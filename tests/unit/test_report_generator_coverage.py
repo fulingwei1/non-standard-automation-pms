@@ -2,7 +2,7 @@
 """report_generator单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/project_review_ai/report_generator import ProjectReviewReportGenerator
+from app.services.project_review_ai.report_generator import ProjectReviewReportGenerator
 
 class TestProjectReviewReportGeneratorInit:
     def test_init_with_db(self):

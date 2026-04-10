@@ -2,7 +2,7 @@
 """approval_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/contract/approval_service import ContractApprovalService
+from app.services.sales.contract.approval_service import ContractApprovalService
 
 class TestContractApprovalServiceInit:
     def test_init_with_db(self):

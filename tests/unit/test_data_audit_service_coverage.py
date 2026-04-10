@@ -2,7 +2,7 @@
 """data_audit_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/data_audit_service import SalesDataAuditService
+from app.services.sales.data_audit_service import SalesDataAuditService
 
 class TestSalesDataAuditServiceInit:
     def test_init_with_db(self):

@@ -8,18 +8,16 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from sqlalchemy import and_, func
+from sqlalchemy import and_, case, func
 from sqlalchemy.orm import Session
 
-from app.models import (
-    ReportArchive,
-    ReportTemplate,
-    Timesheet,
-)
+from app.models import Timesheet
 from app.models.report import (
     ArchiveStatusEnum,
     GeneratedByEnum,
+    ReportArchive,
     ReportTypeEnum,
+    TimesheetReportTemplate as ReportTemplate,
 )
 from app.utils.db_helpers import save_obj
 
@@ -32,9 +30,20 @@ class ReportService:
     @staticmethod
     def get_active_monthly_templates(db: Session) -> List[ReportTemplate]:
         """获取启用的月度报表模板"""
+        supported_types = [
+            ReportTypeEnum.USER_MONTHLY.value,
+            ReportTypeEnum.DEPT_MONTHLY.value,
+            ReportTypeEnum.PROJECT_MONTHLY.value,
+            ReportTypeEnum.COMPANY_MONTHLY.value,
+            ReportTypeEnum.OVERTIME_MONTHLY.value,
+        ]
         return (
             db.query(ReportTemplate)
-            .filter(ReportTemplate.enabled == True, ReportTemplate.frequency == "MONTHLY")
+            .filter(
+                ReportTemplate.enabled == True,
+                ReportTemplate.frequency == "MONTHLY",
+                ReportTemplate.report_type.in_(supported_types),
+            )
             .all()
         )
 
@@ -102,10 +111,10 @@ class ReportService:
                 Timesheet.department_name,
                 func.sum(Timesheet.hours).label("total_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type == "NORMAL", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type == "NORMAL", Timesheet.hours), else_=0)
                 ).label("normal_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type != "NORMAL", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type != "NORMAL", Timesheet.hours), else_=0)
                 ).label("overtime_hours"),
                 func.count(func.distinct(Timesheet.work_date)).label("work_days"),
             )
@@ -204,10 +213,10 @@ class ReportService:
                 func.count(func.distinct(Timesheet.user_id)).label("user_count"),
                 func.sum(Timesheet.hours).label("total_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type == "NORMAL", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type == "NORMAL", Timesheet.hours), else_=0)
                 ).label("normal_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type != "NORMAL", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type != "NORMAL", Timesheet.hours), else_=0)
                 ).label("overtime_hours"),
             )
             .filter(
@@ -320,10 +329,10 @@ class ReportService:
                 func.count(func.distinct(Timesheet.user_id)).label("total_users"),
                 func.sum(Timesheet.hours).label("total_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type == "NORMAL", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type == "NORMAL", Timesheet.hours), else_=0)
                 ).label("normal_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type != "NORMAL", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type != "NORMAL", Timesheet.hours), else_=0)
                 ).label("overtime_hours"),
             )
             .filter(
@@ -373,13 +382,13 @@ class ReportService:
                 Timesheet.user_name,
                 Timesheet.department_name,
                 func.sum(
-                    func.case((Timesheet.overtime_type == "OVERTIME", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type == "OVERTIME", Timesheet.hours), else_=0)
                 ).label("overtime_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type == "WEEKEND", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type == "WEEKEND", Timesheet.hours), else_=0)
                 ).label("weekend_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type == "HOLIDAY", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type == "HOLIDAY", Timesheet.hours), else_=0)
                 ).label("holiday_hours"),
             )
             .filter(

@@ -2,7 +2,7 @@
 """contract_milestone_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/contract_milestone_service import MilestoneType
+from app.services.sales.contract_milestone_service import MilestoneType
 
 class TestMilestoneTypeInit:
     def test_init_with_db(self):

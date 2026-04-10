@@ -61,11 +61,17 @@ class TestAlertRules:
 
         headers = _auth_headers(admin_token)
         rule_data = {
+            "rule_code": f"TEST_RULE_{uuid.uuid4().hex[:8].upper()}",
             "rule_name": f"测试规则-{uuid.uuid4().hex[:4]}",
             "rule_type": "PROJECT_DELAY",
+            "target_type": "PROJECT",
+            "condition_type": "THRESHOLD",
+            "condition_operator": "GTE",
+            "threshold_value": "3",
             "alert_level": "WARNING",
-            "condition": {"days_overdue": 3},
-            "is_active": True,
+            "enforcement_mode": "WARN",
+            "check_frequency": "DAILY",
+            "notify_channels": ["SYSTEM"],
         }
 
         response = client.post(

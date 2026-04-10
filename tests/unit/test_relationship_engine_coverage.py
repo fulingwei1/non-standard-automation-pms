@@ -2,7 +2,7 @@
 """relationship_engine单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/engines/relationship_engine import RelationshipEngine
+from app.services.sales.engines.relationship_engine import RelationshipEngine
 
 class TestRelationshipEngineInit:
     def test_init_with_db(self):

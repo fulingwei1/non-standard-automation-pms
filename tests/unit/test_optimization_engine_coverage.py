@@ -2,7 +2,7 @@
 """optimization_engine单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/cost/optimization_engine import OptimizationEngine
+from app.services.sales.cost.optimization_engine import OptimizationEngine
 
 class TestOptimizationEngineInit:
     def test_init_with_db(self):

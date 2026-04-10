@@ -2,7 +2,7 @@
 """outsourcing_workflow_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/outsourcing_workflow/outsourcing_workflow_service import OutsourcingWorkflowService
+from app.services.outsourcing_workflow.outsourcing_workflow_service import OutsourcingWorkflowService
 
 class TestOutsourcingWorkflowServiceInit:
     def test_init_with_db(self):

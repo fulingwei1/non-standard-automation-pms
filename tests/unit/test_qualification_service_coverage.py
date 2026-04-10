@@ -2,7 +2,7 @@
 """qualification_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/qualification_service import QualificationService
+from app.services.qualification_service import QualificationService
 
 class TestQualificationServiceInit:
     def test_init_with_db(self):

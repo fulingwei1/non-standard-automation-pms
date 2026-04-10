@@ -2,7 +2,7 @@
 """contract_enhanced单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/contract_enhanced import ContractEnhancedService
+from app.services.sales.contract_enhanced import ContractEnhancedService
 
 class TestContractEnhancedServiceInit:
     def test_init_with_db(self):

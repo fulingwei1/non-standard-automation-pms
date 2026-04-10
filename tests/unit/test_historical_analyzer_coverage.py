@@ -2,7 +2,7 @@
 """historical_analyzer单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/cost/historical_analyzer import HistoricalAnalyzer
+from app.services.sales.cost.historical_analyzer import HistoricalAnalyzer
 
 class TestHistoricalAnalyzerInit:
     def test_init_with_db(self):

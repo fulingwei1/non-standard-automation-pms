@@ -2,7 +2,7 @@
 """opportunity_health_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/opportunity_health_service import HealthLevel
+from app.services.sales.opportunity_health_service import HealthLevel
 
 class TestHealthLevelInit:
     def test_init_with_db(self):

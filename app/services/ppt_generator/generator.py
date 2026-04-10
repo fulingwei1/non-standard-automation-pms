@@ -2,9 +2,7 @@
 PPT生成器主类 - 统一管理幻灯片生成流程
 """
 
-from pptx import Presentation
-from pptx.enum.text import PP_ALIGN
-from pptx.util import Inches, Pt
+from .compat import MissingPptxDependencyError, PPTX_AVAILABLE, Presentation, PP_ALIGN, Inches, Pt
 
 from .base_builder import BaseSlideBuilder
 from .config import PresentationConfig
@@ -16,6 +14,10 @@ class PresentationGenerator:
     """PPT生成器主类"""
 
     def __init__(self):
+        if not PPTX_AVAILABLE:
+            raise MissingPptxDependencyError(
+                "python-pptx 未安装，无法使用 PPT 生成功能。请安装 api/requirements.txt 中声明的 python-pptx>=0.6.21"
+            )
         self.prs = Presentation()
         self.prs.slide_width = PresentationConfig.SLIDE_WIDTH
         self.prs.slide_height = PresentationConfig.SLIDE_HEIGHT

@@ -141,7 +141,7 @@ class ConditionEvaluator:
         - {{ items | count_by("status", "DONE") }}
         """
         if self._jinja_env is None:
-            raise ConditionParseError("未安装 jinja2 依赖，无法解析模板表达式")
+            return self._evaluate_jinja2_fallback(expression, context)
 
         try:
             template = self._jinja_env.from_string(expression)
@@ -160,6 +160,75 @@ class ConditionEvaluator:
         except Exception as e:
             logger.error(f"Jinja2表达式评估失败: {e}")
             raise ConditionParseError(f"表达式评估失败: {e}")
+
+    def _evaluate_jinja2_fallback(self, expression: str, context: Dict[str, Any]) -> Any:
+        """无 jinja2 依赖时的轻量模板兜底实现。"""
+        import ast
+
+        expr = expression.strip()
+        if not (expr.startswith("{{") and expr.endswith("}}")):
+            raise ConditionParseError("未安装 jinja2 依赖，无法解析复杂模板表达式")
+
+        inner = expr[2:-2].strip()
+        if not inner:
+            return ""
+
+        parts = [part.strip() for part in inner.split("|")]
+        if not parts:
+            return ""
+
+        value = self._get_field_value(parts[0], context)
+
+        for filter_expr in parts[1:]:
+            if not filter_expr:
+                continue
+
+            if "(" in filter_expr:
+                if not filter_expr.endswith(")"):
+                    raise ConditionParseError(f"Jinja2语法错误: {filter_expr}")
+                filter_name, args_str = filter_expr.split("(", 1)
+                filter_name = filter_name.strip()
+                args_str = args_str[:-1].strip()
+                try:
+                    args = [] if not args_str else list(ast.literal_eval(f"({args_str},)"))
+                except Exception as e:
+                    raise ConditionParseError(f"Jinja2语法错误: {e}")
+            else:
+                filter_name = filter_expr.strip()
+                args = []
+
+            if filter_name == "length":
+                value = 0 if value is None else len(value)
+            elif filter_name == "sum_by":
+                field = args[0] if args else None
+                if not field:
+                    raise ConditionParseError("sum_by 过滤器缺少字段参数")
+                value = sum(item.get(field, 0) for item in (value or []) if item)
+            elif filter_name == "count_by":
+                if not args:
+                    value = len(value or [])
+                else:
+                    field = args[0]
+                    expected = args[1] if len(args) > 1 else None
+                    if expected is None:
+                        value = len(value or [])
+                    else:
+                        value = len(
+                            [item for item in (value or []) if item and item.get(field) == expected]
+                        )
+            elif filter_name == "percentage":
+                decimals = args[0] if args else 1
+                try:
+                    value = 0 if value is None else round(float(value), decimals)
+                except (TypeError, ValueError):
+                    value = 0
+            elif filter_name == "default":
+                default_value = args[0] if args else None
+                value = value if value is not None else default_value
+            else:
+                raise ConditionParseError(f"Jinja2语法错误: unknown filter '{filter_name}'")
+
+        return value
 
     def _evaluate_simple_conditions(
         self, conditions: Dict[str, Any], context: Dict[str, Any]

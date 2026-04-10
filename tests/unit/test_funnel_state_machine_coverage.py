@@ -2,7 +2,7 @@
 """funnel_state_machine单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/funnel_state_machine import FunnelStateMachine
+from app.services.sales.funnel_state_machine import FunnelStateMachine
 
 class TestFunnelStateMachineInit:
     def test_init_with_db(self):

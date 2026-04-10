@@ -2,7 +2,7 @@
 """ai_cost_estimation_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/ai_cost_estimation_service import AICostEstimationService
+from app.services.sales.ai_cost_estimation_service import AICostEstimationService
 
 class TestAICostEstimationServiceInit:
     def test_init_with_db(self):

@@ -2,7 +2,7 @@
 """binding_validation_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/binding_validation_service import BindingIssueLevel
+from app.services.sales.binding_validation_service import BindingIssueLevel
 
 class TestBindingIssueLevelInit:
     def test_init_with_db(self):

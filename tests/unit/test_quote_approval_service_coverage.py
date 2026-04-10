@@ -2,7 +2,7 @@
 """quote_approval_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/quote_approval/quote_approval_service import QuoteApprovalService
+from app.services.quote_approval.quote_approval_service import QuoteApprovalService
 
 class TestQuoteApprovalServiceInit:
     def test_init_with_db(self):

@@ -2,7 +2,7 @@
 """pricing_engine单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/cost/pricing_engine import PricingEngine
+from app.services.sales.cost.pricing_engine import PricingEngine
 
 class TestPricingEngineInit:
     def test_init_with_db(self):

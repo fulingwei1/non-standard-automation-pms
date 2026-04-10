@@ -2,7 +2,7 @@
 """payment_plan_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/payment_plan_service import PaymentPlanService
+from app.services.sales.payment_plan_service import PaymentPlanService
 
 class TestPaymentPlanServiceInit:
     def test_init_with_db(self):

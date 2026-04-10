@@ -1,69 +1,82 @@
 # -*- coding: utf-8 -*-
-"""深入业务逻辑测试 - 报表服务"""
-import pytest
-from unittest.mock import MagicMock
+"""对齐当前静态 API 的 report_service 深度测试"""
+
+from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+from app.models.report import ArchiveStatusEnum, GeneratedByEnum, ReportTypeEnum
+from app.services.report_service import ReportService
 
 
 class TestReportServiceBusinessLogic:
     """报表服务业务逻辑测试"""
 
-    def test_generate_report(self):
-        """测试生成报表"""
-        try:
-            from app.services.report_service import ReportService
+    @patch.object(ReportService, "_generate_user_monthly_report")
+    def test_generate_report(self, mock_generate):
+        """测试生成报表入口会分发到对应静态方法"""
+        mock_db = MagicMock()
+        mock_template = MagicMock()
+        mock_template.report_type = ReportTypeEnum.USER_MONTHLY.value
+        mock_db.query.return_value.filter.return_value.first.return_value = mock_template
+        mock_generate.return_value = {
+            "summary": [{"user_name": "张三", "total_hours": 160}],
+            "detail": [],
+            "year": 2026,
+            "month": 1,
+        }
 
-            mock_db = MagicMock()
-            service = ReportService(mock_db)
+        result = ReportService.generate_report(mock_db, template_id=1, period="2026-01")
 
-            result = service.generate_report("SALES", {})
+        assert result["template"] is mock_template
+        assert result["period"] == "2026-01"
+        assert result["generated_by"] == GeneratedByEnum.SYSTEM.value
+        mock_generate.assert_called_once_with(mock_db, mock_template, 2026, 1)
 
-            assert result is not None
-        except ImportError:
-            pytest.skip("Module not found")
+    @patch("app.services.report_service.save_obj")
+    @patch("app.services.report_service.datetime")
+    def test_archive_report(self, mock_datetime, mock_save_obj):
+        """测试归档报表会保存归档对象"""
+        mock_db = MagicMock()
+        mock_datetime.utcnow.return_value = datetime(2026, 2, 1, 10, 0, 0)
 
-    def test_export_report(self):
-        """测试导出报表"""
-        try:
-            from app.services.report_service import ReportService
+        mock_template = MagicMock()
+        mock_template.name = "人员月报"
+        mock_template.report_type = ReportTypeEnum.USER_MONTHLY.value
+        mock_db.query.return_value.filter.return_value.first.return_value = mock_template
 
-            mock_db = MagicMock()
-            service = ReportService(mock_db)
+        archive = ReportService.archive_report(
+            db=mock_db,
+            template_id=1,
+            period="2026-01",
+            file_path="/tmp/report.xlsx",
+            file_size=1024,
+            row_count=10,
+            status=ArchiveStatusEnum.SUCCESS.value,
+        )
 
-            result = service.export_report(1, "PDF")
+        mock_save_obj.assert_called_once_with(mock_db, archive)
+        assert archive.template_id == 1
+        assert archive.report_type == ReportTypeEnum.USER_MONTHLY.value
+        assert archive.download_count == 0
 
-            assert result is not None
-        except ImportError:
-            pytest.skip("Module not found")
+    def test_get_active_monthly_templates(self):
+        """测试获取启用的月度模板"""
+        mock_db = MagicMock()
+        mock_templates = [MagicMock(), MagicMock()]
+        mock_db.query.return_value.filter.return_value.all.return_value = mock_templates
 
-    def test_schedule_report(self):
-        """测试定时报表"""
-        try:
-            from app.services.report_service import ReportService
+        result = ReportService.get_active_monthly_templates(mock_db)
 
-            mock_db = MagicMock()
-            service = ReportService(mock_db)
+        assert result == mock_templates
 
-            result = service.schedule_report("SALES", "DAILY", "admin@example.com")
+    def test_increment_download_count(self):
+        """测试增加下载次数"""
+        mock_db = MagicMock()
+        mock_archive = MagicMock()
+        mock_archive.download_count = 2
+        mock_db.query.return_value.filter.return_value.first.return_value = mock_archive
 
-            assert result is not None
-        except ImportError:
-            pytest.skip("Module not found")
+        ReportService.increment_download_count(mock_db, archive_id=9)
 
-    def test_get_report_history(self):
-        """测试获取报表历史"""
-        try:
-            from app.services.report_service import ReportService
-
-            mock_db = MagicMock()
-
-            mock_report = MagicMock()
-
-            mock_db.query.return_value.filter.return_value.all.return_value = [mock_report]
-
-            service = ReportService(mock_db)
-
-            result = service.get_report_history("SALES")
-
-            assert result is not None
-        except ImportError:
-            pytest.skip("Module not found")
+        assert mock_archive.download_count == 3
+        mock_db.commit.assert_called_once()

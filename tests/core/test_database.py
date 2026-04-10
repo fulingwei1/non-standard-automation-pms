@@ -12,6 +12,7 @@
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -218,6 +219,166 @@ class TestDatabaseSecurity:
         from app.core.config import settings
 
         # 连接字符串不应该暴露在日志中
+
+
+class TestSQLiteSchemaPatches:
+    """测试 SQLite 历史库字段补丁"""
+
+    def test_alert_rules_patch_adds_enforcement_mode_and_is_active(self, tmp_path):
+        from app.models.base import _ensure_sqlite_schema
+
+        db_path = tmp_path / "legacy_alert_rules.db"
+        engine = create_engine(f"sqlite:///{db_path}")
+
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE alert_rules (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        rule_code VARCHAR(50) NOT NULL UNIQUE,
+                        rule_name VARCHAR(200) NOT NULL,
+                        rule_type VARCHAR(30) NOT NULL,
+                        target_type VARCHAR(30) NOT NULL,
+                        condition_type VARCHAR(20) NOT NULL,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """
+                )
+            )
+
+        _ensure_sqlite_schema(engine)
+
+        columns = {col["name"] for col in inspect(engine).get_columns("alert_rules")}
+        assert "enforcement_mode" in columns
+        assert "is_active" in columns
+
+    def test_users_and_projects_patch_adds_legacy_missing_columns(self, tmp_path):
+        from app.models.base import _ensure_sqlite_schema
+
+        db_path = tmp_path / "legacy_users_projects.db"
+        engine = create_engine(f"sqlite:///{db_path}")
+
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        employee_id INTEGER,
+                        username VARCHAR(50) NOT NULL UNIQUE,
+                        password_hash VARCHAR(255) NOT NULL,
+                        created_at DATETIME,
+                        updated_at DATETIME
+                    )
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE projects (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        project_code VARCHAR(50) NOT NULL UNIQUE,
+                        project_name VARCHAR(200) NOT NULL,
+                        is_active BOOLEAN DEFAULT 1,
+                        is_archived BOOLEAN DEFAULT 0,
+                        created_at DATETIME,
+                        updated_at DATETIME
+                    )
+                    """
+                )
+            )
+
+        _ensure_sqlite_schema(engine)
+
+        user_columns = {col["name"] for col in inspect(engine).get_columns("users")}
+        project_columns = {col["name"] for col in inspect(engine).get_columns("projects")}
+
+        assert "department_id" in user_columns
+        assert "kitting_rate" in project_columns
+        assert "material_status" in project_columns
+        assert "shortage_items_count" in project_columns
+
+    def test_stage_templates_and_quotes_patch_adds_legacy_missing_columns(self, tmp_path):
+        from app.models.base import _ensure_sqlite_schema
+
+        db_path = tmp_path / "legacy_stage_templates_quotes.db"
+        engine = create_engine(f"sqlite:///{db_path}")
+
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE stage_templates (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        template_code VARCHAR(50) NOT NULL UNIQUE,
+                        template_name VARCHAR(100) NOT NULL,
+                        created_by INTEGER,
+                        created_at DATETIME,
+                        updated_at DATETIME
+                    )
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE quotes (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        quote_code VARCHAR(20) NOT NULL UNIQUE,
+                        opportunity_id INTEGER NOT NULL,
+                        customer_id INTEGER NOT NULL,
+                        status VARCHAR(20),
+                        current_version_id INTEGER,
+                        valid_until DATE,
+                        owner_id INTEGER,
+                        created_at DATETIME,
+                        updated_at DATETIME
+                    )
+                    """
+                )
+            )
+
+        _ensure_sqlite_schema(engine)
+
+        stage_template_columns = {col["name"] for col in inspect(engine).get_columns("stage_templates")}
+        quote_columns = {col["name"] for col in inspect(engine).get_columns("quotes")}
+
+        assert "updated_by" in stage_template_columns
+        assert "change_description" in stage_template_columns
+        assert "delivery_date" in quote_columns
+
+
+class TestDatabaseSecurity:
+    """测试数据库安全"""
+
+    def test_sql_injection_prevention(self):
+        """测试SQL注入防护"""
+        from sqlalchemy import text
+
+        from app.models.base import get_session
+
+        session = get_session()
+
+        try:
+            # 使用参数化查询防止SQL注入
+            malicious_input = "'; DROP TABLE users; --"
+
+            # 正确的方式（参数化）
+            # stmt = text("SELECT * FROM users WHERE username = :username")
+            # result = session.execute(stmt, {"username": malicious_input})
+
+            # 不应该执行SQL注入
+        finally:
+            session.close()
+
+    def test_connection_string_security(self):
+        """测试连接字符串安全"""
+        from app.core.config import settings
+
+        # 连接字符串不应该暴露在日志中
         # 密码应该被隐藏
         pass
 
@@ -266,8 +427,11 @@ class TestDatabaseConfiguration:
                 "SECRET_KEY": "test-secret-key-with-32-chars-min!!",
             },
         ):
-            from app.core.config import settings
+            from app.core.config import Settings
 
+            settings = Settings()
+
+            assert settings.POSTGRES_URL is not None
             assert "postgresql" in settings.POSTGRES_URL
 
 

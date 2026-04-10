@@ -39,9 +39,11 @@ CREATE TABLE IF NOT EXISTS alert_rules (
     notify_users        TEXT,                                 -- 指定通知用户JSON
 
     -- 执行配置
+    enforcement_mode    VARCHAR(20) DEFAULT 'WARN',           -- ALLOW/WARN/DENY/REQUIRE_APPROVAL
     check_frequency     VARCHAR(20) DEFAULT 'DAILY',          -- REALTIME/HOURLY/DAILY/WEEKLY
     is_enabled          BOOLEAN DEFAULT 1,                    -- 是否启用
     is_system           BOOLEAN DEFAULT 0,                    -- 是否系统预置
+    is_active           BOOLEAN DEFAULT 1,                    -- 是否激活
 
     -- 描述
     description         TEXT,                                 -- 规则说明

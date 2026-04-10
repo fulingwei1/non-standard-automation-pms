@@ -2,7 +2,7 @@
 """kit_rate_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/kit_rate/kit_rate_service import KitRateService
+from app.services.kit_rate.kit_rate_service import KitRateService
 
 class TestKitRateServiceInit:
     def test_init_with_db(self):

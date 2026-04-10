@@ -2,7 +2,7 @@
 """stage_approval_bridge单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/stage_approval_bridge import StageApprovalBridge
+from app.services.stage_approval_bridge import StageApprovalBridge
 
 class TestStageApprovalBridgeInit:
     def test_init_with_db(self):

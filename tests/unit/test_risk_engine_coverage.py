@@ -2,7 +2,7 @@
 """risk_engine单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/engines/risk_engine import RiskEngine
+from app.services.sales.engines.risk_engine import RiskEngine
 
 class TestRiskEngineInit:
     def test_init_with_db(self):

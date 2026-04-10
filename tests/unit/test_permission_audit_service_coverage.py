@@ -2,7 +2,7 @@
 """permission_audit_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/permission_management/permission_audit_service import PermissionAuditService
+from app.services.permission_management.permission_audit_service import PermissionAuditService
 
 class TestPermissionAuditServiceInit:
     def test_init_with_db(self):

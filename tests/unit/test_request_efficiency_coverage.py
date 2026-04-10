@@ -2,7 +2,7 @@
 """request_efficiency单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/procurement_analysis/request_efficiency import RequestEfficiencyAnalyzer
+from app.services.procurement_analysis.request_efficiency import RequestEfficiencyAnalyzer
 
 class TestRequestEfficiencyAnalyzerInit:
     def test_init_with_db(self):

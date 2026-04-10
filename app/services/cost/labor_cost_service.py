@@ -79,7 +79,7 @@ class LaborCostService:
         Returns:
             计算结果字典，包含创建的成本记录数量、总成本等
         """
-        from app.services.labor_cost.utils import (
+        from app.services.cost.labor_cost_utils import (
             delete_existing_costs,
             group_timesheets_by_user,
             process_user_costs,
@@ -230,7 +230,7 @@ class LaborCostCalculationService:
         Returns:
             Dict: 计算结果统计
         """
-        from app.services.labor_cost.utils import (
+        from app.services.cost.labor_cost_utils import (
             group_timesheets_by_user,
             process_user_costs,
             query_approved_timesheets,

@@ -2,7 +2,7 @@
 """delivery_performance单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/procurement_analysis/delivery_performance import DeliveryPerformanceAnalyzer
+from app.services.procurement_analysis.delivery_performance import DeliveryPerformanceAnalyzer
 
 class TestDeliveryPerformanceAnalyzerInit:
     def test_init_with_db(self):

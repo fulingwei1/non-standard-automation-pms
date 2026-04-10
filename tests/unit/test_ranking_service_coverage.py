@@ -2,7 +2,7 @@
 """ranking_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/engineer_performance/ranking_service import RankingService
+from app.services.engineer_performance.ranking_service import RankingService
 
 class TestRankingServiceInit:
     def test_init_with_db(self):

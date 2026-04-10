@@ -2,8 +2,7 @@
 PPT配置文件 - 颜色和样式定义
 """
 
-from pptx.dml.color import RGBColor as RgbColor  # 兼容不同版本
-from pptx.util import Inches, Pt
+from .compat import Presentation, RgbColor, Inches, Pt
 
 
 class PresentationConfig:

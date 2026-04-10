@@ -7,21 +7,19 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from sqlalchemy import and_, func
+from sqlalchemy import and_, case, func
 from sqlalchemy.orm import Session
 
-from app.models import (
-    ReportArchive,
-    ReportRecipient,
-    ReportTemplate,
-    Timesheet,
-)
+from app.models import Timesheet
 from app.models.report import (
     ArchiveStatusEnum,
     FrequencyEnum,
     GeneratedByEnum,
     OutputFormatEnum,
+    ReportArchive,
+    ReportRecipient,
     ReportTypeEnum,
+    TimesheetReportTemplate as ReportTemplate,
 )
 
 logger = logging.getLogger(__name__)
@@ -251,10 +249,10 @@ class ReportService:
                 Timesheet.department_name,
                 func.sum(Timesheet.hours).label("total_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type == "NORMAL", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type == "NORMAL", Timesheet.hours), else_=0)
                 ).label("normal_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type != "NORMAL", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type != "NORMAL", Timesheet.hours), else_=0)
                 ).label("overtime_hours"),
                 func.count(func.distinct(Timesheet.work_date)).label("work_days"),
             )
@@ -351,10 +349,10 @@ class ReportService:
                 func.count(func.distinct(Timesheet.user_id)).label("user_count"),
                 func.sum(Timesheet.hours).label("total_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type == "NORMAL", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type == "NORMAL", Timesheet.hours), else_=0)
                 ).label("normal_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type != "NORMAL", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type != "NORMAL", Timesheet.hours), else_=0)
                 ).label("overtime_hours"),
             )
             .filter(
@@ -463,10 +461,10 @@ class ReportService:
                 func.count(func.distinct(Timesheet.user_id)).label("total_users"),
                 func.sum(Timesheet.hours).label("total_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type == "NORMAL", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type == "NORMAL", Timesheet.hours), else_=0)
                 ).label("normal_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type != "NORMAL", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type != "NORMAL", Timesheet.hours), else_=0)
                 ).label("overtime_hours"),
             )
             .filter(
@@ -514,13 +512,13 @@ class ReportService:
                 Timesheet.user_name,
                 Timesheet.department_name,
                 func.sum(
-                    func.case((Timesheet.overtime_type == "OVERTIME", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type == "OVERTIME", Timesheet.hours), else_=0)
                 ).label("overtime_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type == "WEEKEND", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type == "WEEKEND", Timesheet.hours), else_=0)
                 ).label("weekend_hours"),
                 func.sum(
-                    func.case((Timesheet.overtime_type == "HOLIDAY", Timesheet.hours), else_=0)
+                    case((Timesheet.overtime_type == "HOLIDAY", Timesheet.hours), else_=0)
                 ).label("holiday_hours"),
             )
             .filter(

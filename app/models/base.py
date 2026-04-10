@@ -104,7 +104,9 @@ def _ensure_sqlite_schema(engine):
     # Many models use TimestampMixin (created_at/updated_at). Historical SQLite
     # databases or hand-written migration scripts may omit these columns for
     # some tables, which can cause runtime 500s when ORM queries select/order
-    # by them. We patch missing timestamp columns opportunistically.
+    # by them. SQLite 不支持在 ALTER TABLE ADD COLUMN 时使用
+    # DEFAULT CURRENT_TIMESTAMP，所以这里只补可查询/可写入的裸 DATETIME 列；
+    # 后续 ORM 插入会由 Python 侧默认值写入时间。
     for table_name in tables:
         columns = None
         try:
@@ -116,15 +118,9 @@ def _ensure_sqlite_schema(engine):
 
         statements = []
         if "created_at" not in columns:
-            statements.append(
-                f"ALTER TABLE {table_name} "
-                "ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP"
-            )
+            statements.append(f"ALTER TABLE {table_name} ADD COLUMN created_at DATETIME")
         if "updated_at" not in columns:
-            statements.append(
-                f"ALTER TABLE {table_name} "
-                "ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
-            )
+            statements.append(f"ALTER TABLE {table_name} ADD COLUMN updated_at DATETIME")
 
         if statements:
             with engine.begin() as conn:
@@ -140,12 +136,7 @@ def _ensure_sqlite_schema(engine):
             columns = [col["name"] for col in inspector.get_columns("project_statuses")]
             if "updated_at" not in columns:
                 with engine.begin() as conn:
-                    conn.execute(
-                        text(
-                            "ALTER TABLE project_statuses "
-                            "ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
-                        )
-                    )
+                    conn.execute(text("ALTER TABLE project_statuses ADD COLUMN updated_at DATETIME"))
         except Exception:
             # Column already exists or table cannot be altered
             logger.debug("project_statuses 列补丁跳过", exc_info=True)
@@ -162,6 +153,97 @@ def _ensure_sqlite_schema(engine):
         if "group_id" not in columns:
             with engine.begin() as conn:
                 conn.execute(text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER"))
+
+    if "alert_rules" in tables:
+        columns = {col["name"] for col in inspector.get_columns("alert_rules")}
+        statements = []
+        if "enforcement_mode" not in columns:
+            statements.append(
+                "ALTER TABLE alert_rules "
+                "ADD COLUMN enforcement_mode VARCHAR(20) DEFAULT 'WARN'"
+            )
+        if "is_active" not in columns:
+            statements.append("ALTER TABLE alert_rules ADD COLUMN is_active BOOLEAN DEFAULT 1")
+
+        if statements:
+            with engine.begin() as conn:
+                for ddl in statements:
+                    try:
+                        conn.execute(text(ddl))
+                    except Exception:
+                        logger.debug("alert_rules 列补丁跳过", exc_info=True)
+
+    if "users" in tables:
+        columns = {col["name"] for col in inspector.get_columns("users")}
+        if "department_id" not in columns:
+            with engine.begin() as conn:
+                try:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN department_id INTEGER"))
+                except Exception:
+                    logger.debug("users.department_id 列补丁跳过", exc_info=True)
+
+    if "projects" in tables:
+        columns = {col["name"] for col in inspector.get_columns("projects")}
+        statements = []
+        if "kitting_rate" not in columns:
+            statements.append("ALTER TABLE projects ADD COLUMN kitting_rate NUMERIC(5, 1) DEFAULT 0")
+        if "material_status" not in columns:
+            statements.append(
+                "ALTER TABLE projects ADD COLUMN material_status VARCHAR(20) DEFAULT '待采购'"
+            )
+        if "shortage_items_count" not in columns:
+            statements.append(
+                "ALTER TABLE projects ADD COLUMN shortage_items_count INTEGER DEFAULT 0"
+            )
+
+        if statements:
+            with engine.begin() as conn:
+                for ddl in statements:
+                    try:
+                        conn.execute(text(ddl))
+                    except Exception:
+                        logger.debug("projects 物料字段补丁跳过", exc_info=True)
+
+    if "stage_templates" in tables:
+        columns = {col["name"] for col in inspector.get_columns("stage_templates")}
+        statements = []
+        if "updated_by" not in columns:
+            statements.append("ALTER TABLE stage_templates ADD COLUMN updated_by INTEGER")
+        if "change_description" not in columns:
+            statements.append("ALTER TABLE stage_templates ADD COLUMN change_description TEXT")
+
+        if statements:
+            with engine.begin() as conn:
+                for ddl in statements:
+                    try:
+                        conn.execute(text(ddl))
+                    except Exception:
+                        logger.debug("stage_templates 列补丁跳过", exc_info=True)
+
+    if "quotes" in tables:
+        columns = {col["name"] for col in inspector.get_columns("quotes")}
+        if "delivery_date" not in columns:
+            with engine.begin() as conn:
+                try:
+                    conn.execute(text("ALTER TABLE quotes ADD COLUMN delivery_date DATE"))
+                except Exception:
+                    logger.debug("quotes.delivery_date 列补丁跳过", exc_info=True)
+
+    if "report_template" in tables:
+        columns = {col["name"] for col in inspector.get_columns("report_template")}
+        if "name" in columns and "template_name" in columns:
+            with engine.begin() as conn:
+                try:
+                    conn.execute(
+                        text(
+                            "UPDATE report_template "
+                            "SET name = template_name "
+                            "WHERE (name IS NULL OR name = '') "
+                            "AND template_name IS NOT NULL"
+                        )
+                    )
+                except Exception:
+                    logger.debug("report_template.name 数据回填跳过", exc_info=True)
 
     if "engineer_dimension_config" in tables:
         columns = {col["name"] for col in inspector.get_columns("engineer_dimension_config")}

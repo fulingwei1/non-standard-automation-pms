@@ -2,7 +2,7 @@
 """collection_priority_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/collection_priority_service import CollectionUrgency
+from app.services.sales.collection_priority_service import CollectionUrgency
 
 class TestCollectionUrgencyInit:
     def test_init_with_db(self):

@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 """
 工时分析与预测模块 Schemas - 修复版
 Pydantic 2.x + Python 3.13 兼容
 """
 
-from datetime import date
+from datetime import date as DateType
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
@@ -25,8 +27,8 @@ class TimesheetAnalyticsQuery(BaseModel):
     """工时分析查询参数"""
 
     period_type: str = Field(..., description="周期类型:DAILY/WEEKLY/MONTHLY/QUARTERLY/YEARLY")
-    start_date: date = Field(..., description="开始日期")
-    end_date: date = Field(..., description="结束日期")
+    start_date: DateType = Field(..., description="开始日期")
+    end_date: DateType = Field(..., description="结束日期")
     dimension: Optional[str] = Field(None, description="分析维度")
     user_ids: Optional[List[int]] = Field(None, description="用户ID列表")
     project_ids: Optional[List[int]] = Field(None, description="项目ID列表")
@@ -78,7 +80,7 @@ class ChartDataPoint(BaseModel):
 
     label: str = Field(..., description="标签")
     value: float = Field(..., description="值")
-    date: Optional[date] = Field(None, description="日期")
+    date: Optional[DateType] = Field(None, description="日期")
     metadata: Optional[Dict[str, Any]] = Field(None, description="元数据")
 
 
@@ -109,8 +111,8 @@ class TimesheetTrendResponse(BaseModel):
     """工时趋势响应"""
 
     period_type: str
-    start_date: date
-    end_date: date
+    start_date: DateType
+    end_date: DateType
     dimension: Optional[str] = None
     total_hours: Decimal
     average_hours: Decimal
@@ -128,8 +130,8 @@ class WorkloadHeatmapResponse(BaseModel):
     """人员负荷热力图响应"""
 
     period_type: str
-    start_date: date
-    end_date: date
+    start_date: DateType
+    end_date: DateType
     heatmap_data: HeatmapData
     statistics: Dict[str, Any] = Field(..., description="统计信息")
     overload_users: List[Dict[str, Any]] = Field(..., description="超负荷人员")
@@ -142,8 +144,8 @@ class EfficiencyComparisonResponse(BaseModel):
     """效率对比响应"""
 
     period_type: str
-    start_date: date
-    end_date: date
+    start_date: DateType
+    end_date: DateType
     planned_hours: Decimal
     actual_hours: Decimal
     variance_hours: Decimal
@@ -160,8 +162,8 @@ class OvertimeStatisticsResponse(BaseModel):
     """加班统计响应"""
 
     period_type: str
-    start_date: date
-    end_date: date
+    start_date: DateType
+    end_date: DateType
     total_overtime_hours: Decimal
     weekend_hours: Decimal
     holiday_hours: Decimal
@@ -178,8 +180,8 @@ class DepartmentComparisonResponse(BaseModel):
     """部门对比响应"""
 
     period_type: str
-    start_date: date
-    end_date: date
+    start_date: DateType
+    end_date: DateType
     departments: List[Dict[str, Any]] = Field(..., description="部门数据")
     chart_data: Dict[str, Any]
     rankings: List[Dict[str, Any]] = Field(..., description="排名")
@@ -192,8 +194,8 @@ class ProjectDistributionResponse(BaseModel):
     """项目分布响应"""
 
     period_type: str
-    start_date: date
-    end_date: date
+    start_date: DateType
+    end_date: DateType
     total_projects: int
     total_hours: Decimal
     pie_chart: PieChartData
@@ -234,7 +236,7 @@ class CompletionForecastResponse(BaseModel):
     current_consumed_hours: Decimal
     predicted_hours: Decimal
     remaining_hours: Decimal
-    predicted_completion_date: date
+    predicted_completion_date: DateType
     predicted_days_remaining: int
     confidence_level: Decimal
     forecast_curve: TrendChartData
@@ -266,8 +268,8 @@ class GapAnalysisResponse(BaseModel):
     """缺口分析响应"""
 
     period_type: str
-    start_date: date
-    end_date: date
+    start_date: DateType
+    end_date: DateType
     required_hours: Decimal
     available_hours: Decimal
     gap_hours: Decimal
@@ -290,8 +292,8 @@ class TimesheetAnalyticsSummary(BaseModel):
     id: int
     period_type: str
     dimension: str
-    start_date: date
-    end_date: date
+    start_date: DateType
+    end_date: DateType
     total_hours: Decimal
     normal_hours: Decimal
     overtime_hours: Decimal

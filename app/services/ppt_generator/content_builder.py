@@ -2,7 +2,7 @@
 内容幻灯片构建器 - 用于创建包含文字内容的幻灯片
 """
 
-from pptx.util import Inches, Pt
+from .compat import Inches, Pt
 
 from .base_builder import BaseSlideBuilder
 

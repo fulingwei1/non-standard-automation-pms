@@ -2,7 +2,7 @@
 """confidence_scorer单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/cost/confidence_scorer import ConfidenceScorer
+from app.services.sales.cost.confidence_scorer import ConfidenceScorer
 
 class TestConfidenceScorerInit:
     def test_init_with_db(self):

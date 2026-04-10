@@ -2,10 +2,7 @@
 基础幻灯片构建器 - 提供基本的幻灯片创建功能
 """
 
-from pptx import Presentation
-from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import PP_ALIGN
-from pptx.util import Inches, Pt
+from .compat import Presentation, MSO_SHAPE, PP_ALIGN, Inches, Pt
 
 from .config import PresentationConfig
 

@@ -2,7 +2,7 @@
 """business_support_reports_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/business_support_reports/business_support_reports_service import BusinessSupportReportsService
+from app.services.business_support_reports.business_support_reports_service import BusinessSupportReportsService
 
 class TestBusinessSupportReportsServiceInit:
     def test_init_with_db(self):

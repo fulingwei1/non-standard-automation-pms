@@ -42,9 +42,11 @@ CREATE TABLE IF NOT EXISTS `alert_rules` (
     `notify_users`        JSON DEFAULT NULL COMMENT '指定通知用户',
 
     -- 执行配置
+    `enforcement_mode`    VARCHAR(20) DEFAULT 'WARN' COMMENT '执行模式: ALLOW/WARN/DENY/REQUIRE_APPROVAL',
     `check_frequency`     VARCHAR(20) DEFAULT 'DAILY' COMMENT 'REALTIME/HOURLY/DAILY/WEEKLY',
     `is_enabled`          TINYINT(1) DEFAULT 1 COMMENT '是否启用',
     `is_system`           TINYINT(1) DEFAULT 0 COMMENT '是否系统预置',
+    `is_active`           TINYINT(1) DEFAULT 1 COMMENT '是否激活',
 
     -- 描述
     `description`         TEXT DEFAULT NULL COMMENT '规则说明',

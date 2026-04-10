@@ -2,7 +2,7 @@
 """smart_alert_engine单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/shortage/smart_alert_engine import SmartAlertEngine
+from app.services.shortage.smart_alert_engine import SmartAlertEngine
 
 class TestSmartAlertEngineInit:
     def test_init_with_db(self):

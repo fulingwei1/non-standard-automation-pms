@@ -20,7 +20,7 @@ from app.models.project import Project, ProjectCost
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.project.project_cost import ProjectCostCreate, ProjectCostResponse, ProjectCostUpdate
-from app.services.cost_service import CostService
+from app.services.cost.cost_service import CostService
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()

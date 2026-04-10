@@ -18,11 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import relationship, selectinload
 
 from app.models.base import Base
-from app.models.project import (
-    Customer,
-    Project,
-    ProjectMilestone,
-)
+from app.models.project import Customer, Project, ProjectMilestone, ProjectPaymentPlan
 from app.models.sales.contracts import Contract
 from app.utils.json_helpers import safe_json_loads
 
@@ -167,27 +163,6 @@ class ContractService:
             await db.rollback()
             logger.error("从合同 %s 创建项目失败: %s", contract_id, str(e))
             raise ValueError(f"创建项目失败: {str(e)}")
-
-
-class ProjectPaymentPlan(Base):
-    """项目收款计划模型（新创建）"""
-
-    __tablename__ = "project_payment_plans"
-
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键")
-    project_id = Column(Integer, nullable=False, index=True, comment="项目ID")
-    contract_id = Column(Integer, nullable=True, comment="合同ID")
-    node_name = Column(String(100), comment="节点名称")
-    percentage = Column(Numeric(5, 2), comment="百分比")
-    amount = Column(Numeric(14, 2), comment="金额")
-    due_date = Column(Date, comment="到期日期")
-    milestone_id = Column(Integer, nullable=True, index=True, comment="里程碑ID（里程碑表）")
-    status = Column(String(20), default="PENDING", comment="状态：PENDING/PAID")
-
-    # 关系
-    project = relationship("Project", back_populates="payment_plans", cascade="all, delete-orphan")
-    contract = relationship("Contract", back_populates="payment_plans")
-    milestone = relationship("ProjectMilestone", foreign_keys="[milestone_id]")
 
 
 class ProjectService:

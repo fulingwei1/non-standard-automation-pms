@@ -2,7 +2,7 @@
 """assessment_template_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/assessment_template_service import AssessmentTemplateService
+from app.services.sales.assessment_template_service import AssessmentTemplateService
 
 class TestAssessmentTemplateServiceInit:
     def test_init_with_db(self):

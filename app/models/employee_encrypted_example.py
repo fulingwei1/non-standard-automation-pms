@@ -37,7 +37,7 @@ class EmployeeEncryptedExample(Base):
 
     【状态】示例代码 - 可删除"""
 
-    __tablename__ = "employees"
+    __tablename__ = "employee_encrypted_examples"
 
     # 基本信息（非敏感）
     id = Column(Integer, primary_key=True, index=True)
@@ -46,7 +46,11 @@ class EmployeeEncryptedExample(Base):
     email = Column(String(255), unique=True, nullable=False, index=True, comment="邮箱")
     department = Column(String(100), comment="部门")
     position = Column(String(100), comment="职位")
-    status = Column(SQLEnum(EmployeeStatus), default=EmployeeStatus.PROBATION, comment="状态")
+    status = Column(
+        SQLEnum(EmployeeEncryptedExampleStatus),
+        default=EmployeeEncryptedExampleStatus.PROBATION,
+        comment="状态",
+    )
     hire_date = Column(Date, default=date.today, comment="入职日期")
 
     # 敏感字段（加密存储）

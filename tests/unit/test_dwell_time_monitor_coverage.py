@@ -2,7 +2,7 @@
 """dwell_time_monitor单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/dwell_time_monitor import DwellTimeMonitorService
+from app.services.sales.dwell_time_monitor import DwellTimeMonitorService
 
 class TestDwellTimeMonitorServiceInit:
     def test_init_with_db(self):

@@ -2,7 +2,7 @@
 """status_transition_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/status_transition_service import StatusTransitionService
+from app.services.status_transition_service import StatusTransitionService
 
 class TestStatusTransitionServiceInit:
     def test_init_with_db(self):

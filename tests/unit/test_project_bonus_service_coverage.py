@@ -2,7 +2,7 @@
 """project_bonus_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/bonus/project_bonus_service import ProjectBonusService
+from app.services.bonus.project_bonus_service import ProjectBonusService
 
 class TestProjectBonusServiceInit:
     def test_init_with_db(self):

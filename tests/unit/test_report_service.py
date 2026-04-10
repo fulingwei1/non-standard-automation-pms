@@ -129,6 +129,24 @@ class TestReportServiceGenerateReport(unittest.TestCase):
         self.assertIn("summary", result)
         mock_generate.assert_called_once()
 
+    @patch.object(ReportService, "_generate_user_monthly_report")
+    def test_generate_report_with_custom_generated_by(self, mock_generate):
+        """测试透传自定义生成人"""
+        mock_template = MagicMock()
+        mock_template.report_type = ReportTypeEnum.USER_MONTHLY.value
+        self.db.query.return_value.filter.return_value.first.return_value = mock_template
+        mock_generate.return_value = {"summary": [], "detail": [], "year": 2026, "month": 1}
+
+        result = ReportService.generate_report(
+            self.db,
+            template_id=1,
+            period="2026-01",
+            generated_by=GeneratedByEnum.MANUAL.value,
+        )
+
+        self.assertEqual(result["generated_by"], GeneratedByEnum.MANUAL.value)
+        mock_generate.assert_called_once_with(self.db, mock_template, 2026, 1)
+
     @patch.object(ReportService, "_generate_project_monthly_report")
     def test_generate_report_project_monthly(self, mock_generate):
         """测试生成项目月度报表"""
@@ -376,6 +394,20 @@ class TestReportServiceDeptMonthly(unittest.TestCase):
 
         self.assertEqual(result["summary"][0]["avg_hours_per_user"], 0)
 
+    def test_generate_dept_monthly_report_december(self):
+        """测试部门月报 12 月边界"""
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.group_by.return_value = mock_query
+        mock_query.all.return_value = []
+
+        self.db.query.return_value = mock_query
+
+        result = ReportService._generate_dept_monthly_report(self.db, self.mock_template, 2025, 12)
+
+        self.assertEqual(result["year"], 2025)
+        self.assertEqual(result["month"], 12)
+
 
 class TestReportServiceProjectMonthly(unittest.TestCase):
     """测试项目月度报表"""
@@ -413,6 +445,43 @@ class TestReportServiceProjectMonthly(unittest.TestCase):
         self.assertEqual(result["summary"][0]["project_name"], "项目A")
         self.assertEqual(result["summary"][0]["total_hours"], 400.0)
         self.assertEqual(result["summary"][0]["avg_hours_per_user"], 80.0)
+
+    def test_generate_project_monthly_report_december(self):
+        """测试项目月报 12 月边界"""
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.group_by.return_value = mock_query
+        mock_query.all.return_value = []
+
+        self.db.query.return_value = mock_query
+
+        result = ReportService._generate_project_monthly_report(
+            self.db, self.mock_template, 2025, 12
+        )
+
+        self.assertEqual(result["year"], 2025)
+        self.assertEqual(result["month"], 12)
+
+    def test_generate_project_monthly_report_zero_users(self):
+        """测试项目人数为0时避免除零"""
+        mock_row = MagicMock()
+        mock_row.project_id = 1
+        mock_row.project_name = "空项目"
+        mock_row.user_count = 0
+        mock_row.total_hours = Decimal("0")
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.group_by.return_value = mock_query
+        mock_query.all.return_value = [mock_row]
+
+        self.db.query.return_value = mock_query
+
+        result = ReportService._generate_project_monthly_report(
+            self.db, self.mock_template, 2026, 1
+        )
+
+        self.assertEqual(result["summary"][0]["avg_hours_per_user"], 0)
 
 
 class TestReportServiceCompanyMonthly(unittest.TestCase):
@@ -464,6 +533,27 @@ class TestReportServiceCompanyMonthly(unittest.TestCase):
         )
 
         self.assertEqual(result["summary"][0]["avg_hours_per_user"], 0)
+
+    def test_generate_company_monthly_report_december(self):
+        """测试公司月报 12 月边界"""
+        mock_stats = MagicMock()
+        mock_stats.total_users = 0
+        mock_stats.total_hours = Decimal("0")
+        mock_stats.normal_hours = Decimal("0")
+        mock_stats.overtime_hours = Decimal("0")
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = mock_stats
+
+        self.db.query.return_value = mock_query
+
+        result = ReportService._generate_company_monthly_report(
+            self.db, self.mock_template, 2025, 12
+        )
+
+        self.assertEqual(result["year"], 2025)
+        self.assertEqual(result["month"], 12)
 
 
 class TestReportServiceOvertimeMonthly(unittest.TestCase):
@@ -526,6 +616,22 @@ class TestReportServiceOvertimeMonthly(unittest.TestCase):
         self.assertEqual(result["summary"][0]["weekend_hours"], 8.0)
         self.assertEqual(result["summary"][0]["holiday_hours"], 0.0)
         self.assertEqual(result["summary"][0]["total_overtime"], 8.0)
+
+    def test_generate_overtime_monthly_report_december(self):
+        """测试加班月报 12 月边界"""
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.group_by.return_value = mock_query
+        mock_query.all.return_value = []
+
+        self.db.query.return_value = mock_query
+
+        result = ReportService._generate_overtime_monthly_report(
+            self.db, self.mock_template, 2025, 12
+        )
+
+        self.assertEqual(result["year"], 2025)
+        self.assertEqual(result["month"], 12)
 
 
 class TestReportServiceUtility(unittest.TestCase):

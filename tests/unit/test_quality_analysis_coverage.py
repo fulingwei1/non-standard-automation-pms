@@ -2,7 +2,7 @@
 """quality_analysis单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/procurement_analysis/quality_analysis import QualityAnalyzer
+from app.services.procurement_analysis.quality_analysis import QualityAnalyzer
 
 class TestQualityAnalyzerInit:
     def test_init_with_db(self):

@@ -2,7 +2,7 @@
 """cost_calculator单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/cost/cost_calculator import CostCalculator
+from app.services.sales.cost.cost_calculator import CostCalculator
 
 class TestCostCalculatorInit:
     def test_init_with_db(self):

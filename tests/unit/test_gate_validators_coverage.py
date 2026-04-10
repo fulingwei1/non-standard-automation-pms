@@ -2,7 +2,7 @@
 """gate_validators单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/sales/gate_validators import ValidationResult
+from app.services.sales.gate_validators import ValidationResult
 
 class TestValidationResultInit:
     def test_init_with_db(self):

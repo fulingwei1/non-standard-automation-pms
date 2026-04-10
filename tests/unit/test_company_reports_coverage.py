@@ -2,7 +2,7 @@
 """company_reports单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/template_report/company_reports import CompanyReportMixin
+from app.services.template_report.company_reports import CompanyReportMixin
 
 class TestCompanyReportMixinInit:
     def test_init_with_db(self):

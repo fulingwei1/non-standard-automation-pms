@@ -2,8 +2,7 @@
 表格幻灯片构建器 - 用于创建包含表格的幻灯片
 """
 
-from pptx.enum.text import PP_ALIGN
-from pptx.util import Inches
+from .compat import PP_ALIGN, Inches
 
 from .base_builder import BaseSlideBuilder
 

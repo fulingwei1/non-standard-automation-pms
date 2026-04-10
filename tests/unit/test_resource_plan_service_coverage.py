@@ -2,7 +2,7 @@
 """resource_plan_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/resource_plan_service import ResourcePlanService
+from app.services.resource_plan_service import ResourcePlanService
 
 class TestResourcePlanServiceInit:
     def test_init_with_db(self):

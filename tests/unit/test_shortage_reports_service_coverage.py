@@ -2,7 +2,7 @@
 """shortage_reports_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/shortage/shortage_reports_service import ShortageReportsService
+from app.services.shortage.shortage_reports_service import ShortageReportsService
 
 class TestShortageReportsServiceInit:
     def test_init_with_db(self):

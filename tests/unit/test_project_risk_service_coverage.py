@@ -2,7 +2,7 @@
 """project_risk_service单元测试"""
 import pytest
 from unittest.mock import Mock
-from services/project_risk/project_risk_service import ProjectRiskService
+from app.services.project_risk.project_risk_service import ProjectRiskService
 
 class TestProjectRiskServiceInit:
     def test_init_with_db(self):
