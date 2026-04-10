@@ -1,63 +1,63 @@
 # -*- coding: utf-8 -*-
 """深入业务逻辑测试 - 销售AI助手服务"""
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 class TestSalesAIAssistantServiceBusinessLogic:
     """销售AI助手服务业务逻辑测试"""
 
-    def test_analyze_customer(self):
-        """测试分析客户"""
+    def test_analyze_competitor(self):
+        """测试分析竞争对手"""
         try:
             from app.services.sales_ai_assistant_service import SalesAIAssistantService
 
             mock_db = MagicMock()
             service = SalesAIAssistantService(mock_db)
 
-            result = service.analyze_customer(1)
+            result = service.analyze_competitor(1)
 
             assert result is not None
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_recommend_product(self):
-        """测试推荐产品"""
+    def test_generate_proposal(self):
+        """测试生成提案"""
         try:
             from app.services.sales_ai_assistant_service import SalesAIAssistantService
 
             mock_db = MagicMock()
             service = SalesAIAssistantService(mock_db)
 
-            result = service.recommend_product(1, "ICT")
+            result = service.generate_proposal(1)
 
             assert result is not None
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_predict_deal_close(self):
-        """测试预测成交"""
+    def test_predict_churn_risk(self):
+        """测试预测流失风险"""
         try:
             from app.services.sales_ai_assistant_service import SalesAIAssistantService
 
             mock_db = MagicMock()
             service = SalesAIAssistantService(mock_db)
 
-            result = service.predict_deal_close(1)
+            result = service.predict_churn_risk(1)
 
             assert result is not None
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_generate_follow_up(self):
-        """测试生成跟进建议"""
+    def test_get_negotiation_advice(self):
+        """测试获取谈判建议"""
         try:
             from app.services.sales_ai_assistant_service import SalesAIAssistantService
 
             mock_db = MagicMock()
             service = SalesAIAssistantService(mock_db)
 
-            result = service.generate_follow_up(1)
+            result = service.get_negotiation_advice(1)
 
             assert result is not None
         except ImportError:

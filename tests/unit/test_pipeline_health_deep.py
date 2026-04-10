@@ -1,68 +1,63 @@
 # -*- coding: utf-8 -*-
 """深入业务逻辑测试 - 管道健康服务"""
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 class TestPipelineHealthServiceBusinessLogic:
     """管道健康服务业务逻辑测试"""
 
-    def test_check_health(self):
-        """测试检查健康"""
+    def test_calculate_pipeline_health(self):
+        """测试计算管道健康"""
         try:
             from app.services.pipeline_health_service import PipelineHealthService
 
             mock_db = MagicMock()
             service = PipelineHealthService(mock_db)
 
-            result = service.check_health()
+            result = service.calculate_pipeline_health()
 
             assert result is not None
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_analyze_conversion(self):
-        """测试分析转化率"""
+    def test_calculate_lead_health(self):
+        """测试计算线索健康"""
         try:
             from app.services.pipeline_health_service import PipelineHealthService
 
             mock_db = MagicMock()
             service = PipelineHealthService(mock_db)
 
-            result = service.analyze_conversion()
+            result = service.calculate_lead_health()
 
             assert result is not None
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_identify_stalled_deals(self):
-        """测试识别停滞交易"""
+    def test_calculate_opportunity_health(self):
+        """测试计算商机健康"""
         try:
             from app.services.pipeline_health_service import PipelineHealthService
 
             mock_db = MagicMock()
-
-            mock_deal = MagicMock()
-
-            mock_db.query.return_value.filter.return_value.all.return_value = [mock_deal]
-
             service = PipelineHealthService(mock_db)
 
-            result = service.identify_stalled_deals(30)
+            result = service.calculate_opportunity_health()
 
             assert result is not None
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_generate_alerts(self):
-        """测试生成告警"""
+    def test_calculate_contract_health(self):
+        """测试计算合同健康"""
         try:
             from app.services.pipeline_health_service import PipelineHealthService
 
             mock_db = MagicMock()
             service = PipelineHealthService(mock_db)
 
-            result = service.generate_alerts()
+            result = service.calculate_contract_health()
 
             assert result is not None
         except ImportError:
