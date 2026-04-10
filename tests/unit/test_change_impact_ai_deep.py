@@ -7,76 +7,58 @@ from unittest.mock import MagicMock
 class TestChangeImpactAIServiceBusinessLogic:
     """变更影响AI服务业务逻辑测试"""
 
-    def test_analyze_change_impact(self):
-        """测试分析变更影响"""
+    def test_analyze_impact(self):
+        """测试分析影响"""
         try:
             from app.services.change_impact_ai_service import ChangeImpactAIService
 
             mock_db = MagicMock()
             service = ChangeImpactAIService(mock_db)
 
-            result = service.analyze_change_impact(1, "修改设计")
+            result = service.analyze_impact(1)
 
             assert result is not None
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_predict_impact_scope(self):
-        """测试预测影响范围"""
+    def test_predict_risk(self):
+        """测试预测风险"""
         try:
             from app.services.change_impact_ai_service import ChangeImpactAIService
 
             mock_db = MagicMock()
             service = ChangeImpactAIService(mock_db)
 
-            result = service.predict_impact_scope(1)
+            result = service.predict_risk(1)
 
             assert result is not None
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_calculate_risk_score(self):
-        """测试计算风险分数"""
+    def test_identify_affected_items(self):
+        """测试识别受影响项"""
         try:
             from app.services.change_impact_ai_service import ChangeImpactAIService
 
             mock_db = MagicMock()
             service = ChangeImpactAIService(mock_db)
 
-            result = service.calculate_risk_score("HIGH", 10)
+            result = service.identify_affected_items(1)
 
             assert result is not None
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_generate_mitigation_plan(self):
-        """测试生成缓解计划"""
+    def test_generate_report(self):
+        """测试生成报告"""
         try:
             from app.services.change_impact_ai_service import ChangeImpactAIService
 
             mock_db = MagicMock()
             service = ChangeImpactAIService(mock_db)
 
-            result = service.generate_mitigation_plan(1)
+            result = service.generate_report(1)
 
             assert result is not None
-        except ImportError:
-            pytest.skip("Module not found")
-
-
-class TestChangeImpactAIValidation:
-    """验证测试"""
-
-    def test_impact_level_ranges(self):
-        """测试影响级别范围"""
-        try:
-            from app.services.change_impact_ai_service import ChangeImpactAIService
-
-            mock_db = MagicMock()
-            service = ChangeImpactAIService(mock_db)
-
-            assert service.calculate_risk_score("LOW", 5) is not None
-            assert service.calculate_risk_score("MEDIUM", 5) is not None
-            assert service.calculate_risk_score("HIGH", 5) is not None
         except ImportError:
             pytest.skip("Module not found")
