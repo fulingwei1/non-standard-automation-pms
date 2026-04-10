@@ -1,74 +1,63 @@
 # -*- coding: utf-8 -*-
 """深入业务逻辑测试 - BOM属性服务"""
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 class TestBOMAttributesServiceBusinessLogic:
     """BOM属性服务业务逻辑测试"""
 
-    def test_create_bom(self):
-        """测试创建BOM"""
+    def test_apply_assembly_template(self):
+        """测试应用装配模板"""
         try:
-            from app.services.bom_attributes.bom_attributes_service import BOMAttributesService
+            from app.services.bom_attributes.bom_attributes_service import BomAttributesService
 
             mock_db = MagicMock()
-            service = BOMAttributesService(mock_db)
+            service = BomAttributesService(mock_db)
 
-            result = service.create_bom("BOM-A", [])
+            result = service.apply_assembly_template(1, "模板A")
 
             assert result is not None
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_add_item(self):
-        """测试添加项"""
+    def test_auto_assign_assembly_attrs(self):
+        """测试自动分配装配属性"""
         try:
-            from app.services.bom_attributes.bom_attributes_service import BOMAttributesService
+            from app.services.bom_attributes.bom_attributes_service import BomAttributesService
 
             mock_db = MagicMock()
+            service = BomAttributesService(mock_db)
 
-            mock_bom = MagicMock()
-            mock_bom.id = 1
-
-            mock_db.query.return_value.filter.return_value.first.return_value = mock_bom
-
-            service = BOMAttributesService(mock_db)
-
-            result = service.add_item(1, 1, 10)
+            result = service.auto_assign_assembly_attrs(1)
 
             assert result is not None
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_validate_bom(self):
-        """测试验证BOM"""
+    def test_get_assembly_attr_recommendations(self):
+        """测试获取装配属性推荐"""
         try:
-            from app.services.bom_attributes.bom_attributes_service import BOMAttributesService
+            from app.services.bom_attributes.bom_attributes_service import BomAttributesService
 
             mock_db = MagicMock()
+            service = BomAttributesService(mock_db)
 
-            mock_bom = MagicMock()
-
-            mock_db.query.return_value.filter.return_value.first.return_value = mock_bom
-
-            service = BOMAttributesService(mock_db)
-
-            result = service.validate_bom(1)
+            result = service.get_assembly_attr_recommendations(1)
 
             assert result is not None
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_export_bom(self):
-        """测试导出BOM"""
+    def test_batch_set_assembly_attrs(self):
+        """测试批量设置装配属性"""
         try:
-            from app.services.bom_attributes.bom_attributes_service import BOMAttributesService
+            from app.services.bom_attributes.bom_attributes_service import BomAttributesService
 
             mock_db = MagicMock()
-            service = BOMAttributesService(mock_db)
+            service = BomAttributesService(mock_db)
 
-            result = service.export_bom(1, "CSV")
+            result = service.batch_set_assembly_attrs([1, 2, 3], {"attr": "value"})
 
             assert result is not None
         except ImportError:
