@@ -3,6 +3,7 @@
 定时任务 - 工时相关任务
 包含：工时填报提醒、工时汇总、审批超时提醒、同步失败提醒等
 """
+import importlib
 import logging
 from datetime import date, datetime, timedelta
 
@@ -16,11 +17,11 @@ def daily_timesheet_reminder_task():
     每日工时填报提醒任务
     每天上午9:00执行，提醒未填报昨天工时的用户
     """
-    from app.services.timesheet.reminder import notify_timesheet_missing
+    reminder_service = importlib.import_module("app.services.timesheet_reminder")
 
     try:
         with get_db_session() as db:
-            count = notify_timesheet_missing(db)
+            count = reminder_service.notify_timesheet_missing(db)
             logger.info(f"[{datetime.now()}] 每日工时填报提醒完成: 发送 {count} 条提醒")
 
             return {"reminder_count": count, "timestamp": datetime.now().isoformat()}
@@ -37,11 +38,11 @@ def weekly_timesheet_reminder_task():
     每周工时填报提醒任务
     每周一上午10:00执行，提醒未完成上周工时填报的用户
     """
-    from app.services.timesheet.reminder import notify_weekly_timesheet_missing
+    reminder_service = importlib.import_module("app.services.timesheet_reminder")
 
     try:
         with get_db_session() as db:
-            count = notify_weekly_timesheet_missing(db)
+            count = reminder_service.notify_weekly_timesheet_missing(db)
             logger.info(f"[{datetime.now()}] 每周工时填报提醒完成: 发送 {count} 条提醒")
 
             return {"reminder_count": count, "timestamp": datetime.now().isoformat()}
@@ -59,21 +60,27 @@ def timesheet_anomaly_alert_task():
     每天下午14:00执行，检测并提醒异常工时记录
     """
     from app.models.timesheet_reminder import ReminderTypeEnum
-    from app.services.timesheet.reminder.anomaly_detector import TimesheetAnomalyDetector
-    from app.services.timesheet.reminder.notification_sender import NotificationSender
-    from app.services.timesheet.reminder.reminder_manager import TimesheetReminderManager
+    anomaly_detector_module = importlib.import_module(
+        "app.services.timesheet_reminder.anomaly_detector"
+    )
+    notification_sender_module = importlib.import_module(
+        "app.services.timesheet_reminder.notification_sender"
+    )
+    reminder_manager_module = importlib.import_module(
+        "app.services.timesheet_reminder.reminder_manager"
+    )
 
     try:
         with get_db_session() as db:
             # 使用新的异常检测器
-            detector = TimesheetAnomalyDetector(db)
+            detector = anomaly_detector_module.TimesheetAnomalyDetector(db)
             anomalies = detector.detect_all_anomalies(
                 start_date=date.today() - timedelta(days=1), end_date=date.today()
             )
 
             # 为每个异常创建提醒
-            manager = TimesheetReminderManager(db)
-            sender = NotificationSender(db)
+            manager = reminder_manager_module.TimesheetReminderManager(db)
+            sender = notification_sender_module.NotificationSender(db)
             reminder_count = 0
 
             for anomaly in anomalies:
@@ -117,11 +124,11 @@ def timesheet_approval_timeout_reminder_task():
     工时审批超时提醒任务
     每天上午11:00和下午15:00执行，提醒审批超时的记录
     """
-    from app.services.timesheet.reminder import notify_approval_timeout
+    reminder_service = importlib.import_module("app.services.timesheet_reminder")
 
     try:
         with get_db_session() as db:
-            count = notify_approval_timeout(db, timeout_hours=24)
+            count = reminder_service.notify_approval_timeout(db, timeout_hours=24)
             logger.info(f"[{datetime.now()}] 工时审批超时提醒完成: 发送 {count} 条提醒")
 
             return {"reminder_count": count, "timestamp": datetime.now().isoformat()}
@@ -138,11 +145,11 @@ def timesheet_sync_failure_alert_task():
     工时数据同步失败提醒任务
     每天下午16:00执行，检查并提醒同步失败的记录
     """
-    from app.services.timesheet.reminder import notify_sync_failure
+    reminder_service = importlib.import_module("app.services.timesheet_reminder")
 
     try:
         with get_db_session() as db:
-            count = notify_sync_failure(db)
+            count = reminder_service.notify_sync_failure(db)
             logger.info(f"[{datetime.now()}] 工时数据同步失败提醒完成: 发送 {count} 条提醒")
 
             return {"alert_count": count, "timestamp": datetime.now().isoformat()}
@@ -159,7 +166,7 @@ def daily_timesheet_aggregation_task():
     每日工时汇总任务
     每天凌晨1点执行，汇总前一天的数据
     """
-    from app.services.timesheet.timesheet_aggregation_service import TimesheetAggregationService
+    aggregation_module = importlib.import_module("app.services.timesheet_aggregation_service")
 
     with get_db_session() as db:
         try:
@@ -168,7 +175,7 @@ def daily_timesheet_aggregation_task():
             year = yesterday.year
             month = yesterday.month
 
-            service = TimesheetAggregationService(db)
+            service = aggregation_module.TimesheetAggregationService(db)
             result = service.aggregate_monthly_timesheet(year, month)
 
             logger.info(
@@ -190,7 +197,7 @@ def weekly_timesheet_aggregation_task():
     每周工时汇总任务
     每周一凌晨2点执行，汇总上一周的数据
     """
-    from app.services.timesheet.timesheet_aggregation_service import TimesheetAggregationService
+    aggregation_module = importlib.import_module("app.services.timesheet_aggregation_service")
 
     with get_db_session() as db:
         try:
@@ -204,7 +211,7 @@ def weekly_timesheet_aggregation_task():
             if last_monday.month == last_sunday.month:
                 year = last_monday.year
                 month = last_monday.month
-                service = TimesheetAggregationService(db)
+                service = aggregation_module.TimesheetAggregationService(db)
                 result = service.aggregate_monthly_timesheet(year, month)
                 logger.info(f"[{datetime.now()}] 每周工时汇总完成（{year}年{month}月）")
             else:
@@ -226,7 +233,7 @@ def monthly_timesheet_aggregation_task():
     每月工时汇总任务
     每月1号凌晨3点执行，汇总上一个月的数据
     """
-    from app.services.timesheet.timesheet_aggregation_service import TimesheetAggregationService
+    aggregation_module = importlib.import_module("app.services.timesheet_aggregation_service")
 
     with get_db_session() as db:
         try:
@@ -240,7 +247,7 @@ def monthly_timesheet_aggregation_task():
                 month = today.month - 1
 
             # 执行月度汇总
-            service = TimesheetAggregationService(db)
+            service = aggregation_module.TimesheetAggregationService(db)
             result = service.aggregate_monthly_timesheet(year, month)
 
             logger.info(
@@ -262,7 +269,7 @@ def calculate_monthly_labor_cost_task():
     计算月度人工成本任务
     每月5号凌晨执行，计算上月的人工成本分摊
     """
-    from app.services.cost.labor_cost_service import LaborCostCalculationService
+    labor_cost_module = importlib.import_module("app.services.labor_cost_service")
 
     try:
         with get_db_session() as db:
@@ -275,7 +282,7 @@ def calculate_monthly_labor_cost_task():
                 year = today.year
                 month = today.month - 1
 
-            service = LaborCostCalculationService(db)
+            service = labor_cost_module.LaborCostCalculationService(db)
             result = service.calculate_monthly_costs(year, month)
 
             logger.info(

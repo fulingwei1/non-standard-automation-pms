@@ -5,6 +5,7 @@
 """
 import logging
 from datetime import datetime
+import importlib
 
 from sqlalchemy import or_
 
@@ -23,9 +24,11 @@ def check_alert_escalation():
     """
     try:
         with get_db_session() as db:
-            from app.services.alert.alert_escalation_service import AlertEscalationService
+            alert_escalation_module = importlib.import_module(
+                "app.services.alert_escalation_service"
+            )
 
-            service = AlertEscalationService(db)
+            service = alert_escalation_module.AlertEscalationService(db)
             result = service.check_and_escalate()
 
             logger.info(

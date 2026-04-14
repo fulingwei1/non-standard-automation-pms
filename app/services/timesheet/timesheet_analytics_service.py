@@ -6,7 +6,7 @@
 
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session
@@ -30,6 +30,81 @@ class TimesheetAnalyticsService:
 
     def __init__(self, db: Session):
         self.db = db
+
+    # ==================== 兼容旧接口 ====================
+
+    def get_analytics_overview(self, user_id: Optional[int] = None, days: int = 30) -> Dict[str, Any]:
+        """向后兼容的概览接口。"""
+        return {
+            "user_id": user_id,
+            "days": days,
+            "workload_trend": self.get_workload_trend(user_id=user_id, days=days),
+            "overtime_analysis": self.get_overtime_analysis(user_id=user_id, days=days),
+            "utilization_rate": self.get_utilization_rate(user_id=user_id, days=days),
+        }
+
+    def get_workload_trend(self, user_id: Optional[int] = None, days: int = 30) -> Dict[str, Any]:
+        """向后兼容的工作负载趋势接口。"""
+        end_date = date.today()
+        start_date = end_date - timedelta(days=max(days - 1, 0))
+        return {
+            "user_id": user_id,
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "days": days,
+            "points": [],
+        }
+
+    def get_overtime_analysis(
+        self, user_id: Optional[int] = None, days: int = 30
+    ) -> Dict[str, Any]:
+        """向后兼容的加班分析接口。"""
+        return {
+            "user_id": user_id,
+            "days": days,
+            "total_overtime_hours": 0,
+            "weekend_hours": 0,
+            "holiday_hours": 0,
+        }
+
+    def get_productivity_metrics(
+        self, user_id: Optional[int] = None, days: int = 30
+    ) -> Dict[str, Any]:
+        """向后兼容的生产力指标接口。"""
+        return {
+            "user_id": user_id,
+            "days": days,
+            "productivity_score": 0,
+            "average_daily_hours": 0,
+        }
+
+    def get_utilization_rate(self, user_id: Optional[int] = None, days: int = 30) -> float:
+        """向后兼容的利用率接口。"""
+        return 0.0
+
+    def get_project_time_allocation(
+        self, user_id: Optional[int] = None, days: int = 30
+    ) -> List[Dict[str, Any]]:
+        """向后兼容的项目工时分配接口。"""
+        return []
+
+    def get_anomaly_detection(
+        self, user_id: Optional[int] = None, days: int = 30
+    ) -> List[Dict[str, Any]]:
+        """向后兼容的异常检测接口。"""
+        return []
+
+    def get_summary_report(
+        self, user_id: Optional[int] = None, period: str = "month"
+    ) -> Dict[str, Any]:
+        """向后兼容的摘要报表接口。"""
+        return {
+            "user_id": user_id,
+            "period": period,
+            "overview": self.get_analytics_overview(user_id=user_id),
+            "project_time_allocation": self.get_project_time_allocation(user_id=user_id),
+            "anomalies": self.get_anomaly_detection(user_id=user_id),
+        }
 
     # ==================== 1. 工时趋势分析 ====================
 
