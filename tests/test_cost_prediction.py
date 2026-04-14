@@ -13,6 +13,7 @@ import json
 from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import Mock, patch
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -30,6 +31,11 @@ from app.services.cost_prediction_service import (
     GLM5CostPredictor,
 )
 
+
+def _uniq(prefix: str) -> str:
+    return f"{prefix}-{uuid4().hex[:8].upper()}"
+
+
 # ==================== Fixtures ====================
 
 
@@ -37,7 +43,7 @@ from app.services.cost_prediction_service import (
 def test_project(db: Session) -> Project:
     """创建测试项目"""
     project = Project(
-        project_code="TEST-COST-001",
+        project_code=_uniq("TEST-COST"),
         project_name="成本预测测试项目",
         budget_amount=Decimal("1000000.00"),
         planned_start_date=date.today() - timedelta(days=180),
@@ -82,7 +88,8 @@ def test_evm_history(db: Session, test_project: Project) -> list:
     history = []
 
     # 创建6个月的历史数据，模拟CPI逐渐下降
-    base_date = date.today() - timedelta(days=150)
+    # 避开 test_evm_data 使用的 date.today()，避免 (project_id, period_type, period_date) 唯一约束冲突
+    base_date = date.today() - timedelta(days=180)
     cpi_values = [1.05, 1.02, 0.98, 0.95, 0.92, 0.9375]
 
     for i in range(6):
@@ -145,7 +152,7 @@ class TestCostPredictionModel:
         db.refresh(prediction)
 
         assert prediction.id is not None
-        assert prediction.project_code == "TEST-COST-001"
+        assert prediction.project_code == test_project.project_code
         assert prediction.predicted_eac == Decimal("1066667.00")
         assert prediction.risk_level == "MEDIUM"
 
@@ -192,11 +199,12 @@ class TestOptimizationSuggestionModel:
         db.commit()
 
         # 创建建议
+        suggestion_code = _uniq("OPT-TEST-COST")
         suggestion = CostOptimizationSuggestion(
             prediction_id=prediction.id,
             project_id=test_project.id,
             project_code=test_project.project_code,
-            suggestion_code="OPT-TEST-COST-001-202602-001",
+            suggestion_code=suggestion_code,
             suggestion_title="优化供应商采购",
             suggestion_type="VENDOR_NEGOTIATION",
             priority="HIGH",
@@ -217,7 +225,7 @@ class TestOptimizationSuggestionModel:
         db.refresh(suggestion)
 
         assert suggestion.id is not None
-        assert suggestion.suggestion_code == "OPT-TEST-COST-001-202602-001"
+        assert suggestion.suggestion_code == suggestion_code
         assert suggestion.net_benefit == Decimal("45000.00")
         assert suggestion.status == "PENDING"
 
@@ -239,7 +247,7 @@ class TestOptimizationSuggestionModel:
             prediction_id=prediction.id,
             project_id=test_project.id,
             project_code=test_project.project_code,
-            suggestion_code="OPT-TEST-002",
+            suggestion_code=_uniq("OPT-TEST"),
             suggestion_title="流程优化",
             suggestion_type="PROCESS_IMPROVEMENT",
             priority="MEDIUM",
@@ -511,7 +519,7 @@ class TestCostPredictionAPI:
     ):
         """测试创建预测API"""
         response = client.post(
-            "/api/v1/projects/costs/predictions",
+            f"/api/v1/projects/{test_project.id}/costs/predictions",
             json={
                 "project_id": test_project.id,
                 "prediction_version": "V1.0",
@@ -543,7 +551,8 @@ class TestCostPredictionAPI:
 
         # 获取详情
         response = client.get(
-            f"/api/v1/projects/costs/predictions/{prediction.id}", headers=auth_headers
+            f"/api/v1/projects/{test_project.id}/costs/predictions/{prediction.id}",
+            headers=auth_headers,
         )
 
         assert response.status_code == 200
@@ -566,7 +575,7 @@ class TestCostPredictionAPI:
         )
 
         response = client.get(
-            f"/api/v1/projects/costs/predictions/project/{test_project.id}/latest",
+            f"/api/v1/projects/{test_project.id}/costs/predictions/latest",
             headers=auth_headers,
         )
 
@@ -591,7 +600,8 @@ class TestCostPredictionAPI:
 
         # 审批
         response = client.post(
-            f"/api/v1/projects/costs/predictions/{prediction.id}/approve", headers=auth_headers
+            f"/api/v1/projects/{test_project.id}/costs/predictions/{prediction.id}/approve",
+            headers=auth_headers,
         )
 
         assert response.status_code == 200
@@ -614,7 +624,7 @@ class TestCostPredictionAPI:
         )
 
         response = client.get(
-            f"/api/v1/projects/costs/projects/{test_project.id}/cost-health", headers=auth_headers
+            f"/api/v1/projects/{test_project.id}/costs/cost-health", headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -652,7 +662,7 @@ class TestOptimizationSuggestionAPI:
             prediction_id=prediction.id,
             project_id=test_project.id,
             project_code=test_project.project_code,
-            suggestion_code="OPT-TEST-001",
+            suggestion_code=_uniq("OPT-TEST"),
             suggestion_title="优化测试",
             suggestion_type="PROCESS_IMPROVEMENT",
             priority="HIGH",
@@ -664,13 +674,14 @@ class TestOptimizationSuggestionAPI:
 
         # 获取列表
         response = client.get(
-            f"/api/v1/projects/costs/predictions/{prediction.id}/suggestions", headers=auth_headers
+            f"/api/v1/projects/{test_project.id}/costs/predictions/{prediction.id}/suggestions",
+            headers=auth_headers,
         )
 
         assert response.status_code == 200
         data = response.json()
         assert len(data) > 0
-        assert data[0]["suggestion_code"] == "OPT-TEST-001"
+        assert data[0]["suggestion_code"] == suggestion.suggestion_code
 
     def test_review_suggestion_api(
         self, client: TestClient, db: Session, test_project: Project, auth_headers: dict
@@ -691,7 +702,7 @@ class TestOptimizationSuggestionAPI:
             prediction_id=prediction.id,
             project_id=test_project.id,
             project_code=test_project.project_code,
-            suggestion_code="OPT-TEST-002",
+            suggestion_code=_uniq("OPT-TEST"),
             suggestion_title="测试建议",
             suggestion_type="VENDOR_NEGOTIATION",
             priority="HIGH",
@@ -703,7 +714,7 @@ class TestOptimizationSuggestionAPI:
 
         # 审核
         response = client.post(
-            f"/api/v1/projects/costs/suggestions/{suggestion.id}/review",
+            f"/api/v1/projects/{test_project.id}/costs/suggestions/{suggestion.id}/review",
             json={"decision": "APPROVED", "comments": "同意实施"},
             headers=auth_headers,
         )

@@ -158,7 +158,7 @@ class ProjectCostPredictionService:
         return (
             self.db.query(CostPrediction)
             .filter(CostPrediction.project_id == project_id)
-            .order_by(desc(CostPrediction.prediction_date))
+            .order_by(desc(CostPrediction.prediction_date), desc(CostPrediction.id))
             .first()
         )
 
@@ -178,7 +178,7 @@ class ProjectCostPredictionService:
         query = (
             self.db.query(CostPrediction)
             .filter(CostPrediction.project_id == project_id)
-            .order_by(desc(CostPrediction.prediction_date))
+            .order_by(desc(CostPrediction.prediction_date), desc(CostPrediction.id))
         )
 
         if limit:
@@ -395,10 +395,20 @@ class ProjectCostPredictionService:
         score = Decimal("100")
 
         # 历史数据充分性
-        if len(evm_history_data) < 3:
+        if not evm_history_data:
             score -= Decimal("30")
         elif len(evm_history_data) < 6:
             score -= Decimal("15")
+
+        # 兼容历史对象/字典两种输入，缺少验证标记时不额外扣分
+        for evm in evm_history_data:
+            if isinstance(evm, dict):
+                is_verified = evm.get("is_verified")
+            else:
+                is_verified = getattr(evm, "is_verified", None)
+
+            if is_verified is False:
+                score -= Decimal("5")
 
         return max(score, Decimal("0"))
 

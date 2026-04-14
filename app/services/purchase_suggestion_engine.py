@@ -581,9 +581,22 @@ class PurchaseSuggestionEngine:
         )
 
         if latest:
-            last_seq = int(latest.suggestion_no[-4:])
-            seq = last_seq + 1
+            seq = int(latest.suggestion_no[-4:])
         else:
-            seq = 1
+            seq = 0
 
-        return f"{prefix}{date_str}{seq:04d}"
+        # 同一次 flush/commit 前，self.db.new 中的待插入记录也要参与编号递增，
+        # 否则批量生成建议时会重复撞到 unique(suggestion_no)
+        for pending in self.db.new:
+            if not isinstance(pending, PurchaseSuggestion):
+                continue
+
+            suggestion_no = getattr(pending, "suggestion_no", None)
+            if not suggestion_no or not suggestion_no.startswith(f"{prefix}{date_str}"):
+                continue
+
+            suffix = suggestion_no[-4:]
+            if suffix.isdigit():
+                seq = max(seq, int(suffix))
+
+        return f"{prefix}{date_str}{seq + 1:04d}"

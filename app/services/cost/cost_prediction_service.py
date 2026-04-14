@@ -708,7 +708,7 @@ class CostPredictionService:
         score = Decimal("100")
 
         # 历史数据充分性
-        if len(evm_history) < 3:
+        if not evm_history:
             score -= Decimal("30")
         elif len(evm_history) < 6:
             score -= Decimal("15")
@@ -782,7 +782,7 @@ class CostPredictionService:
         return (
             self.db.query(CostPrediction)
             .filter(CostPrediction.project_id == project_id)
-            .order_by(desc(CostPrediction.prediction_date))
+            .order_by(desc(CostPrediction.prediction_date), desc(CostPrediction.id))
             .first()
         )
 
@@ -793,7 +793,7 @@ class CostPredictionService:
         query = (
             self.db.query(CostPrediction)
             .filter(CostPrediction.project_id == project_id)
-            .order_by(desc(CostPrediction.prediction_date))
+            .order_by(desc(CostPrediction.prediction_date), desc(CostPrediction.id))
         )
 
         if limit:

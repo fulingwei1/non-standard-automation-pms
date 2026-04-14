@@ -119,26 +119,44 @@ class SupplierPerformanceEvaluator:
 
         if not orders:
             logger.info(f"供应商 {supplier.supplier_code} 在 {evaluation_period} 期间无订单")
-            # 如果无订单，仍然创建记录但评分为0
-            if existing:
-                return existing
+            delivery_metrics = {
+                "on_time_rate": Decimal("0"),
+                "on_time_orders": 0,
+                "late_orders": 0,
+                "avg_delay_days": Decimal("0"),
+            }
+            quality_metrics = {
+                "pass_rate": Decimal("0"),
+                "total_qty": Decimal("0"),
+                "qualified_qty": Decimal("0"),
+                "rejected_qty": Decimal("0"),
+            }
+            price_metrics = {
+                "competitiveness": Decimal("0"),
+                "vs_market": Decimal("0"),
+            }
+            response_metrics = {
+                "score": Decimal("0"),
+                "avg_hours": Decimal("0"),
+            }
+            overall_score = Decimal("0")
+        else:
+            # 1. 计算准时交货率
+            delivery_metrics = self._calculate_delivery_metrics(orders, period_start, period_end)
 
-        # 1. 计算准时交货率
-        delivery_metrics = self._calculate_delivery_metrics(orders, period_start, period_end)
+            # 2. 计算质量合格率
+            quality_metrics = self._calculate_quality_metrics(orders, period_start, period_end)
 
-        # 2. 计算质量合格率
-        quality_metrics = self._calculate_quality_metrics(orders, period_start, period_end)
+            # 3. 计算价格竞争力
+            price_metrics = self._calculate_price_competitiveness(supplier_id, period_start, period_end)
 
-        # 3. 计算价格竞争力
-        price_metrics = self._calculate_price_competitiveness(supplier_id, period_start, period_end)
+            # 4. 计算响应速度
+            response_metrics = self._calculate_response_speed(supplier_id, period_start, period_end)
 
-        # 4. 计算响应速度
-        response_metrics = self._calculate_response_speed(supplier_id, period_start, period_end)
-
-        # 5. 计算综合评分
-        overall_score = self._calculate_overall_score(
-            delivery_metrics, quality_metrics, price_metrics, response_metrics, weight_config
-        )
+            # 5. 计算综合评分
+            overall_score = self._calculate_overall_score(
+                delivery_metrics, quality_metrics, price_metrics, response_metrics, weight_config
+            )
 
         # 确定评级
         rating = self._determine_rating(overall_score)
