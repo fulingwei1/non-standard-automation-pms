@@ -57,11 +57,9 @@ class ContractStatusService:
 
         old_status = contract.status
         contract.status = "signed"
-        self.db.commit()
-        self.db.refresh(contract)
-
         self._log_status_change(contract, old_status, "signed")
         self.db.commit()
+        self.db.refresh(contract)
 
         return contract
 
@@ -72,11 +70,9 @@ class ContractStatusService:
 
         old_status = contract.status
         contract.status = "executing"
-        self.db.commit()
-        self.db.refresh(contract)
-
         self._log_status_change(contract, old_status, "executing")
         self.db.commit()
+        self.db.refresh(contract)
 
         return contract
 
@@ -87,11 +83,9 @@ class ContractStatusService:
 
         old_status = contract.status
         contract.status = "completed"
-        self.db.commit()
-        self.db.refresh(contract)
-
         self._log_status_change(contract, old_status, "completed")
         self.db.commit()
+        self.db.refresh(contract)
 
         return contract
 
@@ -102,10 +96,8 @@ class ContractStatusService:
 
         old_status = contract.status
         contract.status = "voided"
-        self.db.commit()
-        self.db.refresh(contract)
-
         self._log_status_change(contract, old_status, "voided")
         self.db.commit()
+        self.db.refresh(contract)
 
         return contract

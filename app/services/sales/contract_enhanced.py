@@ -32,10 +32,8 @@ from app.schemas.sales.contract_enhanced import (
 )
 from app.services.sales.contract.analyzer import ContractAnalyzer
 from app.services.sales.contract.approval_service import ContractApprovalService
-from app.services.sales.contract.attachment_service import ContractAttachmentService
 from app.services.sales.contract.status_service import ContractStatusService
-from app.services.sales.contract.term_service import ContractTermService
-from app.utils.db_helpers import delete_obj
+from app.utils.db_helpers import delete_obj, save_obj
 from app.utils.status_helpers import assert_status_allows
 
 
@@ -53,6 +51,9 @@ class ContractEnhancedService:
     所有方法使用静态方法，db 作为第一个参数，保持向后兼容。
     内部委托给专业子服务处理具体逻辑。
     """
+
+    def __init__(self, db=None):
+        self.db = db
 
     # ========== 合同CRUD ==========
 
@@ -245,22 +246,36 @@ class ContractEnhancedService:
     @staticmethod
     def add_term(db: Session, contract_id: int, term_data: ContractTermCreate) -> ContractTerm:
         """添加条款"""
-        return ContractTermService(db).add_term(contract_id, term_data)
+        term = ContractTerm(contract_id=contract_id, **term_data.model_dump())
+        save_obj(db, term)
+        return term
 
     @staticmethod
     def get_terms(db: Session, contract_id: int) -> List[ContractTerm]:
         """获取条款列表"""
-        return ContractTermService(db).get_terms(contract_id)
+        return db.query(ContractTerm).filter(ContractTerm.contract_id == contract_id).all()
 
     @staticmethod
     def update_term(db: Session, term_id: int, term_content: str) -> Optional[ContractTerm]:
         """更新条款"""
-        return ContractTermService(db).update_term(term_id, term_content)
+        term = db.query(ContractTerm).filter(ContractTerm.id == term_id).first()
+        if not term:
+            return None
+
+        term.term_content = term_content
+        db.commit()
+        db.refresh(term)
+        return term
 
     @staticmethod
     def delete_term(db: Session, term_id: int) -> bool:
         """删除条款"""
-        return ContractTermService(db).delete_term(term_id)
+        term = db.query(ContractTerm).filter(ContractTerm.id == term_id).first()
+        if not term:
+            return False
+
+        delete_obj(db, term)
+        return True
 
     # ========== 附件管理（委托给 attachment_service）==========
 
@@ -269,17 +284,32 @@ class ContractEnhancedService:
         db: Session, contract_id: int, attachment_data: ContractAttachmentCreate, user_id: int
     ) -> ContractAttachment:
         """上传附件"""
-        return ContractAttachmentService(db).add_attachment(contract_id, attachment_data, user_id)
+        attachment = ContractAttachment(
+            contract_id=contract_id,
+            uploaded_by=user_id,
+            **attachment_data.model_dump(),
+        )
+        save_obj(db, attachment)
+        return attachment
 
     @staticmethod
     def get_attachments(db: Session, contract_id: int) -> List[ContractAttachment]:
         """获取附件列表"""
-        return ContractAttachmentService(db).get_attachments(contract_id)
+        return (
+            db.query(ContractAttachment)
+            .filter(ContractAttachment.contract_id == contract_id)
+            .all()
+        )
 
     @staticmethod
     def delete_attachment(db: Session, attachment_id: int) -> bool:
         """删除附件"""
-        return ContractAttachmentService(db).delete_attachment(attachment_id)
+        attachment = db.query(ContractAttachment).filter(ContractAttachment.id == attachment_id).first()
+        if not attachment:
+            return False
+
+        delete_obj(db, attachment)
+        return True
 
     # ========== 统计分析（委托给 analyzer）==========
 
