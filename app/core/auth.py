@@ -139,7 +139,7 @@ def get_password_hash(password: str) -> str:
 
 
 def create_access_token(
-    data: dict, 
+    data,
     expires_delta: Optional[timedelta] = None,
     jti: Optional[str] = None,
 ) -> str:
@@ -147,14 +147,18 @@ def create_access_token(
     创建访问令牌
     
     Args:
-        data: 要编码的数据
+        data: 要编码的数据。兼容旧调用方式，传入 int/str 时会自动作为 sub
         expires_delta: 过期时间增量
         jti: JWT ID（可选，用于会话管理）
     
     Returns:
         JWT token字符串
     """
-    to_encode = data.copy()
+    if isinstance(data, dict):
+        to_encode = data.copy()
+    else:
+        to_encode = {"sub": str(data)}
+
     now = datetime.now(timezone.utc)
     if expires_delta:
         expire = now + expires_delta
