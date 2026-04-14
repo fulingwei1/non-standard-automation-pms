@@ -18,12 +18,20 @@ class PresaleAIService(_impl.PresaleAIService):
     """兼容包装，确保兼容模块级 patch 会同步到真实实现模块。"""
 
     def __init__(self, *args, **kwargs):
+        original_client_service = _impl.AIClientService
         _impl.AIClientService = AIClientService
-        super().__init__(*args, **kwargs)
+        try:
+            super().__init__(*args, **kwargs)
+        finally:
+            _impl.AIClientService = original_client_service
 
     def generate_solution(self, *args, **kwargs):
+        original_save_obj = _impl.save_obj
         _impl.save_obj = save_obj
-        return super().generate_solution(*args, **kwargs)
+        try:
+            return super().generate_solution(*args, **kwargs)
+        finally:
+            _impl.save_obj = original_save_obj
 
 
 __all__ = [

@@ -4,12 +4,12 @@
 提供AI驱动的成本预测、超支预警和优化建议功能
 """
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
@@ -28,6 +28,8 @@ router = APIRouter()
 
 class PredictionResultSchema(BaseModel):
     """预测结果响应"""
+
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
 
     id: int
     project_id: int
@@ -64,17 +66,13 @@ class PredictionResultSchema(BaseModel):
     model_version: Optional[str]
     data_quality_score: Optional[Decimal]
 
-    class Config:
-        from_attributes = True
-
-
 class PredictionDetailSchema(PredictionResultSchema):
     """预测详情（包含完整分析）"""
 
     # 完整分析数据
-    risk_factors: Optional[dict]
+    risk_factors: Optional[list]
     trend_analysis: Optional[str]
-    cpi_trend_data: Optional[dict]
+    cpi_trend_data: Optional[list]
     ai_analysis_summary: Optional[str]
     ai_insights: Optional[dict]
     sensitivity_analysis: Optional[dict]
@@ -82,9 +80,9 @@ class PredictionDetailSchema(PredictionResultSchema):
     # 元数据
     is_approved: bool
     approved_by: Optional[int]
-    approved_at: Optional[date]
+    approved_at: Optional[datetime]
     created_by: Optional[int]
-    created_at: Optional[date]
+    created_at: Optional[datetime]
     notes: Optional[str]
 
 
@@ -134,9 +132,9 @@ class OptimizationSuggestionDetailSchema(OptimizationSuggestionSchema):
     """优化建议详情"""
 
     current_situation: Optional[str]
-    implementation_steps: Optional[dict]
+    implementation_steps: Optional[list]
     ai_reasoning: Optional[str]
-    similar_cases: Optional[dict]
+    similar_cases: Optional[list]
 
     # 实施跟踪
     assigned_to: Optional[int]
@@ -152,12 +150,12 @@ class OptimizationSuggestionDetailSchema(OptimizationSuggestionSchema):
 
     # 审核
     reviewed_by: Optional[int]
-    reviewed_at: Optional[date]
+    reviewed_at: Optional[datetime]
     review_decision: Optional[str]
     review_comments: Optional[str]
 
     created_by: Optional[int]
-    created_at: Optional[date]
+    created_at: Optional[datetime]
 
 
 class ApprovalRequest(BaseModel):
@@ -231,27 +229,6 @@ def create_cost_prediction(
         )
 
 
-@router.get("/predictions/{prediction_id}", response_model=PredictionDetailSchema)
-def get_prediction_detail(
-    prediction_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    获取预测详情
-
-    返回指定预测的完整详情，包括AI分析结果和风险因素。
-    """
-    prediction = db.query(CostPrediction).filter(CostPrediction.id == prediction_id).first()
-
-    if not prediction:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"预测不存在: id={prediction_id}"
-        )
-
-    return prediction
-
-
 @router.get("/predictions/latest", response_model=PredictionDetailSchema)
 def get_latest_prediction(
     project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
@@ -289,6 +266,27 @@ def get_prediction_history(
     predictions = service.get_prediction_history(project_id, limit=limit)
 
     return predictions
+
+
+@router.get("/predictions/{prediction_id}", response_model=PredictionDetailSchema)
+def get_prediction_detail(
+    prediction_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    获取预测详情
+
+    返回指定预测的完整详情，包括AI分析结果和风险因素。
+    """
+    prediction = db.query(CostPrediction).filter(CostPrediction.id == prediction_id).first()
+
+    if not prediction:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"预测不存在: id={prediction_id}"
+        )
+
+    return prediction
 
 
 @router.post("/predictions/{prediction_id}/approve", response_model=PredictionDetailSchema)
