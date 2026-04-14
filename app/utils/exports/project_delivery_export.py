@@ -123,8 +123,11 @@ class ProjectDeliveryExportService:
         # 调整列宽
         for ws in [ws1, ws2, ws3, ws4]:
             for col in ws.columns:
+                first_cell = next((cell for cell in col if hasattr(cell, "column_letter")), None)
+                if first_cell is None:
+                    continue
                 max_length = max(len(str(cell.value or "")) for cell in col)
-                ws.column_dimensions[col[0].column_letter].width = min(max_length + 4, 40)
+                ws.column_dimensions[first_cell.column_letter].width = min(max_length + 4, 40)
         
         # 输出
         output = io.BytesIO()
