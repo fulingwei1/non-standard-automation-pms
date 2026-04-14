@@ -72,10 +72,11 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
                     "project_priority": project.priority if hasattr(project, "priority") else None,
                 }
 
-        # 获取供应商信息
+        # 获取供应商信息，兼容历史 vendor_id 命名
         vendor_info = {}
-        if order.vendor_id:
-            vendor = self.db.query(Vendor).filter(Vendor.id == order.vendor_id).first()
+        supplier_id = getattr(order, "supplier_id", None) or getattr(order, "vendor_id", None)
+        if supplier_id:
+            vendor = self.db.query(Vendor).filter(Vendor.id == supplier_id).first()
             if vendor:
                 vendor_info = {
                     "vendor_name": vendor.vendor_name,
@@ -196,10 +197,11 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
             self.db.query(PurchaseOrderItem).filter(PurchaseOrderItem.order_id == entity_id).count()
         )
 
-        # 获取供应商名称
+        # 获取供应商名称，兼容历史 vendor_id 命名
         vendor_name = "未指定"
-        if order.vendor_id:
-            vendor = self.db.query(Vendor).filter(Vendor.id == order.vendor_id).first()
+        supplier_id = getattr(order, "supplier_id", None) or getattr(order, "vendor_id", None)
+        if supplier_id:
+            vendor = self.db.query(Vendor).filter(Vendor.id == supplier_id).first()
             if vendor:
                 vendor_name = vendor.vendor_name
 
