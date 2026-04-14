@@ -24,8 +24,10 @@ def _make_service():
     db = MagicMock()
     mock_ai = MagicMock()
     with patch("app.services.presale_ai_service.AIClientService", return_value=mock_ai):
-        svc = PresaleAIService(db_session)
+        svc = PresaleAIService(db)
         svc.ai_client = mock_ai
+        svc.use_semantic_search = False
+        svc.embedding_model = None
     return svc, db, mock_ai
 
 

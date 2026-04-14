@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 class AIService:
     """AI 服务类，提供 Kimi API 调用功能"""
 
-    def __init__(self):
+    def __init__(self, db=None):
+        self.db = db
         self.api_key = settings.KIMI_API_KEY
         self.base_url = settings.KIMI_API_BASE
         self.model = settings.KIMI_MODEL
@@ -29,17 +30,23 @@ class AIService:
         self.enabled = settings.KIMI_ENABLED and self.api_key is not None
 
         if self.enabled:
-            self.client = httpx.AsyncClient(
-                base_url=self.base_url,
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                },
-                timeout=self.timeout,
-            )
+            self.client = self._create_client()
         else:
             self.client = None
             logger.warning("Kimi AI 服务未启用或缺少 API Key")
+
+    def _create_client(self) -> httpx.AsyncClient:
+        client_kwargs = {
+            "base_url": self.base_url,
+            "headers": {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            "timeout": self.timeout,
+            "trust_env": False,
+        }
+
+        return httpx.AsyncClient(**client_kwargs)
 
     async def chat_completion(
         self,

@@ -15,6 +15,7 @@
 import json
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from uuid import uuid4
 
 import pytest
 from sqlalchemy.orm import Session
@@ -38,8 +39,9 @@ from app.services.cost_forecast_service import CostForecastService
 @pytest.fixture
 def test_project(db: Session, test_user: User) -> Project:
     """创建测试项目"""
+    project_code = f"TEST-FORECAST-{uuid4().hex[:8].upper()}"
     project = Project(
-        project_code="TEST-FORECAST-001",
+        project_code=project_code,
         project_name="成本预测测试项目",
         customer_name="测试客户",
         budget_amount=Decimal("1000000.00"),
@@ -166,15 +168,15 @@ def test_cost_alert_model_creation(db: Session, test_project: Project, test_user
 
 def test_cost_alert_rule_model_creation(db: Session, test_user: User):
     """测试成本预警规则模型创建"""
+    rule_code = f"TEST_RULE_{uuid4().hex[:8].upper()}"
     rule = CostAlertRule(
-        rule_code="TEST_RULE_001",
+        rule_code=rule_code,
         rule_name="测试预警规则",
         alert_type="OVERSPEND",
         rule_config={"warning_threshold": 80, "critical_threshold": 100},
         is_enabled=True,
         priority=10,
         created_by=test_user.id,
-        target_type="PROJECT",
     )
 
     db.add(rule)
@@ -182,7 +184,7 @@ def test_cost_alert_rule_model_creation(db: Session, test_user: User):
     db.refresh(rule)
 
     assert rule.id is not None
-    assert rule.rule_code == "TEST_RULE_001"
+    assert rule.rule_code == rule_code
     assert rule.is_enabled is True
 
 
@@ -461,13 +463,12 @@ def test_alert_rules_loading(
     """测试预警规则加载"""
     # 创建自定义规则
     rule = CostAlertRule(
-        rule_code="TEST_CUSTOM_RULE",
+        rule_code=f"TEST_CUSTOM_RULE_{uuid4().hex[:8].upper()}",
         rule_name="测试自定义规则",
         project_id=test_project.id,
         alert_type="OVERSPEND",
         rule_config={"warning_threshold": 70, "critical_threshold": 90},
         is_enabled=True,
-        target_type="PROJECT",
     )
     db.add(rule)
     db.commit()
