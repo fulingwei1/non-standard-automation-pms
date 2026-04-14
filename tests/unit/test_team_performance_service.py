@@ -803,5 +803,32 @@ class TestTeamPerformanceService(unittest.TestCase):
         self.assertEqual(len(result["rankings"]), 0)
 
 
+def _run_legacy_team_performance_test(method_name: str) -> None:
+    """兼容旧 lastfailed 节点名，复用现有 unittest 用例。"""
+    case = TestTeamPerformanceService(methodName=method_name)
+    case.setUp()
+    try:
+        getattr(case, method_name)()
+    finally:
+        tear_down = getattr(case, "tearDown", None)
+        if callable(tear_down):
+            tear_down()
+
+
+class TestGetTeamPerformance:
+    def test_get_team_performance_no_period(self):
+        _run_legacy_team_performance_test("test_get_team_performance_no_period")
+
+
+class TestGetDepartmentPerformance:
+    def test_get_department_performance_no_period(self):
+        _run_legacy_team_performance_test("test_get_department_performance_no_period")
+
+
+class TestGetPerformanceRanking:
+    def test_get_ranking_no_period(self):
+        _run_legacy_team_performance_test("test_get_performance_ranking_no_period")
+
+
 if __name__ == "__main__":
     unittest.main()

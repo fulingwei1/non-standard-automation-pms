@@ -80,7 +80,10 @@ def get_column_value(row: pd.Series, primary_col: str, alt_col: str = None) -> O
     if alt_col is None:
         alt_col = primary_col.replace("*", "")
 
-    value = row.get(primary_col) or row.get(alt_col)
+    value = row.get(primary_col)
+    if pd.isna(value):
+        value = row.get(alt_col)
+
     if pd.isna(value):
         return None
     return str(value).strip() if value else None

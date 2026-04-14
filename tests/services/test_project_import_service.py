@@ -548,6 +548,7 @@ class TestImportProjectsFromDataframe:
     def test_import_row_with_missing_required_fields(self):
         """测试导入缺少必需字段的行"""
         db = _make_db()
+        db.query.return_value.filter.return_value.first.return_value = None
 
         df = pd.DataFrame(
             {
