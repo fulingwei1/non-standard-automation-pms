@@ -41,6 +41,14 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
     def __init__(self, db: Session):
         self.db = db
 
+    @staticmethod
+    def _get_supplier_id(order: PurchaseOrder) -> Optional[int]:
+        """兼容 supplier_id / vendor_id 历史命名差异"""
+        supplier_id = getattr(order, "supplier_id", None)
+        if supplier_id is not None:
+            return supplier_id
+        return getattr(order, "vendor_id", None)
+
     def get_entity(self, entity_id: int) -> Optional[PurchaseOrder]:
         """获取采购订单实体"""
         return self.db.query(PurchaseOrder).filter(PurchaseOrder.id == entity_id).first()
@@ -74,7 +82,7 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
 
         # 获取供应商信息，兼容历史 vendor_id 命名
         vendor_info = {}
-        supplier_id = getattr(order, "supplier_id", None) or getattr(order, "vendor_id", None)
+        supplier_id = self._get_supplier_id(order)
         if supplier_id:
             vendor = self.db.query(Vendor).filter(Vendor.id == supplier_id).first()
             if vendor:
@@ -98,7 +106,8 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
             "promised_date": order.promised_date.isoformat() if order.promised_date else None,
             "payment_terms": order.payment_terms,
             "project_id": order.project_id,
-            "supplier_id": order.supplier_id,
+            "supplier_id": supplier_id,
+            "vendor_id": supplier_id,
             "source_request_id": order.source_request_id,
             "item_count": item_count,
             "created_by": order.created_by,
@@ -199,7 +208,7 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
 
         # 获取供应商名称，兼容历史 vendor_id 命名
         vendor_name = "未指定"
-        supplier_id = getattr(order, "supplier_id", None) or getattr(order, "vendor_id", None)
+        supplier_id = self._get_supplier_id(order)
         if supplier_id:
             vendor = self.db.query(Vendor).filter(Vendor.id == supplier_id).first()
             if vendor:
@@ -246,7 +255,7 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
             return False, f"当前状态 '{order.status}' 不允许提交审批"
 
         # 验证必填字段
-        if not order.supplier_id:
+        if not self._get_supplier_id(order):
             return False, "请选择供应商"
 
         if not order.order_date:

@@ -131,6 +131,21 @@ class ApprovalAdapter(ABC):
         """
         return []
 
+    def get_title(self, entity_id: int) -> str:
+        """
+        获取审批标题（兼容旧接口）
+
+        Args:
+            entity_id: 业务实体ID
+
+        Returns:
+            审批标题
+        """
+        generate_title = self.__class__.generate_title
+        if generate_title is not ApprovalAdapter.generate_title:
+            return generate_title(self, entity_id)
+        return f"{self.entity_type}审批 - {entity_id}"
+
     def generate_title(self, entity_id: int) -> str:
         """
         生成审批标题
@@ -141,7 +156,25 @@ class ApprovalAdapter(ABC):
         Returns:
             审批标题
         """
+        get_title = self.__class__.get_title
+        if get_title is not ApprovalAdapter.get_title:
+            return get_title(self, entity_id)
         return f"{self.entity_type}审批 - {entity_id}"
+
+    def get_summary(self, entity_id: int) -> str:
+        """
+        获取审批摘要（兼容旧接口）
+
+        Args:
+            entity_id: 业务实体ID
+
+        Returns:
+            审批摘要
+        """
+        generate_summary = self.__class__.generate_summary
+        if generate_summary is not ApprovalAdapter.generate_summary:
+            return generate_summary(self, entity_id)
+        return ""
 
     def generate_summary(self, entity_id: int) -> str:
         """
@@ -153,6 +186,9 @@ class ApprovalAdapter(ABC):
         Returns:
             审批摘要
         """
+        get_summary = self.__class__.get_summary
+        if get_summary is not ApprovalAdapter.get_summary:
+            return get_summary(self, entity_id)
         return ""
 
     def get_form_data(self, entity_id: int) -> Dict[str, Any]:

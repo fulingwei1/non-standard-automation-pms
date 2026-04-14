@@ -23,9 +23,22 @@ from app.models.sales.quotes import Quote, QuoteVersion
 from app.models.user import User
 from .base import ApprovalAdapter
 
-ApprovalEngineService = None
-
 logger = logging.getLogger(__name__)
+
+
+class ApprovalEngineService:
+    """延迟导入的轻量代理，兼容测试 patch 且避免循环导入"""
+
+    def __init__(self, db: Session):
+        from ..engine import ApprovalEngineService as _NativeApprovalEngineService
+
+        self._service = _NativeApprovalEngineService(db)
+
+    def submit(self, **kwargs):
+        return self._service.submit(**kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._service, name)
 
 
 class QuoteApprovalAdapter(ApprovalAdapter):
@@ -241,13 +254,6 @@ class QuoteApprovalAdapter(ApprovalAdapter):
             ),
             "status": quote_version.status if quote_version else "DRAFT",
         }
-
-        # 使用统一审批引擎创建实例，保留模块级符号以兼容测试 patch
-        global ApprovalEngineService
-        if ApprovalEngineService is None:
-            from ..engine import ApprovalEngineService as _ApprovalEngineService
-
-            ApprovalEngineService = _ApprovalEngineService
 
         engine = ApprovalEngineService(self.db)
 
