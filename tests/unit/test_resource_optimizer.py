@@ -131,7 +131,7 @@ class TestAIResourceOptimizerSimplified(unittest.TestCase):
         user = MagicMock()
         user.id = 1
 
-        self.db.query.return_value.filter.return_value.all.return_value = []
+        self.db.query.return_value.filter.return_value.scalar.return_value = 0
 
         score = self.optimizer._calculate_availability(user, MagicMock())
 
@@ -142,8 +142,7 @@ class TestAIResourceOptimizerSimplified(unittest.TestCase):
         user = MagicMock()
         user.id = 1
 
-        tasks = [MagicMock(), MagicMock(), MagicMock()]
-        self.db.query.return_value.filter.return_value.all.return_value = tasks
+        self.db.query.return_value.filter.return_value.scalar.return_value = 3
 
         score = self.optimizer._calculate_availability(user, MagicMock())
 
@@ -156,7 +155,7 @@ class TestAIResourceOptimizerSimplified(unittest.TestCase):
         user = MagicMock()
         user.id = 1
 
-        self.db.query.return_value.filter.return_value.all.return_value = []
+        self.db.query.return_value.filter.return_value.scalar.return_value = 0
 
         workload = self.optimizer._get_current_workload(user)
 
@@ -167,8 +166,7 @@ class TestAIResourceOptimizerSimplified(unittest.TestCase):
         user = MagicMock()
         user.id = 1
 
-        tasks = [MagicMock() for _ in range(10)]
-        self.db.query.return_value.filter.return_value.all.return_value = tasks
+        self.db.query.return_value.filter.return_value.scalar.return_value = 10
 
         workload = self.optimizer._get_current_workload(user)
 
