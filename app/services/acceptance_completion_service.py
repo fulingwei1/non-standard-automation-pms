@@ -130,24 +130,31 @@ def handle_acceptance_status_transition(
 
         transition_service = StatusTransitionService(db)
 
+        def _collect_issue_descriptions() -> list[str]:
+            issues = (
+                db.query(AcceptanceIssue)
+                .filter(AcceptanceIssue.order_id == order.id, AcceptanceIssue.status != "RESOLVED")
+                .all()
+            )
+            descriptions = []
+            for issue in issues:
+                description = (
+                    getattr(issue, "issue_description", None)
+                    or getattr(issue, "description", None)
+                    or getattr(issue, "title", None)
+                )
+                if description:
+                    descriptions.append(description)
+            return descriptions
+
         # 根据验收类型和结果更新项目状态
         if order.acceptance_type == "FAT":
             if overall_result == "PASSED":
                 transition_service.handle_fat_passed(order.project_id, order.machine_id)
                 logger.info("FAT验收通过，项目状态已更新")
             elif overall_result == "FAILED":
-                issues = (
-                    db.query(AcceptanceIssue)
-                    .filter(
-                        AcceptanceIssue.order_id == order.id, AcceptanceIssue.status != "RESOLVED"
-                    )
-                    .all()
-                )
-                issue_descriptions = [
-                    issue.issue_description for issue in issues if issue.issue_description
-                ]
                 transition_service.handle_fat_failed(
-                    order.project_id, order.machine_id, issue_descriptions
+                    order.project_id, order.machine_id, _collect_issue_descriptions()
                 )
                 logger.info("FAT验收不通过，项目状态已更新")
 
@@ -156,18 +163,8 @@ def handle_acceptance_status_transition(
                 transition_service.handle_sat_passed(order.project_id, order.machine_id)
                 logger.info("SAT验收通过，项目状态已更新")
             elif overall_result == "FAILED":
-                issues = (
-                    db.query(AcceptanceIssue)
-                    .filter(
-                        AcceptanceIssue.order_id == order.id, AcceptanceIssue.status != "RESOLVED"
-                    )
-                    .all()
-                )
-                issue_descriptions = [
-                    issue.issue_description for issue in issues if issue.issue_description
-                ]
                 transition_service.handle_sat_failed(
-                    order.project_id, order.machine_id, issue_descriptions
+                    order.project_id, order.machine_id, _collect_issue_descriptions()
                 )
                 logger.info("SAT验收不通过，项目状态已更新")
 
@@ -281,6 +278,7 @@ def trigger_warranty_period(db: Session, order: AcceptanceOrder, overall_result:
             machine.status = "COMPLETED"
             db.add(machine)
 
+        db.flush()
         logger.info(f"终验收通过，项目 {project.project_code} 已进入质保期（S9阶段）")
     except Exception as e:
         logger.error(f"终验收后质保期触发失败: {str(e)}", exc_info=True)
