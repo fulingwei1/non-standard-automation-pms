@@ -13,6 +13,18 @@ from typing import Any, Dict, List, Optional
 from fastapi import Query
 
 
+class _SettingsProxy:
+    """Lazy settings proxy so tests can patch app.common.pagination.settings."""
+
+    def __getattr__(self, name: str) -> Any:
+        from app.core.config import settings as app_settings
+
+        return getattr(app_settings, name)
+
+
+settings = _SettingsProxy()
+
+
 @dataclass(frozen=True)
 class PaginationParams:
     """
@@ -61,8 +73,6 @@ def get_pagination_params(
     Returns:
         PaginationParams: 包含 page, page_size, offset, limit。
     """
-    from app.core.config import settings
-
     default = default_page_size if default_page_size is not None else settings.DEFAULT_PAGE_SIZE
     maximum = max_page_size if max_page_size is not None else settings.MAX_PAGE_SIZE
 

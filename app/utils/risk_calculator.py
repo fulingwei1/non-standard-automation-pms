@@ -11,6 +11,14 @@ Probability = Literal["LOW", "MEDIUM", "HIGH"]
 Impact = Literal["LOW", "MEDIUM", "HIGH"]
 
 
+def _normalize_level(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+
+    normalized = value.strip().upper()
+    return normalized or None
+
+
 def calculate_risk_level(probability: Optional[str], impact: Optional[str]) -> Optional[str]:
     """
     基于概率和影响计算风险等级
@@ -47,13 +55,11 @@ def calculate_risk_level(probability: Optional[str], impact: Optional[str]) -> O
         >>> calculate_risk_level("LOW", "LOW")
         'LOW'
     """
-    # 处理空值
+    probability = _normalize_level(probability)
+    impact = _normalize_level(impact)
+
     if not probability or not impact:
         return None
-
-    # 标准化为大写
-    probability = probability.upper()
-    impact = impact.upper()
 
     # 应用风险矩阵规则
     if probability == "HIGH" and impact == "HIGH":
@@ -66,7 +72,7 @@ def calculate_risk_level(probability: Optional[str], impact: Optional[str]) -> O
         return "LOW"
 
 
-def get_risk_score(risk_level: str) -> int:
+def get_risk_score(risk_level: Optional[str]) -> int:
     """
     将风险等级转换为数值分数
 
@@ -90,10 +96,13 @@ def get_risk_score(risk_level: str) -> int:
         "HIGH": 3,
         "CRITICAL": 4,
     }
-    return risk_scores.get(risk_level.upper(), 0)
+    normalized_level = _normalize_level(risk_level)
+    if normalized_level is None:
+        return 0
+    return risk_scores.get(normalized_level, 0)
 
 
-def compare_risk_levels(old_level: str, new_level: str) -> str:
+def compare_risk_levels(old_level: Optional[str], new_level: Optional[str]) -> str:
     """
     比较两个风险等级，判断���升级、降级还是不变
 
@@ -131,7 +140,7 @@ class RiskCalculator:
         return calculate_risk_level(probability, impact)
 
     @staticmethod
-    def compare_risk_levels(level1: Optional[str], level2: Optional[str]) -> int:
+    def compare_risk_levels(level1: Optional[str], level2: Optional[str]) -> str:
         return compare_risk_levels(level1, level2)
 
     @staticmethod
