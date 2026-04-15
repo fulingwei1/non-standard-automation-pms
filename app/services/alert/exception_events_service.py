@@ -358,8 +358,11 @@ class ExceptionEventsService:
     def _send_exception_notification(self, exception_event: ExceptionEvent, action: str):
         """发送异常事件通知"""
         try:
-            from app.services.notification.channels.base import NotificationRequest
-            from app.services.notification.unified_notification_service import get_notification_service
+            from app.services.channel_handlers.base import (
+                NotificationPriority,
+                NotificationRequest,
+            )
+            from app.services.unified_notification_service import get_notification_service
 
             notification_service = get_notification_service(self.db)
 
@@ -394,17 +397,20 @@ class ExceptionEventsService:
             for recipient_id in recipient_ids:
                 if not recipient_id:
                     continue
-                request = NotificationRequest()
-                request.recipient_id = recipient_id
-                request.notification_type = "exception_event"
-                request.category = "alert"
-                request.title = title
-                request.content = content
-                request.priority = (
-                    "HIGH" if exception_event.severity in ("critical", "high") else "NORMAL"
+                request = NotificationRequest(
+                    recipient_id=recipient_id,
+                    notification_type="exception_event",
+                    category="alert",
+                    title=title,
+                    content=content,
+                    priority=(
+                        NotificationPriority.HIGH
+                        if exception_event.severity in ("critical", "high")
+                        else NotificationPriority.NORMAL
+                    ),
+                    source_type="exception_event",
+                    source_id=exception_event.id,
                 )
-                request.source_type = "exception_event"
-                request.source_id = exception_event.id
                 notification_service.send_notification(request)
 
             logger.info(
@@ -426,8 +432,11 @@ class ExceptionEventsService:
     ):
         """发送升级通知"""
         try:
-            from app.services.notification.channels.base import NotificationRequest
-            from app.services.notification.unified_notification_service import get_notification_service
+            from app.services.channel_handlers.base import (
+                NotificationPriority,
+                NotificationRequest,
+            )
+            from app.services.unified_notification_service import get_notification_service
 
             notification_service = get_notification_service(self.db)
 
@@ -442,16 +451,17 @@ class ExceptionEventsService:
 
             # 通知被升级的处理人
             if escalation.escalated_to:
-                request = NotificationRequest()
-                request.recipient_id = escalation.escalated_to
-                request.notification_type = "exception_escalation"
-                request.category = "alert"
-                request.title = title
-                request.content = content
-                request.priority = "HIGH"
-                request.source_type = "exception_event"
-                request.source_id = exception_event.id
-                request.force_send = True  # 升级通知强制发送
+                request = NotificationRequest(
+                    recipient_id=escalation.escalated_to,
+                    notification_type="exception_escalation",
+                    category="alert",
+                    title=title,
+                    content=content,
+                    priority=NotificationPriority.HIGH,
+                    source_type="exception_event",
+                    source_id=exception_event.id,
+                    force_send=True,
+                )
                 notification_service.send_notification(request)
 
             logger.info(
