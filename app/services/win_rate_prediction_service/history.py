@@ -62,21 +62,20 @@ def get_customer_cooperation_history(
     Returns:
         (总合作次数, 成功次数)
     """
-    query = service.db.query(Project)
-
     if customer_id:
-        query = query.filter(Project.customer_id == customer_id)
+        resolved_customer_id = customer_id
     elif customer_name:
-        # 通过客户名称查找
+        # 通过客户名称查找，找到后再查询项目，避免无意义的 Project 查询
         customer = (
             service.db.query(Customer).filter(Customer.customer_name == customer_name).first()
         )
-        if customer:
-            query = query.filter(Project.customer_id == customer.id)
-        else:
+        if not customer:
             return 0, 0
+        resolved_customer_id = customer.id
     else:
         return 0, 0
+
+    query = service.db.query(Project).filter(Project.customer_id == resolved_customer_id)
 
     total = query.count()
     won = query.filter(Project.outcome == LeadOutcomeEnum.WON.value).count()
