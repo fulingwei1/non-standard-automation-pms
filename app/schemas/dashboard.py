@@ -5,9 +5,9 @@
 """
 
 from datetime import date, datetime
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class DashboardStatCard(BaseModel):
@@ -31,8 +31,10 @@ class DashboardWidget(BaseModel):
     widget_id: str = Field(..., description="组件ID")
     widget_type: str = Field(..., description="组件类型: chart/stat/table/list")
     title: str = Field(..., description="标题")
-    data: Dict = Field(..., description="数据")
-    config: Optional[Dict] = Field(None, description="配置")
+    data: Union[Dict[str, Any], List[Any]] = Field(..., description="数据")
+    config: Optional[Dict[str, Any]] = Field(None, description="配置")
+    order: Optional[int] = Field(None, description="显示顺序")
+    span: Optional[int] = Field(None, description="栅格宽度")
 
     class Config:
         from_attributes = True
@@ -262,8 +264,42 @@ class DetailedDashboardResponse(BaseModel):
 
     module_id: str = Field(..., description="模块ID")
     module_name: str = Field(..., description="模块名称")
-    data: Dict = Field(..., description="数据内容")
-    charts: Optional[List[Dict]] = Field(None, description="图表配置")
+    data: Dict[str, Any] = Field(..., description="数据内容")
+    charts: Optional[List[Dict[str, Any]]] = Field(None, description="图表配置")
+
+    # 兼容旧版 dashboard adapters 的字段
+    module: Optional[str] = Field(None, description="兼容旧字段: 模块ID")
+    summary: Optional[Dict[str, Any]] = Field(None, description="兼容旧字段: 汇总数据")
+    details: Optional[Dict[str, Any]] = Field(None, description="兼容旧字段: 详细数据")
+    generated_at: Optional[datetime] = Field(None, description="兼容旧字段: 生成时间")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _apply_compatibility(cls, values: Any) -> Any:
+        if not isinstance(values, dict):
+            return values
+
+        if values.get("module") and not values.get("module_id"):
+            values["module_id"] = values["module"]
+        if values.get("module_id") and not values.get("module"):
+            values["module"] = values["module_id"]
+
+        data = values.get("data")
+        if data is None:
+            compat_data: Dict[str, Any] = {}
+            if values.get("summary") is not None:
+                compat_data["summary"] = values["summary"]
+            if values.get("details") is not None:
+                compat_data["details"] = values["details"]
+            if values.get("generated_at") is not None:
+                compat_data["generated_at"] = values["generated_at"]
+            values["data"] = compat_data
+        elif isinstance(data, dict):
+            values.setdefault("summary", data.get("summary"))
+            values.setdefault("details", data.get("details"))
+            values.setdefault("generated_at", data.get("generated_at"))
+
+        return values
 
     class Config:
         from_attributes = True
