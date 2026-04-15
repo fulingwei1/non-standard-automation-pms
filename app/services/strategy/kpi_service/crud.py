@@ -37,7 +37,11 @@ def create_kpi(db: Session, data: KPICreate) -> KPI:
         good_threshold=data.good_threshold,
         warning_threshold=data.warning_threshold,
         data_source_type=data.data_source_type,
-        data_source_config=json.dumps(data.data_source_config) if data.data_source_config else None,
+        data_source_config=(
+            json.dumps(data.data_source_config)
+            if data.data_source_config is not None
+            else None
+        ),
         frequency=data.frequency,
         weight=data.weight,
         owner_user_id=data.owner_user_id,
@@ -125,7 +129,7 @@ def update_kpi(db: Session, kpi_id: int, data: KPIUpdate) -> Optional[KPI]:
     update_data = data.model_dump(exclude_unset=True)
 
     # 处理 JSON 字段
-    if "data_source_config" in update_data and update_data["data_source_config"]:
+    if "data_source_config" in update_data and update_data["data_source_config"] is not None:
         update_data["data_source_config"] = json.dumps(update_data["data_source_config"])
 
     for key, value in update_data.items():
