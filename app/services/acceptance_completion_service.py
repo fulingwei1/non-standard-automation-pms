@@ -6,6 +6,7 @@
 
 import logging
 from datetime import date, datetime
+from importlib import import_module
 from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
@@ -13,18 +14,47 @@ from sqlalchemy.orm import Session
 from app.models.acceptance import AcceptanceIssue, AcceptanceOrder, AcceptanceOrderItem
 from app.models.project import Machine, Project
 
-# 模块级导入（供 unittest.mock.patch 使用）
-try:
-    from app.services.invoice_auto_service import InvoiceAutoService
-except ImportError:
-    InvoiceAutoService = None
-
-try:
-    from app.services.status_transition_service import StatusTransitionService
-except ImportError:
-    StatusTransitionService = None
-
 logger = logging.getLogger(__name__)
+
+
+def _safe_import(module_path: str, attr_name: str):
+    try:
+        module = import_module(module_path)
+        return getattr(module, attr_name, None)
+    except Exception:
+        return None
+
+
+# 模块级别别名，兼容历史测试对本模块路径的 patch。
+InvoiceAutoService = _safe_import("app.services.invoice_auto_service", "InvoiceAutoService")
+StatusTransitionService = _safe_import(
+    "app.services.status_transition_service", "StatusTransitionService"
+)
+ProgressIntegrationService = _safe_import(
+    "app.services.progress_integration_service", "ProgressIntegrationService"
+)
+BonusCalculator = _safe_import("app.services.bonus", "BonusCalculator")
+
+_DEFAULT_SERVICE_ALIASES = {
+    "InvoiceAutoService": InvoiceAutoService,
+    "StatusTransitionService": StatusTransitionService,
+    "ProgressIntegrationService": ProgressIntegrationService,
+    "BonusCalculator": BonusCalculator,
+}
+
+
+def _resolve_service(local_name: str, module_path: str, attr_name: str):
+    current = globals().get(local_name)
+    default = _DEFAULT_SERVICE_ALIASES.get(local_name)
+
+    if current is not None and current is not default:
+        return current
+
+    resolved = _safe_import(module_path, attr_name)
+    if resolved is not None:
+        return resolved
+
+    return current
 
 
 def validate_required_check_items(db: Session, order_id: int) -> None:
@@ -90,14 +120,20 @@ def trigger_invoice_on_acceptance(db: Session, order_id: int, auto_trigger: bool
     try:
         import os
 
-        from app.services.invoice_auto_service import InvoiceAutoService
+        service_cls = _resolve_service(
+            "InvoiceAutoService",
+            "app.services.invoice_auto_service",
+            "InvoiceAutoService",
+        )
+        if service_cls is None:
+            raise ImportError("InvoiceAutoService is unavailable")
 
         # 默认创建发票申请（不直接创建发票）
         auto_create_invoice = (
             os.getenv("AUTO_CREATE_INVOICE_ON_ACCEPTANCE", "false").lower() == "true"
         )
 
-        service = InvoiceAutoService(db)
+        service = service_cls(db)
         result = service.check_and_create_invoice_request(
             acceptance_order_id=order_id, auto_create=auto_create_invoice
         )
@@ -126,9 +162,15 @@ def handle_acceptance_status_transition(
         overall_result: 验收结果
     """
     try:
-        from app.services.status_transition_service import StatusTransitionService
+        service_cls = _resolve_service(
+            "StatusTransitionService",
+            "app.services.status_transition_service",
+            "StatusTransitionService",
+        )
+        if service_cls is None:
+            raise ImportError("StatusTransitionService is unavailable")
 
-        transition_service = StatusTransitionService(db)
+        transition_service = service_cls(db)
 
         def _collect_issue_descriptions() -> list[str]:
             issues = (
@@ -186,9 +228,15 @@ def handle_progress_integration(
         Dict[str, Any]: 处理结果
     """
     try:
-        from app.services.progress_integration_service import ProgressIntegrationService
+        service_cls = _resolve_service(
+            "ProgressIntegrationService",
+            "app.services.progress_integration_service",
+            "ProgressIntegrationService",
+        )
+        if service_cls is None:
+            raise ImportError("ProgressIntegrationService is unavailable")
 
-        integration_service = ProgressIntegrationService(db)
+        integration_service = service_cls(db)
 
         if overall_result == "FAILED":
             blocked_milestones = integration_service.handle_acceptance_failed(order)
@@ -218,9 +266,15 @@ def check_auto_stage_transition_after_acceptance(
         return {}
 
     try:
-        from app.services.status_transition_service import StatusTransitionService
+        service_cls = _resolve_service(
+            "StatusTransitionService",
+            "app.services.status_transition_service",
+            "StatusTransitionService",
+        )
+        if service_cls is None:
+            raise ImportError("StatusTransitionService is unavailable")
 
-        transition_service = StatusTransitionService(db)
+        transition_service = service_cls(db)
 
         project = db.query(Project).filter(Project.id == order.project_id).first()
         if not project:
@@ -297,12 +351,92 @@ def trigger_bonus_calculation(db: Session, order: AcceptanceOrder, overall_resul
         return
 
     try:
-        from app.services.bonus import BonusCalculator
+        calculator_cls = _resolve_service(
+            "BonusCalculator",
+            "app.services.bonus",
+            "BonusCalculator",
+        )
+        if calculator_cls is None:
+            raise ImportError("BonusCalculator is unavailable")
 
-        calculator = BonusCalculator(db)
+        calculator = calculator_cls(db)
 
         project = db.query(Project).filter(Project.id == order.project_id).first()
         if project:
             calculator.trigger_acceptance_bonus_calculation(project, order)
     except Exception as e:
         logger.error(f"验收后奖金计算失败: {str(e)}", exc_info=True)
+
+
+class AcceptanceCompletionService:
+    """旧接口兼容层，供历史测试/调用继续使用。"""
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def complete_acceptance(
+        self, order_id: int, overall_result: str, conclusion: Optional[str] = None
+    ) -> Dict[str, Any]:
+        order = self.db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
+        if not order:
+            raise ValueError("验收单不存在")
+        if getattr(order, "status", None) == "COMPLETED":
+            raise ValueError("验收单已完成")
+
+        order.status = "COMPLETED"
+        order.overall_result = overall_result
+        order.conclusion = conclusion
+        if hasattr(self.db, "add"):
+            self.db.add(order)
+        if hasattr(self.db, "commit"):
+            self.db.commit()
+
+        return {
+            "order_id": order_id,
+            "status": order.status,
+            "overall_result": overall_result,
+            "conclusion": conclusion,
+        }
+
+    @staticmethod
+    def calculate_pass_rate(passed_items: int, total_items: int) -> float:
+        if not total_items:
+            return 0.0
+        return round((passed_items / total_items) * 100, 2)
+
+    def generate_completion_report(self, order_id: int) -> Dict[str, Any]:
+        order = self.db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
+        if not order:
+            raise ValueError("验收单不存在")
+        return {
+            "order_id": order_id,
+            "status": getattr(order, "status", None),
+            "summary": self.get_completion_summary(order_id),
+        }
+
+    def validate_completion(self, order_id: int) -> Dict[str, Any]:
+        order = self.db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
+        if not order:
+            return {"valid": False, "reason": "验收单不存在"}
+
+        items = list(getattr(order, "items", []) or [])
+        if not items:
+            return {"valid": False, "reason": "验收单没有检查项"}
+
+        return {"valid": True, "item_count": len(items)}
+
+    def get_completion_summary(self, order_id: int) -> Dict[str, Any]:
+        order = self.db.query(AcceptanceOrder).filter(AcceptanceOrder.id == order_id).first()
+        if not order:
+            raise ValueError("验收单不存在")
+
+        passed_items = getattr(order, "passed_items", 0) or 0
+        failed_items = getattr(order, "failed_items", 0) or 0
+        total_items = getattr(order, "total_items", 0) or 0
+        return {
+            "order_id": order_id,
+            "passed_items": passed_items,
+            "failed_items": failed_items,
+            "total_items": total_items,
+            "pass_rate": self.calculate_pass_rate(passed_items, total_items),
+        }
