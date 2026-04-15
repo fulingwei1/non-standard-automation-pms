@@ -15,11 +15,30 @@ class DashboardStatCard(BaseModel):
 
     key: Optional[str] = Field(None, description="唯一键")
     title: str = Field(..., description="标题")
+    label: Optional[str] = Field(None, description="兼容旧版标题字段")
     value: Union[float, int, str] = Field(..., description="数值或字符串")
     unit: Optional[str] = Field(None, description="单位")
     change: Optional[float] = Field(None, description="变化量")
     change_pct: Optional[float] = Field(None, description="变化率(%)")
     trend: Optional[str] = Field(None, description="趋势: up/down/stable")
+    icon: Optional[str] = Field(None, description="兼容旧版图标字段")
+    color: Optional[str] = Field(None, description="兼容旧版颜色字段")
+
+    @model_validator(mode="before")
+    @classmethod
+    def fill_legacy_fields(cls, values):
+        if not isinstance(values, dict):
+            return values
+
+        title = values.get("title")
+        label = values.get("label")
+
+        if not title and label:
+            values["title"] = label
+        elif title and not label:
+            values["label"] = title
+
+        return values
 
     class Config:
         from_attributes = True

@@ -53,8 +53,17 @@ class ApprovalQueryMixin:
                 ApprovalInstance.entity_type == entity_type
             )
 
+        pagination = get_pagination_params(page=page, page_size=page_size)
+        total = query.count()
+        query = apply_pagination(query, pagination.offset, pagination.limit)
         tasks = query.all()
-        return tasks
+
+        return {
+            "total": total,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
+            "items": tasks,
+        }
 
     def get_initiated_instances(
         self: ApprovalEngineCore,
