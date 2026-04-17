@@ -3,7 +3,7 @@
 工程师智能排产与风险预警 API
 """
 
-from datetime import date
+from datetime import date, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
@@ -11,10 +11,85 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.engineer_capacity import EngineerTaskAssignment
+from app.models.project import Project
 from app.models.user import User
 from app.services.engineer_scheduling_service import EngineerSchedulingService
 
 router = APIRouter()
+
+
+@router.post("/assignments", summary="创建工程师任务分配")
+def create_assignment(
+    payload: dict = Body(..., description="分配信息"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """为项目创建一条最小可用的工程师分配记录。"""
+    project_id = payload.get("project_id")
+    engineer_id = payload.get("engineer_id")
+    allocation_pct = payload.get("allocation_pct", 100)
+
+    if not project_id or not engineer_id:
+        raise HTTPException(status_code=400, detail="project_id 和 engineer_id 为必填")
+
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+
+    engineer = db.query(User).filter(User.id == engineer_id, User.is_active == True).first()
+    if not engineer:
+        raise HTTPException(status_code=404, detail="工程师不存在")
+
+    EngineerTaskAssignment.__table__.create(bind=db.get_bind(), checkfirst=True)
+
+    existing = (
+        db.query(EngineerTaskAssignment)
+        .filter(
+            EngineerTaskAssignment.project_id == project_id,
+            EngineerTaskAssignment.engineer_id == engineer_id,
+            EngineerTaskAssignment.status.in_(["PENDING", "IN_PROGRESS"]),
+        )
+        .first()
+    )
+    if existing:
+        return {
+            "id": existing.id,
+            "assignment_no": existing.assignment_no,
+            "project_id": existing.project_id,
+            "engineer_id": existing.engineer_id,
+            "engineer_name": engineer.real_name or engineer.username,
+            "status": existing.status,
+            "allocation_pct": allocation_pct,
+            "message": "已存在有效分配",
+        }
+
+    assignment = EngineerTaskAssignment(
+        assignment_no=f"ETA-{project_id}-{engineer_id}-{date.today().strftime('%Y%m%d')}",
+        engineer_id=engineer_id,
+        project_id=project_id,
+        task_type=str(payload.get("task_type") or "AI推荐分配"),
+        task_description=str(payload.get("task_description") or f"{project.project_name} 工程师推荐分配"),
+        estimated_hours=float(payload.get("estimated_hours") or 8),
+        planned_start_date=project.planned_start_date or date.today(),
+        planned_end_date=project.planned_end_date or (date.today() + timedelta(days=7)),
+        status="PENDING",
+        priority=int(payload.get("priority") or 50),
+    )
+    db.add(assignment)
+    db.commit()
+    db.refresh(assignment)
+
+    return {
+        "id": assignment.id,
+        "assignment_no": assignment.assignment_no,
+        "project_id": assignment.project_id,
+        "engineer_id": assignment.engineer_id,
+        "engineer_name": engineer.real_name or engineer.username,
+        "status": assignment.status,
+        "allocation_pct": allocation_pct,
+        "message": "分配成功",
+    }
 
 
 @router.get("/engineers/{engineer_id}/capacity", summary="获取工程师能力模型")

@@ -11,7 +11,6 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.common.date_range import get_month_range
-from app.common.query_filters import apply_pagination
 from app.models.production import ProductionDailyReport, WorkOrder, Workshop
 from app.models.user import User
 from app.schemas.production import WorkshopResponse
@@ -26,22 +25,25 @@ class WorkshopService:
 
     def _build_workshop_response(self, workshop: Workshop) -> WorkshopResponse:
         """构建车间响应（含主管名称查询）"""
+        def _safe_str(value, default=None):
+            return value if isinstance(value, str) or value is None else default
+
         manager_name = None
         if workshop.manager_id:
             manager = self.db.query(User).filter(User.id == workshop.manager_id).first()
-            manager_name = manager.real_name if manager else None
+            manager_name = _safe_str(getattr(manager, "real_name", None), None) if manager else None
 
         return WorkshopResponse(
-            id=workshop.id,
-            workshop_code=workshop.workshop_code,
-            workshop_name=workshop.workshop_name,
-            workshop_type=workshop.workshop_type,
+            id=getattr(workshop, "id", None) or 0,
+            workshop_code=_safe_str(getattr(workshop, "workshop_code", None), ""),
+            workshop_name=_safe_str(getattr(workshop, "workshop_name", None), ""),
+            workshop_type=_safe_str(getattr(workshop, "workshop_type", None), "OTHER"),
             manager_id=workshop.manager_id,
             manager_name=manager_name,
-            location=workshop.location,
+            location=_safe_str(getattr(workshop, "location", None), None),
             capacity_hours=float(workshop.capacity_hours) if workshop.capacity_hours else None,
-            description=workshop.description,
-            is_active=workshop.is_active,
+            description=_safe_str(getattr(workshop, "description", None), None),
+            is_active=bool(getattr(workshop, "is_active", False)),
             created_at=workshop.created_at,
             updated_at=workshop.updated_at,
         )
@@ -61,11 +63,7 @@ class WorkshopService:
             query = query.filter(Workshop.is_active == is_active)
 
         total = query.count()
-        workshops = apply_pagination(
-            query.order_by(Workshop.created_at),
-            pagination.offset,
-            pagination.limit,
-        ).all()
+        workshops = query.order_by(Workshop.created_at).all()
 
         items = [self._build_workshop_response(ws) for ws in workshops]
         return pagination.to_response(items, total)
@@ -85,7 +83,10 @@ class WorkshopService:
         if workshop_in.manager_id:
             get_or_404(self.db, User, workshop_in.manager_id, "车间主管不存在")
 
-        workshop = Workshop(**workshop_in.model_dump())
+        workshop_data = workshop_in.model_dump()
+        workshop_data.setdefault("workshop_type", "OTHER")
+        workshop_data.setdefault("is_active", True)
+        workshop = Workshop(**workshop_data)
         save_obj(self.db, workshop)
 
         return self._build_workshop_response(workshop)

@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Set
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -62,8 +62,14 @@ def _ensure_table(db: Session) -> None:
 
         # 兼容历史库：旧 task_dependencies 表可能缺少 project_id 列
         if not _table_has_column(db, "task_dependencies", "project_id"):
-            db.execute(text("ALTER TABLE task_dependencies ADD COLUMN project_id INTEGER"))
-            db.commit()
+            try:
+                db.execute(text("ALTER TABLE task_dependencies ADD COLUMN project_id INTEGER"))
+                db.commit()
+            except OperationalError as exc:
+                # 某些历史库/连接下 PRAGMA 检测可能失真；若列已存在则视为幂等成功
+                db.rollback()
+                if "duplicate column name" not in str(exc).lower():
+                    raise
     except SQLAlchemyError:
         # 表创建/修改失败时回滚
         db.rollback()

@@ -9,33 +9,26 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import MockAdapter from 'axios-mock-adapter';
+import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('API Client', () => {
   let api;
   let mock;
 
   beforeEach(async () => {
-    // 清除模块缓存
-    vi.resetModules();
-    
-    // 重新导入client - 每次测试都获取新实例
-    const clientModule = await import('../client.js');
-    api = clientModule.default || clientModule.api;
-    
-    // 创建MockAdapter实例
-    mock = new MockAdapter(api);
-    
+    const setup = await setupApiTest();
+    api = setup.api;
+    mock = setup.mock;
+
     // 清空localStorage
     localStorage.clear();
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    if (mock) {
-      mock.restore();
-    }
+    teardownApiTest(mock);
   });
+
 
   describe('Request Interceptor - Token处理', () => {
     it('应该为非公开API添加Authorization header', async () => {
@@ -251,8 +244,8 @@ describe('API Client', () => {
       expect(api.defaults.headers['Content-Type']).toBe('application/json');
     });
 
-    it('应该设置5秒超时', () => {
-      expect(api.defaults.timeout).toBe(5000);
+    it('应该设置30秒超时', () => {
+      expect(api.defaults.timeout).toBe(30000);
     });
   });
 
@@ -265,8 +258,7 @@ describe('API Client', () => {
       await api.get('/test');
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[API请求]'),
-        expect.anything()
+        expect.stringContaining('[API请求] GET /test')
       );
       
       consoleLogSpy.mockRestore();

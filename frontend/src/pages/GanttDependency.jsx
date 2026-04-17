@@ -124,10 +124,21 @@ export default function GanttDependency() {
 
       if (!selectedProjectId && list.length > 0) {
         setSelectedProjectId(String(list[0].id));
+        return;
+      }
+
+      if (list.length === 0) {
+        setSelectedProjectId("");
+        setTasks([]);
+        setDependencies([]);
+        setCriticalPathTaskIds([]);
+        setCriticalPathDuration(0);
+        setLoading(false);
       }
     } catch (err) {
       console.error("加载项目列表失败:", err);
       setError("加载项目列表失败，请稍后重试。");
+      setLoading(false);
     }
   }, [selectedProjectId]);
 

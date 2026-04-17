@@ -13,6 +13,7 @@ from . import (
     assessments,
     contacts,
     contracts,
+    conversion_analysis,
     cost_management,
     cost_overrun,
     cross_analysis,
@@ -188,4 +189,4 @@ from app.api.v1.endpoints import sales_organization
 router.include_router(
     sales_organization.router, prefix="/organization", tags=["sales-organization"]
 )
-\nrouter.include_router(conversion_analysis.router, tags=["sales-conversion-analysis"])\n
+router.include_router(conversion_analysis.router, tags=["sales-conversion-analysis"])

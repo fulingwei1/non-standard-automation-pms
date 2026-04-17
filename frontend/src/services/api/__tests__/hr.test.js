@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import MockAdapter from 'axios-mock-adapter';
+import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('HR API', () => {
   let api, mock;
@@ -19,11 +19,10 @@ describe('HR API', () => {
   let timesheetApi, qualificationApi, staffMatchingApi, hourlyRateApi;
 
   beforeEach(async () => {
-    vi.resetModules();
-    
-    const clientModule = await import('../client.js');
-    api = clientModule.default || clientModule.api;
-    
+    const setup = await setupApiTest();
+    api = setup.api;
+    mock = setup.mock;
+
     const hrModule = await import('../hr.js');
     employeeApi = hrModule.employeeApi;
     departmentApi = hrModule.departmentApi;
@@ -34,20 +33,16 @@ describe('HR API', () => {
     qualificationApi = hrModule.qualificationApi;
     staffMatchingApi = hrModule.staffMatchingApi;
     hourlyRateApi = hrModule.hourlyRateApi;
-    
-    mock = new MockAdapter(api);
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    if (mock) {
-      mock.restore();
-    }
+    teardownApiTest(mock);
   });
 
   describe('employeeApi - 员工API', () => {
     it('list() - 应该获取员工列表', async () => {
-      mock.onGet('/api/v1/employees').reply(200, {
+      mock.onGet('/api/v1/org/employees').reply(200, {
         success: true,
         data: [{ id: 1, name: 'John Doe' }],
       });
@@ -59,7 +54,7 @@ describe('HR API', () => {
 
     it('create() - 应该创建员工', async () => {
       const employee = { name: 'Jane Doe', email: 'jane@example.com' };
-      mock.onPost('/api/v1/employees').reply(201, {
+      mock.onPost('/api/v1/org/employees').reply(201, {
         success: true,
         data: { id: 1, ...employee },
       });
@@ -71,7 +66,7 @@ describe('HR API', () => {
 
     it('update() - 应该更新员工信息', async () => {
       const updates = { position: 'Senior Engineer' };
-      mock.onPut('/api/v1/employees/1').reply(200, {
+      mock.onPut('/api/v1/org/employees/1').reply(200, {
         success: true,
         data: { id: 1, ...updates },
       });
@@ -185,7 +180,7 @@ describe('HR API', () => {
     });
 
     it('dashboard.overview() - 应该获取仪表板概览', async () => {
-      mock.onGet('/api/v1/hr/dashboard/overview').reply(200, {
+      mock.onGet('/api/v1/hr/dashboard').reply(200, {
         success: true,
         data: { total_employees: 100 },
       });
@@ -199,7 +194,7 @@ describe('HR API', () => {
   describe('performanceApi - 绩效API', () => {
     it('createMonthlySummary() - 应该创建月度总结', async () => {
       const summary = { period: '2024-01', content: 'Monthly work summary' };
-      mock.onPost('/api/v1/performance/monthly-summary').reply(201, {
+      mock.onPost('/api/v1/performance/new/employee/monthly-summary').reply(201, {
         success: true,
         data: { id: 1, ...summary },
       });
@@ -210,7 +205,7 @@ describe('HR API', () => {
     });
 
     it('getMyPerformance() - 应该获取我的绩效', async () => {
-      mock.onGet('/api/v1/performance/my-performance').reply(200, {
+      mock.onGet('/api/v1/performance/new/employee/my-performance').reply(200, {
         success: true,
         data: { score: 95 },
       });
@@ -221,7 +216,7 @@ describe('HR API', () => {
     });
 
     it('getEvaluationTasks() - 应该获取待评价任务', async () => {
-      mock.onGet('/api/v1/performance/evaluation-tasks').reply(200, {
+      mock.onGet('/api/v1/performance/new/manager/evaluation-tasks').reply(200, {
         success: true,
         data: [{ id: 1, employee_id: 1 }],
       });
@@ -233,7 +228,7 @@ describe('HR API', () => {
 
     it('submitEvaluation() - 应该提交评价', async () => {
       const evaluation = { score: 90, comment: 'Good performance' };
-      mock.onPost('/api/v1/performance/evaluation/1').reply(200, {
+      mock.onPost('/api/v1/performance/new/manager/evaluation/1').reply(200, {
         success: true,
         data: { ...evaluation },
       });
@@ -244,7 +239,7 @@ describe('HR API', () => {
     });
 
     it('getWeightConfig() - 应该获取权重配置', async () => {
-      mock.onGet('/api/v1/performance/weight-config').reply(200, {
+      mock.onGet('/api/v1/performance/new/hr/weight-config').reply(200, {
         success: true,
         data: { weights: {} },
       });
@@ -255,7 +250,7 @@ describe('HR API', () => {
     });
 
     it('calculateIntegratedPerformance() - 应该计算融合绩效', async () => {
-      mock.onPost('/api/v1/performance/calculate-integrated').reply(200, {
+      mock.onPost('/api/v1/performance/integration/calculate-integrated').reply(200, {
         success: true,
         data: { calculated: true },
       });
@@ -270,7 +265,7 @@ describe('HR API', () => {
 
   describe('bonusApi - 奖金API', () => {
     it('getMyBonus() - 应该获取我的奖金', async () => {
-      mock.onGet('/api/v1/bonus/my').reply(200, {
+      mock.onGet('/api/v1/bonus/my/my').reply(200, {
         success: true,
         data: { total_bonus: 10000 },
       });
@@ -281,7 +276,7 @@ describe('HR API', () => {
     });
 
     it('getCalculations() - 应该获取奖金计算记录', async () => {
-      mock.onGet('/api/v1/bonus/calculations').reply(200, {
+      mock.onGet('/api/v1/bonus/sales-calc/calculations').reply(200, {
         success: true,
         data: [{ id: 1, amount: 5000 }],
       });
@@ -293,7 +288,7 @@ describe('HR API', () => {
 
     it('calculateSalesBonus() - 应该计算销售奖金', async () => {
       const data = { employee_id: 1, period: '2024-Q1' };
-      mock.onPost('/api/v1/bonus/calculate/sales').reply(200, {
+      mock.onPost('/api/v1/bonus/sales-calc/calculate/sales').reply(200, {
         success: true,
         data: { bonus_amount: 15000 },
       });
@@ -305,7 +300,7 @@ describe('HR API', () => {
 
     it('calculateProjectBonus() - 应该计算项目奖金', async () => {
       const data = { project_id: 1 };
-      mock.onPost('/api/v1/bonus/calculate/project').reply(200, {
+      mock.onPost('/api/v1/bonus/calculation/calculate/project').reply(200, {
         success: true,
         data: { bonus_amount: 20000 },
       });
@@ -345,7 +340,7 @@ describe('HR API', () => {
         { project_id: 1, hours: 8, date: '2024-01-01' },
         { project_id: 1, hours: 8, date: '2024-01-02' },
       ];
-      mock.onPost('/api/v1/timesheets/batch').reply(201, {
+      mock.onPost('/api/v1/timesheet/records/batch').reply(201, {
         success: true,
         data: timesheets,
       });
@@ -357,7 +352,7 @@ describe('HR API', () => {
 
     it('submitWeek() - 应该提交周工时', async () => {
       const weekData = { week: '2024-W01', timesheets: [] };
-      mock.onPost('/api/v1/timesheets/week/submit').reply(200, {
+      mock.onPost('/api/v1/timesheet/weekly/week/submit').reply(200, {
         success: true,
         data: { submitted: true },
       });
@@ -380,7 +375,7 @@ describe('HR API', () => {
     });
 
     it('getStatistics() - 应该获取工时统计', async () => {
-      mock.onGet('/api/v1/timesheets/statistics').reply(200, {
+      mock.onGet('/api/v1/timesheet/statistics').reply(200, {
         success: true,
         data: { total_hours: 160 },
       });
@@ -391,7 +386,7 @@ describe('HR API', () => {
     });
 
     it('getHrReport() - 应该获取HR报表', async () => {
-      mock.onGet('/api/v1/timesheets/reports/hr').reply(200, {
+      mock.onGet('/api/v1/timesheet/reports/detail').reply(200, {
         success: true,
         data: { report: [] },
       });
@@ -405,7 +400,7 @@ describe('HR API', () => {
     });
 
     it('getHrReport() - 应该导出Excel格式', async () => {
-      mock.onGet('/api/v1/timesheets/reports/hr').reply(200, new Blob());
+      mock.onGet('/api/v1/timesheet/reports/detail').reply(200, new Blob());
 
       const response = await timesheetApi.getHrReport({
         month: '2024-01',
@@ -478,7 +473,7 @@ describe('HR API', () => {
 
   describe('staffMatchingApi - 人员匹配API', () => {
     it('getStaffingNeeds() - 应该获取人员需求', async () => {
-      mock.onGet('/api/v1/staff-matching/staffing-needs').reply(200, {
+      mock.onGet('/api/v1/staff-matching/staffing-needs/').reply(200, {
         success: true,
         data: [{ id: 1, position: 'Engineer' }],
       });
@@ -511,7 +506,7 @@ describe('HR API', () => {
     });
 
     it('getDashboard() - 应该获取仪表板', async () => {
-      mock.onGet('/api/v1/staff-matching/dashboard').reply(200, {
+      mock.onGet('/api/v1/staff-matching/').reply(200, {
         success: true,
         data: { open_needs: 5 },
       });
@@ -560,7 +555,7 @@ describe('HR API', () => {
 
   describe('错误处理', () => {
     it('应该处理404错误', async () => {
-      mock.onGet('/api/v1/employees/999').reply(404, {
+      mock.onGet('/api/v1/org/employees/999').reply(404, {
         success: false,
         message: 'Employee not found',
       });
@@ -569,7 +564,7 @@ describe('HR API', () => {
     });
 
     it('应该处理验证错误', async () => {
-      mock.onPost('/api/v1/employees').reply(422, {
+      mock.onPost('/api/v1/org/employees').reply(422, {
         success: false,
         message: 'Validation failed',
         errors: { name: ['Name is required'] },
@@ -594,7 +589,7 @@ describe('HR API', () => {
     });
 
     it('应该处理超时错误', async () => {
-      mock.onGet('/api/v1/performance/my-performance').timeout();
+      mock.onGet('/api/v1/performance/new/employee/my-performance').timeout();
 
       await expect(performanceApi.getMyPerformance()).rejects.toThrow();
     });

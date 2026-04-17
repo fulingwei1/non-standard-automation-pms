@@ -394,6 +394,9 @@ class ScheduleGenerationService:
         """保存计划方案"""
         from datetime import datetime
 
+        ProjectSchedulePlan.__table__.create(bind=self.db.get_bind(), checkfirst=True)
+        ScheduleTask.__table__.create(bind=self.db.get_bind(), checkfirst=True)
+
         plan = ProjectSchedulePlan(
             plan_no=f"PSP{datetime.now().strftime('%Y%m%d%H%M%S')}",
             project_id=schedule_data["project_id"],

@@ -14,6 +14,12 @@ export const scheduleGenerationApi = {
   // 保存计划
   saveSchedule: (projectId, scheduleData) =>
     api.post(`/schedule-generation/projects/${projectId}/save-schedule`, scheduleData),
+
+  // 获取计划列表
+  listSchedulePlans: (projectId) =>
+    api.get('/schedule-generation/schedule-plans', {
+      params: projectId ? { project_id: projectId } : {},
+    }),
   
   // 获取计划详情
   getSchedulePlan: (planId) =>

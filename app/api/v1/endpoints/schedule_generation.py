@@ -100,6 +100,42 @@ def save_schedule(
     }
 
 
+@router.get("/schedule-plans", summary="获取计划列表")
+def list_schedule_plans(
+    project_id: int | None = Query(None, description="项目 ID"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取计划列表（支持按项目过滤）。"""
+    from app.models.project_schedule import ProjectSchedulePlan
+
+    ProjectSchedulePlan.__table__.create(bind=db.get_bind(), checkfirst=True)
+
+    query = db.query(ProjectSchedulePlan)
+    if project_id:
+        query = query.filter(ProjectSchedulePlan.project_id == project_id)
+
+    plans = query.order_by(ProjectSchedulePlan.id.desc()).all()
+    return {
+        "items": [
+            {
+                "id": plan.id,
+                "plan_no": plan.plan_no,
+                "project_id": plan.project_id,
+                "project_name": plan.project_name,
+                "schedule_mode": plan.schedule_mode,
+                "mode_name": plan.mode_name,
+                "total_days": plan.total_days,
+                "status": plan.status,
+                "start_date": plan.start_date.isoformat() if plan.start_date else None,
+                "end_date": plan.end_date.isoformat() if plan.end_date else None,
+                "created_at": plan.created_at.isoformat() if plan.created_at else None,
+            }
+            for plan in plans
+        ]
+    }
+
+
 @router.get("/schedule-plans/{plan_id}", summary="获取计划详情")
 def get_schedule_plan(
     plan_id: int = Path(..., description="计划 ID"),
@@ -121,7 +157,20 @@ def get_schedule_plan(
     )
 
     return {
-        "plan": plan,
+        "plan": {
+            "id": plan.id,
+            "plan_no": plan.plan_no,
+            "project_id": plan.project_id,
+            "project_name": plan.project_name,
+            "schedule_mode": plan.schedule_mode,
+            "mode_name": plan.mode_name,
+            "total_days": plan.total_days,
+            "working_days": plan.working_days,
+            "status": plan.status,
+            "start_date": plan.start_date.isoformat() if plan.start_date else None,
+            "end_date": plan.end_date.isoformat() if plan.end_date else None,
+            "created_at": plan.created_at.isoformat() if plan.created_at else None,
+        },
         "tasks": [
             {
                 "id": t.id,
@@ -169,6 +218,8 @@ def update_task(
         task.assigned_engineer_id = task_data["assigned_engineer_id"]
     if "assigned_engineer_name" in task_data:
         task.assigned_engineer_name = task_data["assigned_engineer_name"]
+    if "status" in task_data:
+        task.status = task_data["status"]
 
     db.commit()
 

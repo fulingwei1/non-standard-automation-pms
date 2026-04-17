@@ -10,8 +10,10 @@
 """
 
 from datetime import date
+from types import SimpleNamespace
 from typing import Any, Dict, List
 
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.models.engineer_capacity import EngineerCapacity
@@ -235,7 +237,7 @@ class RequirementExtractionService:
 
         factor = industry_factor.get(project.industry, 1.0)
 
-        return base_hours * factor
+        return float(base_hours) * factor
 
     # ==================== 工程师推荐 ====================
 
@@ -255,18 +257,28 @@ class RequirementExtractionService:
             推荐的工程师列表（按匹配度排序）
         """
         # 1. 获取所有工程师及其能力
-        engineers = (
-            self.db.query(User, EngineerCapacity)
-            .outerjoin(EngineerCapacity, User.id == EngineerCapacity.engineer_id)
-            .filter(User.is_active == True)
-            .all()
-        )
+        try:
+            engineers = (
+                self.db.query(User, EngineerCapacity)
+                .outerjoin(EngineerCapacity, User.id == EngineerCapacity.engineer_id)
+                .filter(User.is_active == True)
+                .all()
+            )
+        except OperationalError as exc:
+            message = str(exc).lower()
+            if "no such table" in message and "engineer_capacity" in message:
+                engineers = [
+                    (user, None)
+                    for user in self.db.query(User).filter(User.is_active == True).all()
+                ]
+            else:
+                raise
 
         recommendations = []
 
         for user, capacity in engineers:
             if not capacity:
-                continue
+                capacity = self._build_default_recommendation_capacity()
 
             # 2. 计算匹配度
             match_result = self._calculate_match_score(requirement, user, capacity)
@@ -294,6 +306,19 @@ class RequirementExtractionService:
         recommendations.sort(key=lambda x: x["overall_match_score"], reverse=True)
 
         return recommendations[:limit]
+
+    def _build_default_recommendation_capacity(self):
+        """缺少能力表或能力记录时的默认能力画像。"""
+        return SimpleNamespace(
+            skill_tags="[]",
+            multi_project_capacity=1,
+            standardization_score=5,
+            ai_skill_level="NONE",
+            workload_status="NORMAL",
+            multi_project_efficiency=1.0,
+            context_switch_cost=0.1,
+            ai_efficiency_boost=1.0,
+        )
 
     def _calculate_match_score(
         self,

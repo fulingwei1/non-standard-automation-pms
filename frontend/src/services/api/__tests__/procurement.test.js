@@ -7,31 +7,27 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import MockAdapter from 'axios-mock-adapter';
+import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('Procurement API', () => {
   let api, mock;
   let purchaseApi, outsourcingApi, procurementAnalysisApi;
 
   beforeEach(async () => {
-    vi.resetModules();
-    
-    const clientModule = await import('../client.js');
-    api = clientModule.default || clientModule.api;
+    const setup = await setupApiTest();
+    api = setup.api;
+    mock = setup.mock;
     
     const procurementModule = await import('../procurement.js');
     purchaseApi = procurementModule.purchaseApi;
     outsourcingApi = procurementModule.outsourcingApi;
     procurementAnalysisApi = procurementModule.procurementAnalysisApi;
     
-    mock = new MockAdapter(api);
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    if (mock) {
-      mock.restore();
-    }
+    teardownApiTest(mock);
   });
 
   describe('purchaseApi - 采购订单API', () => {
@@ -64,7 +60,7 @@ describe('Procurement API', () => {
         project_id: 1,
         items: [{ material: 'Steel', quantity: 100 }],
       };
-      mock.onPost('/api/v1/purchase-orders').reply(201, {
+      mock.onPost('/api/v1/purchase-orders/').reply(201, {
         success: true,
         data: { id: 1, ...order },
       });
@@ -311,7 +307,7 @@ describe('Procurement API', () => {
 
     it('deliveries.create() - 应该创建交付记录', async () => {
       const delivery = { order_id: 1, items: [] };
-      mock.onPost('/api/v1/outsourcing-orders/1/deliveries').reply(201, {
+      mock.onPost('/api/v1/outsourcing-deliveries').reply(201, {
         success: true,
         data: { id: 1, ...delivery },
       });
@@ -323,7 +319,7 @@ describe('Procurement API', () => {
 
     it('inspections.create() - 应该创建质检记录', async () => {
       const inspection = { order_id: 1, result: 'PASSED' };
-      mock.onPost('/api/v1/outsourcing-orders/1/inspections').reply(201, {
+      mock.onPost('/api/v1/outsourcing-inspections').reply(201, {
         success: true,
         data: { id: 1, ...inspection },
       });

@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import MockAdapter from 'axios-mock-adapter';
+import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('Approval API', () => {
   let api, mock;
@@ -18,11 +18,10 @@ describe('Approval API', () => {
   let APPROVAL_STATUS, getStatusConfig, calculateProgress;
 
   beforeEach(async () => {
-    vi.resetModules();
-    
-    const clientModule = await import('../client.js');
-    api = clientModule.default || clientModule.api;
-    
+    const setup = await setupApiTest();
+    api = setup.api;
+    mock = setup.mock;
+
     const approvalModule = await import('../approval.js');
     submitApproval = approvalModule.submitApproval;
     approveApproval = approvalModule.approveApproval;
@@ -39,15 +38,11 @@ describe('Approval API', () => {
     APPROVAL_STATUS = approvalModule.APPROVAL_STATUS;
     getStatusConfig = approvalModule.getStatusConfig;
     calculateProgress = approvalModule.calculateProgress;
-    
-    mock = new MockAdapter(api);
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    if (mock) {
-      mock.restore();
-    }
+    teardownApiTest(mock);
   });
 
   describe('submitApproval() - 提交审批', () => {
@@ -61,7 +56,7 @@ describe('Approval API', () => {
         cc_user_ids: [1, 2],
       };
 
-      mock.onPost('/api/v1/approvals/submit').reply(201, {
+      mock.onPost('/api/v1/approvals/instances/submit').reply(201, {
         success: true,
         data: {
           instance_id: 1,
@@ -78,7 +73,7 @@ describe('Approval API', () => {
     });
 
     it('应该处理必填字段缺失错误', async () => {
-      mock.onPost('/api/v1/approvals/submit').reply(422, {
+      mock.onPost('/api/v1/approvals/instances/submit').reply(422, {
         success: false,
         message: 'Validation failed',
         errors: {
@@ -149,7 +144,7 @@ describe('Approval API', () => {
       const delegateToId = 2;
       const comment = 'Delegating to manager';
 
-      mock.onPost('/api/v1/approvals/1/delegate').reply(200, {
+      mock.onPost('/api/v1/approvals/delegates').reply(200, {
         success: true,
         data: {
           instance_id: 1,
@@ -162,14 +157,14 @@ describe('Approval API', () => {
 
       expect(response.status).toBe(200);
       expect(JSON.parse(mock.history.post[0].data)).toEqual({
-        decision: 'DELEGATE',
+        instance_id: 1,
         delegate_to_id: delegateToId,
         comment: comment,
       });
     });
 
     it('应该处理无效的被委托人错误', async () => {
-      mock.onPost('/api/v1/approvals/1/delegate').reply(400, {
+      mock.onPost('/api/v1/approvals/delegates').reply(400, {
         success: false,
         message: 'Invalid delegate user',
       });
@@ -182,7 +177,7 @@ describe('Approval API', () => {
     it('应该成功撤回审批', async () => {
       const comment = 'Needs modification';
 
-      mock.onPost('/api/v1/approvals/1/withdraw').reply(200, {
+      mock.onPost('/api/v1/approvals/instances/1/withdraw').reply(200, {
         success: true,
         data: {
           instance_id: 1,
@@ -200,7 +195,7 @@ describe('Approval API', () => {
     });
 
     it('应该处理已完成审批无法撤回错误', async () => {
-      mock.onPost('/api/v1/approvals/1/withdraw').reply(400, {
+      mock.onPost('/api/v1/approvals/instances/1/withdraw').reply(400, {
         success: false,
         message: 'Cannot withdraw completed approval',
       });
@@ -226,7 +221,7 @@ describe('Approval API', () => {
         },
       ];
 
-      mock.onGet('/api/v1/approvals/1/history').reply(200, {
+      mock.onGet('/api/v1/approvals/tasks/instances/1/comments').reply(200, {
         success: true,
         data: mockHistory,
       });
@@ -249,7 +244,7 @@ describe('Approval API', () => {
         total_levels: 3,
       };
 
-      mock.onGet('/api/v1/approvals/1/detail').reply(200, {
+      mock.onGet('/api/v1/approvals/instances/1').reply(200, {
         success: true,
         data: mockDetail,
       });
@@ -261,7 +256,7 @@ describe('Approval API', () => {
     });
 
     it('应该处理审批不存在错误', async () => {
-      mock.onGet('/api/v1/approvals/999/detail').reply(404, {
+      mock.onGet('/api/v1/approvals/instances/999').reply(404, {
         success: false,
         message: 'Approval not found',
       });
@@ -287,7 +282,7 @@ describe('Approval API', () => {
         },
       ];
 
-      mock.onGet('/api/v1/approvals/my-tasks').reply(200, {
+      mock.onGet('/api/v1/approvals/pending/mine').reply(200, {
         success: true,
         data: mockTasks,
       });
@@ -301,7 +296,7 @@ describe('Approval API', () => {
 
   describe('专用审批方法', () => {
     it('submitEcnApproval() - 应该提交ECN审批', async () => {
-      mock.onPost('/api/v1/approvals/submit').reply(201, {
+      mock.onPost('/api/v1/approvals/instances/submit').reply(201, {
         success: true,
         data: { instance_id: 1 },
       });
@@ -322,7 +317,7 @@ describe('Approval API', () => {
     });
 
     it('submitQuoteApproval() - 应该提交报价审批', async () => {
-      mock.onPost('/api/v1/approvals/submit').reply(201, {
+      mock.onPost('/api/v1/approvals/instances/submit').reply(201, {
         success: true,
         data: { instance_id: 1 },
       });
@@ -336,7 +331,7 @@ describe('Approval API', () => {
     });
 
     it('submitContractApproval() - 应该提交合同审批', async () => {
-      mock.onPost('/api/v1/approvals/submit').reply(201, {
+      mock.onPost('/api/v1/approvals/instances/submit').reply(201, {
         success: true,
         data: { instance_id: 1 },
       });
@@ -350,7 +345,7 @@ describe('Approval API', () => {
     });
 
     it('submitInvoiceApproval() - 应该提交发票审批', async () => {
-      mock.onPost('/api/v1/approvals/submit').reply(201, {
+      mock.onPost('/api/v1/approvals/instances/submit').reply(201, {
         success: true,
         data: { instance_id: 1 },
       });
@@ -462,7 +457,7 @@ describe('Approval API', () => {
 
   describe('错误处理', () => {
     it('应该处理网络错误', async () => {
-      mock.onPost('/api/v1/approvals/submit').networkError();
+      mock.onPost('/api/v1/approvals/instances/submit').networkError();
 
       await expect(
         submitApproval({
@@ -473,7 +468,7 @@ describe('Approval API', () => {
     });
 
     it('应该处理服务器错误', async () => {
-      mock.onPost('/api/v1/approvals/submit').reply(500, {
+      mock.onPost('/api/v1/approvals/instances/submit').reply(500, {
         success: false,
         message: 'Internal Server Error',
       });
@@ -487,7 +482,7 @@ describe('Approval API', () => {
     });
 
     it('应该处理超时错误', async () => {
-      mock.onGet('/api/v1/approvals/my-tasks').timeout();
+      mock.onGet('/api/v1/approvals/pending/mine').timeout();
 
       await expect(getMyApprovalTasks()).rejects.toThrow();
     });

@@ -5,8 +5,10 @@
 """
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from uuid import uuid4
 
 import pytest
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.models.production import (
@@ -20,6 +22,29 @@ from app.models.production import (
 from app.models.user import User
 from app.schemas.production_progress import ProductionProgressLogCreate
 from app.services.production_progress_service import ProductionProgressService
+
+
+@pytest.fixture(autouse=True)
+def _clean_production_progress_tables(db: Session):
+    """局部清理生产进度相关表，避免提交后数据污染后续测试。"""
+    table_names = [
+        "progress_alert",
+        "production_progress_log",
+        "workstation_status",
+        "work_order",
+        "workstation",
+        "workshop",
+    ]
+    db.execute(text("PRAGMA foreign_keys=OFF"))
+    for table_name in table_names:
+        try:
+            db.execute(text(f"DELETE FROM {table_name}"))
+        except Exception:
+            pass
+    db.commit()
+    db.execute(text("PRAGMA foreign_keys=ON"))
+    db.commit()
+    yield
 
 
 class TestProgressDeviationEngine:
@@ -463,9 +488,10 @@ class TestBusinessMethods:
 @pytest.fixture
 def test_user(db: Session):
     """创建测试用户"""
+    suffix = uuid4().hex[:8]
     user = User(
-        username="test_service_user",
-        email="service@test.com",
+        username=f"test_service_user_{suffix}",
+        email=f"service_{suffix}@test.com",
         password_hash="hashed",
         is_active=True,
     )
@@ -478,9 +504,10 @@ def test_user(db: Session):
 @pytest.fixture
 def test_workshop(db: Session):
     """创建测试车间"""
+    suffix = uuid4().hex[:8]
     workshop = Workshop(
-        workshop_code="WS-SVC-01",
-        workshop_name="服务测试车间",
+        workshop_code=f"WS-SVC-{suffix}",
+        workshop_name=f"服务测试车间-{suffix}",
         workshop_type="MACHINING",
         is_active=True,
     )
@@ -493,9 +520,10 @@ def test_workshop(db: Session):
 @pytest.fixture
 def test_workstation(db: Session, test_workshop):
     """创建测试工位"""
+    suffix = uuid4().hex[:8]
     workstation = Workstation(
-        workstation_code="WK-SVC-01",
-        workstation_name="服务测试工位",
+        workstation_code=f"WK-SVC-{suffix}",
+        workstation_name=f"服务测试工位-{suffix}",
         workshop_id=test_workshop.id,
         status="IDLE",
         is_active=True,
@@ -509,9 +537,10 @@ def test_workstation(db: Session, test_workshop):
 @pytest.fixture
 def test_work_order(db: Session, test_workstation):
     """创建测试工单"""
+    suffix = uuid4().hex[:8]
     work_order = WorkOrder(
-        work_order_no="WO-SVC-001",
-        task_name="服务测试工单",
+        work_order_no=f"WO-SVC-{suffix}",
+        task_name=f"服务测试工单-{suffix}",
         task_type="MACHINING",
         workstation_id=test_workstation.id,
         plan_qty=20,
@@ -533,9 +562,10 @@ def test_work_order(db: Session, test_workstation):
 @pytest.fixture
 def test_work_order_on_schedule(db: Session, test_workstation):
     """创建按计划进度的工单（当前应该50%）"""
+    suffix = uuid4().hex[:8]
     work_order = WorkOrder(
-        work_order_no="WO-ONTIME-001",
-        task_name="按时工单",
+        work_order_no=f"WO-ONTIME-{suffix}",
+        task_name=f"按时工单-{suffix}",
         task_type="TEST",
         workstation_id=test_workstation.id,
         plan_start_date=date.today() - timedelta(days=5),
@@ -552,9 +582,10 @@ def test_work_order_on_schedule(db: Session, test_workstation):
 @pytest.fixture
 def test_work_order_delayed(db: Session, test_workstation):
     """创建延期工单"""
+    suffix = uuid4().hex[:8]
     work_order = WorkOrder(
-        work_order_no="WO-DELAY-001",
-        task_name="延期工单",
+        work_order_no=f"WO-DELAY-{suffix}",
+        task_name=f"延期工单-{suffix}",
         task_type="TEST",
         workstation_id=test_workstation.id,
         plan_start_date=date.today() - timedelta(days=10),

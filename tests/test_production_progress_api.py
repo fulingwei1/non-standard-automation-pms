@@ -5,9 +5,11 @@
 """
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.main import app
@@ -22,6 +24,36 @@ from app.models.production import (
 from app.models.user import User
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def _bind_fixture_client(client):
+    """确保当前文件中的全局 client 始终指向 pytest fixture 提供的测试客户端。"""
+    globals()["client"] = client
+    yield
+
+
+@pytest.fixture(autouse=True)
+def _clean_production_progress_tables(db: Session):
+    """局部清理生产进度相关表，避免提交后数据污染后续测试。"""
+    table_names = [
+        "progress_alert",
+        "production_progress_log",
+        "workstation_status",
+        "work_order",
+        "workstation",
+        "workshop",
+    ]
+    db.execute(text("PRAGMA foreign_keys=OFF"))
+    for table_name in table_names:
+        try:
+            db.execute(text(f"DELETE FROM {table_name}"))
+        except Exception:
+            pass
+    db.commit()
+    db.execute(text("PRAGMA foreign_keys=ON"))
+    db.commit()
+    yield
 
 
 class TestRealtimeProgressAPI:
@@ -304,17 +336,17 @@ class TestPermissions:
 
 
 @pytest.fixture
-def auth_headers(test_user, db: Session):
-    """创建认证头"""
-    # TODO: 根据实际认证系统生成token
-    return {"Authorization": "Bearer test_token"}
+def auth_headers(admin_auth_headers):
+    """使用真实管理员认证头。"""
+    return admin_auth_headers
 
 
 @pytest.fixture
 def test_user(db: Session):
     """创建测试用户"""
+    suffix = uuid4().hex[:8]
     user = User(
-        username="test_api_user", email="api@test.com", password_hash="hashed", is_active=True
+        username=f"test_api_user_{suffix}", email=f"api_{suffix}@test.com", password_hash="hashed", is_active=True
     )
     db.add(user)
     db.commit()
@@ -325,9 +357,10 @@ def test_user(db: Session):
 @pytest.fixture
 def test_workshop(db: Session):
     """创建测试车间"""
+    suffix = uuid4().hex[:8]
     workshop = Workshop(
-        workshop_code="WS-API-01",
-        workshop_name="API测试车间",
+        workshop_code=f"WS-API-{suffix}",
+        workshop_name=f"API测试车间-{suffix}",
         workshop_type="MACHINING",
         is_active=True,
     )
@@ -340,9 +373,10 @@ def test_workshop(db: Session):
 @pytest.fixture
 def test_workstation(db: Session, test_workshop):
     """创建测试工位"""
+    suffix = uuid4().hex[:8]
     workstation = Workstation(
-        workstation_code="WK-API-01",
-        workstation_name="API测试工位",
+        workstation_code=f"WK-API-{suffix}",
+        workstation_name=f"API测试工位-{suffix}",
         workshop_id=test_workshop.id,
         status="IDLE",
         is_active=True,
@@ -356,9 +390,10 @@ def test_workstation(db: Session, test_workshop):
 @pytest.fixture
 def test_work_order(db: Session, test_workstation):
     """创建测试工单"""
+    suffix = uuid4().hex[:8]
     work_order = WorkOrder(
-        work_order_no="WO-API-001",
-        task_name="API测试工单",
+        work_order_no=f"WO-API-{suffix}",
+        task_name=f"API测试工单-{suffix}",
         task_type="MACHINING",
         workstation_id=test_workstation.id,
         plan_qty=20,
@@ -445,9 +480,10 @@ def test_alert(db: Session, test_work_order):
 @pytest.fixture
 def test_delayed_work_order(db: Session, test_workstation):
     """创建延期工单"""
+    suffix = uuid4().hex[:8]
     work_order = WorkOrder(
-        work_order_no="WO-DELAYED-001",
-        task_name="延期工单",
+        work_order_no=f"WO-DELAYED-{suffix}",
+        task_name=f"延期工单-{suffix}",
         task_type="TEST",
         workstation_id=test_workstation.id,
         plan_start_date=date.today() - timedelta(days=10),

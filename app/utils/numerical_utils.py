@@ -16,7 +16,7 @@
 """
 
 from dataclasses import dataclass, field
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 # ---------------------------------------------------------------------------
@@ -156,7 +156,7 @@ def calc_vac(
 
 
 def calc_cumulative_kit_rate(
-    batches: Union[Sequence[Tuple[float, int, Decimal], float | int | Decimal]],
+    batches: Sequence[Tuple[Union[float, int, Decimal], Union[float, int, Decimal]]],
 ) -> Decimal:
     """
     计算分批到货的累计套件率。
@@ -266,7 +266,7 @@ def calc_price_with_vat(
         raise ValueError("税率不能为负数")
 
     tax_included = p * (Decimal("1") + r)
-    return tax_included.quantize(PLACES_2)
+    return tax_included.quantize(PLACES_2, rounding=ROUND_HALF_UP)
 
 
 def calc_price_breakdown(

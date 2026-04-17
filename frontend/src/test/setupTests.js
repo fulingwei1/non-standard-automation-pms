@@ -29,20 +29,34 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // Mock localStorage
+const localStorageStore = {};
 const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+  getItem: vi.fn((key) => (key in localStorageStore ? localStorageStore[key] : null)),
+  setItem: vi.fn((key, value) => {
+    localStorageStore[key] = String(value);
+  }),
+  removeItem: vi.fn((key) => {
+    delete localStorageStore[key];
+  }),
+  clear: vi.fn(() => {
+    Object.keys(localStorageStore).forEach((key) => delete localStorageStore[key]);
+  }),
 };
 global.localStorage = localStorageMock;
 
 // Mock sessionStorage
+const sessionStorageStore = {};
 const sessionStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+  getItem: vi.fn((key) => (key in sessionStorageStore ? sessionStorageStore[key] : null)),
+  setItem: vi.fn((key, value) => {
+    sessionStorageStore[key] = String(value);
+  }),
+  removeItem: vi.fn((key) => {
+    delete sessionStorageStore[key];
+  }),
+  clear: vi.fn(() => {
+    Object.keys(sessionStorageStore).forEach((key) => delete sessionStorageStore[key]);
+  }),
 };
 global.sessionStorage = sessionStorageMock;
 
