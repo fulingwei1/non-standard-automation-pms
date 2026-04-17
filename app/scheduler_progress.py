@@ -145,6 +145,10 @@ def stop_scheduler():
     """
     logger.info("开始停止定时任务调度器")
 
+    if not scheduler.running:
+        logger.info("定时任务调度器未运行，跳过停止")
+        return
+
     try:
         scheduler.shutdown(wait=False)
         logger.info("定时任务调度器已停止")

@@ -1,3 +1,5 @@
+import { createElement } from 'react';
+
 // 数据权限范围映射
 export const DATA_SCOPE_MAP = {
     'OWN': { label: '仅本人', color: 'bg-blue-100 text-blue-700' },
@@ -11,9 +13,9 @@ export const DATA_SCOPE_MAP = {
 
 export function renderDataScopeBadge(scope) {
     const config = DATA_SCOPE_MAP[scope] || DATA_SCOPE_MAP['OWN'];
-    return (
-        <span className={`px-2 py-0.5 rounded text-xs font-medium ${config.color}`}>
-            {config.label}
-        </span>
+    return createElement(
+        'span',
+        { className: `px-2 py-0.5 rounded text-xs font-medium ${config.color}` },
+        config.label,
     );
 }

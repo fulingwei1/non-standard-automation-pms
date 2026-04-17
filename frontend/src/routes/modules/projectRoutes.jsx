@@ -44,6 +44,8 @@ import TemplateConfigList from "../../pages/TemplateConfigList";
 import MarginPrediction from "../../pages/MarginPrediction";
 import ScheduleOptimization from "../../pages/ScheduleOptimization";
 import ScheduleGeneration from "../../pages/ScheduleGeneration";
+import SchedulePlansList from "../../pages/SchedulePlansList";
+import SchedulePlanDetail from "../../pages/SchedulePlanDetail";
 import ScheduleGenerationEntry from "../../pages/ScheduleGenerationEntry";
 import EngineerRecommendationEntry from "../../pages/EngineerRecommendationEntry";
 import PMODashboard from "../../pages/PMODashboard";
@@ -169,6 +171,8 @@ export function ProjectRoutes() {
       <Route path="/field-commissioning" element={<FieldCommissioning />} />
       <Route path="/projects/:projectId/material-progress" element={<MaterialProgressView />} />
       <Route path="/projects/:id/schedule-generation" element={<ScheduleGeneration />} />
+      <Route path="/schedule-plans" element={<SchedulePlansList />} />
+      <Route path="/schedule-plans/:planId" element={<SchedulePlanDetail />} />
       <Route path="/progress-tracking/resource-overview" element={<ResourceOverview />} />
       <Route path="/project-list-with-cost" element={<ProjectListWithCost />} />
       <Route path="/projects/:projectId/schedule-optimization" element={<ScheduleOptimization />} />

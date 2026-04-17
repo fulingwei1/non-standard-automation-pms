@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import MockAdapter from 'axios-mock-adapter';
+import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('Engineering API', () => {
   let api, mock;
@@ -17,11 +17,10 @@ describe('Engineering API', () => {
   let rdProjectApi, rdReportApi, engineersApi;
 
   beforeEach(async () => {
-    vi.resetModules();
-    
-    const clientModule = await import('../client.js');
-    api = clientModule.default || clientModule.api;
-    
+    const setup = await setupApiTest();
+    api = setup.api;
+    mock = setup.mock;
+
     const engineeringModule = await import('../engineering.js');
     projectReviewApi = engineeringModule.projectReviewApi;
     technicalReviewApi = engineeringModule.technicalReviewApi;
@@ -29,15 +28,11 @@ describe('Engineering API', () => {
     rdProjectApi = engineeringModule.rdProjectApi;
     rdReportApi = engineeringModule.rdReportApi;
     engineersApi = engineeringModule.engineersApi;
-    
-    mock = new MockAdapter(api);
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    if (mock) {
-      mock.restore();
-    }
+    teardownApiTest(mock);
   });
 
   describe('projectReviewApi - 项目复盘API', () => {
@@ -61,7 +56,7 @@ describe('Engineering API', () => {
 
       const response = await projectReviewApi.create(review);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
 
     it('publish() - 应该发布复盘报告', async () => {
@@ -95,7 +90,7 @@ describe('Engineering API', () => {
 
       const response = await projectReviewApi.createLesson(1, lesson);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
 
     it('getBestPractices() - 应该获取最佳实践', async () => {
@@ -122,7 +117,7 @@ describe('Engineering API', () => {
       expect(response.status).toBe(200);
     });
 
-    it('recommendBestPractices() - 应该推荐最佳实践', async () => {
+    it('getPopularBestPractices() - 应该获取热门最佳实践', async () => {
       const criteria = { project_type: 'AUTOMATION', tags: ['quality'] };
       mock.onGet('/api/v1/projects/best-practices/popular').reply(200, {
         success: true,
@@ -156,7 +151,7 @@ describe('Engineering API', () => {
 
       const response = await technicalReviewApi.create(review);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
 
     it('getParticipants() - 应该获取参与人员', async () => {
@@ -179,7 +174,7 @@ describe('Engineering API', () => {
 
       const response = await technicalReviewApi.addParticipant(1, participant);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
 
     it('getIssues() - 应该获取评审问题', async () => {
@@ -202,7 +197,7 @@ describe('Engineering API', () => {
 
       const response = await technicalReviewApi.createIssue(1, issue);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
   });
 
@@ -216,7 +211,7 @@ describe('Engineering API', () => {
 
       const response = await technicalAssessmentApi.applyForLead(1, assessment);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
 
     it('evaluate() - 应该执行技术评估', async () => {
@@ -253,7 +248,7 @@ describe('Engineering API', () => {
 
       const response = await technicalAssessmentApi.createFailureCase(failureCase);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
 
     it('getOpenItems() - 应该获取未决事项', async () => {
@@ -300,7 +295,7 @@ describe('Engineering API', () => {
 
       const response = await rdProjectApi.create(project);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
 
     it('approve() - 应该审批研发项目', async () => {
@@ -441,7 +436,7 @@ describe('Engineering API', () => {
         message: 'Review not found',
       });
 
-      await expect(projectReviewApi.get(999)).resolves.toBeDefined();
+      await expect(projectReviewApi.get(999)).rejects.toBeDefined();
     });
 
     it('应该处理验证错误', async () => {
@@ -451,7 +446,7 @@ describe('Engineering API', () => {
         errors: { name: ['Name is required'] },
       });
 
-      await expect(rdProjectApi.create({})).resolves.toBeDefined();
+      await expect(rdProjectApi.create({})).rejects.toBeDefined();
     });
 
     it('应该处理权限错误', async () => {
@@ -462,13 +457,13 @@ describe('Engineering API', () => {
 
       await expect(
         technicalReviewApi.createIssue(1, { title: 'Test' })
-      ).resolves.toBeDefined();
+      ).rejects.toBeDefined();
     });
 
     it('应该处理网络错误', async () => {
       mock.onGet('/api/v1/rd-projects').reply(500, { message: "Network Error" });
 
-      await expect(rdProjectApi.list()).resolves.toBeDefined();
+      await expect(rdProjectApi.list()).rejects.toBeDefined();
     });
   });
 });

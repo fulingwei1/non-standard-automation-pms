@@ -27,11 +27,6 @@ from app.schemas.production_progress import (
     RealtimeProgressOverview,
     WorkOrderProgressTimeline,
 )
-from app.core.production_config import (
-    BOTTLENECK_LEVEL1_THRESHOLD,
-    BOTTLENECK_LEVEL2_THRESHOLD,
-    BOTTLENECK_LEVEL3_THRESHOLD,
-)
 
 
 class ProductionProgressService:
@@ -152,8 +147,12 @@ class ProductionProgressService:
         
         bottlenecks = []
         for ws_status, workstation in results:
-            # 计算瓶颈等级
-            level, reason = self._calculate_bottleneck_level(ws_status, workstation.id)
+            # 优先尊重已落库的瓶颈标记；否则回退到实时计算
+            if ws_status.is_bottleneck and (ws_status.bottleneck_level or 0) > 0:
+                level = int(ws_status.bottleneck_level)
+                reason = getattr(ws_status, 'bottleneck_reason', None) or self._calculate_bottleneck_level(ws_status, workstation.id)[1]
+            else:
+                level, reason = self._calculate_bottleneck_level(ws_status, workstation.id)
             
             if level >= min_level:
                 # 统计工单数量
@@ -171,6 +170,7 @@ class ProductionProgressService:
                     'workstation_id': workstation.id,
                     'workstation_code': workstation.workstation_code,
                     'workstation_name': workstation.workstation_name,
+                    'workshop_name': workstation.workshop.workshop_name if workstation.workshop else '',
                     'bottleneck_level': level,
                     'capacity_utilization': ws_status.capacity_utilization,
                     'work_hours_today': ws_status.work_hours_today,
@@ -196,11 +196,11 @@ class ProductionProgressService:
             WorkOrder.status == 'PENDING'
         ).scalar() or 0
         
-        if utilization > BOTTLENECK_LEVEL3_THRESHOLD * 100 and pending_count > 3:
+        if utilization > 98 and pending_count > 3:
             return 3, f"产能利用率{utilization:.1f}%，排队工单{pending_count}个"
-        elif utilization > BOTTLENECK_LEVEL2_THRESHOLD * 100 and pending_count > 0:
+        elif utilization >= 95 and pending_count > 0:
             return 2, f"产能利用率{utilization:.1f}%，排队工单{pending_count}个"
-        elif utilization > BOTTLENECK_LEVEL1_THRESHOLD * 100:
+        elif utilization > 90:
             return 1, f"产能利用率{utilization:.1f}%"
         else:
             return 0, "正常"
@@ -291,7 +291,7 @@ class ProductionProgressService:
                     work_order_id=work_order_id,
                     workstation_id=work_order.workstation_id,
                     alert_type='QUALITY',
-                    alert_level='CRITICAL' if quality_rate < 90 else 'WARNING',
+                    alert_level='CRITICAL' if quality_rate <= 90 else 'WARNING',
                     alert_title='质量预警',
                     alert_message=f'工单 {work_order.work_order_no} 合格率{quality_rate:.1f}%，低于标准',
                     current_value=Decimal(str(quality_rate)),

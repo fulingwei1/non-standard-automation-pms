@@ -537,6 +537,9 @@ class PresaleAIRequirementService:
         self.db.commit()
         self.db.refresh(analysis)
 
+        if analysis.confidence_score is not None:
+            analysis.confidence_score = float(analysis.confidence_score)
+
         return analysis
 
     def get_clarification_questions(
@@ -611,7 +614,7 @@ class PresaleAIRequirementService:
                 "recommendations": ["请先进行需求分析"],
             }
 
-        score = analysis.confidence_score or 0.0
+        score = float(analysis.confidence_score or 0.0)
 
         # 评估等级
         if score >= 0.85:

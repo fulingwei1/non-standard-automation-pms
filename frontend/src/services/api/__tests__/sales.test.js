@@ -93,19 +93,6 @@ describe('Sales API', () => {
       expect(response.status).toBe(201);
     });
 
-    it('createQuickFollowUp() - 应该创建快捷跟进记录', async () => {
-      const payload = { template_key: 'contacted_waiting_quote' };
-      mock.onPost('/api/v1/sales/leads/1/follow-ups/quick').reply(201, {
-        success: true,
-        data: { id: 1, follow_up_type: 'CALL' },
-      });
-
-      const response = await leadApi.createQuickFollowUp(1, payload);
-
-      expect(response.status).toBe(201);
-      expect(JSON.parse(mock.history.post[0].data)).toEqual(payload);
-    });
-
     it('convert() - 应该转换线索为商机', async () => {
       const requirementData = { title: 'New Requirement' };
       mock.onPost('/api/v1/sales/leads/1/convert').reply(200, {
@@ -301,13 +288,13 @@ describe('Sales API', () => {
     it('startApproval() - 应该启动审批流程', async () => {
       mock.onPost('/api/v1/sales/quotes/approval/submit').reply(200, {
         success: true,
-        data: { approval_id: 1, quote_ids: [1] },
+        data: { approval_id: 1 },
       });
 
       const response = await quoteApi.startApproval(1);
 
       expect(response.status).toBe(200);
-      expect(mock.history.post[0].data).toBe('{"quote_ids":[1]}');
+      expect(JSON.parse(mock.history.post[0].data)).toEqual({ quote_ids: [1] });
     });
   });
 

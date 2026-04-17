@@ -164,6 +164,7 @@ class ProjectListResponse(BaseSchema):
     stage: Optional[str] = "S1"  # 允许 None，默认 S1
     health: Optional[str] = "H1"  # 允许 None，默认 H1
     progress_pct: Optional[Decimal] = ZERO_DECIMAL  # 允许 None，默认 0
+    budget_amount: Optional[Decimal] = ZERO_DECIMAL
     pm_name: Optional[str] = None
     # 筛选所需的ID字段
     pm_id: Optional[int] = None

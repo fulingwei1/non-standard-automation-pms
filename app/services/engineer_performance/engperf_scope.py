@@ -15,24 +15,50 @@ from sqlalchemy.orm import Query, Session
 from app.models.performance import PerformanceResult
 from app.models.permission import ScopeType
 from app.models.user import User
+from app.services.data_scope.data_scope_service_enhanced import DataScopeServiceEnhanced
 from app.services.data_scope.user_scope import UserScopeService
-from app.services.permission_management.permission_service import PermissionService
+from app.services.permission_service import PermissionService
 
 logger = logging.getLogger(__name__)
 
 RESOURCE_TYPE = "engineer_performance"
+ENGPERF_RESOURCE_TYPE = RESOURCE_TYPE
 
 
 @dataclass
 class EngPerfScopeContext:
     """工程师绩效数据范围上下文"""
 
-    scope_type: str  # ScopeType value: ALL / DEPARTMENT / TEAM / OWN ...
-    user_id: int
+    # 向后兼容旧测试：允许 EngPerfScopeContext(mock_db) 这种历史实例化方式
+    db: Optional[Session] = None
+    scope_type: str = ScopeType.OWN.value  # ScopeType value: ALL / DEPARTMENT / TEAM / OWN ...
+    user_id: int = 0
     # 可访问的部门ID列表；None 表示不限（ALL），空列表表示仅自己（OWN）
     accessible_dept_ids: Optional[List[int]] = None
     # TEAM scope 下可访问的用户ID集合（自己 + 直属下级）
     accessible_user_ids: Set[int] = field(default_factory=set)
+
+    @property
+    def is_all(self) -> bool:
+        return self.scope_type == ScopeType.ALL.value
+
+    @property
+    def is_own(self) -> bool:
+        return self.scope_type == ScopeType.OWN.value
+
+
+def _get_dept_ids_for_users(db: Session, user_ids: Set[int] | List[int]) -> List[int]:
+    """根据用户集合读取部门 ID 列表。"""
+    ids = list(user_ids or [])
+    if not ids:
+        return []
+    rows = db.query(User.department_id).filter(User.id.in_(ids)).all()
+    dept_ids = []
+    for row in rows:
+        dept_id = row[0] if isinstance(row, tuple) else getattr(row, "department_id", None)
+        if dept_id is not None:
+            dept_ids.append(dept_id)
+    return sorted(set(dept_ids))
 
 
 def resolve_engperf_scope(db: Session, user: User) -> EngPerfScopeContext:
@@ -42,69 +68,80 @@ def resolve_engperf_scope(db: Session, user: User) -> EngPerfScopeContext:
     优先从 RoleDataScope 读取 resource_type="engineer_performance"，
     未配置则降级读取 Role.data_scope 字段。
     """
-    if user.is_superuser:
-        return EngPerfScopeContext(
-            scope_type=ScopeType.ALL.value,
-            user_id=user.id,
-            accessible_dept_ids=None,
-        )
-
-    # 1. 从 RoleDataScope 读取
-    scopes = PermissionService.get_user_data_scopes(db, user.id)
-    scope_type = scopes.get(RESOURCE_TYPE)
-
-    # 2. 降级到 Role.data_scope
-    if not scope_type:
-        for user_role in getattr(user, "roles", []):
-            role = getattr(user_role, "role", None)
-            if role and getattr(role, "is_active", False):
-                scope_type = getattr(role, "data_scope", None)
-                if scope_type:
-                    break
-
-    scope_type = scope_type or ScopeType.OWN.value
-
-    # 3. 解析可访问范围
-    accessible_dept_ids: Optional[List[int]] = None
-    accessible_user_ids: Set[int] = set()
-
-    if scope_type == ScopeType.ALL.value:
-        accessible_dept_ids = None  # 不限
-
-    elif scope_type in (
-        ScopeType.DEPARTMENT.value,
-        ScopeType.BUSINESS_UNIT.value,
-    ):
-        from app.services.data_scope.data_scope_service_enhanced import DataScopeServiceEnhanced
-
-        accessible_dept_ids = DataScopeServiceEnhanced.get_accessible_org_units(
-            db, user.id, scope_type
-        )
-        if not accessible_dept_ids:
-            logger.warning(
-                "用户 %d scope=%s 但无关联组织单元，降级为 OWN", user.id, scope_type
+    try:
+        if user.is_superuser:
+            return EngPerfScopeContext(
+                scope_type=ScopeType.ALL.value,
+                user_id=user.id,
+                accessible_dept_ids=None,
             )
+
+        # 1. 从 RoleDataScope 读取
+        scopes = PermissionService.get_user_data_scopes(db, user.id)
+        scope_type = scopes.get(RESOURCE_TYPE)
+
+        # 2. 降级到 Role.data_scope
+        if not scope_type:
+            for user_role in getattr(user, "roles", []):
+                role = getattr(user_role, "role", None)
+                if role and getattr(role, "is_active", False):
+                    scope_type = getattr(role, "data_scope", None)
+                    if scope_type:
+                        break
+
+        scope_type = scope_type or ScopeType.OWN.value
+
+        # 3. 解析可访问范围
+        accessible_dept_ids: Optional[List[int]] = None
+        accessible_user_ids: Set[int] = set()
+
+        if scope_type == ScopeType.ALL.value:
+            accessible_dept_ids = None  # 不限
+
+        elif scope_type in (
+            ScopeType.DEPARTMENT.value,
+            ScopeType.BUSINESS_UNIT.value,
+        ):
+            accessible_dept_ids = DataScopeServiceEnhanced.get_accessible_org_units(
+                db, user.id, scope_type
+            )
+            if not accessible_dept_ids:
+                logger.warning(
+                    "用户 %d scope=%s 但无关联组织单元，降级为 OWN", user.id, scope_type
+                )
+                scope_type = ScopeType.OWN.value
+                accessible_dept_ids = []
+
+        elif scope_type == ScopeType.TEAM.value:
+            subordinate_ids = set(UserScopeService.get_subordinate_ids(db, user.id) or set())
+            if not subordinate_ids:
+                scope_type = ScopeType.OWN.value
+                accessible_dept_ids = []
+            else:
+                accessible_user_ids = subordinate_ids | {user.id}
+                accessible_dept_ids = _get_dept_ids_for_users(db, accessible_user_ids)
+
+        else:
+            # OWN / PROJECT / CUSTOM / 其他 → 仅自己
             scope_type = ScopeType.OWN.value
             accessible_dept_ids = []
 
-    elif scope_type == ScopeType.TEAM.value:
-        subordinate_ids = UserScopeService.get_subordinate_ids(db, user.id)
-        accessible_user_ids = subordinate_ids | {user.id}
-        accessible_dept_ids = []  # TEAM 用 user_ids 过滤，不用 dept
-
-    else:
-        # OWN / PROJECT / CUSTOM / 其他 → 仅自己
-        scope_type = ScopeType.OWN.value
-        accessible_dept_ids = []
-
-    ctx = EngPerfScopeContext(
-        scope_type=scope_type,
-        user_id=user.id,
-        accessible_dept_ids=accessible_dept_ids,
-        accessible_user_ids=accessible_user_ids,
-    )
-    logger.debug("engperf scope: user=%d → %s", user.id, scope_type)
-    return ctx
+        ctx = EngPerfScopeContext(
+            scope_type=scope_type,
+            user_id=user.id,
+            accessible_dept_ids=accessible_dept_ids,
+            accessible_user_ids=accessible_user_ids,
+        )
+        logger.debug("engperf scope: user=%d → %s", user.id, scope_type)
+        return ctx
+    except Exception:
+        logger.exception("resolve_engperf_scope failed for user=%s", getattr(user, "id", None))
+        return EngPerfScopeContext(
+            scope_type=ScopeType.OWN.value,
+            user_id=user.id,
+            accessible_dept_ids=[],
+            accessible_user_ids=set(),
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -225,3 +262,48 @@ def check_department_accessible(
         return department_id in scope.accessible_dept_ids
 
     return False
+
+
+def can_access_engineer_data(
+    scope: EngPerfScopeContext,
+    target_user_id: int,
+    target_dept_id: Optional[int] = None,
+) -> bool:
+    """兼容旧测试/调用方命名。"""
+    return can_view_engineer(scope, target_user_id, target_dept_id)
+
+
+def apply_engperf_scope_to_query(
+    query: Query,
+    scope: EngPerfScopeContext,
+    user_id_column=None,
+    dept_id_column=None,
+) -> Query:
+    """兼容旧测试/调用方命名。"""
+    if scope.scope_type == ScopeType.ALL.value:
+        return query
+
+    if scope.scope_type == ScopeType.OWN.value:
+        if user_id_column is not None:
+            return query.filter(user_id_column == scope.user_id)
+        return query.filter(False)
+
+    if scope.scope_type == ScopeType.TEAM.value:
+        if scope.accessible_user_ids and user_id_column is not None:
+            return query.filter(user_id_column.in_(list(scope.accessible_user_ids)))
+        if user_id_column is not None:
+            return query.filter(user_id_column == scope.user_id)
+        return query.filter(False)
+
+    if scope.scope_type in (ScopeType.DEPARTMENT.value, ScopeType.BUSINESS_UNIT.value):
+        if scope.accessible_dept_ids:
+            if dept_id_column is not None:
+                return query.filter(dept_id_column.in_(scope.accessible_dept_ids))
+            if user_id_column is not None:
+                return query.filter(user_id_column == scope.user_id)
+            return query.filter(False)
+        if user_id_column is not None:
+            return query.filter(user_id_column == scope.user_id)
+        return query.filter(False)
+
+    return query.filter(False)

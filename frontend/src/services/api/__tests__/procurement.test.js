@@ -7,33 +7,27 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import MockAdapter from 'axios-mock-adapter';
+import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('Procurement API', () => {
   let api, mock;
   let purchaseApi, outsourcingApi, procurementAnalysisApi;
 
   beforeEach(async () => {
-    // 取消全局 mock，确保使用真正的 axios 实例
-    vi.unmock('../client.js');
-    vi.resetModules();
-    
-    const clientModule = await import('../client.js');
-    api = clientModule.default || clientModule.api;
+    const setup = await setupApiTest();
+    api = setup.api;
+    mock = setup.mock;
     
     const procurementModule = await import('../procurement.js');
     purchaseApi = procurementModule.purchaseApi;
     outsourcingApi = procurementModule.outsourcingApi;
     procurementAnalysisApi = procurementModule.procurementAnalysisApi;
     
-    mock = new MockAdapter(api);
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    if (mock) {
-      mock.restore();
-    }
+    teardownApiTest(mock);
   });
 
   describe('purchaseApi - 采购订单API', () => {

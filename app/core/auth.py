@@ -698,12 +698,43 @@ def is_system_admin(user: User) -> bool:
     return False
 
 
+def _extract_permission_codes_from_roles(user: User) -> set[str]:
+    """Best-effort ORM/对象图回退：从 user.roles 中提取权限编码。
+
+    用于没有数据库会话时的兼容性权限判断，支持如下常见结构：
+    - user.roles -> user_role.role -> role.api_permissions -> rap.permission.perm_code
+    - user.roles -> role.api_permissions -> rap.permission.perm_code
+    """
+    roles = getattr(user, "roles", None)
+    if not roles:
+        return set()
+
+    if hasattr(roles, "all"):
+        roles = roles.all()
+
+    permissions = set()
+    for user_role in roles or []:
+        role = getattr(user_role, "role", user_role)
+        api_permissions = getattr(role, "api_permissions", None) or []
+        if hasattr(api_permissions, "all"):
+            api_permissions = api_permissions.all()
+
+        for role_api_permission in api_permissions:
+            permission = getattr(role_api_permission, "permission", role_api_permission)
+            perm_code = getattr(permission, "perm_code", None)
+            is_active = getattr(permission, "is_active", True)
+            if perm_code and is_active:
+                permissions.add(perm_code)
+
+    return permissions
+
+
 def check_permission(user: User, permission_code: str, db: Session = None) -> bool:
     """
     检查用户权限（带缓存，支持多租户隔离）
 
     快速放行：超管 / 系统管理员直接通过。
-    普通用户：委托给统一权限引擎（缓存 + DB）。
+    普通用户：优先查缓存，其次查 DB；没有 DB 时回退到 user.roles 对象图。
     """
     logger.info(
         f"Checking permission: user_id={user.id}, username={user.username}, code={permission_code}, is_superuser={user.is_superuser}"
@@ -712,15 +743,25 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
         logger.info(f"Permission GRANTED (superuser/admin): user_id={user.id}")
         return True
 
-    if db is None:
-        logger.warning("check_permission: no db session for user=%s", user.id)
-        return False
-
     tenant_id = getattr(user, "tenant_id", None)
 
-    from .permission_engine import load_permissions
-    permissions = load_permissions(user.id, db, tenant_id)
-    return permission_code in permissions
+    try:
+        from app.services.permission_cache_service import get_permission_cache_service
+
+        cache_svc = get_permission_cache_service()
+        cached_permissions = cache_svc.get_user_permissions(user.id, tenant_id)
+        if cached_permissions is not None:
+            return permission_code in cached_permissions
+    except Exception as e:
+        logger.warning("check_permission cache lookup failed: %s", e)
+
+    if db is not None:
+        permissions = _load_user_permissions_from_db(user.id, db, tenant_id)
+        return permission_code in permissions
+
+    logger.warning("check_permission: no db session for user=%s, falling back to user.roles", user.id)
+    return permission_code in _extract_permission_codes_from_roles(user)
+
 
 
 def require_permission(permission_code: str):

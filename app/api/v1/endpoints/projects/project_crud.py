@@ -169,6 +169,7 @@ def read_projects(
             "stage": p.stage,
             "health": p.health,
             "progress_pct": p.progress_pct,
+            "budget_amount": p.budget_amount,
             "pm_name": p.pm_name,
             "pm_id": p.pm_id,
             "sales_id": p.salesperson_id,

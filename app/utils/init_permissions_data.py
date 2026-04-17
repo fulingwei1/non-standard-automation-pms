@@ -439,7 +439,7 @@ def ensure_admin_permissions(db: Session) -> bool:
         # 查找ADMIN角色
         admin_role = db.query(Role).filter(Role.role_code == "ADMIN").first()
         if not admin_role:
-            logger.error("ADMIN角色不存在")
+            logger.warning("ADMIN角色不存在，跳过管理员权限兜底同步")
             return False
 
         # 获取所有API权限

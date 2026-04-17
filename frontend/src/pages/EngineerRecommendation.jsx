@@ -46,6 +46,8 @@ import {
   DialogFooter,
 } from "../components/ui";
 import { requirementExtractionApi } from "../services/api/requirementExtraction";
+import { engineerSchedulingApi } from "../services/api/engineerScheduling";
+import { toast } from "sonner";
 
 // 匹配度等级
 const MATCH_LEVELS = {
@@ -62,6 +64,7 @@ export default function EngineerRecommendation() {
   const [recommendations, setRecommendations] = useState({});
   const [selectedReq, setSelectedReq] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [assigningEngineerId, setAssigningEngineerId] = useState(null);
 
   const loadRequirements = useCallback(async () => {
     if (!projectId) return;
@@ -69,22 +72,26 @@ export default function EngineerRecommendation() {
     try {
       // 抽取需求
       const reqRes = await requirementExtractionApi.extractRequirements(projectId);
-      setRequirements(reqRes.data || reqRes);
+      const requirementData = reqRes.data || reqRes;
+      setRequirements(requirementData);
 
-      // 为每个需求推荐工程师
+      const recommendRes = await requirementExtractionApi.autoRecommendForProject(projectId);
+      const recommendationGroups = recommendRes.data?.recommendations || recommendRes.recommendations || {};
+
       const recs = {};
-      for (const [type, reqList] of Object.entries((reqRes.data || reqRes).requirements || {})) {
+      for (const [type, reqList] of Object.entries(requirementData.requirements || {})) {
         if (reqList.length > 0) {
-          // 简化处理，直接存储需求
           recs[type] = reqList.map(req => ({
             ...req,
-            recommendations: [], // 实际应该调用推荐 API
+            project_id: requirementData.project_id,
+            recommendations: recommendationGroups[type] || [],
           }));
         }
       }
       setRecommendations(recs);
     } catch (error) {
       console.error("加载失败:", error);
+      toast.error("加载工程师推荐失败");
     } finally {
       setLoading(false);
     }
@@ -99,6 +106,30 @@ export default function EngineerRecommendation() {
     if (score >= 75) return MATCH_LEVELS.GOOD;
     if (score >= 60) return MATCH_LEVELS.FAIR;
     return MATCH_LEVELS.POOR;
+  };
+
+  const handleAssignEngineer = async (engineer) => {
+    const currentProjectId = Number(selectedReq?.project_id || projectId);
+    if (!currentProjectId || !engineer?.engineer_id) {
+      toast.error("缺少分配所需参数");
+      return;
+    }
+
+    setAssigningEngineerId(engineer.engineer_id);
+    try {
+      const response = await engineerSchedulingApi.assignEngineer(
+        currentProjectId,
+        engineer.engineer_id,
+        100,
+      );
+      toast.success(response.data?.message || response.message || "分配成功");
+      setShowDetail(false);
+    } catch (error) {
+      console.error("分配失败:", error);
+      toast.error(error?.response?.data?.detail || "分配失败");
+    } finally {
+      setAssigningEngineerId(null);
+    }
   };
 
   if (loading) {
@@ -311,39 +342,58 @@ export default function EngineerRecommendation() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {/* 示例数据 */}
-                      <TableRow>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">张工</div>
-                            <div className="text-xs text-slate-400">高级电气工程师</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className="bg-green-500">92.5</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Progress value={95} className="w-20 h-2" />
-                            <span className="text-xs">95%</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Progress value={88} className="w-20 h-2" />
-                            <span className="text-xs">88%</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Progress value={75} className="w-20 h-2" />
-                            <span className="text-xs">75%</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm">分配</Button>
-                        </TableCell>
-                      </TableRow>
+                      {(selectedReq?.recommendations || []).length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-slate-400">
+                            暂无可用推荐工程师
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        (selectedReq?.recommendations || []).map((engineer) => (
+                          <TableRow key={engineer.engineer_id}>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">{engineer.engineer_name}</div>
+                                <div className="text-xs text-slate-400">{engineer.department || "工程师"}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge className="bg-green-500">{engineer.overall_match_score}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Progress value={engineer.skill_match_score} className="w-20 h-2" />
+                                <span className="text-xs">{engineer.skill_match_score}%</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Progress value={engineer.capacity_match_score} className="w-20 h-2" />
+                                <span className="text-xs">{engineer.capacity_match_score}%</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Progress value={engineer.availability_score} className="w-20 h-2" />
+                                <span className="text-xs">{engineer.availability_score}%</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={assigningEngineerId === engineer.engineer_id}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleAssignEngineer(engineer);
+                                }}
+                              >
+                                {assigningEngineerId === engineer.engineer_id ? "分配中..." : "分配"}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </div>

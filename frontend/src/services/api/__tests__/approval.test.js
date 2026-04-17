@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import MockAdapter from 'axios-mock-adapter';
+import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('Approval API', () => {
   let api, mock;
@@ -18,13 +18,10 @@ describe('Approval API', () => {
   let APPROVAL_STATUS, getStatusConfig, calculateProgress;
 
   beforeEach(async () => {
-    // 取消全局 mock，确保使用真正的 axios 实例
-    vi.unmock('../client.js');
-    vi.resetModules();
-    
-    const clientModule = await import('../client.js');
-    api = clientModule.default || clientModule.api;
-    
+    const setup = await setupApiTest();
+    api = setup.api;
+    mock = setup.mock;
+
     const approvalModule = await import('../approval.js');
     submitApproval = approvalModule.submitApproval;
     approveApproval = approvalModule.approveApproval;
@@ -41,15 +38,11 @@ describe('Approval API', () => {
     APPROVAL_STATUS = approvalModule.APPROVAL_STATUS;
     getStatusConfig = approvalModule.getStatusConfig;
     calculateProgress = approvalModule.calculateProgress;
-    
-    mock = new MockAdapter(api);
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    if (mock) {
-      mock.restore();
-    }
+    teardownApiTest(mock);
   });
 
   describe('submitApproval() - 提交审批', () => {
@@ -263,7 +256,7 @@ describe('Approval API', () => {
     });
 
     it('应该处理审批不存在错误', async () => {
-      mock.onGet('/api/v1/approvals/999/detail').reply(404, {
+      mock.onGet('/api/v1/approvals/instances/999').reply(404, {
         success: false,
         message: 'Approval not found',
       });

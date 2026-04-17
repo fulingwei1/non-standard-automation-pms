@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import MockAdapter from 'axios-mock-adapter';
+import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('HR API', () => {
   let api, mock;
@@ -19,11 +19,10 @@ describe('HR API', () => {
   let timesheetApi, qualificationApi, staffMatchingApi, hourlyRateApi;
 
   beforeEach(async () => {
-    vi.resetModules();
-    
-    const clientModule = await import('../client.js');
-    api = clientModule.default || clientModule.api;
-    
+    const setup = await setupApiTest();
+    api = setup.api;
+    mock = setup.mock;
+
     const hrModule = await import('../hr.js');
     employeeApi = hrModule.employeeApi;
     departmentApi = hrModule.departmentApi;
@@ -34,15 +33,11 @@ describe('HR API', () => {
     qualificationApi = hrModule.qualificationApi;
     staffMatchingApi = hrModule.staffMatchingApi;
     hourlyRateApi = hrModule.hourlyRateApi;
-    
-    mock = new MockAdapter(api);
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    if (mock) {
-      mock.restore();
-    }
+    teardownApiTest(mock);
   });
 
   describe('employeeApi - 员工API', () => {
@@ -66,7 +61,7 @@ describe('HR API', () => {
 
       const response = await employeeApi.create(employee);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
 
     it('update() - 应该更新员工信息', async () => {
@@ -114,7 +109,7 @@ describe('HR API', () => {
 
       const response = await departmentApi.create(dept);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
 
     it('delete() - 应该删除部门', async () => {
@@ -122,7 +117,7 @@ describe('HR API', () => {
 
       const response = await departmentApi.delete(1);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(204);
     });
   });
 
@@ -147,7 +142,7 @@ describe('HR API', () => {
 
       const response = await hrApi.transactions.create(transaction);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
 
     it('contracts.list() - 应该获取合同列表', async () => {
@@ -206,7 +201,7 @@ describe('HR API', () => {
 
       const response = await performanceApi.createMonthlySummary(summary);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
 
     it('getMyPerformance() - 应该获取我的绩效', async () => {
@@ -337,7 +332,7 @@ describe('HR API', () => {
 
       const response = await timesheetApi.create(timesheet);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
 
     it('batchCreate() - 应该批量创建工时', async () => {
@@ -352,7 +347,7 @@ describe('HR API', () => {
 
       const response = await timesheetApi.batchCreate(timesheets);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
 
     it('submitWeek() - 应该提交周工时', async () => {
@@ -437,7 +432,7 @@ describe('HR API', () => {
 
       const response = await qualificationApi.createLevel(level);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
 
     it('getModels() - 应该获取能力模型', async () => {
@@ -554,7 +549,7 @@ describe('HR API', () => {
 
       const response = await hourlyRateApi.create(rate);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
     });
   });
 
@@ -565,7 +560,7 @@ describe('HR API', () => {
         message: 'Employee not found',
       });
 
-      await expect(employeeApi.get(999)).resolves.toBeDefined();
+      await expect(employeeApi.get(999)).rejects.toThrow();
     });
 
     it('应该处理验证错误', async () => {
@@ -575,7 +570,7 @@ describe('HR API', () => {
         errors: { name: ['Name is required'] },
       });
 
-      await expect(employeeApi.create({})).resolves.toBeDefined();
+      await expect(employeeApi.create({})).rejects.toThrow();
     });
 
     it('应该处理权限错误', async () => {
@@ -584,19 +579,19 @@ describe('HR API', () => {
         message: 'Permission denied',
       });
 
-      await expect(departmentApi.delete(1)).resolves.toBeDefined();
+      await expect(departmentApi.delete(1)).rejects.toThrow();
     });
 
     it('应该处理网络错误', async () => {
-      mock.onGet('/api/v1/timesheets').reply(500, { message: 'Network Error' });
+      mock.onGet('/api/v1/timesheets').networkError();
 
-      await expect(timesheetApi.list()).resolves.toBeDefined();
+      await expect(timesheetApi.list()).rejects.toThrow();
     });
 
     it('应该处理超时错误', async () => {
-      mock.onGet('/api/v1/performance/new/employee/my-performance').reply(408, { message: 'Request Timeout' });
+      mock.onGet('/api/v1/performance/new/employee/my-performance').timeout();
 
-      await expect(performanceApi.getMyPerformance()).resolves.toBeDefined();
+      await expect(performanceApi.getMyPerformance()).rejects.toThrow();
     });
   });
 });

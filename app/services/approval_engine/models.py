@@ -151,6 +151,23 @@ class LegacyApprovalInstance(Base, TimestampMixin):
         else:
             self.current_status = value
 
+    # 兼容属性：测试/旧代码使用 entity_type/entity_id
+    @property
+    def entity_type(self):
+        return self.business_type
+
+    @entity_type.setter
+    def entity_type(self, value):
+        self.business_type = value
+
+    @property
+    def entity_id(self):
+        return self.business_id
+
+    @entity_id.setter
+    def entity_id(self, value):
+        self.business_id = value
+
     # 关系
     flow = relationship("LegacyApprovalFlow")
     current_node = relationship("LegacyApprovalNode", foreign_keys=[current_node_id])

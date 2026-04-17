@@ -6,38 +6,11 @@
 // 导入 jest-dom 扩展的 matchers
 import '@testing-library/jest-dom';
 
-// Mock window.getComputedStyle (jsdom 不支持，antd/rc-component 需要)
-window.getComputedStyle = vi.fn().mockImplementation(() => ({
-  display: 'block',
-  visibility: 'visible',
-  opacity: '1',
-  width: '100px',
-  height: '20px',
-  overflow: 'visible',
-  position: 'static',
-  top: '0px',
-  left: '0px',
-  getPropertyValue: vi.fn().mockReturnValue(''),
-}));
-
-// Mock window.alert (jsdom 不支持)
-window.alert = vi.fn();
-
-// Mock window.confirm (jsdom 不支持)
-window.confirm = vi.fn().mockReturnValue(true);
-
-// Mock window.prompt (jsdom 不支持)
-window.prompt = vi.fn().mockReturnValue(null);
-
-// Mock window.print (jsdom 不支持)
-window.print = vi.fn();
-
 // Mock window.matchMedia (Ant Design 需要)
-// 模拟大屏幕环境，使 lg: 断点的元素可见
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation(query => ({
-    matches: true, // 模拟大屏幕
+    matches: false,
     media: query,
     onchange: null,
     addListener: vi.fn(), // deprecated
@@ -49,32 +22,43 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock window.ResizeObserver
-class ResizeObserverMock {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-global.ResizeObserver = ResizeObserverMock;
-window.ResizeObserver = ResizeObserverMock;
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
 
-// Mock localStorage / sessionStorage with real in-memory behavior
-const createStorageMock = () => {
-  let store = {};
-  return {
-    getItem: vi.fn((key) => (key in store ? store[key] : null)),
-    setItem: vi.fn((key, value) => { store[key] = String(value); }),
-    removeItem: vi.fn((key) => { delete store[key]; }),
-    clear: vi.fn(() => { store = {}; }),
-  };
+// Mock localStorage
+const localStorageStore = {};
+const localStorageMock = {
+  getItem: vi.fn((key) => (key in localStorageStore ? localStorageStore[key] : null)),
+  setItem: vi.fn((key, value) => {
+    localStorageStore[key] = String(value);
+  }),
+  removeItem: vi.fn((key) => {
+    delete localStorageStore[key];
+  }),
+  clear: vi.fn(() => {
+    Object.keys(localStorageStore).forEach((key) => delete localStorageStore[key]);
+  }),
 };
-
-const localStorageMock = createStorageMock();
 global.localStorage = localStorageMock;
-window.localStorage = localStorageMock;
 
-const sessionStorageMock = createStorageMock();
+// Mock sessionStorage
+const sessionStorageStore = {};
+const sessionStorageMock = {
+  getItem: vi.fn((key) => (key in sessionStorageStore ? sessionStorageStore[key] : null)),
+  setItem: vi.fn((key, value) => {
+    sessionStorageStore[key] = String(value);
+  }),
+  removeItem: vi.fn((key) => {
+    delete sessionStorageStore[key];
+  }),
+  clear: vi.fn(() => {
+    Object.keys(sessionStorageStore).forEach((key) => delete sessionStorageStore[key]);
+  }),
+};
 global.sessionStorage = sessionStorageMock;
-window.sessionStorage = sessionStorageMock;
 
 // Mock scrollTo
 window.scrollTo = vi.fn();
@@ -84,32 +68,16 @@ vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    useParams: vi.fn(() => ({ 
-      id: '1',
-      projectId: '1',
-      taskId: '1',
-      customerId: '1',
-      ecnId: '1',
-      sourceType: 'project',
-      sourceId: '1',
-      department: 'engineering',
-    })),
+    useParams: vi.fn(() => ({ id: '1' })),
     useNavigate: vi.fn(() => vi.fn()),
     useLocation: vi.fn(() => ({ pathname: '/', search: '', hash: '', state: null })),
     useSearchParams: vi.fn(() => [new URLSearchParams(), vi.fn()]),
-    useOutletContext: vi.fn(() => ({})),
-    Router: ({ children }) => children,
-    Routes: ({ children }) => children,
-    Route: () => null,
-    MemoryRouter: ({ children }) => children,
   };
 });
 
 // Mock API client globally with proper response structure
-// 注意：这个 mock 会被 axios-mock-adapter 覆盖，所以需要返回正确的响应格式
 vi.mock('../services/api/client', () => {
-  const mockResponse = (data = {}, status = 200) => ({
-    status,
+  const mockResponse = (data = {}) => ({
     data: {
       success: true,
       data,
@@ -120,8 +88,6 @@ vi.mock('../services/api/client', () => {
       unread_cc: 0,
       urgent: 0,
     },
-    headers: {},
-    config: {},
   });
 
   const apiMock = {

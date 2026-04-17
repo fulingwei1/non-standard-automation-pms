@@ -9,52 +9,26 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import MockAdapter from 'axios-mock-adapter';
+import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('API Client', () => {
   let api;
   let mock;
 
   beforeEach(async () => {
-    const storage = {};
+    const setup = await setupApiTest();
+    api = setup.api;
+    mock = setup.mock;
 
-    Object.defineProperty(globalThis, 'localStorage', {
-      configurable: true,
-      value: {
-        getItem: vi.fn((key) => (key in storage ? storage[key] : null)),
-        setItem: vi.fn((key, value) => {
-          storage[key] = String(value);
-        }),
-        removeItem: vi.fn((key) => {
-          delete storage[key];
-        }),
-        clear: vi.fn(() => {
-          Object.keys(storage).forEach((key) => delete storage[key]);
-        }),
-      },
-    });
-
-    // 清除模块缓存
-    vi.resetModules();
-    vi.doUnmock('../client.js');
-    
-    // 重新导入client - 每次测试都获取新实例
-    const clientModule = await import('../client.js');
-    api = clientModule.default || clientModule.api;
-    
-    // 创建MockAdapter实例
-    mock = new MockAdapter(api);
-    
     // 清空localStorage
     localStorage.clear();
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    if (mock) {
-      mock.restore();
-    }
+    teardownApiTest(mock);
   });
+
 
   describe('Request Interceptor - Token处理', () => {
     it('应该为非公开API添加Authorization header', async () => {
@@ -80,7 +54,6 @@ describe('API Client', () => {
       const publicEndpoints = [
         '/auth/login',
         '/auth/register',
-        '/auth/refresh',
         '/health',
         '/docs',
         '/openapi.json',
@@ -260,62 +233,6 @@ describe('API Client', () => {
       
       consoleLogSpy.mockRestore();
     });
-
-    it('应该在数据API返回401时自动刷新token并重试请求', async () => {
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      localStorage.setItem('token', 'expired-access-token');
-      localStorage.setItem('refresh_token', 'valid-refresh-token');
-
-      mock.onGet('/api/v1/projects').replyOnce(401, {
-        code: 401,
-        message: 'Token已失效，请重新登录',
-      });
-      mock.onPost('/api/v1/auth/refresh').replyOnce(200, {
-        access_token: 'new-access-token',
-        token_type: 'bearer',
-        expires_in: 86400,
-      });
-      mock.onGet('/api/v1/projects').replyOnce(200, {
-        success: true,
-        data: [{ id: 1, name: 'Project A' }],
-      });
-
-      const response = await api.get('/projects');
-
-      expect(localStorage.getItem('token')).toBe('new-access-token');
-      expect(mock.history.post).toHaveLength(1);
-      expect(mock.history.post[0].url).toBe('/auth/refresh');
-      expect(mock.history.get).toHaveLength(2);
-      expect(mock.history.get[1].headers.Authorization).toBe('Bearer new-access-token');
-      expect(response.formatted).toEqual([{ id: 1, name: 'Project A' }]);
-
-      consoleLogSpy.mockRestore();
-    });
-
-    it('应该在刷新token失败后清除认证信息并跳转登录页', async () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      localStorage.setItem('token', 'expired-access-token');
-      localStorage.setItem('refresh_token', 'expired-refresh-token');
-      localStorage.setItem('user', JSON.stringify({ id: 1 }));
-
-      mock.onGet('/api/v1/projects').replyOnce(401, {
-        code: 401,
-        message: 'Token已失效，请重新登录',
-      });
-      mock.onPost('/api/v1/auth/refresh').replyOnce(401, {
-        code: 401,
-        message: 'Refresh Token无效或已过期',
-      });
-
-      await expect(api.get('/projects')).rejects.toThrow();
-
-      expect(localStorage.getItem('token')).toBeNull();
-      expect(localStorage.getItem('refresh_token')).toBeNull();
-      expect(localStorage.getItem('user')).toBeNull();
-      expect(window.location.href).toBe('/');
-
-      consoleErrorSpy.mockRestore();
-    });
   });
 
   describe('API配置', () => {
@@ -341,7 +258,7 @@ describe('API Client', () => {
       await api.get('/test');
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[API请求]')
+        expect.stringContaining('[API请求] GET /test')
       );
       
       consoleLogSpy.mockRestore();

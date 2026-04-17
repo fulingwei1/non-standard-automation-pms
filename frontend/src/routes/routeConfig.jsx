@@ -14,10 +14,8 @@ import {
   WarehouseRoutes,
   QualityRoutes
 } from "./modules";
-import SalesFunnel from "../pages/SalesFunnel";
 import AfterSalesCenter from '../pages/AfterSales/AfterSalesCenter';
 import ProjectOverviewDashboard from '../pages/ProjectOverviewDashboard';
-import ProjectDeliveryScheduleList from "../pages/ProjectDeliverySchedule/ScheduleList";
 import ProjectDeliveryScheduleGantt from "../pages/ProjectDeliverySchedule/ScheduleGantt";
 import ProjectDeliveryScheduleCreate from "../pages/ProjectDeliverySchedule/ScheduleCreate";
 import ProjectDeliveryScheduleTaskFill from "../pages/ProjectDeliverySchedule/TaskFill";
@@ -49,10 +47,6 @@ export function AppRoutes() {
       {/* 售后服务 */}
       <Route path="/projects/:projectId/after-sales" element={<AfterSalesCenter />} />
       {/* 项目交付排产计划 */}
-      {/* 项目总览 */}
-      <Route path="/projects/:projectId/overview-dashboard" element={<ProjectOverviewDashboard />} />
-      {/* 售后服务 */}
-      <Route path="/projects/:projectId/after-sales" element={<AfterSalesCenter />} />
       {/* 项目交付排产 - 项目子模块 */}
       <Route path="/projects/:projectId/delivery" element={<ProjectDeliveryScheduleGantt />} />
       <Route path="/projects/:projectId/delivery/create" element={<ProjectDeliveryScheduleCreate />} />

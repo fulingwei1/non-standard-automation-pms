@@ -2,9 +2,6 @@ import { useState, useCallback } from "react";
 import { productionApi, userApi } from "../../../services/api";
 import { useDataManagement } from "../../../hooks/useDataManagement";
 import { DEFAULT_WORKSHOP_FORM } from "../constants";
-import { useState, useCallback, useEffect } from 'react';
-import { workshopApi } from '../../../services/api';
-import { getItemsCompat } from '../../../utils/apiResponse';
 
 /**
  * 车间管理数据 Hook

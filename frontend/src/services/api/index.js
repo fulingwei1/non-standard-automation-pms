@@ -1,5 +1,7 @@
 import { api } from "./client.js";
 
+export { api };
+
 // AI销售助手API
 export const aiSalesApi = {
   recommendScripts: (customerId, opportunityId, scenario) =>

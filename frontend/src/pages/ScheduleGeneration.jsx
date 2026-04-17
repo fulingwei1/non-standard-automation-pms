@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Calendar,
@@ -51,11 +51,13 @@ import {
   Label,
 } from "../components/ui";
 import { scheduleGenerationApi } from "../services/api";
+import { toast } from "sonner";
 
 export default function ScheduleGeneration() {
-  const { projectId } = useParams();
+  const { id: projectId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [schedules, setSchedules] = useState(null);
   const [selectedMode, setSelectedMode] = useState("normal");
   const [showAdjustDialog, setShowAdjustDialog] = useState(false);
@@ -80,16 +82,23 @@ export default function ScheduleGeneration() {
   }, [generateSchedules]);
 
   const handleSave = async (mode) => {
+    setSaving(true);
     try {
       const scheduleData = mode === 'normal' 
         ? schedules.normal_mode 
         : schedules.intensive_mode;
       
-      await scheduleGenerationApi.saveSchedule(projectId, scheduleData);
-      alert("计划已保存");
-      navigate("/schedule-plans");
+      const response = await scheduleGenerationApi.saveSchedule(projectId, scheduleData);
+      const result = response.data || response;
+      toast.success(`计划已保存：${result.plan_no || ''}`.trim());
+      if (result.plan_id) {
+        navigate(`/schedule-plans/${result.plan_id}`);
+      }
     } catch (error) {
-      alert("保存失败：" + error.message);
+      console.error("保存失败:", error);
+      toast.error(`保存失败：${error?.response?.data?.detail || error.message}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -140,9 +149,10 @@ export default function ScheduleGeneration() {
                 <Button 
                   onClick={() => handleSave(selectedMode)}
                   variant="outline"
+                  disabled={saving}
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  保存此方案
+                  {saving ? "保存中..." : "保存此方案"}
                 </Button>
               </div>
             }
