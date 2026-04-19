@@ -1,25 +1,25 @@
 {
-  "audit_time": "2026-04-08T21:24:10.224144",
+  "audit_time": "2026-04-19T11:59:18.341946",
   "summary": {
-    "total_endpoints": 2686,
+    "total_endpoints": 2704,
     "by_protection": {
-      "NONE": 155,
-      "AUTH_ONLY": 1611,
+      "NONE": 152,
+      "AUTH_ONLY": 1632,
       "PERMISSION": 920
     },
     "by_method": {
       "POST": {
         "NONE": 30,
-        "AUTH_ONLY": 501,
+        "AUTH_ONLY": 511,
         "PERMISSION": 309
       },
       "GET": {
-        "NONE": 118,
-        "AUTH_ONLY": 856,
+        "NONE": 115,
+        "AUTH_ONLY": 865,
         "PERMISSION": 442
       },
       "PUT": {
-        "AUTH_ONLY": 194,
+        "AUTH_ONLY": 195,
         "NONE": 5,
         "PERMISSION": 114
       },
@@ -28,13 +28,13 @@
       },
       "DELETE": {
         "PERMISSION": 55,
-        "NONE": 2,
-        "AUTH_ONLY": 55
+        "AUTH_ONLY": 56,
+        "NONE": 2
       }
     },
-    "permission_coverage_pct": 34.3,
-    "auth_only_pct": 60.0,
-    "no_protection_pct": 5.8,
+    "permission_coverage_pct": 34.0,
+    "auth_only_pct": 60.4,
+    "no_protection_pct": 5.6,
     "unique_permission_codes": 179,
     "permission_codes": [
       "acceptance:approve",
@@ -429,6 +429,13 @@
       "NONE": 1,
       "write_unprotected": 6
     },
+    "engineer_scheduling": {
+      "total": 11,
+      "PERMISSION": 0,
+      "AUTH_ONLY": 11,
+      "NONE": 0,
+      "write_unprotected": 6
+    },
     "project_delivery": {
       "total": 14,
       "PERMISSION": 0,
@@ -469,6 +476,13 @@
       "PERMISSION": 0,
       "AUTH_ONLY": 4,
       "NONE": 2,
+      "write_unprotected": 4
+    },
+    "schedule_generation": {
+      "total": 6,
+      "PERMISSION": 0,
+      "AUTH_ONLY": 6,
+      "NONE": 0,
       "write_unprotected": 4
     },
     "best_practice": {
@@ -545,6 +559,13 @@
       "total": 3,
       "PERMISSION": 0,
       "AUTH_ONLY": 3,
+      "NONE": 0,
+      "write_unprotected": 2
+    },
+    "gantt_dependency": {
+      "total": 4,
+      "PERMISSION": 0,
+      "AUTH_ONLY": 4,
       "NONE": 0,
       "write_unprotected": 2
     },
@@ -702,13 +723,6 @@
       "NONE": 1,
       "write_unprotected": 0
     },
-    "gantt_dependency": {
-      "total": 1,
-      "PERMISSION": 0,
-      "AUTH_ONLY": 0,
-      "NONE": 1,
-      "write_unprotected": 0
-    },
     "roles": {
       "total": 1,
       "PERMISSION": 0,
@@ -765,25 +779,11 @@
       "NONE": 1,
       "write_unprotected": 0
     },
-    "engineer_scheduling": {
-      "total": 1,
-      "PERMISSION": 0,
-      "AUTH_ONLY": 0,
-      "NONE": 1,
-      "write_unprotected": 0
-    },
     "node_tasks": {
       "total": 15,
       "PERMISSION": 15,
       "AUTH_ONLY": 0,
       "NONE": 0,
-      "write_unprotected": 0
-    },
-    "schedule_generation": {
-      "total": 1,
-      "PERMISSION": 0,
-      "AUTH_ONLY": 0,
-      "NONE": 1,
       "write_unprotected": 0
     },
     "multi_currency": {
@@ -2816,11 +2816,44 @@
     },
     {
       "file": "app/api/v1/endpoints/gantt_dependency.py",
-      "function": "read_root",
+      "function": "get_gantt_data",
       "method": "GET",
-      "path": "/",
-      "line": 24,
-      "protection": "NONE",
+      "path": "/{project_id}",
+      "line": 122,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/gantt_dependency.py",
+      "function": "add_dependency",
+      "method": "POST",
+      "path": "/{project_id}/dependency",
+      "line": 185,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/gantt_dependency.py",
+      "function": "delete_dependency",
+      "method": "DELETE",
+      "path": "/dependency/{id}",
+      "line": 308,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/gantt_dependency.py",
+      "function": "get_critical_path",
+      "method": "GET",
+      "path": "/{project_id}/critical-path",
+      "line": 334,
+      "protection": "AUTH_ONLY",
       "perm_type": "NONE",
       "perm_code": null,
       "is_known_public": false
@@ -3245,11 +3278,121 @@
     },
     {
       "file": "app/api/v1/endpoints/engineer_scheduling.py",
-      "function": "read_root",
+      "function": "create_assignment",
+      "method": "POST",
+      "path": "/assignments",
+      "line": 23,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/engineer_scheduling.py",
+      "function": "get_engineer_capacity",
       "method": "GET",
-      "path": "/",
-      "line": 24,
-      "protection": "NONE",
+      "path": "/engineers/{engineer_id}/capacity",
+      "line": 96,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/engineer_scheduling.py",
+      "function": "update_engineer_capacity",
+      "method": "POST",
+      "path": "/engineers/{engineer_id}/capacity/update",
+      "line": 108,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/engineer_scheduling.py",
+      "function": "analyze_workload",
+      "method": "GET",
+      "path": "/engineers/{engineer_id}/workload",
+      "line": 127,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/engineer_scheduling.py",
+      "function": "detect_conflicts",
+      "method": "POST",
+      "path": "/engineers/{engineer_id}/conflict-detect",
+      "line": 153,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/engineer_scheduling.py",
+      "function": "generate_warnings",
+      "method": "POST",
+      "path": "/warnings/generate",
+      "line": 178,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/engineer_scheduling.py",
+      "function": "get_scheduling_report",
+      "method": "GET",
+      "path": "/projects/{project_id}/scheduling-report",
+      "line": 205,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/engineer_scheduling.py",
+      "function": "evaluate_ai_capability",
+      "method": "GET",
+      "path": "/engineers/{engineer_id}/ai-capability",
+      "line": 229,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/engineer_scheduling.py",
+      "function": "update_ai_capability",
+      "method": "POST",
+      "path": "/engineers/{engineer_id}/ai-capability/update",
+      "line": 252,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/engineer_scheduling.py",
+      "function": "evaluate_core_capabilities",
+      "method": "GET",
+      "path": "/engineers/{engineer_id}/core-capabilities",
+      "line": 271,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/engineer_scheduling.py",
+      "function": "update_core_capabilities",
+      "method": "POST",
+      "path": "/engineers/{engineer_id}/core-capabilities/update",
+      "line": 289,
+      "protection": "AUTH_ONLY",
       "perm_type": "NONE",
       "perm_code": null,
       "is_known_public": false
@@ -3421,11 +3564,66 @@
     },
     {
       "file": "app/api/v1/endpoints/schedule_generation.py",
-      "function": "read_root",
+      "function": "generate_schedule",
+      "method": "POST",
+      "path": "/projects/{project_id}/generate-schedule",
+      "line": 20,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/schedule_generation.py",
+      "function": "generate_both_modes",
+      "method": "POST",
+      "path": "/projects/{project_id}/generate-both-modes",
+      "line": 48,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/schedule_generation.py",
+      "function": "save_schedule",
+      "method": "POST",
+      "path": "/projects/{project_id}/save-schedule",
+      "line": 83,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/schedule_generation.py",
+      "function": "list_schedule_plans",
       "method": "GET",
-      "path": "/",
-      "line": 24,
-      "protection": "NONE",
+      "path": "/schedule-plans",
+      "line": 104,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/schedule_generation.py",
+      "function": "get_schedule_plan",
+      "method": "GET",
+      "path": "/schedule-plans/{plan_id}",
+      "line": 140,
+      "protection": "AUTH_ONLY",
+      "perm_type": "NONE",
+      "perm_code": null,
+      "is_known_public": false
+    },
+    {
+      "file": "app/api/v1/endpoints/schedule_generation.py",
+      "function": "update_task",
+      "method": "PUT",
+      "path": "/schedule-tasks/{task_id}",
+      "line": 195,
+      "protection": "AUTH_ONLY",
       "perm_type": "NONE",
       "perm_code": null,
       "is_known_public": false
@@ -14787,7 +14985,7 @@
       "function": "create_project",
       "method": "POST",
       "path": "/",
-      "line": 206,
+      "line": 207,
       "protection": "AUTH_ONLY",
       "perm_type": "NONE",
       "perm_code": null,
@@ -14798,7 +14996,7 @@
       "function": "read_project",
       "method": "GET",
       "path": "/{project_id}",
-      "line": 221,
+      "line": 222,
       "protection": "AUTH_ONLY",
       "perm_type": "NONE",
       "perm_code": null,
@@ -14809,7 +15007,7 @@
       "function": "update_project",
       "method": "PUT",
       "path": "/{project_id}",
-      "line": 280,
+      "line": 281,
       "protection": "AUTH_ONLY",
       "perm_type": "NONE",
       "perm_code": null,
@@ -14820,7 +15018,7 @@
       "function": "delete_project",
       "method": "DELETE",
       "path": "/{project_id}",
-      "line": 304,
+      "line": 305,
       "protection": "AUTH_ONLY",
       "perm_type": "NONE",
       "perm_code": null,
