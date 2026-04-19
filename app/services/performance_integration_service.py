@@ -61,16 +61,17 @@ class PerformanceIntegrationService:
         weight_config = PerformanceIntegrationService.get_qualification_weight_config()
 
         # 4. 计算融合得分
+        base_score_value = float(base_score)
         if qualification_data:
-            qualification_score = qualification_data.get("score", 0.0)
+            qualification_score = float(qualification_data.get("score", 0.0) or 0.0)
             integrated_score = (
-                base_score * weight_config["base_weight"]
-                + qualification_score * weight_config["qualification_weight"]
+                base_score_value * float(weight_config["base_weight"])
+                + qualification_score * float(weight_config["qualification_weight"])
             )
         else:
             # 如果没有任职资格，只使用基础绩效
             qualification_score = 0.0
-            integrated_score = base_score
+            integrated_score = base_score_value
 
         return {
             "base_score": float(base_score),
@@ -82,10 +83,10 @@ class PerformanceIntegrationService:
                 qualification_data.get("level_code") if qualification_data else None
             ),
             "details": {
-                "base_performance": base_score,
+                "base_performance": base_score_value,
                 "qualification": qualification_data,
                 "calculation": {
-                    "formula": f"{base_score} × {weight_config['base_weight']} + {qualification_score} × {weight_config['qualification_weight']}",
+                    "formula": f"{base_score_value} × {weight_config['base_weight']} + {qualification_score} × {weight_config['qualification_weight']}",
                     "result": integrated_score,
                 },
             },

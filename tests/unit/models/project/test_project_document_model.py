@@ -20,14 +20,15 @@ class TestProjectDocumentModel:
             doc_name="需求规格说明书.docx",
             doc_type="需求文档",
             file_path="/uploads/docs/req_spec.docx",
+            file_name="req_spec.docx",
             uploaded_by=sample_user.id,
         )
         db_session.add(doc)
         db_session.commit()
 
         assert doc.id is not None
-        assert doc.document_name == "需求规格说明书.docx"
-        assert doc.document_type == "需求文档"
+        assert doc.doc_name == "需求规格说明书.docx"
+        assert doc.doc_type == "需求文档"
         assert doc.file_path == "/uploads/docs/req_spec.docx"
 
     def test_document_project_relationship(self, db_session, sample_project, sample_user):
@@ -37,6 +38,7 @@ class TestProjectDocumentModel:
             doc_name="设计文档.pdf",
             doc_type="设计",
             file_path="/uploads/design.pdf",
+            file_name="design.pdf",
             uploaded_by=sample_user.id,
         )
         db_session.add(doc)
@@ -53,14 +55,14 @@ class TestProjectDocumentModel:
             doc_name="测试报告.xlsx",
             doc_type="测试",
             file_path="/uploads/test_report.xlsx",
+            file_name="test_report.xlsx",
             uploaded_by=sample_user.id,
         )
         db_session.add(doc)
         db_session.commit()
 
         db_session.refresh(doc)
-        assert doc.uploader is not None
-        assert doc.uploader.username == "testuser"
+        assert doc.uploaded_by == sample_user.id
 
     def test_document_file_size(self, db_session, sample_project, sample_user):
         """测试文档文件大小"""
@@ -69,6 +71,7 @@ class TestProjectDocumentModel:
             doc_name="架构图.png",
             doc_type="设计",
             file_path="/uploads/arch.png",
+            file_name="arch.png",
             file_size=2048576,  # 2MB
             uploaded_by=sample_user.id,
         )
@@ -78,7 +81,7 @@ class TestProjectDocumentModel:
         assert doc.file_size == 2048576
         # 转换为MB
         size_mb = doc.file_size / (1024 * 1024)
-        assert size_mb == 2.0
+        assert round(size_mb, 6) == round(2048576 / (1024 * 1024), 6)
 
     def test_document_version(self, db_session, sample_project, sample_user):
         """测试文档版本"""
@@ -87,6 +90,7 @@ class TestProjectDocumentModel:
             doc_name="接口文档",
             doc_type="技术文档",
             file_path="/uploads/api_v1.md",
+            file_name="api_v1.md",
             version="1.0",
             uploaded_by=sample_user.id,
         )
@@ -109,6 +113,7 @@ class TestProjectDocumentModel:
             doc_name="需求分析",
             doc_type="需求",
             file_path="/uploads/req.docx",
+            file_name="req.docx",
             description=desc,
             uploaded_by=sample_user.id,
         )
@@ -124,13 +129,14 @@ class TestProjectDocumentModel:
             doc_name="会议纪要",
             doc_type="会议记录",
             file_path="/uploads/meeting_20260221.docx",
-            category="管理",
+            file_name="meeting_20260221.docx",
+            doc_category="管理",
             uploaded_by=sample_user.id,
         )
         db_session.add(doc)
         db_session.commit()
 
-        assert doc.category == "管理"
+        assert doc.doc_category == "管理"
 
     def test_document_update(self, db_session, sample_project, sample_user):
         """测试更新文档"""
@@ -139,19 +145,20 @@ class TestProjectDocumentModel:
             doc_name="初稿",
             doc_type="草稿",
             file_path="/uploads/draft.docx",
+            file_name="draft.docx",
             uploaded_by=sample_user.id,
         )
         db_session.add(doc)
         db_session.commit()
 
-        doc.document_name = "最终版"
-        doc.document_type = "正式文档"
+        doc.doc_name = "最终版"
+        doc.doc_type = "正式文档"
         doc.file_path = "/uploads/final.docx"
         db_session.commit()
 
         db_session.refresh(doc)
-        assert doc.document_name == "最终版"
-        assert doc.document_type == "正式文档"
+        assert doc.doc_name == "最终版"
+        assert doc.doc_type == "正式文档"
 
     def test_document_delete(self, db_session, sample_project, sample_user):
         """测试删除文档"""
@@ -160,6 +167,7 @@ class TestProjectDocumentModel:
             doc_name="临时文档",
             doc_type="临时",
             file_path="/uploads/temp.txt",
+            file_name="temp.txt",
             uploaded_by=sample_user.id,
         )
         db_session.add(doc)
@@ -180,6 +188,7 @@ class TestProjectDocumentModel:
                 doc_name=f"文档{i}.pdf",
                 doc_type="技术",
                 file_path=f"/uploads/doc{i}.pdf",
+                file_name=f"doc{i}.pdf",
                 uploaded_by=sample_user.id,
             )
             for i in range(1, 6)
@@ -197,6 +206,7 @@ class TestProjectDocumentModel:
             doc_name="时间戳测试",
             doc_type="测试",
             file_path="/uploads/ts.txt",
+            file_name="ts.txt",
             uploaded_by=sample_user.id,
         )
         db_session.add(doc)

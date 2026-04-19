@@ -22,8 +22,8 @@ class TestContractSchema:
     def test_contract_create_valid(self):
         """Test valid Contract creation"""
         try:
-            schema = ContractCreate()
-            assert schema is not None
+            schema = ContractCreate(opportunity_id=1, customer_id=1)
+            assert schema.opportunity_id == 1
         except TypeError:
             pass  # Schema requires fields
 

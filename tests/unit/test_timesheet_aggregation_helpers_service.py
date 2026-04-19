@@ -15,7 +15,7 @@ class TestCalculateMonthRange:
 
     def test_january(self):
         """测试一月"""
-        from app.services.timesheet_aggregation_helpers import calculate_month_range
+        from app.services.timesheet.timesheet_aggregation_helpers import calculate_month_range
 
         start, end = calculate_month_range(2025, 1)
 
@@ -24,7 +24,7 @@ class TestCalculateMonthRange:
 
     def test_february_non_leap(self):
         """测试二月（非闰年）"""
-        from app.services.timesheet_aggregation_helpers import calculate_month_range
+        from app.services.timesheet.timesheet_aggregation_helpers import calculate_month_range
 
         start, end = calculate_month_range(2025, 2)
 
@@ -33,7 +33,7 @@ class TestCalculateMonthRange:
 
     def test_february_leap(self):
         """测试二月（闰年）"""
-        from app.services.timesheet_aggregation_helpers import calculate_month_range
+        from app.services.timesheet.timesheet_aggregation_helpers import calculate_month_range
 
         start, end = calculate_month_range(2024, 2)
 
@@ -42,7 +42,7 @@ class TestCalculateMonthRange:
 
     def test_december(self):
         """测试十二月"""
-        from app.services.timesheet_aggregation_helpers import calculate_month_range
+        from app.services.timesheet.timesheet_aggregation_helpers import calculate_month_range
 
         start, end = calculate_month_range(2025, 12)
 
@@ -55,7 +55,7 @@ class TestQueryTimesheets:
 
     def test_no_timesheets(self, db_session):
         """测试无工时记录"""
-        from app.services.timesheet_aggregation_helpers import query_timesheets
+        from app.services.timesheet.timesheet_aggregation_helpers import query_timesheets
 
         result = query_timesheets(db_session, date(2025, 1, 1), date(2025, 1, 31), None, None, None)
 
@@ -63,7 +63,7 @@ class TestQueryTimesheets:
 
     def test_with_user_filter(self, db_session):
         """测试用户过滤"""
-        from app.services.timesheet_aggregation_helpers import query_timesheets
+        from app.services.timesheet.timesheet_aggregation_helpers import query_timesheets
 
         result = query_timesheets(
             db_session,
@@ -82,7 +82,7 @@ class TestCalculateHoursSummary:
 
     def test_empty_timesheets(self):
         """测试空工时列表"""
-        from app.services.timesheet_aggregation_helpers import calculate_hours_summary
+        from app.services.timesheet.timesheet_aggregation_helpers import calculate_hours_summary
 
         result = calculate_hours_summary([])
 
@@ -92,7 +92,7 @@ class TestCalculateHoursSummary:
 
     def test_with_timesheets(self):
         """测试有工时记录"""
-        from app.services.timesheet_aggregation_helpers import calculate_hours_summary
+        from app.services.timesheet.timesheet_aggregation_helpers import calculate_hours_summary
 
         ts1 = MagicMock()
         ts1.hours = 8
@@ -110,7 +110,7 @@ class TestCalculateHoursSummary:
 
     def test_weekend_hours(self):
         """测试周末工时"""
-        from app.services.timesheet_aggregation_helpers import calculate_hours_summary
+        from app.services.timesheet.timesheet_aggregation_helpers import calculate_hours_summary
 
         ts = MagicMock()
         ts.hours = 8
@@ -122,7 +122,7 @@ class TestCalculateHoursSummary:
 
     def test_holiday_hours(self):
         """测试节假日工时"""
-        from app.services.timesheet_aggregation_helpers import calculate_hours_summary
+        from app.services.timesheet.timesheet_aggregation_helpers import calculate_hours_summary
 
         ts = MagicMock()
         ts.hours = 8
@@ -138,7 +138,7 @@ class TestBuildProjectBreakdown:
 
     def test_empty_timesheets(self):
         """测试空工时列表"""
-        from app.services.timesheet_aggregation_helpers import build_project_breakdown
+        from app.services.timesheet.timesheet_aggregation_helpers import build_project_breakdown
 
         result = build_project_breakdown([])
 
@@ -146,7 +146,7 @@ class TestBuildProjectBreakdown:
 
     def test_with_project(self):
         """测试有项目工时"""
-        from app.services.timesheet_aggregation_helpers import build_project_breakdown
+        from app.services.timesheet.timesheet_aggregation_helpers import build_project_breakdown
 
         ts = MagicMock()
         ts.project_id = 1
@@ -160,7 +160,7 @@ class TestBuildProjectBreakdown:
 
     def test_aggregate_same_project(self):
         """测试同项目汇总"""
-        from app.services.timesheet_aggregation_helpers import build_project_breakdown
+        from app.services.timesheet.timesheet_aggregation_helpers import build_project_breakdown
 
         ts1 = MagicMock()
         ts1.project_id = 1
@@ -186,7 +186,7 @@ class TestBuildDailyBreakdown:
 
     def test_empty_timesheets(self):
         """测试空工时列表"""
-        from app.services.timesheet_aggregation_helpers import build_daily_breakdown
+        from app.services.timesheet.timesheet_aggregation_helpers import build_daily_breakdown
 
         result = build_daily_breakdown([])
 
@@ -194,7 +194,7 @@ class TestBuildDailyBreakdown:
 
     def test_single_day(self):
         """测试单日工时"""
-        from app.services.timesheet_aggregation_helpers import build_daily_breakdown
+        from app.services.timesheet.timesheet_aggregation_helpers import build_daily_breakdown
 
         ts = MagicMock()
         ts.work_date = date(2025, 1, 15)
@@ -212,7 +212,7 @@ class TestBuildTaskBreakdown:
 
     def test_empty_timesheets(self):
         """测试空工时列表"""
-        from app.services.timesheet_aggregation_helpers import build_task_breakdown
+        from app.services.timesheet.timesheet_aggregation_helpers import build_task_breakdown
 
         result = build_task_breakdown([])
 
@@ -220,7 +220,7 @@ class TestBuildTaskBreakdown:
 
     def test_with_task(self):
         """测试有任务工时"""
-        from app.services.timesheet_aggregation_helpers import build_task_breakdown
+        from app.services.timesheet.timesheet_aggregation_helpers import build_task_breakdown
 
         ts = MagicMock()
         ts.task_id = 1
@@ -238,7 +238,7 @@ class TestGetOrCreateSummary:
 
     def test_create_new_summary(self, db_session):
         """测试创建新汇总"""
-        from app.services.timesheet_aggregation_helpers import get_or_create_summary
+        from app.services.timesheet.timesheet_aggregation_helpers import get_or_create_summary
 
         result = get_or_create_summary(
             db_session,

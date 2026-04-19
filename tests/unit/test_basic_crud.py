@@ -76,13 +76,27 @@ class TestBasicCRUD:
 
     def test_query_user(self, db_session: Session):
         """测试查询用户"""
-        # 查找admin用户
-        user = db_session.query(User).filter(User.username == "admin").first()
+        username = f"admin_like_{datetime.now().timestamp()}"
+        user = User(
+            employee_id=998,
+            username=username,
+            password_hash=get_password_hash("test123"),
+            email=f"{username}@example.com",
+            real_name="管理员测试用户",
+            is_active=True,
+            is_superuser=True,
+        )
+        db_session.add(user)
+        db_session.commit()
 
-        # 验证存在
-        assert user is not None
-        assert user.username == "admin"
-        assert user.is_active is True
+        queried = db_session.query(User).filter(User.username == username).first()
+
+        assert queried is not None
+        assert queried.username == username
+        assert queried.is_active is True
+
+        db_session.delete(queried)
+        db_session.commit()
 
     def test_query_projects(self, db_session: Session):
         """测试查询项目列表"""

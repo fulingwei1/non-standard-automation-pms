@@ -234,7 +234,7 @@ class ResourcePlanService:
                         employee=EmployeeBrief(
                             id=employee.id if employee else employee_id,
                             name=employee.username if employee else "Unknown",
-                            department=getattr(employee, "department", None),
+                            department=(employee.department if employee and isinstance(getattr(employee, "department", None), str) else None),
                         ),
                         this_project=ConflictProject(
                             project_id=project_id,
@@ -290,7 +290,7 @@ class ResourcePlanService:
                                 employee=EmployeeBrief(
                                     id=employee.id if employee else employee_id,
                                     name=employee.username if employee else "Unknown",
-                                    department=getattr(employee, "department", None),
+                                    department=(employee.department if employee and isinstance(getattr(employee, "department", None), str) else None),
                                 ),
                                 this_project=ConflictProject(
                                     project_id=a1.project_id,
@@ -397,10 +397,10 @@ class ResourcePlanningService:
         tasks = (
             self.db.query(Task)
             .filter(
-                Task.assignee_id == user_id,
-                Task.status.in_(["PENDING", "IN_PROGRESS"]),
-                Task.plan_start_date <= end_date,
-                Task.plan_end_date >= start_date,
+                Task.owner_id == user_id,
+                Task.status.in_(["TODO", "IN_PROGRESS", "PENDING"]),
+                Task.plan_start <= end_date,
+                Task.plan_end >= start_date,
             )
             .all()
         )
@@ -484,17 +484,17 @@ class ResourcePlanningService:
         query = self.db.query(Task).filter(Task.project_id == project_id)
 
         if start_date:
-            query = query.filter(Task.plan_start_date >= start_date)
+            query = query.filter(Task.plan_start >= start_date)
         if end_date:
-            query = query.filter(Task.plan_end_date <= end_date)
+            query = query.filter(Task.plan_end <= end_date)
 
         tasks = query.all()
 
         # 按人员统计需求
         resource_needs = {}
         for task in tasks:
-            if task.assignee_id:
-                user_key = task.assignee_id
+            if task.owner_id:
+                user_key = task.owner_id
                 if user_key not in resource_needs:
                     user = self.db.query(User).filter(User.id == user_key).first()
                     resource_needs[user_key] = {
@@ -512,9 +512,9 @@ class ResourcePlanningService:
                         "task_name": task.task_name,
                         "estimated_hours": float(task.estimated_hours or 0),
                         "plan_start_date": (
-                            str(task.plan_start_date) if task.plan_start_date else None
+                            str(task.plan_start) if task.plan_start else None
                         ),
-                        "plan_end_date": str(task.plan_end_date) if task.plan_end_date else None,
+                        "plan_end_date": str(task.plan_end) if task.plan_end else None,
                     }
                 )
 

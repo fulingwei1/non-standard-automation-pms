@@ -20,6 +20,15 @@ class ApprovalSubmitMixin:
         """允许独立实例化（兼容测试）"""
         if db is not None:
             self.db = db
+            core = ApprovalEngineCore(db)
+            self.router = core.router
+            self.executor = core.executor
+            self.notify = core.notify
+            self.delegate_service = core.delegate_service
+            self._generate_instance_no = core._generate_instance_no
+            self._get_first_node = core._get_first_node
+            self._create_node_tasks = core._create_node_tasks
+            self._log_action = core._log_action
 
     def submit(
         self: ApprovalEngineCore,
@@ -107,10 +116,16 @@ class ApprovalSubmitMixin:
 
         # 6. 确定标题和摘要
         if adapter:
-            if not title and hasattr(adapter, "generate_title"):
-                title = adapter.generate_title(entity_id)
-            if not summary and hasattr(adapter, "generate_summary"):
-                summary = adapter.generate_summary(entity_id)
+            if not title:
+                if hasattr(adapter, "generate_title"):
+                    title = adapter.generate_title(entity_id)
+                elif hasattr(adapter, "get_title"):
+                    title = adapter.get_title(entity_id)
+            if not summary:
+                if hasattr(adapter, "generate_summary"):
+                    summary = adapter.generate_summary(entity_id)
+                elif hasattr(adapter, "get_summary"):
+                    summary = adapter.get_summary(entity_id)
 
         # 7. 创建审批实例
         instance_no = self._generate_instance_no(template_code)

@@ -73,15 +73,15 @@ class TestContractModel:
             contract_type="sales",
             total_amount=Decimal("100000.00"),
             signing_date=signing,
-            start_date=start,
-            end_date=end,
+            effective_date=start,
+            expiry_date=end,
         )
         db_session.add(contract)
         db_session.commit()
 
         assert contract.signing_date == signing
-        assert contract.start_date == start
-        assert contract.end_date == end
+        assert contract.effective_date == start
+        assert contract.expiry_date == end
 
     def test_contract_amount_fields(self, db_session, sample_customer, sample_user):
         """测试合同金额字段"""
@@ -189,12 +189,12 @@ class TestContractModel:
             sales_owner_id=sample_user.id,
             contract_type="sales",
             total_amount=Decimal("100000.00"),
-            description=desc
+            contract_subject=desc
         )
         db_session.add(contract)
         db_session.commit()
 
-        assert contract.description == desc
+        assert contract.contract_subject == desc
 
     def test_multiple_contracts(self, db_session, sample_customer, sample_user):
         """测试多个合同"""

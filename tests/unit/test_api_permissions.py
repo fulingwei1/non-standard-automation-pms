@@ -12,9 +12,19 @@ from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRo
 from tests.conftest import TestClient
 
 
+def _ensure_tenant_user(db: Session, test_user: User) -> User:
+    db_user = db.query(User).filter(User.id == test_user.id).first()
+    if db_user.tenant_id is None:
+        db_user.tenant_id = 1
+        db.commit()
+        db.refresh(db_user)
+    return db_user
+
+
 @pytest.fixture
 def auth_headers(db: Session, test_user: User) -> dict:
     """为权限 API 测试用户注入最小必需权限并生成 token。"""
+    test_user = _ensure_tenant_user(db, test_user)
     required_permissions = [
         ("permission:read", "权限查看", "permission", "READ"),
         ("permission:create", "权限创建", "permission", "CREATE"),
@@ -91,6 +101,7 @@ class TestPermissionAPI:
     @pytest.fixture
     def test_permissions(self, db: Session, test_user: User) -> list:
         """创建测试权限"""
+        test_user = _ensure_tenant_user(db, test_user)
         permissions = []
         
         # 系统级权限
@@ -139,6 +150,7 @@ class TestPermissionAPI:
         self, db: Session, test_user: User, test_permissions: list
     ) -> Role:
         """创建带权限的测试角色"""
+        test_user = _ensure_tenant_user(db, test_user)
         role = Role(
             tenant_id=test_user.tenant_id,
             role_code="TEST_MANAGER",
@@ -400,15 +412,15 @@ class TestPermissionAPI:
     def test_delete_permission_system_protected(
         self, client: TestClient, auth_headers: dict, test_permissions: list
     ):
-        """测试删除权限 - 系统权限受保护"""
+        """测试删除权限 - 租户用户不能删除系统权限"""
         perm = test_permissions[0]  # 系统权限
         
         response = client.delete(
             f"/api/v1/permissions/{perm.id}", headers=auth_headers
         )
         
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "系统预置权限" in response.json()["detail"]
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "无删除权限" in response.json()["detail"]
 
     def test_delete_permission_in_use(
         self,

@@ -119,7 +119,8 @@ class AcceptanceApprovalService:
         Returns:
             (任务列表, 总数)
         """
-        tasks = self.engine.get_pending_tasks(user_id=user_id, entity_type="ACCEPTANCE_ORDER")
+        tasks_result = self.engine.get_pending_tasks(user_id=user_id, entity_type="ACCEPTANCE_ORDER")
+        tasks = tasks_result.get("items", []) if isinstance(tasks_result, dict) else tasks_result
 
         # 如果指定了验收类型筛选
         if acceptance_type:

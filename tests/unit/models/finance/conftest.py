@@ -10,15 +10,38 @@ import pytest
 
 
 @pytest.fixture
-def sample_invoice(db_session, sample_customer):
+def sample_contract(db_session, sample_customer, sample_user):
+    """创建示例合同"""
+    from app.models.sales.contracts import Contract
+
+    contract = Contract(
+        contract_code="CONTRACT001",
+        contract_name="测试合同",
+        customer_id=sample_customer.id,
+        contract_type="销售合同",
+        total_amount=Decimal("300000.00"),
+        signing_date=date.today(),
+        sales_owner_id=sample_user.id,
+        status="SIGNED",
+    )
+    db_session.add(contract)
+    db_session.commit()
+    db_session.refresh(contract)
+    return contract
+
+
+@pytest.fixture
+def sample_invoice(db_session, sample_contract):
     """创建示例发票"""
     from app.models.sales.invoices import Invoice
 
     invoice = Invoice(
         invoice_code="INV001",
         amount=Decimal("10000.00"),
-        customer_id=sample_customer.id,
-        invoice_date=date.today(),
+        contract_id=sample_contract.id,
+        project_id=sample_contract.project_id,
+        buyer_name=sample_contract.customer.customer_name,
+        issue_date=date.today(),
     )
     db_session.add(invoice)
     db_session.commit()

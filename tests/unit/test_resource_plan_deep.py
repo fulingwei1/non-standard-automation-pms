@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """深入业务逻辑测试 - 资源计划服务"""
+from decimal import Decimal
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import MagicMock, patch
 
 
 class TestResourcePlanServiceBusinessLogic:
@@ -13,9 +15,14 @@ class TestResourcePlanServiceBusinessLogic:
             from app.services.resource_plan_service import ResourcePlanService
 
             mock_db = MagicMock()
-            service = ResourcePlanService(mock_db)
+            plan = MagicMock()
+            plan.project_id = 1
+            plan.planned_start = None
+            plan.planned_end = None
+            plan.allocation_pct = Decimal("50")
+            mock_db.query.return_value.filter.return_value.first.return_value = plan
 
-            result = service.assign_employee(1, 2)
+            result = ResourcePlanService.assign_employee(mock_db, 1, 2)
 
             assert result is not None
         except ImportError:
@@ -26,11 +33,8 @@ class TestResourcePlanServiceBusinessLogic:
         try:
             from app.services.resource_plan_service import ResourcePlanService
 
-            mock_db = MagicMock()
-            service = ResourcePlanService(mock_db)
+            result = ResourcePlanService.calculate_conflict_severity(Decimal("130"))
 
-            result = service.calculate_conflict_severity(1, 2)
-
-            assert result is not None
+            assert result == "MEDIUM"
         except ImportError:
             pytest.skip("Module not found")

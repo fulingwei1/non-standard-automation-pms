@@ -457,7 +457,7 @@ class TestValidateSubmit:
 class TestSubmitForApproval:
     """测试提交审批"""
 
-    @patch("app.services.approval_engine.adapters.invoice.ApprovalEngineService")
+    @patch("app.services.approval_engine.engine.ApprovalEngineService")
     def test_submit_for_approval_success(self, mock_engine_class):
         """测试成功提交审批"""
         mock_db = MagicMock()
@@ -509,7 +509,7 @@ class TestSubmitForApproval:
         mock_db.add.assert_called_with(mock_invoice)
         mock_db.commit.assert_called_once()
 
-    @patch("app.services.approval_engine.adapters.invoice.ApprovalEngineService")
+    @patch("app.services.approval_engine.engine.ApprovalEngineService")
     def test_submit_for_approval_already_submitted(self, mock_engine_class):
         """测试已提交审批的发票"""
         mock_db = MagicMock()

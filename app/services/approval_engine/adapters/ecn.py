@@ -17,6 +17,9 @@ from app.models.ecn import Ecn, EcnApproval, EcnApprovalMatrix, EcnEvaluation
 from app.models.user import Role, User, UserRole
 from .base import ApprovalAdapter
 
+# 兼容测试 patch 点；真正使用时在 submit_for_approval 中懒加载，避免循环导入
+ApprovalEngineService = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -229,9 +232,11 @@ class EcnApprovalAdapter(ApprovalAdapter):
             ]
 
         # 使用统一审批引擎创建实例
-        from ..engine import ApprovalEngineService
+        engine_cls = ApprovalEngineService
+        if engine_cls is None:
+            from ..engine import ApprovalEngineService as engine_cls
 
-        engine = ApprovalEngineService(self.db)
+        engine = engine_cls(self.db)
 
         instance = engine.submit(
             template_code="ECN_STANDARD",

@@ -40,7 +40,7 @@ class TestStockCountService:
         try:
             from app.services.stock_count_service import StockCountService
             mock_db = MagicMock()
-            service = StockCountService(mock_db)
+            service = StockCountService(mock_db, tenant_id=1)
             assert service.db == mock_db
         except ImportError:
             pytest.skip("Module not found")

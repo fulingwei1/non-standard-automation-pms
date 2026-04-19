@@ -366,7 +366,7 @@ class TestEcnApprovalAdapterSubmitForApproval(unittest.TestCase):
 
         # Mock ApprovalEngineService (在函数内部导入)
         with patch(
-            "app.services.approval_engine.adapters.ecn.ApprovalEngineService"
+            "app.services.approval_engine.engine.ApprovalEngineService"
         ) as mock_engine_class:
             mock_engine_inst = MagicMock()
             mock_instance = MagicMock()
@@ -388,10 +388,10 @@ class TestEcnApprovalAdapterSubmitForApproval(unittest.TestCase):
             # 验证ApprovalEngineService被正确调用
             mock_engine_inst.submit.assert_called_once()
             call_args = mock_engine_inst.submit.call_args
-            self.assertEqual(call_args[1]["flow_code"], "ECN_STANDARD")
-            self.assertEqual(call_args[1]["business_type"], "ECN")
-            self.assertEqual(call_args[1]["business_id"], 1)
-            self.assertEqual(call_args[1]["submitted_by"], 100)
+            self.assertEqual(call_args[1]["template_code"], "ECN_STANDARD")
+            self.assertEqual(call_args[1]["entity_type"], "ECN")
+            self.assertEqual(call_args[1]["entity_id"], 1)
+            self.assertEqual(call_args[1]["initiator_id"], 100)
 
             # 验证ECN更新
             self.assertEqual(mock_ecn.approval_instance_id, 999)

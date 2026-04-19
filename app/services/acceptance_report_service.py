@@ -9,6 +9,7 @@ import os
 from datetime import datetime
 from typing import Any, Optional, Tuple
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_like_filter
@@ -42,7 +43,7 @@ def generate_report_no(db: Session, report_type: str) -> str:
     # 查询当天该类型的报告数量
     from app.models.acceptance import AcceptanceReport
 
-    count_query = db.query(AcceptanceReport)
+    count_query = db.query(func.count(AcceptanceReport.id))
     count_query = apply_like_filter(
         count_query,
         AcceptanceReport,

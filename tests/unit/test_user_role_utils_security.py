@@ -46,7 +46,7 @@ def test_replace_user_roles_invalidates_cache_with_target_tenant():
     cache_service = MagicMock()
 
     with patch(
-        "app.services.permission_cache_service.get_permission_cache_service",
+        "app.services.permission_management.permission_cache_service.get_permission_cache_service",
         return_value=cache_service,
     ):
         replace_user_roles(db, user_id=7, role_ids=[20], acting_user=acting_user)

@@ -101,17 +101,23 @@ class TestCertifyEmployee:
 
     def test_certify_employee_level_not_found(self, db_session: Session):
         """测试等级不存在时抛出异常"""
-        # 需要先有员工存在
-        # 这里使用mock
-        with patch("app.services.qualification_service.db.query") as mock_query:
-            mock_employee = MagicMock()
-            mock_query.return_value.filter.return_value.first.side_effect = [
-                mock_employee,  # 员工存在
-                None,  # 等级不存在
-            ]
+        mock_db = MagicMock()
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.side_effect = [
+            MagicMock(),
+            None,
+        ]
+        mock_db.query.return_value = mock_query
 
-            # 实际测试会因为查询逻辑不同而有所变化
-            # 这里简化测试，直接期望抛出异常或正常执行
+        with pytest.raises(ValueError, match="等级.*不存在"):
+            QualificationService.certify_employee(
+                db=mock_db,
+                employee_id=1,
+                position_type="engineer",
+                level_id=999,
+                assessment_details={"score": 85},
+                certifier_id=1,
+            )
 
 
 class TestAssessEmployee:

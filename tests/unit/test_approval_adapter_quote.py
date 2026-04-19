@@ -427,7 +427,7 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
 
     # ========== submit_for_approval() 测试 ==========
 
-    @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
+    @patch("app.services.approval_engine.engine.ApprovalEngineService")
     def test_submit_for_approval_success(self, mock_engine_class):
         """测试提交审批 - 成功"""
         # 创建mock报价版本
@@ -464,7 +464,7 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
         self.mock_db.add.assert_called_with(mock_quote_version)
         self.mock_db.commit.assert_called_once()
 
-    @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
+    @patch("app.services.approval_engine.engine.ApprovalEngineService")
     def test_submit_for_approval_already_submitted(self, mock_engine_class):
         """测试提交审批 - 已经提交过"""
         mock_quote_version = MagicMock()

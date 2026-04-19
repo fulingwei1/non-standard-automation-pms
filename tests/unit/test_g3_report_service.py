@@ -18,16 +18,14 @@ class TestGetActiveMonthlyTemplates:
     def test_returns_enabled_monthly_templates(self):
         db = MagicMock()
         mock_templates = [MagicMock(), MagicMock()]
-        (db.query.return_value.filter.return_value.filter.return_value.all.return_value) = (
-            mock_templates
-        )
+        db.query.return_value.filter.return_value.all.return_value = mock_templates
 
         result = ReportService.get_active_monthly_templates(db)
         assert result == mock_templates
 
     def test_returns_empty_when_no_templates(self):
         db = MagicMock()
-        (db.query.return_value.filter.return_value.filter.return_value.all.return_value) = []
+        db.query.return_value.filter.return_value.all.return_value = []
 
         result = ReportService.get_active_monthly_templates(db)
         assert result == []

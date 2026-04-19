@@ -389,17 +389,19 @@ class AssemblyKitService:
 
         基于历史采购订单数据计算
         """
-        from app.models.purchase import PurchaseOrder, PurchaseOrderItem
+        from app.models.purchase import GoodsReceipt, GoodsReceiptItem, PurchaseOrder, PurchaseOrderItem
 
         # 查询历史采购订单
         po_items = (
-            self.db.query(PurchaseOrderItem, PurchaseOrder)
+            self.db.query(PurchaseOrderItem, PurchaseOrder, GoodsReceipt)
             .join(PurchaseOrder)
+            .join(GoodsReceiptItem, GoodsReceiptItem.order_item_id == PurchaseOrderItem.id)
+            .join(GoodsReceipt, GoodsReceiptItem.receipt_id == GoodsReceipt.id)
             .filter(
                 PurchaseOrderItem.material_id == material_id,
                 PurchaseOrder.status.in_(["COMPLETED", "PARTIAL_RECEIVED"]),
                 PurchaseOrder.order_date != None,
-                PurchaseOrderItem.received_date != None,
+                GoodsReceipt.receipt_date != None,
             )
             .order_by(PurchaseOrder.order_date.desc())
             .limit(10)
@@ -422,9 +424,9 @@ class AssemblyKitService:
         lead_times = []
         last_date = None
 
-        for po_item, po in po_items:
-            if po.order_date and po_item.received_date:
-                days = (po_item.received_date - po.order_date).days
+        for po_item, po, receipt in po_items:
+            if po.order_date and receipt.receipt_date:
+                days = (receipt.receipt_date - po.order_date).days
                 if 0 < days < 180:  # 过滤异常数据
                     lead_times.append(days)
 

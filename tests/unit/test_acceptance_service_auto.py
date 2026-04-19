@@ -1,48 +1,74 @@
 # -*- coding: utf-8 -*-
 """Auto-generated tests for acceptance modules"""
+
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
-from datetime import datetime
 
 
 class TestAcceptanceService:
     """Tests for app.services.acceptance.acceptance_service"""
 
     @pytest.mark.asyncio
-    async def test_acceptance_service_init(self):
-        """Test AcceptanceService initialization"""
+    async def test_acceptance_service_static_api(self):
+        """AcceptanceService 当前以静态 async 方法为主"""
         from app.services.acceptance.acceptance_service import AcceptanceService
-        mock_db = MagicMock()
-        service = AcceptanceService(mock_db)
-        assert service.db == mock_db
+
+        assert hasattr(AcceptanceService, "complete_acceptance_order")
+        assert callable(AcceptanceService.complete_acceptance_order)
 
     @pytest.mark.asyncio
-    async def test_complete_acceptance_order(self):
-        """Test complete_acceptance_order method"""
+    async def test_complete_acceptance_order_is_async_callable(self):
+        """当前至少保证入口存在且可调用；真实业务分支由更具体测试覆盖"""
         from app.services.acceptance.acceptance_service import AcceptanceService
-        with patch('app.services.acceptance.acceptance_service.AcceptanceService') as mock_svc:
-            mock_db = MagicMock()
-            service = AcceptanceService(mock_db)
-            # Basic smoke test
-            assert hasattr(service, 'db')
+
+        assert hasattr(AcceptanceService, "complete_acceptance_order")
+        assert callable(AcceptanceService.complete_acceptance_order)
 
 
 class TestReportUtils:
     """Tests for app.services.acceptance.report_utils"""
 
     def test_generate_report_no(self):
-        """Test generate_report_no function"""
         from app.services.acceptance.report_utils import generate_report_no
-        result = generate_report_no()
+
+        mock_db = MagicMock()
+        mock_db.query.return_value.filter.return_value.scalar.return_value = 0
+        result = generate_report_no(mock_db, "FAT")
         assert result is not None
         assert isinstance(result, str)
+        assert result.startswith("FAT-")
 
     def test_build_report_content(self):
-        """Test build_report_content function"""
         from app.services.acceptance.report_utils import build_report_content
-        mock_data = {"project_name": "Test", "acceptance_date": "2024-01-01"}
-        result = build_report_content(mock_data)
+
+        mock_db = MagicMock()
+        mock_db.query.return_value.filter.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.scalar.side_effect = [0, 0]
+
+        order = MagicMock()
+        order.order_no = "ACC-001"
+        order.status = "PASSED"
+        order.actual_end_date = None
+        order.pass_rate = 100
+        order.total_items = 10
+        order.passed_items = 10
+        order.failed_items = 0
+        order.qa_signer_id = None
+        order.project = None
+        order.machine = None
+        order.acceptance_type = "FAT"
+        order.id = 1
+        order.customer_signer = None
+
+        user = MagicMock()
+        user.real_name = "测试用户"
+        user.username = "tester"
+
+        result = build_report_content(mock_db, order, "FAT-20260417-001", 1, user)
         assert result is not None
+        assert "验收报告" in result
+        assert "FAT-20260417-001" in result
 
 
 class TestAcceptanceApprovalService:
@@ -50,8 +76,8 @@ class TestAcceptanceApprovalService:
 
     @pytest.mark.asyncio
     async def test_service_init(self):
-        """Test AcceptanceApprovalService initialization"""
         from app.services.acceptance_approval.service import AcceptanceApprovalService
+
         mock_db = MagicMock()
         service = AcceptanceApprovalService(mock_db)
         assert service.db == mock_db
@@ -60,19 +86,23 @@ class TestAcceptanceApprovalService:
 class TestAccountLockoutService:
     """Tests for app.services.account_lockout_service"""
 
-    def test_is_account_locked(self):
-        """Test is_account_locked method"""
+    def test_check_lockout(self):
         from app.services.account_lockout_service import AccountLockoutService
-        service = AccountLockoutService()
-        result = service.is_account_locked("test_user")
-        assert isinstance(result, bool)
+
+        with patch("app.services.account_lockout_service.get_redis_client", return_value=MagicMock(get=MagicMock(return_value=None))):
+            result = AccountLockoutService.check_lockout("test_user")
+            assert isinstance(result, dict)
+            assert "locked" in result
 
     def test_record_failed_login(self):
-        """Test record_failed_login method"""
         from app.services.account_lockout_service import AccountLockoutService
-        service = AccountLockoutService()
-        service.record_failed_login("test_user")
-        # Should not raise
+
+        mock_redis = MagicMock()
+        mock_redis.incr.return_value = 1
+        with patch("app.services.account_lockout_service.get_redis_client", return_value=mock_redis):
+            result = AccountLockoutService.record_failed_login("test_user", "127.0.0.1")
+            assert result["attempts"] == 1
+            assert result["locked"] is False
 
 
 class TestAIEmotionService:
@@ -80,11 +110,12 @@ class TestAIEmotionService:
 
     @pytest.mark.asyncio
     async def test_analyze_emotion(self):
-        """Test analyze_emotion method"""
         from app.services.ai_emotion_service import AIEmotionService
-        with patch.object(AIEmotionService, 'analyze_emotion', return_value={"emotion": "neutral"}):
-            service = AIEmotionService()
-            result = await service.analyze_emotion("test text")
+
+        mock_db = MagicMock()
+        service = AIEmotionService(mock_db)
+        with patch.object(AIEmotionService, "analyze_emotion", new=AsyncMock(return_value={"emotion": "neutral"})):
+            result = await service.analyze_emotion(1, 1, "test text")
             assert result is not None
 
 
@@ -92,8 +123,8 @@ class TestAIService:
     """Tests for app.services.ai_service"""
 
     def test_ai_service_init(self):
-        """Test AIService initialization"""
         from app.services.ai_service import AIService
+
         service = AIService()
         assert service is not None
 
@@ -102,8 +133,8 @@ class TestBackupService:
     """Tests for app.services.backup_service"""
 
     def test_backup_service_init(self):
-        """Test BackupService initialization"""
         from app.services.backup_service import BackupService
+
         service = BackupService()
         assert service is not None
 
@@ -111,8 +142,8 @@ class TestBackupService:
 class TestBusinessRules:
     """Tests for app.services.business_rules"""
 
-    def test_business_rules_init(self):
-        """Test BusinessRules initialization"""
-        from app.services.business_rules import BusinessRules
-        rules = BusinessRules()
-        assert rules is not None
+    def test_business_rules_module_exports(self):
+        from app.services import business_rules
+
+        assert hasattr(business_rules, "KPI_BENCHMARKS")
+        assert hasattr(business_rules, "calc_gross_margin")

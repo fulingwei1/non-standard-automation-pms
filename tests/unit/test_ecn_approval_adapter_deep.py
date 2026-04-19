@@ -83,7 +83,7 @@ class TestEcnApprovalAdapterBusinessLogic:
 
             assert result["ecn_no"] == "ECN-2026-001"
             assert result["cost_impact"] == 50000
-            assert result["total_evaluations"] == 1
+            assert result["evaluation_summary"]["total_evaluations"] == 1
         except ImportError:
             pytest.skip("Module not found")
 
@@ -104,7 +104,7 @@ class TestEcnApprovalAdapterBusinessLogic:
             mock_instance = MagicMock()
             adapter.on_submit(1, mock_instance)
 
-            assert mock_ecn.status == "PENDING_APPROVAL"
+            assert mock_ecn.status == "EVALUATING"
         except ImportError:
             pytest.skip("Module not found")
 
@@ -144,7 +144,7 @@ class TestEcnApprovalAdapterBusinessLogic:
 
             adapter = EcnApprovalAdapter(mock_db)
             mock_instance = MagicMock()
-            adapter.on_rejected(1, mock_instance, "成本过高")
+            adapter.on_rejected(1, mock_instance)
 
             assert mock_ecn.status == "REJECTED"
         except ImportError:
@@ -157,6 +157,12 @@ class TestEcnApprovalAdapterBusinessLogic:
 
             mock_db = MagicMock()
 
+            # Mock ECN
+            mock_ecn = MagicMock()
+            mock_ecn.ecn_type = "DESIGN"
+            mock_ecn.cost_impact = 0
+            mock_db.query.return_value.filter.return_value.first.return_value = mock_ecn
+
             # Mock评估矩阵
             mock_matrix = MagicMock()
             mock_matrix.dept = "ENGINEERING"
@@ -165,7 +171,7 @@ class TestEcnApprovalAdapterBusinessLogic:
             mock_db.query.return_value.filter.return_value.all.return_value = [mock_matrix]
 
             adapter = EcnApprovalAdapter(mock_db)
-            result = adapter.get_evaluators(1)
+            result = adapter.get_required_evaluators(1)
 
             assert isinstance(result, list)
         except ImportError:
@@ -180,11 +186,13 @@ class TestEcnApprovalAdapterBusinessLogic:
 
             mock_ecn = MagicMock()
             mock_ecn.id = 1
+            mock_ecn.ecn_type = "DESIGN"
+            mock_ecn.cost_impact = 0
 
             mock_db.query.return_value.filter.return_value.first.return_value = mock_ecn
 
             adapter = EcnApprovalAdapter(mock_db)
-            result = adapter.create_evaluation_tasks(1)
+            result = adapter.create_evaluation_tasks(1, MagicMock())
 
             assert isinstance(result, list)
         except ImportError:
@@ -283,10 +291,10 @@ class TestEcnApprovalAdapterEvaluation:
             adapter = EcnApprovalAdapter(mock_db)
             data = adapter.get_entity_data(1)
 
-            assert data["total_evaluations"] == 2
-            assert data["completed_evaluations"] == 1
-            assert data["pending_evaluations"] == 1
-            assert data["total_cost_estimate"] == 50000
+            assert data["evaluation_summary"]["total_evaluations"] == 2
+            assert data["evaluation_summary"]["completed_evaluations"] == 1
+            assert data["evaluation_summary"]["pending_evaluations"] == 1
+            assert data["evaluation_summary"]["total_cost_estimate"] == 50000
         except ImportError:
             pytest.skip("Module not found")
 
@@ -309,7 +317,7 @@ class TestEcnApprovalAdapterEvaluation:
             adapter = EcnApprovalAdapter(mock_db)
             data = adapter.get_entity_data(1)
 
-            assert data["completed_evaluations"] == 2
+            assert data["evaluation_summary"]["completed_evaluations"] == 2
         except ImportError:
             pytest.skip("Module not found")
 
@@ -370,6 +378,6 @@ class TestEcnApprovalAdapterEdgeCases:
             adapter = EcnApprovalAdapter(mock_db)
             data = adapter.get_entity_data(1)
 
-            assert data["total_evaluations"] == 0
+            assert data["evaluation_summary"]["total_evaluations"] == 0
         except ImportError:
             pytest.skip("Module not found")

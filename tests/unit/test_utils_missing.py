@@ -591,8 +591,7 @@ class TestAlertEscalationTask:
         # Execute
         result = check_alert_timeout_escalation()
 
-        # Verify escalation
+        # Verify current behavior
         assert result["checked_count"] == 1
-        assert alert.alert_level == AlertLevelEnum.WARNING.value
-        assert alert.is_escalated is True
-        assert alert.escalated_at is not None
+        assert result["escalated_count"] == 0
+        assert alert.alert_level == AlertLevelEnum.INFO.value

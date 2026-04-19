@@ -236,6 +236,7 @@ class TestBatchCalculateRisks:
         project.id = 1
         project.project_code = "P-001"
 
+        self.db.query.return_value.filter.return_value.filter.return_value.all.return_value = [project]
         self.db.query.return_value.filter.return_value.all.return_value = [project]
         self.db.query.return_value.all.return_value = [project]
 
@@ -245,6 +246,7 @@ class TestBatchCalculateRisks:
             result = self.svc.batch_calculate_risks(project_ids=[1])
 
         assert len(result) == 1
+        assert result[0]["project_id"] == 1
         assert "error" in result[0]
 
 

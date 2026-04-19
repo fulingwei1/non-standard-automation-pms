@@ -126,19 +126,20 @@ class TestCodeGenerator:
 
     def test_code_uniqueness(self, db_session: Session):
         """测试编码唯一性"""
-        # 生成员工编号
         emp_codes = set()
         for i in range(5):
             code = generate_employee_code(db_session)
             assert code not in emp_codes, f"员工编号重复: {code}"
             emp_codes.add(code)
-            # 创建员工以占用编号
-        employee = Employee(employee_code=code, name=f"唯一性测试员工{i}")
-        db_session.add(employee)
-        db_session.commit()
-        db_session.expire_all()  # 清除缓存，确保后续查询看到最新数据
 
-        # 验证生成了5个不同的编号
+            employee = Employee(
+                employee_code=code,
+                name=f"唯一性测试员工{i}",
+            )
+            db_session.add(employee)
+            db_session.commit()
+            db_session.expire_all()
+
         assert len(emp_codes) == 5
 
 

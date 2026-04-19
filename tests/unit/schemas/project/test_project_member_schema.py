@@ -22,8 +22,8 @@ class TestProjectMemberSchema:
     def test_projectmember_create_valid(self):
         """Test valid ProjectMember creation"""
         try:
-            schema = ProjectMemberCreate()
-            assert schema is not None
+            schema = ProjectMemberCreate(user_id=1, role_code="DEV")
+            assert schema.user_id == 1
         except TypeError:
             pass  # Schema requires fields
 

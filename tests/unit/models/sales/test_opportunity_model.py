@@ -23,8 +23,8 @@ class TestOpportunityModel:
             customer_id=sample_customer.id,
             owner_id=sample_user.id,
             stage="需求分析",
-            probability=Decimal("60.00"),
-            expected_amount=Decimal("500000.00"),
+            probability=60,
+            est_amount=Decimal("500000.00"),
         )
         db_session.add(opp)
         db_session.commit()
@@ -32,7 +32,7 @@ class TestOpportunityModel:
         assert opp.id is not None
         assert opp.opp_code == "OPP001"
         assert opp.opp_name == "测试商机"
-        assert opp.probability == Decimal("60.00")
+        assert opp.probability == 60
 
     def test_opportunity_code_unique(self, db_session, sample_user, sample_customer):
         """测试商机编码唯一性"""
@@ -64,19 +64,19 @@ class TestOpportunityModel:
             customer_id=sample_customer.id,
             owner_id=sample_user.id,
             stage="初步接洽",
-            probability=Decimal("20.00"),
+            probability=20,
         )
         db_session.add(opp)
         db_session.commit()
 
         # 推进阶段
         opp.stage = "需求分析"
-        opp.probability = Decimal("40.00")
+        opp.probability = 40
         db_session.commit()
 
         db_session.refresh(opp)
         assert opp.stage == "需求分析"
-        assert opp.probability == Decimal("40.00")
+        assert opp.probability == 40
 
     def test_opportunity_amount_tracking(self, db_session, sample_user, sample_customer):
         """测试商机金额跟踪"""
@@ -85,14 +85,12 @@ class TestOpportunityModel:
             opp_name="金额测试",
             customer_id=sample_customer.id,
             owner_id=sample_user.id,
-            expected_amount=Decimal("1000000.00"),
-            actual_amount=Decimal("950000.00"),
+            est_amount=Decimal("1000000.00"),
         )
         db_session.add(opp)
         db_session.commit()
 
-        assert opp.expected_amount == Decimal("1000000.00")
-        assert opp.actual_amount == Decimal("950000.00")
+        assert opp.est_amount == Decimal("1000000.00")
 
     def test_opportunity_win_probability(self, db_session, sample_user, sample_customer):
         """测试商机赢单概率"""
@@ -101,12 +99,12 @@ class TestOpportunityModel:
             opp_name="概率测试",
             customer_id=sample_customer.id,
             owner_id=sample_user.id,
-            probability=Decimal("75.50"),
+            probability=76,
         )
         db_session.add(opp)
         db_session.commit()
 
-        assert opp.probability == Decimal("75.50")
+        assert opp.probability == 76
 
     def test_opportunity_close_date(self, db_session, sample_user, sample_customer):
         """测试商机关闭日期"""
@@ -119,13 +117,11 @@ class TestOpportunityModel:
             customer_id=sample_customer.id,
             owner_id=sample_user.id,
             expected_close_date=expected_date,
-            actual_close_date=actual_date,
         )
         db_session.add(opp)
         db_session.commit()
 
         assert opp.expected_close_date == expected_date
-        assert opp.actual_close_date == actual_date
 
     def test_opportunity_relationships(self, db_session, sample_opportunity):
         """测试商机关系"""
@@ -163,7 +159,7 @@ class TestOpportunityModel:
 
     def test_opportunity_status(self, db_session, sample_opportunity):
         """测试商机状态"""
-        assert sample_opportunity.status in [None, "进行中", "赢单", "输单"]
+        assert sample_opportunity.gate_status is not None
 
     def test_multiple_opportunities(self, db_session, sample_user, sample_customer):
         """测试多个商机"""
@@ -173,7 +169,7 @@ class TestOpportunityModel:
                 opp_name=f"商机{i}",
                 customer_id=sample_customer.id,
                 owner_id=sample_user.id,
-                expected_amount=Decimal(f"{i*100000}.00"),
+                est_amount=Decimal(f"{i*100000}.00"),
             )
             for i in range(1, 6)
         ]

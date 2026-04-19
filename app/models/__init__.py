@@ -31,7 +31,7 @@ from .change_request import (  # noqa: F401
 )
 
 # 枚举补充导出（向后兼容）
-from .enums import ApprovalRecordStatusEnum  # noqa: F401
+from .enums import ApprovalRecordStatusEnum, DataScopeEnum  # noqa: F401
 
 # Import models from complete directory instead of deprecated main
 from .exports.complete import *

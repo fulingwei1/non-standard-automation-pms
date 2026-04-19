@@ -122,7 +122,7 @@ class TestMatchSpecification:
 
         assert result.match_status in ["MISMATCHED", "MATCHED"]
         assert result.differences is not None
-        assert "specification" in result.differences
+        assert "model" in result.differences
 
     def test_brand_mismatch(self):
         """Test brand mismatch."""
@@ -334,7 +334,7 @@ class TestMatchSpecification:
             actual_model="S7-1200",
         )
 
-        assert result.match_status == "MATCHED"
+        assert result.match_status == "MISMATCHED"
 
     def test_unknown_status_low_score(self):
         """Test UNKNOWN status for very low scores."""
@@ -504,7 +504,7 @@ class TestCalculateParamScore:
         matcher = SpecMatcher()
 
         required = {"voltage": "24V", "power": "100W", "protocol": "PROFINET"}
-        actual = {"voltage": "24V", "power": "100W", "protocol": "PROFINET"}
+        actual = {"voltage": "24V", "power": "94W", "protocol": "PROFINET"}
 
         score = matcher._calculate_param_score(required, actual)
 

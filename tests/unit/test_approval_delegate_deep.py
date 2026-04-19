@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """深入业务逻辑测试 - 审批代理人服务"""
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from datetime import date, timedelta
 
 
@@ -126,16 +126,22 @@ class TestApprovalDelegateServiceBusinessLogic:
 
             mock_task = MagicMock()
             mock_task.id = 1
-            mock_task.assignee_id = 1
-            mock_task.status = "PENDING"
+            mock_task.instance = MagicMock(template_id=10, id=100)
 
             mock_delegate = MagicMock()
+            mock_delegate.id = 9
             mock_delegate.delegate_id = 2
 
-            service = ApprovalDelegateService(mock_db)
-            result = service.apply_delegation(mock_task, mock_delegate)
+            mock_user = MagicMock()
+            mock_user.real_name = "代理人"
+            mock_user.username = "delegate_user"
+            mock_db.query.return_value.filter.return_value.first.return_value = mock_user
 
-            # 任务应该被转派给代理人
+            service = ApprovalDelegateService(mock_db)
+            with patch.object(service, "get_active_delegate", return_value=mock_delegate):
+                result = service.apply_delegation(mock_task, original_assignee_id=1)
+
+            assert result == mock_task
             assert mock_task.assignee_id == 2
         except ImportError:
             pytest.skip("Module not found")
@@ -146,6 +152,7 @@ class TestApprovalDelegateServiceBusinessLogic:
             from app.services.approval_engine.delegate import ApprovalDelegateService
 
             mock_db = MagicMock()
+            mock_db.query.return_value.filter.return_value.first.return_value = None
 
             service = ApprovalDelegateService(mock_db)
 
@@ -158,6 +165,7 @@ class TestApprovalDelegateServiceBusinessLogic:
             )
 
             assert mock_db.add.called
+            assert mock_db.flush.called
         except ImportError:
             pytest.skip("Module not found")
 
@@ -176,7 +184,8 @@ class TestApprovalDelegateServiceBusinessLogic:
             service = ApprovalDelegateService(mock_db)
             result = service.update_delegate(1, end_date=date.today() + timedelta(days=14))
 
-            assert mock_db.commit.called
+            assert result == mock_delegate
+            assert result.end_date == date.today() + timedelta(days=14)
         except ImportError:
             pytest.skip("Module not found")
 
@@ -210,7 +219,7 @@ class TestApprovalDelegateServiceBusinessLogic:
             mock_delegate = MagicMock()
             mock_delegate.user_id = 1
 
-            mock_db.query.return_value.filter.return_value.all.return_value = [mock_delegate]
+            mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_delegate]
 
             service = ApprovalDelegateService(mock_db)
             result = service.get_user_delegates(1)
@@ -220,21 +229,18 @@ class TestApprovalDelegateServiceBusinessLogic:
             pytest.skip("Module not found")
 
     def test_log_delegation(self):
-        """测试记录代理日志"""
+        """测试记录代理操作日志"""
         try:
             from app.services.approval_engine.delegate import ApprovalDelegateService
 
             mock_db = MagicMock()
+            mock_log = MagicMock()
+            mock_db.query.return_value.filter.return_value.first.return_value = mock_log
 
             service = ApprovalDelegateService(mock_db)
-            service._log_delegation(
-                task_id=1,
-                original_assignee=1,
-                delegate_user=2,
-                action="APPLIED"
-            )
+            service.record_delegate_action(delegate_log_id=1, action="APPROVED")
 
-            assert mock_db.add.called
+            assert mock_log.action == "APPROVED"
         except ImportError:
             pytest.skip("Module not found")
 
@@ -339,21 +345,18 @@ class TestApprovalDelegateServiceEdgeCases:
             pytest.skip("Module not found")
 
     def test_task_already_processed(self):
-        """测试已处理的任务"""
+        """测试无代理配置时返回 None"""
         try:
             from app.services.approval_engine.delegate import ApprovalDelegateService
 
             mock_db = MagicMock()
 
             mock_task = MagicMock()
-            mock_task.status = "APPROVED"  # 已处理
-
-            mock_delegate = MagicMock()
+            mock_task.instance = MagicMock(template_id=10)
 
             service = ApprovalDelegateService(mock_db)
 
-            # 已处理的任务不应该再转派
-            with pytest.raises(Exception):
-                service.apply_delegation(mock_task, mock_delegate)
+            with patch.object(service, "get_active_delegate", return_value=None):
+                assert service.apply_delegation(mock_task, original_assignee_id=1) is None
         except ImportError:
             pytest.skip("Module not found")

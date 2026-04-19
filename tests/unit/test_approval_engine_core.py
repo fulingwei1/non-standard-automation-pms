@@ -41,9 +41,9 @@ class TestGenerateInstanceNo:
         mock_db = MagicMock()
         service = ApprovalEngineCore(mock_db)
 
-        # Mock query to return 0 existing instances
+        # 当前实现通过 max(instance_no) 判断是否已有当天实例
         mock_query = MagicMock()
-        mock_query.filter.return_value.count.return_value = 0
+        mock_query.filter.return_value.with_for_update.return_value.scalar.return_value = None
         mock_db.query.return_value = mock_query
 
         now = datetime.now()
@@ -58,13 +58,12 @@ class TestGenerateInstanceNo:
         mock_db = MagicMock()
         service = ApprovalEngineCore(mock_db)
 
-        # Mock query to return 5 existing instances
-        mock_query = MagicMock()
-        mock_query.filter.return_value.count.return_value = 5
-        mock_db.query.return_value = mock_query
-
         now = datetime.now()
         prefix = f"AP{now.strftime('%y%m%d')}"
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value.with_for_update.return_value.scalar.return_value = f"{prefix}0005"
+        mock_db.query.return_value = mock_query
 
         result = service._generate_instance_no(prefix)
 
@@ -314,8 +313,7 @@ class TestLogAction:
 class TestAdvanceToNextNode:
     """测试 _advance_to_next_node 方法"""
 
-    @patch("app.services.approval_engine.engine.core.get_adapter")
-    def test_advance_to_next_node_no_next_nodes(self, mock_get_adapter):
+    def test_advance_to_next_node_no_next_nodes(self):
         """测试没有下一节点时（审批完成）"""
         mock_db = MagicMock()
         service = ApprovalEngineCore(mock_db)
@@ -331,16 +329,15 @@ class TestAdvanceToNextNode:
         mock_current_task.node.id = 1
 
         # Mock router.get_next_nodes to return empty list
-        with patch.object(service, "router") as mock_router:
+        with patch.object(service, "router") as mock_router, \
+             patch.object(service, "_call_adapter_callback") as mock_callback:
             mock_router.get_next_nodes.return_value = []
-            mock_adapter = MagicMock()
-            mock_get_adapter.return_value = mock_adapter
 
             service._advance_to_next_node(mock_instance, mock_current_task)
 
             assert mock_instance.status == "APPROVED"
             assert isinstance(mock_instance.completed_at, datetime)
-            mock_adapter.on_approved.assert_called_once_with(123, mock_instance)
+            mock_callback.assert_called_once_with(mock_instance, "on_approved")
 
 
 @pytest.mark.unit

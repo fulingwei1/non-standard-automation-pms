@@ -281,8 +281,7 @@ class TestPurchaseOrderModel:
         """测试字符串表示"""
         from app.models.purchase import PurchaseOrder
 
-        order = PurchaseOrder.__new__(PurchaseOrder)
-        order.order_no = "PO-TEST-001"
+        order = PurchaseOrder(order_no="PO-TEST-001", supplier_id=1)
         assert "PO-TEST-001" in repr(order)
 
 

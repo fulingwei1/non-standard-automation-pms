@@ -29,7 +29,6 @@ class TestCheckS3ToS4Transition:
 
     def test_contract_not_signed(self, db_session):
         """测试合同未签订"""
-        from app.models.sales import Contract
         from app.services.stage_transition_checks import check_s3_to_s4_transition
 
         project = MagicMock()
@@ -37,24 +36,18 @@ class TestCheckS3ToS4Transition:
         project.contract_date = "2025-01-15"
         project.contract_amount = 100000
 
-        # 合同状态不是SIGNED
-        contract = Contract(
-            contract_code="CT001",
-            status="DRAFT",
-            opportunity_id=1,  # Required field
-            customer_id=1,  # Required field
-        )
-        db_session.add(contract)
-        db_session.flush()
+        mock_db = MagicMock()
+        mock_contract = MagicMock()
+        mock_contract.status = "DRAFT"
+        mock_db.query.return_value.filter.return_value.first.return_value = mock_contract
 
-        can_advance, target, missing = check_s3_to_s4_transition(db_session, project)
+        can_advance, target, missing = check_s3_to_s4_transition(mock_db, project)
 
         assert can_advance is False
         assert "合同未签订" in missing[0]
 
     def test_contract_signed_can_advance(self, db_session):
         """测试合同已签订可推进"""
-        from app.models.sales import Contract
         from app.services.stage_transition_checks import check_s3_to_s4_transition
 
         project = MagicMock()
@@ -62,16 +55,12 @@ class TestCheckS3ToS4Transition:
         project.contract_date = "2025-01-15"
         project.contract_amount = 100000
 
-        contract = Contract(
-            contract_code="CT002",
-            status="SIGNED",
-            opportunity_id=1,  # Required field
-            customer_id=1,  # Required field
-        )
-        db_session.add(contract)
-        db_session.flush()
+        mock_db = MagicMock()
+        mock_contract = MagicMock()
+        mock_contract.status = "SIGNED"
+        mock_db.query.return_value.filter.return_value.first.return_value = mock_contract
 
-        can_advance, target, missing = check_s3_to_s4_transition(db_session, project)
+        can_advance, target, missing = check_s3_to_s4_transition(mock_db, project)
 
         assert can_advance is True
         assert target == "S4"

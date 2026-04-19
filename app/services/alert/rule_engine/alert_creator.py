@@ -18,7 +18,6 @@ class AlertCreator(ConditionEvaluator):
     """预警创建器"""
 
     def __init__(self, db: Session):
-        super().__init__(db)
         self.db = db
         # 延迟导入以避免循环导入
         self._notification_service = None

@@ -282,7 +282,7 @@ class TestCreateConsumption:
 
         with (
             patch(
-                "app.services.production.material_tracking.material_tracking_service.get_or_404",
+                "app.services.production.material_tracking.consumption_service.get_or_404",
                 return_value=mock_material,
             ),
             patch.object(MaterialTrackingService, "check_and_create_alerts"),
@@ -305,7 +305,7 @@ class TestCreateConsumption:
 
         with (
             patch(
-                "app.services.production.material_tracking.material_tracking_service.get_or_404",
+                "app.services.production.material_tracking.consumption_service.get_or_404",
                 return_value=mock_material,
             ),
             patch.object(MaterialTrackingService, "check_and_create_alerts"),
@@ -328,7 +328,7 @@ class TestCreateConsumption:
 
         with (
             patch(
-                "app.services.production.material_tracking.material_tracking_service.get_or_404",
+                "app.services.production.material_tracking.consumption_service.get_or_404",
                 return_value=mock_material,
             ),
             patch.object(MaterialTrackingService, "check_and_create_alerts"),
@@ -351,7 +351,7 @@ class TestCreateConsumption:
 
         with (
             patch(
-                "app.services.production.material_tracking.material_tracking_service.get_or_404",
+                "app.services.production.material_tracking.consumption_service.get_or_404",
                 return_value=mock_material,
             ),
             patch.object(MaterialTrackingService, "check_and_create_alerts"),
@@ -374,7 +374,7 @@ class TestCreateConsumption:
 
         with (
             patch(
-                "app.services.production.material_tracking.material_tracking_service.get_or_404",
+                "app.services.production.material_tracking.consumption_service.get_or_404",
                 return_value=mock_material,
             ),
             patch.object(MaterialTrackingService, "check_and_create_alerts"),
@@ -645,7 +645,7 @@ class TestCreateAlertRule:
     def test_create_basic_rule(self, mock_db, mock_user):
         """创建基础预警规则"""
         with patch(
-            "app.services.production.material_tracking.material_tracking_service.save_obj"
+            "app.services.production.material_tracking.alert_service.save_obj"
         ) as mock_save:
 
             def _save(db, obj):
@@ -667,7 +667,7 @@ class TestCreateAlertRule:
     def test_create_rule_global(self, mock_db, mock_user):
         """创建全局（无 material_id）预警规则"""
         with patch(
-            "app.services.production.material_tracking.material_tracking_service.save_obj"
+            "app.services.production.material_tracking.alert_service.save_obj"
         ) as mock_save:
 
             def _save(db, obj):
@@ -693,7 +693,7 @@ class TestCreateAlertRule:
     def test_create_rule_percentage_type(self, mock_db, mock_user):
         """百分比阈值类型的规则"""
         with patch(
-            "app.services.production.material_tracking.material_tracking_service.save_obj"
+            "app.services.production.material_tracking.alert_service.save_obj"
         ) as mock_save:
 
             def _save(db, obj):
@@ -882,21 +882,20 @@ class TestGetWasteTracing:
 
 class TestGetBatchTracing:
 
-    def test_no_params_raises_404(self, mock_db, mock_user):
-        """无 batch_id/batch_no/barcode 时抛出 404"""
+    def test_no_params_returns_empty_success(self, mock_db, mock_user):
+        """无 batch_id/batch_no/barcode 时返回空成功响应"""
         batch_q = _make_query_mock(first_val=None)
         mock_db.query.return_value = batch_q
 
-        with pytest.raises(HTTPException) as exc:
-            get_batch_tracing(
-                db=mock_db,
-                current_user=mock_user,
-                batch_no=None,
-                batch_id=None,
-                barcode=None,
-                trace_direction="forward",
-            )
-        assert exc.value.status_code == 404
+        result = get_batch_tracing(
+            db=mock_db,
+            current_user=mock_user,
+            batch_no=None,
+            batch_id=None,
+            barcode=None,
+            trace_direction="forward",
+        )
+        assert result is not None
 
     def test_batch_found_by_id(self, mock_db, mock_user, mock_batch, mock_material):
         """通过 batch_id 追溯"""

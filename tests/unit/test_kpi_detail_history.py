@@ -31,14 +31,18 @@ class TestGetKpiDetail:
         )
 
         with patch(
-            "app.services.strategy.kpi_service.detail_history.calculate_kpi_health",
-            return_value={"level": "GREEN"},
+            "app.services.strategy.kpi_service.detail_history.KPIDetailResponse",
+            return_value=MagicMock(),
         ):
-            with patch(
-                "app.services.strategy.kpi_service.detail_history.calculate_kpi_completion_rate",
-                return_value=80.0,
+            with patch.dict(
+                "sys.modules",
+                {
+                    "app.services.strategy.kpi_service.health_calculator": MagicMock(
+                        calculate_kpi_health=lambda *a, **k: {"level": "GREEN"},
+                        calculate_kpi_completion_rate=lambda *a, **k: 80.0,
+                    )
+                },
             ):
-                mock_resp.return_value = MagicMock()
                 result = get_kpi_detail(db, 1)
                 assert result is not None
 

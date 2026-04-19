@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""深入业务逻辑测试 - 装配属性推荐服务"""
+"""深入业务逻辑测试 - 装配属性推荐服务（对齐当前实现）"""
+
 import pytest
 from unittest.mock import MagicMock
 
@@ -8,63 +9,40 @@ class TestAssemblyAttrRecommenderBusinessLogic:
     """装配属性推荐服务业务逻辑测试"""
 
     def test_recommend_attributes(self):
-        """测试推荐属性"""
-        try:
-            from app.services.assembly_attr_recommender import AssemblyAttrRecommender
+        from app.services.assembly_attr_recommender import AssemblyAttrRecommender
 
-            mock_db = MagicMock()
-            service = AssemblyAttrRecommender(mock_db)
+        mock_db = MagicMock()
+        bom_item = MagicMock(id=1, material_id=1)
+        material = MagicMock(id=1, material_name="铝型材框架", category_id=None, default_supplier_id=None)
 
-            result = service.recommend_attributes(1)
-
-            assert result is not None
-        except ImportError:
-            pytest.skip("Module not found")
+        result = AssemblyAttrRecommender.recommend(mock_db, bom_item, material, current_bom_id=1)
+        assert result is not None
 
     def test_get_similar_assemblies(self):
-        """测试获取相似装配"""
-        try:
-            from app.services.assembly_attr_recommender import AssemblyAttrRecommender
+        from app.services.assembly_attr_recommender import AssemblyAttrRecommender
 
-            mock_db = MagicMock()
+        mock_db = MagicMock()
+        material = MagicMock(id=1, material_name="铝型材框架", category_id=None, default_supplier_id=None)
+        rec = AssemblyAttrRecommender._match_from_keywords(material)
 
-            mock_assembly = MagicMock()
-            mock_assembly.id = 1
-
-            mock_db.query.return_value.filter.return_value.all.return_value = [mock_assembly]
-
-            service = AssemblyAttrRecommender(mock_db)
-
-            result = service.get_similar_assemblies(1)
-
-            assert result is not None
-        except ImportError:
-            pytest.skip("Module not found")
+        assert rec is not None
 
     def test_calculate_similarity(self):
-        """测试计算相似度"""
-        try:
-            from app.services.assembly_attr_recommender import AssemblyAttrRecommender
+        from app.services.assembly_attr_recommender import AssemblyAttrRecommender
 
-            mock_db = MagicMock()
-            service = AssemblyAttrRecommender(mock_db)
+        material = MagicMock()
+        material.material_name = "PLC控制器"
+        rec = AssemblyAttrRecommender._match_from_keywords(material)
 
-            result = service.calculate_similarity({"a": 1}, {"a": 1})
-
-            assert result > 0
-        except ImportError:
-            pytest.skip("Module not found")
+        assert rec is not None
+        assert rec.confidence > 0
 
     def test_update_recommendation_model(self):
-        """测试更新推荐模型"""
-        try:
-            from app.services.assembly_attr_recommender import AssemblyAttrRecommender
+        from app.services.assembly_attr_recommender import AssemblyAttrRecommender
 
-            mock_db = MagicMock()
-            service = AssemblyAttrRecommender(mock_db)
+        mock_db = MagicMock()
+        bom_item = MagicMock(id=1, material_id=1)
+        material = MagicMock(id=1, material_name="未知物料", category_id=None, default_supplier_id=None)
 
-            result = service.update_recommendation_model()
-
-            assert result is not None
-        except ImportError:
-            pytest.skip("Module not found")
+        result = AssemblyAttrRecommender.batch_recommend(mock_db, bom_id=1, bom_items=[bom_item])
+        assert isinstance(result, dict)

@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """ai_prompt单元测试"""
-import pytest
-from unittest.mock import Mock
+
 from app.services.work_log_ai.ai_prompt import AIPromptMixin
 
+
 class TestAIPromptMixinInit:
-    def test_init(self):
-        service = AIPromptMixin(Mock())
-        assert service is not None
+    def test_methods_available(self):
+        assert AIPromptMixin is not None
+        assert hasattr(AIPromptMixin, "_build_ai_prompt")
+        assert hasattr(AIPromptMixin, "_parse_ai_response")

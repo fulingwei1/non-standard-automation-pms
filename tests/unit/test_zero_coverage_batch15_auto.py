@@ -12,9 +12,8 @@ class TestResourcePlanService:
         """Test ResourcePlanService"""
         try:
             from app.services.resource_plan_service import ResourcePlanService
-            mock_db = MagicMock()
-            service = ResourcePlanService(mock_db)
-            assert service.db == mock_db
+            assert hasattr(ResourcePlanService, "calculate_fill_rate")
+            assert hasattr(ResourcePlanService, "create_resource_plan")
         except ImportError:
             pytest.skip("Module not found")
 

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Auto-generated tests for performance_service modules"""
 import pytest
-from unittest.mock import MagicMock, patch
 
 
 class TestPerformanceService:
@@ -11,11 +10,9 @@ class TestPerformanceService:
         """Test performance service can be imported"""
         try:
             from app.services.performance_service import PerformanceService
-            mock_db = MagicMock()
-            service = PerformanceService(mock_db)
-            assert service.db == mock_db
+            assert callable(PerformanceService.calculate_final_score)
+            assert callable(PerformanceService.calculate_quarterly_score)
         except ImportError:
-            # If module doesn't exist, skip
             pytest.skip("Module not found")
 
 

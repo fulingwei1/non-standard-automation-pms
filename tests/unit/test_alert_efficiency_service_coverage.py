@@ -49,7 +49,7 @@ def mock_engine():
 
 class TestCalculateBasicMetrics:
     def test_empty_list_returns_zeros(self, mock_engine):
-        from app.services.alert_efficiency_service import calculate_basic_metrics
+        from app.services.alert.alert_efficiency_service import calculate_basic_metrics
 
         result = calculate_basic_metrics([], mock_engine)
         assert result["processing_rate"] == 0
@@ -58,7 +58,7 @@ class TestCalculateBasicMetrics:
         assert result["duplicate_rate"] == 0
 
     def test_all_resolved(self, mock_engine):
-        from app.services.alert_efficiency_service import calculate_basic_metrics
+        from app.services.alert.alert_efficiency_service import calculate_basic_metrics
 
         now = datetime.now()
         alerts = [
@@ -77,14 +77,14 @@ class TestCalculateBasicMetrics:
         assert result["processing_rate"] == 1.0
 
     def test_none_resolved(self, mock_engine):
-        from app.services.alert_efficiency_service import calculate_basic_metrics
+        from app.services.alert.alert_efficiency_service import calculate_basic_metrics
 
         alerts = [make_alert(status="PENDING"), make_alert(status="PROCESSING")]
         result = calculate_basic_metrics(alerts, mock_engine)
         assert result["processing_rate"] == 0.0
 
     def test_escalation_rate(self, mock_engine):
-        from app.services.alert_efficiency_service import calculate_basic_metrics
+        from app.services.alert.alert_efficiency_service import calculate_basic_metrics
 
         alerts = [
             make_alert(is_escalated=True),
@@ -97,7 +97,7 @@ class TestCalculateBasicMetrics:
 
     def test_duplicate_rate(self, mock_engine):
         """同一规则+目标在24小时内重复触发，计入重复"""
-        from app.services.alert_efficiency_service import calculate_basic_metrics
+        from app.services.alert.alert_efficiency_service import calculate_basic_metrics
 
         now = datetime.now()
         a1 = make_alert(
@@ -116,7 +116,7 @@ class TestCalculateBasicMetrics:
 
     def test_timely_processing_rate(self, mock_engine):
         """在响应时限内处理的比率"""
-        from app.services.alert_efficiency_service import calculate_basic_metrics
+        from app.services.alert.alert_efficiency_service import calculate_basic_metrics
 
         now = datetime.now()
         # level2: timeout=4h, resolved in 2h (timely)
@@ -139,7 +139,7 @@ class TestCalculateBasicMetrics:
         assert result["timely_processing_rate"] == pytest.approx(0.5)
 
     def test_mixed_alert_statuses(self, mock_engine):
-        from app.services.alert_efficiency_service import calculate_basic_metrics
+        from app.services.alert.alert_efficiency_service import calculate_basic_metrics
 
         alerts = [
             make_alert(status="RESOLVED"),
@@ -156,7 +156,7 @@ class TestCalculateBasicMetrics:
 
 class TestCalculateProjectMetrics:
     def test_no_project_alerts_returns_empty(self, mock_engine):
-        from app.services.alert_efficiency_service import calculate_project_metrics
+        from app.services.alert.alert_efficiency_service import calculate_project_metrics
 
         alerts = [make_alert(project_id=None)]
         mock_db = MagicMock()
@@ -164,7 +164,7 @@ class TestCalculateProjectMetrics:
         assert result == {}
 
     def test_groups_by_project(self, mock_engine):
-        from app.services.alert_efficiency_service import calculate_project_metrics
+        from app.services.alert.alert_efficiency_service import calculate_project_metrics
 
         mock_project = MagicMock()
         mock_project.project_name = "项目A"
@@ -187,7 +187,7 @@ class TestCalculateProjectMetrics:
 
 class TestCalculateTypeMetrics:
     def test_groups_by_rule_type(self, mock_engine):
-        from app.services.alert_efficiency_service import calculate_type_metrics
+        from app.services.alert.alert_efficiency_service import calculate_type_metrics
 
         a1 = make_alert(status="RESOLVED")
         a1.rule = MagicMock()
@@ -209,7 +209,7 @@ class TestCalculateTypeMetrics:
         assert result["SCHEDULE"]["processing_rate"] == 0.0
 
     def test_no_rule_shows_unknown(self, mock_engine):
-        from app.services.alert_efficiency_service import calculate_type_metrics
+        from app.services.alert.alert_efficiency_service import calculate_type_metrics
 
         a1 = make_alert(status="PENDING")
         a1.rule = None
@@ -224,7 +224,7 @@ class TestCalculateTypeMetrics:
 class TestGenerateRankings:
     def test_filters_projects_with_few_alerts(self):
         """少于5个预警的项目不进入排行榜"""
-        from app.services.alert_efficiency_service import generate_rankings
+        from app.services.alert.alert_efficiency_service import generate_rankings
 
         project_metrics = {
             "小项目": {
@@ -242,7 +242,7 @@ class TestGenerateRankings:
 
     def test_ranks_by_efficiency_score(self):
         """按效率得分正确排序"""
-        from app.services.alert_efficiency_service import generate_rankings
+        from app.services.alert.alert_efficiency_service import generate_rankings
 
         project_metrics = {
             f"项目{i}": {

@@ -62,12 +62,8 @@ class TestProjectSchema:
             "customer_id": 1,
             "contract_amount": -1000.00,
         }
-        # Depending on schema validation, this might raise
-        try:
-            schema = ProjectCreate(**data)
-            assert schema.contract_amount >= 0
-        except ValidationError:
-            pass  # Expected for negative amounts
+        schema = ProjectCreate(**data)
+        assert schema.contract_amount == Decimal("-1000.0")
 
     def test_project_date_range(self):
         """测试项目日期范围"""

@@ -1,27 +1,29 @@
 # -*- coding: utf-8 -*-
 """Auto-generated tests for knowledge modules"""
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock
+
+from app.services.knowledge import (
+    BestPracticeInductionService,
+    KnowledgeExtractionService,
+    KnowledgeSearchService,
+    PitfallAlertService,
+)
 
 
 class TestKnowledgeService:
-    """Tests for knowledge service"""
+    """Tests for knowledge service exports"""
 
     def test_service_init(self):
-        """Test KnowledgeService initialization"""
-        from app.services.knowledge import KnowledgeService
         mock_db = MagicMock()
-        service = KnowledgeService(mock_db)
+        service = KnowledgeSearchService(mock_db)
         assert service.db == mock_db
 
     @pytest.mark.asyncio
     async def test_search_knowledge(self):
-        """Test search_knowledge method"""
-        from app.services.knowledge import KnowledgeService
         mock_db = MagicMock()
-        service = KnowledgeService(mock_db)
-        # Smoke test
-        assert hasattr(service, 'db')
+        service = KnowledgeSearchService(mock_db)
+        assert hasattr(service, "db")
 
 
 class TestKnowledgeEntryService:
@@ -29,11 +31,8 @@ class TestKnowledgeEntryService:
 
     @pytest.mark.asyncio
     async def test_create_entry(self):
-        """Test create_entry method"""
-        from app.services.knowledge import KnowledgeService
         mock_db = MagicMock()
-        service = KnowledgeService(mock_db)
-        # Basic test
+        service = BestPracticeInductionService(mock_db)
         assert service.db == mock_db
 
 
@@ -41,10 +40,8 @@ class TestKnowledgeCategoryService:
     """Tests for knowledge category"""
 
     def test_category_service_init(self):
-        """Test KnowledgeCategoryService initialization"""
-        from app.services.knowledge import KnowledgeService
         mock_db = MagicMock()
-        service = KnowledgeService(mock_db)
+        service = BestPracticeInductionService(mock_db)
         assert service is not None
 
 
@@ -52,11 +49,9 @@ class TestKnowledgeTagService:
     """Tests for knowledge tags"""
 
     def test_tag_service_init(self):
-        """Test KnowledgeTagService initialization"""
-        from app.services.knowledge import KnowledgeService
         mock_db = MagicMock()
-        service = KnowledgeService(mock_db)
-        assert hasattr(service, 'db')
+        service = PitfallAlertService(mock_db)
+        assert hasattr(service, "db")
 
 
 class TestKnowledgeExtractionService:
@@ -64,9 +59,6 @@ class TestKnowledgeExtractionService:
 
     @pytest.mark.asyncio
     async def test_extract_knowledge(self):
-        """Test extract_knowledge method"""
-        from app.services.knowledge import KnowledgeService
         mock_db = MagicMock()
-        service = KnowledgeService(mock_db)
-        # Smoke test
+        service = KnowledgeExtractionService(mock_db)
         assert service is not None

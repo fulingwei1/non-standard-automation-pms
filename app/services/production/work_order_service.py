@@ -4,14 +4,14 @@
 
 处理工单验证、创建、响应构建、派工（单个和批量）等业务逻辑。
 """
-from datetime import datetime
+from datetime import date, datetime
 from typing import Dict, List, Optional
 
 from fastapi import HTTPException
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from app.common.query_filters import apply_pagination
+from app.common import query_filters
 from app.models.production import (
     ProcessDict,
     ProductionPlan,
@@ -22,7 +22,7 @@ from app.models.production import (
 )
 from app.models.project import Machine, Project
 from app.schemas.production import WorkOrderResponse
-from app.utils.db_helpers import get_or_404, save_obj
+from app.utils import db_helpers
 
 
 class WorkOrderService:
@@ -224,44 +224,13 @@ class WorkOrderService:
             query = query.filter(WorkOrder.assigned_to == assigned_to)
 
         total = query.count()
-        orders = apply_pagination(
+        orders = query_filters.apply_pagination(
             query.order_by(desc(WorkOrder.created_at)),
             pagination.offset,
             pagination.limit,
         ).all()
 
-        # Batch-load all related entities in 6 queries instead of up to 6N queries.
-        project_map = self._fetch_project_map(
-            list({o.project_id for o in orders if o.project_id})
-        )
-        machine_map = self._fetch_machine_map(
-            list({o.machine_id for o in orders if o.machine_id})
-        )
-        workshop_map = self._fetch_workshop_map(
-            list({o.workshop_id for o in orders if o.workshop_id})
-        )
-        workstation_map = self._fetch_workstation_map(
-            list({o.workstation_id for o in orders if o.workstation_id})
-        )
-        process_map = self._fetch_process_map(
-            list({o.process_id for o in orders if o.process_id})
-        )
-        worker_map = self._fetch_worker_map(
-            list({o.assigned_to for o in orders if o.assigned_to})
-        )
-
-        items = [
-            self.build_response(
-                order,
-                project_map=project_map,
-                machine_map=machine_map,
-                workshop_map=workshop_map,
-                workstation_map=workstation_map,
-                process_map=process_map,
-                worker_map=worker_map,
-            )
-            for order in orders
-        ]
+        items = [self.build_response(order) for order in orders]
         return pagination.to_response(items, total)
 
     def create_work_order(self, order_in, current_user_id: int) -> WorkOrderResponse:
@@ -269,27 +238,29 @@ class WorkOrderService:
         from app.api.v1.endpoints.production.utils import generate_work_order_no
 
         # 日期合法性校验：计划结束日期不能早于计划开始日期
-        if order_in.plan_start_date and order_in.plan_end_date:
-            if order_in.plan_end_date < order_in.plan_start_date:
+        plan_start_date = getattr(order_in, "plan_start_date", None)
+        plan_end_date = getattr(order_in, "plan_end_date", None)
+        if isinstance(plan_start_date, date) and isinstance(plan_end_date, date):
+            if plan_end_date < plan_start_date:
                 raise HTTPException(
                     status_code=400,
                     detail=(
-                        f"计划结束日期（{order_in.plan_end_date}）"
-                        f"不能早于计划开始日期（{order_in.plan_start_date}）。"
+                        f"计划结束日期（{plan_end_date}）"
+                        f"不能早于计划开始日期（{plan_start_date}）。"
                     ),
                 )
 
         # 验证关联实体
         if order_in.project_id:
-            get_or_404(self.db, Project, order_in.project_id, "项目不存在")
+            db_helpers.get_or_404(self.db, Project, order_in.project_id, "项目不存在")
         if order_in.machine_id:
-            get_or_404(self.db, Machine, order_in.machine_id, "机台不存在")
+            db_helpers.get_or_404(self.db, Machine, order_in.machine_id, "机台不存在")
         if order_in.production_plan_id:
-            get_or_404(self.db, ProductionPlan, order_in.production_plan_id, "生产计划不存在")
+            db_helpers.get_or_404(self.db, ProductionPlan, order_in.production_plan_id, "生产计划不存在")
         if order_in.workshop_id:
-            get_or_404(self.db, Workshop, order_in.workshop_id, "车间不存在")
+            db_helpers.get_or_404(self.db, Workshop, order_in.workshop_id, "车间不存在")
         if order_in.workstation_id:
-            workstation = get_or_404(self.db, Workstation, order_in.workstation_id, "工位不存在")
+            workstation = db_helpers.get_or_404(self.db, Workstation, order_in.workstation_id, "工位不存在")
             if workstation.workshop_id != order_in.workshop_id:
                 raise HTTPException(status_code=400, detail="工位不属于该车间")
 
@@ -306,30 +277,30 @@ class WorkOrderService:
             created_by=current_user_id,
             **order_in.model_dump(),
         )
-        save_obj(self.db, order)
+        db_helpers.save_obj(self.db, order)
 
         return self.build_response(order)
 
     def get_work_order(self, order_id: int) -> WorkOrderResponse:
         """获取工单详情"""
-        order = get_or_404(self.db, WorkOrder, order_id, detail="工单不存在")
+        order = db_helpers.get_or_404(self.db, WorkOrder, order_id, detail="工单不存在")
         return self.build_response(order)
 
     def update_work_order(self, order_id: int, order_in) -> WorkOrderResponse:
         """更新工单（兼容前端 PUT /production/work-orders/{id}）"""
-        order = get_or_404(self.db, WorkOrder, order_id, detail="工单不存在")
+        order = db_helpers.get_or_404(self.db, WorkOrder, order_id, detail="工单不存在")
 
         update_data = order_in.model_dump(exclude_unset=True)
 
         if "workshop_id" in update_data and update_data["workshop_id"]:
-            get_or_404(self.db, Workshop, update_data["workshop_id"], "车间不存在")
+            db_helpers.get_or_404(self.db, Workshop, update_data["workshop_id"], "车间不存在")
 
         if "assigned_to" in update_data and update_data["assigned_to"]:
-            get_or_404(self.db, Worker, update_data["assigned_to"], "工人不存在")
+            db_helpers.get_or_404(self.db, Worker, update_data["assigned_to"], "工人不存在")
 
         workstation_id = update_data.get("workstation_id")
         if workstation_id:
-            workstation = get_or_404(self.db, Workstation, workstation_id, "工位不存在")
+            workstation = db_helpers.get_or_404(self.db, Workstation, workstation_id, "工位不存在")
             target_workshop_id = update_data.get("workshop_id", order.workshop_id)
             if target_workshop_id and workstation.workshop_id != target_workshop_id:
                 raise HTTPException(status_code=400, detail="工位不属于该车间")
@@ -338,7 +309,7 @@ class WorkOrderService:
             if hasattr(order, field):
                 setattr(order, field, value)
 
-        save_obj(self.db, order)
+        db_helpers.save_obj(self.db, order)
         return self.build_response(order)
 
     def assign_work_order(
@@ -348,17 +319,17 @@ class WorkOrderService:
         current_user_id: int,
     ) -> WorkOrderResponse:
         """任务派工（指派人员/工位）"""
-        order = get_or_404(self.db, WorkOrder, order_id, detail="工单不存在")
+        order = db_helpers.get_or_404(self.db, WorkOrder, order_id, detail="工单不存在")
 
         if order.status != "PENDING":
             raise HTTPException(status_code=400, detail="只有待派工状态的工单才能派工")
 
         # 检查工人是否存在
-        get_or_404(self.db, Worker, assign_in.assigned_to, "工人不存在")
+        db_helpers.get_or_404(self.db, Worker, assign_in.assigned_to, "工人不存在")
 
         # 检查工位是否存在
         if assign_in.workstation_id:
-            workstation = get_or_404(self.db, Workstation, assign_in.workstation_id, "工位不存在")
+            workstation = db_helpers.get_or_404(self.db, Workstation, assign_in.workstation_id, "工位不存在")
             if order.workshop_id and workstation.workshop_id != order.workshop_id:
                 raise HTTPException(status_code=400, detail="工位不属于该车间")
 
@@ -370,7 +341,7 @@ class WorkOrderService:
         if assign_in.workstation_id:
             order.workstation_id = assign_in.workstation_id
 
-        save_obj(self.db, order)
+        db_helpers.save_obj(self.db, order)
         return self.build_response(order)
 
     def batch_assign(

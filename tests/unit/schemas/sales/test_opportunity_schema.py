@@ -22,8 +22,8 @@ class TestOpportunitySchema:
     def test_opportunity_create_valid(self):
         """Test valid Opportunity creation"""
         try:
-            schema = OpportunityCreate()
-            assert schema is not None
+            schema = OpportunityCreate(customer_id=1, opp_name="测试机会")
+            assert schema.customer_id == 1
         except TypeError:
             pass  # Schema requires fields
 

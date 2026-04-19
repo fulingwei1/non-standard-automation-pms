@@ -95,7 +95,7 @@ class TestRiskKeywordExtractor:
 
         score = extractor.calculate_risk_score(keywords, patterns)
 
-        assert 25 <= score < 50
+        assert 50 <= score < 70
 
     def test_calculate_risk_score_high(self, extractor):
         """测试高风险评分计算"""

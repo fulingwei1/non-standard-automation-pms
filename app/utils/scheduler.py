@@ -130,7 +130,6 @@ def _wrap_job_callable(func: Callable[..., Any], task: Dict[str, Any]) -> Callab
 def _load_task_config_from_db(task_id: str) -> Optional[Dict[str, Any]]:
     """从数据库加载任务配置"""
     try:
-        from app.dependencies import get_db_session
         from app.models.scheduler_config import SchedulerTaskConfig
 
         with get_db_session() as db:

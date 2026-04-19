@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Auto-generated tests for unified import modules"""
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import MagicMock, patch
-import importlib
 
 
 class TestUnifiedImportBase:
@@ -17,8 +17,6 @@ class TestUnifiedImportBase:
 
 
 class TestBOMImporter:
-    """Tests for BOM importer"""
-
     def test_module_import(self):
         try:
             from app.services.unified_import.bom_importer import BOMImporter
@@ -29,8 +27,6 @@ class TestBOMImporter:
 
 
 class TestMaterialImporter:
-    """Tests for material importer"""
-
     def test_module_import(self):
         try:
             from app.services.unified_import.material_importer import MaterialImporter
@@ -41,8 +37,6 @@ class TestMaterialImporter:
 
 
 class TestTaskImporter:
-    """Tests for task importer"""
-
     def test_module_import(self):
         try:
             from app.services.unified_import.task_importer import TaskImporter
@@ -53,20 +47,15 @@ class TestTaskImporter:
 
 
 class TestTimesheetImporter:
-    """Tests for timesheet importer"""
-
     def test_module_import(self):
         try:
             from app.services.unified_import.timesheet_importer import TimesheetImporter
-            importer = TimesheetImporter()
-            assert importer is not None
+            assert hasattr(TimesheetImporter, "import_timesheet_data")
         except ImportError:
             pytest.skip("Module not found")
 
 
 class TestUnifiedImporter:
-    """Tests for unified importer"""
-
     def test_module_import(self):
         try:
             from app.services.unified_import.unified_importer import UnifiedImporter
@@ -77,8 +66,6 @@ class TestUnifiedImporter:
 
 
 class TestUserImporter:
-    """Tests for user importer"""
-
     def test_module_import(self):
         try:
             from app.services.unified_import.user_importer import UserImporter
@@ -89,8 +76,6 @@ class TestUserImporter:
 
 
 class TestUrgentPurchaseService:
-    """Tests for urgent purchase"""
-
     def test_service_import(self):
         try:
             from app.services.urgent_purchase_from_shortage_service import UrgentPurchaseService
@@ -102,26 +87,20 @@ class TestUrgentPurchaseService:
 
 
 class TestUserImportService:
-    """Tests for user import"""
-
     def test_service_import(self):
         try:
             from app.services.user_import_service import UserImportService
-            mock_db = MagicMock()
-            service = UserImportService(mock_db)
-            assert service.db == mock_db
+            assert hasattr(UserImportService, "read_file")
+            assert hasattr(UserImportService, "normalize_columns")
         except ImportError:
             pytest.skip("Module not found")
 
 
 class TestUserSyncService:
-    """Tests for user sync"""
-
     def test_service_import(self):
         try:
             from app.services.user_sync_service import UserSyncService
-            mock_db = MagicMock()
-            service = UserSyncService(mock_db)
-            assert service.db == mock_db
+            assert hasattr(UserSyncService, "get_role_by_position")
+            assert hasattr(UserSyncService, "create_user_from_employee")
         except ImportError:
             pytest.skip("Module not found")

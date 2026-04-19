@@ -433,13 +433,16 @@ class ReportService:
     @staticmethod
     def get_last_month_period() -> str:
         """获取上月周期字符串（如：2026-01）"""
-        today = datetime.now()
-        if today.month == 1:
-            last_month = datetime(today.year - 1, 12, 1)
+        now = datetime.now()
+        year = now.year
+        month = now.month
+        if month == 1:
+            year -= 1
+            month = 12
         else:
-            last_month = datetime(today.year, today.month - 1, 1)
+            month -= 1
+        return f"{year:04d}-{month:02d}"
 
-        return last_month.strftime("%Y-%m")
 
     @staticmethod
     def archive_report(

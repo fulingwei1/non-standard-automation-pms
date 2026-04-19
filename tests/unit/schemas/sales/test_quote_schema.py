@@ -22,8 +22,8 @@ class TestQuoteSchema:
     def test_quote_create_valid(self):
         """Test valid Quote creation"""
         try:
-            schema = QuoteCreate()
-            assert schema is not None
+            schema = QuoteCreate(customer_name="客户A", quote_name="测试报价")
+            assert schema.quote_name == "测试报价"
         except TypeError:
             pass  # Schema requires fields
 

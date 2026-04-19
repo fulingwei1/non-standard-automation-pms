@@ -121,10 +121,14 @@ class Customer360Service:
         payment_plans: List[ProjectPaymentPlan],
         communications: List[CustomerCommunication],
     ) -> Dict[str, Any]:
-        total_contract_amount = sum(
-            _decimal(getattr(c, "total_amount", None) or getattr(c, "contract_amount", None))
-            for c in contracts
-        )
+        total_contract_amount = Decimal("0")
+        for c in contracts:
+            amount = getattr(c, "total_amount", None)
+            if not isinstance(amount, (int, float, Decimal, str)):
+                amount = getattr(c, "contract_amount", None)
+            if not isinstance(amount, (int, float, Decimal, str)):
+                amount = getattr(c, "amount", None)
+            total_contract_amount += _decimal(amount)
         open_receivables = Decimal("0")
         for plan in payment_plans:
             if plan.status in ("PENDING", "INVOICED") or _decimal(plan.actual_amount) < _decimal(

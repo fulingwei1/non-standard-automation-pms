@@ -19,6 +19,7 @@ from app.models.user import (
     Role,
     RoleApiPermission,
     User,
+    UserRole,
 )
 from app.services.permission_management.permission_audit_service import PermissionAuditService
 from app.services.permission_management.permission_cache_service import get_permission_cache_service
@@ -269,6 +270,31 @@ class PermissionManagementService:
             .all()
         )
 
+    def get_user(self, user_id: int) -> Optional[User]:
+        """获取用户。"""
+        return self.db.query(User).filter(User.id == user_id).first()
+
+    def get_user_permissions(
+        self,
+        user_id: int,
+        tenant_id: Optional[int],
+    ) -> List[ApiPermission]:
+        """获取用户的权限详情列表。"""
+        permission_codes = PermissionService.get_user_permissions(self.db, user_id, tenant_id)
+        if not permission_codes:
+            return []
+
+        return (
+            self.db.query(ApiPermission)
+            .filter(
+                ApiPermission.perm_code.in_(permission_codes),
+                ApiPermission.is_active,
+                self._permission_scope_filter(tenant_id),
+            )
+            .order_by(ApiPermission.module, ApiPermission.perm_code)
+            .all()
+        )
+
     def assign_role_permissions(
         self,
         role_id: int,
@@ -309,18 +335,10 @@ class PermissionManagementService:
         role_id: int,
         tenant_id: int,
     ) -> None:
-        """清除权限缓存"""
-        from app.services.permission_management.permission_service import PermissionService
-
-        permission_codes = PermissionService.get_user_permissions(self.db, user_id, tenant_id)
-
-        # 获取权限详情
-        return (
-            self.db.query(ApiPermission)
-            .filter(ApiPermission.perm_code.in_(permission_codes), ApiPermission.is_active)
-            .order_by(ApiPermission.module, ApiPermission.perm_code)
-            .all()
-        )
+        """清除角色权限及相关用户权限缓存。"""
+        cache_service = get_permission_cache_service()
+        user_ids = [user_id for (user_id,) in self.db.query(UserRole.user_id).filter(UserRole.role_id == role_id).all()]
+        cache_service.invalidate_role_and_users(role_id, user_ids=user_ids, tenant_id=tenant_id)
 
     def check_user_permission(
         self,

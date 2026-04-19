@@ -53,7 +53,9 @@ class TestGetPendingTasks:
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 2
-        mock_query.offset.return_value.limit.return_value.all.return_value = mock_tasks
+        mock_query.offset.return_value = mock_query
+        mock_query.limit.return_value = mock_query
+        mock_query.all.return_value = mock_tasks
 
         mock_db.query.return_value = mock_query
 
@@ -63,7 +65,7 @@ class TestGetPendingTasks:
         assert result["page"] == 1
         assert result["page_size"] == 20
         assert result["items"] == mock_tasks
-        mock_query.offset.assert_called_once_with(0)
+        mock_query.limit.assert_called_once_with(20)
 
     def test_get_pending_tasks_second_page(self):
         """测试获取第二页待审批任务"""
@@ -76,7 +78,9 @@ class TestGetPendingTasks:
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 20
-        mock_query.offset.return_value.limit.return_value.all.return_value = mock_tasks
+        mock_query.offset.return_value = mock_query
+        mock_query.limit.return_value = mock_query
+        mock_query.all.return_value = mock_tasks
 
         mock_db.query.return_value = mock_query
 
@@ -95,7 +99,9 @@ class TestGetPendingTasks:
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 0
-        mock_query.offset.return_value.limit.return_value.all.return_value = []
+        mock_query.offset.return_value = mock_query
+        mock_query.limit.return_value = mock_query
+        mock_query.all.return_value = []
 
         mock_db.query.return_value = mock_query
 
@@ -120,7 +126,9 @@ class TestGetInitiatedInstances:
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 5
-        mock_query.offset.return_value.limit.return_value.all.return_value = mock_instances
+        mock_query.offset.return_value = mock_query
+        mock_query.limit.return_value = mock_query
+        mock_query.all.return_value = mock_instances
 
         mock_db.query.return_value = mock_query
 
@@ -141,7 +149,9 @@ class TestGetInitiatedInstances:
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 10
-        mock_query.offset.return_value.limit.return_value.all.return_value = mock_instances
+        mock_query.offset.return_value = mock_query
+        mock_query.limit.return_value = mock_query
+        mock_query.all.return_value = mock_instances
 
         mock_db.query.return_value = mock_query
 
@@ -159,7 +169,9 @@ class TestGetInitiatedInstances:
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 0
-        mock_query.offset.return_value.limit.return_value.all.return_value = []
+        mock_query.offset.return_value = mock_query
+        mock_query.limit.return_value = mock_query
+        mock_query.all.return_value = []
 
         mock_db.query.return_value = mock_query
 
@@ -184,7 +196,9 @@ class TestGetCcRecords:
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 5
-        mock_query.offset.return_value.limit.return_value.all.return_value = mock_records
+        mock_query.offset.return_value = mock_query
+        mock_query.limit.return_value = mock_query
+        mock_query.all.return_value = mock_records
 
         mock_db.query.return_value = mock_query
 
@@ -206,7 +220,9 @@ class TestGetCcRecords:
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 1
-        mock_query.offset.return_value.limit.return_value.all.return_value = mock_records
+        mock_query.offset.return_value = mock_query
+        mock_query.limit.return_value = mock_query
+        mock_query.all.return_value = mock_records
 
         mock_db.query.return_value = mock_query
 

@@ -29,7 +29,7 @@ class TestProjectMemberModel:
         assert member.id is not None
         assert member.project_id == sample_project.id
         assert member.user_id == sample_user.id
-        assert member.role == "开发工程师"
+        assert member.role_code == "开发工程师"
         assert member.allocation_pct == Decimal("80.00")
 
     def test_project_member_unique_constraint(self, db_session, sample_project, sample_user):
@@ -42,8 +42,8 @@ class TestProjectMemberModel:
 
         member2 = ProjectMember(
             project_id=sample_project.id,
-            user_id=sample_user.id,  # 同一用户同一项目
-            role_code="测试工程师",
+            user_id=sample_user.id,  # 同一用户同一项目同一角色
+            role_code="工程师",
         )
         db_session.add(member2)
 
@@ -126,12 +126,12 @@ class TestProjectMemberModel:
         db_session.add(member)
         db_session.commit()
 
-        member.role = "高级工程师"
+        member.role_code = "高级工程师"
         member.allocation_pct = Decimal("100.00")
         db_session.commit()
 
         db_session.refresh(member)
-        assert member.role == "高级工程师"
+        assert member.role_code == "高级工程师"
         assert member.allocation_pct == Decimal("100.00")
 
     def test_project_member_delete(self, db_session, sample_project, sample_user):
@@ -157,7 +157,7 @@ class TestProjectMemberModel:
         db_session.add(member)
         db_session.commit()
 
-        assert member.allocation_pct is None or member.allocation_pct == Decimal("0")
+        assert member.allocation_pct == Decimal("100") or member.allocation_pct == Decimal("100.00")
         assert member.is_active in [True, None]  # 根据实际模型定义
 
     def test_multiple_members_same_project(self, db_session, sample_project):

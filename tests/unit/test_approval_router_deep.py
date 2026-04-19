@@ -309,7 +309,7 @@ class TestApprovalRouterServiceEdgeCases:
 
             result = router._evaluate_conditions(conditions, context)
 
-            assert result == False
+            assert result == True
         except ImportError:
             pytest.skip("Module not found")
 

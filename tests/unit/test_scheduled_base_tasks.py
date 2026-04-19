@@ -29,7 +29,7 @@ class TestSendNotificationForAlert:
         alert = MagicMock()
         alert.alert_no = "ALERT-001"
 
-        with patch("app.services.notification_dispatcher.NotificationDispatcher") as MockDisp:
+        with patch("app.services.notification.notification_dispatcher.NotificationDispatcher") as MockDisp:
             instance = MagicMock()
             instance.dispatch_alert_notifications.return_value = {
                 "created": 2,
@@ -54,7 +54,7 @@ class TestSendNotificationForAlert:
         alert = MagicMock()
         alert.alert_no = "ALERT-002"
 
-        with patch("app.services.notification_dispatcher.NotificationDispatcher") as MockDisp:
+        with patch("app.services.notification.notification_dispatcher.NotificationDispatcher") as MockDisp:
             instance = MagicMock()
             instance.dispatch_alert_notifications.return_value = {
                 "created": 0,
@@ -79,7 +79,7 @@ class TestSendNotificationForAlert:
         alert.alert_no = "ALERT-ERR"
 
         with patch(
-            "app.services.notification_dispatcher.NotificationDispatcher",
+            "app.services.notification.notification_dispatcher.NotificationDispatcher",
             side_effect=Exception("dispatch error"),
         ):
             mock_logger = MagicMock()
@@ -97,7 +97,7 @@ class TestSendNotificationForAlert:
         alert = MagicMock()
         alert.alert_no = "ALERT-003"
 
-        with patch("app.services.notification_dispatcher.NotificationDispatcher") as MockDisp:
+        with patch("app.services.notification.notification_dispatcher.NotificationDispatcher") as MockDisp:
             instance = MagicMock()
             instance.dispatch_alert_notifications.return_value = {"created": 0}
             MockDisp.return_value = instance
@@ -117,8 +117,10 @@ class TestEnqueueOrDispatchNotification:
 
     def test_enqueued_successfully(self):
         """成功入队 → 返回 queued=True"""
+        from types import SimpleNamespace
+
         dispatcher = MagicMock()
-        dispatcher.build_notification_request.return_value = MagicMock(__dict__={"key": "val"})
+        dispatcher.build_notification_request.return_value = SimpleNamespace(key="val")
 
         notification = MagicMock()
         notification.id = 1
@@ -129,7 +131,7 @@ class TestEnqueueOrDispatchNotification:
         user = MagicMock()
 
         with patch(
-            "app.services.notification_queue.enqueue_notification",
+            "app.services.notification.notification_queue.enqueue_notification",
             return_value=True,
         ):
             from app.utils.scheduled_tasks.base import enqueue_or_dispatch_notification
@@ -142,8 +144,10 @@ class TestEnqueueOrDispatchNotification:
 
     def test_queue_full_falls_back_to_dispatch(self):
         """入队失败 → fallback 同步发送"""
+        from types import SimpleNamespace
+
         dispatcher = MagicMock()
-        dispatcher.build_notification_request.return_value = MagicMock(__dict__={"key": "val"})
+        dispatcher.build_notification_request.return_value = SimpleNamespace(key="val")
         dispatcher.dispatch.return_value = True
 
         notification = MagicMock()
@@ -155,7 +159,7 @@ class TestEnqueueOrDispatchNotification:
         user = MagicMock()
 
         with patch(
-            "app.services.notification_queue.enqueue_notification",
+            "app.services.notification.notification_queue.enqueue_notification",
             return_value=False,
         ):
             from app.utils.scheduled_tasks.base import enqueue_or_dispatch_notification
@@ -197,11 +201,10 @@ class TestEnqueueOrDispatchNotification:
         alert = MagicMock()
         user = MagicMock()
 
-        pre_built = MagicMock()
-        pre_built.__dict__ = {"channel": "SMS"}
+        pre_built = type("Req", (), {"channel": "SMS"})()
 
         with patch(
-            "app.services.notification_queue.enqueue_notification",
+            "app.services.notification.notification_queue.enqueue_notification",
             return_value=False,
         ):
             from app.utils.scheduled_tasks.base import enqueue_or_dispatch_notification

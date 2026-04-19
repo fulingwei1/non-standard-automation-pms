@@ -15,6 +15,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.services.collaboration_rating import CollaborationRatingService
+from app.services.collaboration_rating.ratings import RatingManager
+from app.services.collaboration_rating.selector import CollaboratorSelector
+from app.services.collaboration_rating.statistics import RatingStatistics
+
 
 class TestCollaborationRatingService:
     """测试协作评分服务"""
@@ -38,49 +43,49 @@ class TestRatingManager:
     @pytest.fixture
     def manager(self, db_session):
         """创建管理器实例"""
-        from app.services.collaboration_rating.rating_manager import RatingManager
-
-        return RatingManager(db_session)
+        service = CollaborationRatingService(db_session)
+        return service.ratings
 
     def test_manager_initialization(self, manager):
         """测试管理器初始化"""
         assert manager is not None
 
-    def test_create_rating_invitations(self, manager, db_session):
+    def test_create_rating_invitations(self, manager):
         """测试创建评分邀请"""
         result = manager.create_rating_invitations(
-            project_id=1,
-            assessment_period="2025Q1",
+            engineer_id=1,
+            period_id=1,
+            collaborator_ids=[],
         )
-
-        assert result is not None or isinstance(result, (list, int))
-
-    def test_submit_rating_not_found(self, manager):
-        """测试提交评分 - 评分不存在"""
-        result = manager.submit_rating(
-            rating_id=99999,
-            communication_score=4,
-            response_speed_score=4,
-            delivery_quality_score=5,
-            interface_compliance_score=4,
-        )
-
-        assert result is False or result is None
-
-    def test_get_pending_ratings(self, manager, db_session):
-        """测试获取待完成评分"""
-        result = manager.get_pending_ratings(user_id=1)
 
         assert isinstance(result, list)
 
-    def test_auto_complete_missing_ratings(self, manager, db_session):
+    def test_submit_rating_not_found(self, manager):
+        """测试提交评分 - 评分不存在"""
+        with pytest.raises(ValueError):
+            manager.submit_rating(
+                rating_id=99999,
+                rater_id=1,
+                communication_score=4,
+                response_score=4,
+                delivery_score=5,
+                interface_score=4,
+            )
+
+    def test_get_pending_ratings(self, manager):
+        """测试获取待完成评分"""
+        result = manager.get_pending_ratings(rater_id=1)
+
+        assert isinstance(result, list)
+
+    def test_auto_complete_missing_ratings(self, manager):
         """测试自动完成缺失评分"""
         result = manager.auto_complete_missing_ratings(
-            assessment_period="2025Q1",
+            period_id=1,
             default_score=75,
         )
 
-        assert result is not None or isinstance(result, int)
+        assert isinstance(result, int)
 
 
 class TestRatingDimensions:
@@ -128,19 +133,12 @@ class TestSelector:
 
     def test_import_class(self):
         """测试导入类"""
-        from app.services.collaboration_rating.selector import Selector
-
-        assert Selector is not None
+        assert CollaboratorSelector is not None
 
     def test_select_collaborators(self, db_session):
         """测试选择协作者"""
-        from app.services.collaboration_rating.selector import Selector
-
-        selector = Selector(db_session)
-        result = selector.select_collaborators(
-            user_id=1,
-            project_id=1,
-        )
+        selector = CollaboratorSelector(db_session, CollaborationRatingService(db_session))
+        result = selector._get_target_job_types("mechanical")
 
         assert isinstance(result, list)
 
@@ -150,28 +148,22 @@ class TestStatistics:
 
     def test_import_class(self):
         """测试导入类"""
-        from app.services.collaboration_rating.statistics import Statistics
-
-        assert Statistics is not None
+        assert RatingStatistics is not None
 
     def test_get_user_statistics(self, db_session):
         """测试获取用户统计"""
-        from app.services.collaboration_rating.statistics import Statistics
-
-        stats = Statistics(db_session)
-        result = stats.get_user_statistics(user_id=1)
+        stats = RatingStatistics(db_session, CollaborationRatingService(db_session))
+        result = stats.get_average_collaboration_score(engineer_id=1, period_id=1)
 
         assert result is not None
-        assert isinstance(result, dict)
 
     def test_get_department_statistics(self, db_session):
         """测试获取部门统计"""
-        from app.services.collaboration_rating.statistics import Statistics
-
-        stats = Statistics(db_session)
-        result = stats.get_department_statistics(department_id=1)
+        stats = RatingStatistics(db_session, CollaborationRatingService(db_session))
+        result = stats.get_rating_statistics(period_id=1)
 
         assert result is not None
+        assert isinstance(result, dict)
 
 
 class TestCollaborationRatingModule:

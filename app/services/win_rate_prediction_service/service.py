@@ -18,12 +18,17 @@ from app.models.sales.presale_ai_win_rate import (
 )
 
 from .ai_service import AIWinRatePredictionService
+from .base import WinRatePredictionService as LegacyWinRatePredictionService
 
 logger = logging.getLogger(__name__)
 
 
 class WinRatePredictionService:
     """完整的赢率预测服务"""
+
+    # 兼容旧同步预测接口依赖的常量
+    DIMENSION_WEIGHTS = LegacyWinRatePredictionService.DIMENSION_WEIGHTS
+    PROBABILITY_THRESHOLDS = LegacyWinRatePredictionService.PROBABILITY_THRESHOLDS
 
     def __init__(self, db: AsyncSession):
         self.db = db

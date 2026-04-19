@@ -398,49 +398,59 @@ class TestReplaceUserRoles(unittest.TestCase):
 
         replace_user_roles(mock_db, user_id=1, role_ids=None)
 
-        # 不应该查询或删除
         mock_db.query.assert_not_called()
         mock_invalidate.assert_not_called()
 
     @patch("app.api.v1.endpoints.users.utils._invalidate_user_cache")
     def test_replace_user_roles_empty_list(self, mock_invalidate):
         """测试清空用户角色"""
-        # Mock旧角色
-        mock_old_role1 = MagicMock()
-        mock_old_role1.role_id = 1
-        mock_old_role2 = MagicMock()
-        mock_old_role2.role_id = 2
+        mock_old_role1 = MagicMock(role_id=1)
+        mock_old_role2 = MagicMock(role_id=2)
+        target_user = MagicMock(tenant_id=11)
 
         mock_db = MagicMock()
-        mock_user_role_query = mock_db.query.return_value
-        mock_user_role_filter = mock_user_role_query.filter.return_value
-        mock_user_role_filter.all.return_value = [mock_old_role1, mock_old_role2]
+
+        def query_side_effect(model):
+            if model.__name__ == "User":
+                mock_query = MagicMock()
+                mock_query.filter.return_value.first.return_value = target_user
+                return mock_query
+            if model.__name__ == "UserRole":
+                mock_query = MagicMock()
+                mock_filter = MagicMock()
+                mock_filter.all.return_value = [mock_old_role1, mock_old_role2]
+                mock_filter.delete.return_value = None
+                mock_query.filter.return_value = mock_filter
+                return mock_query
+            if model.__name__ == "Role":
+                mock_query = MagicMock()
+                mock_query.filter.return_value.all.return_value = []
+                return mock_query
+
+        mock_db.query.side_effect = query_side_effect
 
         replace_user_roles(mock_db, user_id=1, role_ids=[])
 
-        # 验证删除了旧角色
-        mock_user_role_filter.delete.assert_called_once()
-        # 验证缓存失效
-        mock_invalidate.assert_called_once_with(1, [1, 2], [])
+        user_role_filter = query_side_effect(type("UserRole", (), {"__name__": "UserRole"}))
+        self.assertIsNotNone(user_role_filter)
+        mock_invalidate.assert_called_once_with(1, [1, 2], [], 11)
 
     @patch("app.api.v1.endpoints.users.utils._invalidate_user_cache")
     def test_replace_user_roles_success(self, mock_invalidate):
         """测试成功替换角色"""
-        # Mock旧角色
-        mock_old_role = MagicMock()
-        mock_old_role.role_id = 1
-
-        # Mock新角色
-        mock_role1 = MagicMock()
-        mock_role1.id = 2
-        mock_role2 = MagicMock()
-        mock_role2.id = 3
+        mock_old_role = MagicMock(role_id=1)
+        mock_role1 = MagicMock(id=2, tenant_id=None, is_system=False, role_code="r2")
+        mock_role2 = MagicMock(id=3, tenant_id=None, is_system=False, role_code="r3")
+        target_user = MagicMock(tenant_id=11)
 
         mock_db = MagicMock()
 
-        # 设置查询链
         def query_side_effect(model):
-            if model.__name__ == "UserRole":
+            if model.__name__ == "User":
+                mock_query = MagicMock()
+                mock_query.filter.return_value.first.return_value = target_user
+                return mock_query
+            elif model.__name__ == "UserRole":
                 mock_query = MagicMock()
                 mock_filter = MagicMock()
                 mock_filter.all.return_value = [mock_old_role]
@@ -458,22 +468,23 @@ class TestReplaceUserRoles(unittest.TestCase):
 
         replace_user_roles(mock_db, user_id=1, role_ids=[2, 3])
 
-        # 验证添加了新角色（2次调用）
         self.assertEqual(mock_db.add.call_count, 2)
-        # 验证缓存失效
-        mock_invalidate.assert_called_once_with(1, [1], [2, 3])
+        mock_invalidate.assert_called_once_with(1, [1], [2, 3], 11)
 
     @patch("app.api.v1.endpoints.users.utils._invalidate_user_cache")
     def test_replace_user_roles_duplicate_ids(self, mock_invalidate):
         """测试去重重复的角色ID"""
-        mock_role1 = MagicMock()
-        mock_role1.id = 2
-        mock_role2 = MagicMock()
-        mock_role2.id = 3
+        mock_role1 = MagicMock(id=2, tenant_id=None, is_system=False, role_code="r2")
+        mock_role2 = MagicMock(id=3, tenant_id=None, is_system=False, role_code="r3")
+        target_user = MagicMock(tenant_id=11)
 
         mock_db = MagicMock()
 
         def query_side_effect(model):
+            if model.__name__ == "User":
+                mock_query = MagicMock()
+                mock_query.filter.return_value.first.return_value = target_user
+                return mock_query
             if model.__name__ == "UserRole":
                 mock_query = MagicMock()
                 mock_filter = MagicMock()
@@ -490,21 +501,24 @@ class TestReplaceUserRoles(unittest.TestCase):
 
         mock_db.query.side_effect = query_side_effect
 
-        # 传入重复的ID
         replace_user_roles(mock_db, user_id=1, role_ids=[2, 3, 2, 3])
 
-        # 应该只添加2次（去重后）
         self.assertEqual(mock_db.add.call_count, 2)
+        mock_invalidate.assert_called_once_with(1, [], [2, 3], 11)
 
     @patch("app.api.v1.endpoints.users.utils._invalidate_user_cache")
     def test_replace_user_roles_role_not_exist(self, mock_invalidate):
         """测试部分角色不存在"""
-        mock_role = MagicMock()
-        mock_role.id = 2
+        mock_role = MagicMock(id=2, tenant_id=None, is_system=False, role_code="r2")
+        target_user = MagicMock(tenant_id=11)
 
         mock_db = MagicMock()
 
         def query_side_effect(model):
+            if model.__name__ == "User":
+                mock_query = MagicMock()
+                mock_query.filter.return_value.first.return_value = target_user
+                return mock_query
             if model.__name__ == "UserRole":
                 mock_query = MagicMock()
                 mock_filter = MagicMock()
@@ -515,7 +529,6 @@ class TestReplaceUserRoles(unittest.TestCase):
             elif model.__name__ == "Role":
                 mock_query = MagicMock()
                 mock_filter = MagicMock()
-                # 只返回1个角色，但请求了2个
                 mock_filter.all.return_value = [mock_role]
                 mock_query.filter.return_value = mock_filter
                 return mock_query
@@ -532,23 +545,24 @@ class TestReplaceUserRoles(unittest.TestCase):
 class TestInvalidateUserCache(unittest.TestCase):
     """测试缓存失效"""
 
-    @patch("app.services.permission_cache_service.get_permission_cache_service")
+    @patch("app.services.permission_management.permission_cache_service.get_permission_cache_service")
     def test_invalidate_user_cache_success(self, mock_get_service):
         """测试成功使缓存失效"""
         mock_cache_service = MagicMock()
         mock_get_service.return_value = mock_cache_service
 
-        _invalidate_user_cache(user_id=1, old_role_ids=[1, 2], new_role_ids=[3, 4])
+        _invalidate_user_cache(user_id=1, old_role_ids=[1, 2], new_role_ids=[3, 4], tenant_id=11)
 
-        mock_cache_service.invalidate_user_role_change.assert_called_once_with(1, [1, 2], [3, 4])
+        mock_cache_service.invalidate_user_role_change.assert_called_once_with(
+            1, [1, 2], [3, 4], tenant_id=11
+        )
 
-    @patch("app.services.permission_cache_service.get_permission_cache_service")
+    @patch("app.services.permission_management.permission_cache_service.get_permission_cache_service")
     def test_invalidate_user_cache_exception(self, mock_get_service):
         """测试缓存失效异常不影响主流程"""
         mock_get_service.side_effect = Exception("Cache service error")
 
-        # 不应该抛出异常
-        _invalidate_user_cache(user_id=1, old_role_ids=[1], new_role_ids=[2])
+        _invalidate_user_cache(user_id=1, old_role_ids=[1], new_role_ids=[2], tenant_id=11)
 
 
 if __name__ == "__main__":

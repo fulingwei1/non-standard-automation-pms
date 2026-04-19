@@ -170,6 +170,12 @@ class BackupService:
             if not file_path.exists():
                 return {"status": "error", "message": f"备份文件不存在: {file_path}"}
 
+            try:
+                if file_path.stat().st_size <= 0:
+                    return {"status": "invalid", "message": "备份文件无效或已损坏"}
+            except OSError as exc:
+                logger.warning(f"读取备份文件信息失败，改为继续执行脚本校验: {exc}")
+
             # 执行验证脚本
             script_path = cls.SCRIPT_DIR / "verify_backup.sh"
 

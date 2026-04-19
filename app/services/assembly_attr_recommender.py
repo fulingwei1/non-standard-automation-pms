@@ -259,7 +259,7 @@ class AssemblyAttrRecommender:
         matched_stages = []
         for stage_code, keywords in cls.KEYWORD_STAGE_MAPPING.items():
             for keyword in keywords:
-                if keyword in material_name_lower:
+                if keyword.lower() in material_name_lower:
                     matched_stages.append(stage_code)
                     break
 
@@ -289,7 +289,7 @@ class AssemblyAttrRecommender:
         }
 
         matched_keywords = [
-            kw for kw in cls.KEYWORD_STAGE_MAPPING[stage_code] if kw in material_name_lower
+            kw for kw in cls.KEYWORD_STAGE_MAPPING[stage_code] if kw.lower() in material_name_lower
         ]
 
         return AssemblyAttrRecommendation(

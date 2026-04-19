@@ -114,7 +114,9 @@ router.include_router(quote_templates.router, tags=["sales-quote-templates"])
 router.include_router(quote_versions.router, tags=["sales-quote-versions"])
 
 # 新增AI销售助手、报价智能化、销售自动化路由
-from app.api.v1.endpoints import ai_sales_assistant, sales_automation, sales_intelligent_quote
+from app.api.v1.endpoints import ai_sales_assistant
+from . import automation as sales_automation
+from . import intelligent_quote as sales_intelligent_quote
 
 router.include_router(ai_sales_assistant.router, prefix="/ai", tags=["sales-ai-assistant"])
 router.include_router(sales_intelligent_quote.router, tags=["sales-intelligent-quote"])
@@ -136,21 +138,21 @@ from app.api.v1.endpoints import customer_360
 router.include_router(customer_360.router, prefix="/customer-360", tags=["sales-customer-360"])
 
 # 销售绩效与激励路由
-from app.api.v1.endpoints import sales_performance
+from . import performance as sales_performance
 
 router.include_router(
     sales_performance.router, prefix="/performance", tags=["sales-performance-incentive"]
 )
 
 # 销售协同路由
-from app.api.v1.endpoints import sales_collaboration
+from . import collaboration as sales_collaboration
 
 router.include_router(
     sales_collaboration.router, prefix="/collaboration", tags=["sales-collaboration"]
 )
 
 # 移动端支持路由
-from app.api.v1.endpoints import sales_mobile
+from . import mobile as sales_mobile
 
 router.include_router(sales_mobile.router, prefix="/mobile", tags=["sales-mobile"])
 
@@ -184,7 +186,7 @@ router.include_router(
 )
 
 # 销售组织架构路由
-from app.api.v1.endpoints import sales_organization
+from . import organization as sales_organization
 
 router.include_router(
     sales_organization.router, prefix="/organization", tags=["sales-organization"]

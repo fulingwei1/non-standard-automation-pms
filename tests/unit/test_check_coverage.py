@@ -6,5 +6,6 @@ from app.services.data_integrity.check import DataCheckMixin
 
 class TestDataCheckMixinInit:
     def test_init(self):
-        service = DataCheckMixin(Mock())
+        service = DataCheckMixin()
         assert service is not None
+        assert hasattr(service, 'check_data_completeness')

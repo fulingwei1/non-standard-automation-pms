@@ -66,9 +66,9 @@ class TestProjectModel:
     def test_project_manager_relationship(self, db_session, sample_project):
         """测试项目-项目经理关系"""
         db_session.refresh(sample_project)
-        assert sample_project.pm is not None
-        assert sample_project.pm.username == "testuser"
-        assert sample_project.pm_id == sample_project.pm.id
+        assert sample_project.manager is not None
+        assert sample_project.manager.username == "testuser"
+        assert sample_project.pm_id == sample_project.manager.id
 
     def test_project_default_values(self, db_session, sample_customer, sample_user):
         """测试项目默认值"""

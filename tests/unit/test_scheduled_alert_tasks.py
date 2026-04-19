@@ -41,7 +41,7 @@ class TestCheckAlertEscalation:
         ctx, mock_db = make_mock_db_ctx()
         mock_get_db.side_effect = ctx
 
-        with patch("app.services.alert_escalation_service.AlertEscalationService") as MockSvc:
+        with patch("app.services.alert.alert_escalation_service.AlertEscalationService") as MockSvc:
             instance = MagicMock()
             instance.check_and_escalate.return_value = {"checked": 0, "escalated": 0}
             MockSvc.return_value = instance
@@ -59,7 +59,7 @@ class TestCheckAlertEscalation:
         ctx, mock_db = make_mock_db_ctx()
         mock_get_db.side_effect = ctx
 
-        with patch("app.services.alert_escalation_service.AlertEscalationService") as MockSvc:
+        with patch("app.services.alert.alert_escalation_service.AlertEscalationService") as MockSvc:
             instance = MagicMock()
             instance.check_and_escalate.return_value = {"checked": 10, "escalated": 3}
             MockSvc.return_value = instance
@@ -77,7 +77,7 @@ class TestCheckAlertEscalation:
         mock_get_db.side_effect = ctx
 
         with patch(
-            "app.services.alert_escalation_service.AlertEscalationService",
+            "app.services.alert.alert_escalation_service.AlertEscalationService",
             side_effect=Exception("escalation error"),
         ):
             from app.utils.scheduled_tasks.alert_tasks import check_alert_escalation
@@ -101,7 +101,7 @@ class TestRetryFailedNotifications:
         mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
         mock_get_db.side_effect = ctx
 
-        with patch("app.services.notification_dispatcher.NotificationDispatcher"):
+        with patch("app.services.notification.notification_dispatcher.NotificationDispatcher"):
             from app.utils.scheduled_tasks.alert_tasks import retry_failed_notifications
 
             result = retry_failed_notifications()
@@ -121,14 +121,12 @@ class TestRetryFailedNotifications:
         notification.retry_count = 1
         notification.alert = MagicMock()
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
-            notification
-        ]
+        mock_db.query.return_value.filter.return_value.all.return_value = [notification]
 
         user = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = user
 
-        with patch("app.services.notification_dispatcher.NotificationDispatcher") as MockDisp:
+        with patch("app.services.notification.notification_dispatcher.NotificationDispatcher") as MockDisp:
             instance = MagicMock()
             instance.dispatch.return_value = True
             MockDisp.return_value = instance
@@ -152,11 +150,9 @@ class TestRetryFailedNotifications:
         notification.retry_count = 0
         notification.alert = None  # alert 不存在
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
-            notification
-        ]
+        mock_db.query.return_value.filter.return_value.all.return_value = [notification]
 
-        with patch("app.services.notification_dispatcher.NotificationDispatcher"):
+        with patch("app.services.notification.notification_dispatcher.NotificationDispatcher"):
             from app.utils.scheduled_tasks.alert_tasks import retry_failed_notifications
 
             result = retry_failed_notifications()
@@ -202,7 +198,7 @@ class TestSendAlertNotifications:
             []
         )
 
-        with patch("app.services.notification_dispatcher.NotificationDispatcher") as MockDisp:
+        with patch("app.services.notification.notification_dispatcher.NotificationDispatcher") as MockDisp:
             instance = MagicMock()
             instance.dispatch_alert_notifications.return_value = {
                 "created": 0,
@@ -229,16 +225,12 @@ class TestSendAlertNotifications:
         alert.id = 1
         alert.status = "PENDING"
 
-        # pending_alerts 查询
+        # pending_notifications 查询（当前实现是单次 filter）
         mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
             alert
         ]
-        # pending_notifications 查询（or_ filter）
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
-            []
-        )
 
-        with patch("app.services.notification_dispatcher.NotificationDispatcher") as MockDisp:
+        with patch("app.utils.scheduled_tasks.alert_tasks.NotificationDispatcher") as MockDisp:
             instance = MagicMock()
             instance.dispatch_alert_notifications.return_value = {
                 "created": 1,
@@ -285,7 +277,7 @@ class TestCalculateResponseMetrics:
         ctx, mock_db = make_mock_db_ctx()
         mock_get_db.side_effect = ctx
 
-        with patch("app.services.alert_response_service.AlertResponseService") as MockSvc:
+        with patch("app.services.alert.alert_response_service.AlertResponseService") as MockSvc:
             instance = MagicMock()
             instance.calculate_daily_metrics.return_value = {"avg_response_time": 3.5}
             MockSvc.return_value = instance
@@ -302,7 +294,7 @@ class TestCalculateResponseMetrics:
         ctx, mock_db = make_mock_db_ctx()
         mock_get_db.side_effect = ctx
 
-        with patch("app.services.alert_response_service.AlertResponseService") as MockSvc:
+        with patch("app.services.alert.alert_response_service.AlertResponseService") as MockSvc:
             instance = MagicMock()
             instance.calculate_daily_metrics.return_value = {}
             MockSvc.return_value = instance
@@ -320,7 +312,7 @@ class TestCalculateResponseMetrics:
         mock_get_db.side_effect = ctx
 
         with patch(
-            "app.services.alert_response_service.AlertResponseService",
+            "app.services.alert.alert_response_service.AlertResponseService",
             side_effect=Exception("metrics error"),
         ):
             from app.utils.scheduled_tasks.alert_tasks import calculate_response_metrics

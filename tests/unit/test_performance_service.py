@@ -441,7 +441,7 @@ class TestCalculateQuarterlyScore:
 
         assert result is None
 
-    @patch.object(PerformanceService, "calculate_final_score")
+    @patch("app.services.performance_service.calculation.calculate_final_score")
     def test_returns_none_when_no_scores(self, mock_calc):
         """测试无有效分数时返回None"""
         db = create_mock_db_session()
@@ -457,7 +457,7 @@ class TestCalculateQuarterlyScore:
 
         assert result is None
 
-    @patch.object(PerformanceService, "calculate_final_score")
+    @patch("app.services.performance_service.calculation.calculate_final_score")
     def test_calculates_average_of_three_months(self, mock_calc):
         """测试计算3个月平均分"""
         db = create_mock_db_session()
@@ -475,7 +475,7 @@ class TestCalculateQuarterlyScore:
         # 平均分: (80+85+90)/3 = 85
         assert result == 85.0
 
-    @patch.object(PerformanceService, "calculate_final_score")
+    @patch("app.services.performance_service.calculation.calculate_final_score")
     def test_ignores_zero_scores(self, mock_calc):
         """测试忽略0分的月份"""
         db = create_mock_db_session()
@@ -496,7 +496,7 @@ class TestCalculateQuarterlyScore:
 class TestGetManageableEmployees:
     """测试 get_manageable_employees 方法"""
 
-    @patch.object(PerformanceService, "get_user_manager_roles")
+    @patch("app.services.performance_service.roles.get_user_manager_roles")
     def test_returns_empty_when_not_manager(self, mock_roles):
         """测试非经理返回空列表"""
         db = create_mock_db_session()
@@ -512,7 +512,7 @@ class TestGetManageableEmployees:
 
         assert result == []
 
-    @patch.object(PerformanceService, "get_user_manager_roles")
+    @patch("app.services.performance_service.roles.get_user_manager_roles")
     def test_gets_dept_employees_for_dept_manager(self, mock_roles):
         """测试部门经理获取部门员工"""
         db = create_mock_db_session()
@@ -555,7 +555,7 @@ class TestGetManageableEmployees:
         assert 10 in result
         assert 11 in result
 
-    @patch.object(PerformanceService, "get_user_manager_roles")
+    @patch("app.services.performance_service.roles.get_user_manager_roles")
     def test_gets_project_members_for_project_manager(self, mock_roles):
         """测试项目经理获取项目成员"""
         db = create_mock_db_session()
@@ -632,7 +632,7 @@ class TestCreateAssessmentTasks:
 class TestGetHistoricalPerformance:
     """测试 get_historical_performance 方法"""
 
-    @patch.object(PerformanceService, "calculate_final_score")
+    @patch("app.services.performance_service.history.calculate_final_score")
     def test_returns_empty_when_no_summaries(self, mock_calc):
         """测试无工作总结时返回空列表"""
         db = create_mock_db_session()
@@ -642,7 +642,7 @@ class TestGetHistoricalPerformance:
 
         assert result == []
 
-    @patch.object(PerformanceService, "calculate_final_score")
+    @patch("app.services.performance_service.history.calculate_final_score")
     def test_returns_history_with_levels(self, mock_calc):
         """测试返回带等级的历史记录"""
         db = create_mock_db_session()
@@ -665,7 +665,7 @@ class TestGetHistoricalPerformance:
         assert result[0]["level"] == "A"
         assert result[1]["level"] == "B+"
 
-    @patch.object(PerformanceService, "calculate_final_score")
+    @patch("app.services.performance_service.history.calculate_final_score")
     def test_respects_months_parameter(self, mock_calc):
         """测试遵守months参数"""
         db = create_mock_db_session()

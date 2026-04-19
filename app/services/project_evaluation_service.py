@@ -231,7 +231,13 @@ class ProjectEvaluationService:
         Returns:
             Optional[Decimal]: 得分
         """
-        amount = project.contract_amount or Decimal("0")
+        amount = getattr(project, "contract_amount", None)
+        if not isinstance(amount, (int, float, Decimal)):
+            amount = getattr(project, "total_amount", None)
+        if not isinstance(amount, (int, float, Decimal, str)) or amount in (None, ""):
+            amount = Decimal("0")
+        else:
+            amount = Decimal(str(amount))
 
         if amount >= Decimal("5000000"):
             return Decimal("2.0")  # 1-3分

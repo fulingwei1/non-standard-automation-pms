@@ -231,6 +231,28 @@ def calc_hourly_rate(monthly_salary: Union[float, int, Decimal]) -> Decimal:
     return hourly.quantize(PLACES_4)
 
 
+def calculate_project_profit(
+    revenue: Union[float, int, Decimal],
+    cost: Union[float, int, Decimal],
+) -> Dict[str, Decimal]:
+    """计算项目利润与毛利率。"""
+    revenue_dec = Decimal(str(revenue)).quantize(PLACES_2)
+    cost_dec = Decimal(str(cost)).quantize(PLACES_2)
+    profit_dec = (revenue_dec - cost_dec).quantize(PLACES_2)
+
+    if revenue_dec == 0:
+        margin_rate = Decimal("0").quantize(PLACES_6)
+    else:
+        margin_rate = (profit_dec / revenue_dec).quantize(PLACES_6)
+
+    return {
+        "revenue": revenue_dec,
+        "cost": cost_dec,
+        "profit": profit_dec,
+        "margin_rate": margin_rate,
+    }
+
+
 # ---------------------------------------------------------------------------
 # 4. 报价含税计算
 # ---------------------------------------------------------------------------

@@ -68,9 +68,8 @@ class TestQuotationPDFService:
         """Test QuotationPDFService"""
         try:
             from app.services.quotation_pdf_service import QuotationPDFService
-            mock_db = MagicMock()
-            service = QuotationPDFService(mock_db)
-            assert service.db == mock_db
+            service = QuotationPDFService()
+            assert service.output_dir is not None
         except ImportError:
             pytest.skip("Module not found")
 
@@ -138,8 +137,6 @@ class TestReportExcelService:
         """Test ReportExcelService"""
         try:
             from app.services.report_excel_service import ReportExcelService
-            mock_db = MagicMock()
-            service = ReportExcelService(mock_db)
-            assert service.db == mock_db
+            assert hasattr(ReportExcelService, "export_to_excel")
         except ImportError:
             pytest.skip("Module not found")

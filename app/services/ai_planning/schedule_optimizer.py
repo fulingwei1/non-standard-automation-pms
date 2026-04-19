@@ -397,7 +397,7 @@ class AIScheduleOptimizer:
         )
         max_load = max((r["total_hours"] for r in resource_load.values()), default=0)
 
-        if max_load > avg_load * 2:
+        if resource_load and max_load > avg_load * 1.5:
             recommendations.append(
                 {
                     "category": "RESOURCE_BALANCE",

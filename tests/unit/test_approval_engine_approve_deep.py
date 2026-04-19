@@ -141,25 +141,31 @@ class TestApprovalEngineRejectLogic:
 
             mock_task = MagicMock()
             mock_task.id = 1
+            mock_task.node_id = 10
             mock_task.instance = MagicMock()
+            mock_task.instance.id = 100
             mock_task.instance.status = "PENDING"
+            mock_task.node = MagicMock()
 
             mixin = ApprovalProcessMixin()
             mixin.db = mock_db
             mixin._get_and_validate_task = MagicMock(return_value=mock_task)
             mixin.executor = MagicMock()
-            mixin.executor.process_rejection.return_value = (True, None)
+            mixin.executor.process_approval.return_value = (False, None)
             mixin._log_action = MagicMock()
-            mixin._send_back_to_start = MagicMock()
+            mixin._call_adapter_callback = MagicMock()
+            mixin.notify = MagicMock()
 
             result = mixin.reject(1, 1, "不同意", reject_to="START")
 
-            assert mixin._send_back_to_start.called
+            assert mock_task.instance.status == "REJECTED"
+            assert mixin._call_adapter_callback.called
+            assert mixin.notify.notify_rejected.called
         except ImportError:
             pytest.skip("Module not found")
 
     def test_reject_cancel_instance(self):
-        """测试驳回导致实例取消"""
+        """测试未知 reject_to 时实例直接变为驳回"""
         try:
             from app.services.approval_engine.engine.approve import ApprovalProcessMixin
 
@@ -167,19 +173,22 @@ class TestApprovalEngineRejectLogic:
 
             mock_task = MagicMock()
             mock_task.id = 1
+            mock_task.node_id = 10
             mock_task.instance = MagicMock()
+            mock_task.instance.status = "PENDING"
+            mock_task.node = MagicMock()
 
             mixin = ApprovalProcessMixin()
             mixin.db = mock_db
             mixin._get_and_validate_task = MagicMock(return_value=mock_task)
             mixin.executor = MagicMock()
-            mixin.executor.process_rejection.return_value = (True, None)
+            mixin.executor.process_approval.return_value = (False, None)
             mixin._log_action = MagicMock()
-            mixin._cancel_instance = MagicMock()
 
             result = mixin.reject(1, 1, "不同意", reject_to="CANCEL")
 
-            assert mixin._cancel_instance.called
+            assert mock_task.instance.status == "REJECTED"
+            assert mock_task.instance.completed_at is not None
         except ImportError:
             pytest.skip("Module not found")
 
@@ -188,7 +197,7 @@ class TestApprovalEngineReturnLogic:
     """退回逻辑测试"""
 
     def test_return_to_previous_node(self):
-        """测试退回上一节点"""
+        """测试退回指定节点"""
         try:
             from app.services.approval_engine.engine.approve import ApprovalProcessMixin
 
@@ -196,19 +205,23 @@ class TestApprovalEngineReturnLogic:
 
             mock_task = MagicMock()
             mock_task.id = 1
+            mock_task.node_id = 10
             mock_task.instance = MagicMock()
+            mock_task.instance.id = 100
+
+            target_node = MagicMock()
+            target_node.id = 5
 
             mixin = ApprovalProcessMixin()
             mixin.db = mock_db
             mixin._get_and_validate_task = MagicMock(return_value=mock_task)
-            mixin.executor = MagicMock()
-            mixin.executor.process_return.return_value = (True, None)
             mixin._log_action = MagicMock()
-            mixin._send_back_to_node = MagicMock()
+            mixin._return_to_node = MagicMock()
+            mock_db.query.return_value.filter.return_value.first.return_value = target_node
 
-            result = mixin.return_task(1, 1, "退回修改", return_to_node_id=5)
+            result = mixin.return_to(1, 1, target_node_id=5, comment="退回修改")
 
-            assert mixin._send_back_to_node.called
+            assert mixin._return_to_node.called
         except ImportError:
             pytest.skip("Module not found")
 
@@ -225,24 +238,40 @@ class TestApprovalEngineTransferLogic:
 
             mock_task = MagicMock()
             mock_task.id = 1
+            mock_task.node_id = 10
             mock_task.instance = MagicMock()
+            mock_task.instance.id = 100
+            mock_task.node = MagicMock(id=99, can_transfer=True)
+            mock_task.task_type = "APPROVAL"
+            mock_task.task_order = 1
+            mock_task.due_at = None
+            mock_task.is_countersign = False
+
+            mock_from_user = MagicMock()
+            mock_from_user.id = 1
+            mock_from_user.real_name = "张三"
+            mock_from_user.username = "zhangsan"
 
             mock_new_approver = MagicMock()
             mock_new_approver.id = 2
             mock_new_approver.real_name = "李四"
+            mock_new_approver.username = "lisi"
 
-            mock_db.query.return_value.filter.return_value.first.return_value = mock_new_approver
+            mock_db.query.return_value.filter.return_value.first.side_effect = [
+                mock_from_user,
+                mock_new_approver,
+            ]
 
             mixin = ApprovalProcessMixin()
             mixin.db = mock_db
             mixin._get_and_validate_task = MagicMock(return_value=mock_task)
-            mixin.executor = MagicMock()
-            mixin.executor.process_transfer.return_value = True
             mixin._log_action = MagicMock()
+            mixin.notify = MagicMock()
 
             result = mixin.transfer(1, 1, 2, "转给李四处理")
 
-            assert mixin.executor.process_transfer.called
+            assert result.assignee_id == 2
+            assert mixin.notify.notify_transferred.called
         except ImportError:
             pytest.skip("Module not found")
 
@@ -276,23 +305,39 @@ class TestApprovalEngineAddSignerLogic:
 
             mock_task = MagicMock()
             mock_task.id = 1
+            mock_task.node_id = 10
             mock_task.instance = MagicMock()
+            mock_task.instance.id = 100
+            mock_task.node = MagicMock(can_add_approver=True, id=99)
+            mock_task.task_order = 1
+            mock_task.due_at = None
+            mock_task.status = "PENDING"
+
+            mock_operator = MagicMock()
+            mock_operator.id = 1
+            mock_operator.real_name = "张三"
+            mock_operator.username = "zhangsan"
 
             mock_signer = MagicMock()
             mock_signer.id = 3
+            mock_signer.real_name = "王五"
+            mock_signer.username = "wangwu"
 
-            mock_db.query.return_value.filter.return_value.first.return_value = mock_signer
+            mock_db.query.return_value.filter.return_value.first.side_effect = [
+                mock_operator,
+                mock_signer,
+            ]
 
             mixin = ApprovalProcessMixin()
             mixin.db = mock_db
             mixin._get_and_validate_task = MagicMock(return_value=mock_task)
-            mixin.executor = MagicMock()
-            mixin.executor.process_add_signer.return_value = True
             mixin._log_action = MagicMock()
+            mixin.notify = MagicMock()
 
-            result = mixin.add_signer(1, 1, 3, "前加签", position="before")
+            result = mixin.add_approver(1, 1, [3], comment="前加签", position="BEFORE")
 
-            assert mixin.executor.process_add_signer.called
+            assert mock_task.status == "SKIPPED"
+            assert len(result) == 1
         except ImportError:
             pytest.skip("Module not found")
 
@@ -305,22 +350,38 @@ class TestApprovalEngineAddSignerLogic:
 
             mock_task = MagicMock()
             mock_task.id = 1
+            mock_task.node_id = 10
             mock_task.instance = MagicMock()
+            mock_task.instance.id = 100
+            mock_task.node = MagicMock(can_add_approver=True, id=99)
+            mock_task.task_order = 1
+            mock_task.due_at = None
+            mock_task.status = "PENDING"
+
+            mock_operator = MagicMock()
+            mock_operator.id = 1
+            mock_operator.real_name = "张三"
+            mock_operator.username = "zhangsan"
 
             mock_signer = MagicMock()
             mock_signer.id = 4
+            mock_signer.real_name = "赵六"
+            mock_signer.username = "zhaoliu"
 
-            mock_db.query.return_value.filter.return_value.first.return_value = mock_signer
+            mock_db.query.return_value.filter.return_value.first.side_effect = [
+                mock_operator,
+                mock_signer,
+            ]
 
             mixin = ApprovalProcessMixin()
             mixin.db = mock_db
             mixin._get_and_validate_task = MagicMock(return_value=mock_task)
-            mixin.executor = MagicMock()
-            mixin.executor.process_add_signer.return_value = True
             mixin._log_action = MagicMock()
+            mixin.notify = MagicMock()
 
-            result = mixin.add_signer(1, 1, 4, "后加签", position="after")
+            result = mixin.add_approver(1, 1, [4], comment="后加签", position="AFTER")
 
-            assert mixin.executor.process_add_signer.called
+            assert len(result) == 1
+            assert result[0].status == "SKIPPED"
         except ImportError:
             pytest.skip("Module not found")

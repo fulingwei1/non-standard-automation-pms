@@ -395,9 +395,6 @@ class TestWorkOrderService(unittest.TestCase):
     def test_create_work_order_workstation_wrong_workshop(self, mock_get_or_404, mock_generate_no):
         """测试创建工单 - 工位不属于该车间"""
         mock_get_or_404.side_effect = [
-            None,  # project_id is None
-            None,  # machine_id is None
-            None,  # production_plan_id is None
             MagicMock(spec=Workshop),  # workshop
             MagicMock(spec=Workstation, workshop_id=999),  # workstation (不匹配)
         ]

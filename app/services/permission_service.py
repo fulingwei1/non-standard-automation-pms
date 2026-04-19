@@ -6,6 +6,7 @@
 用于向后兼容。实际实现在 app/services/permission_management/permission_service.py
 """
 
+from app.services.permission_management.permission_cache_service import get_permission_cache_service
 from app.services.permission_management.permission_service import (
     PermissionService,
     check_permission_compat,

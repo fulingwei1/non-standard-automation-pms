@@ -477,13 +477,12 @@ class TestQuoteApprovalAdapterSubmitForApproval(unittest.TestCase):
     @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
     def test_submit_for_approval_success(self, MockEngineService):
         """测试成功提交审批"""
-        # 创建mock对象
         mock_version = MagicMock()
         mock_version.id = 1
         mock_version.quote_id = 10
         mock_version.quote_code = "Q2024001"
-        mock_version.quote_total = Decimal("10000.00")
-        mock_version.margin_percent = Decimal("30.0")
+        mock_version.quote_total = Decimal("100000")
+        mock_version.margin_percent = Decimal("30")
         mock_version.status = "DRAFT"
         mock_version.approval_instance_id = None
 
@@ -491,35 +490,30 @@ class TestQuoteApprovalAdapterSubmitForApproval(unittest.TestCase):
         mock_instance.id = 100
         mock_instance.status = "PENDING"
 
-        # Mock ApprovalEngineService
         mock_engine = MagicMock()
         mock_engine.submit.return_value = mock_instance
         MockEngineService.return_value = mock_engine
 
-        # 执行测试
         result = self.adapter.submit_for_approval(
             mock_version,
             initiator_id=20,
             title="测试审批",
             summary="测试摘要",
-            urgency="HIGH",
-            cc_user_ids=[30, 40],
         )
 
-        # 验证
         self.assertEqual(result, mock_instance)
         self.assertEqual(mock_version.approval_instance_id, 100)
         self.assertEqual(mock_version.approval_status, "PENDING")
         self.db.add.assert_called_once_with(mock_version)
         self.db.commit.assert_called_once()
 
-        # 验证ApprovalEngineService调用
-        mock_engine.submit.assert_called_once()
         call_args = mock_engine.submit.call_args
-        self.assertEqual(call_args[1]["flow_code"], "SALES_QUOTE")
-        self.assertEqual(call_args[1]["business_type"], "SALES_QUOTE")
-        self.assertEqual(call_args[1]["business_id"], 1)
-        self.assertEqual(call_args[1]["submitted_by"], 20)
+        self.assertEqual(call_args.kwargs["template_code"], "SALES_QUOTE")
+        self.assertEqual(call_args.kwargs["entity_type"], "QUOTE")
+        self.assertEqual(call_args.kwargs["entity_id"], 1)
+        self.assertEqual(call_args.kwargs["initiator_id"], 20)
+        self.assertEqual(call_args.kwargs["title"], "测试审批")
+        self.assertEqual(call_args.kwargs["summary"], "测试摘要")
 
     @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
     def test_submit_for_approval_already_submitted(self, MockEngineService):
@@ -529,8 +523,6 @@ class TestQuoteApprovalAdapterSubmitForApproval(unittest.TestCase):
         mock_version.approval_instance_id = 100
 
         mock_instance = MagicMock(spec=ApprovalInstance)
-        mock_instance.id = 100
-
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = mock_instance
         self.db.query.return_value = mock_query
@@ -538,7 +530,6 @@ class TestQuoteApprovalAdapterSubmitForApproval(unittest.TestCase):
         result = self.adapter.submit_for_approval(mock_version, initiator_id=20)
 
         self.assertEqual(result, mock_instance)
-        # 不应该创建新实例
         MockEngineService.assert_not_called()
 
     @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
@@ -546,6 +537,7 @@ class TestQuoteApprovalAdapterSubmitForApproval(unittest.TestCase):
         """测试使用默认参数提交审批"""
         mock_version = MagicMock()
         mock_version.id = 1
+        mock_version.quote_id = 10
         mock_version.quote_code = ""
         mock_version.quote_total = None
         mock_version.margin_percent = None
@@ -553,26 +545,24 @@ class TestQuoteApprovalAdapterSubmitForApproval(unittest.TestCase):
         mock_version.approval_instance_id = None
 
         mock_instance = MagicMock(spec=ApprovalInstance)
-        mock_instance.id = 100
+        mock_instance.id = 200
         mock_instance.status = "PENDING"
 
         mock_engine = MagicMock()
         mock_engine.submit.return_value = mock_instance
         MockEngineService.return_value = mock_engine
 
-        result = self.adapter.submit_for_approval(mock_version, initiator_id=20)
+        result = self.adapter.submit_for_approval(mock_version, initiator_id=30)
 
         self.assertEqual(result, mock_instance)
-
-        # 验证form_data中的默认值
         call_args = mock_engine.submit.call_args
-        form_data = call_args[1]["config"]["quote"]
+        self.assertEqual(call_args.kwargs["title"], "报价审批 - ")
+        self.assertEqual(call_args.kwargs["summary"], "报价审批：")
+        self.assertEqual(call_args.kwargs["urgency"], "NORMAL")
+        form_data = call_args.kwargs["form_data"]
         self.assertEqual(form_data["quote_code"], "")
         self.assertEqual(form_data["quote_total"], 0)
         self.assertEqual(form_data["margin_percent"], 0)
-        # status为None时,源代码中会使用 `if quote_version and quote_version.status else "DRAFT"`
-        # 但是mock_version.status = None,所以form_data['status']也是None
-        # 源代码这里应该使用 or "DRAFT",但我们只测试实际行为
         self.assertIsNone(form_data["status"])
 
 

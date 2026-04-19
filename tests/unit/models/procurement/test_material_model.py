@@ -21,7 +21,7 @@ class TestMaterialModel:
             material_name="测试物料",
             material_type="原材料",
             unit="件",
-            unit_price=Decimal("100.00"),
+            standard_price=Decimal("100.00"),
         )
         db_session.add(material)
         db_session.commit()
@@ -67,12 +67,12 @@ class TestMaterialModel:
     def test_material_price(self, db_session):
         """测试物料价格"""
         material = Material(
-            material_code="MAT003", material_name="价格测试", unit_price=Decimal("256.50")
+            material_code="MAT003", material_name="价格测试", standard_price=Decimal("256.50")
         )
         db_session.add(material)
         db_session.commit()
 
-        assert material.unit_price == Decimal("256.50")
+        assert material.standard_price == Decimal("256.50")
 
     def test_material_specification(self, db_session):
         """测试物料规格"""
@@ -86,7 +86,7 @@ class TestMaterialModel:
     def test_material_update(self, db_session, sample_material):
         """测试更新物料"""
         sample_material.material_name = "更新后的物料"
-        sample_material.unit_price = Decimal("150.00")
+        sample_material.standard_price = Decimal("150.00")
         db_session.commit()
 
         db_session.refresh(sample_material)
@@ -107,36 +107,42 @@ class TestMaterialModel:
 
     def test_material_category(self, db_session):
         """测试物料分类"""
+        from app.models.material import MaterialCategory
+
+        category = MaterialCategory(category_code="CAT001", category_name="电子元器件")
+        db_session.add(category)
+        db_session.commit()
+
         material = Material(
-            material_code="MAT005", material_name="分类测试", category_id="电子元器件"
+            material_code="MAT005", material_name="分类测试", category_id=category.id
         )
         db_session.add(material)
         db_session.commit()
 
-        assert material.category == "电子元器件"
+        assert material.category.category_name == "电子元器件"
 
     def test_material_stock(self, db_session):
         """测试物料库存"""
         material = Material(
             material_code="MAT006",
             material_name="库存测试",
-            stock_quantity=Decimal("500.00"),
-            min_stock=Decimal("100.00"),
+            current_stock=Decimal("500.00"),
+            safety_stock=Decimal("100.00"),
         )
         db_session.add(material)
         db_session.commit()
 
-        assert material.stock_quantity == Decimal("500.00")
-        assert material.min_stock == Decimal("100.00")
+        assert material.current_stock == Decimal("500.00")
+        assert material.safety_stock == Decimal("100.00")
 
     def test_multiple_materials(self, db_session):
         """测试多个物料"""
         materials = [
-            Material(
-                material_code=f"MAT{i:03d}",
-                material_name=f"物料{i}",
-                unit_price=Decimal(f"{i*10}.00"),
-            )
+                Material(
+                    material_code=f"MAT{i:03d}",
+                    material_name=f"物料{i}",
+                    standard_price=Decimal(f"{i*10}.00"),
+                )
             for i in range(1, 6)
         ]
         db_session.add_all(materials)
@@ -148,8 +154,8 @@ class TestMaterialModel:
     def test_material_description(self, db_session):
         """测试物料描述"""
         desc = "高品质进口原材料，通过ISO认证"
-        material = Material(material_code="MAT007", material_name="描述测试", description=desc)
+        material = Material(material_code="MAT007", material_name="描述测试", remark=desc)
         db_session.add(material)
         db_session.commit()
 
-        assert material.description == desc
+        assert material.remark == desc

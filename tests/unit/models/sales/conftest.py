@@ -40,7 +40,7 @@ def sample_opportunity(db_session, sample_user, sample_customer):
         customer_id=sample_customer.id,
         owner_id=sample_user.id,
         stage="需求分析",
-        probability=Decimal("60.00"),
+        probability=60,
         est_amount=Decimal("500000.00"),
         expected_close_date=date.today() + timedelta(days=60),
     )
@@ -72,16 +72,16 @@ def sample_contract(db_session, sample_customer, sample_user):
 
 
 @pytest.fixture
-def sample_quote(db_session, sample_customer, sample_user):
+def sample_quote(db_session, sample_customer, sample_user, sample_opportunity):
     """创建示例报价单"""
     from app.models.sales.quotes import Quote
 
     quote = Quote(
         quote_code="QUOTE001",
+        opportunity_id=sample_opportunity.id,
         customer_id=sample_customer.id,
-        quote_amount=Decimal("150000.00"),
         valid_until=date.today() + timedelta(days=30),
-        created_by=sample_user.id,
+        owner_id=sample_user.id,
         status="DRAFT",
     )
     db_session.add(quote)

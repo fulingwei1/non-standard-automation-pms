@@ -51,7 +51,7 @@ class TestCustomerModel:
             contact_person="李四",
             contact_phone="13900139000",
             contact_email="lisi@example.com",
-            contact_address="北京市朝阳区XXX路XXX号",
+            address="北京市朝阳区XXX路XXX号",
         )
         db_session.add(customer)
         db_session.commit()
@@ -59,7 +59,7 @@ class TestCustomerModel:
         assert customer.contact_person == "李四"
         assert customer.contact_phone == "13900139000"
         assert customer.contact_email == "lisi@example.com"
-        assert customer.contact_address is not None
+        assert customer.address is not None
 
     def test_customer_industry_info(self, db_session):
         """测试客户行业信息"""
@@ -106,19 +106,19 @@ class TestCustomerModel:
 
     def test_customer_source(self, db_session):
         """测试客户来源"""
-        customer = Customer(customer_name="来源测试", customer_code="CUST006", source="网络推广")
+        customer = Customer(customer_name="来源测试", customer_code="CUST006", customer_source="网络推广")
         db_session.add(customer)
         db_session.commit()
 
-        assert customer.source == "网络推广"
+        assert customer.customer_source == "网络推广"
 
     def test_customer_region(self, db_session):
         """测试客户区域"""
-        customer = Customer(customer_name="区域客户", customer_code="CUST007", region="华北")
+        customer = Customer(customer_name="区域客户", customer_code="CUST007", address="华北")
         db_session.add(customer)
         db_session.commit()
 
-        assert customer.region == "华北"
+        assert customer.address == "华北"
 
     def test_customer_update(self, db_session):
         """测试更新客户信息"""
@@ -152,11 +152,11 @@ class TestCustomerModel:
     def test_customer_description(self, db_session):
         """测试客户描述"""
         desc = "这是一家专注于智能制造的大型企业，年营业额超过10亿元"
-        customer = Customer(customer_name="描述测试", customer_code="CUST009", description=desc)
+        customer = Customer(customer_name="描述测试", customer_code="CUST009", remark=desc)
         db_session.add(customer)
         db_session.commit()
 
-        assert customer.description == desc
+        assert customer.remark == desc
 
     def test_customer_relationships(self, db_session, sample_customer):
         """测试客户关联关系"""

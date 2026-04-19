@@ -1,20 +1,14 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, PropertyMock, patch
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 
 class TestAlertUpgrader:
     def setup_method(self):
         self.db = MagicMock()
-        with patch(
-            "app.services.alert_rule_engine.alert_upgrader.AlertRuleEngineBase.__init__",
-            return_value=None,
-        ):
-            from app.services.alert_rule_engine.alert_upgrader import AlertUpgrader
+        from app.services.alert.rule_engine.alert_upgrader import AlertUpgrader
 
-            self.upgrader = AlertUpgrader(self.db)
+        self.upgrader = AlertUpgrader(self.db)
 
     def test_upgrade_alert_updates_level_and_content(self):
         alert = MagicMock()
@@ -30,9 +24,9 @@ class TestAlertUpgrader:
         }
         self.upgrader._notification_service = MagicMock()
 
-        with patch("app.services.alert_rule_engine.alert_upgrader.AlertGenerator") as MockGen:
-            MockGen.generate_alert_title.return_value = "title"
-            MockGen.generate_alert_content.return_value = "content"
+        with patch("app.services.alert.rule_engine.alert_upgrader.AlertGenerator") as mock_gen:
+            mock_gen.generate_alert_title.return_value = "title"
+            mock_gen.generate_alert_content.return_value = "content"
             result = self.upgrader.upgrade_alert(alert, "CRITICAL", target_data)
 
         assert result.alert_level == "CRITICAL"
@@ -44,9 +38,8 @@ class TestAlertUpgrader:
         alert = MagicMock()
         alert.alert_level = "WARNING"
         alert.rule = None
-        self.upgrader._subscription_service = MagicMock(side_effect=Exception("fail"))
+        self.upgrader._notification_service = MagicMock(side_effect=Exception("fail"))
 
-        # Should not raise
         result = self.upgrader.upgrade_alert(alert, "CRITICAL", {})
         assert result.alert_level == "CRITICAL"
 
@@ -68,13 +61,11 @@ class TestAlertUpgrader:
         alert.escalated_at = None
         alert.alert_level = "WARNING"
 
-        self.upgrader.level_priority = MagicMock(
-            side_effect=lambda x: {"WARNING": 1, "CRITICAL": 2}[x]
-        )
+        self.upgrader.level_priority = MagicMock(side_effect=lambda x: {"WARNING": 1, "CRITICAL": 2}[x])
         self.upgrader.upgrade_alert = MagicMock(return_value=alert)
 
-        with patch("app.services.alert_rule_engine.level_determiner.LevelDeterminer") as MockLD:
-            MockLD.determine_alert_level.return_value = "CRITICAL"
+        with patch("app.services.alert.rule_engine.level_determiner.LevelDeterminer") as mock_ld:
+            mock_ld.determine_alert_level.return_value = "CRITICAL"
             result = self.upgrader.check_level_escalation(alert, {})
 
         assert result is not None
@@ -89,8 +80,8 @@ class TestAlertUpgrader:
 
         self.upgrader.level_priority = MagicMock(return_value=1)
 
-        with patch("app.services.alert_rule_engine.level_determiner.LevelDeterminer") as MockLD:
-            MockLD.determine_alert_level.return_value = "WARNING"
+        with patch("app.services.alert.rule_engine.level_determiner.LevelDeterminer") as mock_ld:
+            mock_ld.determine_alert_level.return_value = "WARNING"
             result = self.upgrader.check_level_escalation(alert, {})
 
         assert result is None

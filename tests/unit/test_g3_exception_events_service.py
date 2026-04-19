@@ -158,6 +158,8 @@ class TestUpdateExceptionEvent:
         """id、reported_by、created_at 字段不应被覆盖"""
         mock_event = MagicMock()
         mock_event.id = 1
+        mock_event.reported_by = 5
+        mock_event.created_at = "old"
 
         event_data = MagicMock()
         event_data.dict.return_value = {
@@ -173,11 +175,10 @@ class TestUpdateExceptionEvent:
         with patch.object(self.service, "get_exception_event", return_value=mock_event):
             result = self.service.update_exception_event(1, event_data, current_user)
 
-        # 只有 severity 应该被 setattr
-        mock_event.__setattr__.assert_any_call("severity", "LOW")
-        # id 不应该被 setattr
-        calls = [str(c) for c in mock_event.__setattr__.call_args_list]
-        assert not any("'id', 999" in c for c in calls)
+        assert result is mock_event
+        assert mock_event.severity == "LOW"
+        assert mock_event.id == 1
+        assert mock_event.reported_by == 5
 
 
 class TestResolveExceptionEvent:

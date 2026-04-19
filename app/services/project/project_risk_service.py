@@ -377,14 +377,18 @@ class ProjectRiskService:
         # 计算进度偏差（如果有计划结束日期）
         if project.planned_end_date:
             today = date.today()
-            total_duration = (
-                project.planned_end_date
-                - (project.planned_start_date or project.contract_date or today)
-            ).days
+            planned_start = project.planned_start_date
+            if not isinstance(planned_start, date):
+                planned_start = getattr(project, "contract_date", None)
+            if not isinstance(planned_start, date):
+                planned_start = today
+
+            total_duration = (project.planned_end_date - planned_start).days
             if total_duration > 0:
-                elapsed_days = (
-                    today - (project.actual_start_date or project.planned_start_date or today)
-                ).days
+                actual_start = getattr(project, "actual_start_date", None)
+                if not isinstance(actual_start, date):
+                    actual_start = planned_start
+                elapsed_days = (today - actual_start).days
                 expected_progress = min(100, (elapsed_days / total_duration) * 100)
                 actual_progress = float(project.progress_pct or 0)
                 factors["schedule_variance"] = round(actual_progress - expected_progress, 2)

@@ -34,20 +34,28 @@ class TestQuoteApprovalAdapterBusinessLogic:
 
             mock_db = MagicMock()
 
+            mock_version = MagicMock()
+            mock_version.version_no = "V1.0"
+            mock_version.total_price = 80000
+            mock_version.cost_total = 60000
+            mock_version.gross_margin = 0.3
+
             mock_quote = MagicMock()
-            mock_quote.quote_no = "QUOTE-001"
-            mock_quote.customer_name = "客户A"
-            mock_quote.total_amount = 80000
+            mock_quote.quote_code = "QUOTE-001"
+            mock_quote.customer_id = 1
+            mock_quote.customer = MagicMock(name="客户A")
+            mock_quote.owner_id = 1
+            mock_quote.owner = None
             mock_quote.status = "PENDING"
-            mock_quote.discount_rate = 0.1
+            mock_quote.current_version = mock_version
 
             mock_db.query.return_value.filter.return_value.first.return_value = mock_quote
 
             adapter = QuoteApprovalAdapter(mock_db)
             result = adapter.get_entity_data(1)
 
-            assert result["quote_no"] == "QUOTE-001"
-            assert result["total_amount"] == 80000
+            assert result["quote_code"] == "QUOTE-001"
+            assert result["total_price"] == 80000
         except ImportError:
             pytest.skip("Module not found")
 
@@ -96,14 +104,26 @@ class TestQuoteApprovalAdapterBusinessLogic:
 
             mock_db = MagicMock()
 
+            mock_version = MagicMock()
+            mock_version.version_no = "V1.0"
+            mock_version.total_price = 100000
+            mock_version.cost_total = 70000
+            mock_version.gross_margin = 0.3
+
             mock_quote = MagicMock()
-            mock_quote.discount_rate = 0.3  # 高折扣
+            mock_quote.quote_code = "QUOTE-001"
+            mock_quote.customer_id = 1
+            mock_quote.customer = None
+            mock_quote.owner_id = 1
+            mock_quote.owner = None
+            mock_quote.status = "PENDING"
+            mock_quote.current_version = mock_version
 
             mock_db.query.return_value.filter.return_value.first.return_value = mock_quote
 
             adapter = QuoteApprovalAdapter(mock_db)
             data = adapter.get_entity_data(1)
 
-            assert data["discount_rate"] == 0.3
+            assert data["gross_margin"] == 30.0
         except ImportError:
             pytest.skip("Module not found")

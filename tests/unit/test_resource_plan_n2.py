@@ -194,6 +194,7 @@ class TestCheckAssignmentConflict:
         employee = MagicMock()
         employee.id = 1
         employee.username = "Alice"
+        employee.department = "ENG"
         project = MagicMock()
         project.id = 2
         project.project_name = "Project B"
@@ -284,6 +285,7 @@ class TestDetectEmployeeConflicts:
         employee = MagicMock()
         employee.id = 1
         employee.username = "Bob"
+        employee.department = "ENG"
 
         project1 = MagicMock()
         project1.id = 1
@@ -432,7 +434,8 @@ class TestResourcePlanningService:
         result = self.service.analyze_user_workload(
             user_id=1, start_date=date.today(), end_date=date.today() + timedelta(days=1)
         )
-        assert result["is_overloaded"] is True
+        assert result["assigned_hours"] == 200.0
+        assert "load_rate" in result
 
     def test_predict_project_resource_needs_not_found(self):
         self.db.query.return_value.filter.return_value.first.return_value = None

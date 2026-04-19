@@ -26,9 +26,8 @@ class TestDeliveryValidationService:
         """Test DeliveryValidationService"""
         try:
             from app.services.delivery_validation_service import DeliveryValidationService
-            mock_db = MagicMock()
-            service = DeliveryValidationService(mock_db)
-            assert service.db == mock_db
+            assert hasattr(DeliveryValidationService, "get_material_lead_time")
+            assert hasattr(DeliveryValidationService, "get_max_material_lead_time")
         except ImportError:
             pytest.skip("Module not found")
 
@@ -94,9 +93,9 @@ class TestFileUploadService:
         """Test FileUploadService"""
         try:
             from app.services.file_upload_service import FileUploadService
-            mock_db = MagicMock()
-            service = FileUploadService(mock_db)
-            assert service.db == mock_db
+            service = FileUploadService()
+            assert service.upload_dir is not None
+            assert hasattr(service, "validate_file_extension")
         except ImportError:
             pytest.skip("Module not found")
 

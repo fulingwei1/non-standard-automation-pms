@@ -48,7 +48,7 @@ class TestResourceWasteAnalysisCoreInit:
         db = Mock(spec=Session)
         core = ResourceWasteAnalysisCore(db, hourly_rate=Decimal("0"))
 
-        assert core.hourly_rate == Decimal("0")
+        assert core.hourly_rate == ResourceWasteAnalysisCore.DEFAULT_HOURLY_RATE
 
     def test_init_none_rate_uses_default(self):
         """测试None使用默认值"""

@@ -80,8 +80,12 @@ class ExceptionEventsService:
         if project_id:
             query = query.filter(ExceptionEvent.project_id == project_id)
 
-        # 按发生时间倒序
-        query = query.order_by(ExceptionEvent.occurred_at.desc())
+        # 按发生/发现时间倒序（兼容模型字段演进）
+        order_field = getattr(ExceptionEvent, "occurred_at", None) or getattr(
+            ExceptionEvent, "discovered_at", None
+        ) or getattr(ExceptionEvent, "created_at", None)
+        if order_field is not None:
+            query = query.order_by(order_field.desc())
 
         # 分页
         pagination = get_pagination_params(page=page, page_size=page_size)

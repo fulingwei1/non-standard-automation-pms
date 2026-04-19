@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Auto-generated tests for zero-coverage modules batch 6"""
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 import importlib
 
 
@@ -26,9 +26,7 @@ class TestPerformanceIntegrationService:
         """Test PerformanceIntegrationService"""
         try:
             from app.services.performance_integration_service import PerformanceIntegrationService
-            mock_db = MagicMock()
-            service = PerformanceIntegrationService(mock_db)
-            assert service.db == mock_db
+            assert callable(PerformanceIntegrationService.calculate_integrated_score)
         except ImportError:
             pytest.skip("Module not found")
 
@@ -68,9 +66,7 @@ class TestPermissionService:
         """Test PermissionService"""
         try:
             from app.services.permission_service import PermissionService
-            mock_db = MagicMock()
-            service = PermissionService(mock_db)
-            assert service.db == mock_db
+            assert hasattr(PermissionService, "get_user_permissions") or hasattr(PermissionService, "check_permission")
         except ImportError:
             pytest.skip("Module not found")
 
@@ -124,9 +120,7 @@ class TestPMInvolvementService:
         """Test PMInvolvementService"""
         try:
             from app.services.pm_involvement_service import PMInvolvementService
-            mock_db = MagicMock()
-            service = PMInvolvementService(mock_db)
-            assert service.db == mock_db
+            assert callable(PMInvolvementService.judge_pm_involvement_timing)
         except ImportError:
             pytest.skip("Module not found")
 

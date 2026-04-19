@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.models.alert import AlertNotification
 from app.models.notification import NotificationSettings
-from app.services.channel_handlers.base import (
+from app.services.notification.channels.base import (
     NotificationChannel,
     NotificationPriority,
     NotificationRequest,
@@ -24,7 +24,7 @@ class TestNotificationServiceInit:
     """Test suite for service initialization."""
 
     def test_init_creates_handlers(self):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         mock_session = Mock(spec=Session)
         service = NotificationService(mock_session)
@@ -45,7 +45,7 @@ class TestGetUserSettings:
         return Mock(spec=Session)
 
     def test_get_user_settings_found(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         mock_settings = Mock(spec=NotificationSettings)
         mock_settings.user_id = 1
@@ -62,7 +62,7 @@ class TestGetUserSettings:
         assert result == mock_settings
 
     def test_get_user_settings_not_found(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         mock_query = Mock()
         mock_query.filter = Mock(return_value=mock_query)
@@ -83,7 +83,7 @@ class TestDedupKey:
         return Mock(spec=Session)
 
     def test_dedup_key_generates_hash(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -104,7 +104,7 @@ class TestDedupKey:
         assert key.isalnum()
 
     def test_dedup_key_same_request_same_key(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -134,7 +134,7 @@ class TestDedupKey:
         assert key1 == key2
 
     def test_dedup_key_different_source_id_different_key(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -172,7 +172,7 @@ class TestCheckDedup:
         return Mock(spec=Session)
 
     def test_check_dedup_force_send_bypasses_dedup(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -193,7 +193,7 @@ class TestCheckDedup:
         assert result is False
 
     def test_check_dedup_not_in_cache(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
         NotificationService._dedup_cache.clear()
@@ -211,7 +211,7 @@ class TestCheckDedup:
         assert result is False
 
     def test_check_dedup_in_cache_within_window(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -231,7 +231,7 @@ class TestCheckDedup:
         assert result is True  # Should be deduped
 
     def test_check_dedup_in_cache_outside_window(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -260,7 +260,7 @@ class TestUpdateDedupCache:
         return Mock(spec=Session)
 
     def test_update_dedup_cache_normal_request(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
         NotificationService._dedup_cache.clear()
@@ -280,7 +280,7 @@ class TestUpdateDedupCache:
         assert key in NotificationService._dedup_cache
 
     def test_update_dedup_cache_force_send_skips(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
         NotificationService._dedup_cache.clear()
@@ -308,7 +308,7 @@ class TestCheckQuietHours:
         return Mock(spec=Session)
 
     def test_check_quiet_hours_no_settings(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -316,7 +316,7 @@ class TestCheckQuietHours:
         assert result is False
 
     def test_check_quiet_hours_no_start_time(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -328,7 +328,7 @@ class TestCheckQuietHours:
         assert result is False
 
     def test_check_quiet_hours_no_end_time(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -339,9 +339,9 @@ class TestCheckQuietHours:
         result = service._check_quiet_hours(settings)
         assert result is False
 
-    @patch("app.services.unified_notification_service.datetime")
+    @patch("app.services.notification.unified_notification_service.datetime")
     def test_check_quiet_hours_within_same_day_range(self, mock_datetime, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -358,9 +358,9 @@ class TestCheckQuietHours:
         result = service._check_quiet_hours(settings)
         assert result is True
 
-    @patch("app.services.unified_notification_service.datetime")
+    @patch("app.services.notification.unified_notification_service.datetime")
     def test_check_quiet_hours_outside_same_day_range(self, mock_datetime, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -377,9 +377,9 @@ class TestCheckQuietHours:
         result = service._check_quiet_hours(settings)
         assert result is False
 
-    @patch("app.services.unified_notification_service.datetime")
+    @patch("app.services.notification.unified_notification_service.datetime")
     def test_check_quiet_hours_spans_midnight_within(self, mock_datetime, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -397,7 +397,7 @@ class TestCheckQuietHours:
         assert result is True
 
     def test_check_quiet_hours_invalid_format(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -417,7 +417,7 @@ class TestShouldSendByCategory:
         return Mock(spec=Session)
 
     def test_should_send_no_settings(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -434,7 +434,7 @@ class TestShouldSendByCategory:
         assert result is True
 
     def test_should_send_force_send(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -454,7 +454,7 @@ class TestShouldSendByCategory:
         assert result is True
 
     def test_should_send_task_enabled(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -474,7 +474,7 @@ class TestShouldSendByCategory:
         assert result is True
 
     def test_should_send_task_disabled(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -494,7 +494,7 @@ class TestShouldSendByCategory:
         assert result is False
 
     def test_should_send_unknown_category(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -521,7 +521,7 @@ class TestDetermineChannels:
         return Mock(spec=Session)
 
     def test_determine_channels_explicit_channels(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -538,7 +538,7 @@ class TestDetermineChannels:
         assert result == [NotificationChannel.EMAIL, NotificationChannel.SMS]
 
     def test_determine_channels_normal_priority_no_settings(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -560,7 +560,7 @@ class TestDetermineChannels:
         assert NotificationChannel.SYSTEM in result
 
     def test_determine_channels_urgent_priority_no_settings(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -584,7 +584,7 @@ class TestDetermineChannels:
         assert NotificationChannel.EMAIL in result
 
     def test_determine_channels_with_user_settings_all_enabled(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -622,7 +622,7 @@ class TestSendToChannels:
         return Mock(spec=Session)
 
     def test_send_to_channels_success(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -646,7 +646,7 @@ class TestSendToChannels:
         assert results[0].success is True
 
     def test_send_to_channels_failure(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -669,7 +669,7 @@ class TestSendToChannels:
         assert "Send failed" in results[0].error_message
 
     def test_send_to_channels_unknown_channel(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -697,7 +697,7 @@ class TestSendNotification:
         return Mock(spec=Session)
 
     def test_send_notification_deduped(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
 
@@ -721,7 +721,7 @@ class TestSendNotification:
         assert result["deduped"] is True
 
     def test_send_notification_success(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
         NotificationService._dedup_cache.clear()
@@ -763,7 +763,7 @@ class TestSendBulkNotification:
         return Mock(spec=Session)
 
     def test_send_bulk_notification(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
         NotificationService._dedup_cache.clear()
@@ -816,7 +816,7 @@ class TestConvenienceMethods:
 
     @pytest.fixture
     def service_with_mocked_send(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         service = NotificationService(db_session)
         service.send_notification = Mock(return_value={"success": True})
@@ -959,7 +959,7 @@ class TestStaticMethods:
         return Mock(spec=Session)
 
     def test_send_notification_legacy(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         mock_query = Mock()
         mock_query.filter = Mock(return_value=mock_query)
@@ -981,7 +981,7 @@ class TestStaticMethods:
             assert result is True
 
     def test_create_alert_notification(self, db_session):
-        from app.services.unified_notification_service import NotificationService
+        from app.services.notification.unified_notification_service import NotificationService
 
         mock_alert = Mock()
         mock_alert.id = 100
@@ -1006,10 +1006,9 @@ class TestGetNotificationService:
     """Test suite for get_notification_service function."""
 
     def test_get_notification_service_creates_new(self):
-        from app.services import unified_notification_service
-        from app.services.unified_notification_service import get_notification_service
+        import app.services.notification.unified_notification_service as unified_notification_service
+        from app.services.notification.unified_notification_service import get_notification_service
 
-        # Reset global instance
         unified_notification_service.notification_service_instance = None
 
         mock_session = Mock(spec=Session)
@@ -1019,8 +1018,8 @@ class TestGetNotificationService:
         assert service.db == mock_session
 
     def test_get_notification_service_returns_existing(self):
-        from app.services import unified_notification_service
-        from app.services.unified_notification_service import (
+        import app.services.notification.unified_notification_service as unified_notification_service
+        from app.services.notification.unified_notification_service import (
             NotificationService,
             get_notification_service,
         )
@@ -1034,8 +1033,8 @@ class TestGetNotificationService:
         assert service is existing_service
 
     def test_get_notification_service_creates_new_for_different_session(self):
-        from app.services import unified_notification_service
-        from app.services.unified_notification_service import (
+        import app.services.notification.unified_notification_service as unified_notification_service
+        from app.services.notification.unified_notification_service import (
             NotificationService,
             get_notification_service,
         )
@@ -1046,7 +1045,6 @@ class TestGetNotificationService:
         existing_service = NotificationService(mock_session1)
         unified_notification_service.notification_service_instance = existing_service
 
-        # Different session should create new service
         service = get_notification_service(mock_session2)
 
         assert service.db == mock_session2

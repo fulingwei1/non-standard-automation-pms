@@ -1,91 +1,56 @@
 # -*- coding: utf-8 -*-
-"""Auto-generated tests for views modules"""
-import pytest
-from unittest.mock import MagicMock, patch
+"""Auto-generated tests for view/other modules"""
 import importlib
+from unittest.mock import MagicMock
+
+import pytest
 
 
-class TestProjectAfterSalesView:
-    """Tests for project after sales view"""
-
+class TestAdminLogService:
     def test_service_import(self):
         try:
-            from app.services.views.project_after_sales_view import ProjectAfterSalesView
+            from app.services.admin_log_service import AdminLogService
             mock_db = MagicMock()
-            service = ProjectAfterSalesView(mock_db)
+            service = AdminLogService(mock_db)
             assert service.db == mock_db
         except ImportError:
             pytest.skip("Module not found")
 
 
-class TestProjectDeliveryView:
-    """Tests for project delivery view"""
-
+class TestAttachmentService:
     def test_service_import(self):
         try:
-            from app.services.views.project_delivery_view import ProjectDeliveryView
+            from app.services.attachment_service import AttachmentService
             mock_db = MagicMock()
-            service = ProjectDeliveryView(mock_db)
+            service = AttachmentService(mock_db)
             assert service.db == mock_db
         except ImportError:
             pytest.skip("Module not found")
 
 
-class TestProjectProcurementView:
-    """Tests for project procurement view"""
-
+class TestCommentService:
     def test_service_import(self):
         try:
-            from app.services.views.project_procurement_view import ProjectProcurementView
+            from app.services.comment_service import CommentService
             mock_db = MagicMock()
-            service = ProjectProcurementView(mock_db)
+            service = CommentService(mock_db)
             assert service.db == mock_db
         except ImportError:
             pytest.skip("Module not found")
 
 
-class TestProjectProductionView:
-    """Tests for project production view"""
-
+class TestNotificationService:
     def test_service_import(self):
         try:
-            from app.services.views.project_production_view import ProjectProductionView
+            from app.services.notification_service import NotificationService
             mock_db = MagicMock()
-            service = ProjectProductionView(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
-
-
-class TestVendorService:
-    """Tests for vendor"""
-
-    def test_service_import(self):
-        try:
-            from app.services.vendor_service import VendorService
-            mock_db = MagicMock()
-            service = VendorService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
-
-
-class TestWorkLogAutoGenerator:
-    """Tests for work log auto generator"""
-
-    def test_service_import(self):
-        try:
-            from app.services.work_log_auto_generator import WorkLogAutoGenerator
-            mock_db = MagicMock()
-            service = WorkLogAutoGenerator(mock_db)
+            service = NotificationService(mock_db)
             assert service.db == mock_db
         except ImportError:
             pytest.skip("Module not found")
 
 
 class TestWorkLogService:
-    """Tests for work log"""
-
     def test_service_import(self):
         try:
             from app.services.work_log_service import WorkLogService
@@ -102,9 +67,9 @@ class TestTwoFactorService:
     def test_service_import(self):
         try:
             from app.services.two_factor_service import TwoFactorService
-            mock_db = MagicMock()
-            service = TwoFactorService(mock_db)
-            assert service.db == mock_db
+            service = TwoFactorService()
+            assert service is not None
+            assert service.fernet is not None
         except ImportError:
             pytest.skip("Module not found")
 
@@ -114,9 +79,8 @@ class TestStageTransitionChecks:
 
     def test_module_import(self):
         try:
-            from app.services.stage_transition_checks import StageTransitionChecks
-            checks = StageTransitionChecks()
-            assert checks is not None
+            mod = importlib.import_module('app.services.stage_transition_checks')
+            assert mod is not None
         except ImportError:
             pytest.skip("Module not found")
 

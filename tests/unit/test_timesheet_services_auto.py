@@ -1,101 +1,61 @@
 # -*- coding: utf-8 -*-
 """Auto-generated tests for timesheet modules"""
-import pytest
-from unittest.mock import MagicMock, patch
-from datetime import datetime, date
+from unittest.mock import MagicMock
 
 
-class TestTimesheetService:
-    """Tests for timesheet service"""
+class TestTimesheetRecordsService:
+    """Tests for current timesheet records service"""
 
     def test_service_init(self):
-        """Test TimesheetService initialization"""
-        from app.services.timesheet import TimesheetService
+        from app.services.timesheet.records.service import TimesheetRecordsService
+
         mock_db = MagicMock()
-        service = TimesheetService(mock_db)
+        service = TimesheetRecordsService(mock_db)
         assert service.db == mock_db
 
-    @pytest.mark.asyncio
-    async def test_create_timesheet(self):
-        """Test create_timesheet method"""
-        from app.services.timesheet import TimesheetService
+    def test_create_timesheet_method_exists(self):
+        from app.services.timesheet.records.service import TimesheetRecordsService
+
+        service = TimesheetRecordsService(MagicMock())
+        assert callable(service.create_timesheet)
+
+    def test_batch_create_timesheets_method_exists(self):
+        from app.services.timesheet.records.service import TimesheetRecordsService
+
+        service = TimesheetRecordsService(MagicMock())
+        assert callable(service.batch_create_timesheets)
+
+    def test_list_timesheets_method_exists(self):
+        from app.services.timesheet.records.service import TimesheetRecordsService
+
+        service = TimesheetRecordsService(MagicMock())
+        assert callable(service.list_timesheets)
+
+    def test_get_timesheet_detail_method_exists(self):
+        from app.services.timesheet.records.service import TimesheetRecordsService
+
+        service = TimesheetRecordsService(MagicMock())
+        assert callable(service.get_timesheet_detail)
+
+
+class TestTimesheetReminderService:
+    """Tests for current timesheet reminder service"""
+
+    def test_service_init(self):
+        from app.services.timesheet.reminders.service import TimesheetReminderService
+
         mock_db = MagicMock()
-        service = TimesheetService(mock_db)
-        mock_data = {
-            "user_id": 1,
-            "project_id": 1,
-            "date": date.today(),
-            "hours": 8.0
-        }
-        # Smoke test
-        assert hasattr(service, 'db')
-
-
-class TestTimesheetApprovalService:
-    """Tests for timesheet approval"""
-
-    @pytest.mark.asyncio
-    async def test_approve_timesheet(self):
-        """Test approve_timesheet method"""
-        from app.services.timesheet import TimesheetService
-        mock_db = MagicMock()
-        service = TimesheetService(mock_db)
-        assert service is not None
-
-
-class TestTimesheetReportService:
-    """Tests for timesheet reports"""
-
-    def test_generate_report(self):
-        """Test generate_report method"""
-        from app.services.timesheet import TimesheetService
-        mock_db = MagicMock()
-        service = TimesheetService(mock_db)
-        # Basic test
+        service = TimesheetReminderService(mock_db)
         assert service.db == mock_db
 
+    def test_create_reminder_config_method_exists(self):
+        from app.services.timesheet.reminders.service import TimesheetReminderService
 
-class TestTimesheetEntryService:
-    """Tests for timesheet entries"""
+        service = TimesheetReminderService(MagicMock())
+        assert callable(service.create_reminder_config)
 
-    def test_create_entry(self):
-        """Test create_entry method"""
-        from app.services.timesheet import TimesheetService
-        mock_db = MagicMock()
-        service = TimesheetService(mock_db)
-        assert hasattr(service, 'db')
+    def test_list_pending_reminders_method_exists(self):
+        from app.services.timesheet.reminders.service import TimesheetReminderService
 
-
-class TestTimesheetSummaryService:
-    """Tests for timesheet summaries"""
-
-    def test_get_summary(self):
-        """Test get_summary method"""
-        from app.services.timesheet import TimesheetService
-        mock_db = MagicMock()
-        service = TimesheetService(mock_db)
-        # Smoke test
-        assert service is not None
-
-
-class TestTimesheetValidationService:
-    """Tests for timesheet validation"""
-
-    def test_validate_entry(self):
-        """Test validate_entry method"""
-        from app.services.timesheet import TimesheetService
-        mock_db = MagicMock()
-        service = TimesheetService(mock_db)
-        assert service.db == mock_db
-
-
-class TestTimesheetNotificationService:
-    """Tests for timesheet notifications"""
-
-    def test_send_reminder(self):
-        """Test send_reminder method"""
-        from app.services.timesheet import TimesheetService
-        mock_db = MagicMock()
-        service = TimesheetService(mock_db)
-        # Basic assertion
-        assert service is not None
+        service = TimesheetReminderService(MagicMock())
+        assert callable(service.list_pending_reminders)

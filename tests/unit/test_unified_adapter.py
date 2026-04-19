@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests for notification_handlers/unified_adapter.py"""
+"""Tests for notification/handlers/unified_adapter.py"""
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -7,40 +7,40 @@ import pytest
 
 class TestMapAlertLevelToPriority:
     def test_none(self):
-        from app.services.channel_handlers.base import NotificationPriority
-        from app.services.notification_handlers.unified_adapter import map_alert_level_to_priority
+        from app.services.notification.channels.base import NotificationPriority
+        from app.services.notification.handlers.unified_adapter import map_alert_level_to_priority
 
         assert map_alert_level_to_priority(None) == NotificationPriority.NORMAL
 
     def test_urgent(self):
-        from app.services.channel_handlers.base import NotificationPriority
-        from app.services.notification_handlers.unified_adapter import map_alert_level_to_priority
+        from app.services.notification.channels.base import NotificationPriority
+        from app.services.notification.handlers.unified_adapter import map_alert_level_to_priority
 
         assert map_alert_level_to_priority("URGENT") == NotificationPriority.URGENT
 
     def test_warning(self):
-        from app.services.channel_handlers.base import NotificationPriority
-        from app.services.notification_handlers.unified_adapter import map_alert_level_to_priority
+        from app.services.notification.channels.base import NotificationPriority
+        from app.services.notification.handlers.unified_adapter import map_alert_level_to_priority
 
         assert map_alert_level_to_priority("WARNING") == NotificationPriority.HIGH
 
     def test_unknown(self):
-        from app.services.channel_handlers.base import NotificationPriority
-        from app.services.notification_handlers.unified_adapter import map_alert_level_to_priority
+        from app.services.notification.channels.base import NotificationPriority
+        from app.services.notification.handlers.unified_adapter import map_alert_level_to_priority
 
         assert map_alert_level_to_priority("RANDOM") == NotificationPriority.NORMAL
 
 
 class TestResolveRecipientId:
     def test_from_notification(self):
-        from app.services.notification_handlers.unified_adapter import resolve_recipient_id
+        from app.services.notification.handlers.unified_adapter import resolve_recipient_id
 
         db = MagicMock()
         notification = MagicMock(notify_user_id=42)
         assert resolve_recipient_id(db, notification, None) == 42
 
     def test_from_user(self):
-        from app.services.notification_handlers.unified_adapter import resolve_recipient_id
+        from app.services.notification.handlers.unified_adapter import resolve_recipient_id
 
         db = MagicMock()
         notification = MagicMock(spec=[])
@@ -48,7 +48,7 @@ class TestResolveRecipientId:
         assert resolve_recipient_id(db, notification, user) == 10
 
     def test_none(self):
-        from app.services.notification_handlers.unified_adapter import resolve_recipient_id
+        from app.services.notification.handlers.unified_adapter import resolve_recipient_id
 
         db = MagicMock()
         notification = MagicMock(spec=[])
@@ -57,7 +57,7 @@ class TestResolveRecipientId:
 
 class TestSendAlertViaUnified:
     def test_success(self):
-        from app.services.notification_handlers.unified_adapter import send_alert_via_unified
+        from app.services.notification.handlers.unified_adapter import send_alert_via_unified
 
         db = MagicMock()
         notification = MagicMock(notify_user_id=1, notify_title="Alert", notify_content="Content")
@@ -71,7 +71,7 @@ class TestSendAlertViaUnified:
             target_name="P1",
         )
         with patch(
-            "app.services.unified_notification_service.get_notification_service"
+            "app.services.notification.unified_notification_service.get_notification_service"
         ) as mock_get_svc:
             mock_svc = MagicMock()
             mock_svc.send_notification.return_value = {"success": True}
@@ -80,7 +80,7 @@ class TestSendAlertViaUnified:
             assert result["success"] is True
 
     def test_no_recipient_raises(self):
-        from app.services.notification_handlers.unified_adapter import send_alert_via_unified
+        from app.services.notification.handlers.unified_adapter import send_alert_via_unified
 
         db = MagicMock()
         notification = MagicMock(spec=[])

@@ -13,10 +13,11 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.material import Material
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem
+from app.models.purchase import GoodsReceipt, GoodsReceiptItem, PurchaseOrder, PurchaseOrderItem
+from app.services.assembly_kit_service import AssemblyKitService
 
 
-class AssemblyKitServiceEnhanced:
+class AssemblyKitServiceEnhanced(AssemblyKitService):
     """装配工艺齐套分析服务 - 增强版"""
 
     def __init__(self, db: Session):
@@ -24,7 +25,7 @@ class AssemblyKitServiceEnhanced:
 
     # ==================== 春节假期配置 ====================
 
-    def get_spring_festival_impact(self, query_date: date) -> Dict[str, Any]:
+    def get_spring_festival_impact(self, query_date: Optional[date] = None) -> Dict[str, Any]:
         """
         获取春节假期影响
 
@@ -44,7 +45,9 @@ class AssemblyKitServiceEnhanced:
             2030: date(2030, 2, 3),
         }
 
-        year = query_date.year
+        year = (query_date or date.today()).year
+        if query_date is None:
+            query_date = date.today()
         spring_festival = spring_festivals.get(year)
 
         if not spring_festival:
@@ -116,15 +119,15 @@ class AssemblyKitServiceEnhanced:
                 PurchaseOrderItem.material_id == material_id,
                 PurchaseOrderItem.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]),
                 (PurchaseOrderItem.quantity - PurchaseOrderItem.received_qty) > 0,
-                PurchaseOrderItem.promised_delivery_date != None,
+                PurchaseOrderItem.promised_date != None,
             )
-            .order_by(PurchaseOrderItem.promised_delivery_date)
+            .order_by(PurchaseOrderItem.promised_date)
             .all()
         )
 
         if po_items:
             # 返回最早的承诺交期
-            return po_items[0][0].promised_delivery_date
+            return po_items[0][0].promised_date
 
         # 2. 无承诺交期，使用历史数据推算
         return self.get_estimated_delivery_from_history(material_id)
@@ -149,13 +152,15 @@ class AssemblyKitServiceEnhanced:
 
         # 查询该物料历史采购订单
         po_items = (
-            self.db.query(PurchaseOrderItem, PurchaseOrder)
+            self.db.query(PurchaseOrderItem, PurchaseOrder, GoodsReceipt)
             .join(PurchaseOrder)
+            .join(GoodsReceiptItem, GoodsReceiptItem.order_item_id == PurchaseOrderItem.id)
+            .join(GoodsReceipt, GoodsReceiptItem.receipt_id == GoodsReceipt.id)
             .filter(
                 PurchaseOrderItem.material_id == material_id,
                 PurchaseOrder.status.in_(["COMPLETED", "PARTIAL_RECEIVED"]),
                 PurchaseOrder.order_date != None,
-                PurchaseOrderItem.received_date != None,
+                GoodsReceipt.receipt_date != None,
             )
             .order_by(PurchaseOrder.order_date.desc())
             .limit(10)
@@ -163,9 +168,9 @@ class AssemblyKitServiceEnhanced:
         )
 
         lead_times = []
-        for po_item, po in po_items:
-            if po.order_date and po_item.received_date:
-                days = (po_item.received_date - po.order_date).days
+        for po_item, po, receipt in po_items:
+            if po.order_date and receipt.receipt_date:
+                days = (receipt.receipt_date - po.order_date).days
                 if 0 < days < 180:
                     lead_times.append(days)
 
@@ -189,91 +194,90 @@ class AssemblyKitServiceEnhanced:
         获取相似物料的历史提前期
 
         相似度优先级：
-        1. 同分类 + 同供应商
+        1. 同分类 + 同默认供应商
         2. 同分类
-        3. 同供应商
+        3. 同默认供应商
         """
 
-        lead_times = []
+        def _collect(similar_items):
+            collected = []
+            for po_item, po, receipt in similar_items:
+                if po.order_date and receipt.receipt_date:
+                    days = (receipt.receipt_date - po.order_date).days
+                    if 0 < days < 180:
+                        collected.append(days)
+            return collected
 
-        # 1. 同分类 + 同供应商
-        if material.category_id and material.supplier_id:
+        lead_times = []
+        supplier_id = getattr(material, "default_supplier_id", None)
+
+        # 1. 同分类 + 同默认供应商
+        if material.category_id and supplier_id:
             similar_items = (
-                self.db.query(PurchaseOrderItem, PurchaseOrder)
+                self.db.query(PurchaseOrderItem, PurchaseOrder, GoodsReceipt)
                 .join(PurchaseOrder)
+                .join(GoodsReceiptItem, GoodsReceiptItem.order_item_id == PurchaseOrderItem.id)
+                .join(GoodsReceipt, GoodsReceiptItem.receipt_id == GoodsReceipt.id)
                 .join(Material, PurchaseOrderItem.material_id == Material.id)
                 .filter(
                     Material.category_id == material.category_id,
-                    Material.supplier_id == material.supplier_id,
+                    Material.default_supplier_id == supplier_id,
                     PurchaseOrder.status.in_(["COMPLETED", "PARTIAL_RECEIVED"]),
                     PurchaseOrder.order_date != None,
-                    PurchaseOrderItem.received_date != None,
+                    GoodsReceipt.receipt_date != None,
                     PurchaseOrderItem.material_id != material.id,
                 )
                 .order_by(PurchaseOrder.order_date.desc())
                 .limit(20)
                 .all()
             )
-
-            for po_item, po in similar_items:
-                if po.order_date and po_item.received_date:
-                    days = (po_item.received_date - po.order_date).days
-                    if 0 < days < 180:
-                        lead_times.append(days)
-
+            lead_times = _collect(similar_items)
             if lead_times:
                 return lead_times
 
         # 2. 同分类
         if material.category_id:
             similar_items = (
-                self.db.query(PurchaseOrderItem, PurchaseOrder)
+                self.db.query(PurchaseOrderItem, PurchaseOrder, GoodsReceipt)
                 .join(PurchaseOrder)
+                .join(GoodsReceiptItem, GoodsReceiptItem.order_item_id == PurchaseOrderItem.id)
+                .join(GoodsReceipt, GoodsReceiptItem.receipt_id == GoodsReceipt.id)
                 .join(Material, PurchaseOrderItem.material_id == Material.id)
                 .filter(
                     Material.category_id == material.category_id,
                     PurchaseOrder.status.in_(["COMPLETED", "PARTIAL_RECEIVED"]),
                     PurchaseOrder.order_date != None,
-                    PurchaseOrderItem.received_date != None,
+                    GoodsReceipt.receipt_date != None,
                     PurchaseOrderItem.material_id != material.id,
                 )
                 .order_by(PurchaseOrder.order_date.desc())
                 .limit(20)
                 .all()
             )
-
-            for po_item, po in similar_items:
-                if po.order_date and po_item.received_date:
-                    days = (po_item.received_date - po.order_date).days
-                    if 0 < days < 180:
-                        lead_times.append(days)
-
+            lead_times = _collect(similar_items)
             if lead_times:
                 return lead_times
 
-        # 3. 同供应商
-        if material.supplier_id:
+        # 3. 同默认供应商
+        if supplier_id:
             similar_items = (
-                self.db.query(PurchaseOrderItem, PurchaseOrder)
+                self.db.query(PurchaseOrderItem, PurchaseOrder, GoodsReceipt)
                 .join(PurchaseOrder)
+                .join(GoodsReceiptItem, GoodsReceiptItem.order_item_id == PurchaseOrderItem.id)
+                .join(GoodsReceipt, GoodsReceiptItem.receipt_id == GoodsReceipt.id)
+                .join(Material, PurchaseOrderItem.material_id == Material.id)
                 .filter(
-                    PurchaseOrderItem.supplier_id == material.supplier_id,
+                    Material.default_supplier_id == supplier_id,
                     PurchaseOrder.status.in_(["COMPLETED", "PARTIAL_RECEIVED"]),
                     PurchaseOrder.order_date != None,
-                    PurchaseOrderItem.received_date != None,
+                    GoodsReceipt.receipt_date != None,
                     PurchaseOrderItem.material_id != material.id,
                 )
                 .order_by(PurchaseOrder.order_date.desc())
                 .limit(20)
                 .all()
             )
-
-            for po_item, po in similar_items:
-                if po.order_date and po_item.received_date:
-                    days = (po_item.received_date - po.order_date).days
-                    if 0 < days < 180:
-                        lead_times.append(days)
-
+            lead_times = _collect(similar_items)
             if lead_times:
                 return lead_times
 

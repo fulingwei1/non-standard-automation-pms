@@ -23,6 +23,9 @@ from app.models.sales.quotes import Quote, QuoteVersion
 from app.models.user import User
 from .base import ApprovalAdapter
 
+# 兼容旧测试 patch 点：实际在 submit_for_approval 内懒加载
+ApprovalEngineService = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -241,9 +244,11 @@ class QuoteApprovalAdapter(ApprovalAdapter):
         }
 
         # 使用统一审批引擎创建实例
-        from ..engine import ApprovalEngineService
+        engine_cls = ApprovalEngineService
+        if engine_cls is None:
+            from ..engine import ApprovalEngineService as engine_cls
 
-        engine = ApprovalEngineService(self.db)
+        engine = engine_cls(self.db)
 
         instance = engine.submit(
             template_code="SALES_QUOTE",

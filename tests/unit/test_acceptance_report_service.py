@@ -5,8 +5,8 @@ Covers: app/services/acceptance_report_service.py
 Coverage Target: 0% -> 50%+
 """
 
-from datetime import date, datetime
-from unittest.mock import MagicMock, Mock, patch
+from datetime import date
+from unittest.mock import Mock, mock_open, patch
 
 import pytest
 from sqlalchemy.orm import Session
@@ -31,11 +31,10 @@ class TestGenerateReportNo:
 
         assert report_no is not None
         assert report_no.startswith("FAT-")
-        # 格式: FAT-YYYYMMDD-001
         parts = report_no.split("-")
         assert len(parts) == 3
-        assert len(parts[1]) == 8  # 日期部分
-        assert parts[2].isdigit()  # 序号部分
+        assert len(parts[1]) == 8
+        assert parts[2].isdigit()
 
     def test_generate_sat_report_no(self, db_session: Session):
         """测试生成SAT报告编号"""
@@ -49,14 +48,24 @@ class TestGenerateReportNo:
         report_no = generate_report_no(db_session, "OTHER")
 
         assert report_no is not None
-        assert report_no.startswith("AR-")
+        assert report_no.startswith("OTHER-")
 
     def test_generate_sequential_report_no(self, db_session: Session):
         """测试生成连续的报告编号"""
-        report_no_1 = generate_report_no(db_session, "FAT")
-        report_no_2 = generate_report_no(db_session, "FAT")
+        from app.models.acceptance import AcceptanceReport
 
-        # 两个编号应该不同（序号递增）
+        report_no_1 = generate_report_no(db_session, "FAT")
+        db_session.add(
+            AcceptanceReport(
+                report_no=report_no_1,
+                order_id=1,
+                report_type="FAT",
+                version=1,
+            )
+        )
+        db_session.commit()
+
+        report_no_2 = generate_report_no(db_session, "FAT")
         assert report_no_1 != report_no_2
 
 
@@ -66,7 +75,6 @@ class TestGetReportVersion:
 
     def test_get_first_version(self, db_session: Session):
         """测试获取第一个版本号"""
-        # 不存在报告时，应返回版本1
         version = get_report_version(db_session, order_id=99999, report_type="FAT")
         assert version == 1
 
@@ -74,22 +82,18 @@ class TestGetReportVersion:
         """测试版本号递增"""
         from app.models.acceptance import AcceptanceReport
 
-        # 创建一个现有的报告
         existing_report = AcceptanceReport(
             report_no="FAT-TEST-001",
             order_id=12345,
             report_type="FAT",
             version=1,
-            status="GENERATED",
         )
         db_session.add(existing_report)
         db_session.commit()
 
-        # 获取下一个版本号
         version = get_report_version(db_session, order_id=12345, report_type="FAT")
         assert version == 2
 
-        # 清理
         db_session.delete(existing_report)
         db_session.commit()
 
@@ -100,7 +104,6 @@ class TestBuildReportContent:
 
     @pytest.fixture
     def mock_order(self):
-        """创建模拟的验收单"""
         order = Mock()
         order.order_no = "AO-TEST-001"
         order.acceptance_type = "FAT"
@@ -113,21 +116,10 @@ class TestBuildReportContent:
         order.qa_signer_id = None
         order.customer_signer = "客户签字人"
         order.id = 1
-
-        # 项目和机台信息
-        mock_project = Mock()
-        mock_project.project_name = "测试项目"
-        order.project = mock_project
-
-        mock_machine = Mock()
-        mock_machine.machine_name = "测试设备"
-        order.machine = mock_machine
-
         return order
 
     @pytest.fixture
     def mock_user(self):
-        """创建模拟的用户"""
         user = Mock()
         user.id = 1
         user.username = "test_user"
@@ -135,28 +127,24 @@ class TestBuildReportContent:
         return user
 
     def test_build_report_content_basic(self, db_session: Session, mock_order, mock_user):
-        """测试构建基本报告内容"""
-        with patch("app.services.acceptance_report_service.func") as mock_func:
-            # Mock 查询结果
-            mock_func.count.return_value.scalar.return_value = 5
+        content = build_report_content(
+            db=db_session,
+            order=mock_order,
+            report_no="FAT-TEST-001",
+            version=1,
+            user=mock_user,
+        )
 
-            content = build_report_content(
-                db=db_session,
-                order=mock_order,
-                report_no="FAT-TEST-001",
-                version=1,
-                current_user=mock_user,
-            )
-
-            assert content is not None
-            assert "验收报告" in content
-            assert "FAT-TEST-001" in content
-            assert "AO-TEST-001" in content
-            assert "测试项目" in content
-            assert "测试设备" in content
+        assert content is not None
+        assert "验收报告" in content
+        assert "FAT-TEST-001" in content
+        assert "AO-TEST-001" in content
+        assert "验收类型: FAT" in content
+        assert "通过率: 95.0%" in content
+        assert "客户签字: 客户签字人" in content
+        assert "生成人: 测试用户" in content
 
     def test_build_report_content_with_missing_project(self, db_session: Session, mock_user):
-        """测试缺少项目信息时的报告内容"""
         order = Mock()
         order.order_no = "AO-TEST-002"
         order.acceptance_type = "SAT"
@@ -169,22 +157,19 @@ class TestBuildReportContent:
         order.qa_signer_id = None
         order.customer_signer = None
         order.id = 2
-        order.project = None
-        order.machine = None
 
-        with patch("app.services.acceptance_report_service.func") as mock_func:
-            mock_func.count.return_value.scalar.return_value = 0
+        content = build_report_content(
+            db=db_session,
+            order=order,
+            report_no="SAT-TEST-001",
+            version=1,
+            user=mock_user,
+        )
 
-            content = build_report_content(
-                db=db_session,
-                order=order,
-                report_no="SAT-TEST-001",
-                version=1,
-                current_user=mock_user,
-            )
-
-            assert content is not None
-            assert "N/A" in content  # 缺少的信息应显示为 N/A
+        assert content is not None
+        assert "SAT-TEST-001" in content
+        assert "验收类型: SAT" in content
+        assert "通过率: 0%" in content
 
 
 @pytest.mark.unit
@@ -192,10 +177,8 @@ class TestReportlabAvailability:
     """Reportlab 可用性测试"""
 
     def test_reportlab_available_flag(self):
-        """测试 REPORTLAB_AVAILABLE 标志"""
         from app.services.acceptance_report_service import REPORTLAB_AVAILABLE
 
-        # 标志应该是布尔值
         assert isinstance(REPORTLAB_AVAILABLE, bool)
 
 
@@ -205,7 +188,6 @@ class TestSaveReportFile:
 
     @pytest.fixture
     def mock_order(self):
-        """创建模拟的验收单"""
         order = Mock()
         order.id = 1
         order.order_no = "AO-TEST-001"
@@ -216,20 +198,10 @@ class TestSaveReportFile:
         order.total_items = 10
         order.passed_items = 10
         order.failed_items = 0
-
-        mock_project = Mock()
-        mock_project.project_name = "测试项目"
-        order.project = mock_project
-
-        mock_machine = Mock()
-        mock_machine.machine_name = "测试设备"
-        order.machine = mock_machine
-
         return order
 
     @pytest.fixture
     def mock_user(self):
-        """创建模拟的用户"""
         user = Mock()
         user.id = 1
         user.username = "test_user"
@@ -239,30 +211,23 @@ class TestSaveReportFile:
     def test_save_report_file_fallback_to_text(
         self, db_session: Session, mock_order, mock_user, tmp_path
     ):
-        """测试 PDF 生成失败时回退到文本格式"""
         from app.services.acceptance_report_service import save_report_file
 
         report_content = "测试报告内容"
 
-        with patch("app.services.acceptance_report_service.settings") as mock_settings:
-            mock_settings.UPLOAD_DIR = str(tmp_path)
+        with patch("app.services.acceptance_report_service.os.makedirs"):
+            with patch("builtins.open", mock_open()) as mocked_file:
+                file_path, filename = save_report_file(
+                    content=report_content,
+                    order_no="AO-TEST-001",
+                    report_type="FAT",
+                    use_pdf=False,
+                    order=mock_order,
+                    db=db_session,
+                    user=mock_user,
+                )
 
-            with patch("app.services.acceptance_report_service.REPORTLAB_AVAILABLE", False):
-                with patch(
-                    "app.services.acceptance_report_service.get_report_version",
-                    return_value=1,
-                ):
-                    file_path, file_size, file_hash = save_report_file(
-                        report_content=report_content,
-                        report_no="FAT-TEST-001",
-                        report_type="FAT",
-                        include_signatures=False,
-                        order=mock_order,
-                        db=db_session,
-                        current_user=mock_user,
-                    )
-
-                    assert file_path is not None
-                    assert file_path.endswith(".txt")
-                    assert file_size > 0
-                    assert file_hash is not None
+                assert file_path is not None
+                assert file_path.endswith(".txt")
+                assert filename.endswith(".txt")
+                mocked_file().write.assert_called_once_with(report_content)

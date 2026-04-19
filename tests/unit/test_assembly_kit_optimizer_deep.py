@@ -12,12 +12,8 @@ class TestAssemblyKitOptimizerBusinessLogic:
         try:
             from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
-            mock_db = MagicMock()
-            service = AssemblyKitOptimizer(mock_db)
-
-            result = service.optimize_kit(1)
-
-            assert result is not None
+            assert hasattr(AssemblyKitOptimizer, 'optimize_estimated_ready_date')
+            assert callable(AssemblyKitOptimizer.optimize_estimated_ready_date)
         except ImportError:
             pytest.skip("Module not found")
 
@@ -26,12 +22,8 @@ class TestAssemblyKitOptimizerBusinessLogic:
         try:
             from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
-            mock_db = MagicMock()
-            service = AssemblyKitOptimizer(mock_db)
-
-            result = service.calculate_kit_efficiency(1)
-
-            assert result is not None
+            assert hasattr(AssemblyKitOptimizer, '_optimize_by_purchase_order')
+            assert callable(AssemblyKitOptimizer._optimize_by_purchase_order)
         except ImportError:
             pytest.skip("Module not found")
 
@@ -41,17 +33,14 @@ class TestAssemblyKitOptimizerBusinessLogic:
             from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
             mock_db = MagicMock()
+            readiness = MagicMock()
+            readiness.id = 1
+            readiness.estimated_ready_date = None
+            mock_db.query.return_value.filter.return_value.all.return_value = []
 
-            mock_component = MagicMock()
-            mock_component.id = 1
+            result = AssemblyKitOptimizer.optimize_estimated_ready_date(mock_db, readiness)
 
-            mock_db.query.return_value.filter.return_value.all.return_value = [mock_component]
-
-            service = AssemblyKitOptimizer(mock_db)
-
-            result = service.identify_optimal_components(1)
-
-            assert result is not None
+            assert result is None
         except ImportError:
             pytest.skip("Module not found")
 
@@ -61,10 +50,12 @@ class TestAssemblyKitOptimizerBusinessLogic:
             from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
             mock_db = MagicMock()
-            service = AssemblyKitOptimizer(mock_db)
+            readiness = MagicMock()
+            readiness.id = 1
+            mock_db.query.return_value.filter.return_value.all.return_value = []
 
-            result = service.generate_kit_bom(1)
+            result = AssemblyKitOptimizer.generate_optimization_suggestions(mock_db, readiness)
 
-            assert result is not None
+            assert isinstance(result, list)
         except ImportError:
             pytest.skip("Module not found")

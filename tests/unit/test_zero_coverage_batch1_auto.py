@@ -54,9 +54,8 @@ class TestAIAssessmentService:
         """Test AIAssessmentService"""
         try:
             from app.services.ai_assessment_service import AIAssessmentService
-            mock_db = MagicMock()
-            service = AIAssessmentService(mock_db)
-            assert service.db == mock_db
+            service = AIAssessmentService()
+            assert service is not None
         except ImportError:
             pytest.skip("Module not found")
 
@@ -80,7 +79,7 @@ class TestApprovalEngineWorkflow:
         """Test workflow engine"""
         try:
             from app.services.approval_engine.workflow_engine import WorkflowEngine
-            engine = WorkflowEngine()
+            engine = WorkflowEngine(MagicMock())
             assert engine is not None
         except ImportError:
             pytest.skip("Module not found")

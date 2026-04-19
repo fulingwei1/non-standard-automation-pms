@@ -79,41 +79,69 @@ class TestMilestoneAlertServiceBusinessLogic:
             pytest.skip("Module not found")
 
     def test_determine_alert_level_critical(self):
-        """测试确定告警级别（紧急）"""
+        """测试 1 天阈值会生成 CRITICAL 级别告警"""
         try:
             from app.services.alert.milestone_alert_service import MilestoneAlertService
             from app.models.enums import AlertLevelEnum
 
             mock_db = MagicMock()
             service = MilestoneAlertService(mock_db)
+            service._should_create_alert = MagicMock(return_value=True)
+            service._dispatch_milestone_notification = MagicMock()
 
-            # 1天内到期 -> CRITICAL
-            due_date = date.today() + timedelta(days=1)
-            level = service._determine_alert_level(due_date, date.today())
+            milestone = MagicMock()
+            milestone.id = 1
+            milestone.project_id = 100
+            milestone.milestone_code = "MS-001"
+            milestone.milestone_name = "阶段1"
+            milestone.milestone_type = "CUSTOM"
+            milestone.is_key = False
+            milestone.planned_date = date.today() + timedelta(days=1)
 
-            assert level == AlertLevelEnum.CRITICAL.value
+            rule = MagicMock()
+            rule.id = 1
+
+            count = service._process_upcoming_milestones([milestone], rule, date.today(), 0)
+
+            assert count == 1
+            alert = mock_db.add.call_args.args[0]
+            assert alert.alert_level == AlertLevelEnum.CRITICAL.value
         except ImportError:
             pytest.skip("Module not found")
 
     def test_determine_alert_level_warning(self):
-        """测试确定告警级别（警告）"""
+        """测试 3 天阈值会生成 WARNING 级别告警"""
         try:
             from app.services.alert.milestone_alert_service import MilestoneAlertService
             from app.models.enums import AlertLevelEnum
 
             mock_db = MagicMock()
             service = MilestoneAlertService(mock_db)
+            service._should_create_alert = MagicMock(return_value=True)
+            service._dispatch_milestone_notification = MagicMock()
 
-            # 3天内到期 -> WARNING
-            due_date = date.today() + timedelta(days=3)
-            level = service._determine_alert_level(due_date, date.today())
+            milestone = MagicMock()
+            milestone.id = 1
+            milestone.project_id = 100
+            milestone.milestone_code = "MS-001"
+            milestone.milestone_name = "阶段1"
+            milestone.milestone_type = "CUSTOM"
+            milestone.is_key = False
+            milestone.planned_date = date.today() + timedelta(days=3)
 
-            assert level == AlertLevelEnum.WARNING.value
+            rule = MagicMock()
+            rule.id = 1
+
+            count = service._process_upcoming_milestones([milestone], rule, date.today(), 0)
+
+            assert count == 1
+            alert = mock_db.add.call_args.args[0]
+            assert alert.alert_level == AlertLevelEnum.WARNING.value
         except ImportError:
             pytest.skip("Module not found")
 
     def test_create_alert_record(self):
-        """测试创建告警记录"""
+        """测试处理即将到期里程碑时创建告警记录"""
         try:
             from app.services.alert.milestone_alert_service import MilestoneAlertService
 
@@ -121,84 +149,75 @@ class TestMilestoneAlertServiceBusinessLogic:
 
             mock_milestone = MagicMock()
             mock_milestone.id = 1
+            mock_milestone.milestone_code = "MS-001"
             mock_milestone.milestone_name = "阶段1"
             mock_milestone.project_id = 100
-            mock_milestone.due_date = date.today() + timedelta(days=1)
+            mock_milestone.milestone_type = "CUSTOM"
+            mock_milestone.is_key = True
+            mock_milestone.planned_date = date.today() + timedelta(days=1)
 
             mock_rule = MagicMock()
             mock_rule.id = 1
 
             service = MilestoneAlertService(mock_db)
+            service._should_create_alert = MagicMock(return_value=True)
+            service._dispatch_milestone_notification = MagicMock()
 
-            result = service._create_alert_record(
-                milestone=mock_milestone,
-                rule=mock_rule,
-                level="CRITICAL",
-                alert_date=date.today()
+            result = service._process_upcoming_milestones(
+                milestones=[mock_milestone], rule=mock_rule, today=date.today(), start_count=0
             )
 
-            # 验证数据库添加了记录
-            assert mock_db.add.called or result is not None
+            assert result == 1
+            assert mock_db.add.called
         except ImportError:
             pytest.skip("Module not found")
 
     def test_send_notifications(self):
-        """测试发送通知"""
+        """测试通知派发走当前 dispatcher 入口"""
         try:
             from app.services.alert.milestone_alert_service import MilestoneAlertService
 
             mock_db = MagicMock()
+            mock_project = MagicMock(pm_id=1, owner_id=2)
+            mock_db.query.return_value.filter.return_value.first.return_value = mock_project
 
             mock_milestone = MagicMock()
-            mock_milestone.project = MagicMock()
-            mock_milestone.project.owner_id = 1
+            mock_milestone.id = 1
+            mock_milestone.milestone_code = "MS-001"
+            mock_milestone.owner_id = 3
+            mock_milestone.project_id = 100
 
-            mock_alert = MagicMock()
+            mock_alert = MagicMock(alert_no="AL-001", alert_title="title", alert_content="content")
 
             service = MilestoneAlertService(mock_db)
 
-            service._send_notifications(mock_milestone, mock_alert, "即将到期")
-
-            # 验证通知逻辑执行
-            assert True
+            with patch(
+                "app.services.notification.notification_dispatcher.NotificationDispatcher"
+            ) as mock_dispatcher_cls:
+                dispatcher = MagicMock()
+                mock_dispatcher_cls.return_value = dispatcher
+                service._dispatch_milestone_notification(mock_alert, mock_milestone)
+                dispatcher.dispatch_alert_notifications.assert_called_once()
         except ImportError:
             pytest.skip("Module not found")
 
     def test_acknowledge_alert(self):
-        """测试确认告警"""
+        """当前服务未提供手工确认接口，保留为能力缺失 smoke"""
         try:
             from app.services.alert.milestone_alert_service import MilestoneAlertService
 
-            mock_db = MagicMock()
-
-            mock_alert = MagicMock()
-            mock_alert.status = "PENDING"
-            mock_db.query.return_value.filter.return_value.first.return_value = mock_alert
-
-            service = MilestoneAlertService(mock_db)
-            result = service.acknowledge_alert(1, 1)
-
-            # 状态应该变为ACKNOWLEDGED
-            assert mock_alert.status == "ACKNOWLEDGED" or result is not None
+            service = MilestoneAlertService(MagicMock())
+            assert not hasattr(service, "acknowledge_alert")
         except ImportError:
             pytest.skip("Module not found")
 
     def test_resolve_alert(self):
-        """测试解决告警"""
+        """当前服务未提供手工解决接口，保留为能力缺失 smoke"""
         try:
             from app.services.alert.milestone_alert_service import MilestoneAlertService
 
-            mock_db = MagicMock()
-
-            mock_alert = MagicMock()
-            mock_alert.status = "ACKNOWLEDGED"
-            mock_db.query.return_value.filter.return_value.first.return_value = mock_alert
-
-            service = MilestoneAlertService(mock_db)
-            result = service.resolve_alert(1, 1, "问题已解决")
-
-            # 状态应该变为RESOLVED
-            assert mock_alert.status == "RESOLVED" or result is not None
+            service = MilestoneAlertService(MagicMock())
+            assert not hasattr(service, "resolve_alert")
         except ImportError:
             pytest.skip("Module not found")
 
@@ -282,18 +301,30 @@ class TestMilestoneAlertServiceEdgeCases:
             pytest.skip("Module not found")
 
     def test_exact_threshold_boundary(self):
-        """测试精确阈值边界"""
+        """测试正好 3 天边界仍为 WARNING"""
         try:
             from app.services.alert.milestone_alert_service import MilestoneAlertService
             from app.models.enums import AlertLevelEnum
 
             mock_db = MagicMock()
             service = MilestoneAlertService(mock_db)
+            service._should_create_alert = MagicMock(return_value=True)
+            service._dispatch_milestone_notification = MagicMock()
 
-            # 正好3天
-            due_date = date.today() + timedelta(days=3)
-            level = service._determine_alert_level(due_date, date.today())
+            milestone = MagicMock()
+            milestone.id = 1
+            milestone.project_id = 100
+            milestone.milestone_code = "MS-001"
+            milestone.milestone_name = "阶段1"
+            milestone.milestone_type = "CUSTOM"
+            milestone.is_key = False
+            milestone.planned_date = date.today() + timedelta(days=3)
 
-            assert level == AlertLevelEnum.WARNING.value
+            rule = MagicMock()
+            rule.id = 1
+
+            service._process_upcoming_milestones([milestone], rule, date.today(), 0)
+            alert = mock_db.add.call_args.args[0]
+            assert alert.alert_level == AlertLevelEnum.WARNING.value
         except ImportError:
             pytest.skip("Module not found")

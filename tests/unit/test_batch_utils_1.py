@@ -108,6 +108,21 @@ from app.utils.number_generator import (
     generate_monthly_no,
     generate_sequential_no,
 )
+from app.utils.permission_helpers import (
+    check_project_access_or_raise,
+    filter_projects_by_scope,
+)
+from app.utils.pinyin_utils import (
+    batch_generate_pinyin_for_employees,
+    generate_initial_password,
+    generate_unique_username,
+    name_to_pinyin,
+    name_to_pinyin_initials,
+)
+from app.utils.redis_client import close_redis_client, get_redis_client
+from app.utils.scheduler import _load_task_config_from_db, _wrap_job_callable, init_scheduler
+from app.utils.spec_extractor import SpecExtractor
+from app.utils.spec_match_service import SpecMatchService
 
 
 class TestNumberGenerator:

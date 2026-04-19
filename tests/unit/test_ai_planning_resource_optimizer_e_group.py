@@ -4,12 +4,10 @@ E组 - AI资源优化器 单元测试
 覆盖: app/services/ai_planning/resource_optimizer.py
 """
 import json
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import date
+from unittest.mock import MagicMock
 
 import pytest
-
-# ─── fixtures ──────────────────────────────────────────────────────────────
 
 
 @pytest.fixture
@@ -21,10 +19,15 @@ def glm_service():
 
 
 @pytest.fixture
-def optimizer(db_session, glm_service):
+def mock_db():
+    return MagicMock()
+
+
+@pytest.fixture
+def optimizer(mock_db, glm_service):
     from app.services.ai_planning.resource_optimizer import AIResourceOptimizer
 
-    return AIResourceOptimizer(db=db_session, glm_service=glm_service)
+    return AIResourceOptimizer(db=mock_db, glm_service=glm_service)
 
 
 def _make_user(user_id=1, role="developer", is_active=True):
@@ -53,217 +56,134 @@ def _make_wbs(
     return wbs
 
 
-# ─── _calculate_skill_match ──────────────────────────────────────────────────
-
-
 class TestCalculateSkillMatch:
-
     def test_no_required_skills_returns_70(self, optimizer):
         user = _make_user(role="developer")
         wbs = _make_wbs(required_skills=None)
-        result = optimizer._calculate_skill_match(user, wbs)
-        assert result == 70.0
+        assert optimizer._calculate_skill_match(user, wbs) == 70.0
 
     def test_skill_match_in_role(self, optimizer):
         user = _make_user(role="python developer")
         wbs = _make_wbs(required_skills=[{"skill": "python", "level": "senior"}])
-        result = optimizer._calculate_skill_match(user, wbs)
-        assert result > 50.0
+        assert optimizer._calculate_skill_match(user, wbs) > 50.0
 
     def test_no_skill_match(self, optimizer):
         user = _make_user(role="marketing")
         wbs = _make_wbs(required_skills=[{"skill": "java", "level": "senior"}])
-        result = optimizer._calculate_skill_match(user, wbs)
-        assert result == 50.0  # base score, no match
+        assert optimizer._calculate_skill_match(user, wbs) == 50.0
 
     def test_max_capped_at_100(self, optimizer):
         user = _make_user(role="python java frontend backend")
-        wbs = _make_wbs(
-            required_skills=[
-                {"skill": "python"},
-                {"skill": "java"},
-                {"skill": "frontend"},
-                {"skill": "backend"},
-            ]
-        )
-        result = optimizer._calculate_skill_match(user, wbs)
-        assert result <= 100.0
-
-
-# ─── _calculate_experience_match ─────────────────────────────────────────────
+        wbs = _make_wbs(required_skills=[{"skill": "python"}, {"skill": "java"}, {"skill": "frontend"}, {"skill": "backend"}])
+        assert optimizer._calculate_skill_match(user, wbs) <= 100.0
 
 
 class TestCalculateExperienceMatch:
-
-    def test_zero_similar_tasks_returns_40(self, optimizer, db_session):
+    def test_zero_similar_tasks_returns_40(self, optimizer, mock_db):
         user = _make_user()
         wbs = _make_wbs()
-        db_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = (
-            0
-        )
-        result = optimizer._calculate_experience_match(user, wbs)
-        assert result == 40.0
+        mock_db.query.return_value.filter.return_value.scalar.return_value = 0
+        assert optimizer._calculate_experience_match(user, wbs) == 40.0
 
-    def test_few_tasks_returns_60(self, optimizer, db_session):
+    def test_few_tasks_returns_60(self, optimizer, mock_db):
         user = _make_user()
         wbs = _make_wbs()
-        db_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = (
-            2
-        )
-        result = optimizer._calculate_experience_match(user, wbs)
-        assert result == 60.0
+        mock_db.query.return_value.filter.return_value.scalar.return_value = 2
+        assert optimizer._calculate_experience_match(user, wbs) == 60.0
 
-    def test_many_tasks_returns_95(self, optimizer, db_session):
+    def test_many_tasks_returns_95(self, optimizer, mock_db):
         user = _make_user()
         wbs = _make_wbs()
-        db_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = (
-            15
-        )
-        result = optimizer._calculate_experience_match(user, wbs)
-        assert result == 95.0
+        mock_db.query.return_value.filter.return_value.scalar.return_value = 15
+        assert optimizer._calculate_experience_match(user, wbs) == 95.0
 
-    def test_moderate_tasks_returns_80(self, optimizer, db_session):
+    def test_moderate_tasks_returns_80(self, optimizer, mock_db):
         user = _make_user()
         wbs = _make_wbs()
-        db_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = (
-            5
-        )
-        result = optimizer._calculate_experience_match(user, wbs)
-        assert result == 80.0
-
-
-# ─── _get_current_workload ────────────────────────────────────────────────────
+        mock_db.query.return_value.filter.return_value.scalar.return_value = 5
+        assert optimizer._calculate_experience_match(user, wbs) == 80.0
 
 
 class TestGetCurrentWorkload:
-
-    def test_no_active_tasks_returns_0(self, optimizer, db_session):
+    def test_no_active_tasks_returns_0(self, optimizer, mock_db):
         user = _make_user()
-        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = []
-        result = optimizer._get_current_workload(user)
-        assert result == 0.0
+        mock_db.query.return_value.filter.return_value.all.return_value = []
+        assert optimizer._get_current_workload(user) == 0.0
 
-    def test_5_tasks_100_percent(self, optimizer, db_session):
+    def test_5_tasks_100_percent(self, optimizer, mock_db):
         user = _make_user()
         tasks = [MagicMock() for _ in range(5)]
-        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = (
-            tasks
-        )
-        result = optimizer._get_current_workload(user)
-        assert result == 100.0  # 5 * 20 = 100, capped
+        mock_db.query.return_value.filter.return_value.all.return_value = tasks
+        assert optimizer._get_current_workload(user) == 100.0
 
-    def test_2_tasks_40_percent(self, optimizer, db_session):
+    def test_2_tasks_40_percent(self, optimizer, mock_db):
         user = _make_user()
         tasks = [MagicMock(), MagicMock()]
-        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = (
-            tasks
-        )
-        result = optimizer._get_current_workload(user)
-        assert result == 40.0
-
-
-# ─── _calculate_availability ─────────────────────────────────────────────────
+        mock_db.query.return_value.filter.return_value.all.return_value = tasks
+        assert optimizer._get_current_workload(user) == 40.0
 
 
 class TestCalculateAvailability:
-
-    def test_full_availability(self, optimizer, db_session):
+    def test_full_availability(self, optimizer, mock_db):
         user = _make_user()
         wbs = _make_wbs()
-        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = []
-        result = optimizer._calculate_availability(user, wbs)
-        assert result == 100.0
+        mock_db.query.return_value.filter.return_value.all.return_value = []
+        assert optimizer._calculate_availability(user, wbs) == 100.0
 
-    def test_high_workload_low_availability(self, optimizer, db_session):
+    def test_high_workload_low_availability(self, optimizer, mock_db):
         user = _make_user()
         wbs = _make_wbs()
         tasks = [MagicMock() for _ in range(5)]
-        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = (
-            tasks
-        )
-        result = optimizer._calculate_availability(user, wbs)
-        assert result == 0.0  # 100 - 100 = 0
-
-
-# ─── _calculate_performance_score ────────────────────────────────────────────
+        mock_db.query.return_value.filter.return_value.all.return_value = tasks
+        assert optimizer._calculate_availability(user, wbs) == 0.0
 
 
 class TestCalculatePerformanceScore:
-
-    def test_no_completed_tasks_returns_70(self, optimizer, db_session):
+    def test_no_completed_tasks_returns_70(self, optimizer, mock_db):
         user = _make_user()
         wbs = _make_wbs()
-        db_session.query.return_value.filter.return_value.filter.return_value.limit.return_value.all.return_value = (
-            []
-        )
-        result = optimizer._calculate_performance_score(user, wbs)
-        assert result == 70.0
+        mock_db.query.return_value.filter.return_value.limit.return_value.all.return_value = []
+        assert optimizer._calculate_performance_score(user, wbs) == 70.0
 
-    def test_all_on_time_returns_100(self, optimizer, db_session):
+    def test_all_on_time_returns_100(self, optimizer, mock_db):
         user = _make_user()
         wbs = _make_wbs()
-        from datetime import date
-
         task = MagicMock()
         task.planned_end_date = date(2025, 6, 1)
-        task.actual_end_date = date(2025, 5, 28)  # before deadline
-        db_session.query.return_value.filter.return_value.filter.return_value.limit.return_value.all.return_value = [
-            task
-        ]
-        result = optimizer._calculate_performance_score(user, wbs)
-        assert result == 100.0
-
-
-# ─── _get_hourly_rate ─────────────────────────────────────────────────────────
+        task.actual_end_date = date(2025, 5, 28)
+        mock_db.query.return_value.filter.return_value.limit.return_value.all.return_value = [task]
+        assert optimizer._calculate_performance_score(user, wbs) == 100.0
 
 
 class TestGetHourlyRate:
-
     def test_senior_role(self, optimizer):
-        user = _make_user(role="senior developer")
-        assert optimizer._get_hourly_rate(user) == 200.0
+        assert optimizer._get_hourly_rate(_make_user(role="senior developer")) == 200.0
 
     def test_middle_role(self, optimizer):
-        user = _make_user(role="middle engineer")
-        assert optimizer._get_hourly_rate(user) == 150.0
+        assert optimizer._get_hourly_rate(_make_user(role="middle engineer")) == 150.0
 
     def test_junior_role(self, optimizer):
-        user = _make_user(role="junior developer")
-        assert optimizer._get_hourly_rate(user) == 100.0
+        assert optimizer._get_hourly_rate(_make_user(role="junior developer")) == 100.0
 
     def test_default_role(self, optimizer):
-        user = _make_user(role="engineer")
-        assert optimizer._get_hourly_rate(user) == 120.0
+        assert optimizer._get_hourly_rate(_make_user(role="engineer")) == 120.0
 
     def test_chinese_senior(self, optimizer):
-        user = _make_user(role="高级工程师")
-        assert optimizer._get_hourly_rate(user) == 200.0
-
-
-# ─── _calculate_cost_efficiency ──────────────────────────────────────────────
+        assert optimizer._get_hourly_rate(_make_user(role="高级工程师")) == 200.0
 
 
 class TestCalculateCostEfficiency:
-
     def test_zero_rate_returns_match_score(self, optimizer):
-        result = optimizer._calculate_cost_efficiency(80.0, 0.0)
-        assert result == 80.0
+        assert optimizer._calculate_cost_efficiency(80.0, 0.0) == 80.0
 
     def test_efficiency_capped_at_100(self, optimizer):
-        result = optimizer._calculate_cost_efficiency(100.0, 100.0)
-        assert result == 100.0
+        assert optimizer._calculate_cost_efficiency(100.0, 100.0) == 100.0
 
     def test_low_rate_high_efficiency(self, optimizer):
-        result = optimizer._calculate_cost_efficiency(80.0, 50.0)
-        # 80 / 0.5 = 160 -> capped at 100
-        assert result == 100.0
-
-
-# ─── _generate_recommendation_reason ─────────────────────────────────────────
+        assert optimizer._calculate_cost_efficiency(80.0, 50.0) == 100.0
 
 
 class TestGenerateRecommendationReason:
-
     def test_high_skill_match(self, optimizer):
         user = _make_user()
         wbs = _make_wbs()
@@ -283,18 +203,13 @@ class TestGenerateRecommendationReason:
         assert isinstance(reason, str) and len(reason) > 0
 
 
-# ─── _analyze_strengths / _analyze_weaknesses ────────────────────────────────
-
-
 class TestAnalyzeStrengthsWeaknesses:
-
     def test_high_skill_is_strength(self, optimizer):
         user = _make_user()
         wbs = _make_wbs()
         strengths = optimizer._analyze_strengths(user, wbs, skill_match=85, performance=85)
         assert len(strengths) >= 1
-        cats = [s["category"] for s in strengths]
-        assert "技能" in cats
+        assert "技能" in [s["category"] for s in strengths]
 
     def test_low_skill_is_weakness(self, optimizer):
         user = _make_user()
@@ -307,18 +222,12 @@ class TestAnalyzeStrengthsWeaknesses:
         user = _make_user()
         wbs = _make_wbs()
         weaknesses = optimizer._analyze_weaknesses(user, wbs, skill_match=70, availability=30)
-        cats = [w["category"] for w in weaknesses]
-        assert "可用性" in cats
-
-
-# ─── _optimize_allocations ───────────────────────────────────────────────────
+        assert "可用性" in [w["category"] for w in weaknesses]
 
 
 class TestOptimizeAllocations:
-
     def test_empty_input_returns_empty(self, optimizer):
-        result = optimizer._optimize_allocations([], MagicMock())
-        assert result == []
+        assert optimizer._optimize_allocations([], MagicMock()) == []
 
     def test_first_allocation_is_primary(self, optimizer):
         allocs = [MagicMock(overall_match_score=90), MagicMock(overall_match_score=80)]
@@ -333,22 +242,20 @@ class TestOptimizeAllocations:
         assert len(result) <= 5
 
 
-# ─── allocate_resources (integration mock) ──────────────────────────────────
-
-
 class TestAllocateResources:
+    @pytest.mark.asyncio
+    async def test_wbs_not_found_returns_empty(self, optimizer, mock_db):
+        mock_db.query.return_value.get.return_value = None
+        assert await optimizer.allocate_resources(999) == []
 
     @pytest.mark.asyncio
-    async def test_wbs_not_found_returns_empty(self, optimizer, db_session):
-        db_session.query.return_value.get.return_value = None
-        result = await optimizer.allocate_resources(999)
-        assert result == []
-
-    @pytest.mark.asyncio
-    async def test_no_users_returns_empty(self, optimizer, db_session):
+    async def test_no_users_returns_empty(self, optimizer, mock_db):
         wbs = _make_wbs()
-        db_session.query.return_value.get.return_value = wbs
-        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = []
+        query1 = MagicMock()
+        query1.get.return_value = wbs
+        query2 = MagicMock()
+        query2.filter.return_value.all.return_value = []
+        mock_db.query.side_effect = [query1, query2]
 
         result = await optimizer.allocate_resources(1)
         assert result == []
