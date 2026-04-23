@@ -82,6 +82,17 @@ def calculate_response_distribution(response_times: List[Dict[str, Any]]) -> Dic
     return distribution
 
 
+def calculate_avg_response_time(response_times: List[Dict[str, Any]]) -> float:
+    """计算平均响应时间（分钟）。"""
+    if not response_times:
+        return 0
+
+    minutes = [item.get("minutes") for item in response_times if item.get("minutes") is not None]
+    if not minutes:
+        return 0
+    return sum(minutes) / len(minutes)
+
+
 def calculate_level_metrics(response_times: List[Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
     """
     按级别统计响应时效

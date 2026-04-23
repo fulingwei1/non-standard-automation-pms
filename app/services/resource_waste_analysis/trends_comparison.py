@@ -11,6 +11,9 @@ from typing import Any, Dict, List
 class TrendsComparisonMixin:
     """趋势和对比分析功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def get_monthly_trend(self, months: int = 12) -> List[Dict[str, Any]]:
         """获取月度趋势数据
 

@@ -27,6 +27,18 @@ def sample_supplier(db_session):
 
 
 @pytest.fixture
+def sample_material_category(db_session):
+    """创建示例物料分类"""
+    from app.models.material import MaterialCategory
+
+    category = MaterialCategory(category_code="CAT001", category_name="电子元器件")
+    db_session.add(category)
+    db_session.commit()
+    db_session.refresh(category)
+    return category
+
+
+@pytest.fixture
 def sample_material(db_session):
     """创建示例物料"""
     from app.models.material import Material

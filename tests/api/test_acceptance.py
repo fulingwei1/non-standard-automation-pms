@@ -18,6 +18,10 @@ def _auth_headers(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
+def _acceptance_prefix() -> str:
+    return f"{settings.API_V1_PREFIX}/acceptance"
+
+
 def _get_first_project(client: TestClient, token: str) -> dict:
     """获取第一个可用的项目"""
     headers = _auth_headers(token)
@@ -44,7 +48,7 @@ class TestAcceptanceTemplates:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-templates",
+            f"{_acceptance_prefix()}/acceptance-templates",
             params={"page": 1, "page_size": 10},
             headers=headers,
         )
@@ -63,12 +67,32 @@ class TestAcceptanceTemplates:
             "template_code": f"TPL-{uuid.uuid4().hex[:6].upper()}",
             "template_name": f"测试模板-{uuid.uuid4().hex[:4]}",
             "acceptance_type": "FAT",
+            "equipment_type": "AUTO_LINE",
             "version": "V1.0",
-            "is_default": False,
+            "categories": [
+                {
+                    "category_code": f"CAT-{uuid.uuid4().hex[:4].upper()}",
+                    "category_name": "基础检查",
+                    "weight": 100,
+                    "sort_order": 1,
+                    "is_required": True,
+                    "check_items": [
+                        {
+                            "item_code": f"ITEM-{uuid.uuid4().hex[:4].upper()}",
+                            "item_name": "外观检查",
+                            "check_method": "目检",
+                            "acceptance_criteria": "无明显缺陷",
+                            "is_required": True,
+                            "is_key_item": True,
+                            "sort_order": 1,
+                        }
+                    ],
+                }
+            ],
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/acceptance-templates", json=template_data, headers=headers
+            f"{_acceptance_prefix()}/acceptance-templates", json=template_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -87,7 +111,7 @@ class TestAcceptanceTemplates:
 
         # 先获取模板列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-templates",
+            f"{_acceptance_prefix()}/acceptance-templates",
             params={"page": 1, "page_size": 10},
             headers=headers,
         )
@@ -103,7 +127,7 @@ class TestAcceptanceTemplates:
         template_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-templates/{template_id}", headers=headers
+            f"{_acceptance_prefix()}/acceptance-templates/{template_id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -117,7 +141,7 @@ class TestAcceptanceTemplates:
 
         # 先获取模板列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-templates",
+            f"{_acceptance_prefix()}/acceptance-templates",
             params={"page": 1, "page_size": 10},
             headers=headers,
         )
@@ -133,7 +157,7 @@ class TestAcceptanceTemplates:
         template_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-templates/{template_id}/items", headers=headers
+            f"{_acceptance_prefix()}/acceptance-templates/{template_id}/items", headers=headers
         )
 
         assert response.status_code == 200
@@ -151,7 +175,7 @@ class TestAcceptanceOrders:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders",
+            f"{_acceptance_prefix()}/acceptance-orders",
             params={"page": 1, "page_size": 10},
             headers=headers,
         )
@@ -167,7 +191,7 @@ class TestAcceptanceOrders:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders",
+            f"{_acceptance_prefix()}/acceptance-orders",
             params={"page": 1, "page_size": 10, "acceptance_type": "FAT"},
             headers=headers,
         )
@@ -183,7 +207,7 @@ class TestAcceptanceOrders:
 
         # 先获取验收单列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders",
+            f"{_acceptance_prefix()}/acceptance-orders",
             params={"page": 1, "page_size": 10},
             headers=headers,
         )
@@ -199,7 +223,7 @@ class TestAcceptanceOrders:
         order_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}", headers=headers
+            f"{_acceptance_prefix()}/acceptance-orders/{order_id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -213,7 +237,7 @@ class TestAcceptanceOrders:
 
         # 先获取验收单列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders",
+            f"{_acceptance_prefix()}/acceptance-orders",
             params={"page": 1, "page_size": 10},
             headers=headers,
         )
@@ -229,7 +253,7 @@ class TestAcceptanceOrders:
         order_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/items", headers=headers
+            f"{_acceptance_prefix()}/acceptance-orders/{order_id}/items", headers=headers
         )
 
         assert response.status_code == 200
@@ -245,7 +269,7 @@ class TestAcceptanceOrders:
 
         # 先获取验收单列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders",
+            f"{_acceptance_prefix()}/acceptance-orders",
             params={"page": 1, "page_size": 10},
             headers=headers,
         )
@@ -261,7 +285,7 @@ class TestAcceptanceOrders:
         order_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/issues", headers=headers
+            f"{_acceptance_prefix()}/acceptance-orders/{order_id}/issues", headers=headers
         )
 
         assert response.status_code == 200
@@ -277,7 +301,7 @@ class TestAcceptanceOrders:
 
         # 先获取验收单列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders",
+            f"{_acceptance_prefix()}/acceptance-orders",
             params={"page": 1, "page_size": 10},
             headers=headers,
         )
@@ -293,7 +317,7 @@ class TestAcceptanceOrders:
         order_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/signatures", headers=headers
+            f"{_acceptance_prefix()}/acceptance-orders/{order_id}/signatures", headers=headers
         )
 
         assert response.status_code == 200
@@ -313,7 +337,7 @@ class TestAcceptanceIssues:
 
         # 先获取验收单列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders",
+            f"{_acceptance_prefix()}/acceptance-orders",
             params={"page": 1, "page_size": 10},
             headers=headers,
         )
@@ -330,7 +354,7 @@ class TestAcceptanceIssues:
 
         # 获取问题列表
         issues_response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/issues", headers=headers
+            f"{_acceptance_prefix()}/acceptance-orders/{order_id}/issues", headers=headers
         )
 
         if issues_response.status_code != 200 or not issues_response.json():
@@ -339,7 +363,7 @@ class TestAcceptanceIssues:
         issue_id = issues_response.json()[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-issues/{issue_id}", headers=headers
+            f"{_acceptance_prefix()}/acceptance-issues/{issue_id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -353,7 +377,7 @@ class TestAcceptanceIssues:
 
         # 先获取验收单列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders",
+            f"{_acceptance_prefix()}/acceptance-orders",
             params={"page": 1, "page_size": 10},
             headers=headers,
         )
@@ -370,7 +394,7 @@ class TestAcceptanceIssues:
 
         # 获取问题列表
         issues_response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/issues", headers=headers
+            f"{_acceptance_prefix()}/acceptance-orders/{order_id}/issues", headers=headers
         )
 
         if issues_response.status_code != 200 or not issues_response.json():
@@ -379,7 +403,7 @@ class TestAcceptanceIssues:
         issue_id = issues_response.json()[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-issues/{issue_id}/follow-ups", headers=headers
+            f"{_acceptance_prefix()}/acceptance-issues/{issue_id}/follow-ups", headers=headers
         )
 
         assert response.status_code == 200

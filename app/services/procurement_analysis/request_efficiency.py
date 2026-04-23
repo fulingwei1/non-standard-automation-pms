@@ -14,6 +14,9 @@ from app.models.purchase import PurchaseOrder, PurchaseRequest
 class RequestEfficiencyAnalyzer:
     """申请处理时效分析器"""
 
+    def __init__(self, db: Session | None = None):
+        self.db = db
+
     @staticmethod
     def get_request_efficiency_data(
         db: Session, start_date: date, end_date: date

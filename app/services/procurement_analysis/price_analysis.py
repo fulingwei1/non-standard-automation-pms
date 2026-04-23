@@ -15,6 +15,9 @@ from app.models.vendor import Vendor
 class PriceAnalyzer:
     """价格波动分析器"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def get_price_fluctuation_data(
         db: Session,

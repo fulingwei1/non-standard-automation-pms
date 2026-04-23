@@ -12,6 +12,21 @@
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pydantic_settings import SettingsConfigDict
+
+from app.core.config import Settings as AppSettings
+
+
+class Settings(AppSettings):
+    """测试专用 Settings，禁用本地 env 文件污染。"""
+
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=None)
+
+
+@pytest.fixture(autouse=True)
+def _clear_settings_env(monkeypatch):
+    for key in AppSettings.model_fields:
+        monkeypatch.delenv(key, raising=False)
 
 
 class TestEmailConfiguration:
@@ -26,7 +41,7 @@ class TestEmailConfiguration:
             },
             clear=True,
         ):
-            from app.core.config import settings
+            settings = Settings()
 
             assert settings.EMAIL_ENABLED is False
 
@@ -44,7 +59,7 @@ class TestEmailConfiguration:
                 "EMAIL_PASSWORD": "password123",
             },
         ):
-            from app.core.config import settings
+            settings = Settings()
 
             assert settings.EMAIL_ENABLED is True
             assert settings.EMAIL_FROM == "noreply@example.com"
@@ -63,7 +78,7 @@ class TestEmailConfiguration:
                 "EMAIL_FROM": "noreply@example.com",
             },
         ):
-            from app.core.config import settings
+            settings = Settings()
 
             assert settings.EMAIL_ENABLED is True
             assert settings.EMAIL_FROM == "noreply@example.com"
@@ -126,8 +141,7 @@ class TestEmailErrorHandling:
         with patch("smtplib.SMTP", side_effect=smtplib.SMTPConnectError(421, "Connection refused")):
             # 应该抛出或处理连接错误
             with pytest.raises(smtplib.SMTPConnectError):
-                # smtp = smtplib.SMTP('invalid.server', 587)
-                pass
+                smtplib.SMTP("invalid.server", 587)
 
     def test_authentication_failure(self):
         """测试认证失败"""
@@ -164,7 +178,7 @@ class TestEmailErrorHandling:
             },
             clear=True,
         ):
-            from app.core.config import settings
+            settings = Settings()
 
             # 邮件功能应该检测到配置不完整
             assert settings.EMAIL_ENABLED is True
@@ -253,7 +267,7 @@ class TestEmailSecurity:
                 "EMAIL_PASSWORD": "secret_password",
             },
         ):
-            from app.core.config import settings
+            settings = Settings()
 
             # 密码不应该出现在日志中
             assert settings.EMAIL_PASSWORD == "secret_password"

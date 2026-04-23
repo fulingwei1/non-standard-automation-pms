@@ -25,6 +25,9 @@ logger = logging.getLogger(__name__)
 class SalesOperationLogService:
     """销售操作日志服务类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def log_operation(
         db: Session,

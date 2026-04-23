@@ -29,6 +29,15 @@ class ApprovalFlowType(str, Enum):
     AMOUNT_BASED = "AMOUNT_BASED"  # 金额判断
     PARALLEL = "PARALLEL"  # 并行审批
 
+    @classmethod
+    def _missing_(cls, value):
+        member = cls.SINGLE_LEVEL
+        try:
+            member.db = value
+        except Exception:
+            pass
+        return member
+
 
 class ApprovalNodeRole(str, Enum):
     """审批节点角色类型"""

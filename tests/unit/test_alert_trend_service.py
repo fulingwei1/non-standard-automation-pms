@@ -37,8 +37,10 @@ class MockAlertRecord:
 class MockAlertRule:
     """模拟 AlertRule 类"""
 
-    def __init__(self, rule_type: str):
+    def __init__(self, rule_type: str, **kwargs):
         self.rule_type = rule_type
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 class TestGetPeriodKey:
@@ -94,6 +96,19 @@ class TestGenerateDateRange:
             "2024-02-03",
             "2024-02-04",
             "2024-02-05",
+        ]
+
+    def test_generate_date_range_weekly(self):
+        """测试生成每周日期范围"""
+        from app.services.alert_trend_service import generate_date_range
+
+        start = date(2024, 2, 6)
+        end = date(2024, 2, 20)
+        dates = generate_date_range(start, end, "WEEKLY")
+        assert dates == [
+            "2024-02-05",
+            "2024-02-12",
+            "2024-02-19",
         ]
 
     def test_generate_date_range_monthly(self):

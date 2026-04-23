@@ -69,7 +69,8 @@ class SimpleProject:
     def __init__(self, **kwargs):
         self.id = kwargs.get("id")
         self.project_code = kwargs.get("project_code", "")
-        self.name = kwargs.get("name", "")
+        self.name = kwargs.get("name", kwargs.get("project_name", ""))
+        self.project_name = self.name
         self.customer_name = kwargs.get("customer_name", "")
         self.type = kwargs.get("type", "ICT")
         self.budget = kwargs.get("budget", 0)

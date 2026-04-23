@@ -18,6 +18,9 @@ from .normalization import normalize_data_scope, pick_broadest_scope
 class UserScopeService:
     """用户权限范围服务"""
 
+    def __init__(self, db: Session | None = None):
+        self.db = db
+
     @staticmethod
     def get_user_data_scope(db: Session, user: User) -> str:
         """

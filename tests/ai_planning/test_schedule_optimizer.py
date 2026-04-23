@@ -5,6 +5,7 @@ AI进度排期优化器测试
 
 import json
 from datetime import date, timedelta
+from uuid import uuid4
 
 import pytest
 from sqlalchemy.orm import Session
@@ -17,9 +18,10 @@ from app.services.ai_planning import AIScheduleOptimizer
 @pytest.fixture
 def sample_project(db: Session):
     """创建测试项目"""
+    suffix = uuid4().hex[:8]
     project = Project(
-        project_code="SCH_TEST_001",
-        project_name="排期测试项目",
+        project_code=f"SCH_TEST_{suffix}",
+        project_name=f"排期测试项目_{suffix}",
         project_type="WEB_DEV",
         status="ST01",
     )
@@ -31,8 +33,10 @@ def sample_project(db: Session):
 @pytest.fixture
 def sample_wbs_tasks(db: Session, sample_project):
     """创建测试WBS任务链"""
+    suffix = uuid4().hex[:8]
+
     task1 = AIWbsSuggestion(
-        suggestion_code="WBS_SCH_001",
+        suggestion_code=f"WBS_SCH_001_{suffix}",
         project_id=sample_project.id,
         wbs_level=1,
         wbs_code="1",
@@ -43,7 +47,7 @@ def sample_wbs_tasks(db: Session, sample_project):
     )
 
     task2 = AIWbsSuggestion(
-        suggestion_code="WBS_SCH_002",
+        suggestion_code=f"WBS_SCH_002_{suffix}",
         project_id=sample_project.id,
         wbs_level=1,
         wbs_code="2",
@@ -54,7 +58,7 @@ def sample_wbs_tasks(db: Session, sample_project):
     )
 
     task3 = AIWbsSuggestion(
-        suggestion_code="WBS_SCH_003",
+        suggestion_code=f"WBS_SCH_003_{suffix}",
         project_id=sample_project.id,
         wbs_level=1,
         wbs_code="3",
@@ -228,8 +232,10 @@ class TestAIScheduleOptimizer:
     def test_parallel_tasks_scheduling(self, db: Session, sample_project):
         """测试：并行任务排期"""
         # 创建并行任务
+        suffix = uuid4().hex[:8]
+
         task1 = AIWbsSuggestion(
-            suggestion_code="WBS_PAR_001",
+            suggestion_code=f"WBS_PAR_001_{suffix}",
             project_id=sample_project.id,
             wbs_level=1,
             wbs_code="1",
@@ -239,7 +245,7 @@ class TestAIScheduleOptimizer:
         )
 
         task2 = AIWbsSuggestion(
-            suggestion_code="WBS_PAR_002",
+            suggestion_code=f"WBS_PAR_002_{suffix}",
             project_id=sample_project.id,
             wbs_level=1,
             wbs_code="2",
@@ -266,8 +272,10 @@ class TestAIScheduleOptimizer:
     def test_slack_calculation(self, db: Session, sample_project):
         """测试：浮动时间计算"""
         # 创建有浮动时间的任务
+        suffix = uuid4().hex[:8]
+
         task1 = AIWbsSuggestion(
-            suggestion_code="WBS_SLACK_001",
+            suggestion_code=f"WBS_SLACK_001_{suffix}",
             project_id=sample_project.id,
             wbs_level=1,
             wbs_code="1",
@@ -277,7 +285,7 @@ class TestAIScheduleOptimizer:
         )
 
         task2 = AIWbsSuggestion(
-            suggestion_code="WBS_SLACK_002",
+            suggestion_code=f"WBS_SLACK_002_{suffix}",
             project_id=sample_project.id,
             wbs_level=1,
             wbs_code="2",

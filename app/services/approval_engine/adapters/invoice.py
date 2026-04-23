@@ -17,6 +17,11 @@ from app.models.user import User
 
 from .base import ApprovalAdapter
 
+try:
+    from ..engine import ApprovalEngineService
+except Exception:  # pragma: no cover - 兼容单测 patch 目标
+    ApprovalEngineService = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -191,8 +196,6 @@ class InvoiceApprovalAdapter(ApprovalAdapter):
         }
 
         # 使用统一审批引擎创建实例
-        from ..engine import ApprovalEngineService
-
         engine = ApprovalEngineService(self.db)
 
         instance = engine.submit(

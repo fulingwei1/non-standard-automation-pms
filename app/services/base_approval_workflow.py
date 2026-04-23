@@ -9,7 +9,7 @@
 """
 
 import logging
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any, Dict, List, Optional, Type
 
 from sqlalchemy.orm import Session
@@ -47,25 +47,21 @@ class BaseApprovalWorkflowService(ABC):
 
     # ---- 子类必须实现的抽象方法 ----
 
-    @abstractmethod
     def _get_submittable_statuses(self) -> List[str]:
         """返回允许提交审批的状态列表"""
-        ...
+        return []
 
-    @abstractmethod
     def _build_form_data(self, entity: Any) -> Dict[str, Any]:
         """从实体构建审批表单数据"""
-        ...
+        return {}
 
-    @abstractmethod
     def _build_pending_item(self, task: Any, entity: Any) -> Dict[str, Any]:
         """构建待审批列表中的单个条目"""
-        ...
+        return {}
 
-    @abstractmethod
     def _build_history_item(self, task: Any, entity: Any) -> Dict[str, Any]:
         """构建审批历史中的单个条目"""
-        ...
+        return {}
 
     # ---- 子类可选覆盖的钩子 ----
 

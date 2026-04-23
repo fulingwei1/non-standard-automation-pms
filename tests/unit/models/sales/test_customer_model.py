@@ -42,6 +42,7 @@ class TestCustomerModel:
 
         with pytest.raises(IntegrityError):
             db_session.commit()
+        db_session.rollback()
 
     def test_customer_contact_info(self, db_session):
         """测试客户联系信息"""

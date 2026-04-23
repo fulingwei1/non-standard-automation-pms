@@ -25,6 +25,9 @@ from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 class SalesTeamService:
     """销售团队服务类"""
 
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
     @staticmethod
     def create_team(db: Session, team_data: SalesTeamCreate, created_by: int) -> SalesTeam:
         """创建销售团队"""

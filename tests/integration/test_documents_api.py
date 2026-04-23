@@ -5,6 +5,23 @@ Covers: app/api/v1/endpoints/documents.py
 """
 
 from datetime import date
+import uuid
+
+
+def _document_payload(project_id: int, prefix: str = "DOC"):
+    suffix = uuid.uuid4().hex[:6]
+    return {
+        "project_id": project_id,
+        "doc_name": f"测试文档-{suffix}",
+        "doc_no": f"{prefix}-{date.today().strftime('%Y%m%d')}-{suffix}",
+        "doc_type": "TECHNICAL",
+        "doc_category": "MANUAL",
+        "version": "1.0",
+        "description": "测试文档描述",
+        "file_path": f"documents/{suffix}.pdf",
+        "file_name": f"{suffix}.pdf",
+        "file_type": "application/pdf",
+    }
 
 
 class TestDocumentsAPI:
@@ -59,40 +76,30 @@ class TestDocumentsAPI:
         )
         assert response.status_code == 404
 
-    def test_create_document(self, client, admin_token):
+    def test_create_document(self, client, admin_token, test_project):
         """测试创建文档"""
-        document_data = {
-            "document_name": "API测试文档",
-            "document_code": f"DOC-{date.today().strftime('%Y%m%d')}-001",
-            "document_type": "TECHNICAL",
-            "category": "MANUAL",
-            "version": "1.0",
-            "description": "测试文档描述",
-        }
+        document_data = _document_payload(test_project.id)
         response = client.post(
             "/api/v1/documents/",
             json=document_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
-        data = response.json()
-        assert data["document_name"] == document_data["document_name"]
+        data = response.json().get("data", response.json())
+        assert data["doc_name"] == document_data["doc_name"]
+        assert data["project_id"] == test_project.id
         assert "id" in data
 
-    def test_create_document_duplicate_code(self, client, admin_token):
+    def test_create_document_duplicate_code(self, client, admin_token, test_project):
         """测试创建重复编码文档"""
-        document_data = {
-            "document_name": "重复编码文档",
-            "document_code": f"DOC-DUP-{date.today().strftime('%Y%m%d')}",
-            "document_type": "TECHNICAL",
-        }
-        # First create
+        document_data = _document_payload(test_project.id, prefix="DOC-DUP")
         response = client.post(
             "/api/v1/documents/",
             json=document_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
-        # Try to create again
+        assert response.status_code == 200
+
         response = client.post(
             "/api/v1/documents/",
             json=document_data,
@@ -100,27 +107,24 @@ class TestDocumentsAPI:
         )
         assert response.status_code in [200, 400, 409]
 
-    def test_update_document(self, client, admin_token):
+    def test_update_document(self, client, admin_token, test_project):
         """测试更新文档"""
-        document_data = {
-            "document_name": "待更新文档",
-            "document_code": f"DOC-UPD-{date.today().strftime('%Y%m%d')}",
-            "document_type": "TECHNICAL",
-        }
+        document_data = _document_payload(test_project.id, prefix="DOC-UPD")
         response = client.post(
             "/api/v1/documents/",
             json=document_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         if response.status_code == 200:
-            doc_id = response.json()["id"]
-            update_data = {"document_name": "更新后的文档名称", "version": "2.0"}
+            doc_id = response.json().get("data", response.json())["id"]
+            update_data = {"doc_name": "更新后的文档名称", "version": "2.0"}
             response = client.put(
                 f"/api/v1/documents/{doc_id}",
                 json=update_data,
                 headers={"Authorization": f"Bearer {admin_token}"},
             )
             assert response.status_code == 200
+            assert response.json()["doc_name"] == "更新后的文档名称"
 
     def test_update_document_not_found(self, client, admin_token):
         """测试更新不存在的文档"""
@@ -132,20 +136,16 @@ class TestDocumentsAPI:
         )
         assert response.status_code == 404
 
-    def test_delete_document(self, client, admin_token):
+    def test_delete_document(self, client, admin_token, test_project):
         """测试删除文档"""
-        document_data = {
-            "document_name": "待删除文档",
-            "document_code": f"DOC-DEL-{date.today().strftime('%Y%m%d')}",
-            "document_type": "TECHNICAL",
-        }
+        document_data = _document_payload(test_project.id, prefix="DOC-DEL")
         response = client.post(
             "/api/v1/documents/",
             json=document_data,
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         if response.status_code == 200:
-            doc_id = response.json()["id"]
+            doc_id = response.json().get("data", response.json())["id"]
             response = client.delete(
                 f"/api/v1/documents/{doc_id}",
                 headers={"Authorization": f"Bearer {admin_token}"},

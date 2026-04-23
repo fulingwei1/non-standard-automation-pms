@@ -10,6 +10,9 @@ from typing import Any, Dict, List, Optional
 class AutoFixMixin:
     """自动修复功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def suggest_auto_fixes(self, engineer_id: int, period_id: int) -> List[Dict[str, Any]]:
         """
         提供自动修复建议

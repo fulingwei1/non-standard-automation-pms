@@ -41,6 +41,7 @@ class TestMaterialModel:
 
         with pytest.raises(IntegrityError):
             db_session.commit()
+        db_session.rollback()
 
     def test_material_type(self, db_session):
         """测试物料类型"""
@@ -105,15 +106,19 @@ class TestMaterialModel:
         deleted = db_session.query(Material).filter_by(id=mid).first()
         assert deleted is None
 
-    def test_material_category(self, db_session):
+    def test_material_category(self, db_session, sample_material_category):
         """测试物料分类"""
         material = Material(
-            material_code="MAT005", material_name="分类测试", category_id="电子元器件"
+            material_code="MAT005",
+            material_name="分类测试",
+            category_id=sample_material_category.id,
         )
         db_session.add(material)
         db_session.commit()
+        db_session.refresh(material)
 
-        assert material.category == "电子元器件"
+        assert material.category is not None
+        assert material.category.category_name == "电子元器件"
 
     def test_material_stock(self, db_session):
         """测试物料库存"""

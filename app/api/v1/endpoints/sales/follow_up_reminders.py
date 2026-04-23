@@ -25,7 +25,7 @@ from app.services.sales.follow_up_reminder_service import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(prefix="/follow-up")
 
 
 def _serialize_reminder(reminder: FollowUpReminder) -> dict:

@@ -65,6 +65,7 @@ class FileUploadService:
 
     def __init__(
         self,
+        db=None,
         upload_dir: Optional[Path] = None,
         allowed_extensions: Optional[set] = None,
         max_file_size: Optional[int] = None,
@@ -79,6 +80,7 @@ class FileUploadService:
             max_file_size: 最大文件大小（字节）
             user_quota: 用户上传配额（字节）
         """
+        self.db = db
         self.upload_dir = upload_dir or Path(settings.UPLOAD_DIR)
         self.allowed_extensions = allowed_extensions or self.DEFAULT_ALLOWED_EXTENSIONS
         self.max_file_size = max_file_size or self.DEFAULT_MAX_FILE_SIZE

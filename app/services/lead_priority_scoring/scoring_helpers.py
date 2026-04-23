@@ -14,6 +14,9 @@ from app.models.sales import Lead, Opportunity
 class ScoringHelpersMixin:
     """评分辅助方法功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def _calculate_customer_importance(self, lead: Lead) -> int:
         """计算客户重要性分数"""
         # 通过线索关联的商机查找客户

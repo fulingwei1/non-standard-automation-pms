@@ -16,6 +16,9 @@ from .base import ImportBase
 class UserImporter(ImportBase):
     """用户数据导入器"""
 
+    def __init__(self, db: Session | None = None):
+        self.db = db
+
     @classmethod
     def import_user_data(
         cls, db: Session, df: pd.DataFrame, current_user_id: int, update_existing: bool = False

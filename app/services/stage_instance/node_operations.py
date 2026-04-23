@@ -15,6 +15,9 @@ from app.models.stage_instance import ProjectNodeInstance
 class NodeOperationsMixin:
     """节点操作功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def start_node(
         self,
         node_instance_id: int,

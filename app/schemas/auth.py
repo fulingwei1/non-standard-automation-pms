@@ -6,7 +6,7 @@ import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .common import TimestampSchema
 
@@ -59,6 +59,8 @@ class LoginRequest(BaseModel):
 class UserCreate(BaseModel):
     """创建用户"""
 
+    model_config = ConfigDict(extra="ignore")
+
     username: str = Field(min_length=3, max_length=50, description="用户名")
     password: str = Field(min_length=6, description="密码")
     email: Optional[str] = Field(default=None, description="邮箱")
@@ -70,7 +72,28 @@ class UserCreate(BaseModel):
     employee_id: Optional[int] = Field(default=None, description="绑定员工ID")
     department: Optional[str] = Field(default=None, max_length=100, description="部门")
     position: Optional[str] = Field(default=None, max_length=100, description="职位")
+    is_active: bool = Field(default=True, description="是否启用")
+    is_superuser: bool = Field(default=False, description="是否超级管理员")
     role_ids: Optional[List[int]] = Field(default_factory=list, description="角色ID列表")
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        return validate_password_strength(v)
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: Optional[str]) -> Optional[str]:
+        if v and not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", v):
+            raise ValueError("邮箱格式不正确")
+        return v
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, v: Optional[str]) -> Optional[str]:
+        if v and not re.match(r"^\d{11}$", v):
+            raise ValueError("手机号格式不正确")
+        return v
 
 
 class UserUpdate(BaseModel):

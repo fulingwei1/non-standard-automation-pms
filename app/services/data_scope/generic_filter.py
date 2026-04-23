@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 class GenericFilterService:
     """通用过滤服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def filter_by_scope(
         db: Session, query: Query, model: type, user: User, config: Optional[DataScopeConfig] = None

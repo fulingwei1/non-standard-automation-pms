@@ -12,7 +12,7 @@ from app.services.inventory.stock_update_service import StockUpdateService
 class TransferService:
     """库存转移"""
 
-    def __init__(self, db: Session, tenant_id: int):
+    def __init__(self, db: Session, tenant_id: int = 0):
         self.db = db
         self.tenant_id = tenant_id
         self._tx = TransactionService(db, tenant_id)

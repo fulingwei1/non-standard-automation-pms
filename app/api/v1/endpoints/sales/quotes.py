@@ -151,9 +151,9 @@ def create_quote(
     version = QuoteVersion(
         quote_id=quote.id,
         version_no=version_payload.get("version_no") or "V1",
-        total_price=version_payload.get("total_price"),
-        cost_total=version_payload.get("cost_total"),
-        gross_margin=version_payload.get("gross_margin"),
+        total_price=_to_decimal(version_payload.get("total_price")),
+        cost_total=_to_decimal(version_payload.get("cost_total")),
+        gross_margin=_to_decimal(version_payload.get("gross_margin")),
         lead_time_days=version_payload.get("lead_time_days"),
         risk_terms=version_payload.get("risk_terms"),
         created_by=current_user.id,
@@ -192,8 +192,12 @@ def create_quote(
         version.total_price = total_price_calc
     if not version.cost_total:
         version.cost_total = total_cost_calc
-    if version.total_price and version.total_price > 0:
-        version.gross_margin = ((version.total_price - (version.cost_total or Decimal("0"))) / version.total_price * Decimal("100")).quantize(Decimal("0.01"))
+    total_price_value = _to_decimal(version.total_price)
+    cost_total_value = _to_decimal(version.cost_total)
+    if total_price_value > 0:
+        version.gross_margin = (
+            (total_price_value - cost_total_value) / total_price_value * Decimal("100")
+        ).quantize(Decimal("0.01"))
 
     quote.current_version_id = version.id
     db.commit()

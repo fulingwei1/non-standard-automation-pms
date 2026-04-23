@@ -34,16 +34,33 @@ class Quote(Base, TimestampMixin):
 
     __tablename__ = "quotes"
 
+    def __init__(self, **kwargs):
+        if "created_by" in kwargs and "owner_id" not in kwargs:
+            kwargs["owner_id"] = kwargs.pop("created_by")
+        if "description" in kwargs and "remark" not in kwargs:
+            kwargs["remark"] = kwargs.pop("description")
+        if "total_price" in kwargs and "legacy_total_price" not in kwargs:
+            kwargs["legacy_total_price"] = kwargs.pop("total_price")
+        super().__init__(**kwargs)
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     quote_code = Column(String(20), unique=True, nullable=False, comment="报价编码")
     opportunity_id = Column(
-        Integer, ForeignKey("opportunities.id"), nullable=False, comment="商机ID"
+        Integer, ForeignKey("opportunities.id"), nullable=True, comment="商机ID"
     )
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, comment="客户ID")
+    quote_name = Column(String(200), comment="报价名称")
+    quote_amount = Column(Numeric(12, 2), comment="报价金额")
+    discount_amount = Column(Numeric(12, 2), comment="折扣金额")
+    tax_amount = Column(Numeric(12, 2), comment="税额")
+    legacy_total_price = Column(Numeric(12, 2), comment="兼容总价")
     status = Column(String(20), default=QuoteStatusEnum.DRAFT, comment="状态")
     current_version_id = Column(Integer, ForeignKey("quote_versions.id"), comment="当前版本ID")
+    valid_from = Column(Date, comment="有效期起")
     valid_until = Column(Date, comment="有效期至")
     delivery_date = Column(Date, comment="交付日期")
+    version = Column(String(20), comment="版本号")
+    remark = Column(Text, comment="备注")
     owner_id = Column(Integer, ForeignKey("users.id"), comment="负责人ID")
 
     # 关系
@@ -76,14 +93,24 @@ class Quote(Base, TimestampMixin):
         self.quote_code = value
 
     @property
-    def quote_name(self):
-        return self.quote_code
+    def created_by(self):
+        return self.owner_id
 
-    @quote_name.setter
-    def quote_name(self, value):
-        # Legacy field had no dedicated storage; keep backward-compatible behavior.
-        if value and not self.quote_code:
-            self.quote_code = str(value)
+    @created_by.setter
+    def created_by(self, value):
+        self.owner_id = value
+
+    @property
+    def creator(self):
+        return self.owner
+
+    @property
+    def description(self):
+        return self.remark
+
+    @description.setter
+    def description(self, value):
+        self.remark = value
 
     @property
     def title(self):
@@ -91,19 +118,21 @@ class Quote(Base, TimestampMixin):
 
     @title.setter
     def title(self, value):
-        if value and not self.quote_code:
-            self.quote_code = str(value)
+        if value:
+            self.quote_name = str(value)
 
     @property
     def total_price(self):
         if self.current_version:
             return self.current_version.total_price
-        return None
+        return self.legacy_total_price
 
     @total_price.setter
     def total_price(self, value):
         if self.current_version:
             self.current_version.total_price = value
+        else:
+            self.legacy_total_price = value
 
     @property
     def total_amount(self):

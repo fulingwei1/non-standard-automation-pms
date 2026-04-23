@@ -117,6 +117,11 @@ class Opportunity(Base, TimestampMixin):
 
     __tablename__ = "opportunities"
 
+    def __init__(self, **kwargs):
+        if "expected_amount" in kwargs and "est_amount" not in kwargs:
+            kwargs["est_amount"] = kwargs.pop("expected_amount")
+        super().__init__(**kwargs)
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     opp_code = Column(String(20), unique=True, nullable=False, comment="商机编码")
     lead_id = Column(Integer, ForeignKey("leads.id"), comment="线索ID")
@@ -125,16 +130,19 @@ class Opportunity(Base, TimestampMixin):
     project_type = Column(String(20), comment="项目类型")
     equipment_type = Column(String(20), comment="设备类型")
     stage = Column(String(20), default=OpportunityStageEnum.DISCOVERY, comment="阶段")
-    probability = Column(Integer, default=0, comment="成交概率(0-100)")
+    probability = Column(Numeric(5, 2), default=0, comment="成交概率(0-100)")
     est_amount = Column(Numeric(12, 2), comment="预估金额")
+    actual_amount = Column(Numeric(12, 2), comment="实际金额")
     est_margin = Column(Numeric(5, 2), comment="预估毛利率")
     expected_close_date = Column(Date, comment="预计成交日期")
+    actual_close_date = Column(Date, comment="实际成交/关闭日期")
     budget_range = Column(String(50), comment="预算范围")
     decision_chain = Column(Text, comment="决策链")
     delivery_window = Column(String(50), comment="交付窗口")
     acceptance_basis = Column(Text, comment="验收依据")
     score = Column(Integer, default=0, comment="评分")
     risk_level = Column(String(10), comment="风险等级")
+    status = Column(String(20), default="进行中", comment="状态")
     owner_id = Column(Integer, ForeignKey("users.id"), comment="负责人ID")
     updated_by = Column(Integer, ForeignKey("users.id"), comment="最后更新人ID")
     gate_status = Column(String(20), default=GateStatusEnum.PENDING, comment="阶段门状态")
@@ -161,6 +169,14 @@ class Opportunity(Base, TimestampMixin):
     assessment = relationship("TechnicalAssessment", foreign_keys=[assessment_id], uselist=False)
 
     __table_args__ = (Index("idx_opportunity_assessment", "assessment_id"),)
+
+    @property
+    def expected_amount(self):
+        return self.est_amount
+
+    @expected_amount.setter
+    def expected_amount(self, value):
+        self.est_amount = value
 
     def __repr__(self):
         return f"<Opportunity {self.opp_code}>"

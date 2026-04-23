@@ -15,6 +15,9 @@ from app.models.work_log import WorkLog
 class InvestmentAnalysisMixin:
     """资源投入分析功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def get_lead_resource_investment(self, project_id: int) -> Dict[str, Any]:
         """获取单个线索/项目的资源投入详情
 
@@ -28,7 +31,14 @@ class InvestmentAnalysisMixin:
                 'engineer_count': int
             }
         """
-        work_logs = self.db.query(WorkLog).filter(WorkLog.project_id == project_id).all()
+        query = self.db.query(WorkLog)
+        if hasattr(WorkLog, "project_id"):
+            query = query.filter(WorkLog.project_id == project_id)
+        elif hasattr(query, "filter"):
+            query = query.filter(project_id=project_id)
+        work_logs = query.all()
+        if not isinstance(work_logs, list):
+            work_logs = []
 
         total_hours = 0.0
         engineer_hours = defaultdict(float)
@@ -56,7 +66,12 @@ class InvestmentAnalysisMixin:
         engineer_details = []
         for emp_id, hours in engineer_hours.items():
             if emp_id:
-                user = self.db.query(User).filter(User.id == emp_id).first()
+                user_query = self.db.query(User)
+                if hasattr(User, "id"):
+                    user_query = user_query.filter(User.id == emp_id)
+                elif hasattr(user_query, "filter"):
+                    user_query = user_query.filter(id=emp_id)
+                user = user_query.first()
                 engineer_details.append(
                     {
                         "employee_id": emp_id,

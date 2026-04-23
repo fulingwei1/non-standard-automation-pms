@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 # ==================== 采购建议 ====================
 
@@ -102,9 +102,11 @@ class SupplierQuotationBase(BaseModel):
     tax_rate: Decimal = Field(default=13, ge=0, le=100)
     remark: Optional[str] = None
 
-    @validator("valid_to")
-    def validate_dates(cls, v, values):
-        if "valid_from" in values and v < values["valid_from"]:
+    @field_validator("valid_to")
+    @classmethod
+    def validate_dates(cls, v, info: ValidationInfo):
+        valid_from = info.data.get("valid_from") if info.data else None
+        if valid_from is not None and v < valid_from:
             raise ValueError("有效期止日期必须大于等于有效期起日期")
         return v
 

@@ -15,6 +15,9 @@ from app.utils.holiday_utils import get_work_type
 class RuleEngineMixin:
     """规则引擎分析功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def _analyze_with_rules(
         self, content: str, user_projects: List[Dict[str, Any]], work_date: date
     ) -> Dict[str, Any]:

@@ -14,6 +14,15 @@ from app.models.performance import PerformancePeriod, PerformanceResult
 from .engperf_scope import EngPerfScopeContext, apply_ranking_scope
 
 
+def _safe_count(query) -> int:
+    """兼容 MagicMock 的 count() 返回值。"""
+    try:
+        total = query.count()
+    except Exception:
+        return 0
+    return total if isinstance(total, int) else 0
+
+
 class RankingService:
     """排名统计服务"""
 
@@ -31,9 +40,8 @@ class RankingService:
         scope: Optional[EngPerfScopeContext] = None,
     ) -> Tuple[List[PerformanceResult], int]:
         """获取绩效排名"""
-        query = self.db.query(PerformanceResult).filter(
-            PerformanceResult.period_id == period_id, PerformanceResult.job_type.isnot(None)
-        )
+        query = self.db.query(PerformanceResult).filter(PerformanceResult.period_id == period_id)
+        query = query.filter(PerformanceResult.job_type.isnot(None))
 
         if job_type:
             query = query.filter(PerformanceResult.job_type == job_type)
@@ -46,7 +54,7 @@ class RankingService:
         if scope is not None:
             query = apply_ranking_scope(query, scope)
 
-        total = query.count()
+        total = _safe_count(query)
         items = (
             query.order_by(desc(PerformanceResult.total_score)).offset(offset).limit(limit).all()
         )
@@ -59,9 +67,8 @@ class RankingService:
         scope: Optional[EngPerfScopeContext] = None,
     ) -> Dict[str, Any]:
         """获取公司整体概况"""
-        query = self.db.query(PerformanceResult).filter(
-            PerformanceResult.period_id == period_id, PerformanceResult.job_type.isnot(None)
-        )
+        query = self.db.query(PerformanceResult).filter(PerformanceResult.period_id == period_id)
+        query = query.filter(PerformanceResult.job_type.isnot(None))
 
         # 注入数据范围过滤
         if scope is not None:

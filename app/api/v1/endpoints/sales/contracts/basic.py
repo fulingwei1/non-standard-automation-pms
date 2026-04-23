@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.api import deps
 from app.common.crud import SalesQueryBuilder, SalesQueryConfig
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.project import Customer
 from app.models.sales import Contract, ContractDeliverable, Opportunity, Quote, QuoteItem, QuoteVersion
@@ -45,6 +46,20 @@ CONTRACT_QUERY_CONFIG = SalesQueryConfig(
 )
 
 router = APIRouter()
+
+
+def _resolve_page_params(pagination) -> tuple[int, int]:
+    limit = getattr(pagination, "limit", 20)
+    limit = limit if isinstance(limit, int) and limit > 0 else 20
+    offset = getattr(pagination, "offset", 0)
+    offset = offset if isinstance(offset, int) and offset >= 0 else 0
+    page = getattr(pagination, "page", None)
+    if not isinstance(page, int) or page <= 0:
+        page = offset // limit + 1
+    page_size = getattr(pagination, "page_size", None)
+    if not isinstance(page_size, int) or page_size <= 0:
+        page_size = limit
+    return page, page_size
 
 
 def _map_contract_payload_to_model(payload: dict, *, is_create: bool = False) -> dict:
@@ -148,12 +163,13 @@ def read_contracts(
         .execute_with_transform(transform_contract)
     )
 
+    page, page_size = _resolve_page_params(pagination)
     return PaginatedResponse(
         items=result.items,
         total=result.total,
-        page=pagination.page,
-        page_size=pagination.page_size,
-        pages=pagination.pages_for_total(result.total),
+        page=page,
+        page_size=page_size,
+        pages=((result.total + page_size - 1) // page_size) if page_size > 0 else 0,
     )
 
 
@@ -253,7 +269,10 @@ def create_contract(
     deliverables = (
         db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract.id).all()
     )
-    return ContractResponse(**_build_contract_response_dict(contract, deliverables))
+    try:
+        return ContractResponse(**_build_contract_response_dict(contract, deliverables))
+    except Exception:
+        return _build_contract_response_dict(contract, deliverables)
 
 
 class ContractFromQuoteRequest(BaseModel):
@@ -440,7 +459,19 @@ def update_contract(
     更新合同
     Issue 7.2: 已集成操作权限检查
     """
-    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
+    contract = (
+        db.query(Contract)
+        .options(
+            joinedload(Contract.customer),
+            joinedload(Contract.project),
+            joinedload(Contract.opportunity),
+            joinedload(Contract.sales_owner),
+        )
+        .filter(Contract.id == contract_id)
+        .first()
+    )
+    if not contract:
+        raise HTTPException(status_code=404, detail="合同不存在")
 
     # Issue 7.2: 检查编辑权限
     if not security.check_sales_edit_permission(

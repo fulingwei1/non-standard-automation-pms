@@ -41,6 +41,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _resolve_page_params(pagination: Any) -> tuple[int, int]:
+    limit = getattr(pagination, "limit", 20)
+    limit = limit if isinstance(limit, int) and limit > 0 else 20
+    offset = getattr(pagination, "offset", 0)
+    offset = offset if isinstance(offset, int) and offset >= 0 else 0
+    page = getattr(pagination, "page", None)
+    if not isinstance(page, int) or page <= 0:
+        page = offset // limit + 1
+    page_size = getattr(pagination, "page_size", None)
+    if not isinstance(page_size, int) or page_size <= 0:
+        page_size = limit
+    return page, page_size
+
+
 # ============================================================
 # 工具函数
 # ============================================================
@@ -121,11 +135,13 @@ def list_substitutions(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（替代单号/物料编码）"),
+    status: Optional[str] = Query(None, description="兼容旧参数名 status"),
     substitution_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """替代申请列表"""
+    substitution_status = substitution_status or status
     query = db.query(MaterialSubstitution)
 
     # 应用关键词过滤（替代单号/原物料编码/替代物料编码）
@@ -148,12 +164,13 @@ def list_substitutions(
 
     items = [_build_substitution_response(sub, db) for sub in substitutions]
 
+    page, page_size = _resolve_page_params(pagination)
     return PaginatedResponse(
         items=items,
         total=total,
-        page=pagination.page,
-        page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total),
+        page=page,
+        page_size=page_size,
+        pages=((total + page_size - 1) // page_size) if page_size > 0 else 0,
     )
 
 
@@ -161,10 +178,11 @@ def list_substitutions(
 def create_substitution(
     *,
     db: Session = Depends(deps.get_db),
-    sub_in: MaterialSubstitutionCreate,
+    substitution_in: MaterialSubstitutionCreate = Body(...),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建替代申请"""
+    sub_in = substitution_in
     # 验证项目
     get_or_404(db, Project, sub_in.project_id, "项目不存在")
 
@@ -226,14 +244,17 @@ def tech_approve_substitution(
     *,
     db: Session = Depends(deps.get_db),
     substitution_id: int,
-    approved: bool = Body(..., description="是否批准"),
+    approved: bool = Body(True, description="是否批准"),
+    comment: Optional[str] = Body(None, description="兼容旧参数名 comment"),
     approval_note: Optional[str] = Body(None, description="审批意见"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """技术审批"""
     sub = get_or_404(db, MaterialSubstitution, substitution_id, "替代申请不存在")
 
-    if sub.status != "DRAFT":
+    approval_note = approval_note or comment
+
+    if sub.status not in ("DRAFT", "PENDING"):
         raise HTTPException(status_code=400, detail="只有草稿状态的申请才能进行技术审批")
 
     sub.tech_approver_id = current_user.id

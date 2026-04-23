@@ -21,6 +21,8 @@ from sqlalchemy.orm import Session
 
 from app.models.ai_planning.plan_template import AIProjectPlanTemplate
 from app.models.ai_planning.wbs_suggestion import AIWbsSuggestion
+from app.models.material import Material
+from app.models.project.core import Project
 from app.models.shortage.smart_alert import ShortageAlert, ShortageHandlingPlan
 from app.services.ai_client_service import AIClientService
 
@@ -260,13 +262,32 @@ class TestAIResultStorageToDatabase:
         db = db_session
         mock_generate.return_value = {"content": "test response", "model": "glm-5"}
 
+        project = Project(
+            project_code=f"AI_SHORTAGE_PRJ_{uuid.uuid4().hex[:8]}",
+            project_name="AI缺料处理测试项目",
+        )
+        db.add(project)
+        db.flush()
+
+        material = Material(
+            material_code=f"TEST_MAT_001-{uuid.uuid4().hex[:8]}",
+            material_name="测试物料-AI方案",
+            unit="件",
+            material_type="RAW_MATERIAL",
+            current_stock=Decimal("0"),
+            safety_stock=Decimal("100"),
+            is_active=True,
+        )
+        db.add(material)
+        db.flush()
+
         # Step 1: 创建缺料预警（作为前置数据）
         alert = ShortageAlert(
             alert_no=f"ALERT_AI_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
-            material_id=None,  # 测试环境中无真实物料
-            material_code=f"TEST_MAT_001-{uuid.uuid4().hex[:8]}",
-            material_name="测试物料-AI方案",
-            project_id=None,
+            material_id=material.id,
+            material_code=material.material_code,
+            material_name=material.material_name,
+            project_id=project.id,
             required_qty=Decimal("100"),
             shortage_qty=Decimal("50"),
             alert_level="WARNING",

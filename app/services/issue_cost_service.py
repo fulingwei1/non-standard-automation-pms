@@ -16,6 +16,9 @@ from app.models.timesheet import Timesheet
 class IssueCostService:
     """问题成本关联服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def get_issue_related_costs(db: Session, issue_no: str) -> Dict:
         """

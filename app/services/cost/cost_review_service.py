@@ -19,6 +19,9 @@ from app.models.project_review import ProjectReview
 class CostReviewService:
     """成本复盘服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def generate_cost_review_report(
         db: Session, project_id: int, reviewer_id: int, review_date: Optional[date] = None

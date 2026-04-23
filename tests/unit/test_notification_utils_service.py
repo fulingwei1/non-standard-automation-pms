@@ -4,9 +4,13 @@
 """
 
 from datetime import datetime, time, timedelta
-from unittest.mock import MagicMock, patch
+from types import SimpleNamespace
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+
+from app.models.notification import NotificationSettings
+from app.models.user import User
 
 
 class TestGetAlertIconUrl:
@@ -80,6 +84,15 @@ class TestResolveChannels:
         assert "EMAIL" in channels
         assert "WECHAT" in channels
 
+    def test_with_empty_channel_list_falls_back_to_system(self):
+        from app.services.notification_utils import resolve_channels
+
+        alert = MagicMock()
+        alert.rule = MagicMock()
+        alert.rule.notify_channels = []
+
+        assert resolve_channels(alert) == ["SYSTEM"]
+
 
 class TestResolveChannelTarget:
     """测试解析通道目标"""
@@ -132,6 +145,23 @@ class TestResolveChannelTarget:
         target = resolve_channel_target("SYSTEM", None)
         assert target is None
 
+    def test_wecom_channel_uses_username_or_phone(self):
+        from app.services.notification_utils import resolve_channel_target
+
+        user = MagicMock()
+        user.username = ""
+        user.phone = "13800138000"
+
+        assert resolve_channel_target("WE_COM", user) == "13800138000"
+
+    def test_unknown_channel_returns_none(self):
+        from app.services.notification_utils import resolve_channel_target
+
+        user = MagicMock()
+        user.id = 123
+
+        assert resolve_channel_target("PUSH", user) is None
+
 
 class TestChannelAllowed:
     """测试渠道是否允许"""
@@ -162,6 +192,23 @@ class TestChannelAllowed:
 
         result = channel_allowed("EMAIL", settings)
         assert result is False
+
+    def test_wechat_and_sms_flags(self):
+        from app.services.notification_utils import channel_allowed
+
+        settings = MagicMock()
+        settings.wechat_enabled = True
+        settings.sms_enabled = False
+
+        assert channel_allowed("WE_COM", settings) is True
+        assert channel_allowed("SMS", settings) is False
+
+    def test_unknown_channel_defaults_true(self):
+        from app.services.notification_utils import channel_allowed
+
+        settings = MagicMock()
+
+        assert channel_allowed("PUSH", settings) is True
 
 
 class TestParseTimeStr:
@@ -227,6 +274,25 @@ class TestIsQuietHours:
 
         assert result is False
 
+    def test_invalid_quiet_hours_config_returns_false(self):
+        from app.services.notification_utils import is_quiet_hours
+
+        settings = MagicMock()
+        settings.quiet_hours_start = "invalid"
+        settings.quiet_hours_end = "08:00"
+
+        assert is_quiet_hours(settings, datetime.now()) is False
+
+    def test_same_day_quiet_hours_range(self):
+        from app.services.notification_utils import is_quiet_hours
+
+        settings = MagicMock()
+        settings.quiet_hours_start = "09:00"
+        settings.quiet_hours_end = "18:00"
+
+        current_time = datetime(2025, 1, 15, 10, 0)
+        assert is_quiet_hours(settings, current_time) is True
+
 
 class TestNextQuietResume:
     """测试下次免打扰结束时间"""
@@ -287,6 +353,87 @@ class TestResolveRecipients:
 
         result = resolve_recipients(db_session, alert)
         assert isinstance(result, dict)
+
+    def test_includes_handler_and_rule_users_with_settings(self):
+        from app.services.notification_utils import resolve_recipients
+
+        user1 = SimpleNamespace(id=1, is_active=True)
+        user2 = SimpleNamespace(id=2, is_active=True)
+        settings = SimpleNamespace(user_id=2)
+
+        user_query = Mock()
+        user_query.filter.return_value = user_query
+        user_query.all.return_value = [user1, user2]
+
+        settings_query = Mock()
+        settings_query.filter.return_value = settings_query
+        settings_query.all.return_value = [settings]
+
+        db = Mock()
+
+        def query_side_effect(model):
+            if model is User:
+                return user_query
+            if model is NotificationSettings:
+                return settings_query
+            raise AssertionError(model)
+
+        db.query.side_effect = query_side_effect
+
+        alert = SimpleNamespace(
+            project=None,
+            handler_id=2,
+            rule=SimpleNamespace(notify_users=[1, "x", 2]),
+        )
+
+        result = resolve_recipients(db, alert)
+
+        assert set(result.keys()) == {1, 2}
+        assert result[1]["settings"] is None
+        assert result[2]["settings"] == settings
+
+    def test_defaults_to_admin_user_when_no_recipients(self):
+        from app.services.notification_utils import resolve_recipients
+
+        user = SimpleNamespace(id=1, is_active=True)
+        user_query = Mock()
+        user_query.filter.return_value = user_query
+        user_query.all.return_value = [user]
+
+        settings_query = Mock()
+        settings_query.filter.return_value = settings_query
+        settings_query.all.return_value = []
+
+        db = Mock()
+
+        def query_side_effect(model):
+            if model is User:
+                return user_query
+            if model is NotificationSettings:
+                return settings_query
+            raise AssertionError(model)
+
+        db.query.side_effect = query_side_effect
+
+        alert = SimpleNamespace(project=None, handler_id=None, rule=None)
+
+        result = resolve_recipients(db, alert)
+
+        assert result == {1: {"user": user, "settings": None}}
+
+    def test_returns_empty_when_user_lookup_is_empty(self):
+        from app.services.notification_utils import resolve_recipients
+
+        user_query = Mock()
+        user_query.filter.return_value = user_query
+        user_query.all.return_value = []
+
+        db = Mock()
+        db.query.return_value = user_query
+
+        alert = SimpleNamespace(project=None, handler_id=9, rule=None)
+
+        assert resolve_recipients(db, alert) == {}
 
 
 # pytest fixtures

@@ -69,13 +69,13 @@ class TestProjectDocumentModel:
             doc_name="架构图.png",
             doc_type="设计",
             file_path="/uploads/arch.png",
-            file_size=2048576,  # 2MB
+            file_size=2 * 1024 * 1024,  # 2MB
             uploaded_by=sample_user.id,
         )
         db_session.add(doc)
         db_session.commit()
 
-        assert doc.file_size == 2048576
+        assert doc.file_size == 2 * 1024 * 1024
         # 转换为MB
         size_mb = doc.file_size / (1024 * 1024)
         assert size_mb == 2.0

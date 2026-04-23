@@ -12,6 +12,9 @@ from app.models.sales import Lead
 class LeadScoringMixin:
     """线索评分计算功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def calculate_lead_priority(self, lead_id: int) -> Dict[str, Any]:
         """计算线索优先级评分
 

@@ -6,7 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # ============= 成本估算 Schemas =============
 
@@ -77,6 +77,8 @@ class CostEstimationInput(BaseModel):
 class CostEstimationResponse(BaseModel):
     """成本估算结果"""
 
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
+
     id: int
     presale_ticket_id: int
     solution_id: Optional[int]
@@ -92,10 +94,6 @@ class CostEstimationResponse(BaseModel):
     # 元数据
     model_version: Optional[str]
     created_at: datetime
-
-    class Config:
-        from_attributes = True
-
 
 # ============= 成本优化 Schemas =============
 

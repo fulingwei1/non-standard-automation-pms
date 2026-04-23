@@ -29,5 +29,10 @@ class LoginAttempt(Base):
         DateTime, default=datetime.now, nullable=False, index=True, comment="尝试时间"
     )
 
+    def __init__(self, **kwargs):
+        if "timestamp" in kwargs and "created_at" not in kwargs:
+            kwargs["created_at"] = kwargs.pop("timestamp")
+        super().__init__(**kwargs)
+
     def __repr__(self):
         return f"<LoginAttempt(username={self.username}, ip={self.ip_address}, success={self.success})>"

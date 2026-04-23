@@ -39,6 +39,9 @@ class PermissionService:
     提供用户权限的获取、检查、菜单构建等功能
     """
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def get_user_effective_roles(db: Session, user_id: int) -> List[Role]:
         """

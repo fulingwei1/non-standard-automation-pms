@@ -190,6 +190,21 @@ dashboard_endpoint = ShortageAnalyticsDashboardEndpoint()
 router = dashboard_endpoint.router
 
 
+def _build_shortage_daily_report(report: Any) -> dict[str, Any]:
+    """兼容旧测试的缺料日报构造辅助函数。"""
+    return {
+        "date": report.report_date.isoformat() if getattr(report, "report_date", None) else None,
+        "new_alerts": getattr(report, "new_alerts", 0),
+        "resolved_alerts": getattr(report, "resolved_alerts", 0),
+        "pending_alerts": getattr(report, "pending_alerts", 0),
+        "overdue_alerts": getattr(report, "overdue_alerts", 0),
+        "level1_count": getattr(report, "level1_count", 0),
+        "level2_count": getattr(report, "level2_count", 0),
+        "level3_count": getattr(report, "level3_count", 0),
+        "level4_count": getattr(report, "level4_count", 0),
+    }
+
+
 # ============================================================
 # 缺料日报
 # ============================================================

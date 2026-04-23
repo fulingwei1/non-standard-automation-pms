@@ -13,6 +13,9 @@ from app.models.sales import Lead, Opportunity
 class DescriptionsMixin:
     """描述生成功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def _get_customer_level_description(self, lead: Lead) -> str:
         """获取客户等级描述"""
         score = self._calculate_customer_importance(lead)

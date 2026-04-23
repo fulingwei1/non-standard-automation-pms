@@ -8,6 +8,9 @@
 class LevelDeterminationMixin:
     """等级确定功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def _determine_priority_level(self, total_score: int, urgency_score: int) -> str:
         """确定优先级等级"""
         if total_score >= 80 and urgency_score >= 8:

@@ -18,7 +18,7 @@ K1组集成测试 - 项目全生命周期流程
 """
 
 import uuid
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -400,10 +400,14 @@ class TestProjectStatusLog:
 
         log1 = ProjectStatusLog(
             project_id=project.id,
-            from_status="ST01",
-            to_status="ST02",
+            old_stage="S1",
+            old_status="ST01",
+            new_stage="S2",
+            new_status="ST02",
+            change_type="STATUS_CHANGE",
             changed_by=user.id,
             change_reason="项目立项通过",
+            changed_at=datetime.utcnow(),
         )
         db.add(log1)
 
@@ -413,8 +417,8 @@ class TestProjectStatusLog:
 
         saved_logs = db.query(ProjectStatusLog).filter_by(project_id=project.id).all()
         assert len(saved_logs) == 1
-        assert saved_logs[0].from_status == "ST01"
-        assert saved_logs[0].to_status == "ST02"
+        assert saved_logs[0].old_status == "ST01"
+        assert saved_logs[0].new_status == "ST02"
 
     def test_full_lifecycle_log_sequence(self, db):
         """TC-LC-52: 项目完整生命周期中，状态变更日志按顺序记录。"""
@@ -435,10 +439,14 @@ class TestProjectStatusLog:
         for from_s, to_s, reason in transitions:
             log = ProjectStatusLog(
                 project_id=project.id,
-                from_status=from_s,
-                to_status=to_s,
+                old_stage="S1",
+                old_status=from_s,
+                new_stage="S2",
+                new_status=to_s,
+                change_type="STATUS_CHANGE",
                 changed_by=user.id,
                 change_reason=reason,
+                changed_at=datetime.utcnow(),
             )
             db.add(log)
 
@@ -452,6 +460,6 @@ class TestProjectStatusLog:
         )
 
         assert len(logs) == 5
-        assert logs[0].from_status == "ST01"
-        assert logs[-1].to_status == "ST20"
+        assert logs[0].old_status == "ST01"
+        assert logs[-1].new_status == "ST20"
         assert logs[-1].change_reason == "项目结项"

@@ -6,7 +6,7 @@
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class SchedulerTaskConfigBase(BaseModel):
@@ -38,7 +38,8 @@ class SchedulerTaskConfigUpdate(BaseModel):
     is_enabled: Optional[bool] = Field(None, description="是否启用")
     cron_config: Optional[Dict[str, Any]] = Field(None, description="Cron配置")
 
-    @validator("cron_config")
+    @field_validator("cron_config")
+    @classmethod
     def validate_cron_config(cls, v):
         """验证Cron配置格式"""
         if v is None:

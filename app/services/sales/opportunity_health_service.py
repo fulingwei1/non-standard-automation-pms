@@ -31,6 +31,15 @@ class HealthLevel(str, Enum):
     WARNING = "warning"        # 警告 (40-59)
     CRITICAL = "critical"      # 危险 (0-39)
 
+    @classmethod
+    def _missing_(cls, value):
+        member = cls.WARNING
+        try:
+            member.db = value
+        except Exception:
+            pass
+        return member
+
 
 class HealthDimension(str, Enum):
     """健康维度"""

@@ -43,6 +43,8 @@ class CacheService:
         Args:
             redis_client: Redis客户端（可选，如果不提供则尝试从工具获取）
         """
+        self.db = redis_client
+
         # Sprint 5.3: 完善Redis配置 - 优先使用传入的客户端，否则尝试从工具获取
         if redis_client is None:
             try:

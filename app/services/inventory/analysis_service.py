@@ -11,7 +11,7 @@ from app.models.inventory_tracking import MaterialStock, MaterialTransaction
 class AnalysisService:
     """库存分析（周转率、库龄）"""
 
-    def __init__(self, db: Session, tenant_id: int):
+    def __init__(self, db: Session, tenant_id: int = 0):
         self.db = db
         self.tenant_id = tenant_id
 

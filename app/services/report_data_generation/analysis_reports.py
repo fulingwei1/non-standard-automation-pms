@@ -18,6 +18,9 @@ from app.models.user import User
 class AnalysisReportMixin:
     """分析报表生成功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def generate_workload_analysis(
         db: Session,

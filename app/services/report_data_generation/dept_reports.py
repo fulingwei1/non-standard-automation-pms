@@ -17,6 +17,9 @@ from app.models.user import User
 class DeptReportMixin:
     """部门报表生成功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def generate_dept_weekly_report(
         db: Session, department_id: int, start_date: date, end_date: date

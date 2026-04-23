@@ -20,6 +20,29 @@ from .base import ApprovalAdapter
 logger = logging.getLogger(__name__)
 
 
+class ApprovalEngineService:
+    """延迟导入代理，兼容旧参数名与单测 patch 目标"""
+
+    def __init__(self, db: Session):
+        from ..engine import ApprovalEngineService as _NativeApprovalEngineService
+
+        self._service = _NativeApprovalEngineService(db)
+
+    def submit(self, **kwargs):
+        if "flow_code" in kwargs or "business_type" in kwargs or "business_id" in kwargs:
+            kwargs = {
+                "template_code": kwargs.pop("flow_code", kwargs.pop("template_code", None)),
+                "entity_type": kwargs.pop("business_type", kwargs.pop("entity_type", None)),
+                "entity_id": kwargs.pop("business_id", kwargs.pop("entity_id", None)),
+                "initiator_id": kwargs.pop("submitted_by", kwargs.pop("initiator_id", None)),
+                **kwargs,
+            }
+        return self._service.submit(**kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._service, name)
+
+
 class EcnApprovalAdapter(ApprovalAdapter):
     """
     ECN审批适配器
@@ -229,16 +252,14 @@ class EcnApprovalAdapter(ApprovalAdapter):
             ]
 
         # 使用统一审批引擎创建实例
-        from ..engine import ApprovalEngineService
-
         engine = ApprovalEngineService(self.db)
 
         instance = engine.submit(
-            template_code="ECN_STANDARD",
-            entity_type="ECN",
-            entity_id=ecn.id,
+            flow_code="ECN_STANDARD",
+            business_type="ECN",
+            business_id=ecn.id,
             form_data=form_data,
-            initiator_id=initiator_id,
+            submitted_by=initiator_id,
             title=title or f"ECN审批 - {ecn.ecn_title}",
             summary=summary or f"{ecn.ecn_type}变更审批：{ecn.ecn_no}",
             urgency=urgency,

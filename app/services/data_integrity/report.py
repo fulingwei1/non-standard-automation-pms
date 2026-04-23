@@ -13,6 +13,9 @@ from app.models.performance import PerformancePeriod
 class DataReportMixin:
     """数据质量报告功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def generate_data_quality_report(
         self, period_id: int, department_id: Optional[int] = None
     ) -> Dict[str, Any]:

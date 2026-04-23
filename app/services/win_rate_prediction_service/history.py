@@ -15,6 +15,10 @@ if TYPE_CHECKING:
     from app.services.win_rate_prediction_service import WinRatePredictionService
 
 
+def _safe_number(value, default=0):
+    return value if isinstance(value, (int, float)) else default
+
+
 def get_salesperson_historical_win_rate(
     service: "WinRatePredictionService", salesperson_id: int, lookback_months: int = 24
 ) -> Tuple[float, int]:
@@ -43,8 +47,8 @@ def get_salesperson_historical_win_rate(
         .first()
     )
 
-    total = stats.total or 0
-    won = stats.won or 0
+    total = _safe_number((getattr(stats, "total", 0) if stats else 0) or 0)
+    won = _safe_number((getattr(stats, "won", 0) if stats else 0) or 0)
 
     if total == 0:
         return 0.20, 0  # 无数据时返回行业平均值
@@ -80,6 +84,13 @@ def get_customer_cooperation_history(
     total = query.count()
     won = query.filter(Project.outcome == LeadOutcomeEnum.WON.value).count()
 
+    if not isinstance(total, int):
+        rows = query.all() if hasattr(query, "all") else []
+        total = len(rows) if isinstance(rows, list) else 0
+    if not isinstance(won, int):
+        won_rows = query.filter(Project.outcome == LeadOutcomeEnum.WON.value).all()
+        won = len(won_rows) if isinstance(won_rows, list) else 0
+
     return total, won
 
 
@@ -111,7 +122,7 @@ def get_similar_leads_statistics(
         .all()
     )
 
-    if not similar_leads:
+    if not similar_leads or not isinstance(similar_leads, list):
         return 0, 0
 
     won = sum(1 for p in similar_leads if p.outcome == LeadOutcomeEnum.WON.value)

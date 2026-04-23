@@ -18,6 +18,7 @@ from app.models.sales import Lead, Quote
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.services.hourly_rate_service import HourlyRateService
+from app.services.pipeline_break_analysis_service import PipelineBreakAnalysisService
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +34,6 @@ class PipelineAccountabilityService:
         self, start_date: Optional[date] = None, end_date: Optional[date] = None
     ) -> Dict[str, Any]:
         """按环节归责分析"""
-        from app.services.pipeline_break_analysis_service import (
-            PipelineBreakAnalysisService,
-        )
-
         break_service = PipelineBreakAnalysisService(self.db)
         breaks_analysis = break_service.analyze_pipeline_breaks(start_date, end_date)
 
@@ -111,10 +108,6 @@ class PipelineAccountabilityService:
         self, start_date: Optional[date] = None, end_date: Optional[date] = None
     ) -> Dict[str, Any]:
         """按人员归责分析"""
-        from app.services.pipeline_break_analysis_service import (
-            PipelineBreakAnalysisService,
-        )
-
         break_service = PipelineBreakAnalysisService(self.db)
         breaks_analysis = break_service.analyze_pipeline_breaks(start_date, end_date)
 

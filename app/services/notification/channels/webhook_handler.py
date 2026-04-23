@@ -22,6 +22,9 @@ from app.services.channel_handlers.base import (
 class WebhookChannelHandler(ChannelHandler):
     """Webhook通知处理器"""
 
+    def __init__(self, db=None, channel: str = "webhook"):
+        super().__init__(db, channel)
+
     def send(self, request: NotificationRequest) -> NotificationResult:
         if not self.is_enabled():
             return NotificationResult(

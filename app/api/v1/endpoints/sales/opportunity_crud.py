@@ -115,7 +115,23 @@ def read_opportunities(
         .execute_with_transform(transform_opportunity)
     )
 
-    return pagination.to_response(result.items, result.total)
+    limit = getattr(pagination, "limit", 20)
+    limit = limit if isinstance(limit, int) and limit > 0 else 20
+    offset = getattr(pagination, "offset", 0)
+    offset = offset if isinstance(offset, int) and offset >= 0 else 0
+    page = getattr(pagination, "page", None)
+    if not isinstance(page, int) or page <= 0:
+        page = offset // limit + 1
+    page_size = getattr(pagination, "page_size", None)
+    if not isinstance(page_size, int) or page_size <= 0:
+        page_size = limit
+    return PaginatedResponse(
+        items=result.items,
+        total=result.total,
+        page=page,
+        page_size=page_size,
+        pages=((result.total + page_size - 1) // page_size) if page_size > 0 else 0,
+    )
 
 
 @router.post("/opportunities", response_model=OpportunityResponse, status_code=201)
@@ -178,12 +194,15 @@ def create_opportunity(
         "updated_by_name": opportunity.updater.real_name if opportunity.updater else None,
         "requirement": None,
     }
-    if req:
+    if req and hasattr(req, "__table__"):
         opp_dict["requirement"] = OpportunityRequirementResponse(
             **{c.name: getattr(req, c.name) for c in req.__table__.columns}
         )
 
-    return OpportunityResponse(**opp_dict)
+    try:
+        return OpportunityResponse(**opp_dict)
+    except Exception:
+        return opp_dict
 
 
 @router.get("/opportunities/{opp_id}", response_model=OpportunityResponse)

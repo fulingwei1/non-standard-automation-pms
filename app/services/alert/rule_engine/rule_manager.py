@@ -13,6 +13,9 @@ from app.models.alert import AlertRule
 class RuleManager:
     """规则管理器"""
 
+    def __init__(self, db: Session | None = None):
+        self.db = db
+
     @staticmethod
     def get_or_create_rule(
         db: Session, rule_code: str, default_config: Dict[str, Any]

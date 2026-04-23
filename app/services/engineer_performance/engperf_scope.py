@@ -27,8 +27,9 @@ RESOURCE_TYPE = "engineer_performance"
 class EngPerfScopeContext:
     """工程师绩效数据范围上下文"""
 
-    scope_type: str  # ScopeType value: ALL / DEPARTMENT / TEAM / OWN ...
-    user_id: int
+    db: Optional[Session] = None
+    scope_type: str = "OWN"  # ScopeType value: ALL / DEPARTMENT / TEAM / OWN ...
+    user_id: int = 0
     # 可访问的部门ID列表；None 表示不限（ALL），空列表表示仅自己（OWN）
     accessible_dept_ids: Optional[List[int]] = None
     # TEAM scope 下可访问的用户ID集合（自己 + 直属下级）

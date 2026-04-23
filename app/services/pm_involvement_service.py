@@ -9,6 +9,9 @@ from typing import Dict
 class PMInvolvementService:
     """PM介入时机判断服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     # 阈值配置（符哥确认）
     LARGE_PROJECT_THRESHOLD = 100  # 大项目金额阈值（万元）
     SIMILAR_PROJECT_MIN = 3  # 相似项目数量最低要求

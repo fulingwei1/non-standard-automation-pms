@@ -6,7 +6,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class ProjectRiskBase(BaseModel):
@@ -22,7 +22,8 @@ class ProjectRiskBase(BaseModel):
     owner_id: Optional[int] = Field(None, description="负责人ID")
     target_closure_date: Optional[datetime] = Field(None, description="计划关闭日期")
 
-    @validator("risk_type")
+    @field_validator("risk_type")
+    @classmethod
     def validate_risk_type(cls, v):
         allowed = ["TECHNICAL", "COST", "SCHEDULE", "QUALITY"]
         if v not in allowed:
@@ -54,7 +55,8 @@ class ProjectRiskUpdate(BaseModel):
     actual_impact: Optional[str] = None
     actual_closure_date: Optional[datetime] = None
 
-    @validator("risk_type")
+    @field_validator("risk_type")
+    @classmethod
     def validate_risk_type(cls, v):
         if v is not None:
             allowed = ["TECHNICAL", "COST", "SCHEDULE", "QUALITY"]
@@ -62,7 +64,8 @@ class ProjectRiskUpdate(BaseModel):
                 raise ValueError(f'风险类型必须是以下之一: {", ".join(allowed)}')
         return v
 
-    @validator("status")
+    @field_validator("status")
+    @classmethod
     def validate_status(cls, v):
         if v is not None:
             allowed = [

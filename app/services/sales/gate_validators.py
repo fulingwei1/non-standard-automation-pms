@@ -44,6 +44,9 @@ class ValidationResult:
         warnings: Optional[List[str]] = None,
         details: Optional[Dict] = None,
     ):
+        if not isinstance(passed, bool):
+            self.db = passed
+            passed = False
         self.passed = passed
         self.score = score
         self.threshold = threshold

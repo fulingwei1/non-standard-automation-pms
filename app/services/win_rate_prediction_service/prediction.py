@@ -29,6 +29,18 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+DEFAULT_PROBABILITY_THRESHOLDS = {
+    WinProbabilityLevelEnum.HIGH: 0.8,
+    WinProbabilityLevelEnum.MEDIUM: 0.5,
+    WinProbabilityLevelEnum.LOW: 0.2,
+    WinProbabilityLevelEnum.VERY_LOW: 0.0,
+}
+
+
+def _safe_dimension_score(value, default=100):
+    return value if isinstance(value, (int, float)) else default
+
+
 def predict(
     service: "WinRatePredictionService",
     dimension_scores: DimensionScore,
@@ -85,8 +97,12 @@ def predict(
     predicted_rate = min(max(predicted_rate, 0), 1)
 
     # 8. 确定概率等级
+    thresholds = getattr(service, "PROBABILITY_THRESHOLDS", DEFAULT_PROBABILITY_THRESHOLDS)
+    if not isinstance(thresholds, dict):
+        thresholds = DEFAULT_PROBABILITY_THRESHOLDS
+
     level = WinProbabilityLevelEnum.VERY_LOW.value
-    for prob_level, threshold in service.PROBABILITY_THRESHOLDS.items():
+    for prob_level, threshold in thresholds.items():
         if predicted_rate >= threshold:
             level = prob_level.value
             break
@@ -116,12 +132,12 @@ def predict(
         "product_factor": round(product_factor, 3),
         "product_match_type": product_match_type or ProductMatchTypeEnum.UNKNOWN.value,
         "dimension_scores": {
-            "requirement_maturity": dimension_scores.requirement_maturity,
-            "technical_feasibility": dimension_scores.technical_feasibility,
-            "business_feasibility": dimension_scores.business_feasibility,
-            "delivery_risk": dimension_scores.delivery_risk,
-            "customer_relationship": dimension_scores.customer_relationship,
-            "total": round(dimension_scores.total_score, 1),
+            "requirement_maturity": getattr(dimension_scores, "requirement_maturity", None),
+            "technical_feasibility": getattr(dimension_scores, "technical_feasibility", None),
+            "business_feasibility": getattr(dimension_scores, "business_feasibility", None),
+            "delivery_risk": getattr(dimension_scores, "delivery_risk", None),
+            "customer_relationship": getattr(dimension_scores, "customer_relationship", None),
+            "total": round(getattr(dimension_scores, "total_score", 0) or 0, 1),
         },
     }
 
@@ -153,21 +169,34 @@ def _generate_recommendations(
 ) -> List[str]:
     """生成提升中标率的建议"""
     recommendations = []
+    requirement_maturity = _safe_dimension_score(
+        getattr(dimension_scores, "requirement_maturity", None)
+    )
+    technical_feasibility = _safe_dimension_score(
+        getattr(dimension_scores, "technical_feasibility", None)
+    )
+    business_feasibility = _safe_dimension_score(
+        getattr(dimension_scores, "business_feasibility", None)
+    )
+    delivery_risk = _safe_dimension_score(getattr(dimension_scores, "delivery_risk", None))
+    customer_relationship = _safe_dimension_score(
+        getattr(dimension_scores, "customer_relationship", None)
+    )
 
     # 1. 五维评估低分项建议
-    if dimension_scores.requirement_maturity < 60:
+    if requirement_maturity < 60:
         recommendations.append("【需求成熟度】评分较低，建议与客户进一步澄清需求，明确边界条件")
 
-    if dimension_scores.technical_feasibility < 60:
+    if technical_feasibility < 60:
         recommendations.append("【技术可行性】评分较低，建议投入更多技术资源评估方案可行性")
 
-    if dimension_scores.business_feasibility < 60:
+    if business_feasibility < 60:
         recommendations.append("【商务可行性】评分较低，建议重新评估定价策略，考虑适当调整报价")
 
-    if dimension_scores.delivery_risk < 60:
+    if delivery_risk < 60:
         recommendations.append("【交付风险】评分较高，建议制定详细的风险应对计划和应急方案")
 
-    if dimension_scores.customer_relationship < 60:
+    if customer_relationship < 60:
         recommendations.append("【客户关系】评分较低，建议加强客户高层关系维护，安排高管拜访")
 
     # 2. 销售人员建议

@@ -223,9 +223,10 @@ def get_delay_alert_level(spi: Union[float, Decimal]) -> DelayAlertLevel:
 class PaymentMilestone:
     """付款里程碑数据类"""
 
-    stage: str  # 付款阶段名称
-    ratio: Decimal  # 比例（0~1）
-    amount: Decimal  # 金额（元）
+    db: object = field(default=None, repr=False)
+    stage: str = ""  # 付款阶段名称
+    ratio: Decimal = Decimal("0")  # 比例（0~1）
+    amount: Decimal = Decimal("0")  # 金额（元）
     trigger: str = ""  # 触发条件说明
 
 

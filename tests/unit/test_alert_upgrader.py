@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
+from types import ModuleType
 from unittest.mock import MagicMock, PropertyMock, patch
+import sys
 
 import pytest
 
@@ -94,3 +96,65 @@ class TestAlertUpgrader:
             result = self.upgrader.check_level_escalation(alert, {})
 
         assert result is None
+
+    def test_subscription_service_lazy_loads(self):
+        fake_module = ModuleType("app.services.alert.alert_subscription_service")
+
+        class FakeAlertSubscriptionService:
+            def __init__(inner_self, db):
+                inner_self.db = db
+
+        fake_module.AlertSubscriptionService = FakeAlertSubscriptionService
+
+        with patch.dict(sys.modules, {"app.services.alert.alert_subscription_service": fake_module}):
+            self.upgrader._subscription_service = None
+            service = self.upgrader.subscription_service
+
+        assert isinstance(service, FakeAlertSubscriptionService)
+        assert service.db is self.db
+
+    def test_upgrade_alert_uses_default_notification_when_no_recipients(self):
+        alert = MagicMock()
+        alert.alert_level = "WARNING"
+        alert.rule = MagicMock(target_field="cost")
+
+        self.upgrader.get_field_value = MagicMock(return_value=100)
+        self.upgrader._subscription_service = MagicMock()
+        self.upgrader._subscription_service.get_notification_recipients.return_value = {
+            "user_ids": [],
+            "channels": ["email"],
+        }
+        self.upgrader._notification_service = MagicMock()
+
+        with patch("app.services.alert_rule_engine.alert_upgrader.AlertGenerator") as MockGen:
+            MockGen.generate_alert_title.return_value = "title"
+            MockGen.generate_alert_content.return_value = "content"
+            self.upgrader.upgrade_alert(alert, "CRITICAL", {"target_type": "PROJECT", "target_id": 1})
+
+        self.upgrader._notification_service.send_alert_notification.assert_called_with(
+            alert=alert, force_send=True
+        )
+
+    def test_upgrade_alert_logs_notification_error(self):
+        alert = MagicMock()
+        alert.alert_level = "WARNING"
+        alert.rule = MagicMock(target_field="cost")
+
+        self.upgrader.get_field_value = MagicMock(return_value=100)
+        self.upgrader._subscription_service = MagicMock()
+        self.upgrader._subscription_service.get_notification_recipients.return_value = {
+            "user_ids": [1],
+            "channels": ["email"],
+        }
+        self.upgrader._notification_service = MagicMock()
+        self.upgrader._notification_service.send_alert_notification.side_effect = Exception("boom")
+
+        fake_logger = MagicMock()
+        with patch("app.services.alert_rule_engine.alert_upgrader.AlertGenerator") as MockGen:
+            MockGen.generate_alert_title.return_value = "title"
+            MockGen.generate_alert_content.return_value = "content"
+            with patch("logging.getLogger", return_value=fake_logger):
+                result = self.upgrader.upgrade_alert(alert, "CRITICAL", {"target_type": "PROJECT", "target_id": 1})
+
+        assert result is alert
+        fake_logger.error.assert_called_once()

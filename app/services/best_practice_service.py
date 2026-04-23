@@ -73,6 +73,10 @@ class BestPracticeService:
     def __init__(self, db: Session):
         self.db = db
 
+    def get_best_practices(self, *args, **kwargs):
+        """旧接口兼容。"""
+        return []
+
     # ------------------------------------------------------------------
     # 1. ABC 物料自动分级
     # ------------------------------------------------------------------

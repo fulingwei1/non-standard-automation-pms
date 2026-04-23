@@ -35,7 +35,7 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
-@router.get("/{task_id}", response_model=ApprovalTaskResponse)
+@router.get("/{task_id:int}", response_model=ApprovalTaskResponse)
 def get_task(
     task_id: int,
     db: Session = Depends(deps.get_db),
@@ -60,7 +60,7 @@ def get_task(
     return result
 
 
-@router.post("/{task_id}/approve")
+@router.post("/{task_id:int}/approve")
 def approve_task(
     task_id: int,
     data: ApproveRequest,
@@ -92,7 +92,7 @@ def approve_task(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/{task_id}/reject")
+@router.post("/{task_id:int}/reject")
 def reject_task(
     task_id: int,
     data: RejectRequest,
@@ -126,7 +126,7 @@ def reject_task(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/{task_id}/return")
+@router.post("/{task_id:int}/return")
 def return_task(
     task_id: int,
     data: ReturnRequest,
@@ -151,7 +151,7 @@ def return_task(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/{task_id}/transfer")
+@router.post("/{task_id:int}/transfer")
 def transfer_task(
     task_id: int,
     data: TransferRequest,
@@ -180,7 +180,7 @@ def transfer_task(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/{task_id}/add-approver")
+@router.post("/{task_id:int}/add-approver")
 def add_approver(
     task_id: int,
     data: AddApproverRequest,
@@ -211,7 +211,7 @@ def add_approver(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/{task_id}/remind")
+@router.post("/{task_id:int}/remind")
 def remind_task(
     task_id: int,
     data: RemindRequest = None,

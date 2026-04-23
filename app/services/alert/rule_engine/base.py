@@ -11,6 +11,9 @@ from app.models.enums import AlertLevelEnum
 class AlertRuleEngineBase:
     """预警规则引擎基类 - 包含配置和工具方法"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     # 预警级别优先级（用于比较）
     LEVEL_PRIORITY = {
         AlertLevelEnum.INFO.value: 1,

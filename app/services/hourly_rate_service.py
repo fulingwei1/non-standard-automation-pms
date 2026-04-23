@@ -24,6 +24,9 @@ from app.models.user import User, UserRole
 class HourlyRateService:
     """时薪配置服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     # 默认时薪（当没有配置时使用）
     DEFAULT_HOURLY_RATE = Decimal("100")  # 默认100元/小时
 

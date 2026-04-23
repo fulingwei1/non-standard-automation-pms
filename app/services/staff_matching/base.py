@@ -9,6 +9,9 @@ from app.models.staff_matching import RecommendationTypeEnum
 class StaffMatchingBase:
     """人员匹配服务基类 - 包含配置和工具方法"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     # 维度权重配置
     DIMENSION_WEIGHTS = {
         "skill": 0.30,  # 技能匹配 30%

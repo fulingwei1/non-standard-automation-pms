@@ -37,7 +37,10 @@ class AIEmotionService:
         self.model = os.getenv("OPENAI_MODEL", "gpt-4")
 
     async def analyze_emotion(
-        self, presale_ticket_id: int, customer_id: int, communication_content: str
+        self,
+        presale_ticket_id: int,
+        customer_id: Optional[int] = None,
+        communication_content: str = "",
     ) -> PresaleAIEmotionAnalysis:
         """
         分析客户情绪

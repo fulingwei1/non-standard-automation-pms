@@ -14,7 +14,8 @@ from app.services.cache.redis_cache import CacheKeys, cache_key, get_cache
 class BusinessCacheService:
     """业务缓存服务"""
 
-    def __init__(self):
+    def __init__(self, db=None):
+        self.db = db
         self.cache = get_cache()
 
     def get_project_list(

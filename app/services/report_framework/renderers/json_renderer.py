@@ -16,6 +16,12 @@ from app.services.report_framework.renderers.base import Renderer, RenderError, 
 class CustomJSONEncoder(json.JSONEncoder):
     """自定义 JSON 编码器"""
 
+    def __init__(self, *args, **kwargs):
+        if len(args) == 1 and not kwargs:
+            self.db = args[0]
+            args = ()
+        super().__init__(*args, **kwargs)
+
     def default(self, obj: Any) -> Any:
         if isinstance(obj, datetime):
             return obj.isoformat()

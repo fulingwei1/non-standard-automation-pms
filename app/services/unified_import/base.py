@@ -16,6 +16,9 @@ from app.services.import_export_engine import ImportExportEngine
 class ImportBase:
     """导入服务基类 - 包含通用工具方法"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def validate_file(filename: str) -> None:
         """验证Excel文件类型"""

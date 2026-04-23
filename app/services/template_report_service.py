@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 class TemplateReportService:
     """模板报表生成服务"""
 
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
     @staticmethod
     def generate_from_template(
         db: Session,

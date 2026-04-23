@@ -314,3 +314,105 @@ class TestCalculateStrategyHealth:
         ):
             result = calculate_strategy_health(self.db, 1)
         assert result is None
+
+
+class TestHealthTrendAndDetails:
+
+    def test_get_health_trend_returns_oldest_to_latest(self):
+        from app.services.strategy.health_calculator import get_health_trend
+
+        db = MagicMock()
+        review_new = MagicMock(
+            review_date="2026-03-31",
+            review_period="2026-Q1",
+            health_score=88,
+            financial_score=90,
+            customer_score=85,
+            internal_score=87,
+            learning_score=89,
+        )
+        review_old = MagicMock(
+            review_date="2025-12-31",
+            review_period="2025-Q4",
+            health_score=76,
+            financial_score=70,
+            customer_score=75,
+            internal_score=80,
+            learning_score=79,
+        )
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            review_new,
+            review_old,
+        ]
+
+        result = get_health_trend(db, strategy_id=1, periods=2)
+
+        assert [item["period"] for item in result] == ["2025-Q4", "2026-Q1"]
+        assert result[0]["overall_score"] == 76
+        assert result[1]["overall_score"] == 88
+
+    def test_get_dimension_health_details_aggregates_counts_and_buckets(self):
+        from app.services.strategy.health_calculator import get_dimension_health_details
+
+        db = MagicMock()
+
+        def make_query(*, count_value=None, all_value=None):
+            q = MagicMock()
+            q.filter.return_value = q
+            q.join.return_value = q
+            q.count.return_value = count_value
+            q.all.return_value = all_value if all_value is not None else []
+            return q
+
+        financial_kpis = [MagicMock(id=1), MagicMock(id=2), MagicMock(id=3)]
+
+        db.query.side_effect = [
+            make_query(count_value=2),
+            make_query(count_value=3),
+            make_query(all_value=financial_kpis),
+            make_query(count_value=0),
+            make_query(count_value=0),
+            make_query(all_value=[]),
+            make_query(count_value=0),
+            make_query(count_value=0),
+            make_query(all_value=[]),
+            make_query(count_value=0),
+            make_query(count_value=0),
+            make_query(all_value=[]),
+        ]
+
+        health_side_effect = [
+            {"score": 82, "level": "GOOD"},
+            {"score": None, "level": None},
+            {"score": None, "level": None},
+            {"score": None, "level": None},
+        ]
+
+        def kpi_health_side_effect(_db, kpi_id):
+            mapping = {
+                1: {"completion_rate": 90},
+                2: {"completion_rate": 60},
+                3: {"completion_rate": 40},
+            }
+            return mapping[kpi_id]
+
+        with patch(
+            "app.services.strategy.health_calculator.calculate_dimension_health",
+            side_effect=health_side_effect,
+        ), patch(
+            "app.services.strategy.health_calculator.calculate_kpi_health",
+            side_effect=kpi_health_side_effect,
+        ):
+            result = get_dimension_health_details(db, strategy_id=1)
+
+        assert len(result) == 4
+        financial = result[0]
+        assert financial["dimension"] == "FINANCIAL"
+        assert financial["score"] == 82
+        assert financial["health_level"] == "GOOD"
+        assert financial["csf_count"] == 2
+        assert financial["kpi_count"] == 3
+        assert financial["kpi_on_track"] == 1
+        assert financial["kpi_at_risk"] == 1
+        assert financial["kpi_off_track"] == 1
+        assert financial["kpi_completion_rate"] == pytest.approx(33.3333333333)

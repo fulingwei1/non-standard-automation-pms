@@ -49,6 +49,7 @@ class TestProjectMemberModel:
 
         with pytest.raises(IntegrityError):
             db_session.commit()
+        db_session.rollback()
 
     def test_project_member_relationships(self, db_session, sample_project, sample_user):
         """测试项目成员关系"""
@@ -157,8 +158,8 @@ class TestProjectMemberModel:
         db_session.add(member)
         db_session.commit()
 
-        assert member.allocation_pct is None or member.allocation_pct == Decimal("0")
-        assert member.is_active in [True, None]  # 根据实际模型定义
+        assert member.allocation_pct == Decimal("100.00")
+        assert member.is_active is True
 
     def test_multiple_members_same_project(self, db_session, sample_project):
         """测试同一项目多个成员"""

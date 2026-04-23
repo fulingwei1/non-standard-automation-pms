@@ -19,6 +19,9 @@ from app.services.dashboard.dashboard_adapter import DashboardAdapter, register_
 class StrategyDashboardAdapter(DashboardAdapter):
     """战略管理工作台适配器"""
 
+    def __init__(self, db=None, current_user=None):
+        super().__init__(db, current_user)
+
     @property
     def module_id(self) -> str:
         return "strategy"

@@ -35,7 +35,8 @@ except ImportError:
 class PDFExportService:
     """PDF 导出服务类"""
 
-    def __init__(self):
+    def __init__(self, db=None):
+        self.db = db
         if not PDF_AVAILABLE:
             raise ImportError("PDF处理库未安装，请安装reportlab: pip install reportlab")
 

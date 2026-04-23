@@ -55,6 +55,7 @@ class TestProjectModel:
 
         with pytest.raises(IntegrityError):
             db_session.commit()
+        db_session.rollback()
 
     def test_project_customer_relationship(self, db_session, sample_project):
         """测试项目-客户关系"""

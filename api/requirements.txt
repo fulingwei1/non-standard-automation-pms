@@ -43,6 +43,7 @@ mangum==0.17.0
 
 # 缺失依赖修复 (2026-02-26)
 requests>=2.31.0
+chardet<6
 pyotp>=2.9.0
 qrcode>=7.4.2
 python-pptx>=0.6.21

@@ -30,6 +30,10 @@ class ChangeImpactAIService:
     def __init__(self, db: Session):
         self.db = db
 
+    async def analyze_impact(self, *args, **kwargs):
+        """旧接口兼容。"""
+        return await self.analyze_change_impact(*args, **kwargs)
+
     async def analyze_change_impact(
         self, change_request_id: int, user_id: int
     ) -> ChangeImpactAnalysis:

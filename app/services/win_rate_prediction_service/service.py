@@ -36,6 +36,14 @@ class WinRatePredictionService:
             return await value
         return value
 
+    async def _call_maybe_await(self, func, *args, **kwargs) -> Any:
+        """兼容真实 AsyncSession 与测试里的 AsyncMock 方法。"""
+
+        result = func(*args, **kwargs)
+        if inspect.isawaitable(result):
+            return await result
+        return result
+
     async def predict_win_rate(
         self, presale_ticket_id: int, ticket_data: Dict[str, Any], created_by: int
     ) -> PresaleAIWinRate:
@@ -71,7 +79,7 @@ class WinRatePredictionService:
                 created_by=created_by,
             )
 
-            self.db.add(prediction)
+            await self._call_maybe_await(self.db.add, prediction)
             await self.db.flush()
 
             # 4. 创建历史记录用于后续模型训练
@@ -83,7 +91,7 @@ class WinRatePredictionService:
                 features=ticket_data,
             )
 
-            self.db.add(history)
+            await self._call_maybe_await(self.db.add, history)
             await self.db.commit()
             await self.db.refresh(prediction)
 

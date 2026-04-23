@@ -22,6 +22,7 @@ from . import (
     delay_analysis,
     disputes,
     expenses,
+    follow_up_reminders,
     health,
     information_gap,
     invoices,
@@ -80,6 +81,7 @@ router.include_router(payments.router, tags=["sales-payments"])
 router.include_router(statistics.router, tags=["sales-statistics"])
 router.include_router(loss_analysis.router, tags=["sales-loss-analysis"])
 router.include_router(expenses.router, tags=["sales-expenses"])
+router.include_router(follow_up_reminders.router, tags=["sales-follow-up-reminders"])
 router.include_router(assessments.router, tags=["sales-assessments"])
 router.include_router(disputes.router, tags=["sales-disputes"])
 router.include_router(targets.router, tags=["sales-targets"])

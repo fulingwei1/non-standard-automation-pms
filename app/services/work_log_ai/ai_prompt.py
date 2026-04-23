@@ -13,6 +13,9 @@ from typing import Any, Dict, List
 class AIPromptMixin:
     """AI提示词构建功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def _build_ai_prompt(
         self, content: str, user_projects: List[Dict[str, Any]], work_date: date
     ) -> str:

@@ -5,6 +5,7 @@ AI资源优化器测试
 
 import json
 from datetime import datetime
+from uuid import uuid4
 
 import pytest
 from sqlalchemy.orm import Session
@@ -14,11 +15,15 @@ from app.models.ai_planning import AIResourceAllocation, AIWbsSuggestion
 from app.services.ai_planning import AIResourceOptimizer
 
 
+def _unique_code(prefix: str) -> str:
+    return f"{prefix}_{uuid4().hex[:8].upper()}"
+
+
 @pytest.fixture
 def sample_project(db: Session):
     """创建测试项目"""
     project = Project(
-        project_code="RES_TEST_001",
+        project_code=_unique_code("RES_TEST"),
         project_name="资源测试项目",
         project_type="WEB_DEV",
         status="ST01",
@@ -32,15 +37,27 @@ def sample_project(db: Session):
 def sample_users(db: Session):
     """创建测试用户"""
     users = [
-        User(username="dev1", real_name="开发1", position="高级开发", is_active=True,
-        password_hash="test_hash_123"
-    ),
-        User(username="dev2", real_name="开发2", position="中级开发", is_active=True,
-        password_hash="test_hash_123"
-    ),
-        User(username="test1", real_name="测试1", position="测试工程师", is_active=True,
-        password_hash="test_hash_123"
-    ),
+        User(
+            username=_unique_code("dev1").lower(),
+            real_name="开发1",
+            position="高级开发",
+            is_active=True,
+            password_hash="test_hash_123",
+        ),
+        User(
+            username=_unique_code("dev2").lower(),
+            real_name="开发2",
+            position="中级开发",
+            is_active=True,
+            password_hash="test_hash_123",
+        ),
+        User(
+            username=_unique_code("test1").lower(),
+            real_name="测试1",
+            position="测试工程师",
+            is_active=True,
+            password_hash="test_hash_123",
+        ),
     ]
     db.add_all(users)
     db.commit()
@@ -51,7 +68,7 @@ def sample_users(db: Session):
 def sample_wbs(db: Session, sample_project):
     """创建测试WBS任务"""
     wbs = AIWbsSuggestion(
-        suggestion_code="WBS_RES_001",
+        suggestion_code=_unique_code("WBS_RES"),
         project_id=sample_project.id,
         wbs_level=2,
         wbs_code="1.1",
@@ -108,7 +125,7 @@ class TestAIResourceOptimizer:
         user = sample_users[0]
         for i in range(5):
             task = TaskUnified(
-                task_code=f"TASK_{i:03d}",
+                task_code=_unique_code(f"TASK_{i:03d}"),
                 title=f"测试任务{i}",
                 task_type="DEVELOPMENT",
                 assignee_id=user.id,
@@ -153,12 +170,12 @@ class TestAIResourceOptimizer:
         user = sample_users[0]
         for i in range(3):
             task = TaskUnified(
-                task_code=f"COMP_TASK_{i:03d}",
+                task_code=_unique_code(f"COMP_TASK_{i:03d}"),
                 title=f"已完成任务{i}",
                 task_type="DEVELOPMENT",
                 assignee_id=user.id,
                 status="COMPLETED",
-                planned_end_date=datetime(2025, 1, 31).date(),
+                plan_end_date=datetime(2025, 1, 31).date(),
                 actual_end_date=datetime(2025, 1, 30).date(),
             )
             db.add(task)

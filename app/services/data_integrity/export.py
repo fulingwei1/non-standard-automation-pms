@@ -19,6 +19,13 @@ from app.services.import_export_engine import ExcelExportEngine
 class ExportMixin:
     """导出功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
+    def generate_data_quality_report(self, period_id: int, department_id: Optional[int] = None):
+        """占位方法，便于旧单测 patch。"""
+        raise NotImplementedError
+
     def export_data_quality_report(
         self, period_id: int, department_id: Optional[int] = None, format: str = "json"
     ) -> Dict[str, Any]:

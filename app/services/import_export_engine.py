@@ -16,6 +16,9 @@ from app.services.excel_export_service import ExcelExportService
 class ExcelExportEngine:
     """Excel 导出引擎（封装 ExcelExportService）"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def _get_exporter() -> ExcelExportService:
         try:

@@ -48,6 +48,17 @@ class Material(Base, TimestampMixin):
 
     __tablename__ = "materials"
 
+    def __init__(self, **kwargs):
+        if "unit_price" in kwargs and "standard_price" not in kwargs:
+            kwargs["standard_price"] = kwargs.pop("unit_price")
+        if "stock_quantity" in kwargs and "current_stock" not in kwargs:
+            kwargs["current_stock"] = kwargs.pop("stock_quantity")
+        if "min_stock" in kwargs and "safety_stock" not in kwargs:
+            kwargs["safety_stock"] = kwargs.pop("min_stock")
+        if "description" in kwargs and "remark" not in kwargs:
+            kwargs["remark"] = kwargs.pop("description")
+        super().__init__(**kwargs)
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     material_code = Column(String(50), unique=True, nullable=False, comment="物料编码")
     material_name = Column(String(200), nullable=False, comment="物料名称")
@@ -96,6 +107,41 @@ class Material(Base, TimestampMixin):
 
     def __repr__(self):
         return f"<Material {self.material_code}>"
+
+    # ------------------------------------------------------------------
+    # Legacy compatibility aliases
+    # ------------------------------------------------------------------
+    @property
+    def unit_price(self):
+        return self.standard_price
+
+    @unit_price.setter
+    def unit_price(self, value):
+        self.standard_price = value
+
+    @property
+    def stock_quantity(self):
+        return self.current_stock
+
+    @stock_quantity.setter
+    def stock_quantity(self, value):
+        self.current_stock = value
+
+    @property
+    def min_stock(self):
+        return self.safety_stock
+
+    @min_stock.setter
+    def min_stock(self, value):
+        self.safety_stock = value
+
+    @property
+    def description(self):
+        return self.remark
+
+    @description.setter
+    def description(self, value):
+        self.remark = value
 
 
 class MaterialSupplier(Base, TimestampMixin):

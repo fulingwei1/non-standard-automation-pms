@@ -31,6 +31,15 @@ class ReminderType(str, Enum):
     QUOTE_EXPIRING = "quote_expiring"       # 报价即将过期
     HIGH_VALUE_IDLE = "high_value_idle"     # 高价值客户闲置
 
+    @classmethod
+    def _missing_(cls, value):
+        member = cls.OVERDUE_ACTION
+        try:
+            member.db = value
+        except Exception:
+            pass
+        return member
+
 
 class ReminderPriority(str, Enum):
     """提醒优先级"""

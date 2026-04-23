@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 class UserImportService:
     """用户批量导入服务"""
 
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
     # 支持的字段映射
     FIELD_MAPPING = {
         "用户名": "username",

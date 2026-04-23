@@ -66,12 +66,13 @@ class SalesScopeContext:
         is_finance_role:     是否为财务角色（Invoice 等特殊权限）
     """
 
-    scope_type: str
-    user_id: int
+    scope_type: str = ScopeType.OWN.value
+    user_id: int = 0
     resource_type: str = RT_SALES
     accessible_dept_ids: Optional[List[int]] = None
     accessible_user_ids: Set[int] = field(default_factory=set)
     is_finance_role: bool = False
+    db: Optional[Session] = None
 
 
 # ---------------------------------------------------------------------------

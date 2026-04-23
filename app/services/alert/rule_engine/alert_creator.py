@@ -74,7 +74,6 @@ class AlertCreator(ConditionEvaluator):
                 AlertRecord.status.in_(["PENDING", "ACKNOWLEDGED"]),
                 AlertRecord.created_at >= time_window,
             )
-            .order_by(AlertRecord.created_at.desc())
             .first()
         )
 

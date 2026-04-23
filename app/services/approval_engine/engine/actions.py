@@ -20,6 +20,9 @@ from .core import ApprovalEngineCore
 class ApprovalActionsMixin:
     """审批其他操作功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def add_cc(
         self: ApprovalEngineCore,
         instance_id: int,

@@ -316,7 +316,6 @@ class TestApprovalTaskAssignment:
             assignee_name=approver.real_name,
             assignee_type="NORMAL",
             status="PENDING",
-            is_active=True,
         )
         db.add(task)
         db.commit()
@@ -359,13 +358,12 @@ class TestApprovalApprove:
             assignee_name=approver.real_name,
             assignee_type="NORMAL",
             status="PENDING",
-            is_active=True,
         )
         db.add(task)
         db.flush()
 
         # 审批通过
-        task.status = "APPROVED"
+        task.status = "COMPLETED"
         task.action = "APPROVE"
         task.completed_at = datetime.now()
         task.comment = "符合立项条件，同意"
@@ -425,13 +423,12 @@ class TestApprovalApprove:
             assignee_name=approver.real_name,
             assignee_type="NORMAL",
             status="PENDING",
-            is_active=True,
         )
         db.add(task)
         db.flush()
 
         # 驳回
-        task.status = "REJECTED"
+        task.status = "COMPLETED"
         task.action = "REJECT"
         task.completed_at = datetime.now()
         task.comment = "资料不完整，请补充"
@@ -588,14 +585,14 @@ class TestApprovalMultiStep:
             assignee_name=approver1.real_name,
             assignee_type="NORMAL",
             status="PENDING",
-            is_active=True,
         )
         db.add(task1)
         db.flush()
 
         # 一级审批通过
-        task1.status = "APPROVED"
-        task1.is_active = False
+        task1.status = "COMPLETED"
+        task1.action = "APPROVE"
+        task1.completed_at = datetime.now()
         ApprovalActionLog(
             instance_id=instance.id,
             task_id=task1.id,
@@ -618,13 +615,14 @@ class TestApprovalMultiStep:
             assignee_name=approver2.real_name,
             assignee_type="NORMAL",
             status="PENDING",
-            is_active=True,
         )
         db.add(task2)
         db.flush()
 
         # 二级审批通过
-        task2.status = "APPROVED"
+        task2.status = "COMPLETED"
+        task2.action = "APPROVE"
+        task2.completed_at = datetime.now()
         instance.status = "APPROVED"
         db.commit()
 
@@ -637,4 +635,5 @@ class TestApprovalMultiStep:
 
         tasks = db.query(AT).filter_by(instance_id=instance.id).all()
         assert len(tasks) == 2
-        assert all(t.status == "APPROVED" for t in tasks)
+        assert all(t.status == "COMPLETED" for t in tasks)
+        assert all(t.action == "APPROVE" for t in tasks)

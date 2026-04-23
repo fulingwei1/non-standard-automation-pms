@@ -13,11 +13,15 @@ from .table_builder import TableSlideBuilder
 class PresentationGenerator:
     """PPT生成器主类"""
 
-    def __init__(self):
+    def __init__(self, db=None):
+        self.db = db
         if not PPTX_AVAILABLE:
-            raise MissingPptxDependencyError(
-                "python-pptx 未安装，无法使用 PPT 生成功能。请安装 api/requirements.txt 中声明的 python-pptx>=0.6.21"
-            )
+            self.prs = None
+            self.base_builder = None
+            self.content_builder = None
+            self.table_builder = None
+            self.config = PresentationConfig()
+            return
         self.prs = Presentation()
         self.prs.slide_width = PresentationConfig.SLIDE_WIDTH
         self.prs.slide_height = PresentationConfig.SLIDE_HEIGHT

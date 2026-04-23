@@ -21,6 +21,10 @@ logger = logging.getLogger(__name__)
 class SendNotificationMixin:
     """发送通知 Mixin（使用统一通知服务）"""
 
+    def __init__(self, db=None):
+        self.db = db
+        self._notification_dispatcher = None
+
     def _get_dispatcher(self):
         """获取通知调度器实例"""
         if not hasattr(self, "_notification_dispatcher") or self._notification_dispatcher is None:

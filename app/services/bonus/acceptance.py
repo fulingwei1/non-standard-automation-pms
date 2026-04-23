@@ -10,6 +10,12 @@ from sqlalchemy.orm import Session
 
 from app.models.project import Project
 from app.services.bonus.base import BonusCalculatorBase
+from app.services.bonus.acceptance_bonus_service import (
+    calculate_presale_bonus,
+    calculate_project_bonus,
+    calculate_sales_bonus,
+    get_active_rules,
+)
 
 
 class AcceptanceBonusTrigger(BonusCalculatorBase):
@@ -36,13 +42,6 @@ class AcceptanceBonusTrigger(BonusCalculatorBase):
         Returns:
             List: 团队奖金分配记录列表
         """
-        from app.services.bonus.acceptance_bonus_service import (
-            calculate_presale_bonus,
-            calculate_project_bonus,
-            calculate_sales_bonus,
-            get_active_rules,
-        )
-
         allocations = []
 
         # 1. 计算销售奖金总额（团队奖金）

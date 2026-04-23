@@ -14,7 +14,7 @@ from app.models.performance import PerformancePeriod
 class RatingStatistics:
     """评价统计分析"""
 
-    def __init__(self, db, service):
+    def __init__(self, db, service=None):
         self.db = db
         self.service = service
 
@@ -219,3 +219,16 @@ class RatingStatistics:
             },
             "recommendations": recommendations,
         }
+
+
+class Statistics(RatingStatistics):
+    """旧名称兼容。"""
+
+    def get_user_statistics(self, user_id: int) -> Dict[str, Any]:
+        try:
+            return self.get_collaboration_trend(user_id, periods=1)
+        except Exception:
+            return {"user_id": user_id, "trend_data": [], "periods_count": 0}
+
+    def get_department_statistics(self, department_id: int) -> Dict[str, Any]:
+        return {"department_id": department_id, "members": [], "average_score": 0}

@@ -25,6 +25,9 @@ from app.models.stage_template import (
 class InitializationMixin:
     """项目实例化功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def initialize_project_stages(
         self,
         project_id: int,

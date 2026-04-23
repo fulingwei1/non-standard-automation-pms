@@ -14,6 +14,9 @@ from app.models.stage_template import StageDefinition, StageTemplate
 class StageManagementMixin:
     """阶段管理功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def add_stage(
         self,
         template_id: int,

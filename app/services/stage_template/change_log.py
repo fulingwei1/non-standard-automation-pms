@@ -12,6 +12,9 @@ from app.models.stage_template import StageTemplate, StageTemplateChangeLog
 class ChangeLogMixin:
     """变更历史功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def record_change(
         self,
         template_id: int,

@@ -233,22 +233,45 @@ class CalendarYearResponse(BaseModel):
 class RoutineManagementCycleItem(BaseModel):
     """例行管理周期项"""
 
-    event_type: str
-    event_type_name: str
+    cycle_type: str = ""
+    cycle_name: str = ""
     frequency: str  # MONTHLY/QUARTERLY/YEARLY
-    typical_timing: str  # e.g., "每月第一周"
+    description: str = ""
+    typical_duration: int = 0
     participants: List[str] = []
+    event_type: str = ""
+    event_type_name: str = ""
+    typical_timing: str = ""  # e.g., "每月第一周"
     key_activities: List[str] = []
+
+    def model_post_init(self, __context) -> None:
+        if not self.event_type and self.cycle_type:
+            self.event_type = self.cycle_type
+        if not self.event_type_name and self.cycle_name:
+            self.event_type_name = self.cycle_name
+        if not self.cycle_type and self.event_type:
+            self.cycle_type = self.event_type
+        if not self.cycle_name and self.event_type_name:
+            self.cycle_name = self.event_type_name
 
 
 class RoutineManagementCycleResponse(BaseModel):
     """例行管理周期响应"""
 
     strategy_id: int
-    year: int
+    year: int = 0
+    cycles: List[RoutineManagementCycleItem] = []
     annual_events: List[RoutineManagementCycleItem] = []
     quarterly_events: List[RoutineManagementCycleItem] = []
     monthly_events: List[RoutineManagementCycleItem] = []
+
+    def model_post_init(self, __context) -> None:
+        if not self.cycles:
+            self.cycles = [
+                *self.annual_events,
+                *self.quarterly_events,
+                *self.monthly_events,
+            ]
 
     class Config:
         from_attributes = True

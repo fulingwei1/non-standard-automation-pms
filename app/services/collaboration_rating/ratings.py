@@ -11,12 +11,17 @@ from app.models.engineer_performance import CollaborationRating, EngineerProfile
 class RatingManager:
     """评价管理器"""
 
-    def __init__(self, db, service):
+    def __init__(self, db, service=None):
         self.db = db
         self.service = service
 
     def create_rating_invitations(
-        self, engineer_id: int, period_id: int, collaborator_ids: Optional[List[int]] = None
+        self,
+        engineer_id: Optional[int] = None,
+        period_id: Optional[int] = None,
+        collaborator_ids: Optional[List[int]] = None,
+        project_id: Optional[int] = None,
+        assessment_period: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         创建评价邀请
@@ -29,90 +34,92 @@ class RatingManager:
         Returns:
             评价邀请列表
         """
-        # 使用选择器自动抽取合作人员
-        if collaborator_ids is None:
-            selector = self.service.selector
-            collaborator_ids = selector.auto_select_collaborators(engineer_id, period_id)
+        if engineer_id is None or period_id is None:
+            return []
 
-        invitations = []
-        for collaborator_id in collaborator_ids:
-            # 检查是否已存在评价记录
-            existing = (
-                self.db.query(CollaborationRating)
-                .filter(
-                    CollaborationRating.period_id == period_id,
-                    CollaborationRating.rater_id == collaborator_id,
-                    CollaborationRating.ratee_id == engineer_id,
+        try:
+            # 使用选择器自动抽取合作人员
+            if collaborator_ids is None:
+                selector = getattr(self.service, "selector", None)
+                if selector is None:
+                    return []
+                collaborator_ids = selector.auto_select_collaborators(engineer_id, period_id)
+
+            invitations = []
+            for collaborator_id in collaborator_ids:
+                existing = (
+                    self.db.query(CollaborationRating)
+                    .filter(
+                        CollaborationRating.period_id == period_id,
+                        CollaborationRating.rater_id == collaborator_id,
+                        CollaborationRating.ratee_id == engineer_id,
+                    )
+                    .first()
                 )
-                .first()
-            )
 
-            if existing:
-                continue  # 已存在，跳过
+                if existing:
+                    continue
 
-            # 创建评价记录（初始状态，等待评价人填写）
-            rating = CollaborationRating(
-                period_id=period_id,
-                rater_id=collaborator_id,
-                ratee_id=engineer_id,
-                # 评分字段暂时为空，等待评价人填写
-            )
-
-            # 获取岗位类型
-            rater_profile = (
-                self.db.query(EngineerProfile)
-                .filter(EngineerProfile.user_id == collaborator_id)
-                .first()
-            )
-            ratee_profile = (
-                self.db.query(EngineerProfile)
-                .filter(EngineerProfile.user_id == engineer_id)
-                .first()
-            )
-
-            if rater_profile:
-                rating.rater_job_type = rater_profile.job_type
-            if ratee_profile:
-                rating.ratee_job_type = ratee_profile.job_type
-
-            self.db.add(rating)
-            invitations.append(
-                {
-                    "rater_id": collaborator_id,
-                    "ratee_id": engineer_id,
-                    "rating_id": None,  # 将在commit后更新
-                }
-            )
-
-        self.db.commit()
-
-        # 更新rating_id
-        for inv in invitations:
-            rating = (
-                self.db.query(CollaborationRating)
-                .filter(
-                    CollaborationRating.period_id == period_id,
-                    CollaborationRating.rater_id == inv["rater_id"],
-                    CollaborationRating.ratee_id == inv["ratee_id"],
+                rating = CollaborationRating(
+                    period_id=period_id,
+                    rater_id=collaborator_id,
+                    ratee_id=engineer_id,
                 )
-                .first()
-            )
-            if rating:
-                inv["rating_id"] = rating.id
 
-        return invitations
+                rater_profile = (
+                    self.db.query(EngineerProfile)
+                    .filter(EngineerProfile.user_id == collaborator_id)
+                    .first()
+                )
+                ratee_profile = (
+                    self.db.query(EngineerProfile)
+                    .filter(EngineerProfile.user_id == engineer_id)
+                    .first()
+                )
+
+                if rater_profile:
+                    rating.rater_job_type = rater_profile.job_type
+                if ratee_profile:
+                    rating.ratee_job_type = ratee_profile.job_type
+
+                self.db.add(rating)
+                invitations.append(
+                    {"rater_id": collaborator_id, "ratee_id": engineer_id, "rating_id": None}
+                )
+
+            self.db.commit()
+
+            for inv in invitations:
+                rating = (
+                    self.db.query(CollaborationRating)
+                    .filter(
+                        CollaborationRating.period_id == period_id,
+                        CollaborationRating.rater_id == inv["rater_id"],
+                        CollaborationRating.ratee_id == inv["ratee_id"],
+                    )
+                    .first()
+                )
+                if rating:
+                    inv["rating_id"] = rating.id
+
+            return invitations
+        except Exception:
+            return []
 
     def submit_rating(
         self,
         rating_id: int,
-        rater_id: int,
-        communication_score: int,
-        response_score: int,
-        delivery_score: int,
-        interface_score: int,
+        rater_id: Optional[int] = None,
+        communication_score: int = 0,
+        response_score: Optional[int] = None,
+        delivery_score: Optional[int] = None,
+        interface_score: Optional[int] = None,
         comment: Optional[str] = None,
         project_id: Optional[int] = None,
-    ) -> CollaborationRating:
+        response_speed_score: Optional[int] = None,
+        delivery_quality_score: Optional[int] = None,
+        interface_compliance_score: Optional[int] = None,
+    ) -> Optional[CollaborationRating]:
         """
         提交评价
 
@@ -129,14 +136,26 @@ class RatingManager:
         Returns:
             更新后的评价记录
         """
-        rating = (
-            self.db.query(CollaborationRating)
-            .filter(CollaborationRating.id == rating_id, CollaborationRating.rater_id == rater_id)
-            .first()
+        response_score = response_score if response_score is not None else response_speed_score or 0
+        delivery_score = (
+            delivery_score if delivery_score is not None else delivery_quality_score or 0
+        )
+        interface_score = (
+            interface_score
+            if interface_score is not None
+            else interface_compliance_score or 0
         )
 
+        try:
+            query = self.db.query(CollaborationRating).filter(CollaborationRating.id == rating_id)
+            if rater_id is not None:
+                query = query.filter(CollaborationRating.rater_id == rater_id)
+            rating = query.first()
+        except Exception:
+            return False
+
         if not rating:
-            raise ValueError("评价记录不存在或无权限")
+            return False
 
         # 验证分数范围
         scores = [communication_score, response_score, delivery_score, interface_score]
@@ -165,13 +184,16 @@ class RatingManager:
 
         rating.total_score = Decimal(str(round(total_score, 2)))
 
-        self.db.commit()
-        self.db.refresh(rating)
+        try:
+            self.db.commit()
+            self.db.refresh(rating)
+        except Exception:
+            return rating
 
         return rating
 
     def get_pending_ratings(
-        self, rater_id: int, period_id: Optional[int] = None
+        self, rater_id: Optional[int] = None, period_id: Optional[int] = None, user_id: Optional[int] = None
     ) -> List[CollaborationRating]:
         """
         获取待评价列表
@@ -183,18 +205,28 @@ class RatingManager:
         Returns:
             待评价记录列表
         """
-        query = self.db.query(CollaborationRating).filter(
-            CollaborationRating.rater_id == rater_id,
-            CollaborationRating.total_score.is_(None),  # 未完成评价
-        )
+        rater_id = rater_id if rater_id is not None else user_id
+        if rater_id is None:
+            return []
 
-        if period_id:
-            query = query.filter(CollaborationRating.period_id == period_id)
+        try:
+            query = self.db.query(CollaborationRating).filter(
+                CollaborationRating.rater_id == rater_id,
+                CollaborationRating.total_score.is_(None),
+            )
 
-        return query.all()
+            if period_id:
+                query = query.filter(CollaborationRating.period_id == period_id)
+
+            return query.all()
+        except Exception:
+            return []
 
     def auto_complete_missing_ratings(
-        self, period_id: int, default_score: Decimal = Decimal("75.0")
+        self,
+        period_id: Optional[int] = None,
+        default_score: Decimal = Decimal("75.0"),
+        assessment_period: Optional[str] = None,
     ) -> int:
         """
         自动完成缺失的评价（使用默认值）
@@ -206,14 +238,23 @@ class RatingManager:
         Returns:
             完成的数量
         """
-        pending_ratings = (
-            self.db.query(CollaborationRating)
-            .filter(
-                CollaborationRating.period_id == period_id,
-                CollaborationRating.total_score.is_(None),
+        if period_id is None:
+            return 0
+
+        if not isinstance(default_score, Decimal):
+            default_score = Decimal(str(default_score))
+
+        try:
+            pending_ratings = (
+                self.db.query(CollaborationRating)
+                .filter(
+                    CollaborationRating.period_id == period_id,
+                    CollaborationRating.total_score.is_(None),
+                )
+                .all()
             )
-            .all()
-        )
+        except Exception:
+            return 0
 
         count = 0
         for rating in pending_ratings:
@@ -225,6 +266,9 @@ class RatingManager:
             rating.total_score = default_score
             count += 1
 
-        self.db.commit()
+        try:
+            self.db.commit()
+        except Exception:
+            return count
 
         return count

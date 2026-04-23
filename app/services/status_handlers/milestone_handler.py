@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 class MilestoneStatusHandler:
     """处理里程碑状态变更相关的逻辑"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def handle_milestone_completed(
         db: Session,

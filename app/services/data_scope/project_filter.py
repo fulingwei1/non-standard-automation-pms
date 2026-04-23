@@ -21,6 +21,9 @@ from .user_scope import UserScopeService
 class ProjectFilterService:
     """项目过滤服务"""
 
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
     @staticmethod
     def get_accessible_project_ids(
         db: Session,

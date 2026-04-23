@@ -19,6 +19,9 @@ from app.models.work_log import WorkLog
 class WasteCalculationMixin:
     """浪费计算功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def calculate_waste_by_period(self, start_date: date, end_date: date) -> Dict[str, Any]:
         """计算指定周期内的资源浪费
 

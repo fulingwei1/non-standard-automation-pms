@@ -26,6 +26,10 @@ def _auth_headers(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
+def _service_tickets_url() -> str:
+    return f"{settings.API_V1_PREFIX}/tickets"
+
+
 def _get_first_project(client: TestClient, token: str) -> dict:
     """获取第一个可用的项目"""
     headers = _auth_headers(token)
@@ -68,7 +72,7 @@ class TestServiceTickets:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/service-tickets/",
+            _service_tickets_url(),
             params={"page": 1, "page_size": 10},
             headers=headers,
         )
@@ -96,7 +100,6 @@ class TestServiceTickets:
             pytest.skip("No project or customer available for testing")
 
         ticket_data = {
-            "ticket_no": f"TKT-{uuid.uuid4().hex[:8].upper()}",
             "project_id": project["id"],
             "customer_id": customer["id"],
             "problem_type": "SOFTWARE",
@@ -107,7 +110,7 @@ class TestServiceTickets:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/service-tickets/",
+            _service_tickets_url(),
             json=ticket_data,
             headers=headers,
         )
@@ -124,7 +127,7 @@ class TestServiceTickets:
 
         assert response.status_code == 201, response.text
         created_ticket = response.json()
-        assert created_ticket["ticket_no"] == ticket_data["ticket_no"]
+        assert created_ticket["ticket_no"]
         assert created_ticket["problem_type"] == ticket_data["problem_type"]
 
     def test_get_ticket_by_id(self, client: TestClient, admin_token: str, db_session):
@@ -143,7 +146,6 @@ class TestServiceTickets:
 
         # 创建测试工单
         ticket_data = {
-            "ticket_no": f"TKT-{uuid.uuid4().hex[:8].upper()}",
             "project_id": project["id"],
             "customer_id": customer["id"],
             "problem_type": "ELECTRICAL",
@@ -154,7 +156,7 @@ class TestServiceTickets:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/service-tickets/",
+            _service_tickets_url(),
             json=ticket_data,
             headers=headers,
         )
@@ -166,14 +168,14 @@ class TestServiceTickets:
 
         # 获取工单详情
         get_response = client.get(
-            f"{settings.API_V1_PREFIX}/service-tickets/{ticket_id}",
+            f"{_service_tickets_url()}/{ticket_id}",
             headers=headers,
         )
 
         assert get_response.status_code == 200
         ticket = get_response.json()
         assert ticket["id"] == ticket_id
-        assert ticket["ticket_no"] == ticket_data["ticket_no"]
+        assert ticket["ticket_no"]
 
     def test_update_ticket(self, client: TestClient, admin_token: str, db_session):
         """测试更新工单"""
@@ -190,7 +192,6 @@ class TestServiceTickets:
             pytest.skip("No project or customer available")
 
         ticket_data = {
-            "ticket_no": f"TKT-{uuid.uuid4().hex[:8].upper()}",
             "project_id": project["id"],
             "customer_id": customer["id"],
             "problem_type": "MECHANICAL",
@@ -201,7 +202,7 @@ class TestServiceTickets:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/service-tickets/",
+            _service_tickets_url(),
             json=ticket_data,
             headers=headers,
         )
@@ -211,16 +212,9 @@ class TestServiceTickets:
 
         ticket_id = create_response.json()["id"]
 
-        # 更新工单
-        update_data = {
-            "status": "IN_PROGRESS",
-            "assigned_to_name": "张工",
-            "urgency": "HIGH",
-        }
-
         update_response = client.put(
-            f"{settings.API_V1_PREFIX}/service-tickets/{ticket_id}",
-            json=update_data,
+            f"{_service_tickets_url()}/{ticket_id}/status",
+            params={"status": "IN_PROGRESS"},
             headers=headers,
         )
 
@@ -232,7 +226,7 @@ class TestServiceTickets:
         assert update_response.status_code == 200, update_response.text
         updated_ticket = update_response.json()
         assert updated_ticket["status"] == "IN_PROGRESS"
-        assert updated_ticket["urgency"] == "HIGH"
+        assert updated_ticket["urgency"] == ticket_data["urgency"]
 
     def test_close_ticket(self, client: TestClient, admin_token: str, db_session):
         """测试关闭工单"""
@@ -249,7 +243,6 @@ class TestServiceTickets:
             pytest.skip("No project or customer available")
 
         ticket_data = {
-            "ticket_no": f"TKT-{uuid.uuid4().hex[:8].upper()}",
             "project_id": project["id"],
             "customer_id": customer["id"],
             "problem_type": "OPERATION",
@@ -257,11 +250,10 @@ class TestServiceTickets:
             "urgency": "MEDIUM",
             "reported_by": "测试员",
             "reported_time": datetime.now().isoformat(),
-            "status": "RESOLVED",
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/service-tickets/",
+            _service_tickets_url(),
             json=ticket_data,
             headers=headers,
         )
@@ -273,12 +265,13 @@ class TestServiceTickets:
 
         # 关闭工单
         close_data = {
-            "status": "CLOSED",
-            "resolution_notes": "问题已解决，客户确认",
+            "solution": "问题已解决，客户确认",
+            "root_cause": "兼容测试根因",
+            "preventive_action": "已补充防呆措施",
         }
 
-        close_response = client.patch(
-            f"{settings.API_V1_PREFIX}/service-tickets/{ticket_id}/close",
+        close_response = client.put(
+            f"{_service_tickets_url()}/{ticket_id}/close",
             json=close_data,
             headers=headers,
         )
@@ -288,19 +281,9 @@ class TestServiceTickets:
         if close_response.status_code == 403:
             pytest.skip("User does not have permission")
 
-        # 如果 close 端点不存在，尝试用 PUT 更新状态
-        if close_response.status_code != 200:
-            update_response = client.put(
-                f"{settings.API_V1_PREFIX}/service-tickets/{ticket_id}",
-                json={"status": "CLOSED"},
-                headers=headers,
-            )
-            assert update_response.status_code == 200
-            updated_ticket = update_response.json()
-            assert updated_ticket["status"] == "CLOSED"
-        else:
-            closed_ticket = close_response.json()
-            assert closed_ticket["status"] == "CLOSED"
+        assert close_response.status_code == 200, close_response.text
+        closed_ticket = close_response.json()
+        assert closed_ticket["status"] == "CLOSED"
 
 
 class TestItrTimeline:

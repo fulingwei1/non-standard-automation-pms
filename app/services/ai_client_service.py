@@ -31,7 +31,8 @@ except ImportError:
 class AIClientService:
     """AI客户端服务"""
 
-    def __init__(self):
+    def __init__(self, db=None):
+        self.db = db
         self.openai_api_key = os.getenv("OPENAI_API_KEY", "")
         self.kimi_api_key = os.getenv("KIMI_API_KEY", "")
         self.zhipu_api_key = os.getenv("ZHIPU_API_KEY", "")  # 新增智谱API Key

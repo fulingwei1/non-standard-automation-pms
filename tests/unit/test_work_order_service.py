@@ -234,13 +234,25 @@ class TestWorkOrderService(unittest.TestCase):
 
     # ========== list_work_orders() 测试 ==========
 
-    @patch("app.common.query_filters.apply_pagination")
+    @patch("app.services.production.work_order_service.apply_pagination")
     def test_list_work_orders_no_filters(self, mock_apply_pagination):
         """测试查询工单列表 - 无过滤条件"""
         mock_order1 = MagicMock(spec=WorkOrder)
         mock_order1.id = 1
+        mock_order1.project_id = None
+        mock_order1.machine_id = None
+        mock_order1.workshop_id = None
+        mock_order1.workstation_id = None
+        mock_order1.process_id = None
+        mock_order1.assigned_to = None
         mock_order2 = MagicMock(spec=WorkOrder)
         mock_order2.id = 2
+        mock_order2.project_id = None
+        mock_order2.machine_id = None
+        mock_order2.workshop_id = None
+        mock_order2.workstation_id = None
+        mock_order2.process_id = None
+        mock_order2.assigned_to = None
 
         # Mock查询链
         mock_query = MagicMock()
@@ -272,17 +284,21 @@ class TestWorkOrderService(unittest.TestCase):
         mock_pagination = MockPagination()
 
         # 执行
-        with patch.object(self.service, "build_response", side_effect=lambda x: f"response_{x.id}"):
+        with patch.object(
+            self.service,
+            "build_response",
+            side_effect=lambda x, **kwargs: f"response_{x.id}",
+        ):
             result = self.service.list_work_orders(mock_pagination)
 
         # 验证
-        self.db.query.assert_called_once_with(WorkOrder)
+        self.db.query.assert_any_call(WorkOrder)
         mock_count.assert_called_once()
         # 验证返回结果
         self.assertEqual(result["items"], ["response_1", "response_2"])
         self.assertEqual(result["total"], 2)
 
-    @patch("app.common.query_filters.apply_pagination")
+    @patch("app.services.production.work_order_service.apply_pagination")
     def test_list_work_orders_with_filters(self, mock_apply_pagination):
         """测试查询工单列表 - 带过滤条件"""
         mock_query = MagicMock()
@@ -292,6 +308,12 @@ class TestWorkOrderService(unittest.TestCase):
 
         mock_order = MagicMock(spec=WorkOrder)
         mock_order.id = 1
+        mock_order.project_id = None
+        mock_order.machine_id = None
+        mock_order.workshop_id = None
+        mock_order.workstation_id = None
+        mock_order.process_id = None
+        mock_order.assigned_to = None
         mock_apply_pagination.return_value.all.return_value = [mock_order]
 
         self.db.query.return_value = mock_query
@@ -318,8 +340,8 @@ class TestWorkOrderService(unittest.TestCase):
     # ========== create_work_order() 测试 ==========
 
     @patch("app.api.v1.endpoints.production.utils.generate_work_order_no")
-    @patch("app.utils.db_helpers.get_or_404")
-    @patch("app.utils.db_helpers.save_obj")
+    @patch("app.services.production.work_order_service.get_or_404")
+    @patch("app.services.production.work_order_service.save_obj")
     def test_create_work_order_success(self, mock_save_obj, mock_get_or_404, mock_generate_no):
         """测试创建工单 - 成功"""
         mock_generate_no.return_value = "WO-2024-NEW"
@@ -344,6 +366,8 @@ class TestWorkOrderService(unittest.TestCase):
         mock_order_in.production_plan_id = 30
         mock_order_in.workshop_id = 50
         mock_order_in.workstation_id = 60
+        mock_order_in.plan_start_date = None
+        mock_order_in.plan_end_date = None
         mock_order_in.model_dump.return_value = {
             "task_name": "新任务",
             "task_type": "加工",
@@ -369,7 +393,7 @@ class TestWorkOrderService(unittest.TestCase):
         self.assertEqual(saved_order.created_by, 100)
 
     @patch("app.api.v1.endpoints.production.utils.generate_work_order_no")
-    @patch("app.utils.db_helpers.get_or_404")
+    @patch("app.services.production.work_order_service.get_or_404")
     def test_create_work_order_invalid_project(self, mock_get_or_404, mock_generate_no):
         """测试创建工单 - 项目不存在"""
         # 第一次调用get_or_404就抛出异常（项目不存在）
@@ -381,6 +405,8 @@ class TestWorkOrderService(unittest.TestCase):
         mock_order_in.production_plan_id = None
         mock_order_in.workshop_id = None
         mock_order_in.workstation_id = None
+        mock_order_in.plan_start_date = None
+        mock_order_in.plan_end_date = None
 
         with self.assertRaises(HTTPException) as context:
             self.service.create_work_order(mock_order_in, current_user_id=100)
@@ -391,15 +417,14 @@ class TestWorkOrderService(unittest.TestCase):
         mock_get_or_404.assert_called_once()
 
     @patch("app.api.v1.endpoints.production.utils.generate_work_order_no")
-    @patch("app.utils.db_helpers.get_or_404")
+    @patch("app.services.production.work_order_service.get_or_404")
     def test_create_work_order_workstation_wrong_workshop(self, mock_get_or_404, mock_generate_no):
         """测试创建工单 - 工位不属于该车间"""
+        mock_workstation = MagicMock(spec=Workstation)
+        mock_workstation.workshop_id = 999  # 不匹配
         mock_get_or_404.side_effect = [
-            None,  # project_id is None
-            None,  # machine_id is None
-            None,  # production_plan_id is None
             MagicMock(spec=Workshop),  # workshop
-            MagicMock(spec=Workstation, workshop_id=999),  # workstation (不匹配)
+            mock_workstation,  # workstation (不匹配)
         ]
 
         mock_order_in = MagicMock()
@@ -408,6 +433,8 @@ class TestWorkOrderService(unittest.TestCase):
         mock_order_in.production_plan_id = None
         mock_order_in.workshop_id = 50
         mock_order_in.workstation_id = 60
+        mock_order_in.plan_start_date = None
+        mock_order_in.plan_end_date = None
 
         with self.assertRaises(HTTPException) as context:
             self.service.create_work_order(mock_order_in, current_user_id=100)
@@ -417,7 +444,7 @@ class TestWorkOrderService(unittest.TestCase):
 
     # ========== get_work_order() 测试 ==========
 
-    @patch("app.utils.db_helpers.get_or_404")
+    @patch("app.services.production.work_order_service.get_or_404")
     def test_get_work_order_success(self, mock_get_or_404):
         """测试获取工单详情 - 成功"""
         mock_order = MagicMock(spec=WorkOrder)
@@ -464,7 +491,7 @@ class TestWorkOrderService(unittest.TestCase):
         self.assertEqual(result.id, 1)
         mock_get_or_404.assert_called_once_with(self.db, WorkOrder, 1, detail="工单不存在")
 
-    @patch("app.utils.db_helpers.get_or_404")
+    @patch("app.services.production.work_order_service.get_or_404")
     def test_get_work_order_not_found(self, mock_get_or_404):
         """测试获取工单详情 - 不存在"""
         # get_or_404抛出HTTPException
@@ -478,8 +505,8 @@ class TestWorkOrderService(unittest.TestCase):
 
     # ========== assign_work_order() 测试 ==========
 
-    @patch("app.utils.db_helpers.save_obj")
-    @patch("app.utils.db_helpers.get_or_404")
+    @patch("app.services.production.work_order_service.save_obj")
+    @patch("app.services.production.work_order_service.get_or_404")
     def test_assign_work_order_success(self, mock_get_or_404, mock_save_obj):
         """测试单个派工 - 成功"""
         mock_order = MagicMock(spec=WorkOrder)
@@ -514,7 +541,7 @@ class TestWorkOrderService(unittest.TestCase):
         self.assertIsNotNone(mock_order.assigned_at)
         mock_save_obj.assert_called_once()
 
-    @patch("app.utils.db_helpers.get_or_404")
+    @patch("app.services.production.work_order_service.get_or_404")
     def test_assign_work_order_invalid_status(self, mock_get_or_404):
         """测试单个派工 - 工单状态不正确"""
         mock_order = MagicMock(spec=WorkOrder)
@@ -531,7 +558,7 @@ class TestWorkOrderService(unittest.TestCase):
         self.assertEqual(context.exception.status_code, 400)
         self.assertEqual(context.exception.detail, "只有待派工状态的工单才能派工")
 
-    @patch("app.utils.db_helpers.get_or_404")
+    @patch("app.services.production.work_order_service.get_or_404")
     def test_assign_work_order_worker_not_found(self, mock_get_or_404):
         """测试单个派工 - 工人不存在"""
         mock_order = MagicMock(spec=WorkOrder)
@@ -553,7 +580,7 @@ class TestWorkOrderService(unittest.TestCase):
         self.assertEqual(context.exception.status_code, 404)
         self.assertEqual(context.exception.detail, "工人不存在")
 
-    @patch("app.utils.db_helpers.get_or_404")
+    @patch("app.services.production.work_order_service.get_or_404")
     def test_assign_work_order_workstation_wrong_workshop(self, mock_get_or_404):
         """测试单个派工 - 工位不属于该车间"""
         mock_order = MagicMock(spec=WorkOrder)
@@ -581,8 +608,8 @@ class TestWorkOrderService(unittest.TestCase):
         self.assertEqual(context.exception.status_code, 400)
         self.assertEqual(context.exception.detail, "工位不属于该车间")
 
-    @patch("app.utils.db_helpers.save_obj")
-    @patch("app.utils.db_helpers.get_or_404")
+    @patch("app.services.production.work_order_service.save_obj")
+    @patch("app.services.production.work_order_service.get_or_404")
     def test_assign_work_order_without_workstation(self, mock_get_or_404, mock_save_obj):
         """测试单个派工 - 不指定工位"""
         mock_order = MagicMock(spec=WorkOrder)

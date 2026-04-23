@@ -134,7 +134,7 @@ def list_instances(
     )
 
 
-@router.get("/{instance_id}", response_model=ApprovalInstanceDetail)
+@router.get("/{instance_id:int}", response_model=ApprovalInstanceDetail)
 def get_instance(
     instance_id: int,
     db: Session = Depends(deps.get_db),
@@ -227,7 +227,7 @@ def get_instance(
     return result
 
 
-@router.post("/{instance_id}/withdraw")
+@router.post("/{instance_id:int}/withdraw")
 def withdraw_instance(
     instance_id: int,
     comment: Optional[str] = None,
@@ -252,7 +252,7 @@ def withdraw_instance(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/{instance_id}/terminate")
+@router.post("/{instance_id:int}/terminate")
 def terminate_instance(
     instance_id: int,
     comment: str,

@@ -31,6 +31,9 @@ ALLOWED_CONTRACT_STATUSES = {"signed", "executing", "SIGNED", "EXECUTING"}
 class ContractService:
     """合同服务类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     async def create_project_from_contract(db: AsyncSession, contract_id: int) -> Dict[str, Any]:
         """

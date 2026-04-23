@@ -113,8 +113,8 @@ class SalesQueryBuilder(Generic[ModelType]):
 
     def __init__(
         self,
-        db: Session,
-        model: Type[ModelType],
+        db: Optional[Session] = None,
+        model: Optional[Type[ModelType]] = None,
         config: Optional[SalesQueryConfig] = None,
     ) -> None:
         """
@@ -128,7 +128,7 @@ class SalesQueryBuilder(Generic[ModelType]):
         self._db = db
         self._model = model
         self._config = config or SalesQueryConfig()
-        self._query: Query = db.query(model)
+        self._query: Optional[Query] = db.query(model) if db is not None and model is not None else None
         self._pagination: Optional[PaginationParams] = None
 
         # 排序参数（延迟应用）

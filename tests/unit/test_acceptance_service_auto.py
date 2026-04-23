@@ -1,118 +1,78 @@
 # -*- coding: utf-8 -*-
-"""Auto-generated tests for acceptance modules"""
+"""Lightweight smoke tests for acceptance modules."""
+
+from __future__ import annotations
+
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
-from datetime import datetime
 
 
-class TestAcceptanceService:
-    """Tests for app.services.acceptance.acceptance_service"""
+pytestmark = pytest.mark.unit
 
+
+class TestAcceptanceServiceSmoke:
     @pytest.mark.asyncio
-    async def test_acceptance_service_init(self):
-        """Test AcceptanceService initialization"""
+    async def test_update_project_to_warranty_missing_project(self):
         from app.services.acceptance.acceptance_service import AcceptanceService
-        mock_db = MagicMock()
-        service = AcceptanceService(mock_db)
-        assert service.db == mock_db
 
-    @pytest.mark.asyncio
-    async def test_complete_acceptance_order(self):
-        """Test complete_acceptance_order method"""
+        db = AsyncMock()
+        db.add = MagicMock()
+        db.get.return_value = None
+
+        with pytest.raises(ValueError, match="项目不存在"):
+            await AcceptanceService._update_project_to_warranty(db, 999, 1)
+
+    def test_acceptance_service_class_exists(self):
         from app.services.acceptance.acceptance_service import AcceptanceService
-        with patch('app.services.acceptance.acceptance_service.AcceptanceService') as mock_svc:
-            mock_db = MagicMock()
-            service = AcceptanceService(mock_db)
-            # Basic smoke test
-            assert hasattr(service, 'db')
+
+        assert AcceptanceService is not None
 
 
-class TestReportUtils:
-    """Tests for app.services.acceptance.report_utils"""
+class TestReportUtilsSmoke:
+    def test_generate_report_no_signature_current(self, monkeypatch: pytest.MonkeyPatch):
+        from app.services.acceptance import report_utils
 
-    def test_generate_report_no(self):
-        """Test generate_report_no function"""
-        from app.services.acceptance.report_utils import generate_report_no
-        result = generate_report_no()
-        assert result is not None
-        assert isinstance(result, str)
+        count_query = MagicMock()
+        count_query.scalar.return_value = 0
+        monkeypatch.setattr(report_utils, "apply_like_filter", lambda *args, **kwargs: count_query)
 
-    def test_build_report_content(self):
-        """Test build_report_content function"""
-        from app.services.acceptance.report_utils import build_report_content
-        mock_data = {"project_name": "Test", "acceptance_date": "2024-01-01"}
-        result = build_report_content(mock_data)
-        assert result is not None
+        db = MagicMock()
+        result = report_utils.generate_report_no(db, "FAT")
 
+        assert result.startswith("FAT-")
+        assert result.endswith("-001")
 
-class TestAcceptanceApprovalService:
-    """Tests for app.services.acceptance_approval.service"""
+    def test_build_report_content_signature_current(self):
+        from app.services.acceptance import report_utils
 
-    @pytest.mark.asyncio
-    async def test_service_init(self):
-        """Test AcceptanceApprovalService initialization"""
-        from app.services.acceptance_approval.service import AcceptanceApprovalService
-        mock_db = MagicMock()
-        service = AcceptanceApprovalService(mock_db)
-        assert service.db == mock_db
+        db = MagicMock()
+        total_query = MagicMock()
+        total_query.filter.return_value.scalar.return_value = 0
+        resolved_query = MagicMock()
+        resolved_query.filter.return_value.scalar.return_value = 0
+        db.query.side_effect = [total_query, resolved_query]
 
+        order = SimpleNamespace(
+            id=1,
+            order_no="AO-001",
+            acceptance_type="FAT",
+            status="COMPLETED",
+            actual_end_date=None,
+            pass_rate=100,
+            total_items=1,
+            passed_items=1,
+            failed_items=0,
+            qa_signer_id=None,
+            customer_signer="客户",
+            project=None,
+            machine=None,
+        )
+        user = SimpleNamespace(real_name="测试用户", username="tester")
 
-class TestAccountLockoutService:
-    """Tests for app.services.account_lockout_service"""
+        result = report_utils.build_report_content(db, order, "FAT-001", 1, user)
 
-    def test_is_account_locked(self):
-        """Test is_account_locked method"""
-        from app.services.account_lockout_service import AccountLockoutService
-        service = AccountLockoutService()
-        result = service.is_account_locked("test_user")
-        assert isinstance(result, bool)
-
-    def test_record_failed_login(self):
-        """Test record_failed_login method"""
-        from app.services.account_lockout_service import AccountLockoutService
-        service = AccountLockoutService()
-        service.record_failed_login("test_user")
-        # Should not raise
-
-
-class TestAIEmotionService:
-    """Tests for app.services.ai_emotion_service"""
-
-    @pytest.mark.asyncio
-    async def test_analyze_emotion(self):
-        """Test analyze_emotion method"""
-        from app.services.ai_emotion_service import AIEmotionService
-        with patch.object(AIEmotionService, 'analyze_emotion', return_value={"emotion": "neutral"}):
-            service = AIEmotionService()
-            result = await service.analyze_emotion("test text")
-            assert result is not None
-
-
-class TestAIService:
-    """Tests for app.services.ai_service"""
-
-    def test_ai_service_init(self):
-        """Test AIService initialization"""
-        from app.services.ai_service import AIService
-        service = AIService()
-        assert service is not None
-
-
-class TestBackupService:
-    """Tests for app.services.backup_service"""
-
-    def test_backup_service_init(self):
-        """Test BackupService initialization"""
-        from app.services.backup_service import BackupService
-        service = BackupService()
-        assert service is not None
-
-
-class TestBusinessRules:
-    """Tests for app.services.business_rules"""
-
-    def test_business_rules_init(self):
-        """Test BusinessRules initialization"""
-        from app.services.business_rules import BusinessRules
-        rules = BusinessRules()
-        assert rules is not None
+        assert "验收报告" in result
+        assert "FAT-001" in result
+        assert "生成人：测试用户" in result

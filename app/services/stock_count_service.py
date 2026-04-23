@@ -23,7 +23,7 @@ from app.services.inventory_management_service import InventoryManagementService
 class StockCountService:
     """库存盘点服务"""
 
-    def __init__(self, db: Session, tenant_id: int):
+    def __init__(self, db: Session, tenant_id: int = 0):
         self.db = db
         self.tenant_id = tenant_id
         self.inventory_service = InventoryManagementService(db, tenant_id)

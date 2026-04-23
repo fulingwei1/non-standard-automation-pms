@@ -122,7 +122,8 @@ class AIResourceOptimizer:
         experience_match = self._calculate_experience_match(user, wbs)
 
         # 3. 可用性评分
-        availability = self._calculate_availability(user, wbs)
+        current_workload = self._get_current_workload(user)
+        availability = max(0.0, 100.0 - current_workload)
 
         # 4. 历史绩效
         performance = self._calculate_performance_score(user, wbs)
@@ -138,7 +139,8 @@ class AIResourceOptimizer:
 
         # 6. 成本分析
         hourly_rate = self._get_hourly_rate(user)
-        estimated_cost = (wbs.estimated_effort_hours or 0) * hourly_rate
+        allocated_hours = float(wbs.estimated_effort_hours or 0)
+        estimated_cost = allocated_hours * hourly_rate
 
         # 7. 生成推荐理由
         recommendation_reason = self._generate_recommendation_reason(
@@ -154,7 +156,7 @@ class AIResourceOptimizer:
             project_id=wbs.project_id,
             wbs_suggestion_id=wbs.id,
             user_id=user.id,
-            role_name=user.role or "未指定",
+            role_name=self._get_display_role_name(user),
             allocation_type=allocation_type,
             # AI生成信息
             ai_model_version=(
@@ -164,14 +166,17 @@ class AIResourceOptimizer:
             confidence_score=overall_match,
             optimization_method="GREEDY",  # 使用贪心算法
             # 时间分配
-            allocated_hours=wbs.estimated_effort_hours,
-            workload_percentage=None,  # 稍后计算
+            allocated_hours=allocated_hours,
+            workload_percentage=current_workload,
             # 匹配度分析
             skill_match_score=skill_match,
             experience_match_score=experience_match,
             availability_score=availability,
             performance_score=performance,
             overall_match_score=overall_match,
+            current_workload=current_workload,
+            concurrent_tasks=self._get_concurrent_task_count(user),
+            is_available=availability > 0,
             # 成本信息
             hourly_rate=hourly_rate,
             estimated_cost=estimated_cost,
@@ -201,8 +206,8 @@ class AIResourceOptimizer:
         if not required_skills:
             return 70.0  # 无特定技能要求，默认70分
 
-        # 简化版：根据用户角色匹配
-        user_role = (user.role or "").lower()
+        # 简化版：根据用户职位/角色匹配
+        user_role = self._get_user_role_text(user)
 
         match_score = 50.0  # 基础分
 
@@ -247,24 +252,28 @@ class AIResourceOptimizer:
 
         return max(0.0, availability)
 
-    def _get_current_workload(self, user: User) -> float:
-        """获取当前工作负载百分比"""
+    def _get_concurrent_task_count(self, user: User) -> int:
+        """获取用户当前并行任务数。"""
 
-        # 统计用户正在进行的任务
-        active_tasks = (
-            self.db.query(TaskUnified)
+        return (
+            self.db.query(func.count(TaskUnified.id))
             .filter(
                 TaskUnified.assignee_id == user.id,
                 TaskUnified.status.in_(["IN_PROGRESS", "ACCEPTED"]),
             )
-            .all()
+            .scalar()
+            or 0
         )
 
-        if not active_tasks:
+    def _get_current_workload(self, user: User) -> float:
+        """获取当前工作负载百分比"""
+
+        concurrent_tasks = self._get_concurrent_task_count(user)
+        if not concurrent_tasks:
             return 0.0
 
         # 简化计算：每个任务占用20%
-        return min(len(active_tasks) * 20.0, 100.0)
+        return min(concurrent_tasks * 20.0, 100.0)
 
     def _calculate_performance_score(self, user: User, wbs: AIWbsSuggestion) -> float:
         """计算历史绩效评分 (0-100)"""
@@ -283,9 +292,12 @@ class AIResourceOptimizer:
         # 计算按时完成率
         on_time_count = 0
         for task in completed_tasks:
-            if task.planned_end_date and task.actual_end_date:
-                if task.actual_end_date <= task.planned_end_date:
-                    on_time_count += 1
+            planned_end_date = getattr(task, "planned_end_date", None) or getattr(
+                task, "plan_end_date", None
+            )
+            actual_end_date = getattr(task, "actual_end_date", None)
+            if planned_end_date and actual_end_date and actual_end_date <= planned_end_date:
+                on_time_count += 1
 
         on_time_rate = (on_time_count / len(completed_tasks)) * 100 if completed_tasks else 70.0
 
@@ -297,7 +309,7 @@ class AIResourceOptimizer:
         # TODO: 从用户配置或薪资表获取
         # 目前基于角色的默认费率
 
-        role = (user.role or "").lower()
+        role = self._get_user_role_text(user)
 
         if "senior" in role or "高级" in role or "资深" in role:
             return 200.0
@@ -307,6 +319,44 @@ class AIResourceOptimizer:
             return 100.0
         else:
             return 120.0
+
+    def _get_display_role_name(self, user: User) -> str:
+        """获取展示用角色名称。"""
+
+        return getattr(user, "position", None) or getattr(user, "role", None) or "未指定"
+
+    def _get_user_role_text(self, user: User) -> str:
+        """提取用户用于匹配的角色/职位文本。"""
+
+        parts = []
+
+        direct_role = getattr(user, "role", None)
+        if direct_role:
+            parts.append(str(direct_role))
+
+        position = getattr(user, "position", None)
+        if position:
+            parts.append(str(position))
+
+        user_roles = getattr(user, "roles", None)
+        if user_roles is not None:
+            try:
+                role_items = user_roles.all() if hasattr(user_roles, "all") else list(user_roles)
+            except TypeError:
+                role_items = []
+            for item in role_items:
+                role_obj = getattr(item, "role", None)
+                if role_obj is not None:
+                    for attr in ("name", "role_name", "code", "role_code"):
+                        value = getattr(role_obj, attr, None)
+                        if value:
+                            parts.append(str(value))
+                for attr in ("name", "role_name", "code", "role_code"):
+                    value = getattr(item, attr, None)
+                    if value:
+                        parts.append(str(value))
+
+        return " ".join(parts).lower()
 
     def _calculate_cost_efficiency(self, match_score: float, hourly_rate: float) -> float:
         """计算成本效益评分 (0-100)"""

@@ -10,7 +10,7 @@
 from datetime import date
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -28,6 +28,15 @@ from app.schemas.timesheet import (
 from app.services.timesheet_records import TimesheetRecordsService
 
 router = APIRouter(prefix="/records", tags=["records"])
+
+
+def _raise_service_error(exc: ValueError) -> None:
+    message = str(exc)
+    if "不存在" in message:
+        raise HTTPException(status_code=404, detail=message) from exc
+    if "无权" in message:
+        raise HTTPException(status_code=403, detail=message) from exc
+    raise HTTPException(status_code=400, detail=message) from exc
 
 # 共 6 个路由
 
@@ -81,7 +90,10 @@ def create_timesheet(
     创建单条工时
     """
     service = TimesheetRecordsService(db)
-    return service.create_timesheet(timesheet_in, current_user)
+    try:
+        return service.create_timesheet(timesheet_in, current_user)
+    except ValueError as exc:
+        _raise_service_error(exc)
 
 
 @router.post("/batch", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
@@ -114,7 +126,10 @@ def get_timesheet_detail(
     获取工时记录详情
     """
     service = TimesheetRecordsService(db)
-    return service.get_timesheet_detail(timesheet_id, current_user)
+    try:
+        return service.get_timesheet_detail(timesheet_id, current_user)
+    except ValueError as exc:
+        _raise_service_error(exc)
 
 
 @router.put("/{timesheet_id}", response_model=TimesheetResponse, status_code=status.HTTP_200_OK)
@@ -129,7 +144,10 @@ def update_timesheet(
     更新工时记录
     """
     service = TimesheetRecordsService(db)
-    return service.update_timesheet(timesheet_id, timesheet_in, current_user)
+    try:
+        return service.update_timesheet(timesheet_id, timesheet_in, current_user)
+    except ValueError as exc:
+        _raise_service_error(exc)
 
 
 @router.delete("/{timesheet_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -143,6 +161,9 @@ def delete_timesheet(
     删除工时记录（仅草稿）
     """
     service = TimesheetRecordsService(db)
-    service.delete_timesheet(timesheet_id, current_user)
+    try:
+        service.delete_timesheet(timesheet_id, current_user)
+    except ValueError as exc:
+        _raise_service_error(exc)
 
     return ResponseModel(message="工时记录已删除")

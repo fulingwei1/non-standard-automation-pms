@@ -15,6 +15,13 @@ from app.models.timesheet import Timesheet
 class ProjectReportMixin:
     """项目报表生成功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
+    @staticmethod
+    def _ensure_list(value):
+        return value if isinstance(value, list) else []
+
     @staticmethod
     def generate_project_weekly_report(
         db: Session, project_id: int, start_date: date, end_date: date
@@ -48,14 +55,11 @@ class ProjectReportMixin:
         }
 
         # 获取本周的里程碑完成情况
-        milestones = (
-            db.query(ProjectMilestone)
-            .filter(
-                ProjectMilestone.project_id == project_id,
-                ProjectMilestone.milestone_date.between(start_date, end_date),
-            )
-            .all()
-        )
+        milestone_query = db.query(ProjectMilestone).filter(ProjectMilestone.project_id == project_id)
+        milestone_date_field = getattr(ProjectMilestone, "milestone_date", None)
+        if milestone_date_field is not None:
+            milestone_query = milestone_query.filter(milestone_date_field.between(start_date, end_date))
+        milestones = ProjectReportMixin._ensure_list(milestone_query.all())
 
         milestone_summary = {
             "total": len(milestones),
@@ -65,20 +69,19 @@ class ProjectReportMixin:
         }
 
         # 获取工时数据
-        timesheets = (
-            db.query(Timesheet)
-            .filter(
-                Timesheet.project_id == project_id,
-                Timesheet.work_date.between(start_date, end_date),
-            )
-            .all()
-        )
+        timesheet_query = db.query(Timesheet).filter(Timesheet.project_id == project_id)
+        work_date_field = getattr(Timesheet, "work_date", None)
+        if work_date_field is not None:
+            timesheet_query = timesheet_query.filter(work_date_field.between(start_date, end_date))
+        timesheets = ProjectReportMixin._ensure_list(timesheet_query.all())
 
         total_hours = sum(float(t.hours or 0) for t in timesheets)
         unique_workers = len(set(t.user_id for t in timesheets))
 
         # 获取机台进度
-        machines = db.query(Machine).filter(Machine.project_id == project_id).all()
+        machines = ProjectReportMixin._ensure_list(
+            db.query(Machine).filter(Machine.project_id == project_id).all()
+        )
         machine_summary = []
         for machine in machines:
             machine_summary.append(

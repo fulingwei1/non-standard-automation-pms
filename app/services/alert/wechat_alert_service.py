@@ -36,6 +36,9 @@ class WeChatAlertService:
     BACKWARD COMPATIBILITY: This service now uses NotificationDispatcher.
     """
 
+    def __init__(self, db: Session | None = None):
+        self.db = db
+
     @classmethod
     def send_shortage_alert(
         cls, db: Session, shortage_detail: ShortageDetail, alert_level: str

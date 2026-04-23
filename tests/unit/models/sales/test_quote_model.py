@@ -42,6 +42,7 @@ class TestQuoteModel:
 
         with pytest.raises(IntegrityError):
             db_session.commit()
+        db_session.rollback()
 
     def test_quote_validity_period(self, db_session, sample_customer, sample_user):
         """测试报价单有效期"""

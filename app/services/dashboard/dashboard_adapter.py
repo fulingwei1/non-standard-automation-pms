@@ -22,7 +22,7 @@ class DashboardAdapter(ABC):
     每个模块的dashboard需要实现此接口，将原有数据转换为统一格式
     """
 
-    def __init__(self, db: Session, current_user: User):
+    def __init__(self, db: Session, current_user: Optional[User] = None):
         self.db = db
         self.current_user = current_user
 

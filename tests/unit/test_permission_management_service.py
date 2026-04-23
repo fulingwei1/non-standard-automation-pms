@@ -537,7 +537,7 @@ class TestPermissionManagementService(unittest.TestCase):
         self.mock_db.add.assert_not_called()
         self.mock_db.commit.assert_called_once()
 
-    @patch("app.services.permission_cache_service.get_permission_cache_service")
+    @patch("app.services.permission_management.permission_management_service.get_permission_cache_service")
     def test_invalidate_permission_cache_success(self, mock_get_cache):
         """测试清除权限缓存成功"""
         mock_cache_service = MagicMock()
@@ -553,7 +553,7 @@ class TestPermissionManagementService(unittest.TestCase):
             1, tenant_id=self.tenant_id
         )
 
-    @patch("app.services.permission_cache_service.get_permission_cache_service")
+    @patch("app.services.permission_management.permission_management_service.get_permission_cache_service")
     def test_invalidate_permission_cache_failure(self, mock_get_cache):
         """测试清除权限缓存失败"""
         mock_get_cache.side_effect = Exception("缓存服务不可用")
@@ -595,7 +595,7 @@ class TestPermissionManagementService(unittest.TestCase):
 
         self.assertIsNone(result)
 
-    @patch("app.services.permission_service.PermissionService")
+    @patch("app.services.permission_management.permission_management_service.PermissionService")
     def test_get_user_permissions(self, mock_permission_service):
         """测试获取用户权限"""
         # Mock PermissionService返回权限编码列表
@@ -633,7 +633,7 @@ class TestPermissionManagementService(unittest.TestCase):
             self.mock_db, 1, self.tenant_id
         )
 
-    @patch("app.services.permission_service.PermissionService")
+    @patch("app.services.permission_management.permission_management_service.PermissionService")
     def test_get_user_permissions_empty(self, mock_permission_service):
         """测试用户无权限"""
         mock_permission_service.get_user_permissions.return_value = []
@@ -652,7 +652,7 @@ class TestPermissionManagementService(unittest.TestCase):
 
         self.assertEqual(len(result), 0)
 
-    @patch("app.services.permission_service.PermissionService")
+    @patch("app.services.permission_management.permission_management_service.PermissionService")
     def test_check_user_permission_true(self, mock_permission_service):
         """测试用户有权限"""
         mock_user = MagicMock()
@@ -670,7 +670,7 @@ class TestPermissionManagementService(unittest.TestCase):
             self.mock_db, 1, "project.create", mock_user, self.tenant_id
         )
 
-    @patch("app.services.permission_service.PermissionService")
+    @patch("app.services.permission_management.permission_management_service.PermissionService")
     def test_check_user_permission_false(self, mock_permission_service):
         """测试用户无权限"""
         mock_user = MagicMock()

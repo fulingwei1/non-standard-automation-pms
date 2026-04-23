@@ -15,6 +15,9 @@ from app.models.vendor import Vendor
 class QualityAnalyzer:
     """质量合格率分析器"""
 
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
     @staticmethod
     def get_quality_rate_data(
         db: Session, start_date: date, end_date: date, supplier_id: Optional[int] = None

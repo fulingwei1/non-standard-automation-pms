@@ -15,6 +15,9 @@ from .core import ApprovalEngineCore
 class ApprovalProcessMixin:
     """审批处理功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def approve(
         self: ApprovalEngineCore,
         task_id: int,

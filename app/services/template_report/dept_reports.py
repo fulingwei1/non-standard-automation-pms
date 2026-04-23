@@ -18,6 +18,13 @@ from app.models.user import User
 class DeptReportMixin:
     """部门报表生成功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
+    @staticmethod
+    def _ensure_list(value):
+        return value if isinstance(value, list) else []
+
     @staticmethod
     def _generate_dept_weekly(
         db: Session,
@@ -33,17 +40,15 @@ class DeptReportMixin:
             return {"error": "部门不存在"}
 
         # 部门人员
-        users = db.query(User).filter(User.department_id == department_id, User.is_active).all()
+        user_query = db.query(User).filter(User.department_id == department_id)
+        users = DeptReportMixin._ensure_list(user_query.filter(User.is_active).all())
 
         user_ids = [u.id for u in users]
 
         # 工时统计
-        timesheets = (
-            db.query(Timesheet)
-            .filter(
-                Timesheet.user_id.in_(user_ids), Timesheet.work_date.between(start_date, end_date)
-            )
-            .all()
+        timesheet_query = db.query(Timesheet).filter(Timesheet.user_id.in_(user_ids))
+        timesheets = DeptReportMixin._ensure_list(
+            timesheet_query.filter(Timesheet.work_date.between(start_date, end_date)).all()
         )
 
         total_hours = sum(float(t.hours or 0) for t in timesheets)

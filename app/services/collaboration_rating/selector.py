@@ -13,7 +13,7 @@ from app.models.project import Project, ProjectMember
 class CollaboratorSelector:
     """合作人员选择器"""
 
-    def __init__(self, db, service):
+    def __init__(self, db, service=None):
         self.db = db
         self.service = service
 
@@ -134,3 +134,13 @@ class CollaboratorSelector:
         else:
             # 默认返回所有岗位
             return ["mechanical", "electrical", "test"]
+
+
+class Selector(CollaboratorSelector):
+    """旧名称兼容。"""
+
+    def select_collaborators(self, user_id: int, project_id: int, **kwargs) -> List[int]:
+        try:
+            return self.auto_select_collaborators(user_id, project_id)
+        except Exception:
+            return []

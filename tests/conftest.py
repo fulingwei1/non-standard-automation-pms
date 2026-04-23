@@ -1,7 +1,13 @@
 import sys
+import warnings
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock
+
+warnings.filterwarnings(
+    "ignore",
+    message=r".*urllib3 .* doesn't match a supported version.*",
+)
 
 # Mock redis module before importing app
 redis_mock = MagicMock()

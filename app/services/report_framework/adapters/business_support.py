@@ -33,6 +33,16 @@ class BusinessSupportReportAdapter(BaseReportAdapter):
         self.report_type = report_type
         self._service = BusinessSupportReportsService(db)
 
+    def get_report_code(self) -> str:
+        return self.report_type
+
+    def generate_data(
+        self,
+        params: Dict[str, Any],
+        user: Optional[User] = None,
+    ) -> Dict[str, Any]:
+        return self.fetch_data(params, user)
+
     def fetch_data(
         self,
         params: Dict[str, Any],

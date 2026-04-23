@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 class UserSyncService:
     """用户同步服务"""
 
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
     # 默认岗位-角色映射（作为兜底）
     DEFAULT_POSITION_ROLE_MAPPING = {
         # 销售序列

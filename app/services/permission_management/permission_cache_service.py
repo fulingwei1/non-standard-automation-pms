@@ -36,13 +36,14 @@ class PermissionCacheService:
 
     _instance = None
 
-    def __new__(cls):
+    def __new__(cls, *args, **kwargs):
         """单例模式"""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self, db=None):
+        self.db = db
         if not hasattr(self, "_cache"):
             self._cache = CacheService()
 

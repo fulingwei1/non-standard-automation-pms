@@ -103,6 +103,18 @@ class Contract(Base, TimestampMixin):
     """合同主表"""
 
     __tablename__ = "contracts"
+
+    def __init__(self, **kwargs):
+        if "contract_amount" in kwargs and "total_amount" not in kwargs:
+            kwargs["total_amount"] = kwargs.pop("contract_amount")
+        if "start_date" in kwargs and "effective_date" not in kwargs:
+            kwargs["effective_date"] = kwargs.pop("start_date")
+        if "end_date" in kwargs and "expiry_date" not in kwargs:
+            kwargs["expiry_date"] = kwargs.pop("end_date")
+        if "description" in kwargs and "contract_subject" not in kwargs:
+            kwargs["contract_subject"] = kwargs.pop("description")
+        super().__init__(**kwargs)
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     contract_code = Column(String(50), unique=True, nullable=False, comment="合同编码（内部）")
     contract_name = Column(String(200), nullable=False, comment="合同名称")
@@ -187,6 +199,30 @@ class Contract(Base, TimestampMixin):
     @contract_amount.setter
     def contract_amount(self, value):
         self.total_amount = value
+
+    @property
+    def start_date(self):
+        return self.effective_date
+
+    @start_date.setter
+    def start_date(self, value):
+        self.effective_date = value
+
+    @property
+    def end_date(self):
+        return self.expiry_date
+
+    @end_date.setter
+    def end_date(self, value):
+        self.expiry_date = value
+
+    @property
+    def description(self):
+        return self.contract_subject
+
+    @description.setter
+    def description(self, value):
+        self.contract_subject = value
 
 
 class ContractDeliverable(Base, TimestampMixin):

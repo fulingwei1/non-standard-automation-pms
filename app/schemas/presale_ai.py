@@ -6,7 +6,7 @@ Team 10: 售前AI系统集成与前端UI
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AIUsageStatsBase(BaseModel):
@@ -75,6 +75,8 @@ class AIFeedbackResponse(AIFeedbackBase):
 class AIConfigBase(BaseModel):
     """AI配置基础schema"""
 
+    model_config = ConfigDict(protected_namespaces=())
+
     ai_function: str
     enabled: bool = True
     model_name: Optional[str] = None
@@ -92,6 +94,8 @@ class AIConfigCreate(AIConfigBase):
 
 class AIConfigUpdate(BaseModel):
     """更新AI配置"""
+
+    model_config = ConfigDict(protected_namespaces=())
 
     enabled: Optional[bool] = None
     model_name: Optional[str] = None

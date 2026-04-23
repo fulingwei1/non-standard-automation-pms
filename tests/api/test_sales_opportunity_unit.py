@@ -94,34 +94,36 @@ class TestReadOpportunities:
         current_user = _make_user()
         pagination = _make_pagination()
 
-        mock_query = MagicMock()
-        mock_query.count.return_value = 0
-        mock_query.options.return_value = mock_query
-        mock_query.filter.return_value = mock_query
-        mock_query.order_by.return_value = mock_query
-        mock_query.offset.return_value = mock_query
-        mock_query.limit.return_value = mock_query
-        mock_query.all.return_value = []
-        db.query.return_value = mock_query
+        builder = MagicMock()
+        builder.with_options.return_value = builder
+        builder.with_scope_filter.return_value = builder
+        builder.with_keyword.return_value = builder
+        builder.with_status.return_value = builder
+        builder.with_customer.return_value = builder
+        builder.with_owner.return_value = builder
+        builder.with_sort.return_value = builder
+        builder.with_secondary_sort.return_value = builder
+        builder.with_pagination.return_value = builder
+        builder.execute_with_transform.return_value = MagicMock(items=[], total=0)
 
-        with patch("app.api.v1.endpoints.sales.opportunity_crud.security") as mock_sec:
-            mock_sec.filter_sales_data_by_scope.return_value = mock_query
-            with patch(
-                "app.api.v1.endpoints.sales.opportunity_crud.apply_keyword_filter",
-                return_value=mock_query,
-            ):
+        with patch(
+            "app.api.v1.endpoints.sales.opportunity_crud.SalesQueryBuilder",
+            return_value=builder,
+        ):
+            result = read_opportunities(
+                db=db,
+                pagination=pagination,
+                keyword=None,
+                stage=None,
+                customer_id=None,
+                owner_id=None,
+                current_user=current_user,
+            )
 
-                result = read_opportunities(
-                    db=db,
-                    pagination=pagination,
-                    keyword=None,
-                    stage=None,
-                    customer_id=None,
-                    owner_id=None,
-                    current_user=current_user,
-                )
-
-        pagination.to_response.assert_called_once()
+        assert result.items == []
+        assert result.total == 0
+        assert result.page == 1
+        assert result.page_size == 20
 
     def test_list_opportunities_with_filters(self):
         """带过滤条件的商机列表"""
@@ -130,35 +132,40 @@ class TestReadOpportunities:
         db = _make_db()
         current_user = _make_user()
         pagination = _make_pagination()
+        opp = _make_opp()
 
-        mock_query = MagicMock()
-        mock_query.count.return_value = 1
-        mock_query.options.return_value = mock_query
-        mock_query.filter.return_value = mock_query
-        mock_query.order_by.return_value = mock_query
-        mock_query.offset.return_value = mock_query
-        mock_query.limit.return_value = mock_query
-        mock_query.all.return_value = []
-        db.query.return_value = mock_query
+        builder = MagicMock()
+        builder.with_options.return_value = builder
+        builder.with_scope_filter.return_value = builder
+        builder.with_keyword.return_value = builder
+        builder.with_status.return_value = builder
+        builder.with_customer.return_value = builder
+        builder.with_owner.return_value = builder
+        builder.with_sort.return_value = builder
+        builder.with_secondary_sort.return_value = builder
+        builder.with_pagination.return_value = builder
+        builder.execute_with_transform.return_value = MagicMock(items=[opp], total=1)
 
-        with patch("app.api.v1.endpoints.sales.opportunity_crud.security") as mock_sec:
-            mock_sec.filter_sales_data_by_scope.return_value = mock_query
-            with patch(
-                "app.api.v1.endpoints.sales.opportunity_crud.apply_keyword_filter",
-                return_value=mock_query,
-            ):
+        with patch(
+            "app.api.v1.endpoints.sales.opportunity_crud.SalesQueryBuilder",
+            return_value=builder,
+        ):
+            result = read_opportunities(
+                db=db,
+                pagination=pagination,
+                keyword="比亚迪",
+                stage="LEAD",
+                customer_id=1,
+                owner_id=1,
+                current_user=current_user,
+            )
 
-                result = read_opportunities(
-                    db=db,
-                    pagination=pagination,
-                    keyword="比亚迪",
-                    stage="LEAD",
-                    customer_id=1,
-                    owner_id=1,
-                    current_user=current_user,
-                )
-
-        assert result is not None
+        builder.with_keyword.assert_called_once_with("比亚迪")
+        builder.with_status.assert_called_once_with("LEAD", field_name="stage")
+        builder.with_customer.assert_called_once_with(1)
+        builder.with_owner.assert_called_once_with(1)
+        assert result.total == 1
+        assert len(result.items) == 1
 
 
 # ──────────────────────────────────────────────

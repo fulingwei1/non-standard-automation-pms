@@ -28,6 +28,11 @@ class AIRequirementAnalyzer:
     """AI需求分析器 - 核心AI引擎"""
 
     def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4"):
+        if api_key is not None and not isinstance(api_key, str):
+            self.db = api_key
+            api_key = None
+        else:
+            self.db = None
         self.api_key = api_key or getattr(settings, "OPENAI_API_KEY", None)
         self.model = model
         self.api_base_url = "https://api.openai.com/v1/chat/completions"

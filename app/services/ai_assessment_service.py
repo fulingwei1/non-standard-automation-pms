@@ -23,7 +23,8 @@ BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
 class AIAssessmentService:
     """AI分析服务"""
 
-    def __init__(self):
+    def __init__(self, db=None):
+        self.db = db
         # 运行时读取环境变量，以支持测试中动态设置
         self.api_key = os.getenv("ALIBABA_API_KEY", "") or ALIBABA_API_KEY
         self.model = os.getenv("ALIBABA_MODEL", "") or ALIBABA_MODEL

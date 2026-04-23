@@ -14,6 +14,9 @@ from app.schemas.sales.presale_ai_cost import PricingRecommendation
 class PricingEngine:
     """定价推荐引擎"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def generate_recommendations(
         self,
         total_cost: Decimal,

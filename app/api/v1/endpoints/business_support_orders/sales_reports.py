@@ -19,6 +19,23 @@ from app.services.business_support_reports import BusinessSupportReportsService
 router = APIRouter()
 
 
+def _parse_week_string(week: str):
+    """兼容旧测试的周字符串解析。"""
+    from datetime import datetime
+
+    year_str, week_str = week.split("-W")
+    year, week_num = int(year_str), int(week_str)
+    start = datetime.fromisocalendar(year, week_num, 1).date()
+    end = datetime.fromisocalendar(year, week_num, 7).date()
+    return start, end
+
+
+def _get_current_week_range():
+    """兼容旧测试的当前周范围辅助函数。"""
+    today = date.today()
+    return _parse_week_string(f"{today.isocalendar().year}-W{today.isocalendar().week:02d}")
+
+
 @router.get(
     "/reports/sales-daily",
     response_model=ResponseModel[SalesReportResponse],

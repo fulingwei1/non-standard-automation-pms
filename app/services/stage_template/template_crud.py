@@ -20,6 +20,9 @@ from app.models.stage_template import (
 class TemplateCrudMixin:
     """模板CRUD功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def create_template(
         self,
         template_code: str,

@@ -21,6 +21,9 @@ from .base import StaffMatchingBase
 class SkillScoreCalculator(StaffMatchingBase):
     """技能匹配分计算器"""
 
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
     @classmethod
     def calculate_skill_score(
         cls,

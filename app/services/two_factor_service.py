@@ -50,7 +50,8 @@ def _get_encryption_key() -> bytes:
 class TwoFactorService:
     """双因素认证服务"""
 
-    def __init__(self):
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
         self.encryption_key = _get_encryption_key()
         self.fernet = Fernet(self.encryption_key)
 

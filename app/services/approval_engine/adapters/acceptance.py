@@ -381,3 +381,22 @@ class AcceptanceOrderApprovalAdapter(ApprovalAdapter):
                 cc_users.append(sales_user_id)
 
         return list(set(cc_users))  # 去重
+
+
+class AcceptanceApprovalAdapter(AcceptanceOrderApprovalAdapter):
+    """旧类名兼容层。"""
+
+    def get_entity_data(self, entity_id: int) -> Dict[str, Any]:
+        order = self.get_entity(entity_id)
+        if not order:
+            return {}
+
+        return {
+            "acceptance_no": getattr(order, "acceptance_no", None)
+            or getattr(order, "order_no", None),
+            "order_no": getattr(order, "order_no", None)
+            or getattr(order, "acceptance_no", None),
+            "machine_name": getattr(order, "machine_name", None),
+            "status": getattr(order, "status", None),
+            "pass_rate": float(getattr(order, "pass_rate", 0) or 0),
+        }

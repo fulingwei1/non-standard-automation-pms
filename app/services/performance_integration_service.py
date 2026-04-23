@@ -21,6 +21,9 @@ from app.services.qualification_service import QualificationService
 class PerformanceIntegrationService:
     """绩效融合服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     # 默认权重配置
     DEFAULT_BASE_PERFORMANCE_WEIGHT = 0.70  # 基础绩效权重 70%
     DEFAULT_QUALIFICATION_WEIGHT = 0.30  # 任职资格权重 30%

@@ -34,6 +34,16 @@ class StatusUpdateResult:
         message: Optional[str] = None,
         errors: Optional[List[str]] = None,
     ):
+        if not isinstance(success, bool) and entity is None and old_status is None and new_status is None and message is None and errors is None:
+            self.db = success
+            self.success = True
+            self.entity = None
+            self.old_status = None
+            self.new_status = None
+            self.message = None
+            self.errors = []
+            return
+
         self.success = success
         self.entity = entity
         self.old_status = old_status

@@ -17,6 +17,9 @@ from app.models.sales import Invoice
 class RevenueService:
     """营业收入数据获取服务"""
 
+    def __init__(self, db: Session | None = None):
+        self.db = db
+
     @staticmethod
     def get_project_revenue(
         db: Session, project_id: int, revenue_type: str = "CONTRACT"

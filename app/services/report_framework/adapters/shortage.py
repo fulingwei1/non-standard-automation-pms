@@ -23,6 +23,16 @@ class ShortageReportAdapter(BaseReportAdapter):
         super().__init__(db)
         self._service = ShortageReportsService(db)
 
+    def get_report_code(self) -> str:
+        return "SHORTAGE"
+
+    def generate_data(
+        self,
+        params: Dict[str, Any],
+        user: Optional[User] = None,
+    ) -> Dict[str, Any]:
+        return self.fetch_data(params, user)
+
     def fetch_data(
         self,
         params: Dict[str, Any],

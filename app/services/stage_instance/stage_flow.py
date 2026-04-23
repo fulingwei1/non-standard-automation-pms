@@ -20,6 +20,9 @@ from app.models.stage_instance import (
 class StageFlowMixin:
     """阶段状态流转功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def start_stage(
         self,
         stage_instance_id: int,

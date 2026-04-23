@@ -12,7 +12,7 @@ from app.models.inventory_tracking import MaterialStock
 class StockQueryService:
     """库存查询"""
 
-    def __init__(self, db: Session, tenant_id: int):
+    def __init__(self, db: Session, tenant_id: int = 0):
         self.db = db
         self.tenant_id = tenant_id
 

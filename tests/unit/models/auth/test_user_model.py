@@ -45,6 +45,7 @@ class TestUserModel:
 
         with pytest.raises(IntegrityError):
             db_session.commit()
+        db_session.rollback()
 
     def test_email_unique(self, db_session):
         """测试邮箱唯一性"""
@@ -61,6 +62,7 @@ class TestUserModel:
 
         with pytest.raises(IntegrityError):
             db_session.commit()
+        db_session.rollback()
 
     def test_password_hashing(self, db_session):
         """测试密码哈希"""

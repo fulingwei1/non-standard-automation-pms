@@ -14,6 +14,9 @@ from app.models.stage_template import NodeDefinition, StageTemplate
 class HelpersMixin:
     """辅助方法功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def _clear_default_template(self, project_type: str) -> None:
         """取消指定项目类型的默认模板"""
         self.db.query(StageTemplate).filter(

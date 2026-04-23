@@ -24,17 +24,17 @@ from app.services.inventory.analysis_service import AnalysisService
 class InventoryManagementService:
     """库存管理服务 Facade — 向后兼容的统一入口"""
 
-    def __init__(self, db: Session, tenant_id: int):
+    def __init__(self, db: Session, tenant_id: Optional[int] = None):
         self.db = db
         self.tenant_id = tenant_id
-        self._query = StockQueryService(db, tenant_id)
-        self._tx = TransactionService(db, tenant_id)
-        self._stock_update = StockUpdateService(db, tenant_id)
-        self._inbound = InboundService(db, tenant_id)
-        self._outbound = OutboundService(db, tenant_id)
-        self._transfer = TransferService(db, tenant_id)
-        self._reservation = ReservationService(db, tenant_id)
-        self._analysis = AnalysisService(db, tenant_id)
+        self._query = StockQueryService(db, tenant_id) if tenant_id is not None else None
+        self._tx = TransactionService(db, tenant_id) if tenant_id is not None else None
+        self._stock_update = StockUpdateService(db, tenant_id) if tenant_id is not None else None
+        self._inbound = InboundService(db, tenant_id) if tenant_id is not None else None
+        self._outbound = OutboundService(db, tenant_id) if tenant_id is not None else None
+        self._transfer = TransferService(db, tenant_id) if tenant_id is not None else None
+        self._reservation = ReservationService(db, tenant_id) if tenant_id is not None else None
+        self._analysis = AnalysisService(db, tenant_id) if tenant_id is not None else None
 
     # ---- Stock Query ----
     def get_stock(self, material_id: int, location=None, batch_number=None) -> List[MaterialStock]:

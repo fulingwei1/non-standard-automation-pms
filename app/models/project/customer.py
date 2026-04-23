@@ -19,6 +19,15 @@ class Customer(Base, TimestampMixin):
 
     __tablename__ = "customers"
 
+    def __init__(self, **kwargs):
+        if "contact_address" in kwargs and "address" not in kwargs:
+            kwargs["address"] = kwargs.pop("contact_address")
+        if "source" in kwargs and "customer_source" not in kwargs:
+            kwargs["customer_source"] = kwargs.pop("source")
+        if "description" in kwargs and "remark" not in kwargs:
+            kwargs["remark"] = kwargs.pop("description")
+        super().__init__(**kwargs)
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     customer_code = Column(String(50), unique=True, nullable=False, comment="客户编码")
     customer_name = Column(String(200), nullable=False, comment="客户名称")
@@ -27,6 +36,7 @@ class Customer(Base, TimestampMixin):
     industry = Column(String(50), comment="所属行业")
     scale = Column(String(20), comment="规模")
     address = Column(String(500), comment="详细地址")
+    region = Column(String(50), comment="区域")
     contact_person = Column(String(50), comment="联系人")
     contact_phone = Column(String(50), comment="联系电话")
     contact_email = Column(String(100), comment="联系邮箱")
@@ -79,6 +89,30 @@ class Customer(Base, TimestampMixin):
     def name(self) -> str:
         """兼容旧代码：customer.name -> customer_name"""
         return self.customer_name
+
+    @property
+    def contact_address(self):
+        return self.address
+
+    @contact_address.setter
+    def contact_address(self, value):
+        self.address = value
+
+    @property
+    def source(self):
+        return self.customer_source
+
+    @source.setter
+    def source(self, value):
+        self.customer_source = value
+
+    @property
+    def description(self):
+        return self.remark
+
+    @description.setter
+    def description(self, value):
+        self.remark = value
 
     @property
     def display_name(self) -> str:

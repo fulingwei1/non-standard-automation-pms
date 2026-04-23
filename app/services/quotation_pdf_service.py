@@ -26,7 +26,8 @@ from app.models.presale_ai_quotation import PresaleAIQuotation
 class QuotationPDFService:
     """报价单PDF生成服务"""
 
-    def __init__(self):
+    def __init__(self, db=None):
+        self.db = db
         self.output_dir = "uploads/quotations/"
         os.makedirs(self.output_dir, exist_ok=True)
 

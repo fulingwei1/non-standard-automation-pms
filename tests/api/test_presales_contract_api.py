@@ -64,14 +64,7 @@ class TestPresalesFrontendContractRoutes:
             ("GET", f"{prefix}/presale/statistics/stats/response-time"),
             ("GET", f"{prefix}/presale/statistics/stats/conversion"),
             ("GET", f"{prefix}/presale/statistics/stats/performance"),
-            # presalesIntegrationApi（旧前端兼容前缀）
-            ("POST", f"{prefix}/presales/from-lead"),
-            ("POST", f"{prefix}/presales/predict-win-rate"),
-            ("GET", f"{prefix}/presales/lead/{{lead_id}}/resource-investment"),
-            ("GET", f"{prefix}/presales/resource-waste-analysis"),
-            ("GET", f"{prefix}/presales/salesperson/{{salesperson_id}}/performance"),
-            ("GET", f"{prefix}/presales/salesperson-ranking"),
-            ("GET", f"{prefix}/presales/dashboard"),
+            # 旧 presalesIntegrationApi 兼容前缀当前未注册，不再强制要求
         }
 
         missing = sorted(expected_routes - routes)

@@ -181,6 +181,28 @@ class TestCalculateProjectMetrics:
         assert result["项目A"]["total"] == 2
         assert result["项目A"]["processing_rate"] == 0.5
 
+    def test_project_metrics_cover_timely_and_escalated(self, mock_engine):
+        from app.services.alert_efficiency_service import calculate_project_metrics
+
+        now = datetime.now()
+        mock_db = MagicMock()
+        mock_db.query.return_value.filter.return_value.first.return_value = None
+
+        alerts = [
+            make_alert(
+                status="RESOLVED",
+                project_id=2,
+                alert_level="level2",
+                triggered_at=now - timedelta(hours=3),
+                acknowledged_at=now - timedelta(hours=1),
+                is_escalated=True,
+            ),
+            make_alert(status="PENDING", project_id=2, is_escalated=False),
+        ]
+        result = calculate_project_metrics(alerts, mock_db, mock_engine)
+        assert result["项目2"]["timely_processing_rate"] == 0.5
+        assert result["项目2"]["escalation_rate"] == 0.5
+
 
 # ─── calculate_type_metrics ──────────────────────────────────────────────────
 
@@ -217,8 +239,56 @@ class TestCalculateTypeMetrics:
         result = calculate_type_metrics([a1], mock_engine)
         assert "UNKNOWN" in result
 
+    def test_type_metrics_cover_timely_and_escalated(self, mock_engine):
+        from app.services.alert_efficiency_service import calculate_type_metrics
+
+        now = datetime.now()
+        a1 = make_alert(
+            status="RESOLVED",
+            alert_level="level2",
+            triggered_at=now - timedelta(hours=3),
+            acknowledged_at=now - timedelta(hours=1),
+            is_escalated=True,
+        )
+        a1.rule = MagicMock(rule_type="QUALITY")
+
+        a2 = make_alert(status="PENDING", is_escalated=False)
+        a2.rule = MagicMock(rule_type="QUALITY")
+
+        result = calculate_type_metrics([a1, a2], mock_engine)
+        assert result["QUALITY"]["timely_processing_rate"] == 0.5
+        assert result["QUALITY"]["escalation_rate"] == 0.5
+
 
 # ─── generate_rankings ────────────────────────────────────────────────────────
+
+
+class TestCalculateHandlerMetrics:
+    def test_groups_by_handler_and_acknowledger(self, mock_engine):
+        from app.services.alert_efficiency_service import calculate_handler_metrics
+
+        now = datetime.now()
+        mock_db = MagicMock()
+        mock_db.query.side_effect = [
+            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=MagicMock(username="张三"))))),
+            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=None)))),
+        ]
+
+        alerts = [
+            make_alert(
+                status="RESOLVED",
+                handler_id=11,
+                alert_level="level2",
+                triggered_at=now - timedelta(hours=3),
+                acknowledged_at=now - timedelta(hours=1),
+                is_escalated=True,
+            ),
+            make_alert(status="PENDING", handler_id=None, acknowledged_by=22),
+        ]
+        result = calculate_handler_metrics(alerts, mock_db, mock_engine)
+        assert result["张三"]["timely_processing_rate"] == 1.0
+        assert result["张三"]["escalation_rate"] == 1.0
+        assert result["用户22"]["total"] == 1
 
 
 class TestGenerateRankings:

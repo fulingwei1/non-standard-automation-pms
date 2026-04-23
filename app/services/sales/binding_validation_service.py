@@ -25,6 +25,15 @@ class BindingIssueLevel(str, Enum):
     WARNING = "warning"  # 警告，允许操作但需注意
     INFO = "info"  # 信息提示
 
+    @classmethod
+    def _missing_(cls, value):
+        member = cls.ERROR
+        try:
+            member.db = value
+        except Exception:
+            pass
+        return member
+
 
 class BindingIssueCode(str, Enum):
     """绑定问题代码"""

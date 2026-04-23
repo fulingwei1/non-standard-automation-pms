@@ -19,6 +19,9 @@ class ExternalChannelsMixin:
     这些方法保留用于向后兼容，但不再需要手动调用。
     """
 
+    def __init__(self, db=None):
+        self.db = db
+
     def _queue_email_notification(self, notification: Dict[str, Any]):
         """
         将邮件通知加入队列（已由统一服务处理）

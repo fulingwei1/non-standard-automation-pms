@@ -1309,14 +1309,13 @@ class TestQuotationPDFService:
         assert os.path.exists(svc.output_dir)
 
     def test_generate_pdf_raises_when_reportlab_unavailable(self):
-        from app.services.quotation_pdf_service import REPORTLAB_AVAILABLE, QuotationPDFService
+        from app.services.quotation_pdf_service import QuotationPDFService
 
-        if REPORTLAB_AVAILABLE:
-            pytest.skip("reportlab is available - skipping unavailability test")
-        svc = QuotationPDFService()
-        mock_quotation = MagicMock()
-        with pytest.raises(Exception):
-            svc.generate_pdf(mock_quotation)
+        with patch("app.services.quotation_pdf_service.REPORTLAB_AVAILABLE", False):
+            svc = QuotationPDFService()
+            mock_quotation = MagicMock()
+            with pytest.raises(Exception):
+                svc.generate_pdf(mock_quotation)
 
 
 # ─────────────────────────────────────────────

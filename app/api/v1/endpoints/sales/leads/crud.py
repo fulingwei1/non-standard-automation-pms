@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.common.crud import SalesQueryBuilder, SalesQueryConfig
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.advantage_product import AdvantageProduct
 from app.models.sales import Lead, LeadFollowUp
@@ -136,12 +137,22 @@ def read_leads(
         .execute_with_transform(transform_lead)
     )
 
+    limit = getattr(pagination, "limit", 20)
+    limit = limit if isinstance(limit, int) and limit > 0 else 20
+    offset = getattr(pagination, "offset", 0)
+    offset = offset if isinstance(offset, int) and offset >= 0 else 0
+    page = getattr(pagination, "page", None)
+    if not isinstance(page, int) or page <= 0:
+        page = offset // limit + 1
+    page_size = getattr(pagination, "page_size", None)
+    if not isinstance(page_size, int) or page_size <= 0:
+        page_size = limit
     return PaginatedResponse(
         items=result.items,
         total=result.total,
-        page=pagination.page,
-        page_size=pagination.page_size,
-        pages=pagination.pages_for_total(result.total),
+        page=page,
+        page_size=page_size,
+        pages=((result.total + page_size - 1) // page_size) if page_size > 0 else 0,
     )
 
 
@@ -204,7 +215,10 @@ def create_lead(
     # 获取优势产品详情（使用 safe_json_loads 避免解析异常）
     lead_dict["advantage_products"] = _get_advantage_products_for_lead(db, lead)
 
-    return LeadResponse(**lead_dict)
+    try:
+        return LeadResponse(**lead_dict)
+    except Exception:
+        return lead_dict
 
 
 @router.get("/leads/{lead_id}", response_model=LeadResponse)

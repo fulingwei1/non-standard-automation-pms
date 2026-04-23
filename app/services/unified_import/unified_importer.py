@@ -19,6 +19,9 @@ from .user_importer import UserImporter
 class UnifiedImporter(ImportBase):
     """统一导入器 - 根据类型分发到具体导入器"""
 
+    def __init__(self, db: Session | None = None):
+        self.db = db
+
     @classmethod
     def import_data(
         cls,

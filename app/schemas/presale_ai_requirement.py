@@ -6,7 +6,7 @@ AI需求理解Schema定义
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 # ========== 基础Schema ==========
 
@@ -85,7 +85,8 @@ class RequirementAnalysisRequest(BaseModel):
     ai_model: Optional[str] = Field("gpt-4", description="使用的AI模型")
     analysis_depth: str = Field("standard", description="分析深度: quick/standard/deep")
 
-    @validator("raw_requirement")
+    @field_validator("raw_requirement")
+    @classmethod
     def validate_requirement_content(cls, v):
         if len(v.strip()) < 10:
             raise ValueError("需求描述至少10个字符")

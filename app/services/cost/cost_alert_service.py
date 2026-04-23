@@ -16,6 +16,9 @@ from app.models.project import Project
 class CostAlertService:
     """成本预警服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def check_budget_execution(
         db: Session,

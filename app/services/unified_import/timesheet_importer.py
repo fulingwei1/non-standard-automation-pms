@@ -21,6 +21,9 @@ from .base import ImportBase
 class TimesheetImporter(ImportBase):
     """工时数据导入器"""
 
+    def __init__(self, db: Session | None = None):
+        self.db = db
+
     @staticmethod
     def create_timesheet_record(
         user: User,

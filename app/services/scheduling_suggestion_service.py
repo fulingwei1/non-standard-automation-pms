@@ -21,6 +21,9 @@ from app.services.resource_allocation_service import ResourceAllocationService
 class SchedulingSuggestionService:
     """排产建议服务"""
 
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
     # 项目优先级分数映射
     PRIORITY_SCORES = {"P1": 30, "P2": 24, "P3": 18, "P4": 12, "P5": 6}  # 最高优先级  # 最低优先级
 

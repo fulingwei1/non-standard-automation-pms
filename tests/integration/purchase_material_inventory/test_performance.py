@@ -28,12 +28,12 @@ class TestInventoryQueryPerformance:
     def test_stock_realtime_query_performance(self, integration_test_data):
         """测试库存实时查询性能 (目标: < 100ms)"""
         db = integration_test_data["db"]
+        material_prefix = f"PERF_M-{uuid.uuid4().hex[:8]}"
 
         # 创建大量物料数据用于测试
-        test_materials = []
         for i in range(100):
             material = Material(
-                material_code=f"PERF_M{i:04d}",
+                material_code=f"{material_prefix}-{i:04d}",
                 material_name=f"性能测试物料{i}",
                 unit="件",
                 material_type="RAW_MATERIAL",
@@ -42,7 +42,6 @@ class TestInventoryQueryPerformance:
                 current_stock=Decimal("100"),
                 is_active=True,
             )
-            test_materials.append(material)
             db.add(material)
 
         db.commit()
@@ -67,19 +66,21 @@ class TestInventoryQueryPerformance:
         print(f"   查询结果: {len(low_stock_materials)}条记录")
 
         # 清理测试数据
-        for material in test_materials:
-            db.delete(material)
+        db.query(Material).filter(Material.material_code.like(f"{material_prefix}-%")).delete(
+            synchronize_session=False
+        )
         db.commit()
 
     def test_batch_stock_query_performance(self, integration_test_data):
         """测试批量库存查询性能"""
         db = integration_test_data["db"]
+        material_prefix = f"BATCH_M-{uuid.uuid4().hex[:8]}"
 
         # 创建500个物料
         material_ids = []
         for i in range(500):
             material = Material(
-                material_code=f"BATCH_M{i:04d}",
+                material_code=f"{material_prefix}-{i:04d}",
                 material_name=f"批量测试物料{i}",
                 unit="件",
                 material_type="RAW_MATERIAL",
@@ -108,7 +109,9 @@ class TestInventoryQueryPerformance:
         print(f"   查询100条记录耗时: {query_time:.2f}ms")
 
         # 清理
-        db.query(Material).filter(Material.material_code.like("BATCH_M%")).delete()
+        db.query(Material).filter(Material.material_code.like(f"{material_prefix}-%")).delete(
+            synchronize_session=False
+        )
         db.commit()
 
 
@@ -222,12 +225,12 @@ class TestDemandForecastPerformance:
         start_time = time.time()
 
         # 指数平滑预测
-        alpha = 0.3  # 平滑系数
+        alpha = Decimal("0.3")  # 平滑系数
         forecast = historical_data[-1]
 
         for i in range(30):
             # 简化的指数平滑
-            forecast = alpha * historical_data[-1] + (1 - alpha) * forecast
+            forecast = alpha * historical_data[-1] + (Decimal("1.0") - alpha) * forecast
 
         forecast_time = time.time() - start_time
 
@@ -297,7 +300,7 @@ class TestConcurrentStockUpdate:
         print(f"   最终库存: {material.current_stock}")
 
         # 清理
-        db.delete(material)
+        db.query(Material).filter(Material.id == material_id).delete(synchronize_session=False)
         db.commit()
 
     def test_high_concurrency_simulation(self, integration_test_data):
@@ -342,7 +345,7 @@ class TestConcurrentStockUpdate:
         print(f"   平均响应: {avg_response_time:.2f}ms")
 
         # 清理
-        db.delete(material)
+        db.query(Material).filter(Material.id == material.id).delete(synchronize_session=False)
         db.commit()
 
 

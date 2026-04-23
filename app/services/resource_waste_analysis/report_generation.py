@@ -11,6 +11,9 @@ from typing import Any, Dict
 class ReportGenerationMixin:
     """报告生成功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def generate_waste_report(self, period: str) -> Dict[str, Any]:  # 'YYYY' or 'YYYY-MM'
         """生成资源浪费综合报告
 

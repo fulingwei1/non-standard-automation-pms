@@ -13,6 +13,9 @@ from app.models.purchase import PurchaseOrder
 class CostTrendAnalyzer:
     """成本趋势分析器"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def get_cost_trend_data(
         db: Session,

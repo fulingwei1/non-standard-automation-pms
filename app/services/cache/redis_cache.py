@@ -36,6 +36,9 @@ class CacheKeys:
     CONFIG = "config"
     REPORT = "report"
 
+    def __init__(self, db=None):
+        self.db = db
+
 
 def cache_key(*parts) -> str:
     """

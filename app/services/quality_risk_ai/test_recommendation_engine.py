@@ -5,6 +5,11 @@
 class TestRecommendationEngine:
     """测试推荐引擎的Stub实现"""
 
+    __test__ = False
+
+    def __init__(self, db=None):
+        self.db = db
+
     def recommend(self, *args, **kwargs):
         """返回空推荐列表"""
         return []

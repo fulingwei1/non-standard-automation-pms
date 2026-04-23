@@ -14,6 +14,9 @@ from app.models.approval import ApprovalInstance, ApprovalTask
 class FlowNotificationsMixin:
     """流程变更通知 Mixin"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def notify_withdrawn(
         self,
         instance: ApprovalInstance,

@@ -159,10 +159,20 @@ class TenantService:
         if init_data.copy_role_templates:
             templates = self.db.query(RoleTemplate).filter(RoleTemplate.is_active).all()
             for template in templates:
+                template_role_code = getattr(template, "role_code", None) or getattr(
+                    template, "template_code", None
+                )
+                template_role_name = getattr(template, "role_name", None) or getattr(
+                    template, "template_name", None
+                )
+
+                if not template_role_code or not template_role_name:
+                    continue
+
                 # 检查角色是否已存在
                 existing_role = (
                     self.db.query(Role)
-                    .filter(Role.tenant_id == tenant_id, Role.role_code == template.role_code)
+                    .filter(Role.tenant_id == tenant_id, Role.role_code == template_role_code)
                     .first()
                 )
 
@@ -170,13 +180,13 @@ class TenantService:
                     role = Role(
                         tenant_id=tenant_id,
                         source_template_id=template.id,
-                        role_code=template.role_code,
-                        role_name=template.role_name,
+                        role_code=template_role_code,
+                        role_name=template_role_name,
                         description=template.description,
-                        data_scope=template.data_scope,
-                        nav_groups=template.nav_groups,
-                        ui_config=template.ui_config,
-                        sort_order=template.sort_order,
+                        data_scope=getattr(template, "data_scope", "OWN"),
+                        nav_groups=getattr(template, "nav_groups", None),
+                        ui_config=getattr(template, "ui_config", None),
+                        sort_order=getattr(template, "sort_order", 0),
                         is_active=True,
                     )
                     self.db.add(role)
@@ -196,9 +206,9 @@ class TenantService:
         from app.models.organization import Employee
 
         employee = Employee(
+            employee_code=f"T{tenant_id}A{uuid.uuid4().hex[:6].upper()}",
             name=init_data.admin_real_name or init_data.admin_username,
-            email=init_data.admin_email,
-            status="ACTIVE",
+            is_active=True,
         )
         self.db.add(employee)
         self.db.flush()

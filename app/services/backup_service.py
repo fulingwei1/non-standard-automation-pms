@@ -19,6 +19,9 @@ class BackupService:
     BACKUP_DIR = Path(os.getenv("BACKUP_DIR", "/var/backups/pms"))
     SCRIPT_DIR = Path(__file__).parent.parent.parent / "scripts"
 
+    def __init__(self, db=None):
+        self.db = db
+
     @classmethod
     def create_backup(cls, backup_type: str = "full") -> Dict:
         """

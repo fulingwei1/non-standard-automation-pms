@@ -30,6 +30,15 @@ class MilestoneType(str, Enum):
     WARRANTY_END = "warranty"     # 质保到期
     CONTRACT_END = "contract"     # 合同到期
 
+    @classmethod
+    def _missing_(cls, value):
+        member = cls.PAYMENT
+        try:
+            member.db = value
+        except Exception:
+            pass
+        return member
+
 
 class MilestoneUrgency(str, Enum):
     """紧急程度"""

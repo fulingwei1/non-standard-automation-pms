@@ -21,16 +21,25 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     """Repository基类"""
 
-    def __init__(self, model: Type[ModelType], db: AsyncSession, resource_name: str = None):
+    def __init__(
+        self,
+        model: Optional[Type[ModelType]] = None,
+        db: Optional[AsyncSession] = None,
+        resource_name: str = None,
+    ):
         """
         Args:
             model: SQLAlchemy模型类
             db: 数据库会话
             resource_name: 资源名称（用于错误消息）
         """
+        if db is None and model is not None and not isinstance(model, type):
+            db = model
+            model = None
+
         self.model = model
         self.db = db
-        self.resource_name = resource_name or model.__name__
+        self.resource_name = resource_name or (model.__name__ if model else self.__class__.__name__)
 
     async def get(
         self, id: int, *, load_relationships: Optional[List[str]] = None

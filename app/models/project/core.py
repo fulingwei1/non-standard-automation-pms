@@ -234,6 +234,15 @@ class Project(Base, TimestampMixin):
     # ========================================================================
 
     @property
+    def pm(self):
+        """兼容旧代码：project.pm -> manager"""
+        return self.manager
+
+    @pm.setter
+    def pm(self, value):
+        self.manager = value
+
+    @property
     def code(self) -> str:
         """兼容旧代码：project.code -> project_code"""
         return self.project_code

@@ -39,6 +39,10 @@ class ProjectDeliveryService:
     
     def __init__(self, db: Session):
         self.db = db
+
+    def track_delivery(self, *args, **kwargs):
+        """旧接口兼容占位。"""
+        return self.list_schedules(*args, **kwargs) if args or kwargs else []
     
     # ==================== 排产计划 CRUD ====================
     

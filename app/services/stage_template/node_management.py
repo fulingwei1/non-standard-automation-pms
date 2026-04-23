@@ -14,6 +14,9 @@ from app.models.stage_template import NodeDefinition, StageDefinition
 class NodeManagementMixin:
     """节点管理功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def add_node(
         self,
         stage_definition_id: int,

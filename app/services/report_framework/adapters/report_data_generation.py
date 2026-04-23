@@ -27,7 +27,7 @@ class ReportDataGenerationAdapter(BaseReportAdapter):
         "COST_ANALYSIS": "COST_ANALYSIS",
     }
 
-    def __init__(self, db: Session, report_type: str):
+    def __init__(self, db: Session, report_type: str = ""):
         """
         Args:
             db: 数据库会话

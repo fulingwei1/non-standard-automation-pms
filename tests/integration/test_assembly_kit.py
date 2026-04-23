@@ -146,11 +146,11 @@ class TestAssemblyAttrRecommender:
 
     def test_supplier_inference(self, db_session: Session):
         """测试供应商类型推断"""
-        from app.models import Material, Supplier
+        from app.models import Material, Vendor
         from app.services.assembly_attr_recommender import AssemblyAttrRecommender
 
         try:
-            supplier = Supplier(
+            supplier = Vendor(
                 supplier_code=_unique_code("SUP"),
                 supplier_name="测试供应商",
                 supplier_type="MACHINING",

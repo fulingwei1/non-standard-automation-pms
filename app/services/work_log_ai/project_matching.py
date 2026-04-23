@@ -13,6 +13,9 @@ from app.models.timesheet import Timesheet
 class ProjectMatchingMixin:
     """项目匹配功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def _get_user_projects(self, user_id: int) -> List[Dict[str, Any]]:
         """
         获取用户参与的项目列表

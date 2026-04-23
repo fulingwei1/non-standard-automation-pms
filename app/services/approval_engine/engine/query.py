@@ -55,8 +55,7 @@ class ApprovalQueryMixin:
 
         pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        query = apply_pagination(query, pagination.offset, pagination.limit)
-        tasks = query.all()
+        tasks = query.offset(pagination.offset).limit(pagination.limit).all()
 
         return {
             "total": total,
@@ -84,8 +83,7 @@ class ApprovalQueryMixin:
 
         pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        query = apply_pagination(query, pagination.offset, pagination.limit)
-        instances = query.all()
+        instances = query.offset(pagination.offset).limit(pagination.limit).all()
 
         return {
             "total": total,
@@ -113,8 +111,7 @@ class ApprovalQueryMixin:
 
         pagination = get_pagination_params(page=page, page_size=page_size)
         total = query.count()
-        query = apply_pagination(query, pagination.offset, pagination.limit)
-        records = query.all()
+        records = query.offset(pagination.offset).limit(pagination.limit).all()
 
         return {
             "total": total,

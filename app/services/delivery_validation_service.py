@@ -16,6 +16,9 @@ from app.models.sales import Quote, QuoteItem, QuoteVersion
 class DeliveryValidationService:
     """交期校验服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     # 项目阶段默认工期（天）
     DEFAULT_STAGE_DURATION = {
         "S1": 7,  # 需求进入

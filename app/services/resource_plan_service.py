@@ -32,6 +32,9 @@ from app.utils.db_helpers import save_obj
 class ResourcePlanService:
     """资源计划服务"""
 
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
     # ==================== 工具方法 ====================
 
     @staticmethod

@@ -27,6 +27,35 @@ class CostForecastService:
     def __init__(self, db: Session):
         self.db = db
 
+    def _simple_linear_regression(self, x_values: List[float], y_values: List[float]) -> Dict[str, float]:
+        """无 sklearn 依赖的简单线性回归。"""
+        n = len(x_values)
+        if n == 0:
+            return {"slope": 0.0, "intercept": 0.0, "r_squared": 0.0}
+
+        x_mean = sum(x_values) / n
+        y_mean = sum(y_values) / n
+
+        denominator = sum((x - x_mean) ** 2 for x in x_values)
+        if denominator == 0:
+            slope = 0.0
+        else:
+            numerator = sum((x - x_mean) * (y - y_mean) for x, y in zip(x_values, y_values))
+            slope = numerator / denominator
+
+        intercept = y_mean - slope * x_mean
+
+        y_pred = [slope * x + intercept for x in x_values]
+        ss_res = sum((y - y_hat) ** 2 for y, y_hat in zip(y_values, y_pred))
+        ss_tot = sum((y - y_mean) ** 2 for y in y_values)
+        r_squared = 1.0 if ss_tot == 0 else max(0.0, 1 - ss_res / ss_tot)
+
+        return {
+            "slope": float(slope),
+            "intercept": float(intercept),
+            "r_squared": float(r_squared),
+        }
+
     # ========================================================================
     # 成本预测算法
     # ========================================================================
@@ -60,20 +89,13 @@ class CostForecastService:
         df = pd.DataFrame(monthly_costs)
         df["month_index"] = range(1, len(df) + 1)
 
-        # 线性回归
-        from sklearn.linear_model import LinearRegression
-
-        X = df[["month_index"]].values
-        y = df["cumulative_cost"].values
-
-        model = LinearRegression()
-        model.fit(X, y)
-
-        slope = float(model.coef_[0])
-        intercept = float(model.intercept_)
-
-        # 计算R²（拟合优度）
-        r_squared = float(model.score(X, y))
+        regression = self._simple_linear_regression(
+            df["month_index"].astype(float).tolist(),
+            df["cumulative_cost"].astype(float).tolist(),
+        )
+        slope = regression["slope"]
+        intercept = regression["intercept"]
+        r_squared = regression["r_squared"]
 
         # 预测完工成本
         # 估算总月数（基于项目时间）

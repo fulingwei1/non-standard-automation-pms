@@ -14,6 +14,9 @@ from app.models.sales import Opportunity
 class OpportunityScoringMixin:
     """商机评分计算功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def calculate_opportunity_priority(self, opportunity_id: int) -> Dict[str, Any]:
         """计算商机优先级评分"""
         opportunity = self.db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()

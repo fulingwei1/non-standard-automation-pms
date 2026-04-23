@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 class RankingMixin:
     """排名查询功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def get_priority_ranking(
         self,
         entity_type: str = "lead",  # 'lead' or 'opportunity'

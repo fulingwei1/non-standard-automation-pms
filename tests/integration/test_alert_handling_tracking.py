@@ -22,13 +22,13 @@ class TestAlertHandlingTracking:
         assert response.status_code in [200, 201, 404]
 
     def test_alert_resolution(self, client: TestClient, db: Session, auth_headers, test_employee):
-        data = {"alert_id": 1, "resolution": "已解决", "solution": "调整资源配置"}
-        response = client.post("/api/v1/alerts/1/resolve", json=data, headers=auth_headers)
+        data = {"handle_result": "已解决", "handle_note": "调整资源配置"}
+        response = client.put("/api/v1/alerts/1/resolve", json=data, headers=auth_headers)
         assert response.status_code in [200, 404]
 
     def test_alert_closure(self, client: TestClient, db: Session, auth_headers, test_employee):
-        data = {"alert_id": 1, "closed_by": test_employee.id, "closure_notes": "问题已解决"}
-        response = client.post("/api/v1/alerts/1/close", json=data, headers=auth_headers)
+        data = {"handle_result": "问题已解决", "handle_note": "闭环确认"}
+        response = client.put("/api/v1/alerts/1/close", json=data, headers=auth_headers)
         assert response.status_code in [200, 404]
 
     def test_alert_handling_report(

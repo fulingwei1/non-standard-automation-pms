@@ -16,6 +16,9 @@ from .project_reports import ProjectReportMixin
 class ReportRouterMixin:
     """报表路由分发功能混入类"""
 
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
     @staticmethod
     def generate_report_by_type(
         db: Session,

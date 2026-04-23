@@ -20,6 +20,9 @@ from app.models.work_log import WorkLog
 class SalespersonAnalysisMixin:
     """销售人员分析功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def get_salesperson_waste_ranking(
         self, start_date: Optional[date] = None, end_date: Optional[date] = None, limit: int = 20
     ) -> List[Dict[str, Any]]:

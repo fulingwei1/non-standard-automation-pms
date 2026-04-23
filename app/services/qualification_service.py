@@ -26,6 +26,9 @@ from app.utils.db_helpers import save_obj
 class QualificationService:
     """任职资格管理服务"""
 
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
     @staticmethod
     def get_qualification_levels(
         db: Session, role_type: Optional[str] = None, is_active: Optional[bool] = True

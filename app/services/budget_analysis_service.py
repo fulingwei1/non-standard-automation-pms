@@ -15,6 +15,9 @@ from app.models.project import Project, ProjectCost
 class BudgetAnalysisService:
     """预算分析服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def get_budget_execution_analysis(db: Session, project_id: int) -> Dict:
         """

@@ -66,6 +66,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _resolve_page_params(pagination) -> tuple[int, int]:
+    limit = getattr(pagination, "limit", 20)
+    limit = limit if isinstance(limit, int) and limit > 0 else 20
+    offset = getattr(pagination, "offset", 0)
+    offset = offset if isinstance(offset, int) and offset >= 0 else 0
+    page = getattr(pagination, "page", None)
+    if not isinstance(page, int) or page <= 0:
+        page = offset // limit + 1
+    page_size = getattr(pagination, "page_size", None)
+    if not isinstance(page_size, int) or page_size <= 0:
+        page_size = limit
+    return page, page_size
+
+
 # ============================================================
 # 辅助函数
 # ============================================================
@@ -222,6 +236,7 @@ def list_alerts(
     pagination: PaginationParams = Depends(get_pagination_query),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     material_id: Optional[int] = Query(None, description="物料ID筛选"),
+    status: Optional[str] = Query(None, description="兼容旧参数名 status"),
     alert_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     alert_level: Optional[str] = Query(None, description="预警级别筛选"),
     handler_id: Optional[int] = Query(None, description="处理人ID筛选"),
@@ -230,6 +245,7 @@ def list_alerts(
     """
     获取缺料预警列表（系统检测的缺料）
     """
+    alert_status = alert_status or status
     query = db.query(MaterialShortage)
 
     if project_id:
@@ -250,12 +266,13 @@ def list_alerts(
 
     items = [_build_alert_response(alert) for alert in alerts]
 
+    page, page_size = _resolve_page_params(pagination)
     return PaginatedResponse(
         items=items,
         total=total,
-        page=pagination.page,
-        page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total),
+        page=page,
+        page_size=page_size,
+        pages=((total + page_size - 1) // page_size) if page_size > 0 else 0,
     )
 
 

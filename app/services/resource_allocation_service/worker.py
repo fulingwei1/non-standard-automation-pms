@@ -78,7 +78,7 @@ def check_worker_availability(
     if exclude_allocation_id:
         allocations = allocations.filter(PmoResourceAllocation.id != exclude_allocation_id)
 
-    for alloc in allocations:
+    for alloc in allocations.all():
         if alloc.planned_hours:
             assigned_hours += float(alloc.planned_hours)
         else:

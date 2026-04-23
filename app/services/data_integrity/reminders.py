@@ -21,6 +21,9 @@ logger = logging.getLogger(__name__)
 class RemindersMixin:
     """缺失数据提醒功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def get_missing_data_reminders(self, period_id: int) -> List[Dict[str, Any]]:
         """
         获取数据缺失提醒列表

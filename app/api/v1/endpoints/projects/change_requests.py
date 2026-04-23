@@ -37,6 +37,32 @@ from app.services.project_change_requests import ProjectChangeRequestsService
 router = APIRouter()
 
 
+def generate_change_code(db: Session, project_id: int) -> str:
+    """兼容旧测试的变更编号生成辅助函数。"""
+    from app.models.project import Project
+
+    project = db.query(Project).filter(Project.id == project_id).first()
+    project_code = getattr(project, "project_code", f"PRJ{project_id}") if project else f"PRJ{project_id}"
+    count = db.query(Project).filter(Project.id == project_id).scalar() or 0
+    return f"{project_code}-CHG-{int(count) + 1:03d}"
+
+
+def validate_status_transition(old_status: Any, new_status: Any) -> bool:
+    """兼容旧测试的状态流转校验辅助函数。"""
+    old_value = getattr(old_status, "value", old_status)
+    new_value = getattr(new_status, "value", new_status)
+    allowed = {
+        "DRAFT": {"SUBMITTED", "CANCELLED"},
+        "SUBMITTED": {"APPROVED", "REJECTED", "CANCELLED"},
+        "APPROVED": {"IMPLEMENTING", "CANCELLED"},
+        "IMPLEMENTING": {"VERIFYING", "COMPLETED", "CANCELLED"},
+        "VERIFYING": {"COMPLETED", "REOPENED", "CANCELLED"},
+    }
+    if old_value == new_value:
+        return True
+    return str(new_value) in allowed.get(str(old_value), set())
+
+
 @router.post("/")
 def create_change_request(
     *,

@@ -12,6 +12,8 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
+pytest.importorskip("greenlet", reason="sqlalchemy async sqlite tests require greenlet")
+
 from app.common.crud.exceptions import AlreadyExistsError, NotFoundError
 from app.common.crud.repository import BaseRepository
 from app.common.crud.service import BaseService

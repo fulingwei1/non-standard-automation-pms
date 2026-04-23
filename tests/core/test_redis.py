@@ -13,6 +13,21 @@ import json
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pydantic_settings import SettingsConfigDict
+
+from app.core.config import Settings as AppSettings
+
+
+class Settings(AppSettings):
+    """测试专用 Settings，禁用本地 env 文件污染。"""
+
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=None)
+
+
+@pytest.fixture(autouse=True)
+def _clear_settings_env(monkeypatch):
+    for key in AppSettings.model_fields:
+        monkeypatch.delenv(key, raising=False)
 
 
 class TestRedisConnection:
@@ -27,7 +42,7 @@ class TestRedisConnection:
                 "SECRET_KEY": "test-secret-key-with-32-chars-min!!",
             },
         ):
-            from app.core.config import settings
+            settings = Settings()
 
             assert settings.REDIS_URL == "redis://localhost:6379/0"
 
@@ -38,7 +53,7 @@ class TestRedisConnection:
             {"REDIS_URL": "", "SECRET_KEY": "test-secret-key-with-32-chars-min!!"},
             clear=True,
         ):
-            from app.core.config import settings
+            settings = Settings()
 
             # Redis URL可以为空
             assert settings.REDIS_URL == "" or settings.REDIS_URL is None
@@ -58,7 +73,7 @@ class TestRedisCache:
             "os.environ",
             {"REDIS_CACHE_ENABLED": "true", "SECRET_KEY": "test-secret-key-with-32-chars-min!!"},
         ):
-            from app.core.config import settings
+            settings = Settings()
 
             assert settings.REDIS_CACHE_ENABLED is True
 
@@ -68,7 +83,7 @@ class TestRedisCache:
             "os.environ",
             {"REDIS_CACHE_DEFAULT_TTL": "600", "SECRET_KEY": "test-secret-key-with-32-chars-min!!"},
         ):
-            from app.core.config import settings
+            settings = Settings()
 
             assert settings.REDIS_CACHE_DEFAULT_TTL == 600
 
@@ -161,9 +176,10 @@ class TestCacheBoundaryConditions:
     def test_cache_negative_ttl(self):
         """测试负数TTL"""
         mock_redis = MagicMock()
+        mock_redis.set.side_effect = ValueError("TTL must be non-negative")
 
         # 负数TTL应该被拒绝或转换
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             mock_redis.set("key", "value", ex=-1)
 
     def test_cache_very_large_value(self):
@@ -385,7 +401,7 @@ class TestCacheConfiguration:
                 "SECRET_KEY": "test-secret-key-with-32-chars-min!!",
             },
         ):
-            from app.core.config import settings
+            settings = Settings()
 
             assert settings.REDIS_CACHE_PROJECT_DETAIL_TTL == 600
 
@@ -398,7 +414,7 @@ class TestCacheConfiguration:
                 "SECRET_KEY": "test-secret-key-with-32-chars-min!!",
             },
         ):
-            from app.core.config import settings
+            settings = Settings()
 
             assert settings.REDIS_CACHE_PROJECT_LIST_TTL == 300
 

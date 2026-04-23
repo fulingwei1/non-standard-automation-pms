@@ -15,6 +15,9 @@ from app.models.stage_template import StageTemplate
 class DefaultTemplateMixin:
     """默认模板管理功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def get_default_template(
         self, project_type: str = TemplateProjectTypeEnum.CUSTOM.value
     ) -> Optional[StageTemplate]:

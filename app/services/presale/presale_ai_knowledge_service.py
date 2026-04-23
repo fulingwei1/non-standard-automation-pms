@@ -3,6 +3,7 @@
 """
 
 import json
+import builtins
 import logging
 import re
 from typing import Any, Dict, List, Optional, Tuple
@@ -844,3 +845,7 @@ class PresaleAIKnowledgeService:
         except (TypeError, ValueError):
             return None
         return min(max(score, 0.0), 1.0)
+
+
+PresaleAiKnowledgeService = PresaleAIKnowledgeService
+builtins.PresaleAiKnowledgeService = PresaleAIKnowledgeService

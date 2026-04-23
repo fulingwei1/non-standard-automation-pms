@@ -8,7 +8,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 
 class QuotationType(str, Enum):
@@ -45,11 +45,14 @@ class QuotationItem(BaseModel):
     total_price: Decimal = Field(..., description="总价", ge=0)
     category: Optional[str] = Field(None, description="类别")
 
-    @validator("total_price", always=True)
-    def calculate_total(cls, v, values):
+    @field_validator("total_price")
+    @classmethod
+    def calculate_total(cls, v, info: ValidationInfo):
         """自动计算总价"""
-        if "quantity" in values and "unit_price" in values:
-            return values["quantity"] * values["unit_price"]
+        quantity = info.data.get("quantity") if info.data else None
+        unit_price = info.data.get("unit_price") if info.data else None
+        if quantity is not None and unit_price is not None:
+            return quantity * unit_price
         return v
 
 
@@ -132,7 +135,8 @@ class QuotationApprovalRequest(BaseModel):
     status: str = Field(..., description="审批状态 (approved/rejected)")
     comments: Optional[str] = Field(None, description="审批意见")
 
-    @validator("status")
+    @field_validator("status")
+    @classmethod
     def validate_status(cls, v):
         if v not in ["approved", "rejected"]:
             raise ValueError("status must be approved or rejected")

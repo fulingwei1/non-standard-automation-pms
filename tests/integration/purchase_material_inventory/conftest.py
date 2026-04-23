@@ -15,32 +15,28 @@ from app.models.purchase import PurchaseOrder, PurchaseOrderItem, PurchaseReques
 from app.models.user import User
 from app.models.vendor import Vendor
 
-_M001 = f"M001-{uuid.uuid4().hex[:8]}"
-_M002 = f"M002-{uuid.uuid4().hex[:8]}"
-_M003 = f"M003-{uuid.uuid4().hex[:8]}"
-_PRJ2026001 = f"PRJ2026001-{uuid.uuid4().hex[:8]}"
-_RAW_METAL = f"RAW_METAL-{uuid.uuid4().hex[:8]}"
+
+def _uniq(prefix: str) -> str:
+    return f"{prefix}-{uuid.uuid4().hex[:8]}"
 
 
 @pytest.fixture
 def test_materials(db: Session):
     """创建测试物料数据"""
-    # 创建或获取物料分类
-    category = db.query(MaterialCategory).filter_by(category_code=_RAW_METAL).first()
-    if not category:
-        category = MaterialCategory(
-            category_code=_RAW_METAL, category_name="原材料-金属", level=1, is_active=True
-        )
-        db.add(category)
-        db.flush()
+    category = MaterialCategory(
+        category_code=_uniq("RAW_METAL"),
+        category_name="原材料-金属",
+        level=1,
+        is_active=True,
+    )
+    db.add(category)
+    db.flush()
 
-    # 创建或获取测试物料
-    material_codes = [_M001, _M002, _M003]
     materials = []
 
     material_configs = [
         {
-            "material_code": _M001,
+            "material_code": _uniq("M001"),
             "material_name": "不锈钢板 304",
             "specification": "1.5mm*1220*2440",
             "unit": "张",
@@ -54,7 +50,7 @@ def test_materials(db: Session):
             "is_key_material": True,
         },
         {
-            "material_code": _M002,
+            "material_code": _uniq("M002"),
             "material_name": "铝合金型材 6061",
             "specification": "50*50*3mm",
             "unit": "米",
@@ -68,7 +64,7 @@ def test_materials(db: Session):
             "is_key_material": False,
         },
         {
-            "material_code": _M003,
+            "material_code": _uniq("M003"),
             "material_name": "电机 AC220V",
             "specification": "0.75KW 1400rpm",
             "unit": "台",
@@ -84,14 +80,10 @@ def test_materials(db: Session):
     ]
 
     for config in material_configs:
-        existing = db.query(Material).filter_by(material_code=config["material_code"]).first()
-        if existing:
-            materials.append(existing)
-        else:
-            material = Material(category_id=category.id, **config)
-            db.add(material)
-            db.flush()
-            materials.append(material)
+        material = Material(category_id=category.id, **config)
+        db.add(material)
+        db.flush()
+        materials.append(material)
 
     db.commit()
     return materials
@@ -157,13 +149,8 @@ def test_suppliers(db: Session):
 @pytest.fixture
 def test_project(db: Session):
     """创建测试项目"""
-    # 检查项目是否已存在
-    existing_project = db.query(Project).filter_by(project_code=_PRJ2026001).first()
-    if existing_project:
-        return existing_project
-
     project = Project(
-        project_code=_PRJ2026001,
+        project_code=_uniq("PRJ2026001"),
         project_name="自动化生产线项目A",
         project_type="CUSTOM",
         status="ST01",
@@ -182,14 +169,9 @@ def test_user(db: Session):
     """创建测试用户"""
     from app.core.security import get_password_hash
 
-    # 检查用户是否已存在
-    existing_user = db.query(User).filter_by(username="test_purchaser").first()
-    if existing_user:
-        return existing_user
-
     user = User(
-        username="test_purchaser",
-        email="purchaser@test.com",
+        username=_uniq("test_purchaser"),
+        email=f"{uuid.uuid4().hex[:8]}@test.com",
         real_name="测试采购员",
         password_hash=get_password_hash("test123456"),
         is_active=True,

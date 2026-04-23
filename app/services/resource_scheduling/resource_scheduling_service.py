@@ -30,6 +30,10 @@ class ResourceSchedulingService:
         self.db = db
         self.ai_service = ResourceSchedulingAIService(db)
 
+    def schedule_resources(self, *args, **kwargs) -> Dict[str, Any]:
+        """兼容旧接口名。"""
+        return self.detect_conflicts(*args, **kwargs)
+
     # ============================================================================
     # 1. 资源冲突检测
     # ============================================================================

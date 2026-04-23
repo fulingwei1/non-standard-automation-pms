@@ -8,6 +8,9 @@
 class ScoringConstants:
     """评分常量类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     # 客户重要性分数映射
     CUSTOMER_IMPORTANCE_SCORES = {
         "A": 20,  # A级客户

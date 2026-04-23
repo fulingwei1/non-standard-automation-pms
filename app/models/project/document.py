@@ -3,6 +3,8 @@
 项目文档和模板模型 - ProjectDocument, ProjectTemplate, ProjectTemplateVersion
 """
 
+from pathlib import Path
+
 from sqlalchemy import (
     Boolean,
     Column,
@@ -23,6 +25,20 @@ class ProjectDocument(Base, TimestampMixin):
     """项目文档表"""
 
     __tablename__ = "project_documents"
+
+    def __init__(self, **kwargs):
+        if "document_name" in kwargs and "doc_name" not in kwargs:
+            kwargs["doc_name"] = kwargs.pop("document_name")
+        if "document_type" in kwargs and "doc_type" not in kwargs:
+            kwargs["doc_type"] = kwargs.pop("document_type")
+        if "category" in kwargs and "doc_category" not in kwargs:
+            kwargs["doc_category"] = kwargs.pop("category")
+        if "file_name" not in kwargs:
+            if kwargs.get("doc_name"):
+                kwargs["file_name"] = kwargs["doc_name"]
+            elif kwargs.get("file_path"):
+                kwargs["file_name"] = Path(str(kwargs["file_path"])).name
+        super().__init__(**kwargs)
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
@@ -57,6 +73,32 @@ class ProjectDocument(Base, TimestampMixin):
         back_populates="documents",
     )
     machine = relationship("Machine")
+    uploader = relationship("User", foreign_keys=[uploaded_by], backref="uploaded_project_documents")
+    approver = relationship("User", foreign_keys=[approved_by], backref="approved_project_documents")
+
+    @property
+    def document_name(self):
+        return self.doc_name
+
+    @document_name.setter
+    def document_name(self, value):
+        self.doc_name = value
+
+    @property
+    def document_type(self):
+        return self.doc_type
+
+    @document_type.setter
+    def document_type(self, value):
+        self.doc_type = value
+
+    @property
+    def category(self):
+        return self.doc_category
+
+    @category.setter
+    def category(self, value):
+        self.doc_category = value
 
     __table_args__ = (
         Index("idx_project_documents_project", "project_id"),

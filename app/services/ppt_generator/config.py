@@ -8,6 +8,9 @@ from .compat import Presentation, RgbColor, Inches, Pt
 class PresentationConfig:
     """PPT配置类 - 统一管理颜色、尺寸等配置"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     # 颜色定义
     DARK_BLUE = RgbColor(10, 22, 40)  # #0A1628
     TECH_BLUE = RgbColor(0, 212, 255)  # #00D4FF

@@ -234,6 +234,7 @@ def create_api_router() -> APIRouter:
     # ==================== 验收管理 ====================
     try:
         from app.api.v1.endpoints.acceptance import router as acceptance_router
+        api_router.include_router(acceptance_router, tags=["acceptance"])
         api_router.include_router(acceptance_router, prefix="/acceptance", tags=["acceptance"])
         print("✓ 验收管理模块加载成功")
     except Exception as e:

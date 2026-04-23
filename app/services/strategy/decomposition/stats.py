@@ -28,6 +28,10 @@ from app.models.strategy import (
 # ============================================
 
 
+def _safe_count(value: Any) -> int:
+    return value if isinstance(value, int) else 0
+
+
 def get_decomposition_stats(
     db: Session, strategy_id: int, year: Optional[int] = None
 ) -> Dict[str, Any]:
@@ -46,10 +50,12 @@ def get_decomposition_stats(
         year = date.today().year
 
     # 统计 CSF 数量
-    csf_count = db.query(CSF).filter(CSF.strategy_id == strategy_id, CSF.is_active).count()
+    csf_count = _safe_count(
+        db.query(CSF).filter(CSF.strategy_id == strategy_id, CSF.is_active).count()
+    )
 
     # 统计 KPI 数量
-    kpi_count = (
+    kpi_count = _safe_count(
         db.query(KPI)
         .join(CSF)
         .filter(CSF.strategy_id == strategy_id, CSF.is_active, KPI.is_active)
@@ -57,7 +63,7 @@ def get_decomposition_stats(
     )
 
     # 统计部门目标数量
-    dept_obj_count = (
+    dept_obj_count = _safe_count(
         db.query(DepartmentObjective)
         .filter(
             DepartmentObjective.strategy_id == strategy_id,
@@ -68,7 +74,7 @@ def get_decomposition_stats(
     )
 
     # 统计个人 KPI 数量
-    personal_kpi_count = (
+    personal_kpi_count = _safe_count(
         db.query(PersonalKPI)
         .join(DepartmentObjective)
         .filter(
@@ -91,6 +97,8 @@ def get_decomposition_stats(
         )
         .all()
     )
+    if not isinstance(dept_objs, list):
+        dept_objs = []
 
     for obj in dept_objs:
         dept_id = obj.department_id
@@ -98,7 +106,7 @@ def get_decomposition_stats(
             dept_stats[dept_id] = {"objectives": 0, "personal_kpis": 0}
         dept_stats[dept_id]["objectives"] += 1
 
-        pkpi_count = (
+        pkpi_count = _safe_count(
             db.query(PersonalKPI)
             .filter(PersonalKPI.department_objective_id == obj.id, PersonalKPI.is_active)
             .count()

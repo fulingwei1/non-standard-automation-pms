@@ -26,6 +26,9 @@ logger = logging.getLogger(__name__)
 class AssemblyKitOptimizer:
     """装配齐套分析优化服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @classmethod
     def optimize_estimated_ready_date(
         cls, db: Session, readiness: MaterialReadiness

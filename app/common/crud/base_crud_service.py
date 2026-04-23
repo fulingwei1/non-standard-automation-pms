@@ -60,18 +60,18 @@ class BaseCRUDService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Res
 
     def __init__(
         self,
+        db: Optional[Session] = None,
         *,
-        model: Type[ModelType],
-        db: Session,
-        response_schema: Type[ResponseSchemaType],
+        model: Optional[Type[ModelType]] = None,
+        response_schema: Optional[Type[ResponseSchemaType]] = None,
         resource_name: Optional[str] = None,
         default_filters: Optional[Dict[str, Any]] = None,
     ):
         self.model = model
         self.db = db
-        self.resource_name = resource_name or model.__name__
+        self.resource_name = resource_name or (model.__name__ if model else self.__class__.__name__)
         self.response_schema = response_schema
-        self.repository = SyncBaseRepository(model, db, self.resource_name)
+        self.repository = SyncBaseRepository(model, db, self.resource_name) if model and db else None
         self._default_filters = default_filters.copy() if default_filters else {}
 
     # --------------------------------------------------------------------- #
@@ -212,6 +212,13 @@ class BaseCRUDService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Res
         use_soft_delete = soft_delete
         if use_soft_delete is None:
             use_soft_delete = bool(self.soft_delete_field)
+
+        # 某些模型没有 deleted_at，路由即使传了 soft_delete=true 也应自动降级为硬删除，避免 500
+        if use_soft_delete:
+            soft_delete_field = self.soft_delete_field or "deleted_at"
+            if not hasattr(self.model, soft_delete_field):
+                use_soft_delete = False
+
         deleted = self.repository.delete(object_id, soft_delete=use_soft_delete)
         if deleted:
             # 记录审计日志

@@ -20,6 +20,9 @@ from app.utils.db_helpers import save_obj
 class CreditTransactionType:
     """积分交易类型"""
 
+    def __init__(self, *args, **kwargs):
+        pass
+
     INIT = "INIT"  # 初始化积分
     GENERATE = "GENERATE"  # 生成方案扣除
     ADMIN_ADD = "ADMIN_ADD"  # 管理员充值

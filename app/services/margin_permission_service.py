@@ -36,6 +36,9 @@ FULL_ACCESS_ROLES = {ROLE_FINANCE, ROLE_MANAGEMENT, ROLE_ADMIN}
 class MarginPermissionService:
     """毛利率数据权限服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def get_user_roles(user: User) -> Set[str]:
         """

@@ -17,6 +17,9 @@ from app.models.stage_instance import (
 class ProgressQueryMixin:
     """进度查询功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def get_project_progress(self, project_id: int) -> Dict[str, Any]:
         """
         获取项目阶段进度

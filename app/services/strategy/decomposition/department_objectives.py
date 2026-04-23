@@ -26,6 +26,14 @@ from app.schemas.strategy import (
 # ============================================
 
 
+def _safe_json_dumps(value):
+    if value is None:
+        return None
+    if isinstance(value, (dict, list, tuple, str, int, float, bool)):
+        return json.dumps(value, ensure_ascii=False)
+    return None
+
+
 def create_department_objective(
     db: Session, data: DepartmentObjectiveCreate
 ) -> DepartmentObjective:
@@ -34,9 +42,9 @@ def create_department_objective(
         department_id=data.department_id,
         year=data.year,
         quarter=data.quarter,
-        objectives=json.dumps(data.objectives, ensure_ascii=False) if data.objectives else None,
-        key_results=json.dumps(data.key_results, ensure_ascii=False) if data.key_results else None,
-        kpis_config=json.dumps(data.kpis_config, ensure_ascii=False) if data.kpis_config else None,
+        objectives=_safe_json_dumps(data.objectives),
+        key_results=_safe_json_dumps(data.key_results),
+        kpis_config=_safe_json_dumps(getattr(data, "kpis_config", None)),
         owner_user_id=data.owner_user_id,
     )
     db.add(obj)

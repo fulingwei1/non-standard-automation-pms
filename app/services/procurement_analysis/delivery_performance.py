@@ -14,6 +14,9 @@ from app.models.vendor import Vendor
 class DeliveryPerformanceAnalyzer:
     """交期准时率分析器"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def get_delivery_performance_data(
         db: Session, start_date: date, end_date: date, supplier_id: Optional[int] = None

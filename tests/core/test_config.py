@@ -15,8 +15,23 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from pydantic import ValidationError
+from pydantic_settings import SettingsConfigDict
 
-from app.core.config import Settings
+from app.core.config import Settings as AppSettings
+
+
+class Settings(AppSettings):
+    """测试专用 Settings，禁用本地 .env/.env.local 污染。"""
+
+    model_config = SettingsConfigDict(case_sensitive=True, env_file=None)
+
+
+@pytest.fixture(autouse=True)
+def _clear_settings_env(monkeypatch):
+    """每个测试前清掉运行时注入的配置环境变量，避免污染默认值断言。"""
+
+    for key in AppSettings.model_fields:
+        monkeypatch.delenv(key, raising=False)
 
 
 class TestSettingsBasicLoading:
@@ -89,7 +104,7 @@ class TestSecretKeyValidation:
         with patch.dict(os.environ, {"DEBUG": "true"}, clear=True):
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
-                settings = Settings()
+                settings = Settings(_env_file=None)
 
                 # 应该生成临时密钥
                 assert settings.SECRET_KEY is not None
@@ -103,7 +118,7 @@ class TestSecretKeyValidation:
         """测试生产环境必须提供密钥"""
         with patch.dict(os.environ, {"DEBUG": "false"}, clear=True):
             with pytest.raises(ValueError, match="生产环境必须设置 SECRET_KEY"):
-                Settings()
+                Settings(_env_file=None)
 
     def test_old_secret_keys_optional(self):
         """测试旧密钥配置可选"""

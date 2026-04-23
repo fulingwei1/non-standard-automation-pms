@@ -18,6 +18,9 @@ from app.utils.decimal_helpers import parse_decimal
 class OptimizationEngine:
     """成本优化建议引擎"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     # 成本阈值
     HARDWARE_OPTIMIZATION_THRESHOLD = Decimal("50000")
     SOFTWARE_OPTIMIZATION_THRESHOLD = Decimal("100000")

@@ -42,6 +42,9 @@ from app.utils.db_helpers import save_obj
 class PermissionAuditService:
     """权限审计服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     # 操作类型常量
     ACTION_USER_CREATED = "USER_CREATED"
     ACTION_USER_UPDATED = "USER_UPDATED"

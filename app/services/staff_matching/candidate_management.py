@@ -14,6 +14,9 @@ from app.models.staff_matching import HrAIMatchingLog, MesProjectStaffingNeed
 class CandidateManager:
     """候选人管理器"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @classmethod
     def accept_candidate(cls, db: Session, matching_log_id: int, acceptor_id: int) -> bool:
         """采纳候选人"""

@@ -18,6 +18,9 @@ from app.models.user import User
 class CompanyReportMixin:
     """公司报表生成功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def _generate_company_monthly(
         db: Session, start_date: date, end_date: date, sections_config: Dict, metrics_config: Dict

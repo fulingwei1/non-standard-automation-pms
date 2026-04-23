@@ -27,7 +27,8 @@ except ImportError:
 class ExcelExportService:
     """Excel 导出服务类"""
 
-    def __init__(self):
+    def __init__(self, db=None):
+        self.db = db
         if not EXCEL_AVAILABLE:
             raise ImportError(
                 "Excel处理库未安装，请安装pandas和openpyxl: pip install pandas openpyxl"

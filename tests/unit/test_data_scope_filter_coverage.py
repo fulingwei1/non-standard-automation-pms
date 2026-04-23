@@ -245,10 +245,43 @@ class TestCheckCustomerAccess:
             result = GenericFilterService.check_customer_access(mock_db, user, customer_id=5)
         assert result is True
 
-    @pytest.mark.skip(reason="DataScopeEnum.CUSTOMER 未定义 - 服务代码 bug，待修复")
     def test_no_projects_returns_false(self, mock_db):
-        pass
+        from app.models.enums import DataScopeEnum
+        from app.services.data_scope.generic_filter import GenericFilterService
 
-    @pytest.mark.skip(reason="DataScopeEnum.CUSTOMER 未定义 - 服务代码 bug，待修复")
+        user = make_user(is_superuser=False)
+
+        with (
+            patch(
+                "app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope",
+                return_value=DataScopeEnum.PROJECT.value,
+            ),
+            patch(
+                "app.services.data_scope.generic_filter.UserScopeService.get_user_project_ids",
+                return_value=set(),
+            ),
+        ):
+            result = GenericFilterService.check_customer_access(mock_db, user, customer_id=5)
+
+        assert result is False
+
     def test_subordinate_scope_with_projects_checks_customer(self, mock_db):
-        pass
+        from app.models.enums import DataScopeEnum
+        from app.services.data_scope.generic_filter import GenericFilterService
+
+        user = make_user(is_superuser=False)
+        mock_db.query.return_value.filter.return_value.first.return_value = (5,)
+
+        with (
+            patch(
+                "app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope",
+                return_value=DataScopeEnum.SUBORDINATE.value,
+            ),
+            patch(
+                "app.services.data_scope.generic_filter.UserScopeService.get_user_project_ids",
+                return_value={1, 2, 3},
+            ),
+        ):
+            result = GenericFilterService.check_customer_access(mock_db, user, customer_id=5)
+
+        assert result is True

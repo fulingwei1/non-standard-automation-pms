@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 class MaterialTransferService:
     """物料调拨服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def get_project_material_stock(
         db: Session, project_id: int, material_id: int

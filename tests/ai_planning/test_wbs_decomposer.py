@@ -5,6 +5,7 @@ AI WBS分解器测试
 
 import json
 from datetime import datetime
+from uuid import uuid4
 
 import pytest
 from sqlalchemy.orm import Session
@@ -17,9 +18,10 @@ from app.services.ai_planning import AIWbsDecomposer
 @pytest.fixture
 def sample_project(db: Session):
     """创建测试项目"""
+    suffix = uuid4().hex[:8]
     project = Project(
-        project_code="WBS_TEST_001",
-        project_name="WBS测试项目",
+        project_code=f"WBS_TEST_{suffix}",
+        project_name=f"WBS测试项目_{suffix}",
         project_type="WEB_DEV",
         status="ST01",
     )
@@ -35,10 +37,11 @@ def sample_template(db: Session):
         {"name": "需求分析", "duration_days": 15, "deliverables": ["需求文档"]},
         {"name": "设计", "duration_days": 20, "deliverables": ["设计文档"]},
     ]
+    suffix = uuid4().hex[:8]
 
     template = AIProjectPlanTemplate(
-        template_code="TPL_WBS_001",
-        template_name="WBS测试模板",
+        template_code=f"TPL_WBS_{suffix}",
+        template_name=f"WBS测试模板_{suffix}",
         project_type="WEB_DEV",
         phases=json.dumps(phases, ensure_ascii=False),
         is_active=True,
@@ -113,10 +116,11 @@ class TestAIWbsDecomposer:
     def test_identify_dependencies(self, db: Session, sample_project):
         """测试：依赖关系识别"""
         decomposer = AIWbsDecomposer(db)
+        suffix = uuid4().hex[:8]
 
         # 创建测试任务
         task1 = AIWbsSuggestion(
-            suggestion_code="WBS_DEP_001",
+            suggestion_code=f"WBS_DEP_001_{suffix}",
             project_id=sample_project.id,
             wbs_level=1,
             wbs_code="1",
@@ -125,7 +129,7 @@ class TestAIWbsDecomposer:
             estimated_duration_days=10,
         )
         task2 = AIWbsSuggestion(
-            suggestion_code="WBS_DEP_002",
+            suggestion_code=f"WBS_DEP_002_{suffix}",
             project_id=sample_project.id,
             wbs_level=1,
             wbs_code="2",

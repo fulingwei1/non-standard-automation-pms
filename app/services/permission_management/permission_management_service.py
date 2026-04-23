@@ -309,12 +309,27 @@ class PermissionManagementService:
         role_id: int,
         tenant_id: int,
     ) -> None:
-        """清除权限缓存"""
-        from app.services.permission_management.permission_service import PermissionService
+        """清除角色及相关用户的权限缓存"""
+        try:
+            cache_service = get_permission_cache_service()
+            cache_service.invalidate_role_and_users(role_id, tenant_id=tenant_id)
+        except Exception as exc:
+            logger.warning(f"清除角色权限缓存失败: {exc}")
 
+    def get_user(self, user_id: int) -> Optional[User]:
+        """获取用户详情。"""
+        return self.db.query(User).filter(User.id == user_id).first()
+
+    def get_user_permissions(
+        self,
+        user_id: int,
+        tenant_id: Optional[int],
+    ) -> List[ApiPermission]:
+        """获取用户权限详情列表。"""
         permission_codes = PermissionService.get_user_permissions(self.db, user_id, tenant_id)
+        if not permission_codes:
+            return []
 
-        # 获取权限详情
         return (
             self.db.query(ApiPermission)
             .filter(ApiPermission.perm_code.in_(permission_codes), ApiPermission.is_active)
@@ -330,8 +345,6 @@ class PermissionManagementService:
         tenant_id: int,
     ) -> bool:
         """检查用户是否有指定权限"""
-        from app.services.permission_management.permission_service import PermissionService
-
         return PermissionService.check_permission(
             self.db, user_id, permission_code, user, tenant_id
         )

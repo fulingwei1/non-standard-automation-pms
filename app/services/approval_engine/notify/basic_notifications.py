@@ -13,28 +13,43 @@ from app.models.approval import ApprovalCarbonCopy, ApprovalInstance, ApprovalTa
 class BasicNotificationsMixin:
     """基础通知 Mixin"""
 
+    def __init__(self, db=None):
+        self.db = db
+
+    @staticmethod
+    def _safe_instance_title(instance: ApprovalInstance) -> str:
+        title = getattr(instance, "title", None)
+        if title:
+            return title
+        return getattr(instance, "business_key", None) or f"审批#{getattr(instance, 'id', '')}"
+
+    @staticmethod
+    def _safe_iso(value: Any) -> Optional[str]:
+        return value.isoformat() if hasattr(value, "isoformat") else None
+
     def notify_pending(
         self,
-        task: ApprovalTask,
+        instance_or_task,
+        node=None,
+        task: Optional[ApprovalTask] = None,
         extra_context: Optional[Dict[str, Any]] = None,
     ):
-        """
-        通知待审批
+        """通知待审批，兼容新旧调用签名。"""
+        if task is None and node is None:
+            task = instance_or_task
+            instance = task.instance
+        else:
+            instance = instance_or_task
 
-        Args:
-            task: 审批任务
-            extra_context: 额外上下文信息
-        """
-        instance = task.instance
         notification = {
             "type": "APPROVAL_PENDING",
-            "title": f"您有新的审批待处理: {instance.title}",
-            "content": instance.summary or "",
-            "receiver_id": task.assignee_id,
-            "instance_id": instance.id,
-            "task_id": task.id,
-            "urgency": instance.urgency,
-            "created_at": instance.created_at.isoformat() if instance.created_at else None,
+            "title": f"您有新的审批待处理: {self._safe_instance_title(instance)}",
+            "content": getattr(instance, "summary", "") or "",
+            "receiver_id": getattr(task, "assignee_id", None),
+            "instance_id": getattr(instance, "id", None),
+            "task_id": getattr(task, "id", None),
+            "urgency": getattr(instance, "urgency", "NORMAL"),
+            "created_at": self._safe_iso(getattr(instance, "created_at", None)),
         }
 
         self._send_notification(notification)
@@ -42,22 +57,19 @@ class BasicNotificationsMixin:
     def notify_approved(
         self,
         instance: ApprovalInstance,
+        node=None,
+        task: Optional[ApprovalTask] = None,
         extra_context: Optional[Dict[str, Any]] = None,
     ):
-        """
-        通知审批通过
-
-        Args:
-            instance: 审批实例
-            extra_context: 额外上下文信息
-        """
+        """通知审批通过，兼容新旧调用签名。"""
+        title = self._safe_instance_title(instance)
         notification = {
             "type": "APPROVAL_APPROVED",
-            "title": f"审批已通过: {instance.title}",
-            "content": f"您发起的审批「{instance.title}」已通过",
-            "receiver_id": instance.initiator_id,
-            "instance_id": instance.id,
-            "created_at": instance.created_at.isoformat() if instance.created_at else None,
+            "title": f"审批已通过: {title}",
+            "content": f"您发起的审批「{title}」已通过",
+            "receiver_id": getattr(instance, "initiator_id", None),
+            "instance_id": getattr(instance, "id", None),
+            "created_at": self._safe_iso(getattr(instance, "created_at", None)),
         }
 
         self._send_notification(notification)
@@ -65,20 +77,19 @@ class BasicNotificationsMixin:
     def notify_rejected(
         self,
         instance: ApprovalInstance,
+        node=None,
+        task: Optional[ApprovalTask] = None,
         rejector_name: Optional[str] = None,
         reject_comment: Optional[str] = None,
         extra_context: Optional[Dict[str, Any]] = None,
     ):
-        """
-        通知审批驳回
+        """通知审批驳回，兼容新旧调用签名。"""
+        if isinstance(node, str) and rejector_name is None and task is None:
+            rejector_name = node
+            node = None
 
-        Args:
-            instance: 审批实例
-            rejector_name: 驳回人姓名
-            reject_comment: 驳回原因
-            extra_context: 额外上下文信息
-        """
-        content = f"您发起的审批「{instance.title}」已被驳回"
+        title = self._safe_instance_title(instance)
+        content = f"您发起的审批「{title}」已被驳回"
         if rejector_name:
             content += f"（驳回人: {rejector_name}）"
         if reject_comment:
@@ -86,35 +97,39 @@ class BasicNotificationsMixin:
 
         notification = {
             "type": "APPROVAL_REJECTED",
-            "title": f"审批已驳回: {instance.title}",
+            "title": f"审批已驳回: {title}",
             "content": content,
-            "receiver_id": instance.initiator_id,
-            "instance_id": instance.id,
-            "created_at": instance.created_at.isoformat() if instance.created_at else None,
+            "receiver_id": getattr(instance, "initiator_id", None),
+            "instance_id": getattr(instance, "id", None),
+            "created_at": self._safe_iso(getattr(instance, "created_at", None)),
         }
 
         self._send_notification(notification)
 
     def notify_cc(
         self,
-        cc_record: ApprovalCarbonCopy,
+        cc_or_instance,
+        node=None,
+        cc_user_ids=None,
         extra_context: Optional[Dict[str, Any]] = None,
     ):
-        """
-        通知抄送
+        """通知抄送，兼容抄送记录对象和旧式(instance, node, user_ids)调用。"""
+        if cc_user_ids is None and node is None:
+            cc_record = cc_or_instance
+            instance = cc_record.instance
+            user_ids = [cc_record.cc_user_id]
+        else:
+            instance = cc_or_instance
+            user_ids = list(cc_user_ids or [])
 
-        Args:
-            cc_record: 抄送记录
-            extra_context: 额外上下文信息
-        """
-        instance = cc_record.instance
-        notification = {
-            "type": "APPROVAL_CC",
-            "title": f"您收到一条审批抄送: {instance.title}",
-            "content": instance.summary or "",
-            "receiver_id": cc_record.cc_user_id,
-            "instance_id": instance.id,
-            "created_at": instance.created_at.isoformat() if instance.created_at else None,
-        }
-
-        self._send_notification(notification)
+        title = self._safe_instance_title(instance)
+        for user_id in user_ids:
+            notification = {
+                "type": "APPROVAL_CC",
+                "title": f"您收到一条审批抄送: {title}",
+                "content": getattr(instance, "summary", "") or "",
+                "receiver_id": user_id,
+                "instance_id": getattr(instance, "id", None),
+                "created_at": self._safe_iso(getattr(instance, "created_at", None)),
+            }
+            self._send_notification(notification)

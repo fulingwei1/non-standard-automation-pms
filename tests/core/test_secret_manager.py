@@ -14,6 +14,8 @@ import pytest
 
 from app.core.secret_manager import SecretKeyManager, get_secret_manager
 
+jwt = pytest.importorskip("jwt", reason="PyJWT not installed in test environment")
+
 
 class TestSecretKeyGeneration:
     """测试密钥生成功能"""

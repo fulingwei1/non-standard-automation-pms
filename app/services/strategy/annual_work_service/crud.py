@@ -57,9 +57,9 @@ def get_annual_work(db: Session, work_id: int) -> Optional[AnnualKeyWork]:
     Returns:
         Optional[AnnualKeyWork]: 年度重点工作
     """
-    return (
-        db.query(AnnualKeyWork).filter(AnnualKeyWork.id == work_id, AnnualKeyWork.is_active).first()
-    )
+    return db.query(AnnualKeyWork).filter(AnnualKeyWork.id == work_id).filter(
+        AnnualKeyWork.is_active
+    ).first()
 
 
 def list_annual_works(

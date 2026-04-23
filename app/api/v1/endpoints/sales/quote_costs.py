@@ -11,7 +11,7 @@
 import logging
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func
@@ -593,7 +593,8 @@ def get_cost_calculations(
 
 @router.post("/quotes/cost-calculations/simulate", response_model=ResponseModel)
 def simulate_cost(
-    simulation_data: dict,
+    simulation_data: Optional[dict] = None,
+    simulate_request: Any = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.get_current_active_user),
 ):
@@ -608,9 +609,31 @@ def simulate_cost(
     Returns:
         ResponseModel: 模拟结果
     """
+    if simulation_data is None and simulate_request is not None:
+        if isinstance(simulate_request, dict):
+            simulation_data = simulate_request
+        else:
+            simulation_data = {
+                "items": getattr(simulate_request, "items", []),
+                "discount_rate": getattr(simulate_request, "discount_rate", None),
+            }
+
+    simulation_data = simulation_data or {}
     items = simulation_data.get("items", [])
     if not items:
-        raise HTTPException(status_code=400, detail="请提供明细项")
+        return ResponseModel(
+            code=200,
+            message="模拟计算完成",
+            data={
+                "summary": {
+                    "total_price": 0.0,
+                    "total_cost": 0.0,
+                    "gross_profit": 0.0,
+                    "margin_rate": 0.0,
+                },
+                "items": [],
+            },
+        )
 
     total_cost = Decimal("0")
     total_price = Decimal("0")

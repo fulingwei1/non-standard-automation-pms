@@ -22,6 +22,9 @@ from app.models.purchase import (
 class InventoryAnalysisService:
     """库存分析服务类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def get_turnover_rate_data(
         db: Session, start_date: date, end_date: date, category_id: Optional[int] = None

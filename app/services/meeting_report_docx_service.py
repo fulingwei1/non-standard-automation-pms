@@ -27,7 +27,8 @@ except ImportError:
 class MeetingReportDocxService:
     """会议报告Word文档生成服务"""
 
-    def __init__(self):
+    def __init__(self, db=None):
+        self.db = db
         if not DOCX_AVAILABLE:
             raise ImportError("Word处理库未安装，请安装python-docx: pip install python-docx")
 

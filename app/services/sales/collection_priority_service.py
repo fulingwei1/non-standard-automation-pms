@@ -30,6 +30,15 @@ class CollectionUrgency(str, Enum):
     MEDIUM = "medium"          # 中优先级（两周内处理）
     LOW = "low"                # 低优先级（月内处理）
 
+    @classmethod
+    def _missing_(cls, value):
+        member = cls.CRITICAL
+        try:
+            member.db = value
+        except Exception:
+            pass
+        return member
+
 
 class CollectionRisk(str, Enum):
     """回款风险等级"""

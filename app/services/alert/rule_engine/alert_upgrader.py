@@ -140,7 +140,7 @@ class AlertUpgrader(AlertRuleEngineBase):
                 return None
 
         # 重新评估条件，确定新的预警级别
-        from .level_determiner import LevelDeterminer
+        from app.services.alert_rule_engine.level_determiner import LevelDeterminer
 
         new_level = LevelDeterminer.determine_alert_level(alert.rule, target_data, context, self)
 

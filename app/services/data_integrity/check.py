@@ -21,6 +21,9 @@ from app.models.work_log import WorkLog
 class DataCheckMixin:
     """数据完整性检查功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def check_data_completeness(self, engineer_id: int, period_id: int) -> Dict[str, Any]:
         """
         检查工程师数据完整性

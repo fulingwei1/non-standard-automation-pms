@@ -13,6 +13,9 @@ from app.models.user import User
 class ReportDataGenerationCore:
     """报表数据生成服务核心类"""
 
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
     # 角色-报表权限矩阵
     ROLE_REPORT_MATRIX = {
         "PROJECT_MANAGER": ["PROJECT_WEEKLY", "PROJECT_MONTHLY", "COST_ANALYSIS", "RISK_REPORT"],

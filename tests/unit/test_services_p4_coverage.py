@@ -1313,28 +1313,28 @@ class TestExpressionParser:
         assert parser is not None
 
     def test_evaluate_simple_expression(self):
-        from app.services.report_framework.expressions.parser import ExpressionParser
+        from app.services.report_framework.expressions.parser import ExpressionError, ExpressionParser
 
-        try:
-            parser = ExpressionParser()
-            if parser._env is None:
-                pytest.skip("Jinja2 not installed")
-            result = parser.evaluate("{{ 1 + 1 }}", {})
-            assert result is not None
-        except Exception:
-            pass  # May fail if jinja2 not available
+        parser = ExpressionParser()
+        if parser._env is None:
+            with pytest.raises(ExpressionError):
+                parser.evaluate("{{ 1 + 1 }}", {})
+            return
+
+        result = parser.evaluate("{{ 1 + 1 }}", {})
+        assert result == 2
 
     def test_evaluate_with_context(self):
-        from app.services.report_framework.expressions.parser import ExpressionParser
+        from app.services.report_framework.expressions.parser import ExpressionError, ExpressionParser
 
-        try:
-            parser = ExpressionParser()
-            if parser._env is None:
-                pytest.skip("Jinja2 not installed")
-            result = parser.evaluate("{{ value * 2 }}", {"value": 5})
-            assert result is not None
-        except Exception:
-            pass
+        parser = ExpressionParser()
+        if parser._env is None:
+            with pytest.raises(ExpressionError):
+                parser.evaluate("{{ value * 2 }}", {"value": 5})
+            return
+
+        result = parser.evaluate("{{ value * 2 }}", {"value": 5})
+        assert result == 10
 
 
 # =============================================================================

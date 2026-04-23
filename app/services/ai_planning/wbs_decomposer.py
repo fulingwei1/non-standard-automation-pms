@@ -80,6 +80,7 @@ class AIWbsDecomposer:
 
         return all_suggestions
 
+
     def _generate_level_1_tasks(
         self, project: Project, template: Optional[AIProjectPlanTemplate]
     ) -> List[AIWbsSuggestion]:
@@ -437,3 +438,6 @@ class AIWbsDecomposer:
                 chain.extend(self._get_task_chain(subtask, all_tasks))
 
         return chain
+
+
+WBSDecomposer = AIWbsDecomposer

@@ -22,6 +22,9 @@ from .user_scope import UserScopeService
 class IssueFilterService:
     """问题过滤服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def filter_issues_by_scope(
         db: Session,

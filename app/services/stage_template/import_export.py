@@ -13,6 +13,9 @@ from app.models.stage_template import NodeDefinition
 class ImportExportMixin:
     """导入导出功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def export_template(self, template_id: int) -> Dict[str, Any]:
         """
         导出模板为字典格式（用于JSON导出）

@@ -98,7 +98,7 @@ class Settings(BaseSettings):
         return self
 
     # CORS配置
-    CORS_ORIGINS: List[str] = [
+    CORS_ORIGINS: List[str] | str = [
         "http://localhost:3000",
         "http://localhost:8080",
         "http://localhost:5173",

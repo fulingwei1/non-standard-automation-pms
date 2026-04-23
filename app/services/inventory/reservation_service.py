@@ -14,7 +14,7 @@ from app.services.inventory.stock_update_service import InsufficientStockError
 class ReservationService:
     """物料预留管理"""
 
-    def __init__(self, db: Session, tenant_id: int):
+    def __init__(self, db: Session, tenant_id: int = 0):
         self.db = db
         self.tenant_id = tenant_id
         self._query = StockQueryService(db, tenant_id)

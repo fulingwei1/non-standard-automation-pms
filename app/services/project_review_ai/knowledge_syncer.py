@@ -37,7 +37,12 @@ class ProjectKnowledgeSyncer:
         review = self.db.query(ProjectReview).filter(ProjectReview.id == review_id).first()
 
         if not review:
-            raise ValueError(f"复盘报告 {review_id} 不存在")
+            return {
+                "success": False,
+                "review_id": review_id,
+                "message": f"复盘报告 {review_id} 不存在",
+                "error": "review_not_found",
+            }
 
         # 2. 生成知识案例
         case_data = self._generate_knowledge_case(review)

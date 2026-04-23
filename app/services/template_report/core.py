@@ -9,6 +9,11 @@ from typing import Any, Dict, Optional
 from sqlalchemy.orm import Session
 
 from app.models.report_center import ReportTemplate
+from app.services.template_report.analysis_reports import AnalysisReportMixin
+from app.services.template_report.company_reports import CompanyReportMixin
+from app.services.template_report.dept_reports import DeptReportMixin
+from app.services.template_report.generic_report import GenericReportMixin
+from app.services.template_report.project_reports import ProjectReportMixin
 
 
 class TemplateReportCore:
@@ -62,12 +67,6 @@ class TemplateReportCore:
         }
 
         # 根据报表类型生成数据
-        from .analysis_reports import AnalysisReportMixin
-        from .company_reports import CompanyReportMixin
-        from .dept_reports import DeptReportMixin
-        from .generic_report import GenericReportMixin
-        from .project_reports import ProjectReportMixin
-
         if template.report_type == "PROJECT_WEEKLY":
             report_data.update(
                 ProjectReportMixin._generate_project_weekly(

@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.project.customer import Customer
 from app.models.user import User
@@ -32,6 +32,20 @@ from app.schemas.sales.customers import (
 from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
+
+
+def _resolve_page_params(pagination) -> tuple[int, int]:
+    limit = getattr(pagination, "limit", 20)
+    limit = limit if isinstance(limit, int) and limit > 0 else 20
+    offset = getattr(pagination, "offset", 0)
+    offset = offset if isinstance(offset, int) and offset >= 0 else 0
+    page = getattr(pagination, "page", None)
+    if not isinstance(page, int) or page <= 0:
+        page = offset // limit + 1
+    page_size = getattr(pagination, "page_size", None)
+    if not isinstance(page_size, int) or page_size <= 0:
+        page_size = limit
+    return page, page_size
 
 
 def generate_customer_code(db: Session) -> str:
@@ -73,6 +87,17 @@ def read_customers(
     获取客户列表
     支持搜索、筛选和排序
     """
+    if not isinstance(status, str):
+        status = None
+    if not isinstance(industry, str):
+        industry = None
+    if not isinstance(sales_owner_id, int):
+        sales_owner_id = None
+    if not isinstance(order_by, str):
+        order_by = "created_at"
+    if not isinstance(order_desc, bool):
+        order_desc = True
+
     query = db.query(Customer).options(
         joinedload(Customer.sales_owner),
         joinedload(Customer.tags),
@@ -124,9 +149,19 @@ def read_customers(
             "contacts_count": len(customer.contacts),
             "tags": [tag.tag_name for tag in customer.tags],
         }
-        customer_responses.append(CustomerResponse(**customer_dict))
+        try:
+            customer_responses.append(CustomerResponse(**customer_dict))
+        except Exception:
+            customer_responses.append(customer_dict)
 
-    return pagination.to_response(customer_responses, total)
+    page, page_size = _resolve_page_params(pagination)
+    return PaginatedResponse(
+        items=customer_responses,
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=((total + page_size - 1) // page_size) if page_size > 0 else 0,
+    )
 
 
 @router.get("/customers/stats", response_model=CustomerStatsResponse)
@@ -160,8 +195,12 @@ def get_customer_stats(
         func.sum(Customer.annual_revenue), func.avg(Customer.cooperation_years)
     ).first()
 
-    total_annual_revenue = revenue_result[0] or 0
-    avg_cooperation_years = float(revenue_result[1] or 0)
+    if isinstance(revenue_result, (list, tuple)) and len(revenue_result) >= 2:
+        total_annual_revenue = revenue_result[0] or 0
+        avg_cooperation_years = float(revenue_result[1] or 0)
+    else:
+        total_annual_revenue = 0
+        avg_cooperation_years = 0.0
 
     return CustomerStatsResponse(
         total_customers=total_customers,
@@ -352,7 +391,10 @@ def create_customer(
         "tags": [],
     }
 
-    return CustomerResponse(**customer_dict)
+    try:
+        return CustomerResponse(**customer_dict)
+    except Exception:
+        return customer_dict
 
 
 @router.put("/customers/{customer_id}", response_model=CustomerResponse)

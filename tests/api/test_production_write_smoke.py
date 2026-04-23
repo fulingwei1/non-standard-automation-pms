@@ -90,7 +90,7 @@ class TestProductionWriteSmoke:
         assert updated_workshop["description"] == "生产写操作冒烟-已更新"
 
         worker_create_resp = client.post(
-            f"{settings.API_V1_PREFIX}/workers",
+            f"{settings.API_V1_PREFIX}/production/workers",
             json={
                 "worker_code": f"WK-SMOKE-{suffix}",
                 "worker_name": "冒烟工人",
@@ -230,7 +230,7 @@ class TestProductionWriteSmoke:
         }
 
         exception_create_resp = client.post(
-            f"{settings.API_V1_PREFIX}/production-exceptions",
+            f"{settings.API_V1_PREFIX}/production/exceptions",
             json={
                 "exception_type": "QUALITY",
                 "exception_level": "MAJOR",

@@ -13,11 +13,11 @@ from app.services.inventory.stock_update_service import StockUpdateService
 class InboundService:
     """入库操作"""
 
-    def __init__(self, db: Session, tenant_id: int):
+    def __init__(self, db: Session, tenant_id: Optional[int] = None):
         self.db = db
         self.tenant_id = tenant_id
-        self._tx = TransactionService(db, tenant_id)
-        self._stock = StockUpdateService(db, tenant_id)
+        self._tx = TransactionService(db, tenant_id) if tenant_id is not None else None
+        self._stock = StockUpdateService(db, tenant_id) if tenant_id is not None else None
 
     def purchase_in(
         self,

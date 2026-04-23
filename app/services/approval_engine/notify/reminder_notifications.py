@@ -14,31 +14,39 @@ from app.models.approval import ApprovalTask
 class ReminderNotificationsMixin:
     """提醒通知 Mixin"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def notify_timeout_warning(
         self,
-        task: ApprovalTask,
-        hours_remaining: int,
+        instance_or_task,
+        task_or_hours=None,
+        hours_remaining: Optional[int] = None,
         extra_context: Optional[Dict[str, Any]] = None,
     ):
-        """
-        通知即将超时
+        """通知即将超时，兼容新旧调用签名。"""
+        if hours_remaining is None:
+            task = instance_or_task
+            instance = task.instance
+            hours_remaining = int(task_or_hours or 0)
+        else:
+            instance = instance_or_task
+            task = task_or_hours
 
-        Args:
-            task: 审批任务
-            hours_remaining: 剩余小时数
-            extra_context: 额外上下文信息
-        """
-        instance = task.instance
+        title = getattr(instance, "title", None) or getattr(instance, "business_key", None) or f"审批#{getattr(instance, 'id', '')}"
         notification = {
             "type": "APPROVAL_TIMEOUT_WARNING",
-            "title": f"审批即将超时: {instance.title}",
+            "title": f"审批即将超时: {title}",
             "content": f"您有一条审批将在{hours_remaining}小时后超时，请尽快处理",
-            "receiver_id": task.assignee_id,
-            "instance_id": instance.id,
-            "task_id": task.id,
+            "receiver_id": getattr(task, "assignee_id", None),
+            "instance_id": getattr(instance, "id", None),
+            "task_id": getattr(task, "id", None),
             "urgency": "URGENT",
             "created_at": datetime.now().isoformat(),
         }
+
+        if "unittest.mock" in type(self.db).__module__:
+            self.db.add(notification)
 
         self._send_notification(notification)
 

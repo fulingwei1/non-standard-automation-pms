@@ -28,6 +28,9 @@ class EVMCalculator:
     INDEX_DECIMAL_PLACES = 6  # 指数保留6位小数
     PERCENT_DECIMAL_PLACES = 2  # 百分比保留2位小数
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def decimal(value: Union[float, Decimal, int]) -> Decimal:
         """转换为Decimal类型"""

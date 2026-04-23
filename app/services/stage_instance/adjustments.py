@@ -19,6 +19,9 @@ from app.models.stage_instance import (
 class AdjustmentsMixin:
     """调整操作功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def add_custom_node(
         self,
         stage_instance_id: int,

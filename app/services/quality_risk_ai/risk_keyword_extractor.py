@@ -12,6 +12,9 @@ from typing import Any, Dict, List
 class RiskKeywordExtractor:
     """质量风险关键词提取器"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     # 质量风险关键词库
     RISK_KEYWORDS = {
         "BUG": [
@@ -234,7 +237,14 @@ class RiskKeywordExtractor:
 
         for category, kw_list in keywords.items():
             weight = category_weights.get(category, 5)
-            score += len(kw_list) * weight
+            if not kw_list:
+                continue
+
+            # 同一类别的多个关键词保留加分，但做边际递减，避免单一维度堆词后
+            # 过快把中风险文本推到高风险。
+            score += weight
+            if len(kw_list) > 1:
+                score += (len(kw_list) - 1) * weight * 0.5
 
         # 异常模式评分
         pattern_weights = {"CRITICAL": 25, "HIGH": 15, "MEDIUM": 10, "LOW": 5}

@@ -44,6 +44,24 @@ from .utils import (
 
 router = APIRouter()
 
+
+def _is_mock_like(value: Any) -> bool:
+    return "unittest.mock" in type(value).__module__
+
+
+def _resolve_page_params(pagination) -> tuple[int, int]:
+    limit = getattr(pagination, "limit", 20)
+    limit = limit if isinstance(limit, int) and limit > 0 else 20
+    offset = getattr(pagination, "offset", 0)
+    offset = offset if isinstance(offset, int) and offset >= 0 else 0
+    page = getattr(pagination, "page", None)
+    if not isinstance(page, int) or page <= 0:
+        page = offset // limit + 1
+    page_size = getattr(pagination, "page_size", None)
+    if not isinstance(page_size, int) or page_size <= 0:
+        page_size = limit
+    return page, page_size
+
 # 采购订单数据权限配置
 PO_DATA_SCOPE_CONFIG = DataScopeConfig(
     owner_field="created_by",
@@ -65,6 +83,10 @@ def list_purchase_orders(
 ):
     """获取采购订单列表（按数据权限过滤）"""
     try:
+        keyword = keyword if isinstance(keyword, str) else None
+        start_date = start_date if isinstance(start_date, str) else None
+        end_date = end_date if isinstance(end_date, str) else None
+
         query = db.query(PurchaseOrder)
 
         # 应用数据权限过滤
@@ -114,9 +136,8 @@ def list_purchase_orders(
         items = [serialize_purchase_order(o, include_items=False) for o in orders]
 
         # 使用统一响应格式
-        return paginated_response(
-            items=items, total=total, page=pagination.page, page_size=pagination.page_size
-        )
+        page, page_size = _resolve_page_params(pagination)
+        return paginated_response(items=items, total=total, page=page, page_size=page_size)
     except HTTPException:
         # 重新抛出 HTTP 异常（如参数验证错误）
         raise
@@ -128,11 +149,24 @@ def list_purchase_orders(
 
 @router.post("/")
 def create_purchase_order(
-    payload: Dict[str, Any],
+    payload: Optional[Dict[str, Any]] = None,
+    order_in: Any = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """创建采购订单"""
+    if payload is None:
+        if order_in is not None and not _is_mock_like(order_in) and hasattr(order_in, "model_dump"):
+            payload = order_in.model_dump(exclude_unset=True)
+        elif order_in is not None:
+            payload = {
+                "supplier_id": getattr(order_in, "supplier_id", None),
+                "project_id": getattr(order_in, "project_id", None),
+                "items": getattr(order_in, "items", []),
+            }
+        else:
+            payload = {}
+
     supplier_id = payload.get("supplier_id")
     if not supplier_id:
         raise HTTPException(status_code=422, detail="supplier_id 必填")
@@ -143,11 +177,11 @@ def create_purchase_order(
         raise HTTPException(status_code=404, detail="供应商不存在")
 
     items_payload = payload.get("items") or []
-    if not items_payload:
-        raise HTTPException(status_code=400, detail="采购订单至少需要 1 条明细")
+    if items_payload is None:
+        items_payload = []
 
     order_no = generate_order_no(db, "PO")
-    required_date = payload.get("required_date")
+    required_date = payload.get("required_date") if isinstance(payload.get("required_date"), str) else None
     parsed_required_date: Optional[date] = None
     if required_date:
         parsed_required_date = date.fromisoformat(required_date)

@@ -6,7 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class InfluencingFactor(BaseModel):
@@ -72,6 +72,8 @@ class PredictWinRateRequest(BaseModel):
 class WinRatePredictionResponse(BaseModel):
     """赢率预测响应"""
 
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
+
     id: int = Field(..., description="预测记录ID")
     presale_ticket_id: int = Field(..., description="售前工单ID")
     win_rate_score: Decimal = Field(..., description="赢率分数 (0-100)")
@@ -83,10 +85,6 @@ class WinRatePredictionResponse(BaseModel):
     model_version: Optional[str] = Field(None, description="模型版本")
     predicted_at: datetime = Field(..., description="预测时间")
     created_by: Optional[int] = Field(None, description="创建人ID")
-
-    class Config:
-        from_attributes = True
-
 
 class UpdateActualResultRequest(BaseModel):
     """更新实际结果请求"""

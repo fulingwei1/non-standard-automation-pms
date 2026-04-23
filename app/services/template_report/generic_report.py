@@ -13,6 +13,9 @@ from sqlalchemy.orm import Session
 class GenericReportMixin:
     """通用报表生成功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def _generate_generic_report(
         db: Session,

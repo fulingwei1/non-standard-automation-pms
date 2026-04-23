@@ -23,6 +23,7 @@ from app.schemas.business_support import (
     SupplierRegistrationReviewRequest,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.db_helpers import get_or_404
 
 from .utils import (
     _serialize_attachments,
@@ -31,6 +32,20 @@ from .utils import (
 )
 
 router = APIRouter()
+
+
+def _resolve_page_params(pagination) -> tuple[int, int]:
+    limit = getattr(pagination, "limit", 20)
+    limit = limit if isinstance(limit, int) and limit > 0 else 20
+    offset = getattr(pagination, "offset", 0)
+    offset = offset if isinstance(offset, int) and offset >= 0 else 0
+    page = getattr(pagination, "page", None)
+    if not isinstance(page, int) or page <= 0:
+        page = offset // limit + 1
+    page_size = getattr(pagination, "page_size", None)
+    if not isinstance(page_size, int) or page_size <= 0:
+        page_size = limit
+    return page, page_size
 
 
 # ==================== 客户供应商入驻 ====================
@@ -44,6 +59,8 @@ router = APIRouter()
 async def get_customer_registrations(
     pagination: PaginationParams = Depends(get_pagination_query),
     customer_id: Optional[int] = Query(None, description="客户ID"),
+    registration_type: Optional[str] = Query(None, description="兼容旧筛选参数"),
+    status: Optional[str] = Query(None, description="兼容旧参数名 status"),
     registration_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     platform_name: Optional[str] = Query(None, description="平台名称筛选"),
     keyword: Optional[str] = Query(None, description="搜索入驻编号/客户"),
@@ -52,6 +69,7 @@ async def get_customer_registrations(
 ):
     """分页获取客户供应商入驻记录"""
     try:
+        registration_status = registration_status or status
         query = db.query(CustomerSupplierRegistration)
         if customer_id:
             query = query.filter(CustomerSupplierRegistration.customer_id == customer_id)
@@ -77,15 +95,16 @@ async def get_customer_registrations(
 
         responses = [_to_registration_response(item) for item in items]
 
+        page, page_size = _resolve_page_params(pagination)
         return ResponseModel(
             code=200,
             message="获取客户供应商入驻列表成功",
             data=PaginatedResponse(
                 items=responses,
                 total=total,
-                page=pagination.page,
-                page_size=pagination.page_size,
-                pages=pagination.pages_for_total(total),
+                page=page,
+                page_size=page_size,
+                pages=((total + page_size - 1) // page_size) if page_size > 0 else 0,
             ),
         )
     except HTTPException:
@@ -152,11 +171,7 @@ async def get_customer_registration(
     current_user: User = Depends(deps.get_current_user),
 ):
     """获取客户供应商入驻详情"""
-    record = (
-        db.query(CustomerSupplierRegistration)
-        .filter(CustomerSupplierRegistration.id == registration_id)
-        .first()
-    )
+    record = get_or_404(db, CustomerSupplierRegistration, registration_id, "入驻申请不存在")
     if not record:
         raise HTTPException(status_code=404, detail="入驻记录不存在")
     return ResponseModel(
@@ -212,26 +227,22 @@ async def update_customer_registration(
 )
 async def approve_customer_registration(
     registration_id: int,
-    review_in: SupplierRegistrationReviewRequest,
+    review_data: Optional[SupplierRegistrationReviewRequest] = None,
+    review_in: Optional[SupplierRegistrationReviewRequest] = None,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ):
     """审批通过客户供应商入驻申请"""
     try:
-        record = (
-            db.query(CustomerSupplierRegistration)
-            .filter(CustomerSupplierRegistration.id == registration_id)
-            .first()
-        )
-        if not record:
-            raise HTTPException(status_code=404, detail="入驻记录不存在")
+        review_in = review_in or review_data
+        record = get_or_404(db, CustomerSupplierRegistration, registration_id, "入驻申请不存在")
         if record.registration_status == "APPROVED":
             raise HTTPException(status_code=400, detail="申请已审批通过")
 
         record.registration_status = "APPROVED"
         record.approved_date = date.today()
         record.reviewer_id = current_user.id
-        record.review_comment = review_in.review_comment
+        record.review_comment = getattr(review_in, "review_comment", None)
         record.external_sync_status = "pending"
 
         db.add(record)

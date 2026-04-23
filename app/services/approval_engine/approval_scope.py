@@ -40,6 +40,10 @@ class ParticipantRole(str, Enum):
     ADMIN = "ADMIN"  # 审批管理员（全局角色，非实例级）
     NONE = "NONE"  # 无参与关系
 
+    @classmethod
+    def _missing_(cls, value):
+        return cls.NONE
+
 
 # 拥有完整详情查看权的角色（含 form_data / action_logs）
 FULL_DETAIL_ROLES: Set[ParticipantRole] = {

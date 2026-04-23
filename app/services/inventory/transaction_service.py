@@ -13,7 +13,7 @@ from app.models.material import Material
 class TransactionService:
     """交易记录管理"""
 
-    def __init__(self, db: Session, tenant_id: int):
+    def __init__(self, db: Session, tenant_id: int = 0):
         self.db = db
         self.tenant_id = tenant_id
 

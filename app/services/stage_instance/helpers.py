@@ -16,6 +16,9 @@ from app.models.stage_instance import NodeTask, ProjectNodeInstance
 class HelpersMixin:
     """辅助方法功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def _check_tasks_completion(self, node: ProjectNodeInstance) -> None:
         """
         检查节点的子任务是否全部完成

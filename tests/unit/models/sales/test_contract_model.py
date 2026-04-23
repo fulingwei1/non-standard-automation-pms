@@ -58,6 +58,7 @@ class TestContractModel:
 
         with pytest.raises(IntegrityError):
             db_session.commit()
+        db_session.rollback()
 
     def test_contract_dates(self, db_session, sample_customer, sample_user):
         """测试合同日期"""

@@ -24,6 +24,11 @@ class ProjectMember(Base, TimestampMixin):
 
     __tablename__ = "project_members"
 
+    def __init__(self, **kwargs):
+        if "role" in kwargs and "role_code" not in kwargs:
+            kwargs["role_code"] = kwargs.pop("role")
+        super().__init__(**kwargs)
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
@@ -79,6 +84,14 @@ class ProjectMember(Base, TimestampMixin):
         "ProjectMember", back_populates="lead", foreign_keys=[lead_member_id]
     )
 
+    @property
+    def role(self):
+        return self.role_code
+
+    @role.setter
+    def role(self, value):
+        self.role_code = value
+
     __table_args__ = (
         Index("idx_project_members_project", "project_id"),
         Index("idx_project_members_user", "user_id"),
@@ -90,7 +103,6 @@ class ProjectMember(Base, TimestampMixin):
             "idx_project_members_project_user_role",
             "project_id",
             "user_id",
-            "role_code",
             unique=True,
         ),
     )

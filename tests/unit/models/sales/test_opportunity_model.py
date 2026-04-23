@@ -55,6 +55,7 @@ class TestOpportunityModel:
 
         with pytest.raises(IntegrityError):
             db_session.commit()
+        db_session.rollback()
 
     def test_opportunity_stage_progression(self, db_session, sample_user, sample_customer):
         """测试商机阶段推进"""

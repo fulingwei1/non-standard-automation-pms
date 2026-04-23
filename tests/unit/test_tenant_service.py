@@ -5,13 +5,35 @@
 测试 TenantService 的业务逻辑
 """
 
-from unittest.mock import MagicMock
+import sys
+from types import ModuleType, SimpleNamespace
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from app.models.tenant import Tenant, TenantStatus
 from app.schemas.tenant import TenantCreate, TenantUpdate
 from app.services.tenant_service import TenantService
+
+
+_UNSET = object()
+
+
+def _query(*, first=_UNSET, all_=_UNSET, scalar=_UNSET, subquery=_UNSET):
+    query = MagicMock()
+    query.filter.return_value = query
+    query.order_by.return_value = query
+    query.offset.return_value = query
+    query.limit.return_value = query
+    if first is not _UNSET:
+        query.first.return_value = first
+    if all_ is not _UNSET:
+        query.all.return_value = all_
+    if scalar is not _UNSET:
+        query.scalar.return_value = scalar
+    if subquery is not _UNSET:
+        query.subquery.return_value = subquery
+    return query
 
 
 class TestTenantServiceCreate:
@@ -232,3 +254,176 @@ class TestTenantServiceStats:
         stats = service.get_tenant_stats(999)
 
         assert stats is None
+
+
+class TestTenantServiceInitAndStats:
+    def test_init_tenant_raises_when_tenant_missing(self):
+        service = TenantService(MagicMock())
+        service.get_tenant = MagicMock(return_value=None)
+
+        with pytest.raises(ValueError, match="租户不存在"):
+            service.init_tenant(
+                1,
+                None,
+            )
+
+    @patch("app.services.tenant_service.get_password_hash", return_value="hashed-password")
+    def test_init_tenant_copies_templates_and_creates_admin(self, mock_hash):
+        mock_db = MagicMock()
+        service = TenantService(mock_db)
+        tenant = Tenant(id=1, tenant_code="T00000001", tenant_name="租户A")
+        service.get_tenant = MagicMock(return_value=tenant)
+
+        templates = [
+            SimpleNamespace(
+                id=11,
+                template_code="TENANT_ADMIN",
+                template_name="租户管理员",
+                description="admin",
+                data_scope="ALL",
+                nav_groups=["system"],
+                ui_config={"home": True},
+                sort_order=1,
+            ),
+            SimpleNamespace(
+                id=12,
+                template_code="EXISTING_ROLE",
+                template_name="已存在角色",
+                description="exists",
+                data_scope="OWN",
+                nav_groups=None,
+                ui_config=None,
+                sort_order=2,
+            ),
+        ]
+        tenant_admin_role = SimpleNamespace(id=88)
+        mock_db.query.side_effect = [
+            _query(all_=templates),
+            _query(first=None),
+            _query(first=SimpleNamespace(id=99)),
+            _query(first=None),
+            _query(first=tenant_admin_role),
+        ]
+
+        added_objects = []
+
+        def add_side_effect(obj):
+            added_objects.append(obj)
+
+        def flush_side_effect():
+            for obj in added_objects:
+                if obj.__class__.__name__ == "Employee" and getattr(obj, "id", None) is None:
+                    obj.id = 101
+                if obj.__class__.__name__ == "User" and getattr(obj, "id", None) is None:
+                    obj.id = 202
+
+        mock_db.add.side_effect = add_side_effect
+        mock_db.flush.side_effect = flush_side_effect
+
+        result = service.init_tenant(
+            1,
+            SimpleNamespace(
+                admin_username="tenant_admin",
+                admin_password="secret123",
+                admin_email="tenant@example.com",
+                admin_real_name="Tenant Admin",
+                copy_role_templates=True,
+            ),
+        )
+
+        copied_role = next(obj for obj in added_objects if obj.__class__.__name__ == "Role")
+        user_role = next(obj for obj in added_objects if obj.__class__.__name__ == "UserRole")
+        employee = next(obj for obj in added_objects if obj.__class__.__name__ == "Employee")
+        admin_user = next(obj for obj in added_objects if obj.__class__.__name__ == "User")
+
+        assert copied_role.role_code == "TENANT_ADMIN"
+        assert copied_role.role_name == "租户管理员"
+        assert employee.employee_code.startswith("T1A")
+        assert admin_user.username == "tenant_admin"
+        assert user_role.user_id == 202
+        assert user_role.role_id == 88
+        assert result == {"tenant_id": 1, "roles_created": 1, "admin_created": True, "admin_user_id": 202}
+        mock_hash.assert_called_once_with("secret123")
+        mock_db.commit.assert_called_once()
+
+    def test_init_tenant_raises_when_admin_username_exists(self):
+        mock_db = MagicMock()
+        service = TenantService(mock_db)
+        service.get_tenant = MagicMock(return_value=Tenant(id=1, tenant_code="T0001", tenant_name="租户"))
+        mock_db.query.side_effect = [_query(first=SimpleNamespace(id=7))]
+
+        with pytest.raises(ValueError, match="用户名 existed 已存在"):
+            service.init_tenant(
+                1,
+                SimpleNamespace(
+                    admin_username="existed",
+                    admin_password="secret123",
+                    admin_email="tenant@example.com",
+                    admin_real_name=None,
+                    copy_role_templates=False,
+                ),
+            )
+
+    def test_get_tenant_stats_aggregates_counts_projects_and_storage(self):
+        mock_db = MagicMock()
+        service = TenantService(mock_db)
+        tenant = Tenant(id=1, tenant_code="T00000001", tenant_name="租户A", plan_type="STANDARD")
+        service.get_tenant = MagicMock(return_value=tenant)
+        project_user_ids = MagicMock(name="project_user_ids")
+        attachment_user_ids = MagicMock(name="attachment_user_ids")
+        mock_db.query.side_effect = [
+            _query(scalar=5),
+            _query(scalar=2),
+            _query(subquery=project_user_ids),
+            _query(scalar=7),
+            _query(subquery=attachment_user_ids),
+            _query(scalar=5 * 1024 * 1024),
+        ]
+
+        attachment_module = ModuleType("app.models.document")
+        attachment_module.Attachment = SimpleNamespace(
+            file_size=MagicMock(name="file_size"),
+            uploaded_by=MagicMock(name="uploaded_by"),
+        )
+        attachment_module.Attachment.uploaded_by.in_.return_value = MagicMock(name="uploaded_by_filter")
+
+        with patch.dict(sys.modules, {"app.models.document": attachment_module}):
+            stats = service.get_tenant_stats(1)
+
+        assert stats == {
+            "tenant_id": 1,
+            "tenant_code": "T00000001",
+            "user_count": 5,
+            "role_count": 2,
+            "project_count": 7,
+            "storage_used_mb": 5.0,
+            "plan_limits": tenant.get_plan_limits(),
+        }
+
+    def test_get_tenant_stats_tolerates_project_and_attachment_query_failures(self):
+        mock_db = MagicMock()
+        service = TenantService(mock_db)
+        tenant = Tenant(id=1, tenant_code="T00000001", tenant_name="租户A")
+        service.get_tenant = MagicMock(return_value=tenant)
+
+        query_calls = iter(
+            [
+                _query(scalar=1),
+                _query(scalar=1),
+                RuntimeError("project query failed"),
+                RuntimeError("attachment query failed"),
+            ]
+        )
+
+        def query_side_effect(*args, **kwargs):
+            current = next(query_calls)
+            if isinstance(current, Exception):
+                raise current
+            return current
+
+        mock_db.query.side_effect = query_side_effect
+
+        stats = service.get_tenant_stats(1)
+
+        assert stats["project_count"] == 0
+        assert stats["storage_used_mb"] == 0

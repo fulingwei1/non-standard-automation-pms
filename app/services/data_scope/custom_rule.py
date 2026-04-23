@@ -33,6 +33,9 @@ logger = logging.getLogger(__name__)
 class CustomRuleService:
     """自定义规则服务"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     @staticmethod
     def get_custom_rule(db: Session, user_id: int, resource_type: str) -> Optional[DataScopeRule]:
         """

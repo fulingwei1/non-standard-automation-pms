@@ -18,6 +18,9 @@ from app.models.work_log import WorkLog
 class FailurePatternsMixin:
     """失败模式分析功能混入类"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def analyze_failure_patterns(
         self, start_date: Optional[date] = None, end_date: Optional[date] = None
     ) -> Dict[str, Any]:

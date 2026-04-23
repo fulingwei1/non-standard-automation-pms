@@ -9,7 +9,6 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.models.acceptance import (
     AcceptanceIssue,
@@ -27,6 +26,10 @@ logger = logging.getLogger(__name__)
 
 class AcceptanceService:
     """验收服务类 - 实施验收→开票自动触发功能"""
+
+    def __init__(self, db: Optional[AsyncSession] = None):
+        """兼容旧测试/旧调用方式，允许实例化后挂 db。"""
+        self.db = db
 
     @staticmethod
     async def complete_acceptance_order(
@@ -54,7 +57,8 @@ class AcceptanceService:
         # 1. 查询验收单（包含项目和验收信息）
         result = await db.execute(
             select(AcceptanceOrder, Project, Customer)
-            .options(selectinload(Customer))
+            .join(Project, AcceptanceOrder.project_id == Project.id)
+            .join(Customer, Project.customer_id == Customer.id, isouter=True)
             .where(AcceptanceOrder.id == order_id)
         )
         order_data = result.first()
@@ -62,9 +66,7 @@ class AcceptanceService:
         if not order_data:
             raise ValueError(f"验收单不存在: {order_id}")
 
-        order = order_data[0]
-        project = order_data[2]
-        order_data[3]
+        order, project, _customer = order_data
 
         # 2. 检查验收单状态
         if order.status != "PASSED":
@@ -75,7 +77,7 @@ class AcceptanceService:
         issues_result = await db.execute(
             select(AcceptanceIssue).where(
                 and_(
-                    AcceptanceIssue.acceptance_order_id == order_id,
+                    AcceptanceIssue.order_id == order_id,
                     AcceptanceIssue.status == "OPEN",
                 )
             )
@@ -92,17 +94,26 @@ class AcceptanceService:
 
         # 4. 创建发票
         # 使用验收单的总金额作为发票金额
+        invoice_amount = getattr(order, "total_amount", None)
+        if invoice_amount is None:
+            invoice_amount = getattr(project, "contract_amount", 0)
+
         invoice = Invoice(
-            code=await InvoiceService.generate_code(),
+            invoice_code=await InvoiceService.generate_code(),
             project_id=order.project_id,
-            customer_id=order.customer_id,
-            contract_id=order.contract_id,
-            amount=order.total_amount,
+            contract_id=getattr(order, "contract_id", None) or getattr(project, "contract_id", None),
+            amount=invoice_amount,
+            total_amount=invoice_amount,
             invoice_type="AUTOMATIC",  # 自动开票
-            acceptance_order_id=order.id,
-            auto_generated=True,
             status="DRAFT",
         )
+
+        if hasattr(invoice, "customer_id"):
+            invoice.customer_id = getattr(order, "customer_id", None) or getattr(project, "customer_id", None)
+        if hasattr(invoice, "acceptance_order_id"):
+            invoice.acceptance_order_id = order.id
+        if hasattr(invoice, "auto_generated"):
+            invoice.auto_generated = True
 
         db.add(invoice)
         await db.flush()
@@ -134,9 +145,9 @@ class AcceptanceService:
             "message": "验收完成，已自动创建发票",
             "order_id": order_id,
             "invoice_id": invoice.id,
-            "invoice_code": invoice.code,
+            "invoice_code": getattr(invoice, "invoice_code", None) or getattr(invoice, "code", None),
             "project_id": order.project_id,
-            "project_code": project.code,
+            "project_code": getattr(project, "project_code", None) or getattr(project, "code", None),
         }
 
     @staticmethod
@@ -156,7 +167,10 @@ class AcceptanceService:
             project.stage = "S9"  # 质保结项
             project.status = "ST30"  # 已完结
             project.end_date = date.today()
-            project.health_status = "H4"  # 已完结
+            if hasattr(project, "health_status"):
+                project.health_status = "H4"  # 已完结
+            if hasattr(project, "health"):
+                project.health = "H4"
 
         db.add(project)
         await db.commit()

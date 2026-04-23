@@ -833,4 +833,4 @@ def case(condition_tuple, else_=None):
     """SQLAlchemy case helper"""
     from sqlalchemy import case as sa_case
 
-    return sa_case((condition_tuple,), else_=else_)
+    return sa_case(condition_tuple, else_=else_)

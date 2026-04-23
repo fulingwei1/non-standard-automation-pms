@@ -29,7 +29,6 @@ def mock_user():
 class TestCostOverviewAPI:
     """测试成本总览 API"""
 
-    @pytest.mark.xfail(reason="Mock configuration needs update - endpoint implementation exists")
     @patch("app.api.v1.endpoints.dashboard.cost_dashboard.deps.get_db")
     @patch("app.api.v1.endpoints.dashboard.cost_dashboard.security.require_permission")
     def test_get_cost_overview_success(self, mock_auth, mock_db, mock_user, admin_token, client):
@@ -38,7 +37,7 @@ class TestCostOverviewAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_cost_overview.return_value = {
@@ -90,7 +89,7 @@ class TestTopProjectsAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_top_projects.return_value = {
@@ -101,6 +100,7 @@ class TestTopProjectsAPI:
                         "project_name": "项目 1",
                         "actual_cost": 100000,
                         "budget_amount": 120000,
+                        "contract_amount": 150000,
                         "cost_variance": -20000,
                         "cost_variance_pct": -16.67,
                         "profit": 50000,
@@ -120,7 +120,6 @@ class TestTopProjectsAPI:
             assert data["code"] == 200
             assert len(data["data"]["top_cost_projects"]) == 1
 
-    @pytest.mark.xfail(reason="Mock 配置问题 - 端点实现存在")
     @patch("app.api.v1.endpoints.dashboard.cost_dashboard.deps.get_db")
     @patch("app.api.v1.endpoints.dashboard.cost_dashboard.security.require_permission")
     def test_get_top_projects_custom_limit(self, mock_auth, mock_db, mock_user, admin_token, client):
@@ -129,7 +128,7 @@ class TestTopProjectsAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_top_projects.return_value = {
@@ -149,7 +148,6 @@ class TestTopProjectsAPI:
 class TestCostAlertsAPI:
     """测试成本预警 API"""
 
-    @pytest.mark.xfail(reason="Mock 配置问题 - 端点实现存在")
     @patch("app.api.v1.endpoints.dashboard.cost_dashboard.deps.get_db")
     @patch("app.api.v1.endpoints.dashboard.cost_dashboard.security.require_permission")
     def test_get_cost_alerts_success(self, mock_auth, mock_db, mock_user, admin_token, client):
@@ -158,7 +156,7 @@ class TestCostAlertsAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_cost_alerts.return_value = {
@@ -195,7 +193,6 @@ class TestCostAlertsAPI:
 class TestProjectDashboardAPI:
     """测试项目仪表盘 API"""
 
-    @pytest.mark.xfail(reason="Mock 配置问题 - 端点实现存在")
     @patch("app.api.v1.endpoints.dashboard.cost_dashboard.deps.get_db")
     @patch("app.api.v1.endpoints.dashboard.cost_dashboard.security.require_permission")
     def test_get_project_dashboard_success(self, mock_auth, mock_db, mock_user, admin_token, client):
@@ -204,7 +201,7 @@ class TestProjectDashboardAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_project_cost_dashboard.return_value = {
@@ -241,7 +238,7 @@ class TestProjectDashboardAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_project_cost_dashboard.side_effect = ValueError("项目 999 不存在")
@@ -263,7 +260,7 @@ class TestExportAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_cost_overview.return_value = {
@@ -307,14 +304,13 @@ class TestExportAPI:
 class TestCacheAPI:
     """测试缓存 API"""
 
-    @pytest.mark.xfail(reason="Mock 配置问题 - 端点实现存在")
     @patch("app.api.v1.endpoints.dashboard.cost_dashboard.security.require_permission")
     def test_clear_cache_success(self, mock_auth, mock_user, admin_token, client):
         """测试清除缓存"""
         mock_auth.return_value = mock_user
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
-        with patch("app.services.dashboard_cache_service.get_cache_service") as mock_cache:
+        with patch("app.api.v1.endpoints.dashboard.cost_dashboard.get_cache_service") as mock_cache:
             mock_cache_instance = MagicMock()
             mock_cache_instance.clear_pattern.return_value = 5
             mock_cache.return_value = mock_cache_instance
@@ -325,14 +321,13 @@ class TestCacheAPI:
             data = response.json()
             assert data["data"]["deleted_count"] == 5
 
-    @pytest.mark.xfail(reason="Mock 配置问题 - 端点实现存在")
     @patch("app.api.v1.endpoints.dashboard.cost_dashboard.security.require_permission")
     def test_clear_cache_custom_pattern(self, mock_auth, mock_user, admin_token, client):
         """测试自定义缓存模式"""
         mock_auth.return_value = mock_user
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
-        with patch("app.services.dashboard_cache_service.get_cache_service") as mock_cache:
+        with patch("app.api.v1.endpoints.dashboard.cost_dashboard.get_cache_service") as mock_cache:
             mock_cache_instance = MagicMock()
             mock_cache_instance.clear_pattern.return_value = 3
             mock_cache.return_value = mock_cache_instance
@@ -354,7 +349,7 @@ class TestForceRefresh:
         mock_auth.return_value = mock_user
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
-        with patch("app.services.dashboard_cache_service.get_cache_service") as mock_cache:
+        with patch("app.api.v1.endpoints.dashboard.cost_dashboard.get_cache_service") as mock_cache:
             mock_cache_instance = MagicMock()
             mock_cache_instance.get_or_set.return_value = {"total_projects": 10}
             mock_cache.return_value = mock_cache_instance

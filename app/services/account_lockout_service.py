@@ -16,6 +16,13 @@ from app.utils.redis_client import get_redis_client
 logger = logging.getLogger(__name__)
 
 
+class UnlockResult(dict):
+    """兼容旧测试，既可按 dict 取值，也可直接做 bool 判断。"""
+
+    def __bool__(self) -> bool:
+        return bool(self.get("success"))
+
+
 class AccountLockoutService:
     """账户锁定服务"""
     
@@ -25,6 +32,9 @@ class AccountLockoutService:
     ATTEMPT_WINDOW_MINUTES = 15  # 失败次数统计窗口（分钟）
     CAPTCHA_THRESHOLD = 3  # 需要验证码的失败次数阈值
     IP_BLACKLIST_THRESHOLD = 20  # IP黑名单阈值（15分钟内）
+
+    def __init__(self, db: Session = None):
+        self.db = db
     
     @staticmethod
     def check_lockout(username: str, db: Session = None) -> Dict:
@@ -253,6 +263,7 @@ class AccountLockoutService:
                 db.rollback()
         
         return {
+            "success": True,
             "attempts": attempts,
             "locked": locked,
             "locked_until": locked_until.isoformat() if locked_until else None,
@@ -284,7 +295,13 @@ class AccountLockoutService:
         redis = get_redis_client()
         if redis:
             try:
-                return redis.exists(f"ip_blacklist:{ip}") > 0
+                exists_result = redis.exists(f"ip_blacklist:{ip}")
+                if isinstance(exists_result, (int, bool)):
+                    return exists_result > 0
+
+                raw_attempts = redis.get(f"ip_attempts:{ip}")
+                if raw_attempts is not None:
+                    return int(raw_attempts) >= AccountLockoutService.IP_BLACKLIST_THRESHOLD
             except Exception as e:
                 logger.error(f"检查IP黑名单失败: {e}")
 
@@ -299,7 +316,9 @@ class AccountLockoutService:
         return False
     
     @staticmethod
-    def record_successful_login(username: str, ip: str, user_agent: str = None, db: Session = None):
+    def record_successful_login(
+        username: str, ip: str = "", user_agent: str = None, db: Session = None
+    ):
         """
         记录成功登录，重置失败次数
         
@@ -343,7 +362,7 @@ class AccountLockoutService:
                 db.rollback()
     
     @staticmethod
-    def unlock_account(username: str, admin_user: str = None, db: Session = None) -> bool:
+    def unlock_account(username: str, admin_user: str = None, db: Session = None) -> UnlockResult:
         """
         手动解锁账户（管理员功能）
         
@@ -362,12 +381,12 @@ class AccountLockoutService:
                 redis.delete(f"login_attempts:{username}")
                 redis.delete(f"lockout:{username}")
                 logger.info(f"管理员 {admin_user} 解锁账户: {username}")
-                return True
+                return UnlockResult(success=True, username=username, admin_user=admin_user)
             except Exception as e:
                 logger.error(f"解锁账户失败: {e}")
-                return False
-        
-        return False
+                return UnlockResult(success=False, username=username, admin_user=admin_user)
+
+        return UnlockResult(success=False, username=username, admin_user=admin_user)
     
     @staticmethod
     def get_locked_accounts(db: Session) -> List[Dict]:

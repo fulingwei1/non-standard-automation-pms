@@ -11,6 +11,9 @@ from typing import Any, Dict, List
 class BatchNotificationMixin:
     """批量通知 Mixin"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def batch_notify(self, notifications: List[Dict[str, Any]]):
         """
         批量发送通知

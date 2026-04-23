@@ -5,7 +5,6 @@
 提供通知去重、用户偏好检查等工具函数
 """
 
-import hashlib
 import logging
 from datetime import datetime, timedelta
 from typing import Dict
@@ -20,16 +19,21 @@ logger = logging.getLogger(__name__)
 class NotificationUtilsMixin:
     """通知工具函数 Mixin"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def _generate_dedup_key(self, notification: Dict) -> str:
-        """生成通知去重的唯一键"""
-        key_parts = [
-            str(notification.get("type", "")),
-            str(notification.get("receiver_id", "")),
-            str(notification.get("instance_id", "")),
-            str(notification.get("task_id", "")),
-        ]
-        key_str = "|".join(key_parts)
-        return hashlib.md5(key_str.encode()).hexdigest()
+        """生成通知去重的唯一键。"""
+        recipient_id = notification.get("recipient_id", notification.get("receiver_id", ""))
+        return ":".join(
+            [
+                str(notification.get("instance_id", "")),
+                str(notification.get("node_id", "")),
+                str(notification.get("task_id", "")),
+                str(notification.get("type", "")),
+                str(recipient_id),
+            ]
+        )
 
     def _is_duplicate(self, dedup_key: str) -> bool:
         """检查是否为重复通知（基于用户偏好的去重窗口）

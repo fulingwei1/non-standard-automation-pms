@@ -6,6 +6,7 @@ AI进度排期优化器
 
 import json
 import logging
+from decimal import Decimal
 from datetime import date, timedelta
 from typing import Any, Dict, List, Optional
 
@@ -28,6 +29,31 @@ class AIScheduleOptimizer:
             db: 数据库会话
         """
         self.db = db
+
+    @staticmethod
+    def _safe_number(value: Any, default: float = 0) -> float:
+        if isinstance(value, (int, float, Decimal)):
+            return float(value)
+        return default
+
+    def _get_task_duration(self, task: Any) -> float:
+        duration = getattr(task, "estimated_duration_days", None)
+        normalized = self._safe_number(duration, None)
+        if normalized is not None:
+            return normalized
+
+        duration = getattr(task, "duration_days", None)
+        return self._safe_number(duration, 0)
+
+    @staticmethod
+    def _get_task_level(task: Any) -> int:
+        level = getattr(task, "wbs_level", None)
+        return level if isinstance(level, int) else 1
+
+    @staticmethod
+    def _get_parent_id(task: Any) -> Any:
+        parent_id = getattr(task, "parent_wbs_id", None)
+        return parent_id if not hasattr(parent_id, "__class__") or isinstance(parent_id, (int, str, type(None))) else None
 
     def optimize_schedule(
         self, project_id: int, start_date: Optional[date] = None, constraints: Optional[Dict] = None
@@ -121,11 +147,11 @@ class AIScheduleOptimizer:
         slack_dict = {}  # 浮动时间
 
         # 按拓扑排序（按WBS层级和序号）
-        sorted_tasks = sorted(tasks, key=lambda t: (t.wbs_level, t.wbs_code))
+        sorted_tasks = sorted(tasks, key=lambda t: (self._get_task_level(t), getattr(t, "wbs_code", "")))
 
         # 正向计算 ES 和 EF
         for task in sorted_tasks:
-            duration = task.estimated_duration_days or 0
+            duration = self._get_task_duration(task)
 
             # 获取前置任务
             predecessors = self._get_predecessors(task, task_dict)
@@ -146,7 +172,7 @@ class AIScheduleOptimizer:
 
         # 反向计算 LS 和 LF
         for task in reversed(sorted_tasks):
-            duration = task.estimated_duration_days or 0
+            duration = self._get_task_duration(task)
 
             # 获取后继任务
             successors = self._get_successors(task, task_dict)
@@ -238,11 +264,11 @@ class AIScheduleOptimizer:
                     "task_id": task.id,
                     "task_name": task.task_name,
                     "wbs_code": task.wbs_code,
-                    "level": task.wbs_level,
-                    "parent_id": task.parent_wbs_id,
+                    "level": self._get_task_level(task),
+                    "parent_id": self._get_parent_id(task),
                     "start_date": task_start.isoformat(),
                     "end_date": task_end.isoformat(),
-                    "duration_days": task.estimated_duration_days,
+                    "duration_days": self._get_task_duration(task),
                     "es": es,
                     "ef": ef,
                     "slack": slack,
@@ -348,7 +374,8 @@ class AIScheduleOptimizer:
 
         # 3. 检测任务工期异常
         for task in tasks:
-            if task.estimated_duration_days and task.estimated_duration_days > 60:
+            duration = self._get_task_duration(task)
+            if duration > 60:
                 conflicts.append(
                     {
                         "type": "TASK_TOO_LONG",

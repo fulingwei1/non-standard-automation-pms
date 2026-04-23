@@ -14,6 +14,9 @@ from app.models.approval import ApprovalInstance
 class CommentNotificationsMixin:
     """评论通知 Mixin"""
 
+    def __init__(self, db=None):
+        self.db = db
+
     def notify_comment(
         self,
         instance: ApprovalInstance,

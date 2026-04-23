@@ -46,9 +46,9 @@ class AICostEstimationService:
 
     MODEL_VERSION = "v1.0.0"
 
-    def __init__(self, db: Session, user_id: int):
+    def __init__(self, db: Session, user_id: int | None = None):
         self.db = db
-        self.user_id = user_id
+        self.user_id = user_id or 0
         # 初始化子模块
         self._calculator = CostCalculator(db)
         self._optimizer = OptimizationEngine()
