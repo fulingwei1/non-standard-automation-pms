@@ -36,6 +36,7 @@ class AIService:
                     "Content-Type": "application/json",
                 },
                 timeout=self.timeout,
+                trust_env=False,
             )
         else:
             self.client = None
