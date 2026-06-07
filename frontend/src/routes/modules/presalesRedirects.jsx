@@ -1,4 +1,12 @@
-import { Navigate, useLocation } from "react-router-dom";
+import * as Router from "react-router-dom";
+
+const CONTEXT_PARAM_ALIASES = {
+  leadId: "lead_id",
+  opportunityId: "opportunity_id",
+  ticketId: "ticket_id",
+  projectId: "project_id",
+  contractId: "contract_id",
+};
 
 export function buildPresalesCenterSearch(tab, search) {
   const currentParams = new URLSearchParams(search || "");
@@ -7,7 +15,11 @@ export function buildPresalesCenterSearch(tab, search) {
   nextParams.set("tab", tab);
   currentParams.forEach((value, key) => {
     if (key !== "tab") {
-      nextParams.append(key, value);
+      const nextKey = CONTEXT_PARAM_ALIASES[key] || key;
+      if (nextKey !== key && nextParams.has(nextKey)) {
+        return;
+      }
+      nextParams.append(nextKey, value);
     }
   });
 
@@ -15,7 +27,7 @@ export function buildPresalesCenterSearch(tab, search) {
 }
 
 export function PresalesCenterRedirect({ tab }) {
-  const location = useLocation();
+  const location = Router.useLocation();
   const browserSearch =
     typeof window !== "undefined" && window.location.pathname === location.pathname
       ? window.location.search
@@ -23,7 +35,7 @@ export function PresalesCenterRedirect({ tab }) {
   const search = buildPresalesCenterSearch(tab, location.search || browserSearch);
 
   return (
-    <Navigate
+    <Router.Navigate
       to={{ pathname: "/presales/technical-solutions", search }}
       replace
     />

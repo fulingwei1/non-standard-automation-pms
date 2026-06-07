@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { BrowserRouter, MemoryRouter, Routes } from "react-router-dom";
+import * as Router from "react-router-dom";
 import { PresalesRoutes } from "../presalesRoutes";
 import { buildPresalesCenterSearch } from "../presalesRedirects";
+
+const { BrowserRouter, MemoryRouter, Routes } = Router;
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
@@ -42,6 +44,15 @@ describe("PresalesRoutes", () => {
     expect(buildPresalesCenterSearch("reviews", "?type=review&status=reviewing")).toBe(
       "?tab=reviews&type=review&status=reviewing",
     );
+  });
+
+  it("normalizes legacy camelCase context params when building unified redirects", () => {
+    expect(
+      buildPresalesCenterSearch(
+        "reviews",
+        "?projectId=42&opportunityId=2&ticketId=501&leadId=7",
+      ),
+    ).toBe("?tab=reviews&project_id=42&opportunity_id=2&ticket_id=501&lead_id=7");
   });
 
   it("redirects the legacy technical parameter route to the unified center", async () => {

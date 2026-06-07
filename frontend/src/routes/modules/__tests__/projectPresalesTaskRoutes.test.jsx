@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import * as Router from "react-router-dom";
 import { ProjectRoutes } from "../projectRoutes";
 
 vi.mock("react-router-dom", async () => {
@@ -17,7 +17,7 @@ vi.mock("../../../pages/PresalesTasks", () => ({
 }));
 
 function LocationProbe() {
-  const location = useLocation();
+  const location = Router.useLocation();
 
   return <div>售前技术支持中心 {location.search}</div>;
 }
@@ -27,15 +27,17 @@ describe("ProjectRoutes presales task compatibility", () => {
     window.history.pushState({}, "", "/project-presales-tasks?projectId=42&status=assigned");
 
     render(
-      <BrowserRouter>
-        <Routes>
+      <Router.BrowserRouter>
+        <Router.Routes>
           {ProjectRoutes()}
-          <Route path="/presales/technical-solutions" element={<LocationProbe />} />
-        </Routes>
-      </BrowserRouter>,
+          <Router.Route path="/presales/technical-solutions" element={<LocationProbe />} />
+        </Router.Routes>
+      </Router.BrowserRouter>,
     );
 
-    expect(await screen.findByText(/售前技术支持中心/)).toBeInTheDocument();
+    expect(
+      await screen.findByText("售前技术支持中心 ?tab=reviews&project_id=42&status=assigned"),
+    ).toBeInTheDocument();
     expect(screen.queryByText("项目侧售前工单旧视图")).not.toBeInTheDocument();
   });
 });
