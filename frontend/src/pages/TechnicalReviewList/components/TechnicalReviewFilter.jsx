@@ -1,5 +1,5 @@
 import { Search, Plus } from "lucide-react";
-import { Button, Input, Select, Card, CardContent } from "../../../components/ui";
+import { Button, Input, FormSelect, Card, CardContent } from "../../../components/ui";
 
 export function TechnicalReviewFilter({
     searchKeyword, setSearchKeyword,
@@ -27,10 +27,11 @@ export function TechnicalReviewFilter({
                             />
                         </div>
                     </div>
-                    <Select
+                    <FormSelect
+                        label="项目"
+                        name="technical-review-project-filter"
                         value={projectId || ""}
-                        onValueChange={(value) => setProjectId(value || null)}
-                        className="bg-slate-800/50 border-slate-700"
+                        onChange={(e) => setProjectId(e.target.value || null)}
                     >
                         <option value="">全部项目</option>
                         {(projectList || []).map((p) => (
@@ -38,11 +39,12 @@ export function TechnicalReviewFilter({
                                 {p.project_code} - {p.project_name}
                             </option>
                         ))}
-                    </Select>
-                    <Select
+                    </FormSelect>
+                    <FormSelect
+                        label="评审类型"
+                        name="technical-review-type-filter"
                         value={reviewType || ""}
-                        onValueChange={(value) => setReviewType(value || null)}
-                        className="bg-slate-800/50 border-slate-700"
+                        onChange={(e) => setReviewType(e.target.value || null)}
                     >
                         <option value="">全部类型</option>
                         <option value="PDR">方案设计评审</option>
@@ -50,11 +52,12 @@ export function TechnicalReviewFilter({
                         <option value="PRR">生产准备评审</option>
                         <option value="FRR">出厂评审</option>
                         <option value="ARR">现场评审</option>
-                    </Select>
-                    <Select
+                    </FormSelect>
+                    <FormSelect
+                        label="状态"
+                        name="technical-review-status-filter"
                         value={status || ""}
-                        onValueChange={(value) => setStatus(value || null)}
-                        className="bg-slate-800/50 border-slate-700"
+                        onChange={(e) => setStatus(e.target.value || null)}
                     >
                         <option value="">全部状态</option>
                         <option value="DRAFT">草稿</option>
@@ -62,7 +65,7 @@ export function TechnicalReviewFilter({
                         <option value="IN_PROGRESS">评审中</option>
                         <option value="COMPLETED">已完成</option>
                         <option value="CANCELLED">已取消</option>
-                    </Select>
+                    </FormSelect>
                 </div>
                 <div className="flex gap-2 mt-4">
                     <Button onClick={onSearch} className="bg-blue-600 hover:bg-blue-700">

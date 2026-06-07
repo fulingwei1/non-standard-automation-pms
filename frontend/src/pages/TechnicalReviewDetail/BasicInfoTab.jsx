@@ -5,7 +5,7 @@ import {
     CardTitle,
     Badge,
     Input,
-    Select,
+    FormSelect,
 } from "../../components/ui";
 import { formatDate } from "../../lib/utils";
 import { getStatusBadge } from "./constants";
@@ -25,20 +25,19 @@ export function BasicInfoTab({ isNew, review, formData, updateField, projects, u
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                评审类型 *
-                            </label>
-                            <Select
+                            <FormSelect
+                                label="评审类型"
+                                name="review_type"
+                                required
                                 value={formData.review_type}
-                                onValueChange={(value) => updateField("review_type", value)}
-                                className="bg-slate-800/50 border-slate-700"
+                                onChange={(e) => updateField("review_type", e.target.value)}
                             >
                                 <option value="PDR">方案设计评审 (PDR)</option>
                                 <option value="DDR">详细设计评审 (DDR)</option>
                                 <option value="PRR">生产准备评审 (PRR)</option>
                                 <option value="FRR">出厂评审 (FRR)</option>
                                 <option value="ARR">现场评审 (ARR)</option>
-                            </Select>
+                            </FormSelect>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -52,13 +51,12 @@ export function BasicInfoTab({ isNew, review, formData, updateField, projects, u
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                关联项目 *
-                            </label>
-                            <Select
-                                value={formData.project_id}
-                                onValueChange={(value) => updateField("project_id", value)}
-                                className="bg-slate-800/50 border-slate-700"
+                            <FormSelect
+                                label="关联项目"
+                                name="project_id"
+                                required
+                                value={formData.project_id || ""}
+                                onChange={(e) => updateField("project_id", e.target.value)}
                             >
                                 <option value="">请选择项目</option>
                                 {(projects || []).map((p) => (
@@ -66,7 +64,7 @@ export function BasicInfoTab({ isNew, review, formData, updateField, projects, u
                                         {p.project_code} - {p.project_name}
                                     </option>
                                 ))}
-                            </Select>
+                            </FormSelect>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -91,27 +89,25 @@ export function BasicInfoTab({ isNew, review, formData, updateField, projects, u
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                会议形式 *
-                            </label>
-                            <Select
+                            <FormSelect
+                                label="会议形式"
+                                name="meeting_type"
+                                required
                                 value={formData.meeting_type}
-                                onValueChange={(value) => updateField("meeting_type", value)}
-                                className="bg-slate-800/50 border-slate-700"
+                                onChange={(e) => updateField("meeting_type", e.target.value)}
                             >
                                 <option value="ONSITE">现场</option>
                                 <option value="ONLINE">线上</option>
                                 <option value="HYBRID">混合</option>
-                            </Select>
+                            </FormSelect>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                主持人 *
-                            </label>
-                            <Select
-                                value={formData.host_id}
-                                onValueChange={(value) => updateField("host_id", value)}
-                                className="bg-slate-800/50 border-slate-700"
+                            <FormSelect
+                                label="主持人"
+                                name="host_id"
+                                required
+                                value={formData.host_id || ""}
+                                onChange={(e) => updateField("host_id", e.target.value)}
                             >
                                 <option value="">请选择主持人</option>
                                 {(users || []).map((u) => (
@@ -119,16 +115,15 @@ export function BasicInfoTab({ isNew, review, formData, updateField, projects, u
                                         {u.real_name || u.username}
                                     </option>
                                 ))}
-                            </Select>
+                            </FormSelect>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                汇报人 *
-                            </label>
-                            <Select
-                                value={formData.presenter_id}
-                                onValueChange={(value) => updateField("presenter_id", value)}
-                                className="bg-slate-800/50 border-slate-700"
+                            <FormSelect
+                                label="汇报人"
+                                name="presenter_id"
+                                required
+                                value={formData.presenter_id || ""}
+                                onChange={(e) => updateField("presenter_id", e.target.value)}
                             >
                                 <option value="">请选择汇报人</option>
                                 {(users || []).map((u) => (
@@ -136,16 +131,15 @@ export function BasicInfoTab({ isNew, review, formData, updateField, projects, u
                                         {u.real_name || u.username}
                                     </option>
                                 ))}
-                            </Select>
+                            </FormSelect>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                记录人 *
-                            </label>
-                            <Select
-                                value={formData.recorder_id}
-                                onValueChange={(value) => updateField("recorder_id", value)}
-                                className="bg-slate-800/50 border-slate-700"
+                            <FormSelect
+                                label="记录人"
+                                name="recorder_id"
+                                required
+                                value={formData.recorder_id || ""}
+                                onChange={(e) => updateField("recorder_id", e.target.value)}
                             >
                                 <option value="">请选择记录人</option>
                                 {(users || []).map((u) => (
@@ -153,7 +147,7 @@ export function BasicInfoTab({ isNew, review, formData, updateField, projects, u
                                         {u.real_name || u.username}
                                     </option>
                                 ))}
-                            </Select>
+                            </FormSelect>
                         </div>
                     </div>
                 </CardContent>
