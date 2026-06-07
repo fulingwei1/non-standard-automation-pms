@@ -90,6 +90,13 @@ class TestTechnicalReviewDetailSubresourceContract:
         assert participant_response.status_code == 201, participant_response.text
         assert participant_response.json()["user_id"] == admin_user.id
 
+        participants_list_response = client.get(
+            f"{prefix}/technical-reviews/{review.id}/participants",
+            headers=headers,
+        )
+        assert participants_list_response.status_code == 200, participants_list_response.text
+        assert [p["user_id"] for p in participants_list_response.json()] == [admin_user.id]
+
         material_response = client.post(
             f"{prefix}/technical-reviews/{review.id}/materials",
             headers=headers,
@@ -105,6 +112,13 @@ class TestTechnicalReviewDetailSubresourceContract:
         )
         assert material_response.status_code == 201, material_response.text
         assert material_response.json()["material_name"] == "总装图纸"
+
+        materials_list_response = client.get(
+            f"{prefix}/technical-reviews/{review.id}/materials",
+            headers=headers,
+        )
+        assert materials_list_response.status_code == 200, materials_list_response.text
+        assert [m["material_name"] for m in materials_list_response.json()] == ["总装图纸"]
 
         issue_response = client.post(
             f"{prefix}/technical-reviews/{review.id}/issues",
@@ -196,6 +210,15 @@ class TestTechnicalReviewDetailSubresourceContract:
         checklist_payload = checklist_response.json()
         assert checklist_payload["result"] == "FAIL"
         assert checklist_payload["issue_id"] is not None
+
+        checklist_records_response = client.get(
+            f"{prefix}/technical-reviews/{review.id}/checklist-records",
+            headers=headers,
+        )
+        assert checklist_records_response.status_code == 200, checklist_records_response.text
+        assert [c["check_item"] for c in checklist_records_response.json()] == [
+            "定位基准是否明确"
+        ]
 
         detail_response = client.get(
             f"{prefix}/technical-reviews/{review.id}",

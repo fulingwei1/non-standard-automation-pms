@@ -24,6 +24,43 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
+@router.get(
+    "/technical-reviews/{review_id}/participants",
+    response_model=list[ReviewParticipantResponse],
+    status_code=status.HTTP_200_OK,
+)
+def read_review_participants(
+    review_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取评审参与人列表"""
+    get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
+
+    participants = (
+        db.query(ReviewParticipant)
+        .filter(ReviewParticipant.review_id == review_id)
+        .order_by(ReviewParticipant.id.asc())
+        .all()
+    )
+
+    return [
+        ReviewParticipantResponse(
+            id=participant.id,
+            review_id=participant.review_id,
+            user_id=participant.user_id,
+            role=participant.role,
+            is_required=participant.is_required,
+            attendance=participant.attendance,
+            delegate_id=participant.delegate_id,
+            sign_time=participant.sign_time,
+            signature=participant.signature,
+            created_at=participant.created_at,
+        )
+        for participant in participants
+    ]
+
+
 @router.post(
     "/technical-reviews/{review_id}/participants",
     response_model=ReviewParticipantResponse,

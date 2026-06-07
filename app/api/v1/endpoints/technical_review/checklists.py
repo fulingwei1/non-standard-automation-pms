@@ -25,6 +25,45 @@ from .utils import generate_issue_no, sync_review_issue_to_project_issue, update
 router = APIRouter()
 
 
+@router.get(
+    "/technical-reviews/{review_id}/checklist-records",
+    response_model=list[ReviewChecklistRecordResponse],
+    status_code=status.HTTP_200_OK,
+)
+def read_checklist_records(
+    review_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取评审检查项记录列表"""
+    get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
+
+    records = (
+        db.query(ReviewChecklistRecord)
+        .filter(ReviewChecklistRecord.review_id == review_id)
+        .order_by(ReviewChecklistRecord.id.asc())
+        .all()
+    )
+
+    return [
+        ReviewChecklistRecordResponse(
+            id=record.id,
+            review_id=record.review_id,
+            checklist_item_id=record.checklist_item_id,
+            category=record.category,
+            check_item=record.check_item,
+            result=record.result,
+            issue_level=record.issue_level,
+            issue_desc=record.issue_desc,
+            issue_id=record.issue_id,
+            checker_id=record.checker_id,
+            remark=record.remark,
+            created_at=record.created_at,
+        )
+        for record in records
+    ]
+
+
 @router.post(
     "/technical-reviews/{review_id}/checklist-records",
     response_model=ReviewChecklistRecordResponse,
