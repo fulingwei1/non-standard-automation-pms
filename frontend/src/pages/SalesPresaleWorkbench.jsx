@@ -292,7 +292,7 @@ export default function SalesPresaleWorkbench() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-medium text-gray-300">关联方案</div>
-                  <Link to="/presales/solutions">
+                  <Link to="/presales/technical-solutions?tab=solutions">
                     <Button variant="outline" size="sm">
                       查看全部
                     </Button>
@@ -454,7 +454,7 @@ export default function SalesPresaleWorkbench() {
                 维护 ICT、FCT、EOL 等技术参数模板，为评估和成本估算提供标准输入。
               </div>
               <Link
-                to="/presales/technical-parameters"
+                to="/presales/technical-solutions?tab=parameters"
                 className="mt-3 inline-flex items-center gap-2 text-sm text-blue-300"
               >
                 管理技术参数
@@ -470,7 +470,7 @@ export default function SalesPresaleWorkbench() {
                 对接售前方案、成本估算和模板中心，减少线索到方案的断层。
               </div>
               <Link
-                to="/presales/solutions"
+                to="/presales/technical-solutions?tab=solutions"
                 className="mt-3 inline-flex items-center gap-2 text-sm text-blue-300"
               >
                 进入方案中心

@@ -226,7 +226,7 @@ export const allMenuGroups = [
       {
         id: "tech-assessments",
         name: "技术评估",
-        path: "/presales/assessments",
+        path: "/presales/technical-solutions?tab=reviews",
         icon: "ClipboardCheck",
       },
       {
@@ -238,13 +238,13 @@ export const allMenuGroups = [
       {
         id: "solutions",
         name: "方案设计",
-        path: "/presales/solutions",
+        path: "/presales/technical-solutions?tab=solutions",
         icon: "Lightbulb",
       },
       {
         id: "presales-templates",
         name: "模板库",
-        path: "/presales/templates",
+        path: "/presales/technical-solutions?tab=knowledge",
         icon: "Layers",
       },
     ],

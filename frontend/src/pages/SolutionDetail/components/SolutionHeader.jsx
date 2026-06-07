@@ -16,7 +16,7 @@ export function SolutionHeader({ solution, navigate, onSubmitReview, submittingR
             <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate("/presales/solutions")}
+                onClick={() => navigate("/presales/technical-solutions?tab=solutions")}
                 className="text-slate-400 hover:text-white"
             >
                 <ArrowLeft className="w-5 h-5" />

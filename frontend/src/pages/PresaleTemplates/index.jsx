@@ -8,7 +8,7 @@ import { StatsBar } from "./StatsBar";
 import { TemplateGrid } from "./TemplateGrid";
 import { usePresaleTemplates } from "./usePresaleTemplates";
 
-export default function PresaleTemplates() {
+export default function PresaleTemplates({ embedded = false } = {}) {
   const {
     loading,
     loadError,
@@ -37,10 +37,12 @@ export default function PresaleTemplates() {
       animate="visible"
       variants={staggerContainer}
     >
-      <PageHeader
-        title="售前模板库"
-        description="统一管理模板分类、快速预览、模板应用和团队评分反馈。"
-      />
+      {!embedded && (
+        <PageHeader
+          title="售前模板库"
+          description="统一管理模板分类、快速预览、模板应用和团队评分反馈。"
+        />
+      )}
 
       {loadError && (
         <motion.div variants={fadeIn}>

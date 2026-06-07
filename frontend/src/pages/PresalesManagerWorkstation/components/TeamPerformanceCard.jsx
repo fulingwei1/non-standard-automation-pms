@@ -30,7 +30,7 @@ export default function TeamPerformanceCard({ teamPerformance }) {
               <Users className="h-5 w-5 text-purple-400" />
               团队绩效排行
             </CardTitle>
-            <Link to="/presales-tasks">
+            <Link to="/presales/technical-solutions?tab=reviews">
               <Button
                 variant="ghost"
                 size="sm"

@@ -1,4 +1,4 @@
-export const SOLUTION_CENTER_PATH = "/presales/solutions";
+export const SOLUTION_CENTER_PATH = "/presales/technical-solutions?tab=solutions";
 
 export const opportunityStageConfigs = {
     initial: { label: '初步接触', color: 'bg-slate-500' },

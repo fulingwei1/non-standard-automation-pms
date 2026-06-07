@@ -23,7 +23,7 @@ export default function OngoingSolutionsCard({ solutions }) {
           <FileText className="w-5 h-5 text-violet-400" />
           进行中方案
         </CardTitle>
-        <Link to="/presales/solutions">
+        <Link to="/presales/technical-solutions?tab=solutions">
           <Button
             variant="ghost"
             size="sm"

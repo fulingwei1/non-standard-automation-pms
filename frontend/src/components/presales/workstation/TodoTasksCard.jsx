@@ -25,7 +25,7 @@ export default function TodoTasksCard({ tasks, onTaskClick }) {
             {tasks?.length}
           </Badge>
         </CardTitle>
-        <Link to="/presales-tasks">
+        <Link to="/presales/technical-solutions?tab=reviews">
           <Button
             variant="ghost"
             size="sm"

@@ -19,7 +19,7 @@ import { StatsCards } from "./StatsCards";
 import { BiddingKanban } from "./BiddingKanban";
 import { BiddingDetailPanel } from "./BiddingDetailPanel";
 
-export default function BiddingCenter() {
+export default function BiddingCenter({ embedded = false } = {}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBidding, setSelectedBidding] = useState(null);
   const [biddings, setBiddings] = useState([]);
@@ -138,17 +138,20 @@ export default function BiddingCenter() {
       className="space-y-6">
 
       {/* 页面头部 */}
-      <PageHeader
-        title="投标中心"
-        description="管理投标项目、技术标书、竞争分析"
-        actions={
-        <motion.div variants={fadeIn} className="flex gap-2">
-            <Button className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              新建投标
-            </Button>
-        </motion.div>
-        } />
+      {!embedded && (
+        <PageHeader
+          title="投标中心"
+          description="管理投标项目、技术标书、竞争分析"
+          actions={
+            <motion.div variants={fadeIn} className="flex gap-2">
+              <Button className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                新建投标
+              </Button>
+            </motion.div>
+          }
+        />
+      )}
 
 
       {/* 统计卡片 */}

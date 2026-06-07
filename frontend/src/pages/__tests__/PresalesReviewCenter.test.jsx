@@ -46,6 +46,18 @@ vi.mock("../TechnicalParameterManagement", () => ({
   default: ({ embedded }) => <div>技术参数模板中心 {embedded ? "embedded" : "standalone"}</div>,
 }));
 
+vi.mock("../PresalesCostEstimation", () => ({
+  default: ({ embedded }) => <div>成本估算中心 {embedded ? "embedded" : "standalone"}</div>,
+}));
+
+vi.mock("../BiddingCenter", () => ({
+  default: ({ embedded }) => <div>投标支持中心 {embedded ? "embedded" : "standalone"}</div>,
+}));
+
+vi.mock("../PresaleTemplates", () => ({
+  default: ({ embedded }) => <div>知识模板中心 {embedded ? "embedded" : "standalone"}</div>,
+}));
+
 describe("PresalesReviewCenter", () => {
   beforeEach(() => {
     routeState.search = "tab=solutions";
@@ -70,6 +82,33 @@ describe("PresalesReviewCenter", () => {
     render(<PresalesReviewCenter />);
 
     expect(screen.getByText(/技术参数模板中心 embedded/)).toBeInTheDocument();
+    expect(screen.queryByText("工单看板中心")).not.toBeInTheDocument();
+  });
+
+  it("opens cost estimation inside the technical solutions center", () => {
+    routeState.search = "tab=cost";
+
+    render(<PresalesReviewCenter />);
+
+    expect(screen.getByText(/成本估算中心 embedded/)).toBeInTheDocument();
+    expect(screen.queryByText("工单看板中心")).not.toBeInTheDocument();
+  });
+
+  it("opens bidding support inside the technical solutions center", () => {
+    routeState.search = "tab=bids";
+
+    render(<PresalesReviewCenter />);
+
+    expect(screen.getByText(/投标支持中心 embedded/)).toBeInTheDocument();
+    expect(screen.queryByText("工单看板中心")).not.toBeInTheDocument();
+  });
+
+  it("opens presales knowledge templates inside the technical solutions center", () => {
+    routeState.search = "tab=knowledge";
+
+    render(<PresalesReviewCenter />);
+
+    expect(screen.getByText(/知识模板中心 embedded/)).toBeInTheDocument();
     expect(screen.queryByText("工单看板中心")).not.toBeInTheDocument();
   });
 });

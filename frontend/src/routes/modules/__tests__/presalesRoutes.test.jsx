@@ -3,9 +3,17 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Routes } from "react-router-dom";
 import { PresalesRoutes } from "../presalesRoutes";
 
-vi.mock("../../../pages/TechnicalParameterManagement", () => ({
-  default: () => <div>技术参数模板路由已挂载</div>,
-}));
+vi.mock("../../../pages/PresalesReviewCenter", async () => {
+  const { useLocation } = await vi.importActual("react-router-dom");
+
+  return {
+    default: function PresalesReviewCenterRouteProbe() {
+      const location = useLocation();
+
+      return <div>售前技术支持中心 {location.search}</div>;
+    },
+  };
+});
 
 vi.mock("../../../pages/PresalesWorkstation", () => ({
   default: () => <div>售前执行旧视图</div>,
@@ -24,14 +32,30 @@ vi.mock("../../../hooks/usePermission", () => ({
 }));
 
 describe("PresalesRoutes", () => {
-  it("mounts the technical parameter management page", async () => {
+  it("redirects the legacy technical parameter route to the unified center", async () => {
     render(
       <MemoryRouter initialEntries={["/presales/technical-parameters"]}>
         <Routes>{PresalesRoutes()}</Routes>
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText("技术参数模板路由已挂载")).toBeInTheDocument();
+    expect(await screen.findByText("售前技术支持中心 ?tab=parameters")).toBeInTheDocument();
+  });
+
+  it.each([
+    ["/presales/cost-estimation", "?tab=cost"],
+    ["/presales/solutions", "?tab=solutions"],
+    ["/bidding", "?tab=bids"],
+    ["/presales/templates", "?tab=knowledge"],
+    ["/presales-tasks", "?tab=reviews"],
+  ])("redirects legacy route %s to the unified center", async (entry, expectedSearch) => {
+    render(
+      <MemoryRouter initialEntries={[entry]}>
+        <Routes>{PresalesRoutes()}</Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText(`售前技术支持中心 ${expectedSearch}`)).toBeInTheDocument();
   });
 
   it("mounts the unified presales workbench as the primary entry", async () => {

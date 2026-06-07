@@ -15,7 +15,7 @@ export default function RecentTendersCard({ tenders }) {
           <Target className="w-5 h-5 text-amber-400" />
           近期投标
         </CardTitle>
-        <Link to="/bidding">
+        <Link to="/presales/technical-solutions?tab=bids">
           <Button
             variant="ghost"
             size="sm"

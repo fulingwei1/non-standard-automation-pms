@@ -59,7 +59,7 @@ export const defaultNavGroups = [
         permissionAny: ["sales:lead:read", "sales:opportunity:read"],
         permissionLabel: "商机中心"
       },
-      { name: "投标管理", path: "/bidding", icon: "Target", permission: "sales:bid:read", permissionLabel: "投标管理" },
+      { name: "投标管理", path: "/presales/technical-solutions?tab=bids", icon: "Target", permission: "sales:bid:read", permissionLabel: "投标管理" },
       { name: "报价管理", path: "/cost-quotes/quotes", icon: "Calculator", permission: "sales:quote:read", permissionLabel: "报价管理" },
       { name: "合同管理", path: "/sales/contracts", icon: "FileCheck", permission: "sales:contract:read", permissionLabel: "合同管理" },
       { name: "立项管理", path: "/pmo/initiations", icon: "FileText", permission: "project:initiation:read", permissionLabel: "立项管理" },
@@ -93,10 +93,10 @@ export const defaultNavGroups = [
         permissionLabel: "售前工作台"
       },
       // 业务功能
-      { name: "技术方案", path: "/presales/technical-solutions", icon: "Lightbulb", permission: "presales:task:read", permissionLabel: "技术方案" },
-      { name: "成本估算", path: "/presales/cost-estimation", icon: "Calculator", permission: "presales:task:read", permissionLabel: "成本估算" },
+      { name: "技术方案", path: "/presales/technical-solutions?tab=solutions", icon: "Lightbulb", permission: "presales:task:read", permissionLabel: "技术方案" },
+      { name: "成本估算", path: "/presales/technical-solutions?tab=cost", icon: "Calculator", permission: "presales:task:read", permissionLabel: "成本估算" },
       // 资源与工具
-      { name: "模板库", path: "/presales/templates", icon: "Layers", permission: "presales:task:read", permissionLabel: "模板库" },
+      { name: "模板库", path: "/presales/technical-solutions?tab=knowledge", icon: "Layers", permission: "presales:task:read", permissionLabel: "模板库" },
       // 运营管理
       { name: "数据分析", path: "/presales/presale-analytics", icon: "BarChart3", permission: "sales:funnel:read", permissionLabel: "售前数据分析" }
     ]

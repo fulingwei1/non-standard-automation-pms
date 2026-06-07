@@ -36,10 +36,10 @@ const roleEntries = [
 ];
 
 const processLinks = [
-  { label: "技术方案", to: "/presales/solutions", icon: FileText },
-  { label: "成本估算", to: "/presales/cost-estimation", icon: LineChart },
-  { label: "模板库", to: "/presales/templates", icon: Layers },
-  { label: "技术参数", to: "/presales/technical-parameters", icon: Settings },
+  { label: "技术方案", to: "/presales/technical-solutions?tab=solutions", icon: FileText },
+  { label: "成本估算", to: "/presales/technical-solutions?tab=cost", icon: LineChart },
+  { label: "模板库", to: "/presales/technical-solutions?tab=knowledge", icon: Layers },
+  { label: "技术参数", to: "/presales/technical-solutions?tab=parameters", icon: Settings },
 ];
 
 export default function PresalesWorkbench() {

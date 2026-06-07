@@ -238,7 +238,7 @@ export default function BiddingDetail() {
         <div className="text-center py-16 text-red-400">
           <div className="text-lg font-medium">加载失败</div>
           <div className="text-sm mt-2">{error || "投标项目不存在"}</div>
-          <Button className="mt-4" onClick={() => navigate("/bidding")}>
+          <Button className="mt-4" onClick={() => navigate("/presales/technical-solutions?tab=bids")}>
             返回投标中心
           </Button>
         </div>
@@ -252,7 +252,7 @@ export default function BiddingDetail() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate("/bidding")}
+          onClick={() => navigate("/presales/technical-solutions?tab=bids")}
           className="text-slate-400 hover:text-white">
 
           <ArrowLeft className="w-5 h-5" />

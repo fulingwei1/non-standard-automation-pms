@@ -24,7 +24,7 @@ export default function BiddingProjectsCard({ biddingProjects }) {
               <Target className="h-5 w-5 text-amber-400" />
               投标项目
             </CardTitle>
-            <Link to="/bidding">
+            <Link to="/presales/technical-solutions?tab=bids">
               <Button
                 variant="ghost"
                 size="sm"

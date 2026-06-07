@@ -31,7 +31,7 @@ import FeasibilityAssessmentDialog from "../components/presales/workstation/Feas
 import { getTypeColor } from "../components/presales/workstation/utils";
 
 const YUAN_TO_CENTS = 10000;
-const SOLUTION_CENTER_PATH = "/presales/solutions";
+const SOLUTION_CENTER_PATH = "/presales/technical-solutions?tab=solutions";
 
 const statsData = [
   {

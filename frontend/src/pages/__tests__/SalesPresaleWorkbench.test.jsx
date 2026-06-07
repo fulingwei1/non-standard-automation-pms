@@ -52,7 +52,7 @@ describe("SalesPresaleWorkbench", () => {
     expect(await screen.findByText("FCT 技术参数模板")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /管理技术参数/ })).toHaveAttribute(
       "href",
-      "/presales/technical-parameters",
+      "/presales/technical-solutions?tab=parameters",
     );
   });
 });

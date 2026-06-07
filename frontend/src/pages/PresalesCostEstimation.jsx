@@ -16,7 +16,7 @@ function parseAmount(value) {
   return amount;
 }
 
-export default function PresalesCostEstimation() {
+export default function PresalesCostEstimation({ embedded = false } = {}) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -39,23 +39,25 @@ export default function PresalesCostEstimation() {
   };
 
   const handleCancel = () => {
-    navigate("/presales/workbench");
+    navigate(embedded ? "/presales/technical-solutions?tab=cost" : "/presales/workbench");
   };
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="成本估算"
-        description="按技术方案拆分成本结构，输出建议报价与毛利参考。"
-        actions={[
-          {
-            label: "查看技术方案",
-            icon: Lightbulb,
-            to: "/presales/technical-solutions",
-            variant: "outline",
-          },
-        ]}
-      />
+      {!embedded && (
+        <PageHeader
+          title="成本估算"
+          description="按技术方案拆分成本结构，输出建议报价与毛利参考。"
+          actions={[
+            {
+              label: "查看技术方案",
+              icon: Lightbulb,
+              to: "/presales/technical-solutions",
+              variant: "outline",
+            },
+          ]}
+        />
+      )}
 
       <Card className="bg-surface-1/50 border border-white/5">
         <CardHeader>
@@ -75,11 +77,13 @@ export default function PresalesCostEstimation() {
             onCancel={handleCancel}
           />
 
-          <div className="flex justify-end">
-            <Button variant="ghost" onClick={() => navigate("/presales/workbench")}>
-              返回售前工作台
-            </Button>
-          </div>
+          {!embedded && (
+            <div className="flex justify-end">
+              <Button variant="ghost" onClick={() => navigate("/presales/workbench")}>
+                返回售前工作台
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
