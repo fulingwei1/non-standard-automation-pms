@@ -26,7 +26,7 @@ import SolutionGenerateTab from "./SolutionGenerateTab";
 import SolutionReviewTab from "./SolutionReviewTab";
 import SolutionVersionsTab from "./SolutionVersionsTab";
 
-export default function PresaleProposals() {
+export default function PresaleProposals({ embedded = false } = {}) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("list");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -245,25 +245,34 @@ export default function PresaleProposals() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <div className="container mx-auto px-4 py-6">
+  const actionButtons = (
+    <div className="flex items-center gap-2">
+      <Button variant="outline" onClick={loadSolutions} disabled={loading}>
+        <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+        刷新数据
+      </Button>
+      <Button onClick={() => setActiveTab("generate")}>
+        <PlusCircle className="mr-2 h-4 w-4" />
+        新建方案
+      </Button>
+    </div>
+  );
+
+  const content = (
+    <>
+      {!embedded && (
         <PageHeader
           title="售前方案管理"
           description="方案列表、AI生成、方案评审与版本管理一体化协同"
-          actions={
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={loadSolutions} disabled={loading}>
-                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                刷新数据
-              </Button>
-              <Button onClick={() => setActiveTab("generate")}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                新建方案
-              </Button>
-            </div>
-          }
+          actions={actionButtons}
         />
+      )}
+
+      {embedded && (
+        <div className="flex justify-end">
+          {actionButtons}
+        </div>
+      )}
 
         {error && (
           <Alert className="mb-4 border-red-500/30 bg-red-500/10 text-red-100">
@@ -347,6 +356,17 @@ export default function PresaleProposals() {
             />
           </TabsContent>
         </Tabs>
+    </>
+  );
+
+  if (embedded) {
+    return <div className="space-y-6">{content}</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      <div className="container mx-auto px-4 py-6">
+        {content}
       </div>
     </div>
   );

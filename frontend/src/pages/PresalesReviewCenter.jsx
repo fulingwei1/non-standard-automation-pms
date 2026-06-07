@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { PageHeader } from "../components/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import RequirementSurvey from "./RequirementSurvey";
-import SolutionList from "./SolutionList";
+import PresaleProposals from "./PresaleProposals";
 import PresalesTasks from "./PresalesTasks";
 
 const TAB_SURVEYS = "surveys";
@@ -89,7 +89,7 @@ export default function PresalesReviewCenter() {
         </TabsContent>
 
         <TabsContent value={TAB_SOLUTIONS || "unknown"} className="space-y-6">
-          <SolutionList embedded />
+          <PresaleProposals embedded />
         </TabsContent>
 
         <TabsContent value={TAB_REVIEWS || "unknown"} className="space-y-6">
