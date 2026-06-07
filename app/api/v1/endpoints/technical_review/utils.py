@@ -77,6 +77,70 @@ _ISSUE_LEVEL_TO_PROJECT_ISSUE = {
     "D": ("MINOR", "LOW", False),
 }
 
+_REVIEW_STATUS_TO_PROJECT_STATUS = {
+    "OPEN": "OPEN",
+    "PROCESSING": "IN_PROGRESS",
+    "IN_PROGRESS": "IN_PROGRESS",
+    "RESOLVED": "RESOLVED",
+    "VERIFIED": "CLOSED",
+    "CLOSED": "CLOSED",
+}
+
+_VERIFY_PASS_VALUES = {"PASS", "PASSED", "VERIFIED"}
+_VERIFY_FAIL_VALUES = {"FAIL", "FAILED", "REJECTED"}
+
+
+def _project_issue_status_for_review_issue(issue: ReviewIssue) -> str:
+    verify_result = (issue.verify_result or "").upper()
+    if verify_result in _VERIFY_PASS_VALUES:
+        return "CLOSED"
+    if verify_result in _VERIFY_FAIL_VALUES:
+        return "IN_PROGRESS"
+    return _REVIEW_STATUS_TO_PROJECT_STATUS.get((issue.status or "").upper(), "OPEN")
+
+
+def _project_issue_verified_result_for_review_issue(issue: ReviewIssue) -> str | None:
+    verify_result = (issue.verify_result or "").upper()
+    if verify_result in _VERIFY_PASS_VALUES:
+        return "VERIFIED"
+    if verify_result in _VERIFY_FAIL_VALUES:
+        return "REJECTED"
+    return None
+
+
+def _apply_review_issue_to_project_issue(
+    *,
+    db: Session,
+    project_issue: Issue,
+    review: TechnicalReview,
+    issue: ReviewIssue,
+    actor: User,
+) -> None:
+    project_issue.status = _project_issue_status_for_review_issue(issue)
+    project_issue.solution = issue.solution or issue.suggestion
+    project_issue.due_date = issue.deadline
+    project_issue.impact_scope = f"技术评审 {review.review_no}"
+
+    if project_issue.status in {"RESOLVED", "CLOSED"}:
+        project_issue.resolved_at = project_issue.resolved_at or datetime.now()
+        project_issue.resolved_by = project_issue.resolved_by or actor.id
+        project_issue.resolved_by_name = project_issue.resolved_by_name or (
+            actor.real_name or actor.username
+        )
+
+    verified_result = _project_issue_verified_result_for_review_issue(issue)
+    if verified_result:
+        project_issue.verified_result = verified_result
+        project_issue.verified_at = issue.verify_time or datetime.now()
+        verified_by = issue.verifier_id or actor.id
+        project_issue.verified_by = verified_by
+        verifier_name = actor.real_name or actor.username
+        if verified_by != actor.id:
+            verifier = db.query(User).filter(User.id == verified_by).first()
+            if verifier:
+                verifier_name = verifier.real_name or verifier.username
+        project_issue.verified_by_name = verifier_name
+
 
 def sync_review_issue_to_project_issue(
     db: Session,
@@ -89,6 +153,14 @@ def sync_review_issue_to_project_issue(
     if issue.linked_issue_id:
         existing_issue = db.query(Issue).filter(Issue.id == issue.linked_issue_id).first()
         if existing_issue:
+            _apply_review_issue_to_project_issue(
+                db=db,
+                project_issue=existing_issue,
+                review=review,
+                issue=issue,
+                actor=reporter,
+            )
+            db.flush()
             return existing_issue
 
     severity, priority, is_blocking = _ISSUE_LEVEL_TO_PROJECT_ISSUE.get(
@@ -126,8 +198,37 @@ def sync_review_issue_to_project_issue(
         responsible_engineer_name=assignee_name,
         tags=json.dumps(["技术评审"], ensure_ascii=False),
     )
+    _apply_review_issue_to_project_issue(
+        db=db,
+        project_issue=project_issue,
+        review=review,
+        issue=issue,
+        actor=reporter,
+    )
 
     db.add(project_issue)
     db.flush()
     issue.linked_issue_id = project_issue.id
     return project_issue
+
+
+def update_linked_project_issue_from_review_issue(
+    db: Session,
+    *,
+    issue: ReviewIssue,
+    current_user: User,
+) -> Issue | None:
+    """评审问题处理状态变化后，同步更新项目问题池中的关联问题。"""
+    if not issue.linked_issue_id:
+        return None
+
+    review = db.query(TechnicalReview).filter(TechnicalReview.id == issue.review_id).first()
+    if not review:
+        return None
+
+    return sync_review_issue_to_project_issue(
+        db,
+        review=review,
+        issue=issue,
+        reporter=current_user,
+    )

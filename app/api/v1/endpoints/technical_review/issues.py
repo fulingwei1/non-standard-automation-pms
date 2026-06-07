@@ -24,7 +24,12 @@ from app.schemas.technical_review import (
 )
 from app.utils.db_helpers import get_or_404
 
-from .utils import generate_issue_no, sync_review_issue_to_project_issue, update_review_issue_counts
+from .utils import (
+    generate_issue_no,
+    sync_review_issue_to_project_issue,
+    update_linked_project_issue_from_review_issue,
+    update_review_issue_counts,
+)
 
 router = APIRouter()
 
@@ -120,6 +125,12 @@ def update_review_issue(
         issue.verify_time = datetime.now()
         if not issue.verifier_id:
             issue.verifier_id = current_user.id
+
+    update_linked_project_issue_from_review_issue(
+        db,
+        issue=issue,
+        current_user=current_user,
+    )
 
     db.commit()
     db.refresh(issue)

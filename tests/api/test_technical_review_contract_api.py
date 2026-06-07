@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.issue import Issue
 from app.models.project import Customer, Project
 from app.models.technical_review import TechnicalReview
 from app.models.user import User
@@ -121,6 +122,50 @@ class TestTechnicalReviewDetailSubresourceContract:
         assert issue_response.status_code == 201, issue_response.text
         issue_payload = issue_response.json()
         assert issue_payload["linked_issue_id"] is not None
+        linked_project_issue_id = issue_payload["linked_issue_id"]
+
+        resolve_response = client.put(
+            f"{prefix}/technical-reviews/issues/{issue_payload['id']}",
+            headers=headers,
+            json={
+                "status": "RESOLVED",
+                "solution": "已补充定位销受力校核和复核记录",
+            },
+        )
+        assert resolve_response.status_code == 200, resolve_response.text
+
+        resolved_workspace_issues_response = client.get(
+            f"{prefix}/project-workspace/projects/{project.id}/issues",
+            headers=headers,
+        )
+        assert (
+            resolved_workspace_issues_response.status_code == 200
+        ), resolved_workspace_issues_response.text
+        resolved_workspace_issue = next(
+            issue
+            for issue in resolved_workspace_issues_response.json()["issues"]
+            if issue["id"] == linked_project_issue_id
+        )
+        assert resolved_workspace_issue["status"] == "RESOLVED"
+        assert resolved_workspace_issue["solution"] == "已补充定位销受力校核和复核记录"
+
+        verify_response = client.put(
+            f"{prefix}/technical-reviews/issues/{issue_payload['id']}",
+            headers=headers,
+            json={
+                "status": "VERIFIED",
+                "verify_result": "PASS",
+                "verifier_id": admin_user.id,
+            },
+        )
+        assert verify_response.status_code == 200, verify_response.text
+
+        linked_project_issue = (
+            db_session.query(Issue).filter(Issue.id == linked_project_issue_id).one()
+        )
+        assert linked_project_issue.status == "CLOSED"
+        assert linked_project_issue.verified_result == "VERIFIED"
+        assert linked_project_issue.verified_by == admin_user.id
 
         checklist_response = client.post(
             f"{prefix}/technical-reviews/{review.id}/checklist-records",
