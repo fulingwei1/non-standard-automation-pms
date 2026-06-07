@@ -5,21 +5,32 @@
  */
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Card, CardContent, CardHeader, CardTitle,
   Button, Input, Label, Select, SelectContent,
   SelectItem, SelectTrigger, SelectValue, Alert,
 } from '@/components/ui';
 import { projectDeliveryApi } from '@/services/api/projectDelivery';
+import { getProjectContextFilters } from '@/lib/projectContext';
+
+const parseProjectId = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? '' : String(parsed);
+};
 
 export default function ProjectDeliveryScheduleCreate() {
   const navigate = useNavigate();
+  const { projectId } = useParams();
+  const [searchParams] = useSearchParams();
+  const contextProjectId = parseProjectId(
+    projectId || getProjectContextFilters(searchParams).project_id
+  );
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     schedule_name: '',
     lead_id: '',
-    project_id: '',
+    project_id: contextProjectId,
     usage_type: 'BOTH',
     departments: ['MECHANICAL', 'ELECTRICAL', 'SOFTWARE', 'PURCHASE', 'PRODUCTION'],
   });
@@ -39,7 +50,11 @@ export default function ProjectDeliveryScheduleCreate() {
       
       const response = await projectDeliveryApi.createSchedule(data);
       alert('排产计划创建成功！');
-      navigate(`/project-delivery-schedule/${response.id}`);
+      if (data.project_id) {
+        navigate(`/projects/${data.project_id}/delivery`);
+      } else {
+        navigate(`/project-delivery-schedule/${response.id}`);
+      }
     } catch (error) {
       alert('创建失败：' + error.message);
     } finally {

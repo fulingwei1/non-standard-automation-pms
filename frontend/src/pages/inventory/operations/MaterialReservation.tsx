@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -28,12 +29,22 @@ import { Plus, X, Package } from 'lucide-react';
 import InventoryAPI from '@/services/inventory';
 import { Reservation, ReservationStatus, ReserveRequest } from '@/types/inventory';
 import { format } from 'date-fns';
+import { getProjectContextFilters } from '@/lib/projectContext';
+
+const parseProjectId = (value?: string | null) => {
+  const parsed = Number.parseInt(value || '', 10);
+  return Number.isNaN(parsed) ? undefined : parsed;
+};
 
 const MaterialReservation: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const contextProjectId = parseProjectId(getProjectContextFilters(searchParams).project_id);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [formData, setFormData] = useState<Partial<ReserveRequest>>({});
+  const [formData, setFormData] = useState<Partial<ReserveRequest>>(() => ({
+    project_id: contextProjectId,
+  }));
 
   useEffect(() => {
     loadReservations();
@@ -59,7 +70,7 @@ const MaterialReservation: React.FC = () => {
       }
       await InventoryAPI.reserveMaterial(formData as ReserveRequest);
       setDialogOpen(false);
-      setFormData({});
+      setFormData({ project_id: contextProjectId });
       loadReservations();
       alert('预留成功！');
     } catch (error: any) {
@@ -147,7 +158,10 @@ const MaterialReservation: React.FC = () => {
                   placeholder="输入项目ID（可选）"
                   value={formData.project_id || ''}
                   onChange={(e) =>
-                    setFormData({ ...formData, project_id: Number(e.target.value) })
+                    setFormData({
+                      ...formData,
+                      project_id: e.target.value ? Number(e.target.value) : undefined,
+                    })
                   }
                 />
               </div>

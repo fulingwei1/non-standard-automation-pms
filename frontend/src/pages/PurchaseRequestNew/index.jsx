@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "../../components/layout";
@@ -27,18 +27,30 @@ import {
   buildRequestPayload,
   DEFAULT_FORM_DATA,
 } from "./utils";
+import { getProjectContextFilters } from "../../lib/projectContext";
+
+const parseProjectId = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+};
 
 export default function PurchaseRequestNew() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const isEdit = !!id;
+  const projectIdFromQuery = getProjectContextFilters(searchParams).project_id || "";
+  const contextProjectId = parseProjectId(projectIdFromQuery);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
 
   // Form data
-  const [formData, setFormData] = useState({ ...DEFAULT_FORM_DATA });
+  const [formData, setFormData] = useState(() => ({
+    ...DEFAULT_FORM_DATA,
+    project_id: contextProjectId,
+  }));
 
   // Dropdown data
   const [projects, setProjects] = useState([]);
@@ -53,14 +65,26 @@ export default function PurchaseRequestNew() {
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        const res = await projectApi.list({ page_size: 1000 });
+        const params = { page_size: 1000 };
+        if (projectIdFromQuery) {params.project_id = projectIdFromQuery;}
+        const res = await projectApi.list(params);
         setProjects(res.data?.items || res.data?.items || res.data || []);
       } catch (err) {
         console.error("Failed to load projects:", err);
       }
     };
     loadProjects();
-  }, []);
+  }, [projectIdFromQuery]);
+
+  useEffect(() => {
+    if (isEdit || !contextProjectId) {
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      project_id: prev.project_id || contextProjectId,
+    }));
+  }, [contextProjectId, isEdit]);
 
   // Load machines when project changes
   useEffect(() => {

@@ -36,7 +36,7 @@ export default function BasicInfoCard({
               onValueChange={(val) =>
                 setFormData({
                   ...formData,
-                  project_id: val ? parseInt(val) : null,
+                  project_id: val && val !== "none" ? parseInt(val) : null,
                   machine_id: null,
                 })
               }
@@ -61,7 +61,7 @@ export default function BasicInfoCard({
               onValueChange={(val) =>
                 setFormData({
                   ...formData,
-                  machine_id: val ? parseInt(val) : null,
+                  machine_id: val && val !== "none" ? parseInt(val) : null,
                 })
               }
               disabled={!formData.project_id}

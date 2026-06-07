@@ -6,27 +6,67 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tabs, TabsContent, TabsList, TabsTrigger, Alert } from '@/components/ui';
 import { projectDeliveryApi } from '@/services/api/projectDelivery';
 
+const parseId = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
 export default function ProjectDeliveryScheduleGantt() {
-  const { scheduleId } = useParams();
+  const { projectId, scheduleId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [ganttData, setGanttData] = useState(null);
-  const [conflicts, setConflicts] = useState([]);
+  const [conflicts, setConflicts] = useState({});
 
-  useEffect(() => { loadGanttData(); loadConflicts(); }, [scheduleId]);
+  useEffect(() => { loadGanttData(); }, [scheduleId, projectId]);
+
+  const resolveScheduleId = async () => {
+    const directScheduleId = parseId(scheduleId);
+    if (directScheduleId) {
+      return directScheduleId;
+    }
+
+    const contextProjectId = parseId(projectId);
+    if (!contextProjectId) {
+      return null;
+    }
+
+    const schedules = await projectDeliveryApi.getSchedules({ project_id: contextProjectId });
+    const items = Array.isArray(schedules) ? schedules : schedules?.data || [];
+    return items[0]?.id || null;
+  };
 
   const loadGanttData = async () => {
-    try { setLoading(true); setGanttData(await projectDeliveryApi.getGanttData(scheduleId)); }
+    try {
+      setLoading(true);
+      const resolvedScheduleId = await resolveScheduleId();
+      if (!resolvedScheduleId) {
+        setGanttData(null);
+        setConflicts({});
+        return;
+      }
+      const [gantt, conflictData] = await Promise.all([
+        projectDeliveryApi.getGanttData(resolvedScheduleId),
+        projectDeliveryApi.getConflicts(resolvedScheduleId),
+      ]);
+      setGanttData(gantt);
+      setConflicts(conflictData || {});
+    }
     catch (error) { console.error('加载甘特图失败:', error); }
     finally { setLoading(false); }
   };
 
-  const loadConflicts = async () => {
-    try { setConflicts(await projectDeliveryApi.getConflicts(scheduleId)); }
-    catch (error) { console.error('加载冲突失败:', error); }
-  };
-
   if (loading) return <div className="p-6">加载中...</div>;
+  if (!ganttData && projectId) {
+    return (
+      <div className="p-6">
+        <Alert className="mb-6">当前项目暂无排产计划</Alert>
+        <Button onClick={() => navigate(`/projects/${projectId}/delivery/create`)}>
+          创建排产计划
+        </Button>
+      </div>
+    );
+  }
   if (!ganttData) return <div className="p-6"><Alert variant="destructive">加载失败</Alert></div>;
 
   return (
