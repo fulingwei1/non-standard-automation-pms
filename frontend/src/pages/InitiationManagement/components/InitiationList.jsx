@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { FileText, Eye, XCircle } from "lucide-react";
+import { CheckCircle2, FileText, Eye, XCircle } from "lucide-react";
 import { Card, CardContent, Button, SkeletonCard, Badge } from "../../../components/ui";
 import { formatCurrency, formatDate } from "../../../lib/utils";
 import { getStatusBadge } from '../constants';
@@ -28,7 +28,9 @@ export function InitiationList({
     onRetry,
     onViewDetail,
     onViewProject,
-    onSubmitReview
+    onSubmitReview,
+    onApprove,
+    onReject
 }) {
     if (error) {
         return (
@@ -84,6 +86,7 @@ export function InitiationList({
                 {(initiations || []).map((initiation) => {
                     if (!initiation || !initiation.id) return null;
                     const statusBadge = getStatusBadge(initiation.status);
+                    const canReview = ["SUBMITTED", "REVIEWING"].includes(initiation.status);
 
                     return (
                         <motion.div key={initiation.id} variants={staggerChild}>
@@ -149,6 +152,25 @@ export function InitiationList({
                                                 >
                                                     提交评审
                                                 </Button>
+                                            )}
+                                            {canReview && (
+                                                <>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => onApprove(initiation.id)}
+                                                    >
+                                                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                                                        审批通过
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => onReject(initiation.id)}
+                                                    >
+                                                        驳回
+                                                    </Button>
+                                                </>
                                             )}
                                             {initiation.status === "APPROVED" && initiation.project_id && (
                                                 <Button

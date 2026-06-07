@@ -3,7 +3,12 @@ import { Plus } from "lucide-react";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { Button } from "../../components/ui";
 import { useInitiationManagement } from "./hooks";
-import { InitiationFilter, InitiationList, CreateInitiationDialog } from "./components";
+import {
+    CreateInitiationDialog,
+    InitiationFilter,
+    InitiationList,
+    ReviewInitiationDialog,
+} from "./components";
 
 export default function InitiationManagement() {
     const navigate = useNavigate();
@@ -17,8 +22,15 @@ export default function InitiationManagement() {
         keyword, setKeyword,
         statusFilter, setStatusFilter,
         createDialogOpen, setCreateDialogOpen,
+        reviewDialogOpen, setReviewDialogOpen,
+        reviewMode,
+        reviewLoading,
+        projectManagers,
         handleCreate,
         handleSubmit,
+        openApproveDialog,
+        openRejectDialog,
+        handleReview,
         fetchData
     } = useInitiationManagement();
 
@@ -54,12 +66,23 @@ export default function InitiationManagement() {
                 onViewDetail={(id) => navigate(`/pmo/initiations/${id}`)}
                 onViewProject={(id) => navigate(`/projects/${id}`)}
                 onSubmitReview={handleSubmit}
+                onApprove={openApproveDialog}
+                onReject={openRejectDialog}
             />
 
             <CreateInitiationDialog
                 open={createDialogOpen}
                 onOpenChange={setCreateDialogOpen}
                 onSubmit={handleCreate}
+            />
+
+            <ReviewInitiationDialog
+                open={reviewDialogOpen}
+                mode={reviewMode}
+                projectManagers={projectManagers}
+                loading={reviewLoading}
+                onOpenChange={setReviewDialogOpen}
+                onSubmit={handleReview}
             />
         </div>
     );

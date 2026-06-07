@@ -18,6 +18,7 @@ export const pmoApi = {
     submit: (id) => api.put(`/pmo/initiations/${id}/submit`),
     approve: (id, data) => api.put(`/pmo/initiations/${id}/approve`, data),
     reject: (id, data) => api.put(`/pmo/initiations/${id}/reject`, data),
+    projectManagers: () => api.get("/pmo/initiations/project-managers"),
   },
 
   // Project Phases
