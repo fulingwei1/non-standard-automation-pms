@@ -114,6 +114,13 @@ class TicketResponse(TimestampSchema):
     satisfaction_score: Optional[int] = None
     feedback: Optional[str] = None
 
+    # 技术评估闭环
+    assessment_required: Optional[bool] = Field(True, description="是否需要技术评估")
+    assessment_status: Optional[str] = Field(None, description="技术评估状态")
+    assessment_priority: Optional[str] = Field(None, description="技术评估优先级")
+    assessment_due_date: Optional[datetime] = Field(None, description="技术评估截止时间")
+    current_assessment_id: Optional[int] = Field(None, description="当前技术评估ID")
+
     # PM介入策略结果（2026-02-15新增）
     pm_involvement_required: Optional[bool] = Field(False, description="是否需要PM提前介入")
     pm_involvement_risk_level: Optional[str] = Field(None, description="风险等级（高/低）")

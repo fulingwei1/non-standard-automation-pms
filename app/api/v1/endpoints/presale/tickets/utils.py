@@ -138,6 +138,11 @@ def build_ticket_response(ticket: PresaleSupportTicket) -> TicketResponse:
         ],
         satisfaction_score=ticket.satisfaction_score,
         feedback=ticket.feedback,
+        assessment_required=ticket.assessment_required,
+        assessment_status=ticket.assessment_status,
+        assessment_priority=ticket.assessment_priority,
+        assessment_due_date=ticket.assessment_due_date,
+        current_assessment_id=ticket.current_assessment_id,
         created_at=ticket.created_at,
         updated_at=ticket.updated_at,
     )

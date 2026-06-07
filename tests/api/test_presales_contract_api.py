@@ -553,7 +553,10 @@ class TestPresalesFrontendContractBehavior:
             headers=headers,
         )
         assert completed.status_code == 200, completed.text
-        assert completed.json()["status"] == "COMPLETED"
+        completed_payload = completed.json()
+        assert completed_payload["status"] == "COMPLETED"
+        assert completed_payload["assessment_status"] == AssessmentStatusEnum.COMPLETED.value
+        assert completed_payload["current_assessment_id"] is not None
 
         refreshed = client.get(
             f"{prefix}/sales/opportunities/{opportunity.id}",
