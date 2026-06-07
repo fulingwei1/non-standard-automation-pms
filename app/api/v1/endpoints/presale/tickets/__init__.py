@@ -12,9 +12,10 @@ from . import board, crud, operations
 router = APIRouter()
 
 # 直接合并所有子路由的 routes（避免空路径问题）
+# 静态路由必须先于 /{ticket_id} 动态路由注册，避免 /board 被当成 ticket_id。
+for route in board.router.routes:
+    router.routes.append(route)
 for route in crud.router.routes:
     router.routes.append(route)
 for route in operations.router.routes:
-    router.routes.append(route)
-for route in board.router.routes:
     router.routes.append(route)

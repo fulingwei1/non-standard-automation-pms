@@ -37,6 +37,7 @@ def get_ticket_board(
     pending = []
     accepted = []
     in_progress = []
+    reviewing = []
     completed = []
 
     for ticket in tickets:
@@ -46,11 +47,17 @@ def get_ticket_board(
             pending.append(ticket_resp)
         elif ticket.status == "ACCEPTED":
             accepted.append(ticket_resp)
-        elif ticket.status == "IN_PROGRESS":
+        elif ticket.status in {"IN_PROGRESS", "PROCESSING"}:
             in_progress.append(ticket_resp)
+        elif ticket.status in {"REVIEW", "REVIEWING"}:
+            reviewing.append(ticket_resp)
         elif ticket.status == "COMPLETED":
             completed.append(ticket_resp)
 
     return TicketBoardResponse(
-        pending=pending, accepted=accepted, in_progress=in_progress, completed=completed
+        pending=pending,
+        accepted=accepted,
+        in_progress=in_progress,
+        reviewing=reviewing,
+        completed=completed,
     )

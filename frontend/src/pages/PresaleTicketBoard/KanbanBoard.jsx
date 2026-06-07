@@ -25,7 +25,7 @@ export default function KanbanBoard({
         <CardDescription>按状态查看当前排队，点击卡片可联动左侧工单列表。</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           {BOARD_STATUS_ORDER.map((status) => {
             const statusConfig = STATUS_CONFIG[status];
             const columnTickets = groupedByStatus[status] || [];

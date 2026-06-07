@@ -181,7 +181,11 @@ export default function TicketTable({
                     <Button
                       variant={ticket.status === "COMPLETED" ? "secondary" : "outline"}
                       size="sm"
-                      disabled={ticket.status === "COMPLETED" || flowUpdatingId === ticket.id}
+                      disabled={
+                        ticket.status === "COMPLETED" ||
+                        ticket.status === "REVIEWING" ||
+                        flowUpdatingId === ticket.id
+                      }
                       onClick={(event) => {
                         event.stopPropagation();
                         handleAdvanceFlow(ticket);

@@ -74,7 +74,11 @@ export default function ProcessingStats({
               <Button
                 size="sm"
                 variant={selectedTicket.status === "COMPLETED" ? "secondary" : "default"}
-                disabled={selectedTicket.status === "COMPLETED" || flowUpdatingId === selectedTicket.id}
+                disabled={
+                  selectedTicket.status === "COMPLETED" ||
+                  selectedTicket.status === "REVIEWING" ||
+                  flowUpdatingId === selectedTicket.id
+                }
                 onClick={() => handleAdvanceFlow(selectedTicket)}
               >
                 {renderFlowActionLabel(selectedTicket.status)}

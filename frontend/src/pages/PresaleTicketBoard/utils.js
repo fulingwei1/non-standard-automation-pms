@@ -18,6 +18,9 @@ export function normalizeStatus(status) {
   if (resolved === "PROCESSING") {
     return "IN_PROGRESS";
   }
+  if (resolved === "REVIEW" || resolved === "REVIEWING") {
+    return "REVIEWING";
+  }
   if (resolved === "CLOSED" || resolved === "CANCELLED") {
     return "COMPLETED";
   }

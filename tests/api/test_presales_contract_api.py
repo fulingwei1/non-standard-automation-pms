@@ -273,6 +273,65 @@ class TestPresalesFrontendContractBehavior:
         assert refreshed.status_code == 200, refreshed.text
         assert refreshed.json()["assessment_status"] == AssessmentStatusEnum.COMPLETED.value
 
+    def test_ticket_board_keeps_processing_and_review_tickets_visible(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        processing_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-BRD-P-{unique}",
+            title=f"看板处理中工单-{unique}",
+            ticket_type="TECHNICAL_EXCHANGE",
+            urgency="NORMAL",
+            customer_name="看板测试客户",
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PROCESSING",
+            created_by=admin_user.id,
+        )
+        review_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-BRD-R-{unique}",
+            title=f"看板评审工单-{unique}",
+            ticket_type="SOLUTION_REVIEW",
+            urgency="HIGH",
+            customer_name="看板测试客户",
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="REVIEW",
+            created_by=admin_user.id,
+        )
+        db_session.add_all([processing_ticket, review_ticket])
+        db_session.commit()
+
+        try:
+            response = client.get(f"{prefix}/presale/tickets/board", headers=headers)
+            assert response.status_code == 200, response.text
+            payload = response.json()
+
+            assert any(
+                item["ticket_no"] == processing_ticket.ticket_no
+                for item in payload["in_progress"]
+            )
+            assert any(
+                item["ticket_no"] == review_ticket.ticket_no
+                for item in payload["reviewing"]
+            )
+        finally:
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.ticket_no.in_(
+                    [processing_ticket.ticket_no, review_ticket.ticket_no]
+                )
+            ).delete(synchronize_session=False)
+            db_session.commit()
+
     def test_template_update_supports_frontend_apply_count_alias(
         self, client: TestClient, admin_token: str
     ):

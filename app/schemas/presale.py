@@ -143,6 +143,7 @@ class TicketBoardResponse(BaseModel):
     pending: List[TicketResponse] = []
     accepted: List[TicketResponse] = []
     in_progress: List[TicketResponse] = []
+    reviewing: List[TicketResponse] = []
     completed: List[TicketResponse] = []
 
 

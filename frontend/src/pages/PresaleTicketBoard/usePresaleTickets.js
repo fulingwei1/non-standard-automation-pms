@@ -117,6 +117,7 @@ export default function usePresaleTickets() {
     const pending = tickets.filter((ticket) => ticket.status === "PENDING").length;
     const accepted = tickets.filter((ticket) => ticket.status === "ACCEPTED").length;
     const inProgress = tickets.filter((ticket) => ticket.status === "IN_PROGRESS").length;
+    const reviewing = tickets.filter((ticket) => ticket.status === "REVIEWING").length;
     const completed = tickets.filter((ticket) => ticket.status === "COMPLETED").length;
     const highPriority = tickets.filter(
       (ticket) => ticket.priority === "HIGH" || ticket.priority === "URGENT",
@@ -164,6 +165,7 @@ export default function usePresaleTickets() {
       pending,
       accepted,
       inProgress,
+      reviewing,
       completed,
       highPriority,
       overdue,
@@ -222,6 +224,7 @@ export default function usePresaleTickets() {
       PENDING: "ACCEPTED",
       ACCEPTED: "IN_PROGRESS",
       IN_PROGRESS: "COMPLETED",
+      REVIEWING: null,
       COMPLETED: null,
     };
 
@@ -265,6 +268,9 @@ export default function usePresaleTickets() {
     }
     if (status === "IN_PROGRESS") {
       return "标记完成";
+    }
+    if (status === "REVIEWING") {
+      return "待评审";
     }
     return "已完结";
   };

@@ -14,6 +14,11 @@ export const STATUS_CONFIG = {
     badgeClass: "bg-amber-500/20 text-amber-300 border border-amber-500/40",
     dotClass: "bg-amber-400",
   },
+  REVIEWING: {
+    label: "评审中",
+    badgeClass: "bg-violet-500/20 text-violet-300 border border-violet-500/40",
+    dotClass: "bg-violet-400",
+  },
   COMPLETED: {
     label: "已完成",
     badgeClass: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40",
@@ -21,7 +26,13 @@ export const STATUS_CONFIG = {
   },
 };
 
-export const BOARD_STATUS_ORDER = ["PENDING", "ACCEPTED", "IN_PROGRESS", "COMPLETED"];
+export const BOARD_STATUS_ORDER = [
+  "PENDING",
+  "ACCEPTED",
+  "IN_PROGRESS",
+  "REVIEWING",
+  "COMPLETED",
+];
 
 export const PRIORITY_CONFIG = {
   LOW: {
