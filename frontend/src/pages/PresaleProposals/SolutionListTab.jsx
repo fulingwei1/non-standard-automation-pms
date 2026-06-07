@@ -36,7 +36,7 @@ export default function SolutionListTab({
   setStatusFilter,
   loading,
   solutions,
-  navigate,
+  onViewSolution,
   setSelectedSolutionId,
   setActiveTab,
 }) {
@@ -159,7 +159,7 @@ export default function SolutionListTab({
                           variant="outline"
                           size="sm"
                           className="flex-1"
-                          onClick={() => navigate(`/solutions/${solution.id}`)}
+                          onClick={() => onViewSolution(solution)}
                         >
                           查看详情
                         </Button>

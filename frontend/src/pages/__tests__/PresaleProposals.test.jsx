@@ -7,12 +7,13 @@ import { presaleApi } from "../../services/api";
 const routeState = vi.hoisted(() => ({
   search: "tab=solutions&type=support&opportunity_id=2&ticket_id=501",
 }));
+const navigateMock = vi.hoisted(() => vi.fn());
 
 vi.mock("react-router-dom", async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    useNavigate: () => vi.fn(),
+    useNavigate: () => navigateMock,
     useSearchParams: () => [new URLSearchParams(routeState.search), vi.fn()],
   };
 });
@@ -72,6 +73,7 @@ function renderPage(
 describe("PresaleProposals", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    navigateMock.mockClear();
     presaleApi.solutions.list.mockResolvedValue({ data: { items: [], total: 0 } });
     presaleApi.solutions.create.mockResolvedValue({
       data: {
@@ -152,5 +154,35 @@ describe("PresaleProposals", () => {
         }),
       );
     });
+  });
+
+  it("keeps sales and project context when opening a solution detail", async () => {
+    presaleApi.solutions.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 88,
+            solution_no: "SOL-88",
+            name: "项目现场交付补充方案",
+            status: "DRAFT",
+            ticket_id: 501,
+            opportunity_id: 2,
+            project_id: 42,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage(
+      "/presales/technical-solutions?tab=solutions&type=support&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+
+    await screen.findByText("项目现场交付补充方案");
+    fireEvent.click(screen.getByRole("button", { name: "查看详情" }));
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      "/solutions/88?ticket_id=501&opportunity_id=2&project_id=42",
+    );
   });
 });

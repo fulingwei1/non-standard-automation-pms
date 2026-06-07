@@ -35,6 +35,12 @@ function parseContextId(value) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
+function appendContextParam(params, key, value) {
+  if (value !== undefined && value !== null && value !== "") {
+    params.set(key, String(value));
+  }
+}
+
 export default function PresaleProposals({ embedded = false } = {}) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -304,6 +310,15 @@ export default function PresaleProposals({ embedded = false } = {}) {
     }
   };
 
+  const buildSolutionDetailPath = (solution) => {
+    const params = new URLSearchParams();
+    appendContextParam(params, "ticket_id", solution?.ticketId || contextTicketId);
+    appendContextParam(params, "opportunity_id", solution?.opportunityId || contextOpportunityId);
+    appendContextParam(params, "project_id", solution?.projectId || contextProjectId);
+    const query = params.toString();
+    return `/solutions/${solution.id}${query ? `?${query}` : ""}`;
+  };
+
   const actionButtons = (
     <div className="flex items-center gap-2">
       <Button variant="outline" onClick={loadSolutions} disabled={loading}>
@@ -369,7 +384,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
               setStatusFilter={setStatusFilter}
               loading={loading}
               solutions={solutions}
-              navigate={navigate}
+              onViewSolution={(solution) => navigate(buildSolutionDetailPath(solution))}
               setSelectedSolutionId={setSelectedSolutionId}
               setActiveTab={setActiveTab}
             />
