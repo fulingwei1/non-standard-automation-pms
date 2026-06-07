@@ -252,7 +252,7 @@ describe("ProjectWorkspace", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/projects/1/workspace"]}>
+      <MemoryRouter initialEntries={["/projects/1/workspace?ticket_id=91&opportunity_id=2"]}>
         <Routes>
           <Route path="/projects/:id/workspace" element={<ProjectWorkspace />} />
         </Routes>
@@ -298,11 +298,11 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("解决交付排产冲突")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /处理质检不合格项/ })).toHaveAttribute(
       "href",
-      "/quality/inspections?project_id=1",
+      "/quality/inspections?project_id=1&ticket_id=91&opportunity_id=2",
     );
     expect(screen.getByRole("link", { name: /解决交付排产冲突/ })).toHaveAttribute(
       "href",
-      "/projects/1/delivery",
+      "/projects/1/delivery?ticket_id=91&opportunity_id=2&project_id=1",
     );
   });
 });

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import { projectWorkspaceApi } from "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -131,9 +131,30 @@ function buildPresaleTicketPath(ticket, opportunity, project) {
   return `/presales/technical-solutions?${params.toString()}`;
 }
 
+function appendMissingContextParam(params, key, value) {
+  if (!params.has(key)) {
+    appendContextParam(params, key, value);
+  }
+}
+
+function buildContextualActionPath(href, context) {
+  if (!href || /^https?:\/\//i.test(href)) {
+    return href;
+  }
+
+  const url = new URL(href, "http://localhost");
+  appendMissingContextParam(url.searchParams, "ticket_id", context.ticketId);
+  appendMissingContextParam(url.searchParams, "opportunity_id", context.opportunityId);
+  appendMissingContextParam(url.searchParams, "project_id", context.projectId);
+
+  const query = url.searchParams.toString();
+  return `${url.pathname}${query ? `?${query}` : ""}${url.hash}`;
+}
+
 export default function ProjectWorkspace() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [workspaceData, setWorkspaceData] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
@@ -214,6 +235,22 @@ export default function ProjectWorkspace() {
     handoverContext?.opportunity,
     project,
   );
+  const currentParams = new URLSearchParams(location.search);
+  const downstreamActionContext = {
+    ticketId:
+      currentParams.get("ticket_id") ||
+      currentParams.get("ticketId") ||
+      getFirstValue(primaryTicket, ["id", "ticket_id", "ticketId"]),
+    opportunityId:
+      currentParams.get("opportunity_id") ||
+      currentParams.get("opportunityId") ||
+      getFirstValue(primaryTicket, ["opportunity_id", "opportunityId"]) ||
+      handoverContext?.opportunity?.id,
+    projectId:
+      currentParams.get("project_id") ||
+      currentParams.get("projectId") ||
+      project?.id,
+  };
   const primaryTicketRiskFactors = normalizeRiskFactors(
     primaryTicket?.pm_involvement_risk_factors,
   );
@@ -553,8 +590,12 @@ export default function ProjectWorkspace() {
                 </div>
                 <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
                   {nextActions.map((action, index) => {
-                    const ActionWrapper = action.href ? Link : "div";
-                    const actionWrapperProps = action.href ? { to: action.href } : {};
+                    const actionPath = buildContextualActionPath(
+                      action.href,
+                      downstreamActionContext,
+                    );
+                    const ActionWrapper = actionPath ? Link : "div";
+                    const actionWrapperProps = actionPath ? { to: actionPath } : {};
                     return (
                       <ActionWrapper
                         key={`${action.domain}-${action.title}-${index}`}
