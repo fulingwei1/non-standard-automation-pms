@@ -20,6 +20,7 @@ import { ParticipantsTab } from "./ParticipantsTab";
 import { MaterialsTab } from "./MaterialsTab";
 import { ChecklistTab } from "./ChecklistTab";
 import { IssuesTab } from "./IssuesTab";
+import { ReviewIssueDialog } from "./ReviewIssueDialog";
 import { buildTechnicalReviewListPath } from "./navigation";
 
 export default function TechnicalReviewDetail() {
@@ -42,11 +43,13 @@ export default function TechnicalReviewDetail() {
         materials,
         checklistRecords,
         issues,
+        issueDialog,
         setParticipantDialog,
         setMaterialDialog,
         setChecklistDialog,
         setIssueDialog,
         handleSave,
+        handleCreateIssue,
         fetchReview,
     } = useTechnicalReviewForm(reviewId);
 
@@ -159,6 +162,16 @@ export default function TechnicalReviewDetail() {
                     </TabsContent>
                 </Tabs>
             </div>
+
+            {!isNew && (
+                <ReviewIssueDialog
+                    open={Boolean(issueDialog?.open)}
+                    onOpenChange={(open) => setIssueDialog({ open })}
+                    reviewId={reviewId}
+                    users={users}
+                    onSubmit={handleCreateIssue}
+                />
+            )}
         </div>
     );
 }

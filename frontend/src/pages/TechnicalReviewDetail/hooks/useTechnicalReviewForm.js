@@ -121,6 +121,17 @@ export function useTechnicalReviewForm(reviewId) {
         }
     };
 
+    const handleCreateIssue = async (issueData) => {
+        try {
+            await technicalReviewApi.createIssue(reviewId, issueData);
+            setIssueDialog({ open: false });
+            await fetchReview();
+        } catch (error) {
+            console.error("Failed to create review issue:", error);
+            alert("创建问题失败：" + (error.response?.data?.detail || error.message));
+        }
+    };
+
     const updateField = (field, value) =>
         setFormData((prev) => ({ ...prev, [field]: value }));
 
@@ -148,6 +159,7 @@ export function useTechnicalReviewForm(reviewId) {
         issueDialog,
         setIssueDialog,
         handleSave,
+        handleCreateIssue,
         fetchReview,
     };
 }

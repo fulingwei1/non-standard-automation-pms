@@ -20,6 +20,7 @@ vi.mock("../../../../services/api", () => ({
     get: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    createIssue: vi.fn(),
   },
   projectApi: {
     list: vi.fn(),
@@ -37,6 +38,26 @@ describe("useTechnicalReviewForm", () => {
     projectApi.list.mockResolvedValue({ data: { items: [] } });
     userApi.list.mockResolvedValue({ data: { items: [] } });
     technicalReviewApi.create.mockResolvedValue({ data: { id: 7 } });
+    technicalReviewApi.get.mockResolvedValue({
+      data: {
+        id: 7,
+        review_type: "PDR",
+        review_name: "合同转项目 PDR",
+        project_id: 42,
+        equipment_id: null,
+        scheduled_date: "2026-06-07T09:00:00",
+        location: "会议室",
+        meeting_type: "ONSITE",
+        host_id: 1,
+        presenter_id: 1,
+        recorder_id: 1,
+        participants: [],
+        materials: [],
+        checklist_records: [],
+        issues: [],
+      },
+    });
+    technicalReviewApi.createIssue.mockResolvedValue({ data: { id: 11 } });
   });
 
   it("treats the static new route without reviewId as create mode", async () => {
@@ -93,5 +114,40 @@ describe("useTechnicalReviewForm", () => {
     expect(navigateSpy).toHaveBeenCalledWith(
       "/technical-reviews?project_id=42&ticket_id=91&opportunity_id=2",
     );
+  });
+
+  it("creates a review issue and refreshes the review detail", async () => {
+    const { result } = renderHook(() => useTechnicalReviewForm("7"));
+
+    await waitFor(() => {
+      expect(technicalReviewApi.get).toHaveBeenCalledWith("7");
+    });
+
+    await act(async () => {
+      await result.current.handleCreateIssue({
+        review_id: 7,
+        issue_level: "B",
+        category: "设计风险",
+        description: "夹具定位方案需要复核",
+        suggestion: "补充定位销校核",
+        assignee_id: 3,
+        deadline: "2026-06-20",
+      });
+    });
+
+    expect(technicalReviewApi.createIssue).toHaveBeenCalledWith(
+      "7",
+      expect.objectContaining({
+        review_id: 7,
+        issue_level: "B",
+        category: "设计风险",
+        description: "夹具定位方案需要复核",
+        suggestion: "补充定位销校核",
+        assignee_id: 3,
+        deadline: "2026-06-20",
+      }),
+    );
+    expect(technicalReviewApi.get).toHaveBeenCalledTimes(2);
+    expect(result.current.issueDialog.open).toBe(false);
   });
 });
