@@ -521,6 +521,8 @@ class TestPresalesFrontendContractBehavior:
             opp_name=f"售前闭环商机-{unique}",
             stage="QUALIFICATION",
             probability=60,
+            est_amount=Decimal("350000"),
+            expected_close_date=date.today(),
             owner_id=admin_user.id,
             updated_by=admin_user.id,
             assessment_status=AssessmentStatusEnum.PENDING.value,
@@ -559,6 +561,38 @@ class TestPresalesFrontendContractBehavior:
         )
         assert refreshed.status_code == 200, refreshed.text
         assert refreshed.json()["assessment_status"] == AssessmentStatusEnum.COMPLETED.value
+        assert refreshed.json()["assessment_id"] is not None
+
+        db_session.expire_all()
+        refreshed_opportunity = db_session.get(Opportunity, opportunity.id)
+        assert refreshed_opportunity.assessment_id is not None
+
+        assessment = db_session.get(TechnicalAssessment, refreshed_opportunity.assessment_id)
+        assert assessment is not None
+        assert assessment.source_type == "OPPORTUNITY"
+        assert assessment.source_id == opportunity.id
+        assert assessment.status == AssessmentStatusEnum.COMPLETED.value
+        assert assessment.decision == "推荐立项"
+        assert assessment.presale_ticket_id == ticket_id
+
+        refreshed_ticket = db_session.get(PresaleSupportTicket, ticket_id)
+        assert refreshed_ticket.assessment_status == AssessmentStatusEnum.COMPLETED.value
+        assert refreshed_ticket.current_assessment_id == assessment.id
+
+        context = client.get(
+            f"{prefix}/presale/workbench/context",
+            params={
+                "source_type": "opportunity",
+                "source_id": opportunity.id,
+                "presale_ticket_id": ticket_id,
+            },
+            headers=headers,
+        )
+        assert context.status_code == 200, context.text
+        context_data = context.json()["data"]
+        assert context_data["assessment"]["current"]["id"] == assessment.id
+        assert context_data["funnel"]["gateStatus"]["is_valid"] is True
+        assert "技术评估通过" in context_data["funnel"]["gateStatus"]["checked_items"]
 
     def test_ticket_board_keeps_processing_and_review_tickets_visible(
         self, client: TestClient, db_session: Session, admin_token: str

@@ -11,9 +11,9 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.enums import AssessmentStatusEnum
+from app.models.enums import AssessmentSourceTypeEnum, AssessmentStatusEnum
 from app.models.presale import PresaleSupportTicket, PresaleTicketDeliverable, PresaleTicketProgress
-from app.models.sales import Opportunity
+from app.models.sales import Opportunity, TechnicalAssessment
 from app.models.user import User
 from app.schemas.presale import (
     DeliverableCreate,
@@ -29,6 +29,70 @@ from app.utils.db_helpers import get_or_404, save_obj
 from .crud import read_ticket
 
 router = APIRouter()
+
+
+def _complete_opportunity_assessment_for_ticket(
+    *,
+    db: Session,
+    ticket: PresaleSupportTicket,
+    opportunity: Opportunity,
+    current_user: User,
+) -> TechnicalAssessment:
+    """补齐商机关联售前工单的技术评估闭环。"""
+    assessment = None
+    if opportunity.assessment_id:
+        assessment = (
+            db.query(TechnicalAssessment)
+            .filter(TechnicalAssessment.id == opportunity.assessment_id)
+            .first()
+        )
+
+    if assessment is None and ticket.current_assessment_id:
+        assessment = (
+            db.query(TechnicalAssessment)
+            .filter(TechnicalAssessment.id == ticket.current_assessment_id)
+            .first()
+        )
+
+    if assessment is None:
+        assessment = (
+            db.query(TechnicalAssessment)
+            .filter(
+                TechnicalAssessment.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value,
+                TechnicalAssessment.source_id == opportunity.id,
+            )
+            .order_by(TechnicalAssessment.id.desc())
+            .first()
+        )
+
+    if assessment is None:
+        assessment = TechnicalAssessment(
+            source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
+            source_id=opportunity.id,
+            evaluator_id=current_user.id,
+            status=AssessmentStatusEnum.COMPLETED.value,
+            decision="推荐立项",
+            evaluated_at=datetime.now(),
+            presale_ticket_id=ticket.id,
+        )
+        db.add(assessment)
+        db.flush()
+    else:
+        assessment.source_type = AssessmentSourceTypeEnum.OPPORTUNITY.value
+        assessment.source_id = opportunity.id
+        assessment.status = AssessmentStatusEnum.COMPLETED.value
+        assessment.decision = assessment.decision or "推荐立项"
+        assessment.evaluator_id = assessment.evaluator_id or current_user.id
+        assessment.evaluated_at = assessment.evaluated_at or datetime.now()
+        if not assessment.presale_ticket_id:
+            assessment.presale_ticket_id = ticket.id
+
+    opportunity.assessment_id = assessment.id
+    opportunity.assessment_status = AssessmentStatusEnum.COMPLETED.value
+    opportunity.updated_by = current_user.id
+    ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
+    ticket.current_assessment_id = assessment.id
+    return assessment
 
 
 @router.put("/{ticket_id}/accept", response_model=TicketResponse)
@@ -178,15 +242,18 @@ def complete_ticket(
     )
     db.add(progress)
 
-    ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
     if ticket.opportunity_id:
         opportunity = db.query(Opportunity).filter(Opportunity.id == ticket.opportunity_id).first()
         if opportunity:
-            opportunity.assessment_status = AssessmentStatusEnum.COMPLETED.value
-            opportunity.updated_by = current_user.id
-            if ticket.current_assessment_id and not opportunity.assessment_id:
-                opportunity.assessment_id = ticket.current_assessment_id
+            _complete_opportunity_assessment_for_ticket(
+                db=db,
+                ticket=ticket,
+                opportunity=opportunity,
+                current_user=current_user,
+            )
             db.add(opportunity)
+    else:
+        ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
 
     save_obj(db, ticket)
 
