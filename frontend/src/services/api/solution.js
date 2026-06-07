@@ -1,5 +1,5 @@
-import { api } from "./client.js";
+import { presaleSolutionApi } from "./presaleSolution.js";
 
 export const solutionApi = {
-  list: (params) => api.get("/presales/solutions", { params }),
+  list: (params) => presaleSolutionApi.list(params),
 };

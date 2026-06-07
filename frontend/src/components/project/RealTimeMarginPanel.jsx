@@ -12,14 +12,13 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { api } from "../../services/api/client";
+import { presaleSolutionApi } from "../../services/api/presaleSolution";
 import { formatCurrency } from "../../lib/utils";
 import { usePermission, PERMISSIONS } from "../../hooks/usePermission";
-import {
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  Percent,
-} from "lucide-react";
+import * as UI from "../ui";
+import * as Icons from "lucide-react";
+
+const Ui = UI;
 
 // 成本类别配置（非标自动化测试设备行业）
 const COST_CATEGORY_CONFIG = {
@@ -123,8 +122,9 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
 
     // 获取详细成本明细
     try {
-      const costItemsRes = await api.get(`/presale/solutions/${solution.id}/costs`);
-      const costItems = costItemsRes.data?.data?.items || costItemsRes.data?.items || [];
+      const costItemsRes = await presaleSolutionApi.getCost(solution.id);
+      const costPayload = costItemsRes.data?.data || costItemsRes.data || {};
+      const costItems = costPayload.items || costPayload.breakdown || [];
       const byCategory = {};
       costItems.forEach(item => {
         const cat = item.category || "OTHER";
@@ -181,9 +181,7 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
       // 方式2：通过项目 ID 获取关联的售前方案（一个项目可能有多个投标方案）
       if (!estimateResponse) {
         try {
-          const solutionsRes = await api.get(`/presale/solutions`, {
-            params: { project_id: project.id },
-          });
+          const solutionsRes = await presaleSolutionApi.findByProject(project.id);
           const solutions = solutionsRes.data?.data?.items || solutionsRes.data?.items || [];
           allSolutions = [...allSolutions, ...solutions];
         } catch {
@@ -194,9 +192,7 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
       // 方式3：通过商机 ID 获取售前方案（兼容历史数据）
       if (opportunityId) {
         try {
-          const solutionsRes = await api.get(`/presale/solutions`, {
-            params: { opportunity_id: opportunityId },
-          });
+          const solutionsRes = await presaleSolutionApi.findByOpportunity(opportunityId);
           const solutions = solutionsRes.data?.data?.items || solutionsRes.data?.items || [];
           // 合并并去重（按 id）
           solutions.forEach(s => {
@@ -348,13 +344,13 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
   const getMarginStatusStyle = (status) => {
     switch (status) {
       case "healthy":
-        return { color: "text-green-600", bg: "bg-green-100", icon: TrendingUp };
+        return { color: "text-green-600", bg: "bg-green-100", icon: Icons.TrendingUp };
       case "warning":
-        return { color: "text-yellow-600", bg: "bg-yellow-100", icon: AlertTriangle };
+        return { color: "text-yellow-600", bg: "bg-yellow-100", icon: Icons.AlertTriangle };
       case "danger":
-        return { color: "text-red-600", bg: "bg-red-100", icon: TrendingDown };
+        return { color: "text-red-600", bg: "bg-red-100", icon: Icons.TrendingDown };
       default:
-        return { color: "text-gray-600", bg: "bg-gray-100", icon: Percent };
+        return { color: "text-gray-600", bg: "bg-gray-100", icon: Icons.Percent };
     }
   };
 
@@ -368,59 +364,59 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
   // 权限检查：无权限时显示提示
   if (!canViewMargin) {
     return (
-      <Card>
-        <CardContent className="p-6">
+      <Ui.Card>
+        <Ui.CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
-              <PieChart className="h-5 w-5 text-blue-500" />
+              <Icons.PieChart className="h-5 w-5 text-blue-500" />
               即时毛利率
             </h3>
           </div>
           <div className="text-center py-4 text-gray-500">
-            <Lock className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+            <Icons.Lock className="h-8 w-8 mx-auto mb-2 text-gray-400" />
             <p>暂无查看权限</p>
             <p className="text-sm">如需查看毛利率数据，请联系管理员</p>
           </div>
-        </CardContent>
-      </Card>
+        </Ui.CardContent>
+      </Ui.Card>
     );
   }
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="p-6">
+      <Ui.Card>
+        <Ui.CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <Skeleton className="h-6 w-32" />
-            <Skeleton className="h-8 w-8 rounded-full" />
+            <Ui.Skeleton className="h-6 w-32" />
+            <Ui.Skeleton className="h-8 w-8 rounded-full" />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Skeleton className="h-24" />
-            <Skeleton className="h-24" />
+            <Ui.Skeleton className="h-24" />
+            <Ui.Skeleton className="h-24" />
           </div>
-        </CardContent>
-      </Card>
+        </Ui.CardContent>
+      </Ui.Card>
     );
   }
 
   // 如果没有合同金额，显示提示
   if (!contractAmount) {
     return (
-      <Card>
-        <CardContent className="p-6">
+      <Ui.Card>
+        <Ui.CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
-              <PieChart className="h-5 w-5 text-blue-500" />
+              <Icons.PieChart className="h-5 w-5 text-blue-500" />
               即时毛利率
             </h3>
           </div>
           <div className="text-center py-4 text-gray-500">
-            <DollarSign className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+            <Icons.DollarSign className="h-8 w-8 mx-auto mb-2 text-gray-400" />
             <p>暂无合同金额数据</p>
             <p className="text-sm">请先录入项目合同金额</p>
           </div>
-        </CardContent>
-      </Card>
+        </Ui.CardContent>
+      </Ui.Card>
     );
   }
 
@@ -428,12 +424,12 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
   const StatusIcon = statusStyle.icon;
 
   return (
-    <Card>
-      <CardContent className="p-6">
+    <Ui.Card>
+      <Ui.CardContent className="p-6">
         {/* 标题栏 */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            <PieChart className="h-5 w-5 text-blue-500" />
+            <Icons.PieChart className="h-5 w-5 text-blue-500" />
             即时毛利率
           </h3>
           <button
@@ -442,7 +438,7 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             title="刷新数据"
           >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            <Icons.RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
           </button>
         </div>
 
@@ -467,7 +463,7 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
           {/* 预估毛利率 */}
           <div className="p-4 rounded-lg bg-blue-50">
             <div className="flex items-center gap-2 mb-1">
-              <Target className="h-4 w-4 text-blue-600" />
+              <Icons.Target className="h-4 w-4 text-blue-600" />
               <span className="text-xs text-gray-600">预估毛利率</span>
             </div>
             <div className="text-2xl font-bold text-blue-600">
@@ -489,11 +485,11 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
           <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-blue-700">
-                <FileText className="h-4 w-4" />
+                <Icons.FileText className="h-4 w-4" />
                 <span>对比方案</span>
-                <Badge variant="secondary" className="text-xs">
+                <Ui.Badge variant="secondary" className="text-xs">
                   {availableSolutions.length} 个方案
-                </Badge>
+                </Ui.Badge>
               </div>
               <select
                 value={selectedSolutionId || ""}
@@ -528,7 +524,7 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
               <span className="text-gray-600">
                 实际: <span className="font-medium text-gray-900">{formatCurrency(marginData.totalCost)}</span>
               </span>
-              <ArrowRight className="h-4 w-4 text-gray-400" />
+              <Icons.ArrowRight className="h-4 w-4 text-gray-400" />
               <span className="text-gray-600">
                 预估: <span className="font-medium text-blue-600">{formatCurrency(marginData.estimatedCost)}</span>
               </span>
@@ -574,12 +570,12 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
         >
           {expanded ? (
             <>
-              <ChevronUp className="h-4 w-4" />
+              <Icons.ChevronUp className="h-4 w-4" />
               收起详细对比
             </>
           ) : (
             <>
-              <ChevronDown className="h-4 w-4" />
+              <Icons.ChevronDown className="h-4 w-4" />
               查看分类对比
             </>
           )}
@@ -588,20 +584,20 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
         {/* 展开的详细对比 */}
         {expanded && (
           <div className="mt-4 pt-4 border-t">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="overview" className="text-xs">
-                  <BarChart3 className="h-3 w-3 mr-1" />
+            <Ui.Tabs value={activeTab} onValueChange={setActiveTab}>
+              <Ui.TabsList className="grid w-full grid-cols-2 mb-4">
+                <Ui.TabsTrigger value="overview" className="text-xs">
+                  <Icons.BarChart3 className="h-3 w-3 mr-1" />
                   分类对比
-                </TabsTrigger>
-                <TabsTrigger value="detail" className="text-xs">
-                  <FileText className="h-3 w-3 mr-1" />
+                </Ui.TabsTrigger>
+                <Ui.TabsTrigger value="detail" className="text-xs">
+                  <Icons.FileText className="h-3 w-3 mr-1" />
                   偏差分析
-                </TabsTrigger>
-              </TabsList>
+                </Ui.TabsTrigger>
+              </Ui.TabsList>
 
               {/* 分类对比视图 */}
-              <TabsContent value="overview" className="space-y-3">
+              <Ui.TabsContent value="overview" className="space-y-3">
                 {costComparison.length > 0 ? (
                   <>
                     {/* 表头 */}
@@ -639,10 +635,10 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
                     暂无分类成本数据
                   </div>
                 )}
-              </TabsContent>
+              </Ui.TabsContent>
 
               {/* 偏差分析视图 */}
-              <TabsContent value="detail" className="space-y-3">
+              <Ui.TabsContent value="detail" className="space-y-3">
                 {/* 关键财务指标 */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-gray-50 rounded-lg">
@@ -673,7 +669,7 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
                 {estimateData?.solution_name && (
                   <div className="p-3 bg-blue-50 rounded-lg">
                     <div className="flex items-center gap-2 text-xs text-blue-600 mb-1">
-                      <FileText className="h-3 w-3" />
+                      <Icons.FileText className="h-3 w-3" />
                       关联售前方案
                     </div>
                     <div className="text-sm font-medium text-blue-800">
@@ -711,14 +707,14 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
                     </div>
                   </div>
                 )}
-              </TabsContent>
-            </Tabs>
+              </Ui.TabsContent>
+            </Ui.Tabs>
 
             {/* 成本控制建议 */}
             {marginData.healthStatus === "danger" && (
               <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
                 <div className="flex items-center gap-2 text-red-700 text-sm font-medium">
-                  <AlertTriangle className="h-4 w-4" />
+                  <Icons.AlertTriangle className="h-4 w-4" />
                   毛利率预警
                 </div>
                 <p className="text-xs text-red-600 mt-1">
@@ -731,7 +727,7 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
             {marginData.healthStatus === "warning" && (
               <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                 <div className="flex items-center gap-2 text-yellow-700 text-sm font-medium">
-                  <AlertTriangle className="h-4 w-4" />
+                  <Icons.AlertTriangle className="h-4 w-4" />
                   成本关注
                 </div>
                 <p className="text-xs text-yellow-600 mt-1">
@@ -743,7 +739,7 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
             {marginData.healthStatus === "healthy" && marginData.marginVariance !== null && marginData.marginVariance > 5 && (
               <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
                 <div className="flex items-center gap-2 text-green-700 text-sm font-medium">
-                  <TrendingUp className="h-4 w-4" />
+                  <Icons.TrendingUp className="h-4 w-4" />
                   成本控制良好
                 </div>
                 <p className="text-xs text-green-600 mt-1">
@@ -755,7 +751,7 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
             )}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </Ui.CardContent>
+    </Ui.Card>
   );
 }
