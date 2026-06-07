@@ -78,6 +78,7 @@ const buildReviewDescription = (opp) => {
 };
 
 const SUPPORT_TICKET_TYPE = "TECHNICAL_SUPPORT";
+const ASSESSMENT_TICKET_TYPE = "FEASIBILITY_ASSESSMENT";
 const REVIEW_TICKET_TYPE = "SOLUTION_REVIEW";
 const ACTIVE_SUPPORT_STATUSES = new Set([
   "PENDING",
@@ -87,7 +88,10 @@ const ACTIVE_SUPPORT_STATUSES = new Set([
 ]);
 
 const getTicketTitlePrefix = (ticketType) =>
-  ticketType === REVIEW_TICKET_TYPE ? "方案评审申请" : "售前支持申请";
+  ({
+    [ASSESSMENT_TICKET_TYPE]: "技术评估申请",
+    [REVIEW_TICKET_TYPE]: "方案评审申请",
+  })[ticketType] || "售前支持申请";
 
 const buildTicketTitle = (opp, ticketType = SUPPORT_TICKET_TYPE) =>
   opp?.opp_name
@@ -117,7 +121,13 @@ const buildPresalesTicketBoardPath = ({
 }) => {
   const params = new URLSearchParams();
   params.set("tab", "reviews");
-  params.set("type", ticketType === REVIEW_TICKET_TYPE ? "review" : "support");
+  params.set(
+    "type",
+    ({
+      [ASSESSMENT_TICKET_TYPE]: "assessment",
+      [REVIEW_TICKET_TYPE]: "review",
+    })[ticketType] || "support",
+  );
   params.set("status", normalizeTicketStatusForUrl(status, ticketType));
   if (leadId) {
     params.set("lead_id", String(leadId));
@@ -131,8 +141,8 @@ const buildPresalesTicketBoardPath = ({
   return `/presales/technical-solutions?${params.toString()}`;
 };
 
-const isReusableSupportTicket = (ticket) => (
-  ticket?.ticket_type === SUPPORT_TICKET_TYPE &&
+const isReusablePresaleTicket = (ticket, ticketType) => (
+  ticket?.ticket_type === ticketType &&
   ACTIVE_SUPPORT_STATUSES.has(String(ticket.status || "").toUpperCase())
 );
 
@@ -465,12 +475,12 @@ export default function OpportunityManagement({ embedded = false }) {
     }
     setReviewSubmitting(true);
     try {
-      if (ticketType === SUPPORT_TICKET_TYPE) {
+      if ([SUPPORT_TICKET_TYPE, ASSESSMENT_TICKET_TYPE].includes(ticketType)) {
         const context = await presaleWorkbenchApi.loadContext({
           sourceType: "opportunity",
           sourceId: reviewTarget.id,
         });
-        if (isReusableSupportTicket(context?.ticket)) {
+        if (isReusablePresaleTicket(context?.ticket, ticketType)) {
           setShowReviewDialog(false);
           setReviewTarget(null);
           navigate(buildPresalesTicketBoardPath({
@@ -507,7 +517,12 @@ export default function OpportunityManagement({ embedded = false }) {
       const ticketId = unwrapTicketId(response);
       setShowReviewDialog(false);
       setReviewTarget(null);
-      alert(ticketType === REVIEW_TICKET_TYPE ? "方案评审已提交" : "售前支持已提交");
+      alert(
+        ({
+          [ASSESSMENT_TICKET_TYPE]: "技术评估已提交",
+          [REVIEW_TICKET_TYPE]: "方案评审已提交",
+        })[ticketType] || "售前支持已提交"
+      );
       navigate(buildPresalesTicketBoardPath({
         ticketType,
         status: ticketType === REVIEW_TICKET_TYPE ? "REVIEW" : "PENDING",

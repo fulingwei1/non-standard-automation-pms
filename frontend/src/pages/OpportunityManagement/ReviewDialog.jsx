@@ -43,6 +43,7 @@ export default function ReviewDialog({
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
             >
               <option value="TECHNICAL_SUPPORT">售前支持</option>
+              <option value="FEASIBILITY_ASSESSMENT">技术评估</option>
               <option value="SOLUTION_REVIEW" disabled={!canRequestSolutionReview}>
                 方案评审
               </option>

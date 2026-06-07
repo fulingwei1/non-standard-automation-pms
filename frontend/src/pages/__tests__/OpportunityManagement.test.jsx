@@ -102,7 +102,7 @@ vi.mock('../OpportunityManagement/DetailDialog', () => ({
 }));
 
 vi.mock('../OpportunityManagement/ReviewDialog', () => ({
-  default: ({ open, reviewForm, setReviewForm, onCreateReviewTicket }) => (
+  default: ({ open, reviewForm, setReviewForm, onCreateReviewTicket, onTicketTypeChange }) => (
     <div data-testid="review-dialog">
       {open ? (
         <>
@@ -111,17 +111,13 @@ vi.mock('../OpportunityManagement/ReviewDialog', () => ({
             aria-label="支持类型"
             value={reviewForm.ticket_type}
             onChange={(event) =>
-              setReviewForm({
-                ...reviewForm,
-                ticket_type: event.target.value,
-                title:
-                  event.target.value === 'SOLUTION_REVIEW'
-                    ? reviewForm.title.replace('售前支持申请', '方案评审申请')
-                    : reviewForm.title.replace('方案评审申请', '售前支持申请'),
-              })
+              onTicketTypeChange
+                ? onTicketTypeChange(event.target.value)
+                : setReviewForm({ ...reviewForm, ticket_type: event.target.value })
             }
           >
             <option value="TECHNICAL_SUPPORT">售前支持</option>
+            <option value="FEASIBILITY_ASSESSMENT">技术评估</option>
             <option value="SOLUTION_REVIEW">方案评审</option>
           </select>
           <button type="button" onClick={onCreateReviewTicket}>
@@ -379,6 +375,37 @@ describe('OpportunityManagement', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith(
       '/presales/technical-solutions?tab=reviews&type=review&status=reviewing&opportunity_id=1&ticket_id=501',
+    );
+  });
+
+  it('creates a technical assessment presales ticket from an opportunity', async () => {
+    renderPage();
+
+    await screen.findByText('智能制造升级项目');
+
+    fireEvent.click(screen.getAllByRole('button', { name: /发起支持/ })[0]);
+    fireEvent.change(screen.getByLabelText('支持类型'), {
+      target: { value: 'FEASIBILITY_ASSESSMENT' },
+    });
+    expect(screen.getByText('技术评估申请 - 智能制造升级项目')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '提交支持' }));
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: '技术评估申请 - 智能制造升级项目',
+          ticket_type: 'FEASIBILITY_ASSESSMENT',
+          customer_id: 101,
+          customer_name: '某大型企业',
+          opportunity_id: 1,
+          description: expect.stringContaining('商机编号：OPP-001'),
+        }),
+      );
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/presales/technical-solutions?tab=reviews&type=assessment&status=pending&opportunity_id=1&ticket_id=501',
     );
   });
 });
