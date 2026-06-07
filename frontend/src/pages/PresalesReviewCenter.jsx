@@ -5,9 +5,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import RequirementSurvey from "./RequirementSurvey";
 import PresaleProposals from "./PresaleProposals";
 import PresalesTasks from "./PresalesTasks";
+import TechnicalParameterManagement from "./TechnicalParameterManagement";
 
 const TAB_SURVEYS = "surveys";
 const TAB_SOLUTIONS = "solutions";
+const TAB_PARAMETERS = "parameters";
 const TAB_REVIEWS = "reviews";
 
 function getTabFromPath(pathname) {
@@ -26,7 +28,12 @@ function getTabFromPath(pathname) {
 
 function getTabFromSearch(searchParams) {
   const tab = searchParams.get("tab");
-  if (tab === TAB_SURVEYS || tab === TAB_SOLUTIONS || tab === TAB_REVIEWS) {
+  if (
+    tab === TAB_SURVEYS ||
+    tab === TAB_SOLUTIONS ||
+    tab === TAB_PARAMETERS ||
+    tab === TAB_REVIEWS
+  ) {
     return tab;
   }
   return null;
@@ -49,6 +56,7 @@ export default function PresalesReviewCenter() {
     () => [
       { value: TAB_SURVEYS, label: "需求调研", path: "/requirement-survey" },
       { value: TAB_SOLUTIONS, label: "方案管理", path: "/presales/solutions" },
+      { value: TAB_PARAMETERS, label: "技术参数", path: "/presales/technical-parameters" },
       { value: TAB_REVIEWS, label: "工单看板", path: "/presales-tasks" }
     ],
     []
@@ -76,7 +84,7 @@ export default function PresalesReviewCenter() {
       />
 
       <Tabs value={activeTab || "unknown"} onValueChange={handleTabChange}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
           {(tabs || []).map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
               {tab.label}
@@ -90,6 +98,10 @@ export default function PresalesReviewCenter() {
 
         <TabsContent value={TAB_SOLUTIONS || "unknown"} className="space-y-6">
           <PresaleProposals embedded />
+        </TabsContent>
+
+        <TabsContent value={TAB_PARAMETERS || "unknown"} className="space-y-6">
+          <TechnicalParameterManagement embedded />
         </TabsContent>
 
         <TabsContent value={TAB_REVIEWS || "unknown"} className="space-y-6">

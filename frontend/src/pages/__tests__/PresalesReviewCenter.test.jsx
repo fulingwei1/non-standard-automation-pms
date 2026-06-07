@@ -7,6 +7,9 @@ const presaleProposalsMock = vi.hoisted(() => vi.fn(({ embedded }) => (
 )));
 
 const setSearchParamsMock = vi.hoisted(() => vi.fn());
+const routeState = vi.hoisted(() => ({
+  search: "tab=solutions",
+}));
 
 vi.mock("react-router-dom", async (importOriginal) => {
   const actual = await importOriginal();
@@ -14,12 +17,12 @@ vi.mock("react-router-dom", async (importOriginal) => {
     ...actual,
     useLocation: () => ({
       pathname: "/presales/technical-solutions",
-      search: "?tab=solutions",
+      search: `?${routeState.search}`,
       hash: "",
       state: null,
     }),
     useNavigate: () => vi.fn(),
-    useSearchParams: () => [new URLSearchParams("tab=solutions"), setSearchParamsMock],
+    useSearchParams: () => [new URLSearchParams(routeState.search), setSearchParamsMock],
   };
 });
 
@@ -39,7 +42,17 @@ vi.mock("../PresalesTasks", () => ({
   default: () => <div>工单看板中心</div>,
 }));
 
+vi.mock("../TechnicalParameterManagement", () => ({
+  default: ({ embedded }) => <div>技术参数模板中心 {embedded ? "embedded" : "standalone"}</div>,
+}));
+
 describe("PresalesReviewCenter", () => {
+  beforeEach(() => {
+    routeState.search = "tab=solutions";
+    setSearchParamsMock.mockClear();
+    presaleProposalsMock.mockClear();
+  });
+
   it("uses the unified proposal workflow in the technical solutions center", async () => {
     render(<PresalesReviewCenter />);
 
@@ -49,5 +62,14 @@ describe("PresalesReviewCenter", () => {
       expect.objectContaining({ embedded: true }),
       undefined,
     );
+  });
+
+  it("opens technical parameter templates inside the technical solutions center", () => {
+    routeState.search = "tab=parameters";
+
+    render(<PresalesReviewCenter />);
+
+    expect(screen.getByText(/技术参数模板中心 embedded/)).toBeInTheDocument();
+    expect(screen.queryByText("工单看板中心")).not.toBeInTheDocument();
   });
 });

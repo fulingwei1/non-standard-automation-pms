@@ -119,7 +119,7 @@ function getLaborHoursTotal(laborHours) {
   return null;
 }
 
-export default function TechnicalParameterManagement() {
+export default function TechnicalParameterManagement({ embedded = false } = {}) {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -288,7 +288,9 @@ export default function TechnicalParameterManagement() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="技术参数模板" description="模板管理 · 成本估算 · 行业分类" />
+      {!embedded && (
+        <PageHeader title="技术参数模板" description="模板管理 · 成本估算 · 行业分类" />
+      )}
 
       {loading ? (
         <div className="text-center text-slate-500 py-12">加载中...</div>
