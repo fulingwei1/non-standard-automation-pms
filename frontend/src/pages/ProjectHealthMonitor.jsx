@@ -3,7 +3,7 @@
  * 整合项目列表 + 齐套率 + 健康度 + 毛利率
  */
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { Fragment, useState, useEffect, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -606,9 +606,8 @@ export default function ProjectHealthMonitor({ embedded = false }) {
                     const kitRateLevel = getKitRateLevel(kitRate);
 
                     return (
-                      <>
+                      <Fragment key={project.id}>
                         <TableRow
-                          key={project.id}
                           className="cursor-pointer hover:bg-slate-800/50"
                           onClick={() => toggleRowExpand(project.id)}
                         >
@@ -662,7 +661,7 @@ export default function ProjectHealthMonitor({ embedded = false }) {
                           </TableCell>
                         </TableRow>
                         {isExpanded && renderExpandedRow(project)}
-                      </>
+                      </Fragment>
                     );
                   })
                 )}
