@@ -549,17 +549,24 @@ export default function PresalesWorkstation() {
   const handleFeasibilitySave = async (assessmentData) => {
     try {
       if (selectedFeasibilityTask?.ticketId) {
+        const scoreText = assessmentData.overallScore.toFixed(1);
+        const feasibilityText =
+          assessmentData.feasibility === "feasible"
+            ? "可行"
+            : assessmentData.feasibility === "conditional"
+              ? "有条件可行"
+              : "不可行";
+        const recommendation = assessmentData.recommendation || "未填写";
+        const riskAnalysis = assessmentData.riskAnalysis || "未填写";
+        const technicalNotes = assessmentData.technicalNotes || "未填写";
+
         await presaleApi.tickets.update(selectedFeasibilityTask.ticketId, {
-          description: `${selectedFeasibilityTask.description || ""}\n\n可行性评估结果：\n综合评分：${assessmentData.overallScore.toFixed(1)}分\n可行性：${assessmentData.feasibility === "feasible" ? "可行" : assessmentData.feasibility === "conditional" ? "有条件可行" : "不可行"}\n评估建议：${assessmentData.recommendation}\n风险分析：${assessmentData.riskAnalysis}\n技术说明：${assessmentData.technicalNotes}`
+          description: `${selectedFeasibilityTask.description || ""}\n\n可行性评估结果：\n综合评分：${scoreText}分\n可行性：${feasibilityText}\n评估建议：${recommendation}\n风险分析：${riskAnalysis}\n技术说明：${technicalNotes}`
         });
 
-        await presaleApi.tickets.updateProgress(
-          selectedFeasibilityTask.ticketId,
-          {
-            progress_note: `可行性评估已完成，综合评分：${assessmentData.overallScore.toFixed(1)}分`,
-            progress_percent: 100
-          }
-        );
+        await presaleApi.tickets.complete(selectedFeasibilityTask.ticketId, {
+          completion_note: `可行性评估已完成，综合评分：${scoreText}分，可行性：${feasibilityText}。评估建议：${recommendation}`
+        });
       }
 
       await loadData();

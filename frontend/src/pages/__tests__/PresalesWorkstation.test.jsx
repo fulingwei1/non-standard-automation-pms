@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import PresalesWorkstation from "../PresalesWorkstation";
 
@@ -10,6 +10,7 @@ const apiMocks = vi.hoisted(() => ({
       get: vi.fn(),
       update: vi.fn(),
       updateProgress: vi.fn(),
+      complete: vi.fn(),
     },
     solutions: {
       list: vi.fn(),
@@ -34,6 +35,7 @@ describe("PresalesWorkstation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(window, "alert").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -139,5 +141,69 @@ describe("PresalesWorkstation", () => {
     expect(apiMocks.presaleApi.solutions.list).not.toHaveBeenCalled();
     expect(apiMocks.presaleApi.tenders.list).not.toHaveBeenCalled();
     expect(apiMocks.opportunityApi.list).not.toHaveBeenCalled();
+  });
+
+  it("completes the presale ticket when saving feasibility assessment", async () => {
+    apiMocks.presaleWorkbenchApi.loadOverview.mockResolvedValue({
+      tickets: {
+        items: [
+          {
+            id: 51,
+            ticket_no: "PS-051",
+            title: "电池包可行性评估",
+            ticket_type: "FEASIBILITY_ASSESSMENT",
+            urgency: "NORMAL",
+            customer_name: "金凯博客户",
+            applicant_name: "张销售",
+            status: "PROCESSING",
+            opportunity_id: 41,
+            description: "客户要求新增检测站",
+          },
+        ],
+        total: 1,
+      },
+      solutions: { items: [], total: 0 },
+      tenders: { items: [], total: 0 },
+      opportunities: { items: [], total: 0 },
+      templates: {
+        assessment: { items: [], total: 0 },
+        technical: { items: [], total: 0 },
+      },
+      funnel: {
+        summary: {},
+        health: {},
+        conversion: {},
+        dwellAlerts: { items: [], total: 0 },
+      },
+      meta: { failures: [] },
+    });
+    apiMocks.presaleApi.tickets.update.mockResolvedValue({ data: { id: 51 } });
+    apiMocks.presaleApi.tickets.complete.mockResolvedValue({ data: { id: 51 } });
+    apiMocks.presaleApi.tickets.updateProgress.mockResolvedValue({ data: { id: 51 } });
+
+    render(
+      <MemoryRouter>
+        <PresalesWorkstation />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(await screen.findByText("电池包可行性评估"));
+    fireEvent.click(screen.getAllByText("5 - 优秀")[0]);
+
+    const textboxes = screen.getAllByRole("textbox");
+    fireEvent.change(textboxes[0], { target: { value: "建议进入报价" } });
+    fireEvent.change(textboxes[1], { target: { value: "周期风险可控" } });
+    fireEvent.change(textboxes[2], { target: { value: "采用标准测试平台" } });
+
+    fireEvent.click(screen.getByRole("button", { name: /提交评估/ }));
+
+    await waitFor(() => {
+      expect(apiMocks.presaleApi.tickets.complete).toHaveBeenCalledWith(51, {
+        completion_note: expect.stringContaining("可行性评估已完成"),
+      });
+    });
+    expect(apiMocks.presaleApi.tickets.complete.mock.calls[0][1].completion_note)
+      .toContain("建议进入报价");
+    expect(apiMocks.presaleApi.tickets.updateProgress).not.toHaveBeenCalled();
   });
 });
