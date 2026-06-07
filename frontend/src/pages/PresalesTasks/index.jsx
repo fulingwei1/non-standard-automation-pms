@@ -21,7 +21,17 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
 import { Badge } from "../../components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { presaleApi } from "../../services/api";
@@ -48,6 +58,23 @@ const getTicketItems = (response) => {
   return [];
 };
 
+const INITIAL_CREATE_FORM = {
+  title: "",
+  ticket_type: "SOLUTION_DESIGN",
+  urgency: "NORMAL",
+  customer_name: "",
+  expected_date: "",
+  description: "",
+};
+
+const createTaskTypes = [
+  { value: "REQUIREMENT_RESEARCH", label: "需求调研" },
+  { value: "TECHNICAL_EXCHANGE", label: "技术交流" },
+  { value: "SOLUTION_DESIGN", label: "方案设计" },
+  { value: "COST_ESTIMATE", label: "成本核算" },
+  { value: "TENDER_SUPPORT", label: "投标支持" },
+];
+
 export default function PresalesTasks({ embedded = false } = {}) {
   const location = useLocation();
   const initialFilters = getInitialTaskFilters(location.search);
@@ -59,6 +86,9 @@ export default function PresalesTasks({ embedded = false } = {}) {
   const [tasks, setTasks] = useState([]);
   const [_loading, setLoading] = useState(true);
   const [_error, setError] = useState(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [createForm, setCreateForm] = useState(INITIAL_CREATE_FORM);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Map backend ticket type to frontend type
   const mapTicketType = (backendType) => {
@@ -175,6 +205,53 @@ export default function PresalesTasks({ embedded = false } = {}) {
     }
   }, [selectedStatus, searchTerm]);
 
+  const updateCreateForm = (field, value) => {
+    setCreateForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const resetCreateForm = () => {
+    setCreateForm(INITIAL_CREATE_FORM);
+  };
+
+  const handleCreateTask = async (event) => {
+    event?.preventDefault();
+
+    const title = createForm.title.trim();
+    if (!title) {
+      alert("请输入任务标题");
+      return;
+    }
+
+    const payload = {
+      title,
+      ticket_type: createForm.ticket_type,
+      urgency: createForm.urgency,
+    };
+
+    const optionalFields = ["customer_name", "expected_date", "description"];
+    optionalFields.forEach((field) => {
+      const value = (createForm[field] || "").trim();
+      if (value) {
+        payload[field] = value;
+      }
+    });
+
+    try {
+      setIsCreating(true);
+      await presaleApi.tickets.create(payload);
+      setShowCreateDialog(false);
+      resetCreateForm();
+      await loadTasks();
+      alert("任务已创建");
+    } catch (err) {
+      console.error("Failed to create presale task:", err);
+      const message = err.response?.data?.detail || err.message || "未知错误";
+      alert(`创建任务失败：${message}`);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const type = params.get("type");
@@ -225,7 +302,10 @@ export default function PresalesTasks({ embedded = false } = {}) {
           description="管理技术支持请求、方案设计、投标任务"
           actions={
           <motion.div variants={fadeIn} className="flex gap-2">
-              <Button className="flex items-center gap-2">
+              <Button
+                className="flex items-center gap-2"
+                onClick={() => setShowCreateDialog(true)}
+              >
                 <Plus className="w-4 h-4" />
                 新建任务
               </Button>
@@ -374,6 +454,110 @@ export default function PresalesTasks({ embedded = false } = {}) {
         onUpdate={loadTasks} />
 
       }
+
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-xl">
+          <form onSubmit={handleCreateTask}>
+            <DialogHeader>
+              <DialogTitle>新建售前任务</DialogTitle>
+              <DialogDescription>
+                创建内部售前技术任务，提交后进入待处理列表
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="px-6 py-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="presale-task-title">任务标题</Label>
+                <Input
+                  id="presale-task-title"
+                  value={createForm.title}
+                  onChange={(event) => updateCreateForm("title", event.target.value)}
+                  placeholder="请输入任务标题"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="presale-task-type">任务类型</Label>
+                  <select
+                    id="presale-task-type"
+                    value={createForm.ticket_type}
+                    onChange={(event) => updateCreateForm("ticket_type", event.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                  >
+                    {createTaskTypes.map((type) => (
+                      <option key={type.value} value={type.value}>
+                        {type.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="presale-task-urgency">紧急程度</Label>
+                  <select
+                    id="presale-task-urgency"
+                    value={createForm.urgency}
+                    onChange={(event) => updateCreateForm("urgency", event.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="NORMAL">普通</option>
+                    <option value="URGENT">紧急</option>
+                    <option value="VERY_URGENT">非常紧急</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="presale-task-customer">客户名称</Label>
+                  <Input
+                    id="presale-task-customer"
+                    value={createForm.customer_name}
+                    onChange={(event) => updateCreateForm("customer_name", event.target.value)}
+                    placeholder="可选"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="presale-task-expected-date">期望完成日期</Label>
+                  <Input
+                    id="presale-task-expected-date"
+                    type="date"
+                    value={createForm.expected_date}
+                    onChange={(event) => updateCreateForm("expected_date", event.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="presale-task-description">任务说明</Label>
+                <Textarea
+                  id="presale-task-description"
+                  rows={4}
+                  value={createForm.description}
+                  onChange={(event) => updateCreateForm("description", event.target.value)}
+                  placeholder="补充任务背景、输入资料或交付要求"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCreateDialog(false)}
+                disabled={isCreating}
+              >
+                取消
+              </Button>
+              <Button type="submit" disabled={isCreating}>
+                {isCreating ? "创建中..." : "创建任务"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </motion.div>);
 
 }

@@ -8,6 +8,7 @@ vi.mock('../../services/api', () => ({
   presaleApi: {
     tickets: {
       list: vi.fn(),
+      create: vi.fn(),
       accept: vi.fn(),
       updateProgress: vi.fn(),
       complete: vi.fn(),
@@ -105,6 +106,14 @@ describe('PresalesTasks', () => {
     presaleApi.tickets.list.mockResolvedValue({
       data: { items: ticketItems, total: ticketItems.length },
     });
+    presaleApi.tickets.create.mockResolvedValue({
+      data: {
+        id: 99,
+        title: '客户现场技术交流',
+        ticket_type: 'TECHNICAL_EXCHANGE',
+        status: 'PENDING',
+      },
+    });
     presaleApi.tickets.accept.mockResolvedValue({ data: { success: true } });
   });
 
@@ -190,6 +199,52 @@ describe('PresalesTasks', () => {
     });
 
     expect(screen.getByText('65%')).toBeInTheDocument();
+  });
+
+  it('creates an internal presale task from the task center and refreshes the list', async () => {
+    renderPage('/sales/presales-tasks');
+
+    await screen.findByText('技术方案编写');
+
+    fireEvent.click(screen.getByRole('button', { name: /新建任务/ }));
+
+    expect(screen.getByText('新建售前任务')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('任务标题'), {
+      target: { value: '客户现场技术交流' },
+    });
+    fireEvent.change(screen.getByLabelText('任务类型'), {
+      target: { value: 'TECHNICAL_EXCHANGE' },
+    });
+    fireEvent.change(screen.getByLabelText('紧急程度'), {
+      target: { value: 'URGENT' },
+    });
+    fireEvent.change(screen.getByLabelText('客户名称'), {
+      target: { value: '华东制造' },
+    });
+    fireEvent.change(screen.getByLabelText('期望完成日期'), {
+      target: { value: '2026-06-20' },
+    });
+    fireEvent.change(screen.getByLabelText('任务说明'), {
+      target: { value: '现场澄清节拍和验收标准' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '创建任务' }));
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.create).toHaveBeenCalledWith({
+        title: '客户现场技术交流',
+        ticket_type: 'TECHNICAL_EXCHANGE',
+        urgency: 'URGENT',
+        customer_name: '华东制造',
+        expected_date: '2026-06-20',
+        description: '现场澄清节拍和验收标准',
+      });
+    });
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.list).toHaveBeenCalledTimes(2);
+    });
   });
 
   it('requests backend status filters using current ticket API parameters', async () => {
