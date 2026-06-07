@@ -59,6 +59,8 @@ export default function TaskDetailPanel({ task, onClose, onUpdate, onDeliverable
 
   const priorityStyle = getPriorityStyle(task.priority);
   const statusConfig = (taskStatuses || []).find((s) => s.id === task.status);
+  const canWorkOnTask = task.status === "in_progress" || task.status === "reviewing";
+  const canUpdateProgress = task.status === "in_progress";
 
   // 接单
   const handleAccept = async () => {
@@ -331,7 +333,7 @@ export default function TaskDetailPanel({ task, onClose, onUpdate, onDeliverable
         </div>
         }
 
-        {(task.status === "in_progress" || task.status === "reviewing") &&
+        {canWorkOnTask &&
         <div className="p-4 border-t border-white/5 space-y-3">
             <div className="space-y-2">
               <label
@@ -387,6 +389,7 @@ export default function TaskDetailPanel({ task, onClose, onUpdate, onDeliverable
                 {isSubmittingDeliverable ? "提交中..." : "提交交付物"}
               </Button>
             </div>
+            {canUpdateProgress &&
             <div className="space-y-2">
               <label className="text-sm text-slate-400">更新进度</label>
               <div className="flex items-center gap-3">
@@ -418,6 +421,7 @@ export default function TaskDetailPanel({ task, onClose, onUpdate, onDeliverable
                 {isUpdating ? "更新中..." : "更新进度"}
               </Button>
             </div>
+            }
             <div className="space-y-2">
               <label className="text-sm text-slate-400">实际工时（小时）</label>
               <Input

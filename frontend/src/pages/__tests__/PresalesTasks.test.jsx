@@ -182,6 +182,35 @@ describe('PresalesTasks', () => {
     expect(screen.getByText('某大型企业')).toBeInTheDocument();
   });
 
+  it('does not show progress update controls for backend REVIEW tickets', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 32,
+            title: '方案评审申请 - 视觉检测项目',
+            ticket_type: 'SOLUTION_REVIEW',
+            status: 'REVIEW',
+            urgency: 'NORMAL',
+            customer_name: '苏州电子',
+            applicant_name: '吴敏',
+            expected_date: '2026-06-22',
+            description: '审核方案边界和成本测算',
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage('/sales/presales-tasks?type=review&status=reviewing');
+
+    await screen.findByText('方案评审申请 - 视觉检测项目');
+    fireEvent.click(screen.getByText('方案评审申请 - 视觉检测项目'));
+
+    expect(screen.queryByRole('button', { name: /更新进度/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /完成工单/ })).toBeInTheDocument();
+  });
+
   it('uses backend progress_percent when rendering in-progress tickets', async () => {
     presaleApi.tickets.list.mockResolvedValue({
       data: {
