@@ -146,6 +146,20 @@ function getAssessmentSourceParams(sourceType, sourceId, params = {}) {
   };
 }
 
+function normalizeEvaluationPayload(data = {}) {
+  if ("requirement_data" in data || "enable_ai" in data) {
+    return {
+      ...data,
+      enable_ai: Boolean(data.enable_ai),
+    };
+  }
+
+  return {
+    requirement_data: data,
+    enable_ai: false,
+  };
+}
+
 export const technicalAssessmentApi = {
   // 申请技术评估
   applyForLead: (leadId, data) =>
@@ -155,7 +169,7 @@ export const technicalAssessmentApi = {
 
   // 执行技术评估
   evaluate: (assessmentId, data) =>
-    api.post(`/sales/assessments/${assessmentId}/evaluate`, data),
+    api.post(`/sales/assessments/${assessmentId}/evaluate`, normalizeEvaluationPayload(data)),
 
   // 获取评估列表
   getLeadAssessments: (leadId) => api.get(`/sales/leads/${leadId}/assessments`),

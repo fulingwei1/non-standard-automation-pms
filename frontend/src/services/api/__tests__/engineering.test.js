@@ -216,9 +216,15 @@ describe('Engineering API', () => {
 
     it('evaluate() - 应该执行技术评估', async () => {
       const evaluation = { feasibility_score: 85, risk_level: 'LOW' };
-      mock.onPost('/api/v1/sales/assessments/1/evaluate').reply(200, {
-        success: true,
-        data: { ...evaluation },
+      mock.onPost('/api/v1/sales/assessments/1/evaluate').reply((config) => {
+        expect(JSON.parse(config.data)).toEqual({
+          requirement_data: evaluation,
+          enable_ai: false,
+        });
+        return [200, {
+          success: true,
+          data: { id: 1, status: 'COMPLETED' },
+        }];
       });
 
       const response = await technicalAssessmentApi.evaluate(1, evaluation);
