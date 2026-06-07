@@ -24,6 +24,7 @@ vi.mock("../../services/api", () => ({
     solutions: {
       get: vi.fn(),
       list: vi.fn(),
+      create: vi.fn(),
       update: vi.fn(),
     },
   },
@@ -105,6 +106,12 @@ describe("PresalesCostEstimation", () => {
         suggested_price: 1680000,
       },
     });
+    presaleApi.solutions.create.mockResolvedValue({
+      data: {
+        id: 89,
+        name: "线索成本估算方案",
+      },
+    });
     presaleApi.solutions.update.mockResolvedValue({ data: { id: 88 } });
   });
 
@@ -163,6 +170,47 @@ describe("PresalesCostEstimation", () => {
         },
       });
     });
+    expect(toast.success).toHaveBeenCalledWith("成本估算草稿已保存");
+  });
+
+  it("creates a linked solution when saving cost estimation without an existing solution", async () => {
+    presaleApi.solutions.list.mockResolvedValueOnce({
+      data: {
+        items: [],
+        total: 0,
+      },
+    });
+
+    renderPage(
+      "/presales/technical-solutions?tab=cost&type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42&name=%E7%BA%BF%E7%B4%A2%E6%88%90%E6%9C%AC%E4%BC%B0%E7%AE%97%E6%96%B9%E6%A1%88",
+    );
+
+    expect(await screen.findByText("当前方案：线索成本估算方案")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "保存成本" }));
+
+    await waitFor(() => {
+      expect(presaleApi.solutions.create).toHaveBeenCalledWith({
+        name: "线索成本估算方案",
+        solution_type: "CUSTOM",
+        lead_id: 2026,
+        opportunity_id: 2,
+        ticket_id: 501,
+        project_id: 42,
+        estimated_cost: 120000,
+        suggested_price: 168000,
+        cost_breakdown: {
+          mechanical: 55000,
+          electrical: 32000,
+          software: 18000,
+          standard: 12000,
+          labor: 26000,
+          other: 7000,
+          notes: "含夹具、PLC、电控和调试人工",
+        },
+      });
+    });
+    expect(presaleApi.solutions.update).not.toHaveBeenCalled();
     expect(toast.success).toHaveBeenCalledWith("成本估算草稿已保存");
   });
 

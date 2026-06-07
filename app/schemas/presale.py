@@ -180,6 +180,7 @@ class SolutionCreate(BaseModel):
     technical_spec: Optional[str] = Field(None, description="技术规格")
     estimated_cost: Optional[Decimal] = Field(None, description="预估成本")
     suggested_price: Optional[Decimal] = Field(None, description="建议报价")
+    cost_breakdown: Optional[Dict[str, Any]] = Field(None, description="成本明细")
     estimated_hours: Optional[int] = Field(None, description="预估工时")
     estimated_duration: Optional[int] = Field(None, description="预估周期")
 

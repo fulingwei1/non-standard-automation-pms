@@ -165,6 +165,7 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
       return {
         id: explicitSolutionId || linkedSolution?.id || undefined,
         ticketId: contextTicketIdNumber || undefined,
+        leadId: contextLeadIdNumber || undefined,
         opportunityId: contextOpportunityIdNumber || undefined,
         projectId: contextProjectIdNumber || undefined,
         name: searchParams.get("name") || linkedSolution?.name || "售前技术方案",
@@ -172,6 +173,7 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
       };
     },
     [
+      contextLeadIdNumber,
       contextOpportunityIdNumber,
       contextProjectIdNumber,
       contextTicketIdNumber,
@@ -181,10 +183,36 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
     ],
   );
 
+  const buildSolutionPayload = (costData) => {
+    const payload = {
+      name: bidding.name,
+      solution_type: "CUSTOM",
+      ...costData,
+    };
+
+    if (bidding.leadId) {
+      payload.lead_id = bidding.leadId;
+    }
+    if (bidding.opportunityId) {
+      payload.opportunity_id = bidding.opportunityId;
+    }
+    if (bidding.ticketId) {
+      payload.ticket_id = bidding.ticketId;
+    }
+    if (bidding.projectId) {
+      payload.project_id = bidding.projectId;
+    }
+
+    return payload;
+  };
+
   const handleSave = async (result) => {
     try {
       if (bidding.id && result?.costData) {
         await presaleApi.solutions.update(Number(bidding.id), result.costData);
+      } else if (result?.costData) {
+        const response = await presaleApi.solutions.create(buildSolutionPayload(result.costData));
+        setLinkedSolution(extractSolutionDetail(response));
       }
 
       if (result?.status === "submitted") {

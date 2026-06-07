@@ -298,6 +298,7 @@ def create_solution(
         technical_spec=solution_in.technical_spec,
         estimated_cost=solution_in.estimated_cost,
         suggested_price=solution_in.suggested_price,
+        cost_breakdown=solution_in.cost_breakdown,
         estimated_hours=solution_in.estimated_hours,
         estimated_duration=solution_in.estimated_duration,
         status="DRAFT",

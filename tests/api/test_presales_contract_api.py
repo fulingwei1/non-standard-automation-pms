@@ -1711,6 +1711,77 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(Lead).filter(Lead.id == lead.id).delete()
             db_session.commit()
 
+    def test_solution_created_from_cost_estimation_preserves_context_and_breakdown(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        lead = Lead(
+            lead_code=f"LD-COST-{unique}",
+            customer_name=f"线索成本客户-{unique}",
+            source="展会",
+            industry="电子制造",
+            owner_id=admin_user.id,
+        )
+        db_session.add(lead)
+        db_session.commit()
+
+        cost_breakdown = {
+            "mechanical": 55000,
+            "electrical": 32000,
+            "software": 18000,
+            "standard": 12000,
+            "labor": 26000,
+            "other": 7000,
+            "notes": "直接成本估算生成",
+        }
+
+        created_solution = client.post(
+            f"{prefix}/presale/proposals/solutions",
+            json={
+                "name": f"线索直接成本估算-{unique}",
+                "solution_type": "CUSTOM",
+                "lead_id": lead.id,
+                "estimated_cost": 150000,
+                "suggested_price": 210000,
+                "cost_breakdown": cost_breakdown,
+            },
+            headers=headers,
+        )
+        assert created_solution.status_code == 201, created_solution.text
+        solution = created_solution.json()
+        ticket_id = solution.get("ticket_id")
+
+        try:
+            assert solution["lead_id"] == lead.id
+            assert solution["ticket_id"] is not None
+            assert solution["estimated_cost"] == 150000.0
+            assert solution["suggested_price"] == 210000.0
+            assert solution["cost_breakdown"] == cost_breakdown
+
+            db_session.expire_all()
+            stored = db_session.get(PresaleSolution, solution["id"])
+            assert stored is not None
+            assert stored.cost_breakdown == cost_breakdown
+        finally:
+            db_session.query(PresaleSolution).filter(
+                PresaleSolution.id == solution["id"]
+            ).delete(synchronize_session=False)
+            if ticket_id:
+                db_session.query(PresaleSupportTicket).filter(
+                    PresaleSupportTicket.id == ticket_id
+                ).delete(synchronize_session=False)
+            db_session.query(Lead).filter(Lead.id == lead.id).delete()
+            db_session.commit()
+
     def test_solution_update_preserves_cost_breakdown(
         self, client: TestClient, db_session: Session, admin_token: str
     ):
