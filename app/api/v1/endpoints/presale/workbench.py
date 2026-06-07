@@ -229,6 +229,7 @@ def _costing_payload(solutions: list[PresaleSolution]) -> dict[str, Any]:
             "solution_name": baseline_solution.name,
             "estimated_cost": _json_value(estimated_cost),
             "suggested_price": _json_value(suggested_price),
+            "cost_breakdown": _json_value(baseline_solution.cost_breakdown),
             "gross_margin_rate": gross_margin_rate,
         }
     }

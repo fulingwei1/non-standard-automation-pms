@@ -356,8 +356,18 @@ describe("PresalesWorkstation", () => {
       expect.objectContaining({
         name: "线索阶段成本核算",
         ticket_id: 62,
+        lead_id: 2026,
         customer_id: 8,
         estimated_cost: 90000,
+        cost_breakdown: {
+          mechanical: 90000,
+          electrical: 0,
+          software: 0,
+          standard: 0,
+          labor: 0,
+          other: 0,
+          notes: "",
+        },
       }),
     );
     expect(apiMocks.presaleApi.solutions.create.mock.calls[0][0])

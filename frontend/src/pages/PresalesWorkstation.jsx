@@ -33,6 +33,39 @@ import { getTypeColor } from "../components/presales/workstation/utils";
 const YUAN_TO_CENTS = 10000;
 const SOLUTION_CENTER_PATH = "/presales/technical-solutions?tab=solutions";
 
+function toYuanAmount(amount) {
+  const parsed = Number(amount);
+  if (!Number.isFinite(parsed)) {
+    return 0;
+  }
+  return Math.round(parsed * YUAN_TO_CENTS);
+}
+
+function buildCostBreakdown(costResult) {
+  if (costResult?.costData?.cost_breakdown) {
+    return costResult.costData.cost_breakdown;
+  }
+
+  const costs = costResult?.costs || {};
+  return {
+    mechanical: toYuanAmount(costs.mechanical?.amount),
+    electrical: toYuanAmount(costs.electrical?.amount),
+    software: toYuanAmount(costs.software?.amount),
+    standard: toYuanAmount(costs.standard?.amount),
+    labor: toYuanAmount(costs.labor?.amount),
+    other: toYuanAmount(costs.other?.amount),
+    notes: costResult?.notes || "",
+  };
+}
+
+function buildCostSolutionFields(costResult) {
+  return {
+    estimated_cost: toYuanAmount(costResult?.totalAmount),
+    suggested_price: toYuanAmount(costResult?.suggestedPrice),
+    cost_breakdown: buildCostBreakdown(costResult),
+  };
+}
+
 const statsData = [
   {
     id: 1,
@@ -488,10 +521,10 @@ export default function PresalesWorkstation() {
 
   const handleCostSave = async (costData) => {
     try {
+      const costSolutionFields = buildCostSolutionFields(costData);
       if (selectedCostTask?.solutionId) {
         await presaleApi.solutions.update(selectedCostTask.solutionId, {
-          estimated_cost: costData.totalAmount * YUAN_TO_CENTS,
-          suggested_price: costData.suggestedPrice * YUAN_TO_CENTS
+          ...costSolutionFields
         });
       } else if (selectedCostTask?.ticketId) {
         const solutionsResponse = await presaleApi.solutions.list({
@@ -503,8 +536,7 @@ export default function PresalesWorkstation() {
 
         if (solutions.length > 0) {
           await presaleApi.solutions.update(solutions[0].id, {
-            estimated_cost: costData.totalAmount * YUAN_TO_CENTS,
-            suggested_price: costData.suggestedPrice * YUAN_TO_CENTS
+            ...costSolutionFields
           });
         } else {
           const ticketResponse = await presaleApi.tickets.get(
@@ -516,12 +548,14 @@ export default function PresalesWorkstation() {
           const solutionPayload = {
             name: selectedCostTask.title,
             ticket_id: selectedCostTask.ticketId,
-            estimated_cost: costData.totalAmount * YUAN_TO_CENTS,
-            suggested_price: costData.suggestedPrice * YUAN_TO_CENTS
+            ...costSolutionFields
           };
 
           if (ticket.customer_id != null && ticket.customer_id !== "") {
             solutionPayload.customer_id = ticket.customer_id;
+          }
+          if (ticket.lead_id != null && ticket.lead_id !== "") {
+            solutionPayload.lead_id = ticket.lead_id;
           }
           if (ticket.opportunity_id != null && ticket.opportunity_id !== "") {
             solutionPayload.opportunity_id = ticket.opportunity_id;

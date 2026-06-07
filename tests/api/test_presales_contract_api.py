@@ -425,6 +425,15 @@ class TestPresalesFrontendContractBehavior:
             opportunity_id=opportunity.id,
             estimated_cost=Decimal("260000"),
             suggested_price=Decimal("420000"),
+            cost_breakdown={
+                "mechanical": 120000,
+                "electrical": 80000,
+                "software": 40000,
+                "standard": 15000,
+                "labor": 5000,
+                "other": 0,
+                "notes": "项目管理成本基线",
+            },
             author_id=admin_user.id,
             author_name=admin_user.real_name or admin_user.username,
             status="APPROVED",
@@ -485,6 +494,15 @@ class TestPresalesFrontendContractBehavior:
             assert data["solutions"]["items"][0]["id"] == solution.id
             assert data["costing"]["baseline"]["estimated_cost"] == 260000.0
             assert data["costing"]["baseline"]["suggested_price"] == 420000.0
+            assert data["costing"]["baseline"]["cost_breakdown"] == {
+                "mechanical": 120000,
+                "electrical": 80000,
+                "software": 40000,
+                "standard": 15000,
+                "labor": 5000,
+                "other": 0,
+                "notes": "项目管理成本基线",
+            }
             assert data["costing"]["baseline"]["gross_margin_rate"] == pytest.approx(0.380952, rel=1e-4)
             assert data["quotes"]["items"][0]["quote_code"] == quote.quote_code
             assert data["quotes"]["items"][0]["current_version"]["total_price"] == 420000.0
