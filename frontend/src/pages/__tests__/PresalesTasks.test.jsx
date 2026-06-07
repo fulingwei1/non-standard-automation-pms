@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import PresalesTasks from '../PresalesTasks';
 import { presaleApi } from '../../services/api';
 
@@ -71,6 +71,7 @@ const ticketItems = [
     actual_hours: 3,
   },
 ];
+const navigateSpy = vi.fn();
 
 function toLocation(initialEntry) {
   if (typeof initialEntry === 'string') {
@@ -102,6 +103,7 @@ function renderPage(initialEntry = '/presales-tasks', props = {}) {
 describe('PresalesTasks', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useNavigate.mockReturnValue(navigateSpy);
     useLocation.mockReturnValue(toLocation('/presales-tasks'));
     vi.spyOn(window, 'alert').mockImplementation(() => {});
     presaleApi.tickets.list.mockResolvedValue({
@@ -403,6 +405,39 @@ describe('PresalesTasks', () => {
     fireEvent.click(screen.getByText('大型线体方案评审'));
 
     expect(screen.getByText('PM提前介入')).toBeInTheDocument();
+  });
+
+  it('opens the linked project workspace from a project presale task detail', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 91,
+            title: 'FCT售前技术支持',
+            ticket_type: 'TECHNICAL_SUPPORT',
+            status: 'IN_PROGRESS',
+            urgency: 'HIGH',
+            customer_name: '华南电子',
+            applicant_name: '张销售',
+            description: '交接售前方案、成本边界和验收口径',
+            opportunity_id: 2,
+            opportunity_name: '电源测试线商机',
+            project_id: 42,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage('/presales/technical-solutions?tab=reviews&type=support&ticket_id=91&opportunity_id=2&project_id=42');
+
+    await screen.findByText('FCT售前技术支持');
+    fireEvent.click(screen.getByText('FCT售前技术支持'));
+    fireEvent.click(screen.getByRole('button', { name: /打开项目工作区/ }));
+
+    expect(navigateSpy).toHaveBeenCalledWith(
+      '/projects/42/workspace?ticket_id=91&opportunity_id=2',
+    );
   });
 
   it('creates an internal presale task from the task center and refreshes the list', async () => {

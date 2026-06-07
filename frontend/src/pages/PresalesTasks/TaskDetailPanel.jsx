@@ -3,6 +3,7 @@
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   Clock,
   Users,
@@ -45,7 +46,27 @@ function getDeliverableKey(deliverable, index) {
   return `${getDeliverableLabel(deliverable, index)}-${index}`;
 }
 
-export default function TaskDetailPanel({ task, onClose, onUpdate, onDeliverableCreated }) {
+function appendContextParam(params, key, value) {
+  if (value !== undefined && value !== null && value !== "") {
+    params.set(key, String(value));
+  }
+}
+
+function buildProjectWorkspacePath(task) {
+  const params = new URLSearchParams();
+  appendContextParam(params, "ticket_id", task.ticketId);
+  appendContextParam(params, "opportunity_id", task.opportunityId);
+  const query = params.toString();
+  return `/projects/${task.projectId}/workspace${query ? `?${query}` : ""}`;
+}
+
+export default function TaskDetailPanel({
+  task,
+  onClose,
+  onUpdate,
+  onDeliverableCreated,
+}) {
+  const navigate = useNavigate();
   const [progress, setProgress] = useState(task?.progress || 0);
   const [progressNote, setProgressNote] = useState("");
   const [actualHours, setActualHours] = useState(task?.actualHours || 0);
@@ -242,6 +263,18 @@ export default function TaskDetailPanel({ task, onClose, onUpdate, onDeliverable
                 </p>
               )}
             </div>
+          )}
+
+          {task.projectId && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => navigate(buildProjectWorkspacePath(task))}
+            >
+              <Briefcase className="w-4 h-4 mr-2" />
+              打开项目工作区
+            </Button>
           )}
 
           {/* Basic Info */}

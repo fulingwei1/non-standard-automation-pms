@@ -18,11 +18,7 @@ export default mergeConfig(
       exclude: [...configDefaults.exclude, "e2e/**"],
       // 限制并发，避免状态冲突
       pool: "forks",
-      poolOptions: {
-        forks: {
-          singleFork: true,
-        },
-      },
+      fileParallelism: false,
       maxConcurrency: 5,
       sequence: {
         shuffle: false,
