@@ -1,0 +1,121 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  setupApiTest,
+  teardownApiTest,
+} from "../api/__tests__/_test-setup.js";
+
+describe("presaleAIService", () => {
+  let mock;
+  let api;
+  let presaleAIService;
+
+  beforeEach(async () => {
+    const setup = await setupApiTest();
+    mock = setup.mock;
+    api = setup.api;
+
+    const module = await import("../presaleAIService.js");
+    presaleAIService = module.presaleAIService;
+
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    teardownApiTest(mock);
+  });
+
+  it("uses the shared /api/v1 base URL for dashboard stats", async () => {
+    mock.onGet("/api/v1/presale/ai/dashboard/stats").reply((config) => {
+      expect(config.params).toEqual({ days: 14 });
+      return [
+        200,
+        {
+          total_requests: 8,
+          successful_requests: 7,
+          success_rate: 87.5,
+        },
+      ];
+    });
+
+    await expect(presaleAIService.getDashboardStats(14)).resolves.toMatchObject({
+      total_requests: 8,
+    });
+
+    expect(mock.history.get.map((request) => api.getUri(request))).toEqual([
+      "/api/v1/presale/ai/dashboard/stats?days=14",
+    ]);
+  });
+
+  it("posts cost estimation to the backend registered estimate-cost endpoint", async () => {
+    const input = {
+      presale_ticket_id: 501,
+      project_type: "自动化产线",
+      complexity_level: "medium",
+      hardware_items: [{ name: "PLC", unit_price: 5000, quantity: 2 }],
+    };
+
+    mock.onPost("/api/v1/presale/ai/estimate-cost").reply((config) => {
+      expect(JSON.parse(config.data)).toEqual(input);
+      return [
+        200,
+        {
+          id: 23,
+          presale_ticket_id: 501,
+          solution_id: null,
+          cost_breakdown: { total_cost: 120000 },
+        },
+      ];
+    });
+
+    await expect(presaleAIService.estimateCost(input)).resolves.toMatchObject({
+      id: 23,
+      presale_ticket_id: 501,
+    });
+
+    expect(mock.history.post.map((request) => api.getUri(request))).toEqual([
+      "/api/v1/presale/ai/estimate-cost",
+    ]);
+  });
+
+  it("uses registered integration and win-rate AI endpoints", async () => {
+    mock.onPost("/api/v1/presale/ai/workflow/start").reply((config) => {
+      expect(JSON.parse(config.data)).toEqual({
+        presale_ticket_id: 501,
+        initial_data: { source: "lead" },
+        auto_run: false,
+      });
+      return [200, [{ id: 1, status: "started" }]];
+    });
+    mock.onGet("/api/v1/presale/ai/health-check").reply(200, {
+      status: "healthy",
+    });
+    mock.onPost("/api/v1/presale/ai/predict-win-rate").reply((config) => {
+      expect(JSON.parse(config.data)).toEqual({
+        presale_ticket_id: 501,
+        ticket_data: { industry: "electronics" },
+      });
+      return [200, { presale_ticket_id: 501, win_rate_score: 76 }];
+    });
+
+    await expect(
+      presaleAIService.startWorkflow(501, { source: "lead" }, false)
+    ).resolves.toHaveLength(1);
+    await expect(presaleAIService.healthCheck()).resolves.toMatchObject({
+      status: "healthy",
+    });
+    await expect(
+      presaleAIService.predictWinRate({
+        presale_ticket_id: 501,
+        ticket_data: { industry: "electronics" },
+      })
+    ).resolves.toMatchObject({ win_rate_score: 76 });
+
+    expect(mock.history.post.map((request) => api.getUri(request))).toEqual([
+      "/api/v1/presale/ai/workflow/start",
+      "/api/v1/presale/ai/predict-win-rate",
+    ]);
+    expect(mock.history.get.map((request) => api.getUri(request))).toEqual([
+      "/api/v1/presale/ai/health-check",
+    ]);
+  });
+});

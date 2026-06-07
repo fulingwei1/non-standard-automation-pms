@@ -12,7 +12,7 @@ class PresaleAIService {
    * @param {number} days - 统计天数
    */
   async getDashboardStats(days = 30) {
-    const response = await api.get('/api/v1/presale/ai/dashboard/stats', {
+    const response = await api.get('/presale/ai/dashboard/stats', {
       params: { days },
     });
     return response.data;
@@ -25,7 +25,7 @@ class PresaleAIService {
    * @param {Object} params - 查询参数
    */
   async getUsageStats(params = {}) {
-    const response = await api.get('/api/v1/presale/ai/usage-stats', {
+    const response = await api.get('/presale/ai/usage-stats', {
       params,
     });
     return response.data;
@@ -38,7 +38,7 @@ class PresaleAIService {
    * @param {Object} feedbackData - 反馈数据
    */
   async submitFeedback(feedbackData) {
-    const response = await api.post('/api/v1/presale/ai/feedback', feedbackData);
+    const response = await api.post('/presale/ai/feedback', feedbackData);
     return response.data;
   }
 
@@ -48,7 +48,7 @@ class PresaleAIService {
    * @param {Object} params - 查询参数
    */
   async getFeedbackByFunction(aiFunction, params = {}) {
-    const response = await api.get(`/api/v1/presale/ai/feedback/${aiFunction}`, {
+    const response = await api.get(`/presale/ai/feedback/${aiFunction}`, {
       params,
     });
     return response.data;
@@ -63,7 +63,7 @@ class PresaleAIService {
    * @param {boolean} autoRun - 是否自动运行
    */
   async startWorkflow(ticketId, initialData = {}, autoRun = true) {
-    const response = await api.post('/api/v1/presale/ai/workflow/start', {
+    const response = await api.post('/presale/ai/workflow/start', {
       presale_ticket_id: ticketId,
       initial_data: initialData,
       auto_run: autoRun,
@@ -77,7 +77,7 @@ class PresaleAIService {
    */
   async getWorkflowStatus(ticketId) {
     const response = await api.get(
-      `/api/v1/presale/ai/workflow/status/${ticketId}`
+      `/presale/ai/workflow/status/${ticketId}`
     );
     return response.data;
   }
@@ -90,7 +90,7 @@ class PresaleAIService {
    */
   async batchProcess(batchRequest) {
     const response = await api.post(
-      '/api/v1/presale/ai/batch-process',
+      '/presale/ai/batch-process',
       batchRequest
     );
     return response.data;
@@ -102,7 +102,7 @@ class PresaleAIService {
    * AI服务健康检查
    */
   async healthCheck() {
-    const response = await api.get('/api/v1/presale/ai/health-check');
+    const response = await api.get('/presale/ai/health-check');
     return response.data;
   }
 
@@ -114,7 +114,7 @@ class PresaleAIService {
    * @param {Object} configData - 配置数据
    */
   async updateConfig(aiFunction, configData) {
-    const response = await api.post('/api/v1/presale/ai/config/update', configData, {
+    const response = await api.post('/presale/ai/config/update', configData, {
       params: { ai_function: aiFunction },
     });
     return response.data;
@@ -124,7 +124,7 @@ class PresaleAIService {
    * 获取所有AI配置
    */
   async getAllConfigs() {
-    const response = await api.get('/api/v1/presale/ai/config');
+    const response = await api.get('/presale/ai/config');
     return response.data;
   }
 
@@ -135,7 +135,7 @@ class PresaleAIService {
    * @param {Object} params - 查询参数
    */
   async getAuditLogs(params = {}) {
-    const response = await api.get('/api/v1/presale/ai/audit-log', {
+    const response = await api.get('/presale/ai/audit-log', {
       params,
     });
     return response.data;
@@ -149,7 +149,7 @@ class PresaleAIService {
    */
   async exportReport(exportRequest) {
     const response = await api.post(
-      '/api/v1/presale/ai/export-report',
+      '/presale/ai/export-report',
       exportRequest
     );
     return response.data;
@@ -187,7 +187,7 @@ class PresaleAIService {
    */
   async estimateCost(costData) {
     const response = await api.post(
-      '/api/v1/presale/ai/cost/estimate',
+      '/presale/ai/estimate-cost',
       costData
     );
     return response.data;
@@ -199,7 +199,7 @@ class PresaleAIService {
    */
   async predictWinRate(winRateData) {
     const response = await api.post(
-      '/api/v1/presale/ai/winrate/predict',
+      '/presale/ai/predict-win-rate',
       winRateData
     );
     return response.data;

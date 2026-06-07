@@ -120,6 +120,24 @@ class TestPresalesFrontendContractRoutes:
         missing = sorted(expected_routes - routes)
         assert not missing, f"前端声明但后端未注册的路由: {missing}"
 
+    def test_presale_ai_dashboard_and_cost_routes_exist(self, client: TestClient):
+        """售前 AI 工作台和成本估算服务应暴露前端使用的共享 /api/v1 路由。"""
+        routes = _route_map(client.app)
+        prefix = settings.API_V1_PREFIX
+
+        expected_routes = {
+            ("GET", f"{prefix}/presale/ai/dashboard/stats"),
+            ("POST", f"{prefix}/presale/ai/estimate-cost"),
+            ("GET", f"{prefix}/presale/ai/historical-accuracy"),
+            ("POST", f"{prefix}/presale/ai/update-actual-cost"),
+            ("POST", f"{prefix}/presale/ai/workflow/start"),
+            ("GET", f"{prefix}/presale/ai/health-check"),
+            ("POST", f"{prefix}/presale/ai/predict-win-rate"),
+        }
+
+        missing = sorted(expected_routes - routes)
+        assert not missing, f"售前 AI 前端依赖但后端未注册的路由: {missing}"
+
 
 class TestPresalesFrontendContractBehavior:
     """验证这几个曾经炸出 404/字段不匹配的接口现在真能用。"""
