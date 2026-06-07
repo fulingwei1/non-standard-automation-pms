@@ -337,6 +337,49 @@ describe("TechnicalParameterManagement", () => {
     });
   });
 
+  it("keeps upstream context when creating a technical parameter template", async () => {
+    const user = userEvent.setup();
+    technicalParameterApiMock.create.mockResolvedValueOnce({
+      data: {
+        id: 9,
+        name: "EOL 项目测试模板",
+        code: "EOL-PRJ-001",
+      },
+    });
+
+    const { container } = renderPage(
+      "/presales/technical-solutions?tab=parameters&type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+
+    await screen.findByText("FCT 标准测试模板");
+    await user.click(screen.getByRole("button", { name: "新增模板" }));
+
+    const textInputs = container.querySelectorAll('input[type="text"]');
+    await user.type(textInputs[1], "EOL 项目测试模板");
+    await user.type(textInputs[2], "EOL-PRJ-001");
+
+    const selects = screen.getAllByRole("combobox");
+    await user.selectOptions(selects[2], "INDUSTRIAL");
+    await user.selectOptions(selects[3], "EOL");
+
+    await user.click(screen.getByRole("button", { name: "保存" }));
+
+    expect(technicalParameterApiMock.create).toHaveBeenCalledWith({
+      name: "EOL 项目测试模板",
+      code: "EOL-PRJ-001",
+      industry: "INDUSTRIAL",
+      test_type: "EOL",
+      description: "",
+      parameters: {},
+      cost_factors: {},
+      typical_labor_hours: {},
+      lead_id: 2026,
+      opportunity_id: 2,
+      ticket_id: 501,
+      project_id: 42,
+    });
+  });
+
   it("loads template detail before editing a list item", async () => {
     const user = userEvent.setup();
     technicalParameterApiMock.list.mockResolvedValueOnce({

@@ -255,7 +255,10 @@ export default function TechnicalParameterManagement({ embedded = false } = {}) 
       if (editingTemplate) {
         await technicalParameterApi.update(editingTemplate.id, formData);
       } else {
-        await technicalParameterApi.create(formData);
+        await technicalParameterApi.create({
+          ...formData,
+          ...getTechnicalContextPayload(technicalContextFilters),
+        });
       }
       setEditModal(false);
       // 刷新列表
