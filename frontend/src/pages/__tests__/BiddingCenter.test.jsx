@@ -1,9 +1,11 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import { MemoryRouter, useSearchParams } from "react-router-dom";
+import { MemoryRouter, useNavigate, useSearchParams } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import BiddingCenter from "../BiddingCenter";
 import { presaleApi } from "../../services/api";
+
+const navigateMock = vi.hoisted(() => vi.fn());
 
 vi.mock("../../services/api", () => ({
   presaleApi: {
@@ -67,6 +69,7 @@ function renderPage(props = {}) {
 describe("BiddingCenter", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useNavigate.mockReturnValue(navigateMock);
     useSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
     presaleApi.tenders.list.mockResolvedValue({ data: { items: tenders } });
     presaleApi.tenders.create.mockResolvedValue({
@@ -210,6 +213,35 @@ describe("BiddingCenter", () => {
       });
     });
     expect(presaleApi.tenders.list).toHaveBeenCalledTimes(2);
+  });
+
+  it("opens cost estimation from a bidding card with sales support context", async () => {
+    useSearchParams.mockReturnValue([
+      new URLSearchParams("tab=bids&type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42"),
+      vi.fn(),
+    ]);
+    presaleApi.tenders.list.mockResolvedValueOnce({
+      data: {
+        items: [
+          {
+            ...tenders[0],
+            ticket_id: 501,
+            lead_id: 2026,
+            opportunity_id: 2,
+            project_id: 42,
+          },
+        ],
+      },
+    });
+
+    renderPage({ embedded: true });
+
+    fireEvent.click(await screen.findByText("智能制造系统"));
+    fireEvent.click(screen.getByRole("button", { name: "申请成本支持" }));
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      "/presales/technical-solutions?tab=cost&type=support&ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
+    );
   });
 
   it("shows backend load errors", async () => {

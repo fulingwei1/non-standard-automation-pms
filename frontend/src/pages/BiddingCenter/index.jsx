@@ -3,7 +3,7 @@
  * 管理投标项目、技术标书、竞争分析
  */
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Target,
@@ -37,13 +37,41 @@ function parseContextId(value) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
+function appendContextParam(params, key, value) {
+  if (value !== undefined && value !== null && value !== "") {
+    params.set(key, String(value));
+  }
+}
+
+function buildCostSupportUrl(bidding, contextType) {
+  const params = new URLSearchParams();
+  params.set("tab", "cost");
+  if (
+    contextType ||
+    bidding?.ticketId ||
+    bidding?.leadId ||
+    bidding?.opportunityId ||
+    bidding?.projectId
+  ) {
+    params.set("type", contextType || "support");
+  }
+  appendContextParam(params, "ticket_id", bidding?.ticketId);
+  appendContextParam(params, "lead_id", bidding?.leadId);
+  appendContextParam(params, "opportunity_id", bidding?.opportunityId);
+  appendContextParam(params, "project_id", bidding?.projectId);
+
+  return `/presales/technical-solutions?${params.toString()}`;
+}
+
 const INITIAL_TENDER_FORM = {
   tender_name: "",
   customer_name: "",
 };
 
 export default function BiddingCenter({ embedded = false } = {}) {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const contextType = searchParams.get("type") || "";
   const contextLeadId = searchParams.get("lead_id") || "";
   const contextTicketId = searchParams.get("ticket_id") || "";
   const contextOpportunityId = searchParams.get("opportunity_id") || "";
@@ -105,7 +133,9 @@ export default function BiddingCenter({ embedded = false } = {}) {
         return {
           id: tender.id,
           ticketId: tender.ticket_id,
+          leadId: tender.lead_id,
           opportunityId: tender.opportunity_id,
+          projectId: tender.project_id,
           code: tender.tender_no || `BID-${tender.id}`,
           name: tender.tender_name || tender.project_name || "",
           customer: tender.customer_name || "",
@@ -211,6 +241,13 @@ export default function BiddingCenter({ embedded = false } = {}) {
       setCreating(false);
     }
   };
+
+  const handleRequestCostSupport = useCallback(
+    (bidding) => {
+      navigate(buildCostSupportUrl(bidding, contextType));
+    },
+    [contextType, navigate],
+  );
 
   // 筛选投标
   const filteredBiddings = (biddings || []).filter((bidding) => {
@@ -325,6 +362,7 @@ export default function BiddingCenter({ embedded = false } = {}) {
       {selectedBidding &&
       <BiddingDetailPanel
         bidding={selectedBidding}
+        onRequestCostSupport={handleRequestCostSupport}
         onClose={() => setSelectedBidding(null)} />
 
       }

@@ -56,7 +56,9 @@ function appendContextParam(params, key, value) {
 function buildProjectWorkspacePath(task) {
   const params = new URLSearchParams();
   appendContextParam(params, "ticket_id", task.ticketId);
+  appendContextParam(params, "lead_id", task.leadId);
   appendContextParam(params, "opportunity_id", task.opportunityId);
+  appendContextParam(params, "project_id", task.projectId);
   const query = params.toString();
   return `/projects/${task.projectId}/workspace${query ? `?${query}` : ""}`;
 }
@@ -74,6 +76,10 @@ function buildTechnicalAssessmentPath(task) {
   const params = new URLSearchParams();
   appendContextParam(params, "assessment_id", task.currentAssessmentId);
   appendContextParam(params, "ticket_id", task.ticketId);
+  if (task.opportunityId) {
+    appendContextParam(params, "lead_id", task.leadId);
+  }
+  appendContextParam(params, "project_id", task.projectId);
   const query = params.toString();
   return `${path}${query ? `?${query}` : ""}`;
 }

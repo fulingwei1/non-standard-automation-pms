@@ -480,6 +480,7 @@ describe('PresalesTasks', () => {
             customer_name: '华南电子',
             applicant_name: '张销售',
             description: '交接售前方案、成本边界和验收口径',
+            lead_id: 2026,
             opportunity_id: 2,
             opportunity_name: '电源测试线商机',
             project_id: 42,
@@ -496,7 +497,7 @@ describe('PresalesTasks', () => {
     fireEvent.click(screen.getByRole('button', { name: /打开项目工作区/ }));
 
     expect(navigateSpy).toHaveBeenCalledWith(
-      '/projects/42/workspace?ticket_id=91&opportunity_id=2',
+      '/projects/42/workspace?ticket_id=91&lead_id=2026&opportunity_id=2&project_id=42',
     );
   });
 
@@ -549,6 +550,7 @@ describe('PresalesTasks', () => {
             lead_id: 21,
             opportunity_id: 2,
             opportunity_name: '视觉检测商机',
+            project_id: 42,
             assessment_status: 'COMPLETED',
             current_assessment_id: 702,
           },
@@ -566,7 +568,7 @@ describe('PresalesTasks', () => {
     fireEvent.click(screen.getByRole('button', { name: /打开技术评估/ }));
 
     expect(navigateSpy).toHaveBeenCalledWith(
-      '/sales/assessments/opportunity/2?assessment_id=702&ticket_id=93',
+      '/sales/assessments/opportunity/2?assessment_id=702&ticket_id=93&lead_id=21&project_id=42',
     );
   });
 

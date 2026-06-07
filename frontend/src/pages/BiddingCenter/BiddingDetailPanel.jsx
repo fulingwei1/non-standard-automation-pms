@@ -26,7 +26,7 @@ import { Progress } from "../../components/ui/progress";
 import { cn } from "../../lib/utils";
 import { getStageStyle, getStageName } from "./constants";
 
-export function BiddingDetailPanel({ bidding, onClose }) {
+export function BiddingDetailPanel({ bidding, onClose, onRequestCostSupport }) {
   if (!bidding) {return null;}
 
   return (
@@ -156,22 +156,7 @@ export function BiddingDetailPanel({ bidding, onClose }) {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => {
-                  // 申请成本支持
-                  const _updatedBidding = {
-                    ...bidding,
-                    costSupport: {
-                      status: "requested",
-                      requestedAt: new Date().toISOString().split("T")[0],
-                      requestedBy: "当前用户",
-                      estimatedCost: null,
-                      submittedAt: null,
-                      submittedBy: null
-                    }
-                  };
-                  // 这里应该调用API更新
-                  alert("成本支持申请已提交，售前技术工程师将尽快处理");
-                }}>
+                onClick={() => onRequestCostSupport?.(bidding)}>
 
                   <MessageSquare className="w-4 h-4 mr-2" />
                   申请成本支持
