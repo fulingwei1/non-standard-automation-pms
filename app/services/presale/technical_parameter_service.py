@@ -86,7 +86,7 @@ class TechnicalParameterService:
 
         # 允许更新的字段
         allowed_fields = {
-            "name", "description", "parameters", "cost_factors",
+            "name", "industry", "test_type", "description", "parameters", "cost_factors",
             "typical_labor_hours", "reference_docs", "sample_images", "is_active"
         }
 

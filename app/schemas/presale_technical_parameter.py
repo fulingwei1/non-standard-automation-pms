@@ -69,6 +69,8 @@ class TechnicalParameterTemplateUpdate(BaseModel):
     """更新技术参数模板"""
 
     name: Optional[str] = Field(None, min_length=1, max_length=200, description="模板名称")
+    industry: Optional[str] = Field(None, description="行业分类")
+    test_type: Optional[str] = Field(None, description="测试类型")
     description: Optional[str] = Field(None, description="模板描述")
     parameters: Optional[Dict[str, Any]] = Field(None, description="技术参数模板")
     cost_factors: Optional[Dict[str, Any]] = Field(None, description="成本估算因子")

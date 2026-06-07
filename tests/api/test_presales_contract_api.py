@@ -340,9 +340,26 @@ class TestPresalesFrontendContractBehavior:
         template = created.json()
         template_id = template["id"]
 
+        updated = client.put(
+            f"{prefix}/presale/technical-parameters/templates/{template_id}",
+            json={
+                "name": "FCT 标准测试模板-编辑后",
+                "industry": "AUTOMOTIVE",
+                "test_type": "EOL",
+                "description": "前端编辑表单会提交完整分类字段",
+            },
+            headers=headers,
+        )
+        assert updated.status_code == 200, updated.text
+        updated_payload = updated.json()
+        assert updated_payload["name"] == "FCT 标准测试模板-编辑后"
+        assert updated_payload["industry"] == "AUTOMOTIVE"
+        assert updated_payload["test_type"] == "EOL"
+        assert updated_payload["description"] == "前端编辑表单会提交完整分类字段"
+
         listed = client.get(
             f"{prefix}/presale/technical-parameters/templates",
-            params={"industry": "CONSUMER", "test_type": "FCT"},
+            params={"industry": "AUTOMOTIVE", "test_type": "EOL"},
             headers=headers,
         )
         assert listed.status_code == 200, listed.text
@@ -350,7 +367,7 @@ class TestPresalesFrontendContractBehavior:
 
         matched = client.get(
             f"{prefix}/presale/technical-parameters/templates/match",
-            params={"industry": "CONSUMER", "test_type": "FCT"},
+            params={"industry": "AUTOMOTIVE", "test_type": "EOL"},
             headers=headers,
         )
         assert matched.status_code == 200, matched.text
