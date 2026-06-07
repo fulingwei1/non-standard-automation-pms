@@ -94,8 +94,8 @@ def _ticket_payload(ticket: PresaleSupportTicket) -> dict[str, Any]:
     return _dump_response(build_ticket_response(ticket))
 
 
-def _solution_payload(solution: PresaleSolution) -> dict[str, Any]:
-    return _dump_response(build_solution_response(solution))
+def _solution_payload(db: Session, solution: PresaleSolution) -> dict[str, Any]:
+    return _dump_response(build_solution_response(db, solution))
 
 
 def _tender_payload(tender: PresaleTenderRecord) -> dict[str, Any]:
@@ -688,7 +688,7 @@ def get_workbench_overview(
                 ticket_page_size,
             ),
             "solutions": _page_payload(
-                [_solution_payload(solution) for solution in solutions],
+                [_solution_payload(db, solution) for solution in solutions],
                 solution_total,
                 solution_page,
                 solution_page_size,
@@ -895,7 +895,7 @@ def get_workbench_context(
                 "technical": _active_technical_templates(db, page=1, page_size=20),
             },
             "solutions": {
-                "items": [_solution_payload(solution) for solution in solution_items],
+                "items": [_solution_payload(db, solution) for solution in solution_items],
                 "total": solution_total,
             },
             "costing": _costing_payload(solution_items),

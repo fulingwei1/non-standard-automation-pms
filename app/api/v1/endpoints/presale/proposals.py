@@ -26,6 +26,7 @@ from app.models.presale import (
     PresaleSolution,
     PresaleSolutionCost,
 )
+from app.models.project import Customer
 from app.models.sales import Lead, Opportunity, TechnicalAssessment
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
@@ -53,7 +54,62 @@ router = APIRouter(prefix="/proposals", tags=["proposals"])
 # ==================== 技术方案管理 ====================
 
 
-def build_solution_response(solution: PresaleSolution) -> SolutionResponse:
+def get_user_display_name(user: Optional[User]) -> Optional[str]:
+    if not user:
+        return None
+    return user.real_name or user.username
+
+
+def resolve_solution_response_context(
+    db: Session,
+    solution: PresaleSolution,
+) -> dict[str, Any]:
+    ticket = solution.ticket
+    customer_id = solution.customer_id or (ticket.customer_id if ticket else None)
+    customer_name = ticket.customer_name if ticket else None
+    opportunity_id = solution.opportunity_id or (ticket.opportunity_id if ticket else None)
+    opportunity_name = None
+    sales_person_id = None
+    sales_person_name = None
+
+    if opportunity_id:
+        opportunity = db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
+        if opportunity:
+            opportunity_name = opportunity.opp_name
+            customer_id = customer_id or opportunity.customer_id
+            if opportunity.customer:
+                customer_name = customer_name or opportunity.customer.customer_name
+            sales_person_id = opportunity.owner_id
+            sales_person_name = get_user_display_name(opportunity.owner)
+
+    if customer_id and not customer_name:
+        customer = db.query(Customer).filter(Customer.id == customer_id).first()
+        if customer:
+            customer_name = customer.customer_name
+
+    if ticket and not sales_person_name:
+        sales_person_id = ticket.applicant_id
+        sales_person_name = ticket.applicant_name
+
+    reviewer_name = None
+    if solution.reviewer_id:
+        reviewer = db.query(User).filter(User.id == solution.reviewer_id).first()
+        reviewer_name = get_user_display_name(reviewer)
+
+    return {
+        "customer_id": customer_id,
+        "customer_name": customer_name,
+        "opportunity_id": opportunity_id,
+        "opportunity_name": opportunity_name,
+        "sales_person_id": sales_person_id,
+        "sales_person_name": sales_person_name,
+        "reviewer_name": reviewer_name,
+    }
+
+
+def build_solution_response(db: Session, solution: PresaleSolution) -> SolutionResponse:
+    context = resolve_solution_response_context(db, solution)
+
     return SolutionResponse(
         id=solution.id,
         solution_no=solution.solution_no,
@@ -65,8 +121,12 @@ def build_solution_response(solution: PresaleSolution) -> SolutionResponse:
         ticket_id=solution.ticket_id,
         lead_id=solution.ticket.lead_id if solution.ticket else None,
         project_id=solution.project_id,
-        customer_id=solution.customer_id,
-        opportunity_id=solution.opportunity_id,
+        customer_id=context["customer_id"],
+        customer_name=context["customer_name"],
+        opportunity_id=context["opportunity_id"],
+        opportunity_name=context["opportunity_name"],
+        sales_person_id=context["sales_person_id"],
+        sales_person_name=context["sales_person_name"],
         requirement_summary=solution.requirement_summary,
         solution_overview=solution.solution_overview,
         technical_spec=solution.technical_spec,
@@ -79,6 +139,7 @@ def build_solution_response(solution: PresaleSolution) -> SolutionResponse:
         version=solution.version,
         parent_id=solution.parent_id,
         reviewer_id=solution.reviewer_id,
+        reviewer_name=context["reviewer_name"],
         review_time=solution.review_time,
         review_status=solution.review_status,
         review_comment=solution.review_comment,
@@ -256,7 +317,7 @@ def read_solutions(
         query.order_by(desc(PresaleSolution.created_at)), pagination.offset, pagination.limit
     ).all()
 
-    items = [build_solution_response(solution) for solution in solutions]
+    items = [build_solution_response(db, solution) for solution in solutions]
 
     return pagination.to_response(items, total)
 
@@ -309,7 +370,7 @@ def create_solution(
 
     save_obj(db, solution)
 
-    return build_solution_response(solution)
+    return build_solution_response(db, solution)
 
 
 @router.get("/solutions/{solution_id}", response_model=SolutionResponse)
@@ -324,7 +385,7 @@ def read_solution(
     """
     solution = get_or_404(db, PresaleSolution, solution_id, detail="方案不存在")
 
-    return build_solution_response(solution)
+    return build_solution_response(db, solution)
 
 
 @router.put("/solutions/{solution_id}", response_model=SolutionResponse)
@@ -472,4 +533,4 @@ def get_solution_versions(
     )
     versions.extend(child_versions)
 
-    return [build_solution_response(sol) for sol in versions]
+    return [build_solution_response(db, sol) for sol in versions]

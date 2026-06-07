@@ -222,7 +222,11 @@ class SolutionResponse(TimestampSchema):
     lead_id: Optional[int] = None
     project_id: Optional[int] = None
     customer_id: Optional[int] = None
+    customer_name: Optional[str] = None
     opportunity_id: Optional[int] = None
+    opportunity_name: Optional[str] = None
+    sales_person_id: Optional[int] = None
+    sales_person_name: Optional[str] = None
     requirement_summary: Optional[str] = None
     solution_overview: Optional[str] = None
     technical_spec: Optional[str] = None
@@ -235,6 +239,7 @@ class SolutionResponse(TimestampSchema):
     version: Optional[str] = None
     parent_id: Optional[int] = None
     reviewer_id: Optional[int] = None
+    reviewer_name: Optional[str] = None
     review_time: Optional[datetime] = None
     review_status: Optional[str] = None
     review_comment: Optional[str] = None

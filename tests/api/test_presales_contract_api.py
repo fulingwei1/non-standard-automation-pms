@@ -1701,6 +1701,11 @@ class TestPresalesFrontendContractBehavior:
             assert solution["project_id"] == project.id
             assert solution["opportunity_id"] == opportunity.id
             assert solution["customer_id"] == customer.id
+            assert solution["customer_name"] == customer.customer_name
+            assert solution["opportunity_name"] == opportunity.opp_name
+            assert solution["sales_person_name"] == (
+                admin_user.real_name or admin_user.username
+            )
 
             by_project = client.get(
                 f"{prefix}/presale/proposals/solutions",
@@ -1708,7 +1713,14 @@ class TestPresalesFrontendContractBehavior:
                 headers=headers,
             )
             assert by_project.status_code == 200, by_project.text
-            assert any(item["id"] == solution["id"] for item in by_project.json()["items"])
+            project_solution = next(
+                item for item in by_project.json()["items"] if item["id"] == solution["id"]
+            )
+            assert project_solution["customer_name"] == customer.customer_name
+            assert project_solution["opportunity_name"] == opportunity.opp_name
+            assert project_solution["sales_person_name"] == (
+                admin_user.real_name or admin_user.username
+            )
 
             by_opportunity = client.get(
                 f"{prefix}/presale/proposals/solutions",
@@ -1717,6 +1729,18 @@ class TestPresalesFrontendContractBehavior:
             )
             assert by_opportunity.status_code == 200, by_opportunity.text
             assert any(item["id"] == solution["id"] for item in by_opportunity.json()["items"])
+
+            detail = client.get(
+                f"{prefix}/presale/proposals/solutions/{solution['id']}",
+                headers=headers,
+            )
+            assert detail.status_code == 200, detail.text
+            detail_payload = detail.json()
+            assert detail_payload["customer_name"] == customer.customer_name
+            assert detail_payload["opportunity_name"] == opportunity.opp_name
+            assert detail_payload["sales_person_name"] == (
+                admin_user.real_name or admin_user.username
+            )
         finally:
             db_session.query(PresaleSolution).filter(
                 PresaleSolution.id == solution["id"]
