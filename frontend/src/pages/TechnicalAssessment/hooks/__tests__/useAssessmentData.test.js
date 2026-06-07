@@ -2,9 +2,12 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useAssessmentData } from "../useAssessmentData";
-import { technicalAssessmentApi } from "../../../../services/api";
+import { presaleWorkbenchApi, technicalAssessmentApi } from "../../../../services/api";
 
 vi.mock("../../../../services/api", () => ({
+  presaleWorkbenchApi: {
+    loadContext: vi.fn(),
+  },
   technicalAssessmentApi: {
     getLeadAssessments: vi.fn(),
     getOpportunityAssessments: vi.fn(),
@@ -18,6 +21,9 @@ describe("useAssessmentData", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(window, "alert").mockImplementation(() => {});
+    presaleWorkbenchApi.loadContext.mockResolvedValue({
+      assessment: { requirementDetail: null },
+    });
   });
 
   it("clears the current assessment when the selected source has no assessments", async () => {
@@ -60,6 +66,54 @@ describe("useAssessmentData", () => {
 
     expect(result.current.assessments).toEqual([olderAssessment, ticketAssessment]);
     expect(result.current.assessment).toEqual(ticketAssessment);
+  });
+
+  it("prefills requirement data from the presale workbench context when opened from a ticket", async () => {
+    const ticketAssessment = { id: 702, status: "PENDING", source_type: "OPPORTUNITY" };
+    technicalAssessmentApi.getOpportunityAssessments.mockResolvedValue({
+      data: [ticketAssessment],
+    });
+    presaleWorkbenchApi.loadContext.mockResolvedValue({
+      assessment: {
+        requirementDetail: {
+          id: 301,
+          lead_id: 21,
+          has_sow: true,
+          requirement_maturity: 4,
+          cycle_time_seconds: 12.5,
+          workstation_count: 2,
+          target_object_type: "电源模块",
+        },
+      },
+    });
+
+    const { result } = renderHook(() =>
+      useAssessmentData("opportunity", "2", "702", "93")
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(presaleWorkbenchApi.loadContext).toHaveBeenCalledWith({
+      sourceType: "opportunity",
+      sourceId: 2,
+      presaleTicketId: 93,
+    });
+    expect(result.current.requirementData).toEqual(
+      expect.objectContaining({
+        source_type: "opportunity",
+        source_id: 2,
+        requirement_detail_id: 301,
+        lead_id: 21,
+        has_sow: true,
+        hasSOW: true,
+        requirement_maturity: 4,
+        requirementMaturity: 4,
+        cycle_time_seconds: 12.5,
+        takt_time_s: 12.5,
+        workstation_count: 2,
+        target_object_type: "电源模块",
+      }),
+    );
   });
 
   it("applies a lead assessment and reloads the source assessment list", async () => {

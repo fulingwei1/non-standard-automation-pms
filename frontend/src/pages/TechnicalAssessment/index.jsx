@@ -17,6 +17,7 @@ export default function TechnicalAssessment() {
   const { sourceType, sourceId } = useParams();
   const [searchParams] = useSearchParams();
   const selectedAssessmentId = searchParams.get("assessment_id") || searchParams.get("assessmentId");
+  const presaleTicketId = searchParams.get("ticket_id") || searchParams.get("ticketId");
 
   const {
     assessment,
@@ -32,7 +33,7 @@ export default function TechnicalAssessment() {
     setShowHistory,
     handleApplyAssessment,
     handleEvaluate,
-  } = useAssessmentData(sourceType, sourceId, selectedAssessmentId);
+  } = useAssessmentData(sourceType, sourceId, selectedAssessmentId, presaleTicketId);
 
   if (loading) {
     return <div className="p-6">加载中...</div>;
