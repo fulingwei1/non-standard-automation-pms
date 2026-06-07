@@ -386,6 +386,9 @@ export const presaleWorkbenchApi = {
         technical: normalizeListPayload(context.templates?.technical),
       },
       solutions: normalizeListPayload(context.solutions),
+      costing: context.costing || { baseline: null },
+      quotes: normalizeListPayload(context.quotes),
+      tenders: normalizeListPayload(context.tenders),
       funnel: {
         entityType: funnel.entityType ?? resolvedEntityType,
         entityId: funnel.entityId ?? resolvedEntityId,

@@ -140,6 +140,22 @@ describe('presaleWorkbenchApi', () => {
             items: [{ id: 31, solution_name: '方案 A' }],
             total: 1,
           },
+          costing: {
+            baseline: {
+              solution_id: 31,
+              estimated_cost: 260000,
+              suggested_price: 420000,
+              gross_margin_rate: 0.380952,
+            },
+          },
+          quotes: {
+            items: [{ id: 41, quote_code: 'Q-001', current_version: { total_price: 420000 } }],
+            total: 1,
+          },
+          tenders: {
+            items: [{ id: 51, tender_no: 'TENDER-001', our_bid_amount: 420000 }],
+            total: 1,
+          },
           funnel: {
             entityType: 'OPPORTUNITY',
             entityId: 9,
@@ -168,6 +184,9 @@ describe('presaleWorkbenchApi', () => {
     expect(context.assessment.versions.total).toBe(1);
     expect(context.assessment.risks.total).toBe(0);
     expect(context.solutions.total).toBe(1);
+    expect(context.costing.baseline.estimated_cost).toBe(260000);
+    expect(context.quotes.items[0].quote_code).toBe('Q-001');
+    expect(context.tenders.items[0].tender_no).toBe('TENDER-001');
     expect(context.meta.failures).toEqual([
       { key: 'risks', message: '风险服务暂不可用' },
     ]);

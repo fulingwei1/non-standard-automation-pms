@@ -22,7 +22,7 @@ from app.models.presale import (
     TechnicalParameterTemplate,
 )
 from app.models.project import Customer, Machine, Project
-from app.models.sales import AssessmentTemplate, Opportunity, TechnicalAssessment
+from app.models.sales import AssessmentTemplate, Opportunity, Quote, QuoteVersion, TechnicalAssessment
 from app.models.timesheet import Timesheet
 from app.models.user import User
 
@@ -331,8 +331,38 @@ class TestPresalesFrontendContractBehavior:
             author_name=admin_user.real_name or admin_user.username,
             status="APPROVED",
         )
-        db_session.add_all([assessment, solution])
+        tender = PresaleTenderRecord(
+            ticket_id=ticket.id,
+            opportunity_id=opportunity.id,
+            tender_no=f"TENDER-WBC-{unique}",
+            tender_name=f"工作台上下文投标-{unique}",
+            customer_name=customer.customer_name,
+            deadline=datetime.now(),
+            budget_amount=Decimal("450000"),
+            our_bid_amount=Decimal("420000"),
+            result="PENDING",
+            leader_id=admin_user.id,
+        )
+        quote = Quote(
+            quote_code=f"QWBC{unique[:6]}",
+            opportunity_id=opportunity.id,
+            customer_id=customer.id,
+            status="DRAFT",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([assessment, solution, tender, quote])
         db_session.flush()
+        quote_version = QuoteVersion(
+            quote_id=quote.id,
+            version_no="V1",
+            total_price=Decimal("420000"),
+            cost_total=Decimal("260000"),
+            gross_margin=Decimal("38.10"),
+            created_by=admin_user.id,
+        )
+        db_session.add(quote_version)
+        db_session.flush()
+        quote.current_version_id = quote_version.id
         opportunity.assessment_id = assessment.id
         ticket.current_assessment_id = assessment.id
         db_session.commit()
@@ -355,6 +385,13 @@ class TestPresalesFrontendContractBehavior:
             assert data["assessment"]["current"]["id"] == assessment.id
             assert data["assessment"]["current"]["status"] == AssessmentStatusEnum.COMPLETED.value
             assert data["solutions"]["items"][0]["id"] == solution.id
+            assert data["costing"]["baseline"]["estimated_cost"] == 260000.0
+            assert data["costing"]["baseline"]["suggested_price"] == 420000.0
+            assert data["costing"]["baseline"]["gross_margin_rate"] == pytest.approx(0.380952, rel=1e-4)
+            assert data["quotes"]["items"][0]["quote_code"] == quote.quote_code
+            assert data["quotes"]["items"][0]["current_version"]["total_price"] == 420000.0
+            assert data["tenders"]["items"][0]["tender_no"] == tender.tender_no
+            assert data["tenders"]["items"][0]["our_bid_amount"] == 420000.0
             assert data["funnel"]["entityType"] == "OPPORTUNITY"
             assert data["funnel"]["entityId"] == opportunity.id
             assert data["funnel"]["gateStatus"]["gate_type"] == "G2"
@@ -362,6 +399,13 @@ class TestPresalesFrontendContractBehavior:
             assert "技术评估通过" in data["funnel"]["gateStatus"]["checked_items"]
             assert data["meta"]["failures"] == []
         finally:
+            db_session.query(QuoteVersion).filter(QuoteVersion.id == quote_version.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(Quote).filter(Quote.id == quote.id).delete(synchronize_session=False)
+            db_session.query(PresaleTenderRecord).filter(
+                PresaleTenderRecord.id == tender.id
+            ).delete(synchronize_session=False)
             db_session.query(PresaleSolution).filter(PresaleSolution.id == solution.id).delete(
                 synchronize_session=False
             )

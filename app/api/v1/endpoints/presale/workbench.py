@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
@@ -151,6 +151,87 @@ def _opportunity_payload(opportunity: Opportunity) -> dict[str, Any]:
         else None
     )
     return data
+
+
+def _quote_version_payload(version: Any) -> Optional[dict[str, Any]]:
+    if version is None:
+        return None
+
+    return _model_to_dict(
+        version,
+        only=[
+            "id",
+            "quote_id",
+            "version_no",
+            "total_price",
+            "cost_total",
+            "gross_margin",
+            "lead_time_days",
+            "delivery_date",
+            "binding_status",
+            "binding_warning",
+            "created_at",
+            "updated_at",
+        ],
+    )
+
+
+def _quote_payload(quote: Quote) -> dict[str, Any]:
+    data = _model_to_dict(
+        quote,
+        only=[
+            "id",
+            "quote_code",
+            "opportunity_id",
+            "customer_id",
+            "status",
+            "current_version_id",
+            "valid_until",
+            "delivery_date",
+            "owner_id",
+            "created_at",
+            "updated_at",
+        ],
+    )
+    owner = getattr(quote, "owner", None)
+    data["owner_name"] = (
+        getattr(owner, "real_name", None) or getattr(owner, "username", None)
+        if owner
+        else None
+    )
+    data["current_version"] = _quote_version_payload(getattr(quote, "current_version", None))
+    return data
+
+
+def _costing_payload(solutions: list[PresaleSolution]) -> dict[str, Any]:
+    baseline_solution = next(
+        (
+            solution
+            for solution in solutions
+            if solution.estimated_cost is not None or solution.suggested_price is not None
+        ),
+        None,
+    )
+    if baseline_solution is None:
+        return {"baseline": None}
+
+    estimated_cost = baseline_solution.estimated_cost
+    suggested_price = baseline_solution.suggested_price
+    gross_margin_rate = None
+    if estimated_cost is not None and suggested_price:
+        gross_margin_rate = float((Decimal(suggested_price) - Decimal(estimated_cost)) / Decimal(suggested_price))
+
+    return {
+        "baseline": {
+            "source": "solution",
+            "solution_id": baseline_solution.id,
+            "solution_no": baseline_solution.solution_no,
+            "solution_name": baseline_solution.name,
+            "estimated_cost": _json_value(estimated_cost),
+            "suggested_price": _json_value(suggested_price),
+            "gross_margin_rate": gross_margin_rate,
+        }
+    }
 
 
 def _assessment_payload(assessment: TechnicalAssessment) -> dict[str, Any]:
@@ -741,6 +822,38 @@ def get_workbench_context(
         solution_query.order_by(desc(PresaleSolution.created_at), desc(PresaleSolution.id)).all()
     )
 
+    opportunity_context_id = source_id if normalized_source_type == "opportunity" else None
+    if ticket and ticket.opportunity_id:
+        opportunity_context_id = ticket.opportunity_id
+
+    quote_query = db.query(Quote).options(
+        joinedload(Quote.current_version),
+        joinedload(Quote.owner),
+    )
+    if opportunity_context_id:
+        quote_query = quote_query.filter(Quote.opportunity_id == opportunity_context_id)
+    else:
+        quote_query = quote_query.filter(False)
+    quote_total = quote_query.count()
+    quote_items = quote_query.order_by(desc(Quote.created_at), desc(Quote.id)).all()
+
+    tender_query = db.query(PresaleTenderRecord)
+    if ticket and opportunity_context_id:
+        tender_query = tender_query.filter(
+            or_(
+                PresaleTenderRecord.ticket_id == ticket.id,
+                PresaleTenderRecord.opportunity_id == opportunity_context_id,
+            )
+        )
+    elif ticket:
+        tender_query = tender_query.filter(PresaleTenderRecord.ticket_id == ticket.id)
+    elif opportunity_context_id:
+        tender_query = tender_query.filter(PresaleTenderRecord.opportunity_id == opportunity_context_id)
+    else:
+        tender_query = tender_query.filter(False)
+    tender_total = tender_query.count()
+    tender_items = tender_query.order_by(desc(PresaleTenderRecord.created_at), desc(PresaleTenderRecord.id)).all()
+
     gate_status = _validate_gate_status(
         db,
         entity_type=resolved_entity_type,
@@ -775,6 +888,15 @@ def get_workbench_context(
             "solutions": {
                 "items": [_solution_payload(solution) for solution in solution_items],
                 "total": solution_total,
+            },
+            "costing": _costing_payload(solution_items),
+            "quotes": {
+                "items": [_quote_payload(quote) for quote in quote_items],
+                "total": quote_total,
+            },
+            "tenders": {
+                "items": [_tender_payload(tender) for tender in tender_items],
+                "total": tender_total,
             },
             "funnel": {
                 "entityType": resolved_entity_type,
