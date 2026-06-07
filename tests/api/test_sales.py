@@ -16,10 +16,16 @@ Issue 8.1: 销售模块单元测试完善
 import json
 import uuid
 from datetime import date, timedelta
+from decimal import Decimal
 
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.enums import AssessmentStatusEnum
+from app.models.project import Customer
+from app.models.sales import Opportunity, TechnicalAssessment
+from app.models.user import User
 
 
 def _auth_headers(token: str) -> dict:
@@ -743,6 +749,109 @@ class TestSalesClosedLoop:
         matched = [item for item in items if item["id"] == quote["id"]]
         assert matched
         assert matched[0]["contract_id"] == contract["id"]
+
+
+class TestSalesFunnelWorkflow:
+    """销售漏斗跨阶段闭环测试。"""
+
+    def test_g2_quote_can_continue_to_g3_contract(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """G2 转出的报价应自带版本/金额，审批后可继续 G3 转合同。"""
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid.uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-G2Q-{unique}",
+            customer_name=f"G2报价闭环客户-{unique}",
+            industry="电子制造",
+            contact_person="王工",
+            contact_phone="021-88888888",
+            created_by=admin_user.id,
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPG2Q{unique[:6]}",
+            customer_id=customer.id,
+            opp_name=f"G2报价闭环商机-{unique}",
+            stage="QUALIFICATION",
+            probability=75,
+            est_amount=Decimal("360000"),
+            expected_close_date=date.today() + timedelta(days=30),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+            assessment_status=AssessmentStatusEnum.COMPLETED.value,
+            requirement_maturity=3,
+        )
+        db_session.add(opportunity)
+        db_session.flush()
+
+        assessment = TechnicalAssessment(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            evaluator_id=admin_user.id,
+            status=AssessmentStatusEnum.COMPLETED.value,
+            decision="推荐立项",
+        )
+        db_session.add(assessment)
+        db_session.flush()
+        opportunity.assessment_id = assessment.id
+        db_session.commit()
+
+        converted = client.post(
+            f"{prefix}/sales/funnel/opportunity-to-quote",
+            json={
+                "opportunity_id": opportunity.id,
+                "quote_title": f"G2闭环报价-{unique}",
+                "validity_days": 30,
+            },
+            headers=headers,
+        )
+        assert converted.status_code == 200, converted.text
+        quote_id = converted.json()["data"]["quote_id"]
+
+        quote_detail = client.get(f"{prefix}/sales/quotes/{quote_id}", headers=headers)
+        assert quote_detail.status_code == 200, quote_detail.text
+        quote = quote_detail.json()["data"]
+        assert quote["current_version"] is not None
+        assert float(quote["current_version"]["total_price"]) > 0
+
+        approved = client.post(
+            f"{prefix}/sales/quotes/{quote_id}/approve",
+            json={"approved": True, "remark": "同意报价"},
+            headers=headers,
+        )
+        assert approved.status_code == 200, approved.text
+
+        gate = client.post(
+            f"{prefix}/sales/funnel/validate-gate",
+            json={"gate_type": "G3", "entity_id": quote_id, "save_result": False},
+            headers=headers,
+        )
+        assert gate.status_code == 200, gate.text
+        gate_data = gate.json()["data"]
+        assert gate_data["is_valid"] is True
+        assert "报价版本有效" in gate_data["checked_items"]
+        assert "报价金额有效" in gate_data["checked_items"]
+
+        contracted = client.post(
+            f"{prefix}/sales/funnel/quote-to-contract",
+            json={
+                "quote_id": quote_id,
+                "contract_title": f"G2报价闭环合同-{unique}",
+                "contract_type": "SALES",
+            },
+            headers=headers,
+        )
+        assert contracted.status_code == 200, contracted.text
+        assert contracted.json()["data"]["contract_id"] is not None
 
 
 class TestInvoiceManagement:

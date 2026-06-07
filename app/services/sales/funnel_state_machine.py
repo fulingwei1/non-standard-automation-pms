@@ -7,13 +7,14 @@
 
 import logging
 from datetime import datetime, timedelta
+from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.sales.contracts import Contract
 from app.models.sales.leads import Lead, Opportunity
-from app.models.sales.quotes import Quote, QuoteVersion
+from app.models.sales.quotes import Quote, QuoteItem, QuoteVersion
 from app.models.sales.sales_funnel import (
     FunnelEntityTypeEnum,
     FunnelTransitionLog,
@@ -432,7 +433,7 @@ class FunnelStateMachine:
                 validity_days = 30
             valid_until = datetime.now().date() + timedelta(days=validity_days)
 
-        # 创建报价
+        # 创建报价。G2 产物必须带初始版本，否则后续 G3 会因“无有效版本”断链。
         quote = Quote(
             quote_code=quote_data.get("quote_code") or f"QT{datetime.now().strftime('%Y%m%d%H%M%S')}",
             opportunity_id=opportunity_id,
@@ -444,8 +445,46 @@ class FunnelStateMachine:
         )
 
         self.db.add(quote)
-        self.db.commit()
-        self.db.refresh(quote)
+        self.db.flush()
+
+        total_price = Decimal(str(quote_data.get("total_price") or opportunity.est_amount or 0))
+        margin_rate = Decimal(str(quote_data.get("gross_margin") or opportunity.est_margin or 30))
+        if margin_rate < 0:
+            margin_rate = Decimal("0")
+        if margin_rate > 100:
+            margin_rate = Decimal("100")
+        cost_total = quote_data.get("cost_total")
+        if cost_total is None:
+            cost_total = total_price * (Decimal("100") - margin_rate) / Decimal("100")
+        cost_total = Decimal(str(cost_total or 0))
+
+        version = QuoteVersion(
+            quote_id=quote.id,
+            version_no=quote_data.get("version_no") or "V1",
+            total_price=total_price,
+            cost_total=cost_total,
+            gross_margin=margin_rate,
+            lead_time_days=quote_data.get("lead_time_days"),
+            risk_terms=quote_data.get("risk_terms"),
+            created_by=transitioned_by,
+        )
+        self.db.add(version)
+        self.db.flush()
+
+        if total_price > 0:
+            self.db.add(
+                QuoteItem(
+                    quote_version_id=version.id,
+                    item_type="SYSTEM",
+                    item_name=quote_data.get("item_name") or opportunity.opp_name or "非标自动化设备",
+                    qty=Decimal("1"),
+                    unit_price=total_price,
+                    cost=cost_total,
+                    remark="G2商机转报价自动生成的初版汇总项",
+                )
+            )
+
+        quote.current_version_id = version.id
 
         # 记录转换日志
         log = FunnelTransitionLog(
