@@ -4,8 +4,8 @@
  * Tab 1: AI智能排计划 - 选择项目后生成计划
  * Tab 2: 工程师调度 - 选择项目后推荐工程师
  */
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Calendar,
@@ -27,6 +27,7 @@ import { Input } from "../components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Badge } from "../components/ui/badge";
 import { staggerContainer } from "../lib/animations";
+import { mergeProjectContextFilters } from "../lib/projectContext";
 import { projectApi } from "../services/api";
 
 // Tab 配置
@@ -94,6 +95,7 @@ export default function AIProjectTools({
   embedded = false,
   searchParamName = "tab",
 }) {
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => {
@@ -103,6 +105,10 @@ export default function AIProjectTools({
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const projectListParams = useMemo(
+    () => mergeProjectContextFilters(new URLSearchParams(location.search), { page_size: 100 }),
+    [location.search],
+  );
 
   // 同步 tab 到 URL
   useEffect(() => {
@@ -119,7 +125,7 @@ export default function AIProjectTools({
     let cancelled = false;
     setLoading(true);
     projectApi
-      .list({ page_size: 100 })
+      .list(projectListParams)
       .then((res) => {
         if (cancelled) return;
         const list = res?.data?.items ?? res?.items ?? res?.data ?? res ?? [];
@@ -132,7 +138,7 @@ export default function AIProjectTools({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [projectListParams]);
 
   // 项目筛选
   const filteredProjects = projects.filter((p) => {

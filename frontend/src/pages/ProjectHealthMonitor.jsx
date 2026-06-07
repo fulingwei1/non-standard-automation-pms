@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -54,6 +54,7 @@ import { toast } from "../components/ui/toast";
 import { projectApi, marginPredictionApi } from "../services/api";
 import { materialReadinessApi } from "../services/api/materialReadiness";
 import { PROJECT_STAGES, HEALTH_CONFIG, getHealthConfig } from "../lib/constants/common";
+import { mergeProjectContextFilters } from "../lib/projectContext";
 import { formatDate, formatCurrency, cn } from "../lib/utils";
 
 // 健康度筛选选项
@@ -91,6 +92,7 @@ const getMarginLevel = (margin) => {
 };
 
 export default function ProjectHealthMonitor({ embedded = false }) {
+  const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState([]);
@@ -103,6 +105,10 @@ export default function ProjectHealthMonitor({ embedded = false }) {
   const [healthFilter, setHealthFilter] = useState("all");
   const [kitRateFilter, setKitRateFilter] = useState("all");
   const [stageFilter, setStageFilter] = useState("all");
+  const projectListParams = useMemo(
+    () => mergeProjectContextFilters(new URLSearchParams(location.search), { page_size: 100 }),
+    [location.search],
+  );
 
   // 计算项目毛利率（从项目数据直接计算，无需调用 API）
   const calculateMargins = useCallback((projectList) => {
@@ -128,7 +134,7 @@ export default function ProjectHealthMonitor({ embedded = false }) {
   const fetchProjects = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await projectApi.list({ page_size: 100 });
+      const res = await projectApi.list(projectListParams);
       const items = res.data?.items || res.data || [];
       setProjects(Array.isArray(items) ? items : []);
 
@@ -145,7 +151,7 @@ export default function ProjectHealthMonitor({ embedded = false }) {
     } finally {
       setLoading(false);
     }
-  }, [calculateMargins]);
+  }, [calculateMargins, projectListParams]);
 
   // 批量获取齐套率
   const fetchBatchKitRates = async (projectIds) => {

@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
@@ -15,11 +16,17 @@ import {
   ScheduleCalendarView,
   ResourceHeatMap
 } from "../components/schedule-board";
+import { mergeProjectContextFilters } from "../lib/projectContext";
 
 export default function ScheduleBoard() {
+  const location = useLocation();
   const [viewMode, setViewMode] = useState("kanban"); // kanban | gantt | calendar
   const [projects, setProjects] = useState([]);
   const [_loading, setLoading] = useState(true);
+  const projectListParams = useMemo(
+    () => mergeProjectContextFilters(new URLSearchParams(location.search), { page_size: 100 }),
+    [location.search],
+  );
 
   const stages = [
     { stage: "S3", name: "采购备料" },
@@ -47,7 +54,7 @@ export default function ScheduleBoard() {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const response = await projectApi.list({ page_size: 100 });
+        const response = await projectApi.list(projectListParams);
         // Handle PaginatedResponse format
         const data = response.data || response;
         const projectList = data.items || data || [];
@@ -129,7 +136,7 @@ export default function ScheduleBoard() {
       }
     };
     fetchProjects();
-  }, []);
+  }, [projectListParams]);
 
   const totalProjects = projects?.length;
   const atRiskProjects = (projects || []).filter((p) => p.health === "H2").length;

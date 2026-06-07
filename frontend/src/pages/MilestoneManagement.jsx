@@ -2,8 +2,8 @@
  * Milestone Management Page - 里程碑管理页面
  * Features: 里程碑列表、创建、更新、完成、时间线展示
  */
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   Plus,
@@ -43,6 +43,7 @@ import {
   DialogFooter } from
 "../components/ui/dialog";
 import { cn, formatDate } from "../lib/utils";
+import { getProjectContextFilters, mergeProjectContextFilters } from "../lib/projectContext";
 import { milestoneApi, projectApi } from "../services/api";
 import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {
@@ -54,6 +55,16 @@ const statusConfigs = {
 export default function MilestoneManagement() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const projectContextFilters = useMemo(
+    () => getProjectContextFilters(new URLSearchParams(location.search)),
+    [location.search],
+  );
+  const contextProjectId = id ? String(id) : projectContextFilters.project_id || "";
+  const projectListParams = useMemo(
+    () => mergeProjectContextFilters(new URLSearchParams(location.search), { page_size: 200 }),
+    [location.search],
+  );
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -62,7 +73,7 @@ export default function MilestoneManagement() {
   const isGlobalMode = !id;
   // Filters
   const [filterStatus, setFilterStatus] = useState("");
-  const [filterProjectId, setFilterProjectId] = useState("");
+  const [filterProjectId, setFilterProjectId] = useState(() => contextProjectId);
   const [searchQuery, setSearchQuery] = useState("");
   // Dialogs
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -76,8 +87,15 @@ export default function MilestoneManagement() {
     target_amount: 0,
     description: "",
     auto_invoice: false,
-    project_id: ""
+    project_id: contextProjectId
   });
+  useEffect(() => {
+    if (!isGlobalMode || !contextProjectId) return;
+    setFilterProjectId((current) => current || contextProjectId);
+    setNewMilestone((current) =>
+      current.project_id ? current : { ...current, project_id: contextProjectId },
+    );
+  }, [contextProjectId, isGlobalMode]);
   // 加载项目列表（全局模式）
   useEffect(() => {
     if (isGlobalMode) {
@@ -87,11 +105,11 @@ export default function MilestoneManagement() {
       fetchProject();
       fetchMilestones();
     }
-  }, [id, filterStatus, filterProjectId]);
+  }, [id, filterStatus, filterProjectId, projectListParams, contextProjectId]);
   // 获取项目列表（全局模式用）
   const fetchProjects = async () => {
     try {
-      const res = await projectApi.list({ page_size: 200 });
+      const res = await projectApi.list(projectListParams);
       const list = res?.data?.items ?? res?.items ?? res?.data ?? res ?? [];
       setProjects(Array.isArray(list) ? list : []);
     } catch (error) {
@@ -112,7 +130,8 @@ export default function MilestoneManagement() {
       setLoading(true);
       const params = {};
       if (filterStatus && filterStatus !== "all") params.status = filterStatus;
-      if (filterProjectId && filterProjectId !== "all") params.project_id = filterProjectId;
+      const scopedProjectId = filterProjectId || contextProjectId;
+      if (scopedProjectId && scopedProjectId !== "all") params.project_id = scopedProjectId;
       // 假设 milestoneApi.listAll 存在，否则需要调用 /milestones 接口
       const res = await milestoneApi.listAll ? milestoneApi.listAll(params) : milestoneApi.list(null, params);
       const milestoneList = res?.data?.items ?? res?.data ?? res ?? [];
@@ -170,7 +189,7 @@ export default function MilestoneManagement() {
         target_amount: 0,
         description: "",
         auto_invoice: false,
-        project_id: ""
+        project_id: contextProjectId
       });
       if (isGlobalMode) {
         fetchAllMilestones();

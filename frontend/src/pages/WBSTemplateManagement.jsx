@@ -2,8 +2,8 @@
  * WBS Template Management Page - WBS模板管理页面
  * Features: WBS模板CRUD、任务配置、从模板初始化项目WBS
  */
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -41,9 +41,20 @@ import {
   SelectValue } from
 "../components/ui/select";
 import { formatDate } from "../lib/utils";
+import { getProjectContextFilters, mergeProjectContextFilters } from "../lib/projectContext";
 import { progressApi, projectApi } from "../services/api";
 export default function WBSTemplateManagement() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const projectContextFilters = useMemo(
+    () => getProjectContextFilters(new URLSearchParams(location.search)),
+    [location.search],
+  );
+  const contextProjectId = projectContextFilters.project_id || "";
+  const projectListParams = useMemo(
+    () => mergeProjectContextFilters(new URLSearchParams(location.search), { page_size: 1000 }),
+    [location.search],
+  );
   const [loading, setLoading] = useState(true);
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
@@ -63,11 +74,15 @@ export default function WBSTemplateManagement() {
     template_type: "SINGLE_MACHINE", // SINGLE_MACHINE or LINE
     description: ""
   });
-  const [selectedProject, setSelectedProject] = useState("");
+  const [selectedProject, setSelectedProject] = useState(() => contextProjectId);
   useEffect(() => {
     fetchTemplates();
     fetchProjects();
-  }, [filterType, searchKeyword]);
+  }, [filterType, searchKeyword, projectListParams]);
+  useEffect(() => {
+    if (!contextProjectId) return;
+    setSelectedProject((current) => current || contextProjectId);
+  }, [contextProjectId]);
   const fetchTemplates = async () => {
     try {
       setLoading(true);
@@ -88,7 +103,7 @@ export default function WBSTemplateManagement() {
   };
   const fetchProjects = async () => {
     try {
-      const res = await projectApi.list({ page_size: 1000 });
+      const res = await projectApi.list(projectListParams);
       setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
@@ -137,7 +152,7 @@ export default function WBSTemplateManagement() {
         template_id: selectedTemplate.id
       });
       setShowInitDialog(false);
-      setSelectedProject("");
+      setSelectedProject(contextProjectId || "");
       alert("WBS初始化成功");
       navigate(`/projects/${selectedProject}`);
     } catch (error) {
