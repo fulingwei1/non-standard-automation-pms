@@ -85,6 +85,7 @@ class RiskCreateRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     risk_type: str = Field(..., description="风险类型")
+    risk_title: Optional[str] = Field(None, description="风险标题")
     risk_description: str = Field(..., description="风险描述")
     risk_level: str = Field(default="MEDIUM", description="风险等级")
     source_item_id: Optional[int] = Field(None, description="来源评估项ID")
@@ -106,6 +107,18 @@ class VersionCreateRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     change_summary: str = Field(..., description="变更摘要")
+
+
+def _probability_impact_for_level(risk_level: str) -> tuple[str, str]:
+    """Map the legacy risk_level-only request onto the service probability/impact model."""
+    level = (risk_level or "MEDIUM").upper()
+    if level == "LOW":
+        return "LOW", "LOW"
+    if level == "HIGH":
+        return "MEDIUM", "MEDIUM"
+    if level == "CRITICAL":
+        return "HIGH", "MEDIUM"
+    return "LOW", "MEDIUM"
 
 
 # ==================== 模板 API ====================
@@ -355,15 +368,17 @@ def create_assessment_risk(
 ) -> Any:
     """创建评估风险"""
     service = AssessmentRiskService(db)
+    probability, impact = _probability_impact_for_level(request.risk_level)
 
     risk = service.create_risk(
         assessment_id=assessment_id,
-        risk_type=request.risk_type,
+        risk_title=request.risk_title or f"{request.risk_type}风险",
         risk_description=request.risk_description,
-        risk_level=request.risk_level,
-        source_item_id=request.source_item_id,
+        risk_category=request.risk_type,
+        probability=probability,
+        impact=impact,
         mitigation_plan=request.mitigation_plan,
-        identified_by=current_user.id,
+        owner_id=current_user.id,
     )
 
     if not risk:
@@ -397,7 +412,9 @@ def list_assessment_risks(
                 {
                     "id": r.id,
                     "risk_code": r.risk_code,
-                    "risk_type": r.risk_type,
+                    "risk_title": r.risk_title,
+                    "risk_type": r.risk_category,
+                    "risk_category": r.risk_category,
                     "risk_description": r.risk_description,
                     "risk_level": r.risk_level,
                     "status": r.status,
@@ -420,7 +437,11 @@ def update_risk_status(
 ) -> Any:
     """更新风险状态"""
     service = AssessmentRiskService(db)
-    risk = service.update_risk_status(risk_id, request.status, note=request.note)
+    risk = service.update_risk_status(
+        risk_id,
+        request.status,
+        resolution_notes=request.note,
+    )
 
     if not risk:
         raise HTTPException(status_code=404, detail="风险不存在")

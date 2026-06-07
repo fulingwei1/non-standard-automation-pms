@@ -14,7 +14,6 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.sales.assessment_template import (
-    AssessmentDimensionEnum,
     AssessmentItem,
     AssessmentRisk,
     AssessmentTemplate,
@@ -426,7 +425,10 @@ class AssessmentRiskService:
             return RiskLevelEnum.LOW
 
     def get_risks_by_assessment(
-        self, assessment_id: int, status: Optional[str] = None
+        self,
+        assessment_id: int,
+        status: Optional[str] = None,
+        level: Optional[str] = None,
     ) -> List[AssessmentRisk]:
         """获取评估的风险列表"""
         query = self.db.query(AssessmentRisk).filter(
@@ -435,6 +437,8 @@ class AssessmentRiskService:
 
         if status:
             query = query.filter(AssessmentRisk.status == status)
+        if level:
+            query = query.filter(AssessmentRisk.risk_level == level)
 
         return query.order_by(AssessmentRisk.risk_score.desc()).all()
 
