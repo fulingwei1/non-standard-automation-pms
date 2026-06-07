@@ -24,6 +24,7 @@ from app.schemas.presale import (
     TicketRatingRequest,
     TicketResponse,
 )
+from app.services.presale_assessment_completion import complete_presale_source_assessment
 from app.utils.db_helpers import get_or_404, save_obj
 
 from .crud import read_ticket
@@ -39,59 +40,18 @@ def _complete_opportunity_assessment_for_ticket(
     current_user: User,
 ) -> TechnicalAssessment:
     """补齐商机关联售前工单的技术评估闭环。"""
-    assessment = None
-    if opportunity.assessment_id:
-        assessment = (
-            db.query(TechnicalAssessment)
-            .filter(TechnicalAssessment.id == opportunity.assessment_id)
-            .first()
-        )
-
-    if assessment is None and ticket.current_assessment_id:
-        assessment = (
-            db.query(TechnicalAssessment)
-            .filter(TechnicalAssessment.id == ticket.current_assessment_id)
-            .first()
-        )
-
-    if assessment is None:
-        assessment = (
-            db.query(TechnicalAssessment)
-            .filter(
-                TechnicalAssessment.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value,
-                TechnicalAssessment.source_id == opportunity.id,
-            )
-            .order_by(TechnicalAssessment.id.desc())
-            .first()
-        )
-
-    if assessment is None:
-        assessment = TechnicalAssessment(
-            source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
-            source_id=opportunity.id,
-            evaluator_id=current_user.id,
-            status=AssessmentStatusEnum.COMPLETED.value,
-            decision="推荐立项",
-            evaluated_at=datetime.now(),
-            presale_ticket_id=ticket.id,
-        )
-        db.add(assessment)
-        db.flush()
-    else:
-        assessment.source_type = AssessmentSourceTypeEnum.OPPORTUNITY.value
-        assessment.source_id = opportunity.id
-        assessment.status = AssessmentStatusEnum.COMPLETED.value
-        assessment.decision = assessment.decision or "推荐立项"
-        assessment.evaluator_id = assessment.evaluator_id or current_user.id
-        assessment.evaluated_at = assessment.evaluated_at or datetime.now()
-        if not assessment.presale_ticket_id:
-            assessment.presale_ticket_id = ticket.id
+    assessment = complete_presale_source_assessment(
+        db=db,
+        source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
+        source_id=opportunity.id,
+        current_user=current_user,
+        ticket=ticket,
+        source_assessment_id=opportunity.assessment_id,
+    )
 
     opportunity.assessment_id = assessment.id
     opportunity.assessment_status = AssessmentStatusEnum.COMPLETED.value
     opportunity.updated_by = current_user.id
-    ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
-    ticket.current_assessment_id = assessment.id
     return assessment
 
 
@@ -103,58 +63,17 @@ def _complete_lead_assessment_for_ticket(
     current_user: User,
 ) -> TechnicalAssessment:
     """补齐线索关联售前工单的技术评估闭环。"""
-    assessment = None
-    if lead.assessment_id:
-        assessment = (
-            db.query(TechnicalAssessment)
-            .filter(TechnicalAssessment.id == lead.assessment_id)
-            .first()
-        )
-
-    if assessment is None and ticket.current_assessment_id:
-        assessment = (
-            db.query(TechnicalAssessment)
-            .filter(TechnicalAssessment.id == ticket.current_assessment_id)
-            .first()
-        )
-
-    if assessment is None:
-        assessment = (
-            db.query(TechnicalAssessment)
-            .filter(
-                TechnicalAssessment.source_type == AssessmentSourceTypeEnum.LEAD.value,
-                TechnicalAssessment.source_id == lead.id,
-            )
-            .order_by(TechnicalAssessment.id.desc())
-            .first()
-        )
-
-    if assessment is None:
-        assessment = TechnicalAssessment(
-            source_type=AssessmentSourceTypeEnum.LEAD.value,
-            source_id=lead.id,
-            evaluator_id=current_user.id,
-            status=AssessmentStatusEnum.COMPLETED.value,
-            decision="推荐立项",
-            evaluated_at=datetime.now(),
-            presale_ticket_id=ticket.id,
-        )
-        db.add(assessment)
-        db.flush()
-    else:
-        assessment.source_type = AssessmentSourceTypeEnum.LEAD.value
-        assessment.source_id = lead.id
-        assessment.status = AssessmentStatusEnum.COMPLETED.value
-        assessment.decision = assessment.decision or "推荐立项"
-        assessment.evaluator_id = assessment.evaluator_id or current_user.id
-        assessment.evaluated_at = assessment.evaluated_at or datetime.now()
-        if not assessment.presale_ticket_id:
-            assessment.presale_ticket_id = ticket.id
+    assessment = complete_presale_source_assessment(
+        db=db,
+        source_type=AssessmentSourceTypeEnum.LEAD.value,
+        source_id=lead.id,
+        current_user=current_user,
+        ticket=ticket,
+        source_assessment_id=lead.assessment_id,
+    )
 
     lead.assessment_id = assessment.id
     lead.assessment_status = AssessmentStatusEnum.COMPLETED.value
-    ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
-    ticket.current_assessment_id = assessment.id
     return assessment
 
 

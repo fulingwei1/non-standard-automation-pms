@@ -333,3 +333,104 @@ def test_evaluate_bound_assessment_does_not_complete_other_ticket_assessment(
     assert preserved_first_ticket.current_assessment_id == first_assessment.id
     assert refreshed_second_ticket.assessment_status == AssessmentStatusEnum.COMPLETED.value
     assert refreshed_second_ticket.current_assessment_id == second_assessment.id
+
+
+def test_completing_ticket_does_not_reuse_another_ticket_assessment(
+    client: TestClient, db_session: Session, admin_token: str
+):
+    """直接完成售前工单时，不应复用同商机其它工单的技术评估。"""
+    if not admin_token:
+        pytest.skip("Admin token not available")
+
+    headers = _auth_headers(admin_token)
+    prefix = settings.API_V1_PREFIX
+    unique = uuid4().hex[:8].upper()
+
+    admin_user = db_session.query(User).filter(User.username == "admin").first()
+    assert admin_user is not None
+
+    customer = Customer(
+        customer_code=f"CUST-TCO-{unique}",
+        customer_name=f"工单完成隔离客户-{unique}",
+        industry="电子制造",
+        created_by=admin_user.id,
+    )
+    opportunity = Opportunity(
+        opp_code=f"OPPTCO{unique[:6]}",
+        customer=customer,
+        opp_name=f"工单完成隔离商机-{unique}",
+        stage="QUALIFICATION",
+        probability=60,
+        est_amount=Decimal("460000"),
+        owner_id=admin_user.id,
+        updated_by=admin_user.id,
+        assessment_status=AssessmentStatusEnum.PENDING.value,
+    )
+    db_session.add_all([customer, opportunity])
+    db_session.flush()
+
+    first_ticket = PresaleSupportTicket(
+        ticket_no=f"TICKET-TCO-A-{unique}",
+        title=f"已有待评估工单-{unique}",
+        ticket_type="FEASIBILITY_ASSESSMENT",
+        urgency="NORMAL",
+        customer_id=customer.id,
+        customer_name=customer.customer_name,
+        opportunity_id=opportunity.id,
+        applicant_id=admin_user.id,
+        applicant_name=admin_user.real_name or admin_user.username,
+        status="PROCESSING",
+        assessment_status=AssessmentStatusEnum.PENDING.value,
+        created_by=admin_user.id,
+    )
+    second_ticket = PresaleSupportTicket(
+        ticket_no=f"TICKET-TCO-B-{unique}",
+        title=f"当前完成工单-{unique}",
+        ticket_type="FEASIBILITY_ASSESSMENT",
+        urgency="NORMAL",
+        customer_id=customer.id,
+        customer_name=customer.customer_name,
+        opportunity_id=opportunity.id,
+        applicant_id=admin_user.id,
+        applicant_name=admin_user.real_name or admin_user.username,
+        status="PROCESSING",
+        assessment_status=AssessmentStatusEnum.PENDING.value,
+        created_by=admin_user.id,
+    )
+    db_session.add_all([first_ticket, second_ticket])
+    db_session.flush()
+
+    first_assessment = TechnicalAssessment(
+        source_type="OPPORTUNITY",
+        source_id=opportunity.id,
+        evaluator_id=admin_user.id,
+        status=AssessmentStatusEnum.PENDING.value,
+        presale_ticket_id=first_ticket.id,
+    )
+    db_session.add(first_assessment)
+    db_session.flush()
+    first_ticket.current_assessment_id = first_assessment.id
+    opportunity.assessment_id = first_assessment.id
+    db_session.commit()
+
+    response = client.put(
+        f"{prefix}/presale/tickets/{second_ticket.id}/complete",
+        json={"actual_hours": 3, "completion_note": "当前工单方案可行"},
+        headers=headers,
+    )
+
+    assert response.status_code == 200, response.text
+
+    db_session.expire_all()
+    preserved_first_assessment = db_session.get(TechnicalAssessment, first_assessment.id)
+    preserved_first_ticket = db_session.get(PresaleSupportTicket, first_ticket.id)
+    refreshed_second_ticket = db_session.get(PresaleSupportTicket, second_ticket.id)
+    refreshed_opportunity = db_session.get(Opportunity, opportunity.id)
+
+    assert preserved_first_assessment.status == AssessmentStatusEnum.PENDING.value
+    assert preserved_first_assessment.presale_ticket_id == first_ticket.id
+    assert preserved_first_ticket.assessment_status == AssessmentStatusEnum.PENDING.value
+    assert preserved_first_ticket.current_assessment_id == first_assessment.id
+    assert refreshed_second_ticket.assessment_status == AssessmentStatusEnum.COMPLETED.value
+    assert refreshed_second_ticket.current_assessment_id != first_assessment.id
+    assert refreshed_opportunity.assessment_id == refreshed_second_ticket.current_assessment_id
