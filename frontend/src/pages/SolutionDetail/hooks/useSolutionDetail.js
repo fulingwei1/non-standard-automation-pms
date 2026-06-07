@@ -57,6 +57,24 @@ const parseObject = (value) => {
     return null;
 };
 
+const unwrapListResponse = (response) => {
+    const data = unwrapResponse(response);
+
+    if (Array.isArray(data)) {
+        return data;
+    }
+
+    if (Array.isArray(data?.items)) {
+        return data.items;
+    }
+
+    if (Array.isArray(data?.data)) {
+        return data.data;
+    }
+
+    return [];
+};
+
 const normalizeTechSpecs = (solutionData) => {
     const source =
         parseObject(solutionData.tech_specs) ||
@@ -81,6 +99,22 @@ const normalizeTechSpecs = (solutionData) => {
                 : ""),
     };
 };
+
+const normalizeVersionHistory = (versions, currentSolutionId) =>
+    versions.map((version) => ({
+        id: version.id,
+        version: version.version || version.solution_no || "",
+        date: version.updated_at || version.created_at || version.review_time || "",
+        author: version.author_name || version.creator_name || version.reviewer_name || "",
+        changes:
+            version.review_comment ||
+            version.solution_overview ||
+            version.requirement_summary ||
+            version.description ||
+            "",
+        status: (version.status || version.review_status || "").toLowerCase(),
+        current: Number(version.id) === Number(currentSolutionId),
+    }));
 
 export function useSolutionDetail() {
     const { id } = useParams();
@@ -110,6 +144,14 @@ export function useSolutionDetail() {
                 costData = unwrapResponse(costResponse);
             } catch (_err) {
                 // Cost estimate may not exist, ignore error
+            }
+
+            let versions = [];
+            try {
+                const versionsResponse = await presaleApi.solutions.getVersions(id);
+                versions = unwrapListResponse(versionsResponse);
+            } catch (_err) {
+                // Version history may not be available, ignore error
             }
 
             const amountSource =
@@ -154,7 +196,7 @@ export function useSolutionDetail() {
                 techSpecs: normalizeTechSpecs(solutionData),
                 equipment: solutionData.equipment || {},
                 deliverables: solutionData.deliverables || [],
-                versionHistory: [], // These seem to be placeholders or missing from API transformation in original
+                versionHistory: normalizeVersionHistory(versions, solutionData.id),
                 reviews: [],
                 collaborators: []
             };

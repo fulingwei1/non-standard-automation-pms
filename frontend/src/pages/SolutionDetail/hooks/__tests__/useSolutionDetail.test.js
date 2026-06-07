@@ -13,6 +13,7 @@ vi.mock("../../../../services/api", () => ({
     solutions: {
       get: vi.fn(),
       getCost: vi.fn(),
+      getVersions: vi.fn(),
       review: vi.fn(),
     },
   },
@@ -22,6 +23,7 @@ describe("useSolutionDetail", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useParams.mockReturnValue({ id: "88" });
+    presaleApi.solutions.getVersions.mockResolvedValue({ data: { code: 200, data: [] } });
   });
 
   it("unwraps backend solution detail and cost estimate responses", async () => {
@@ -114,6 +116,76 @@ describe("useSolutionDetail", () => {
       suggested_price: 180000,
       breakdown: [{ item_name: "PXI机箱", amount: 80000 }],
     });
+  });
+
+  it("loads backend solution versions into the history tab contract", async () => {
+    presaleApi.solutions.get.mockResolvedValue({
+      data: {
+        code: 200,
+        data: {
+          id: 88,
+          solution_no: "SOL-20260607-001",
+          name: "华南电子FCT方案",
+          status: "APPROVED",
+          version: "V1.0",
+          author_name: "陈敏",
+          solution_overview: "采用模块化测试平台",
+          created_at: "2026-06-07T10:00:00",
+        },
+      },
+    });
+    presaleApi.solutions.getCost.mockResolvedValue({ data: { code: 200, data: null } });
+    presaleApi.solutions.getVersions.mockResolvedValue({
+      data: {
+        code: 200,
+        data: [
+          {
+            id: 77,
+            version: "V0.9",
+            author_name: "李工",
+            review_comment: "初版评审意见",
+            created_at: "2026-06-01T09:00:00",
+            updated_at: "2026-06-01T09:30:00",
+            status: "APPROVED",
+          },
+          {
+            id: 88,
+            version: "V1.0",
+            author_name: "陈敏",
+            solution_overview: "采用模块化测试平台",
+            created_at: "2026-06-07T10:00:00",
+            updated_at: "2026-06-07T11:00:00",
+            status: "APPROVED",
+          },
+        ],
+      },
+    });
+
+    const { result } = renderHook(() => useSolutionDetail());
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(presaleApi.solutions.getVersions).toHaveBeenCalledWith("88");
+    expect(result.current.solution.versionHistory).toEqual([
+      {
+        id: 77,
+        version: "V0.9",
+        date: "2026-06-01T09:30:00",
+        author: "李工",
+        changes: "初版评审意见",
+        status: "approved",
+        current: false,
+      },
+      {
+        id: 88,
+        version: "V1.0",
+        date: "2026-06-07T11:00:00",
+        author: "陈敏",
+        changes: "采用模块化测试平台",
+        status: "approved",
+        current: true,
+      },
+    ]);
   });
 
   it("submits a draft solution for review and refreshes detail state", async () => {
