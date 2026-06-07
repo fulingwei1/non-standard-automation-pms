@@ -14,6 +14,7 @@ import {
   X,
   Briefcase,
   AlertTriangle,
+  Cpu,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -60,6 +61,16 @@ function buildProjectWorkspacePath(task) {
   return `/projects/${task.projectId}/workspace${query ? `?${query}` : ""}`;
 }
 
+function buildTechnicalAssessmentPath(task) {
+  if (task.leadId) {
+    return `/sales/assessments/lead/${task.leadId}`;
+  }
+  if (task.opportunityId) {
+    return `/sales/assessments/opportunity/${task.opportunityId}`;
+  }
+  return "";
+}
+
 export default function TaskDetailPanel({
   task,
   onClose,
@@ -85,6 +96,7 @@ export default function TaskDetailPanel({
   const statusConfig = (taskStatuses || []).find((s) => s.id === task.status);
   const canWorkOnTask = task.status === "in_progress" || task.status === "reviewing";
   const canUpdateProgress = task.status === "in_progress";
+  const technicalAssessmentPath = buildTechnicalAssessmentPath(task);
 
   // 接单
   const handleAccept = async () => {
@@ -274,6 +286,18 @@ export default function TaskDetailPanel({
             >
               <Briefcase className="w-4 h-4 mr-2" />
               打开项目工作区
+            </Button>
+          )}
+
+          {technicalAssessmentPath && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => navigate(technicalAssessmentPath)}
+            >
+              <Cpu className="w-4 h-4 mr-2" />
+              打开技术评估
             </Button>
           )}
 

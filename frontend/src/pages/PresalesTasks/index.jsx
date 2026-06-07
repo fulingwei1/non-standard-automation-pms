@@ -261,8 +261,11 @@ export default function PresalesTasks({ embedded = false } = {}) {
           progress: ticket.progress_percent ?? ticket.progress ?? 0,
           description: ticket.description || ticket.requirement || "",
           opportunity: ticket.opportunity_name || "",
+          leadId: ticket.lead_id ?? null,
           opportunityId: ticket.opportunity_id ?? null,
           projectId: ticket.project_id ?? null,
+          assessmentStatus: ticket.assessment_status || "",
+          currentAssessmentId: ticket.current_assessment_id ?? null,
           amount: (ticket.estimated_amount ?? ticket.estimated_value)
             ? (ticket.estimated_amount ?? ticket.estimated_value) / 10000
             : 0,

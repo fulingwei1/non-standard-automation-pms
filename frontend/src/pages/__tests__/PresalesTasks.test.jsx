@@ -500,6 +500,37 @@ describe('PresalesTasks', () => {
     );
   });
 
+  it('opens the linked lead technical assessment from a presale task detail', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 92,
+            title: '线索售前可行性评估',
+            ticket_type: 'TECHNICAL_SUPPORT',
+            status: 'IN_PROGRESS',
+            urgency: 'HIGH',
+            customer_name: '华东电子',
+            applicant_name: '张销售',
+            description: '线索阶段评估测试方案和成本边界',
+            lead_id: 21,
+            assessment_status: 'IN_PROGRESS',
+            current_assessment_id: 701,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage('/presales/technical-solutions?tab=reviews&type=support&lead_id=21');
+
+    await screen.findByText('线索售前可行性评估');
+    fireEvent.click(screen.getByText('线索售前可行性评估'));
+    fireEvent.click(screen.getByRole('button', { name: /打开技术评估/ }));
+
+    expect(navigateSpy).toHaveBeenCalledWith('/sales/assessments/lead/21');
+  });
+
   it('creates an internal presale task from the task center and refreshes the list', async () => {
     renderPage('/sales/presales-tasks');
 
