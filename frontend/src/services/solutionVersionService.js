@@ -14,7 +14,7 @@ class SolutionVersionService {
    */
   async createVersion(solutionId, versionData) {
     const response = await api.post(
-      `/api/v1/sales/solutions/${solutionId}/versions`,
+      `/sales/solutions/${solutionId}/versions`,
       versionData
     );
     return response.data;
@@ -26,7 +26,7 @@ class SolutionVersionService {
    */
   async getVersionHistory(solutionId) {
     const response = await api.get(
-      `/api/v1/sales/solutions/${solutionId}/versions`
+      `/sales/solutions/${solutionId}/versions`
     );
     return response.data;
   }
@@ -37,7 +37,7 @@ class SolutionVersionService {
    */
   async getVersion(versionId) {
     const response = await api.get(
-      `/api/v1/sales/solution-versions/${versionId}`
+      `/sales/solution-versions/${versionId}`
     );
     return response.data;
   }
@@ -49,7 +49,7 @@ class SolutionVersionService {
    */
   async updateVersion(versionId, updateData) {
     const response = await api.put(
-      `/api/v1/sales/solution-versions/${versionId}`,
+      `/sales/solution-versions/${versionId}`,
       updateData
     );
     return response.data;
@@ -61,7 +61,7 @@ class SolutionVersionService {
    */
   async submitForReview(versionId) {
     const response = await api.post(
-      `/api/v1/sales/solution-versions/${versionId}/submit`
+      `/sales/solution-versions/${versionId}/submit`
     );
     return response.data;
   }
@@ -74,7 +74,7 @@ class SolutionVersionService {
    */
   async approveVersion(versionId, action, comments = '') {
     const response = await api.post(
-      `/api/v1/sales/solution-versions/${versionId}/approve`,
+      `/sales/solution-versions/${versionId}/approve`,
       { action, comments }
     );
     return response.data;
@@ -86,7 +86,7 @@ class SolutionVersionService {
    * @param {number} versionId2 - 版本2 ID
    */
   async compareVersions(versionId1, versionId2) {
-    const response = await api.get('/api/v1/sales/solution-versions/compare', {
+    const response = await api.get('/sales/solution-versions/compare', {
       params: { version_id_1: versionId1, version_id_2: versionId2 },
     });
     return response.data;
@@ -100,7 +100,7 @@ class SolutionVersionService {
    */
   async validateBinding(quoteVersionId) {
     const response = await api.post(
-      `/api/v1/sales/quote-versions/${quoteVersionId}/validate-binding`
+      `/sales/quote-versions/${quoteVersionId}/validate-binding`
     );
     return response.data;
   }
@@ -111,7 +111,7 @@ class SolutionVersionService {
    */
   async syncCostToQuote(quoteVersionId) {
     const response = await api.post(
-      `/api/v1/sales/quote-versions/${quoteVersionId}/sync-cost`
+      `/sales/quote-versions/${quoteVersionId}/sync-cost`
     );
     return response.data;
   }
@@ -122,7 +122,7 @@ class SolutionVersionService {
    */
   async checkUpdateImpact(versionId) {
     const response = await api.get(
-      `/api/v1/sales/solution-versions/${versionId}/impact`
+      `/sales/solution-versions/${versionId}/impact`
     );
     return response.data;
   }
@@ -135,7 +135,7 @@ class SolutionVersionService {
    */
   async bindQuoteVersion(quoteVersionId, solutionVersionId, costEstimationId) {
     const response = await api.post(
-      `/api/v1/sales/quote-versions/${quoteVersionId}/bind`,
+      `/sales/quote-versions/${quoteVersionId}/bind`,
       null,
       {
         params: {
