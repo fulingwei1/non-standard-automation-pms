@@ -2,6 +2,86 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { presaleApi } from "../../../services/api";
 
+const defaultTechSpecs = {
+    productInfo: {},
+    capacity: { uph: 0, cycleTime: 0, dailyOutput: 0, channels: 0 },
+    testItems: [],
+    testStandards: [],
+    environment: {},
+    rawText: "",
+};
+
+const unwrapResponse = (response) => {
+    if (response?.formatted !== undefined) {
+        return response.formatted;
+    }
+
+    const data = response?.data;
+    if (
+        data &&
+        typeof data === "object" &&
+        "data" in data &&
+        ("code" in data || "success" in data)
+    ) {
+        return data.data;
+    }
+
+    return data ?? response;
+};
+
+const safeNumber = (value) => {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : 0;
+};
+
+const parseObject = (value) => {
+    if (!value) {
+        return null;
+    }
+
+    if (typeof value === "object" && !Array.isArray(value)) {
+        return value;
+    }
+
+    if (typeof value === "string") {
+        try {
+            const parsed = JSON.parse(value);
+            return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+                ? parsed
+                : null;
+        } catch {
+            return null;
+        }
+    }
+
+    return null;
+};
+
+const normalizeTechSpecs = (solutionData) => {
+    const source =
+        parseObject(solutionData.tech_specs) ||
+        parseObject(solutionData.technical_specs) ||
+        parseObject(solutionData.technical_spec) ||
+        {};
+
+    return {
+        productInfo: source.productInfo || source.product_info || {},
+        capacity: {
+            ...defaultTechSpecs.capacity,
+            ...(source.capacity || {}),
+        },
+        testItems: source.testItems || source.test_items || [],
+        testStandards: source.testStandards || source.test_standards || [],
+        environment: source.environment || {},
+        rawText:
+            source.rawText ||
+            source.raw_text ||
+            (typeof solutionData.technical_spec === "string"
+                ? solutionData.technical_spec
+                : ""),
+    };
+};
+
 export function useSolutionDetail() {
     const { id } = useParams();
     const [activeTab, setActiveTab] = useState("overview");
@@ -19,16 +99,21 @@ export function useSolutionDetail() {
 
             // Load solution detail
             const solutionResponse = await presaleApi.solutions.get(id);
-            const solutionData = solutionResponse.data;
+            const solutionData = unwrapResponse(solutionResponse) || {};
 
             // Load cost estimate if available
             let costData = null;
             try {
                 const costResponse = await presaleApi.solutions.getCost(id);
-                costData = costResponse.data;
+                costData = unwrapResponse(costResponse);
             } catch (_err) {
                 // Cost estimate may not exist, ignore error
             }
+
+            const amountSource =
+                solutionData.estimated_cost != null
+                    ? solutionData.estimated_cost
+                    : solutionData.suggested_price;
 
             // Transform solution data
             const transformedSolution = {
@@ -42,21 +127,24 @@ export function useSolutionDetail() {
                 deviceType: solutionData.solution_type?.toLowerCase() || "",
                 deviceTypeName: solutionData.solution_type || "",
                 progress: solutionData.progress || 0,
-                amount: solutionData.estimated_cost
-                    ? solutionData.estimated_cost / 10000
-                    : solutionData.suggested_price
-                        ? solutionData.suggested_price / 10000
-                        : 0,
+                amount: safeNumber(amountSource) / 10000,
                 deadline: solutionData.deadline || "",
                 createdAt: solutionData.created_at || "",
                 updatedAt: solutionData.updated_at || solutionData.created_at || "",
-                creator: solutionData.creator_name || "",
+                creator: solutionData.creator_name || solutionData.author_name || "",
                 opportunity: solutionData.opportunity_name || "",
                 opportunityId: solutionData.opportunity_id,
                 salesPerson: solutionData.sales_person_name || "",
                 tags: solutionData.tags || [],
-                description: solutionData.description || "",
-                techSpecs: solutionData.tech_specs || {},
+                description:
+                    solutionData.description ||
+                    solutionData.solution_overview ||
+                    solutionData.requirement_summary ||
+                    "",
+                requirementSummary: solutionData.requirement_summary || "",
+                solutionOverview: solutionData.solution_overview || "",
+                technicalSpec: solutionData.technical_spec || "",
+                techSpecs: normalizeTechSpecs(solutionData),
                 equipment: solutionData.equipment || {},
                 deliverables: solutionData.deliverables || [],
                 versionHistory: [], // These seem to be placeholders or missing from API transformation in original

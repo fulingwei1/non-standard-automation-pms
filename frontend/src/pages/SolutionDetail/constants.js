@@ -16,7 +16,12 @@ export const getStatusStyle = (status) => {
         case "in_progress":
             return { bg: "bg-blue-500", text: "编写中" };
         case "reviewing":
+        case "review":
             return { bg: "bg-amber-500", text: "评审中" };
+        case "approved":
+            return { bg: "bg-emerald-500", text: "已通过" };
+        case "rejected":
+            return { bg: "bg-red-500", text: "已驳回" };
         case "published":
             return { bg: "bg-emerald-500", text: "已发布" };
         case "archived":
