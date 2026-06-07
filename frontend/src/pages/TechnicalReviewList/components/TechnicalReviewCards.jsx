@@ -152,6 +152,7 @@ export function TechnicalReviewCards({
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
+                                                aria-label={`查看 ${review.review_name}`}
                                                 onClick={() => onView(review)}
                                                 className="text-slate-400 hover:text-slate-100"
                                             >
@@ -162,6 +163,7 @@ export function TechnicalReviewCards({
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
+                                                        aria-label={`编辑 ${review.review_name}`}
                                                         onClick={() => onEdit(review)}
                                                         className="text-slate-400 hover:text-slate-100"
                                                     >
@@ -170,6 +172,7 @@ export function TechnicalReviewCards({
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
+                                                        aria-label={`删除 ${review.review_name}`}
                                                         onClick={() => onDeleteRequest(review)}
                                                         className="text-slate-400 hover:text-red-400"
                                                     >

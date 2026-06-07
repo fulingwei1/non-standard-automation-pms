@@ -2,8 +2,7 @@
  * 技术评审详情/创建页面
  * 支持创建、编辑、查看技术评审详情
  */
-import { useParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { PageHeader } from "../../components/layout/PageHeader";
 import {
     Button,
@@ -21,10 +20,12 @@ import { ParticipantsTab } from "./ParticipantsTab";
 import { MaterialsTab } from "./MaterialsTab";
 import { ChecklistTab } from "./ChecklistTab";
 import { IssuesTab } from "./IssuesTab";
+import { buildTechnicalReviewListPath } from "./navigation";
 
 export default function TechnicalReviewDetail() {
     const { reviewId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const {
         isNew,
@@ -71,7 +72,7 @@ export default function TechnicalReviewDetail() {
                     <div className="flex items-center gap-2">
                         <Button
                             variant="outline"
-                            onClick={() => navigate("/technical-reviews")}
+                            onClick={() => navigate(buildTechnicalReviewListPath(location.search))}
                             className="border-slate-700"
                         >
                             <ArrowLeft className="w-4 h-4 mr-2" />

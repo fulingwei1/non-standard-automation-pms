@@ -1,10 +1,17 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { useTechnicalReviewList } from "./hooks";
 import { TechnicalReviewFilter, TechnicalReviewCards, TechnicalReviewDeleteDialog } from "./components";
 
+function buildContextualReviewPath(pathname, search) {
+    const params = new URLSearchParams(search || "");
+    const query = params.toString();
+    return `${pathname}${query ? `?${query}` : ""}`;
+}
+
 export default function TechnicalReviewList() {
     const navigate = useNavigate();
+    const location = useLocation();
     const {
         loading,
         reviews,
@@ -22,6 +29,8 @@ export default function TechnicalReviewList() {
         handleSearch,
         handleReset
     } = useTechnicalReviewList();
+    const withCurrentContext = (pathname) =>
+        buildContextualReviewPath(pathname, location.search);
 
     return (
         <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -43,7 +52,7 @@ export default function TechnicalReviewList() {
                     projectList={projectList}
                     onSearch={handleSearch}
                     onReset={handleReset}
-                    onCreate={() => navigate("/technical-reviews/new")}
+                    onCreate={() => navigate(withCurrentContext("/technical-reviews/new"))}
                 />
 
                 <TechnicalReviewCards
@@ -53,9 +62,13 @@ export default function TechnicalReviewList() {
                     page={page}
                     pageSize={pageSize}
                     setPage={setPage}
-                    onCreate={() => navigate("/technical-reviews/new")}
-                    onView={(review) => navigate(`/technical-reviews/${review.id}`)}
-                    onEdit={(review) => navigate(`/technical-reviews/${review.id}/edit`)}
+                    onCreate={() => navigate(withCurrentContext("/technical-reviews/new"))}
+                    onView={(review) =>
+                        navigate(withCurrentContext(`/technical-reviews/${review.id}`))
+                    }
+                    onEdit={(review) =>
+                        navigate(withCurrentContext(`/technical-reviews/${review.id}/edit`))
+                    }
                     onDeleteRequest={(review) => setDeleteDialog({ open: true, review })}
                 />
             </div>

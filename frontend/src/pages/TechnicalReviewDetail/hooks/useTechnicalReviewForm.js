@@ -4,6 +4,7 @@ import { technicalReviewApi, projectApi, userApi } from "../../../services/api";
 import { formatDate } from "../../../lib/utils";
 import { DEFAULT_FORM_DATA } from "../constants";
 import { getProjectContextFilters } from "../../../lib/projectContext";
+import { buildTechnicalReviewListPath } from "../navigation";
 
 /**
  * Manages all create/edit form state for TechnicalReviewDetail.
@@ -107,7 +108,7 @@ export function useTechnicalReviewForm(reviewId) {
             setSaving(true);
             if (isNew) {
                 await technicalReviewApi.create(formData);
-                navigate("/technical-reviews");
+                navigate(buildTechnicalReviewListPath(searchParams));
             } else {
                 await technicalReviewApi.update(reviewId, formData);
                 await fetchReview();
