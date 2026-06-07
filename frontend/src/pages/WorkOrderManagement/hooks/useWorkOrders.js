@@ -1,18 +1,32 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { productionApi, projectApi } from "../../../services/api";
+import { getProjectContextFilters } from "../../../lib/projectContext";
 import { INITIAL_NEW_ORDER, INITIAL_ASSIGN_DATA } from "../statusConstants";
+
+const toContextProjectIdNumber = (projectId) => {
+  const parsed = Number(projectId);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
 
 /**
  * Hook encapsulating all work-order CRUD, filtering, and dialog state.
  */
 export function useWorkOrders() {
+  const [searchParams] = useSearchParams();
+  const projectContextFilters = useMemo(
+    () => getProjectContextFilters(searchParams),
+    [searchParams],
+  );
+  const contextProjectId = projectContextFilters.project_id || "";
+  const contextProjectIdNumber = toContextProjectIdNumber(contextProjectId);
   const [loading, setLoading] = useState(true);
   const [workOrders, setWorkOrders] = useState([]);
   const [projects, setProjects] = useState([]);
 
   // Filters
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [filterProject, setFilterProject] = useState("");
+  const [filterProject, setFilterProject] = useState(contextProjectId);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
 
@@ -23,17 +37,20 @@ export function useWorkOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   // Form states
-  const [newOrder, setNewOrder] = useState({ ...INITIAL_NEW_ORDER });
+  const [newOrder, setNewOrder] = useState({
+    ...INITIAL_NEW_ORDER,
+    project_id: contextProjectIdNumber,
+  });
   const [assignData, setAssignData] = useState({ ...INITIAL_ASSIGN_DATA });
 
   const fetchProjects = useCallback(async () => {
     try {
-      const res = await projectApi.list({ page_size: 1000 });
+      const res = await projectApi.list({ page_size: 1000, ...projectContextFilters });
       setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
-  }, []);
+  }, [projectContextFilters]);
 
   const fetchWorkOrders = useCallback(async () => {
     try {
@@ -58,6 +75,16 @@ export function useWorkOrders() {
     fetchWorkOrders();
   }, [fetchProjects, fetchWorkOrders]);
 
+  useEffect(() => {
+    if (contextProjectId) {
+      setFilterProject(contextProjectId);
+      setNewOrder((prev) => ({
+        ...prev,
+        project_id: contextProjectIdNumber,
+      }));
+    }
+  }, [contextProjectId, contextProjectIdNumber]);
+
   const handleCreateOrder = useCallback(async () => {
     if (!newOrder.task_name || !newOrder.project_id) {
       alert("请填写任务名称和选择项目");
@@ -66,13 +93,16 @@ export function useWorkOrders() {
     try {
       await productionApi.workOrders.create(newOrder);
       setShowCreateDialog(false);
-      setNewOrder({ ...INITIAL_NEW_ORDER });
+      setNewOrder({
+        ...INITIAL_NEW_ORDER,
+        project_id: contextProjectIdNumber,
+      });
       fetchWorkOrders();
     } catch (error) {
       console.error("Failed to create work order:", error);
       alert("创建工单失败: " + (error.response?.data?.detail || error.message));
     }
-  }, [newOrder, fetchWorkOrders]);
+  }, [newOrder, contextProjectIdNumber, fetchWorkOrders]);
 
   const handleViewDetail = useCallback(async (orderId) => {
     try {

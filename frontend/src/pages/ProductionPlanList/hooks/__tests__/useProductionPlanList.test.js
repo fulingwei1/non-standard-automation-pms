@@ -1,76 +1,54 @@
-import { renderHook, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { useProductionPlanList } from '../useProductionPlanList';
-import { productionApi } from '../../../../services/api';
+import { renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useSearchParams } from "react-router-dom";
+import { useProductionPlanList } from "../useProductionPlanList";
+import { productionApi, projectApi } from "../../../../services/api";
 
-// Mock API
-vi.mock('../../../../services/api', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    productionApi: {
+vi.mock("react-router-dom", () => ({
+  useSearchParams: vi.fn(),
+}));
+
+vi.mock("../../../../services/api", () => ({
+  productionApi: {
+    productionPlans: {
+      list: vi.fn(),
+      get: vi.fn(),
+      create: vi.fn(),
+      publish: vi.fn(),
+    },
+    workshops: {
+      list: vi.fn(),
+    },
+  },
+  projectApi: {
     list: vi.fn(),
-    get: vi.fn(),
-    query: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    aiMatch: vi.fn(),
-    getOverdue: vi.fn(),
-    getAging: vi.fn(),
-    getSummary: vi.fn(),
-    batch: vi.fn(),
-    export: vi.fn(),
-    submit: vi.fn(),
-    approve: vi.fn(),
-    reject: vi.fn(),
-    start: vi.fn(),
-    complete: vi.fn(),
-    cancel: vi.fn(),
   },
-  default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-    patch: vi.fn(),
-    defaults: { baseURL: '/api' },
-  },
-  };
-});
+}));
 
-describe.skip('useProductionPlanList Hook', () => {
-  // Setup common mock data
-  const mockItems = [{ id: 1, name: 'Test 1' }, { id: 2, name: 'Test 2' }];
-  const mockDetail = { id: 1, name: 'Test Detail' };
-  const mockResponse = { data: { items: mockItems, total: 2 }, items: mockItems }; 
-
+describe("useProductionPlanList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Auto-setup mocks for known methods
-    const apiObjects = [productionApi];
-    apiObjects.forEach(api => {
-        if (api) {
-            if (api.list) api.list.mockResolvedValue(mockResponse);
-            if (api.get) api.get.mockResolvedValue({ data: mockDetail });
-            if (api.query) api.query.mockResolvedValue(mockResponse);
-            if (api.aiMatch) api.aiMatch.mockResolvedValue(mockResponse); // specialized
-        }
-    });
+    useSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
+    projectApi.list.mockResolvedValue({ data: { items: [] } });
+    productionApi.workshops.list.mockResolvedValue({ data: { items: [] } });
+    productionApi.productionPlans.list.mockResolvedValue({ data: { items: [] } });
   });
 
-  it('should load data', async () => {
+  it("scopes production plans and defaults new plans by project context", async () => {
+    useSearchParams.mockReturnValue([
+      new URLSearchParams("project_id=42"),
+      vi.fn(),
+    ]);
+
     const { result } = renderHook(() => useProductionPlanList());
 
-    // Wait for loading to finish
-    if (Object.prototype.hasOwnProperty.call(result.current, 'loading')) {
-        await waitFor(() => expect(result.current.loading).toBe(false));
-    } else {
-        await waitFor(() => {});
-    }
+    await waitFor(() => {
+      expect(productionApi.productionPlans.list).toHaveBeenCalledWith({
+        project_id: "42",
+      });
+    });
 
-    // Basic assertion
-    expect(result.current).toBeDefined();
+    expect(result.current.filterProject).toBe("42");
+    expect(result.current.newPlan.project_id).toBe(42);
   });
 });

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
     purchaseApi,
@@ -7,6 +7,7 @@ import {
 } from "../../../services/api";
 import { toast } from "../../../components/ui/toast";
 import { ORDER_STATUS_CONFIGS } from "../../../lib/constants/procurement";
+import { getProjectContextFilters } from "../../../lib/projectContext";
 import {
     ORDER_STATUS,
     ORDER_URGENCY,
@@ -18,6 +19,11 @@ import {
 export function usePurchaseOrders() {
     const [searchParams] = useSearchParams();
     const initialStatus = searchParams.get("status") || "all";
+    const projectContextFilters = useMemo(
+        () => getProjectContextFilters(searchParams),
+        [searchParams]
+    );
+    const contextProjectId = projectContextFilters.project_id || "";
 
     // States
     const [orders, setOrders] = useState([]);
@@ -43,7 +49,7 @@ export function usePurchaseOrders() {
     // Form states
     const [newOrder, setNewOrder] = useState({
         supplier_id: "",
-        project_id: "",
+        project_id: contextProjectId,
         items: [],
         payment_terms: PAYMENT_TERMS.NET30,
         shipping_method: SHIPPING_METHODS.STANDARD,
@@ -54,7 +60,7 @@ export function usePurchaseOrders() {
     const [editOrder, setEditOrder] = useState({
         id: "",
         supplier_id: "",
-        project_id: "",
+        project_id: contextProjectId,
         items: [],
         payment_terms: PAYMENT_TERMS.NET30,
         shipping_method: SHIPPING_METHODS.STANDARD,
@@ -75,6 +81,7 @@ export function usePurchaseOrders() {
         try {
             const params = {
                 page_size: 1000,
+                ...(contextProjectId && { project_id: contextProjectId }),
                 ...(statusFilter && statusFilter !== "all" && { status: statusFilter }),
                 ...(searchQuery && { search: searchQuery })
             };
@@ -140,7 +147,7 @@ export function usePurchaseOrders() {
         } finally {
             setLoading(false);
         }
-    }, [statusFilter, searchQuery]);
+    }, [contextProjectId, statusFilter, searchQuery]);
 
     // Load dropdown data
     useEffect(() => {
@@ -148,7 +155,7 @@ export function usePurchaseOrders() {
             try {
                 const [suppliersRes, projectsRes] = await Promise.all([
                     supplierApi.list({ page_size: 1000 }),
-                    projectApi.list({ page_size: 1000 })
+                    projectApi.list({ page_size: 1000, ...projectContextFilters })
                 ]);
 
                 const suppliersData = suppliersRes.data?.items || suppliersRes.data?.items || suppliersRes.data || [];
@@ -164,7 +171,13 @@ export function usePurchaseOrders() {
         };
 
         loadDropdownData();
-    }, []);
+    }, [projectContextFilters]);
+
+    useEffect(() => {
+        if (contextProjectId) {
+            setNewOrder((prev) => ({ ...prev, project_id: contextProjectId }));
+        }
+    }, [contextProjectId]);
 
     // Initial load and reload on filter changes
     useEffect(() => {
@@ -196,7 +209,7 @@ export function usePurchaseOrders() {
             setShowCreateModal(false);
             setNewOrder({
                 supplier_id: "",
-                project_id: "",
+                project_id: contextProjectId,
                 items: [],
                 payment_terms: PAYMENT_TERMS.NET30,
                 shipping_method: SHIPPING_METHODS.STANDARD,

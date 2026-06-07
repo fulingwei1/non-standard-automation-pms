@@ -1,9 +1,23 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { productionApi, projectApi } from "../../../services/api";
+import { getProjectContextFilters } from "../../../lib/projectContext";
 import { confirmAction } from "@/lib/confirmAction";
 import { INITIAL_NEW_PLAN } from "../constants";
 
+const toContextProjectIdNumber = (projectId) => {
+  const parsed = Number(projectId);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
 export function useProductionPlanList() {
+  const [searchParams] = useSearchParams();
+  const projectContextFilters = useMemo(
+    () => getProjectContextFilters(searchParams),
+    [searchParams],
+  );
+  const contextProjectId = projectContextFilters.project_id || "";
+  const contextProjectIdNumber = toContextProjectIdNumber(contextProjectId);
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -12,7 +26,7 @@ export function useProductionPlanList() {
   // Filters
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filterType, setFilterType] = useState("");
-  const [filterProject, setFilterProject] = useState("");
+  const [filterProject, setFilterProject] = useState(contextProjectId);
   const [filterWorkshop, setFilterWorkshop] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
 
@@ -22,16 +36,19 @@ export function useProductionPlanList() {
   const [selectedPlan, setSelectedPlan] = useState(null);
 
   // Create form state
-  const [newPlan, setNewPlan] = useState(INITIAL_NEW_PLAN);
+  const [newPlan, setNewPlan] = useState({
+    ...INITIAL_NEW_PLAN,
+    project_id: contextProjectIdNumber,
+  });
 
   const fetchProjects = useCallback(async () => {
     try {
-      const res = await projectApi.list({ page_size: 1000 });
+      const res = await projectApi.list({ page_size: 1000, ...projectContextFilters });
       setProjects(res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
-  }, []);
+  }, [projectContextFilters]);
 
   const fetchWorkshops = useCallback(async () => {
     try {
@@ -69,6 +86,16 @@ export function useProductionPlanList() {
     fetchPlans();
   }, [fetchPlans]);
 
+  useEffect(() => {
+    if (contextProjectId) {
+      setFilterProject(contextProjectId);
+      setNewPlan((prev) => ({
+        ...prev,
+        project_id: contextProjectIdNumber,
+      }));
+    }
+  }, [contextProjectId, contextProjectIdNumber]);
+
   const filteredPlans = useMemo(() => {
     return (plans || []).filter((plan) => {
       if (searchKeyword) {
@@ -90,7 +117,10 @@ export function useProductionPlanList() {
     try {
       await productionApi.productionPlans.create(newPlan);
       setShowCreateDialog(false);
-      setNewPlan(INITIAL_NEW_PLAN);
+      setNewPlan({
+        ...INITIAL_NEW_PLAN,
+        project_id: contextProjectIdNumber,
+      });
       fetchPlans();
     } catch (error) {
       console.error("Failed to create plan:", error);

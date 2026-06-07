@@ -1,5 +1,6 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { useSearchParams } from 'react-router-dom';
 import { usePurchaseOrders } from '../usePurchaseOrders';
 import { purchaseApi, supplierApi, projectApi } from '../../../../services/api';
 
@@ -79,12 +80,13 @@ vi.mock('../../../../services/api', async (importOriginal) => {
 });
 
 vi.mock('react-router-dom', () => ({
-    useSearchParams: () => [new URLSearchParams()]
+    useSearchParams: vi.fn()
 }));
 
 describe('usePurchaseOrders Hook', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        useSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
         purchaseApi.list.mockResolvedValue({ data: { items: [] } });
         supplierApi.list.mockResolvedValue({ data: { items: [] } });
         projectApi.list.mockResolvedValue({ data: { items: [] } });
@@ -92,6 +94,12 @@ describe('usePurchaseOrders Hook', () => {
 
     it('should initialize with default state', async () => {
         const { result } = renderHook(() => usePurchaseOrders());
+
+        await waitFor(() => {
+            expect(purchaseApi.list).toHaveBeenCalled();
+            expect(projectApi.list).toHaveBeenCalled();
+            expect(supplierApi.list).toHaveBeenCalled();
+        });
 
         expect(result.current.statusFilter).toBe('all');
         expect(result.current.showCreateModal).toBe(false);
@@ -106,13 +114,39 @@ describe('usePurchaseOrders Hook', () => {
         });
     });
 
-    it('should handle modal state', () => {
+    it('should handle modal state', async () => {
         const { result } = renderHook(() => usePurchaseOrders());
+
+        await waitFor(() => {
+            expect(purchaseApi.list).toHaveBeenCalled();
+            expect(projectApi.list).toHaveBeenCalled();
+            expect(supplierApi.list).toHaveBeenCalled();
+        });
 
         act(() => {
             result.current.setShowCreateModal(true);
         });
 
         expect(result.current.showCreateModal).toBe(true);
+    });
+
+    it('scopes purchase orders and defaults new orders by project context', async () => {
+        useSearchParams.mockReturnValue([
+            new URLSearchParams('project_id=42'),
+            vi.fn()
+        ]);
+
+        const { result } = renderHook(() => usePurchaseOrders());
+
+        await waitFor(() => {
+            expect(purchaseApi.list).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    page_size: 1000,
+                    project_id: '42'
+                })
+            );
+        });
+
+        expect(result.current.newOrder.project_id).toBe('42');
     });
 });
