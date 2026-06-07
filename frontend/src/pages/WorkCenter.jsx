@@ -58,7 +58,7 @@ export default function WorkCenter() {
     description: "管理我的待办任务",
     icon: Target,
     color: "bg-green-500",
-    action: () => navigate("/tasks")
+    action: () => navigate("/project/management-center?tab=tasks")
   },
   {
     title: "工时填报",
@@ -390,7 +390,7 @@ export default function WorkCenter() {
               <Button
                 variant="outline"
                 className="w-full mt-4"
-                onClick={() => navigate("/tasks")}>
+                onClick={() => navigate("/project/management-center?tab=tasks")}>
 
                 查看所有活动
               </Button>
@@ -471,11 +471,11 @@ export default function WorkCenter() {
                 </button>
 
                 <button
-                  onClick={() => navigate("/projects")}
+                  onClick={() => navigate("/project/management-center?tab=board&view=card")}
                   className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-50 text-left">
 
                   <Award className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm">项目列表</span>
+                  <span className="text-sm">项目中心</span>
                 </button>
               </div>
             </CardContent>

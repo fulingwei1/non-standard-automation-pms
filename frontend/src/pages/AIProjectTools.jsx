@@ -90,21 +90,29 @@ function ProjectCard({ project, onSelect }) {
   );
 }
 
-export default function AIProjectTools() {
+export default function AIProjectTools({
+  embedded = false,
+  searchParamName = "tab",
+}) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "schedule");
+  const [activeTab, setActiveTab] = useState(() => {
+    const searchTab = searchParams.get(searchParamName);
+    return TABS.some((tab) => tab.id === searchTab) ? searchTab : "schedule";
+  });
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
   // 同步 tab 到 URL
   useEffect(() => {
-    const currentTab = searchParams.get("tab");
+    const currentTab = searchParams.get(searchParamName);
     if (currentTab !== activeTab) {
-      setSearchParams({ tab: activeTab }, { replace: true });
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set(searchParamName, activeTab);
+      setSearchParams(nextParams, { replace: true });
     }
-  }, [activeTab, searchParams, setSearchParams]);
+  }, [activeTab, searchParamName, searchParams, setSearchParams]);
 
   // 加载项目列表
   useEffect(() => {
@@ -152,13 +160,15 @@ export default function AIProjectTools() {
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
-      className="space-y-6 p-6"
+      className={embedded ? "space-y-6" : "space-y-6 p-6"}
     >
-      <PageHeader
-        title="AI 项目工具"
-        description={currentTabConfig?.description || "智能排计划与工程师调度"}
-        icon={<Sparkles className="w-6 h-6 text-primary" />}
-      />
+      {!embedded ? (
+        <PageHeader
+          title="AI 项目工具"
+          description={currentTabConfig?.description || "智能排计划与工程师调度"}
+          icon={<Sparkles className="w-6 h-6 text-primary" />}
+        />
+      ) : null}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">

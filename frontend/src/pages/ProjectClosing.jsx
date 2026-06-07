@@ -55,20 +55,26 @@ function LoadingFallback() {
   );
 }
 
-export default function ProjectClosing() {
+export default function ProjectClosing({
+  embedded = false,
+  searchParamName = "tab",
+}) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => {
     // 从 URL 参数读取初始 tab
-    return searchParams.get("tab") || "closure";
+    const searchTab = searchParams.get(searchParamName);
+    return TABS.some((tab) => tab.id === searchTab) ? searchTab : "closure";
   });
 
   // 同步 tab 状态到 URL
   useEffect(() => {
-    const currentTab = searchParams.get("tab");
+    const currentTab = searchParams.get(searchParamName);
     if (currentTab !== activeTab) {
-      setSearchParams({ tab: activeTab }, { replace: true });
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set(searchParamName, activeTab);
+      setSearchParams(nextParams, { replace: true });
     }
-  }, [activeTab, searchParams, setSearchParams]);
+  }, [activeTab, searchParamName, searchParams, setSearchParams]);
 
   const handleTabChange = (value) => {
     setActiveTab(value);
@@ -81,12 +87,14 @@ export default function ProjectClosing() {
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
-      className="space-y-6 p-6"
+      className={embedded ? "space-y-6" : "space-y-6 p-6"}
     >
-      <PageHeader
-        title="项目收尾"
-        description={currentTabConfig?.description || "项目结项、复盘与经验沉淀"}
-      />
+      {!embedded ? (
+        <PageHeader
+          title="项目收尾"
+          description={currentTabConfig?.description || "项目结项、复盘与经验沉淀"}
+        />
+      ) : null}
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList className="grid w-full grid-cols-3 lg:w-[500px]">

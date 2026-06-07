@@ -46,19 +46,25 @@ function LoadingFallback() {
   );
 }
 
-export default function GanttAndResource() {
+export default function GanttAndResource({
+  embedded = false,
+  searchParamName = "tab",
+}) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => {
-    return searchParams.get("tab") || "task";
+    const searchTab = searchParams.get(searchParamName);
+    return TABS.some((tab) => tab.id === searchTab) ? searchTab : "task";
   });
 
   // 同步 tab 状态到 URL
   useEffect(() => {
-    const currentTab = searchParams.get("tab");
+    const currentTab = searchParams.get(searchParamName);
     if (currentTab !== activeTab) {
-      setSearchParams({ tab: activeTab }, { replace: true });
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set(searchParamName, activeTab);
+      setSearchParams(nextParams, { replace: true });
     }
-  }, [activeTab, searchParams, setSearchParams]);
+  }, [activeTab, searchParamName, searchParams, setSearchParams]);
 
   const handleTabChange = (value) => {
     setActiveTab(value);
@@ -71,12 +77,14 @@ export default function GanttAndResource() {
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
-      className="space-y-6 p-6"
+      className={embedded ? "space-y-6" : "space-y-6 p-6"}
     >
-      <PageHeader
-        title="甘特与资源"
-        description={currentTabConfig?.description || "项目计划与资源管理"}
-      />
+      {!embedded ? (
+        <PageHeader
+          title="甘特与资源"
+          description={currentTabConfig?.description || "项目计划与资源管理"}
+        />
+      ) : null}
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">

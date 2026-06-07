@@ -3,7 +3,10 @@ import TabbedCenterPage from "../components/layout/TabbedCenterPage";
 import PMODashboard from "./PMODashboard";
 import ProjectHealthMonitor from "./ProjectHealthMonitor";
 
-export default function ProjectDashboardCenter() {
+export default function ProjectDashboardCenter({
+  embedded = false,
+  searchParamName = "tab",
+}) {
   const tabs = useMemo(
     () => [
       {
@@ -27,6 +30,8 @@ export default function ProjectDashboardCenter() {
       title="项目驾驶舱"
       description="统一查看 PMO 总览与项目健康监控"
       tabs={tabs}
+      showHeader={!embedded}
+      searchParamName={searchParamName}
     />
   );
 }

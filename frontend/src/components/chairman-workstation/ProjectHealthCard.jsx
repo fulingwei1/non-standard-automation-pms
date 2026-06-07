@@ -21,8 +21,8 @@ export const ProjectHealthCard = ({ projectHealthDistribution }) => {
               className="text-xs text-primary"
               asChild>
 
-              <Link to="/board">
-                项目看板 <ChevronRight className="w-3 h-3 ml-1" />
+              <Link to="/project/management-center">
+                项目中心 <ChevronRight className="w-3 h-3 ml-1" />
               </Link>
             </Button>
           </div>

@@ -25,8 +25,8 @@ export function getNavForRole(role) {
       {
         label: "全面监控",
         items: [
-          { name: "项目看板", path: "/board", icon: "Kanban" },
-          { name: "项目列表", path: "/projects", icon: "Briefcase" },
+          { name: "项目管理中心", path: "/project/management-center", icon: "Briefcase" },
+          { name: "项目驾驶舱", path: "/project/management-center?tab=dashboard", icon: "Gauge" },
           { name: "运营大屏", path: "/operation", icon: "BarChart3" },
         ],
       },
@@ -69,9 +69,9 @@ export function getNavForRole(role) {
       {
         label: "项目管理",
         items: [
-          { name: "项目看板", path: "/board", icon: "Kanban" },
-          { name: "项目列表", path: "/projects", icon: "Briefcase" },
-          { name: "排期看板", path: "/schedule", icon: "Calendar" },
+          { name: "项目管理中心", path: "/project/management-center", icon: "Briefcase" },
+          { name: "项目驾驶舱", path: "/project/management-center?tab=dashboard", icon: "Gauge" },
+          { name: "计划资源", path: "/project/management-center?tab=planning", icon: "GitBranch" },
         ],
       },
       {
@@ -113,9 +113,9 @@ export function getNavForRole(role) {
       {
         label: "项目管理",
         items: [
-          { name: "项目看板", path: "/board", icon: "Kanban" },
-          { name: "项目列表", path: "/projects", icon: "Briefcase" },
-          { name: "排期看板", path: "/schedule", icon: "Calendar" },
+          { name: "项目管理中心", path: "/project/management-center", icon: "Briefcase" },
+          { name: "项目驾驶舱", path: "/project/management-center?tab=dashboard", icon: "Gauge" },
+          { name: "计划资源", path: "/project/management-center?tab=planning", icon: "GitBranch" },
         ],
       },
       {
@@ -181,8 +181,8 @@ export function getNavForRole(role) {
       {
         label: "项目跟踪",
         items: [
-          { name: "项目看板", path: "/board", icon: "Kanban" },
-          { name: "项目列表", path: "/projects", icon: "Briefcase" },
+          { name: "项目管理中心", path: "/project/management-center", icon: "Briefcase" },
+          { name: "项目进度", path: "/project/management-center?tab=tracking", icon: "Calendar" },
         ],
       },
       {
@@ -236,8 +236,8 @@ export function getNavForRole(role) {
         label: "项目跟踪",
         items: [
           { name: "项目进度", path: "/sales-projects", icon: "Briefcase" },
-          { name: "项目看板", path: "/board", icon: "Kanban" },
-          { name: "项目列表", path: "/projects", icon: "Briefcase" },
+          { name: "项目管理中心", path: "/project/management-center", icon: "Briefcase" },
+          { name: "项目任务", path: "/project/management-center?tab=tasks", icon: "ListTodo" },
         ],
       },
       {
@@ -274,9 +274,9 @@ export function getNavForRole(role) {
       {
         label: "项目管理",
         items: [
-          { name: "项目看板", path: "/board", icon: "Kanban" },
-          { name: "排期看板", path: "/schedule", icon: "Calendar" },
-          { name: "任务中心", path: "/tasks", icon: "ListTodo" },
+          { name: "项目管理中心", path: "/project/management-center", icon: "Briefcase" },
+          { name: "计划资源", path: "/project/management-center?tab=planning", icon: "GitBranch" },
+          { name: "任务中心", path: "/project/management-center?tab=tasks", icon: "ListTodo" },
         ],
       },
       {

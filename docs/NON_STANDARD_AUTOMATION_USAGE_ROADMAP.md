@@ -32,7 +32,7 @@
 |---|---|---|---|
 | 销售工作台 | 销售、销售经理 | 客户、商机、报价、合同、售前申请、赢单交接 | 销售模块现有工作台继续收敛 |
 | 售前技术支持中心 | 销售、售前工程师、售前主管 | 需求调研、方案、技术参数、成本估算、投标、工单、知识库、模板 | `/presales/technical-solutions` 已开始合并 |
-| 项目管理中心 | 项目经理、PMO、工程负责人 | 项目看板、项目详情、WBS、任务、甘特、资源、里程碑、项目评审 | 当前分散在 `/board`、`/project/dashboard-center`、`/gantt-resource` 等 |
+| 项目管理中心 | 项目经理、PMO、工程负责人 | 项目看板、项目详情、WBS、任务、甘特、资源、里程碑、项目评审 | `/project/management-center` 已开始合并 |
 | 项目执行中心 | 机械、电气、软件、装配、调试 | 任务领取、进度填报、工时、问题、现场资源 | 当前分散在任务、工程师工作台、装配、生产执行 |
 | 项目成本毛利中心 | 项目经理、财务、老板 | 预算、实际成本、工时成本、报价成本、毛利偏差、变更影响 | `/project/cost-center` 已有雏形 |
 | 交付验收中心 | 项目经理、品质、交付、售后 | FAT、SAT、现场问题、验收单、整改闭环、售后交接 | 当前分散在生产验收、项目交付、售后 |
@@ -74,27 +74,29 @@
 
 项目管理的问题和售前类似：已经有很多子模块，但项目经理缺一个稳定日常入口。
 
-建议新增或扩展主入口：`/project/management-center`
+当前主入口：`/project/management-center`
 
-建议页签：
+已落地页签：
 
 | 页签 | 作用 | 来源页面 |
 |---|---|---|
-| 项目看板 | 所有项目、卡片视图、流水线视图 | `ProjectBoard` |
-| 项目驾驶舱 | PMO 总览、健康监控 | `ProjectDashboardCenter` |
-| 任务计划 | WBS、任务、里程碑、进度报告 | `TaskCenter`、`WBSTemplateManagement`、`MilestoneManagement`、`ProgressReport` |
-| 甘特资源 | 任务依赖、资源负载 | `GanttAndResource` |
-| 技术评审 | PDR/DDR/PRR/FRR/ARR 评审 | `ProjectReviewList`、`ProjectReviewDetail` |
-| 风险变更 | 风险、ECN、问题、影响分析 | `RiskManagement`、`ECNManagement`、`ECNCostImpact`、`ECNMaterialImpact` |
-| 成本毛利 | 预算、工时、成本、毛利预测 | `ProjectCostCenter`、`MarginPrediction` |
-| 交付收尾 | 交付计划、验收、结项、复盘、经验 | `ProjectClosing`、验收/交付相关页面 |
+| 看板 | 所有项目、卡片、看板、列表、流水线视图 | `ProjectBoard` |
+| 驾驶舱 | PMO 总览、健康监控 | `ProjectDashboardCenter` |
+| 任务 | 项目任务和个人任务 | `TaskCenter` |
+| 进度 | 排期、进度报告、里程碑、WBS 模板 | `ScheduleBoard`、`ProgressReport`、`MilestoneManagement`、`WBSTemplateManagement` |
+| 计划资源 | 任务依赖、资源负载 | `GanttAndResource` |
+| 成本 | 预算、工时成本、毛利联动 | `ProjectCostCenter` |
+| 收尾 | 结项、复盘、经验教训 | `ProjectClosing` |
+| AI工具 | 智能排计划、工程师调度 | `AIProjectTools` |
 
 路由策略：
 
-- `/projects`、`/board` 统一作为项目列表入口，后续可重定向到 `management-center?tab=board`。
-- `/pmo/dashboard`、`/project/dashboard-center` 统一作为 `management-center?tab=dashboard`。
-- `/gantt-resource` 保留为深链接，但菜单只露出项目管理中心。
-- `/project-closing` 保留为深链接，但菜单归入项目管理中心的交付收尾页签。
+- `/projects`、`/board` 已重定向到 `management-center?tab=board`。
+- `/pmo/dashboard`、`/project/dashboard-center` 已重定向到 `management-center?tab=dashboard`。
+- `/progress-tracking/schedule|reports|milestones|wbs` 已重定向到 `management-center?tab=tracking` 的对应子页签。
+- `/gantt-resource`、`/resource-overview` 已重定向到 `management-center?tab=planning`。
+- `/project/cost-center`、`/time-cost-margin-flow` 已重定向到 `management-center?tab=cost`。
+- `/project-closing`、`/pmo/closure`、`/projects/reviews`、`/lessons-learned` 已重定向到 `management-center?tab=closing`。
 - `/projects/:id/*` 继续保留项目详情深链接，不强行塞进全局页签。
 
 ## 售前到项目的交接包
@@ -124,7 +126,7 @@
 
 - 销售：商机、报价、合同、售前申请只保留一个主入口。
 - 售前：`/presales/technical-solutions` 作为售前技术支持中心。
-- 项目：建立 `/project/management-center` 或扩展现有项目中心。
+- 项目：`/project/management-center` 作为项目管理中心，旧入口跳转到对应页签。
 - 菜单只放主入口，旧入口只做跳转和深链接。
 
 ### Phase 2：流程闭环
@@ -140,7 +142,7 @@
 
 目标：项目经理每天只看一个项目中心。
 
-- 项目中心补齐任务计划、技术评审、风险变更、成本毛利、交付收尾。
+- 项目中心继续补齐技术评审、风险变更、验收交付、售后交接等专业深链入口。
 - 采购、生产、装配、验收页面保留专业视图，但必须能从项目详情进入。
 - 每个后续模块都要回写项目状态、风险、成本或验收结果。
 
@@ -171,7 +173,7 @@
 ## 最近三步执行建议
 
 1. 统一销售工作台里的“发起售前支持”动作，确保商机、方案评审、技术支持都落到同一张售前工单。
-2. 新建或扩展项目管理中心，把项目看板、PMO、任务计划、甘特资源、技术评审、风险变更、成本毛利、交付收尾放到同一入口。
+2. 做售前到项目交接包，把需求、方案、成本、风险、里程碑、未闭环事项带入项目中心。
 3. 做一条端到端验收脚本：商机 -> 售前工单 -> 方案/成本 -> 赢单交接 -> 项目 -> 任务/评审 -> 验收/收尾。
 
 这三步完成后，系统才会从“很多功能模块”变成“公司能按流程每天用的系统”。

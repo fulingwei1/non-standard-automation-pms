@@ -79,7 +79,7 @@
 用户不应该在菜单里猜功能位置。每个大模块只保留一个主入口：
 
 - 售前技术支持：`/presales/workbench`
-- 项目管理：`/project/workbench`
+- 项目管理：`/project/management-center`
 - 销售闭环：`/sales/workstation`
 
 4. 旧功能变子视图，不做重复页面
@@ -223,46 +223,58 @@
 
 新主入口：
 
-`/project/workbench`
+`/project/management-center`
 
 旧入口兼容：
 
-- `/board` -> `/project/workbench?view=board`
-- `/pmo/dashboard` -> `/project/workbench?view=pmo`
-- `/progress-tracking/...` -> `/project/workbench?view=progress`
-- `/gantt-resource` -> `/project/workbench?view=schedule`
-- `/ai-project-tools` -> `/project/workbench?view=ai`
-- `/project-health-monitor` -> `/project/workbench?view=health`
-- `/project/cost-center` -> `/project/workbench?view=cost`
-- `/project-closing` -> `/project/workbench?view=closing`
+- `/board` -> `/project/management-center?tab=board`
+- `/projects` -> `/project/management-center?tab=board&view=card`
+- `/stage-view`、`/projects/stage-view` -> `/project/management-center?tab=board&view=pipeline`
+- `/pmo/dashboard`、`/project/dashboard-center` -> `/project/management-center?tab=dashboard`
+- `/project-health-monitor` -> `/project/management-center?tab=dashboard&dashboardTab=health`
+- `/progress-tracking/tasks`、`/tasks` -> `/project/management-center?tab=tasks`
+- `/progress-tracking/schedule`、`/schedule` -> `/project/management-center?tab=tracking&trackingTab=schedule`
+- `/progress-tracking/reports` -> `/project/management-center?tab=tracking&trackingTab=reports`
+- `/progress-tracking/milestones`、`/milestones` -> `/project/management-center?tab=tracking&trackingTab=milestones`
+- `/progress-tracking/wbs`、`/wbs-templates` -> `/project/management-center?tab=tracking&trackingTab=wbs`
+- `/gantt-resource`、`/gantt` -> `/project/management-center?tab=planning`
+- `/resource-overview`、`/progress-tracking/resource-overview` -> `/project/management-center?tab=planning&planningTab=resource`
+- `/ai-project-tools` -> `/project/management-center?tab=ai`
+- `/schedule-generation`、`/engineer-recommendation` -> `/project/management-center?tab=ai`
+- `/project/cost-center` -> `/project/management-center?tab=cost`
+- `/time-cost-margin-flow` -> `/project/management-center?tab=cost&costTab=margin`
+- `/project-closing` -> `/project/management-center?tab=closing`
+- `/pmo/closure`、`/projects/reviews`、`/lessons-learned` -> `/project/management-center?tab=closing`
 
 ### 项目工作台一级视图
 
-项目管理建议合成 8 个视图：
+项目管理第一版已经合成 8 个视图：
 
-1. 项目总览
-   - 全部项目、阶段、健康度、风险、负责人、客户、合同金额。
+1. 看板
+   - 全部项目、卡片视图、看板、列表、流水线视图。
 
-2. 项目启动
-   - 合同转项目、立项、项目章程、范围、交付物、关键节点。
+2. 驾驶舱
+   - PMO 总览、项目健康监控。
 
-3. 计划与 WBS
-   - WBS、阶段模板、任务拆解、里程碑、依赖。
+3. 任务
+   - 个人/项目任务中心。
 
-4. 资源与工时
-   - 项目成员、工程师负荷、工时、资源冲突、调度建议。
+4. 进度
+   - 排期看板、进度报告、里程碑、WBS 模板。
 
-5. 进度与交付
-   - 进度看板、甘特、周报、延期原因、预测。
+5. 计划资源
+   - 任务甘特、资源甘特、人员负荷。
 
-6. 成本与毛利
-   - 预算、实际成本、EVM、材料成本、工时成本、毛利预测。
+6. 成本
+   - 预算、工时成本、毛利联动。
 
-7. 风险/变更/问题
-   - 项目风险、ECN、问题、客户变更、影响评估。
+7. 收尾
+   - 结项、复盘、经验教训。
 
-8. 验收与复盘
-   - FAT/SAT、验收问题、结项、经验教训、最佳实践。
+8. AI 工具
+   - 智能排计划、工程师调度。
+
+暂未并入中心的专业深链继续保留，例如 `/projects/:id/*`、ECN 详情、验收详情、项目物料进度等。这些页面不作为一级菜单暴露，后续从项目详情和项目中心上下文进入。
 
 ### 项目统一上下文
 
@@ -398,9 +410,9 @@
 
 动作：
 
-- 建 `/project/workbench`。
-- 项目看板、PMO、进度、甘特、资源、成本、健康、收尾进入同一工作台视图。
-- 旧路径重定向到对应 view。
+- 已建 `/project/management-center`。
+- 项目看板、PMO、任务、进度、甘特、资源、成本、健康、收尾、AI 工具进入同一中心页签。
+- 旧路径重定向到对应 `tab`，并保留原查询参数。
 
 验收：
 
@@ -448,11 +460,11 @@
 
 ## 最近可执行的下一步
 
-先沿着本次售前中心化的样板继续做两件事：
+先沿着本次售前和项目中心化的样板继续做三件事：
 
-1. 新建或扩展项目管理中心，把项目看板、PMO、任务计划、甘特资源、技术评审、风险变更、成本毛利、交付收尾放到一个主入口。
-2. 做售前到项目交接包：赢单后把客户、合同、需求、方案、参数、成本、风险、里程碑和未闭环事项带入项目。
-3. 把售前中心的数据加载从多个散接口逐步迁到统一上下文接口。
+1. 做售前到项目交接包：赢单后把客户、合同、需求、方案、参数、成本、风险、里程碑和未闭环事项带入项目。
+2. 把项目中心的专业深链继续按项目上下文接入：技术评审、风险变更、ECN、验收、交付、售后。
+3. 把售前中心和项目中心的数据加载从多个散接口逐步迁到统一上下文接口。
 
 这三步完成后，系统才会从“很多模块都有”变成“从销售到交付能按一条线跑”。
 

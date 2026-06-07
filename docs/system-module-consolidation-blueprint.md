@@ -256,7 +256,7 @@
 
 ### 主入口
 
-`/project/workbench`
+`/project/management-center`
 
 ### 合并对象
 
@@ -292,14 +292,16 @@
 
 ### 工作台视图
 
-- 项目总览
-- 项目启动
-- 计划与 WBS
-- 资源与工时
-- 进度与交付
-- 成本与毛利
-- 风险/变更/问题
-- 验收与复盘
+- 看板
+- 驾驶舱
+- 任务
+- 进度
+- 计划资源
+- 成本
+- 收尾
+- AI 工具
+
+第一版已把 `/board`、`/projects`、`/project/dashboard-center`、`/pmo/dashboard`、`/progress-tracking/*`、`/gantt-resource`、`/ai-project-tools`、`/project/cost-center`、`/project-closing` 等旧入口重定向到该中心对应页签。`/projects/:id/*` 作为单项目深链保留。
 
 ### 聚合接口
 
@@ -811,7 +813,7 @@
 | 销售/商机 | 销售经营中心 | `/sales/workstation` | `customer_id / lead_id / opportunity_id` | 售前评估状态、方案结论、报价状态、合同状态 | 商机能看到售前工单、评估、方案和下一步 |
 | 售前技术 | 售前技术中心 | `/presales/workbench` | `opportunity_id / presale_ticket_id / assessment_id / solution_id` | 工单完成结论、交付物、技术评估、成本建议、G2 结果 | 完成工单后销售侧能看到评审结论 |
 | 报价/合同 | 销售经营中心 + 财务经营中心 | `/sales/workstation?view=quote` | `quote_id / contract_id` | 方案引用、成本基线、毛利、合同签署结果 | 报价能读取售前方案和成本，不重复录入 |
-| 立项/项目 | 项目交付中心 | `/project/workbench` | `project_id / contract_id / opportunity_id` | 项目章程、范围、里程碑、预算、团队 | 合同转项目带入售前方案和成本基线 |
+| 立项/项目 | 项目交付中心 | `/project/management-center` | `project_id / contract_id / opportunity_id` | 项目章程、范围、里程碑、预算、团队 | 合同转项目带入售前方案和成本基线 |
 | 工程技术 | 工程技术中心 | `/engineering/workbench` | `project_id / review_id / ecn_id / spec_id` | 技术评审结论、设计输出、ECN 影响、工程未决项 | PM 能在项目上下文看到工程问题和 ECN |
 | BOM/采购/仓储 | 供应链中心 | `/supply-chain/workbench` | `project_id / bom_id / material_id / purchase_order_id` | BOM 发布、物料需求、缺料、到货、齐套率、库存 | 项目能看到齐套率和关键缺料 |
 | 生产/装配 | 生产执行中心 | `/production/workbench` | `project_id / work_order_id / assembly_task_id` | 工单进度、领料、装配完成、异常、发货状态 | 生产异常能反写项目风险 |
@@ -992,7 +994,7 @@
 动作：
 
 - `/presales/workbench`
-- `/project/workbench`
+- `/project/management-center`
 - 售前 overview/context
 - 项目 workspace/context
 - 商机 -> 售前 -> 方案 -> 报价 -> 合同 -> 立项 -> 项目的对象链
@@ -1191,8 +1193,8 @@
 1. 固化全系统归并矩阵。
 2. 先做 `/presales/workbench` 统一入口。
 3. 建售前 `overview/context` 聚合接口。
-4. 设计 `/project/workbench` 的 view 参数和旧路由重定向。
-5. 项目 `workspace/context` API 已进入 v1：先接合同、商机、报价成本、售前方案、成本基线。
+4. 已落地 `/project/management-center` 的 `tab` 参数和旧路由重定向。
+5. 项目 `workspace/context` API 继续接合同、商机、报价成本、售前方案、成本基线。
 6. 在项目工作台概览展示“项目交接包”，让 PM 先能用起来。
 7. 下一步按同一口径补工程/BOM、采购齐套、生产工单、验收服务上下文。
 8. 每做一个中心，补一组路由测试、聚合接口测试、最小 E2E 冒烟测试。

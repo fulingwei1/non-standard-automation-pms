@@ -17,11 +17,12 @@ export default function TabbedCenterPage({
   tabs,
   defaultTab,
   showHeader = true,
+  searchParamName = "tab",
 }) {
   const normalizedTabs = useMemo(() => (tabs || []).filter(Boolean), [tabs]);
   const { hasPermission, hasAnyPermission } = usePermission();
   const [searchParams, setSearchParams] = useSearchParams();
-  const searchTab = searchParams.get("tab");
+  const searchTab = searchParams.get(searchParamName);
   const visibleTabs = useMemo(
     () =>
       normalizedTabs.filter((tab) => {
@@ -47,7 +48,7 @@ export default function TabbedCenterPage({
 
   const handleTabChange = (value) => {
     const nextParams = new URLSearchParams(searchParams);
-    nextParams.set("tab", value);
+    nextParams.set(searchParamName, value);
     setSearchParams(nextParams, { replace: true });
     setActiveTab(value);
   };

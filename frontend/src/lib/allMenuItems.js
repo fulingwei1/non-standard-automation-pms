@@ -57,15 +57,26 @@ export const allMenuGroups = [
     id: "project",
     label: "项目管理",
     items: [
-      { id: "board", name: "项目看板", path: "/board", icon: "Kanban" },
       {
-        id: "projects",
-        name: "项目列表",
-        path: "/projects",
+        id: "project-management-center",
+        name: "项目管理中心",
+        path: "/project/management-center",
         icon: "Briefcase",
       },
-      { id: "schedule", name: "排期看板", path: "/schedule", icon: "Calendar" },
-      { id: "tasks", name: "任务中心", path: "/tasks", icon: "ListTodo" },
+      {
+        id: "project-dashboard",
+        name: "项目驾驶舱",
+        path: "/project/management-center?tab=dashboard",
+        icon: "Gauge",
+      },
+      {
+        id: "project-planning",
+        name: "计划资源",
+        path: "/project/management-center?tab=planning",
+        icon: "GitBranch",
+      },
+      { id: "project-tasks", name: "任务中心", path: "/project/management-center?tab=tasks", icon: "ListTodo" },
+      { id: "project-cost", name: "成本毛利", path: "/project/management-center?tab=cost", icon: "CreditCard" },
     ],
   },
   {

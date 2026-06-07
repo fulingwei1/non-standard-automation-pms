@@ -3,7 +3,10 @@ import TabbedCenterPage from "../components/layout/TabbedCenterPage";
 import BudgetManagement from "./BudgetManagement";
 import TimeCostMarginFlow from "./TimeCostMarginFlow";
 
-export default function ProjectCostCenter() {
+export default function ProjectCostCenter({
+  embedded = false,
+  searchParamName = "tab",
+}) {
   const tabs = useMemo(
     () => [
       {
@@ -27,6 +30,8 @@ export default function ProjectCostCenter() {
       title="项目成本中心"
       description="统一查看项目预算与工时成本毛利联动"
       tabs={tabs}
+      showHeader={!embedded}
+      searchParamName={searchParamName}
     />
   );
 }

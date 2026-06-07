@@ -265,7 +265,7 @@ export default function WeeklyReport() {
             <div className="flex items-center justify-between p-5 border-b border-white/5">
               <h3 className="text-lg font-semibold text-white">本周项目更新</h3>
               <Link
-                to="/projects"
+                to="/project/management-center?tab=board&view=card"
                 className="flex items-center gap-1 text-sm text-primary hover:text-primary-light transition-colors">
 
                 查看全部 <ArrowRight className="h-4 w-4" />

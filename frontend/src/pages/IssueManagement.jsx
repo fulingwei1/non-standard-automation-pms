@@ -264,7 +264,7 @@ export default function IssueManagement({ embedded = false }) {
           title="问题异常"
           subtitle="问题跟踪、状态管理、优先级分配、分析统计"
           breadcrumbs={[
-            { label: "项目管理", href: "/projects" },
+            { label: "项目管理", href: "/project/management-center" },
             { label: "问题异常", href: "/issues" },
           ]}
           actions={

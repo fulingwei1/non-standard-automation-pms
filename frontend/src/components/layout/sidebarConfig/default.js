@@ -105,25 +105,23 @@ export const defaultNavGroups = [
   {
     label: "项目管理",
     items: [
-      // 概览
-      { name: "项目驾驶舱", path: "/project/dashboard-center", icon: "Gauge", permission: "project:project:read", permissionLabel: "项目驾驶舱" },
-      // 项目中心 - 整合项目列表、看板、流水线、里程碑等多视图
-      { name: "项目中心", path: "/board", icon: "Kanban", permission: "project:project:read", permissionLabel: "项目中心" },
-      // 规划层
-      { name: "甘特与资源", path: "/gantt-resource", icon: "GitBranch", permission: "project:read", permissionLabel: "甘特与资源" },
-      { name: "AI项目工具", path: "/ai-project-tools", icon: "Sparkles", permission: "project:project:read", permissionLabel: "AI项目工具" },
-      // 执行层
-      { name: "任务中心", path: "/tasks", icon: "ListTodo", permission: "project:project:read", permissionLabel: "任务中心" },
-      // 监控层
       {
-        name: "项目成本中心",
-        path: "/project/cost-center",
+        name: "项目管理中心",
+        path: "/project/management-center",
+        icon: "Briefcase",
+        permission: "project:project:read",
+        permissionLabel: "项目管理中心"
+      },
+      { name: "项目任务", path: "/project/management-center?tab=tasks", icon: "ListTodo", permission: "project:project:read", permissionLabel: "项目任务" },
+      { name: "计划与资源", path: "/project/management-center?tab=planning", icon: "GitBranch", permission: "project:read", permissionLabel: "计划与资源" },
+      {
+        name: "成本毛利",
+        path: "/project/management-center?tab=cost",
         icon: "CreditCard",
         permissionAny: ["budget:read", "cost:accounting:read"],
-        permissionLabel: "项目成本中心"
+        permissionLabel: "成本毛利"
       },
-      // 收尾层（整合结项、复盘、经验教训）
-      { name: "项目收尾", path: "/project-closing", icon: "CheckCircle2", permission: "project:close", permissionLabel: "项目收尾" }
+      { name: "项目收尾", path: "/project/management-center?tab=closing", icon: "CheckCircle2", permission: "project:close", permissionLabel: "项目收尾" }
     ]
   },
   // 6. 工程技术

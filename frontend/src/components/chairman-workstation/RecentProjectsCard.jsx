@@ -21,8 +21,8 @@ export const RecentProjectsCard = ({ projects }) => {
               className="text-xs text-primary"
               asChild>
 
-              <Link to="/projects">
-                项目列表 <ChevronRight className="w-3 h-3 ml-1" />
+              <Link to="/project/management-center?tab=board&view=card">
+                项目中心 <ChevronRight className="w-3 h-3 ml-1" />
               </Link>
             </Button>
           </div>
