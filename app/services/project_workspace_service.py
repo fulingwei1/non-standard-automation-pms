@@ -235,6 +235,34 @@ def build_meeting_info(db: Session, project_id: int) -> Dict[str, Any]:
         }
 
 
+def serialize_project_workspace_issue(issue: Issue) -> Dict[str, Any]:
+    """Serialize project issues for both workspace summary and issue tab."""
+    return {
+        "id": issue.id,
+        "issue_no": issue.issue_no,
+        "category": issue.category,
+        "issue_type": issue.issue_type,
+        "title": issue.title,
+        "description": issue.description,
+        "status": issue.status,
+        "severity": issue.severity,
+        "priority": issue.priority,
+        "solution": issue.solution,
+        "has_solution": bool(issue.solution),
+        "assignee_id": issue.assignee_id,
+        "assignee_name": issue.assignee_name,
+        "due_date": issue.due_date.isoformat() if issue.due_date else None,
+        "report_date": issue.report_date.isoformat() if issue.report_date else None,
+        "impact_scope": issue.impact_scope,
+        "impact_level": issue.impact_level,
+        "is_blocking": bool(issue.is_blocking),
+        "verified_at": issue.verified_at.isoformat() if issue.verified_at else None,
+        "verified_by": issue.verified_by,
+        "verified_by_name": issue.verified_by_name,
+        "verified_result": issue.verified_result,
+    }
+
+
 def build_issue_info(db: Session, project_id: int, limit: int = 50) -> Dict[str, Any]:
     """
     构建问题信息
@@ -251,20 +279,7 @@ def build_issue_info(db: Session, project_id: int, limit: int = 50) -> Dict[str,
     )
 
     return {
-        "issues": [
-            {
-                "id": i.id,
-                "issue_no": i.issue_no,
-                "title": i.title,
-                "status": i.status,
-                "severity": i.severity,
-                "priority": i.priority,
-                "has_solution": bool(i.solution),
-                "assignee_name": i.assignee_name,
-                "report_date": i.report_date.isoformat() if i.report_date else None,
-            }
-            for i in issues
-        ],
+        "issues": [serialize_project_workspace_issue(i) for i in issues],
     }
 
 

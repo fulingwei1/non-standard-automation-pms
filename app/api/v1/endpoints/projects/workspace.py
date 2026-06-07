@@ -233,6 +233,7 @@ def get_project_issues(
     """
     获取项目问题列表
     """
+    from app.services.project_workspace_service import serialize_project_workspace_issue
     from app.utils.permission_helpers import check_project_access_or_raise
 
     check_project_access_or_raise(db, current_user, project_id)
@@ -244,23 +245,7 @@ def get_project_issues(
 
     issues = query.order_by(Issue.report_date.desc()).all()
 
-    return {
-        "issues": [
-            {
-                "id": i.id,
-                "issue_no": i.issue_no,
-                "title": i.title,
-                "status": i.status,
-                "severity": i.severity,
-                "priority": i.priority,
-                "solution": i.solution,
-                "has_solution": bool(i.solution),
-                "assignee_name": i.assignee_name,
-                "report_date": i.report_date.isoformat() if i.report_date else None,
-            }
-            for i in issues
-        ],
-    }
+    return {"issues": [serialize_project_workspace_issue(i) for i in issues]}
 
 
 @router.get("/projects/{project_id}/solutions", response_model=dict)

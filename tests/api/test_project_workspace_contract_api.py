@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.ecn import Ecn
+from app.models.issue import Issue
 from app.models.material import BomHeader, BomItem, Material
 from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.production import ProductionPlan, QualityInspection, WorkOrder
@@ -60,6 +61,96 @@ class TestProjectWorkspaceFrontendContractRoutes:
 
         missing = sorted(expected_routes - routes)
         assert not missing, f"前端声明但后端未注册的项目工作台路由: {missing}"
+
+
+class TestProjectWorkspaceIssueContext:
+    """验证项目工作台问题列表能支撑跨模块问题跟进。"""
+
+    def test_project_workspace_issues_expose_source_deadline_and_verification_context(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-PWI-{unique}",
+            customer_name=f"项目问题客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        project = Project(
+            project_code=f"PRJPWI{unique[:6]}",
+            project_name=f"项目问题工作台-{unique}",
+            customer=customer,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            pm_id=admin_user.id,
+            pm_name=admin_user.real_name or admin_user.username,
+            created_by=admin_user.id,
+        )
+        db_session.add_all([customer, project])
+        db_session.flush()
+
+        issue = Issue(
+            issue_no=f"IS-PWI-{unique}",
+            category="TECHNICAL",
+            project_id=project.id,
+            issue_type="TECHNICAL_REVIEW",
+            severity="MAJOR",
+            priority="HIGH",
+            title="技术评审问题：定位夹具方案复核",
+            description="PDR评审发现定位夹具校核资料不完整",
+            reporter_id=admin_user.id,
+            reporter_name=admin_user.real_name or admin_user.username,
+            report_date=datetime(2026, 6, 21, 10, 0, 0),
+            assignee_id=admin_user.id,
+            assignee_name=admin_user.real_name or admin_user.username,
+            due_date=date(2026, 6, 25),
+            status="CLOSED",
+            solution="已补充受力校核并完成复核",
+            impact_scope="技术评审 RV-PDR-001",
+            impact_level="MAJOR",
+            is_blocking=True,
+            verified_at=datetime(2026, 6, 22, 15, 30, 0),
+            verified_by=admin_user.id,
+            verified_by_name=admin_user.real_name or admin_user.username,
+            verified_result="VERIFIED",
+        )
+        db_session.add(issue)
+        db_session.commit()
+
+        workspace_response = client.get(
+            f"{prefix}/project-workspace/projects/{project.id}/workspace",
+            headers=headers,
+        )
+        assert workspace_response.status_code == 200, workspace_response.text
+        workspace_issue = workspace_response.json()["issues"]["issues"][0]
+
+        issues_response = client.get(
+            f"{prefix}/project-workspace/projects/{project.id}/issues",
+            headers=headers,
+        )
+        assert issues_response.status_code == 200, issues_response.text
+        listed_issue = issues_response.json()["issues"][0]
+
+        for payload in (workspace_issue, listed_issue):
+            assert payload["category"] == "TECHNICAL"
+            assert payload["issue_type"] == "TECHNICAL_REVIEW"
+            assert payload["description"] == "PDR评审发现定位夹具校核资料不完整"
+            assert payload["due_date"] == "2026-06-25"
+            assert payload["impact_scope"] == "技术评审 RV-PDR-001"
+            assert payload["is_blocking"] is True
+            assert payload["verified_result"] == "VERIFIED"
+            assert payload["verified_at"] == "2026-06-22T15:30:00"
 
 
 class TestProjectListContextFilters:

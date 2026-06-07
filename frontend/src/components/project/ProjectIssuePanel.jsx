@@ -18,6 +18,18 @@ import {
 import { formatDate } from "../../lib/utils";
 import { projectWorkspaceApi } from "../../services/api";
 
+function getIssueSourceLabel(issue) {
+  if (issue.issue_type === "TECHNICAL_REVIEW") return "技术评审";
+  if (issue.category === "TECHNICAL") return "技术问题";
+  return issue.category || issue.issue_type || null;
+}
+
+function getVerifiedLabel(result) {
+  if (result === "VERIFIED") return "验证通过";
+  if (result === "REJECTED") return "验证退回";
+  return null;
+}
+
 export default function ProjectIssuePanel({ projectId }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -146,7 +158,22 @@ export default function ProjectIssuePanel({ projectId }) {
                             <Badge variant="outline" className="text-xs">
                               {issue.issue_no}
                             </Badge>
+                            {getIssueSourceLabel(issue) && (
+                              <Badge variant="outline" className="text-xs">
+                                {getIssueSourceLabel(issue)}
+                              </Badge>
+                            )}
+                            {issue.is_blocking && (
+                              <Badge variant="destructive" className="text-xs">
+                                阻塞
+                              </Badge>
+                            )}
                           </div>
+                          {issue.description && (
+                            <p className="text-sm text-gray-600 mb-2">
+                              {issue.description}
+                            </p>
+                          )}
                           <div className="flex items-center gap-2">
                             <Badge
                               variant={
@@ -172,6 +199,16 @@ export default function ProjectIssuePanel({ projectId }) {
                             <span className="text-sm text-gray-500">
                               {formatDate(issue.report_date)}
                             </span>
+                            {issue.due_date && (
+                              <span className="text-sm text-gray-500">
+                                截止 {formatDate(issue.due_date)}
+                              </span>
+                            )}
+                            {getVerifiedLabel(issue.verified_result) && (
+                              <Badge variant="outline">
+                                {getVerifiedLabel(issue.verified_result)}
+                              </Badge>
+                            )}
                           </div>
                         </div>
                         <Badge

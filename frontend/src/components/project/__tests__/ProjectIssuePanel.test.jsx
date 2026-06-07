@@ -123,6 +123,43 @@ describe('ProjectIssuePanel', () => {
     });
   });
 
+  it('shows technical review issue source, deadline and verification context', async () => {
+    projectWorkspaceApi.getIssues.mockResolvedValue({
+      data: {
+        issues: [
+          {
+            id: 9,
+            title: '技术评审问题：定位夹具方案复核',
+            issue_no: 'IS-TR-001',
+            category: 'TECHNICAL',
+            issue_type: 'TECHNICAL_REVIEW',
+            description: 'PDR评审发现定位夹具校核资料不完整',
+            status: 'CLOSED',
+            priority: 'HIGH',
+            severity: 'MAJOR',
+            assignee_name: '王工',
+            report_date: '2026-06-21T10:00:00',
+            due_date: '2026-06-25',
+            impact_scope: '技术评审 RV-PDR-001',
+            is_blocking: true,
+            verified_result: 'VERIFIED',
+            verified_at: '2026-06-22T15:30:00',
+            has_solution: true,
+          },
+        ],
+      },
+    });
+
+    renderWithRouter(<ProjectIssuePanel projectId="123" />);
+
+    expect(await screen.findByText('技术评审问题：定位夹具方案复核')).toBeInTheDocument();
+    expect(screen.getByText('技术评审')).toBeInTheDocument();
+    expect(screen.getByText('PDR评审发现定位夹具校核资料不完整')).toBeInTheDocument();
+    expect(screen.getByText('截止 2026-06-25')).toBeInTheDocument();
+    expect(screen.getByText('阻塞')).toBeInTheDocument();
+    expect(screen.getByText('验证通过')).toBeInTheDocument();
+  });
+
   it('filters open issues correctly', async () => {
     renderWithRouter(<ProjectIssuePanel projectId="123" />);
 
