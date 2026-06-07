@@ -279,7 +279,6 @@ export default function PresaleProposals({ embedded = false } = {}) {
 
       await loadSolutions();
       setSelectedSolutionId(String(created.id));
-      setActiveTab("list");
     } catch (requestError) {
       console.error("生成方案失败:", requestError);
       setGenerationError(requestError?.response?.data?.detail || requestError?.message || "方案生成失败");
@@ -400,7 +399,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
               handleGenerateProposal={handleGenerateProposal}
               setGeneratorForm={setGeneratorForm}
               latestGenerated={latestGenerated}
-              navigate={navigate}
+              onViewSolution={(solution) => navigate(buildSolutionDetailPath(solution))}
             />
           </TabsContent>
 

@@ -185,4 +185,23 @@ describe("PresaleProposals", () => {
       "/solutions/88?ticket_id=501&opportunity_id=2&project_id=42",
     );
   });
+
+  it("keeps context when opening the newly generated solution detail", async () => {
+    renderPage(
+      "/presales/technical-solutions?tab=solutions&type=support&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+
+    fireEvent.click(screen.getByText("方案生成"));
+    fireEvent.change(screen.getByPlaceholderText("例如：新能源PACK线FCT测试方案"), {
+      target: { value: "项目现场交付补充方案" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "生成并保存方案" }));
+
+    await screen.findByText("最近生成方案");
+    fireEvent.click(screen.getByRole("button", { name: /打开方案详情/ }));
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      "/solutions/900?ticket_id=501&opportunity_id=2&project_id=42",
+    );
+  });
 });

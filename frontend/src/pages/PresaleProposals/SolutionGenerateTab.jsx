@@ -37,7 +37,7 @@ export default function SolutionGenerateTab({
   handleGenerateProposal,
   setGeneratorForm,
   latestGenerated,
-  navigate,
+  onViewSolution,
 }) {
   return (
     <div className="space-y-6">
@@ -255,7 +255,7 @@ export default function SolutionGenerateTab({
             <div className="md:col-span-3">
               <Button
                 variant="outline"
-                onClick={() => navigate(`/solutions/${latestGenerated.id}`)}
+                onClick={() => onViewSolution(latestGenerated)}
               >
                 打开方案详情
                 <ArrowRight className="ml-2 h-4 w-4" />
