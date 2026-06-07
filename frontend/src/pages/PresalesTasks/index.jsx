@@ -154,7 +154,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
           "内部流程",
           deadline: ticket.deadline || ticket.expected_date || "",
           createdAt: ticket.apply_time || ticket.created_at || "",
-          progress: ticket.progress || 0,
+          progress: ticket.progress_percent ?? ticket.progress ?? 0,
           description: ticket.description || ticket.requirement || "",
           opportunity: ticket.opportunity_name || "",
           amount: ticket.estimated_value ? ticket.estimated_value / 10000 : 0,

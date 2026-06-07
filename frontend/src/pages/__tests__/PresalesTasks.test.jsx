@@ -163,6 +163,35 @@ describe('PresalesTasks', () => {
     expect(screen.getByText('某大型企业')).toBeInTheDocument();
   });
 
+  it('uses backend progress_percent when rendering in-progress tickets', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 41,
+            title: '方案深化',
+            ticket_type: 'SOLUTION_DESIGN',
+            status: 'IN_PROGRESS',
+            urgency: 'NORMAL',
+            customer_name: '华东制造',
+            applicant_name: '宋魁',
+            progress_percent: 65,
+            actual_hours: 4,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('方案深化')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('65%')).toBeInTheDocument();
+  });
+
   it('requests backend status filters using current ticket API parameters', async () => {
     renderPage();
 

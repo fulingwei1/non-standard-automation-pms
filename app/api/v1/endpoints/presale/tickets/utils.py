@@ -69,8 +69,23 @@ def generate_tender_no(db: Session) -> str:
     return f"TENDER-{today}-{seq:03d}"
 
 
+def _latest_progress_record(ticket: PresaleSupportTicket):
+    records = list(getattr(ticket, "progress_records", None) or [])
+    if not records:
+        return None
+
+    return max(
+        records,
+        key=lambda record: (
+            getattr(record, "created_at", None) or datetime.min,
+            getattr(record, "id", 0) or 0,
+        ),
+    )
+
+
 def build_ticket_response(ticket: PresaleSupportTicket) -> TicketResponse:
     """构建工单响应对象"""
+    latest_progress = _latest_progress_record(ticket)
     return TicketResponse(
         id=ticket.id,
         ticket_no=ticket.ticket_no,
@@ -92,6 +107,8 @@ def build_ticket_response(ticket: PresaleSupportTicket) -> TicketResponse:
         expected_date=ticket.expected_date,
         deadline=ticket.deadline,
         status=ticket.status,
+        progress_percent=getattr(latest_progress, "progress_percent", None),
+        progress_note=getattr(latest_progress, "progress_note", None),
         complete_time=ticket.complete_time,
         actual_hours=float(ticket.actual_hours) if ticket.actual_hours else None,
         satisfaction_score=ticket.satisfaction_score,

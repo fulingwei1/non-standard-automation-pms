@@ -105,6 +105,8 @@ class TicketResponse(TimestampSchema):
     expected_date: Optional[date] = None
     deadline: Optional[datetime] = None
     status: str
+    progress_percent: Optional[int] = Field(None, description="最新进度百分比")
+    progress_note: Optional[str] = Field(None, description="最新进度说明")
     complete_time: Optional[datetime] = None
     actual_hours: Optional[float] = None
     satisfaction_score: Optional[int] = None
