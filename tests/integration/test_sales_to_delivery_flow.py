@@ -1155,7 +1155,7 @@ class TestSalesLeadToDelivery:
         """
         from app.models.acceptance import AcceptanceOrder
         from app.models.project import Project
-        from tests.fixtures.industry_data import KPI_BENCHMARKS, SAMPLE_COSTS
+        from tests.fixtures.industry_data import KPI_BENCHMARKS
 
         # 11-a SAT 现场验收
         sat = AcceptanceOrder(
@@ -1188,7 +1188,7 @@ class TestSalesLeadToDelivery:
         db.add(sat)
         db.flush()
 
-        # 11-b 核算实际成本（基于 SAMPLE_COSTS 行业基准数据）
+        # 11-b 核算实际成本（基于项目归集成本）
         actual_costs = {
             "硬件采购": 118_000,  # NI机箱+板卡+气缸+相机+夹具材料
             "人工成本": 46_000,  # 5人×2个月
