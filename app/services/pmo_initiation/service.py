@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.pmo import PmoProjectInitiation
-from app.models.presale import PresaleSolution
+from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Project
 from app.models.sales import Contract, Opportunity
 from app.models.user import User
@@ -530,12 +530,24 @@ class PmoInitiationService:
     def _bind_presale_solution_to_project(
         self, presale_solution: Optional[PresaleSolution], project_id: Optional[int]
     ) -> None:
-        """审批立项创建项目后，把售前方案反向绑定到项目。"""
+        """审批立项创建项目后，把售前方案和原工单反向绑定到项目。"""
         if not presale_solution or not project_id:
             return
 
         if not getattr(presale_solution, "project_id", None):
             presale_solution.project_id = project_id
+
+        ticket_id = getattr(presale_solution, "ticket_id", None)
+        if not ticket_id:
+            return
+
+        ticket = (
+            self.db.query(PresaleSupportTicket)
+            .filter(PresaleSupportTicket.id == ticket_id)
+            .first()
+        )
+        if ticket and not getattr(ticket, "project_id", None):
+            ticket.project_id = project_id
 
     def _find_active_initiation_by_contract_no(
         self, contract_no: str, exclude_id: Optional[int] = None

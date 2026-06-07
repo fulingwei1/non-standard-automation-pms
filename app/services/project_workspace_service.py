@@ -465,6 +465,29 @@ def _build_presale_solution_payload(solution: PresaleSolution) -> Dict[str, Any]
     }
 
 
+def _build_presale_ticket_payload(ticket: PresaleSupportTicket) -> Dict[str, Any]:
+    return {
+        "id": ticket.id,
+        "ticket_no": ticket.ticket_no,
+        "title": ticket.title,
+        "ticket_type": ticket.ticket_type,
+        "urgency": ticket.urgency,
+        "status": ticket.status,
+        "customer_id": ticket.customer_id,
+        "customer_name": ticket.customer_name,
+        "opportunity_id": ticket.opportunity_id,
+        "project_id": ticket.project_id,
+        "applicant_name": ticket.applicant_name,
+        "assignee_name": ticket.assignee_name,
+        "actual_hours": _num(ticket.actual_hours),
+        "expected_date": ticket.expected_date.isoformat() if ticket.expected_date else None,
+        "deadline": ticket.deadline.isoformat() if ticket.deadline else None,
+        "complete_time": ticket.complete_time.isoformat() if ticket.complete_time else None,
+        "satisfaction_score": ticket.satisfaction_score,
+        "updated_at": ticket.updated_at.isoformat() if ticket.updated_at else None,
+    }
+
+
 def _get_presale_solutions(db: Session, project: Project, limit: int = 10) -> List[PresaleSolution]:
     ticket_ids = [
         row[0]
@@ -491,6 +514,33 @@ def _get_presale_solutions(db: Session, project: Project, limit: int = 10) -> Li
     )
 
 
+def _get_presale_tickets(
+    db: Session,
+    project: Project,
+    presale_solutions: List[PresaleSolution],
+    limit: int = 10,
+) -> List[PresaleSupportTicket]:
+    filters = [PresaleSupportTicket.project_id == project.id]
+    if project.opportunity_id:
+        filters.append(PresaleSupportTicket.opportunity_id == project.opportunity_id)
+
+    solution_ticket_ids = {
+        solution.ticket_id
+        for solution in presale_solutions
+        if getattr(solution, "ticket_id", None)
+    }
+    if solution_ticket_ids:
+        filters.append(PresaleSupportTicket.id.in_(solution_ticket_ids))
+
+    return (
+        db.query(PresaleSupportTicket)
+        .filter(or_(*filters))
+        .order_by(PresaleSupportTicket.updated_at.desc(), PresaleSupportTicket.id.desc())
+        .limit(limit)
+        .all()
+    )
+
+
 def build_project_handover_context(db: Session, project: Project) -> Dict[str, Any]:
     """
     构建项目工作台上游交接上下文。
@@ -502,6 +552,7 @@ def build_project_handover_context(db: Session, project: Project) -> Dict[str, A
     opportunity = _resolve_opportunity(project, contract)
     quote, quote_version = _resolve_quote_context(opportunity, contract)
     presale_solutions = _get_presale_solutions(db, project)
+    presale_tickets = _get_presale_tickets(db, project, presale_solutions)
     primary_solution = presale_solutions[0] if presale_solutions else None
 
     quote_cost_total = _num(quote_version.cost_total) if quote_version else None
@@ -545,6 +596,9 @@ def build_project_handover_context(db: Session, project: Project) -> Dict[str, A
         "contract": _build_contract_payload(contract),
         "opportunity": _build_opportunity_payload(opportunity),
         "quote": _build_quote_payload(quote, quote_version),
+        "presale_tickets": [
+            _build_presale_ticket_payload(ticket) for ticket in presale_tickets
+        ],
         "presale_solutions": [
             _build_presale_solution_payload(solution) for solution in presale_solutions
         ],

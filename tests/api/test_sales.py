@@ -23,6 +23,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.enums import AssessmentStatusEnum
+from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer
 from app.models.sales import Opportunity, TechnicalAssessment
 from app.models.user import User
@@ -648,13 +649,53 @@ class TestSalesClosedLoop:
         assert contract_detail["contract_name"] == contract_name
 
     def test_contract_pmo_initiation_approval_links_project_back_to_contract(
-        self, client: TestClient, admin_token: str
+        self, client: TestClient, db_session: Session, admin_token: str
     ):
-        """合同走 PMO 立项审批后，生成项目必须回写合同，避免重复发起立项。"""
+        """合同走 PMO 立项审批后，生成项目必须回写合同和售前交接资料。"""
 
         headers = _auth_headers(admin_token)
         contract = _create_contract(client, admin_token)
         _sign_contract(client, admin_token, contract["id"], auto_create_project=False)
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+        ticket = PresaleSupportTicket(
+            ticket_no=_unique_code("TICKET-PMO"),
+            title=f"PMO售前交接工单-{uuid.uuid4().hex[:4]}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_id=contract["customer_id"],
+            customer_name=contract["customer_name"],
+            opportunity_id=contract["opportunity_id"],
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            actual_hours=Decimal("12.5"),
+            created_by=admin_user.id,
+        )
+        db_session.add(ticket)
+        db_session.flush()
+        solution = PresaleSolution(
+            solution_no=_unique_code("SOL-PMO"),
+            name=f"PMO售前交接方案-{uuid.uuid4().hex[:4]}",
+            solution_type="CUSTOM",
+            ticket_id=ticket.id,
+            customer_id=contract["customer_id"],
+            opportunity_id=contract["opportunity_id"],
+            requirement_summary="PMO立项前冻结的客户需求",
+            solution_overview="PMO审批后应进入项目工作台",
+            technical_spec="ICT/FCT一体化测试设备",
+            estimated_cost=Decimal("90000"),
+            suggested_price=Decimal("150000"),
+            estimated_hours=96,
+            estimated_duration=35,
+            status="APPROVED",
+            review_status="APPROVED",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        db_session.add(solution)
+        db_session.commit()
 
         initiation_response = client.post(
             f"{settings.API_V1_PREFIX}/pmo/initiations",
@@ -666,6 +707,7 @@ class TestSalesClosedLoop:
                 "contract_amount": contract["contract_amount"],
                 "required_start_date": date.today().isoformat(),
                 "required_end_date": (date.today() + timedelta(days=45)).isoformat(),
+                "technical_solution_id": solution.id,
                 "requirement_summary": f"由合同 {contract['contract_code']} 发起立项",
             },
             headers=headers,
@@ -692,12 +734,33 @@ class TestSalesClosedLoop:
         project_id = approve_response.json()["data"]["project_id"]
         assert project_id > 0
 
+        db_session.expire_all()
+        refreshed_solution = db_session.get(PresaleSolution, solution.id)
+        refreshed_ticket = db_session.get(PresaleSupportTicket, ticket.id)
+        assert refreshed_solution.project_id == project_id
+        assert refreshed_ticket.project_id == project_id
+
         contract_detail_response = client.get(
             f"{settings.API_V1_PREFIX}/sales/contracts/{contract['id']}",
             headers=headers,
         )
         assert contract_detail_response.status_code == 200, contract_detail_response.text
         assert contract_detail_response.json()["project_id"] == project_id
+
+        workspace_context_response = client.get(
+            f"{settings.API_V1_PREFIX}/project-workspace/projects/{project_id}/workspace/context",
+            headers=headers,
+        )
+        assert workspace_context_response.status_code == 200, workspace_context_response.text
+        workspace_context = workspace_context_response.json()
+        assert workspace_context["contract"]["contract_code"] == contract["contract_code"]
+        assert workspace_context["opportunity"]["id"] == contract["opportunity_id"]
+        assert workspace_context["quote"]["version"]["cost_total"] == 90000.0
+        assert workspace_context["baseline_cost"]["presale_estimated_cost"] == 90000.0
+        assert workspace_context["presale_tickets"][0]["id"] == ticket.id
+        assert workspace_context["presale_tickets"][0]["actual_hours"] == 12.5
+        assert workspace_context["presale_solutions"][0]["id"] == solution.id
+        assert workspace_context["handover_status"]["ready"] is True
 
         payment_plans_response = client.get(
             f"{settings.API_V1_PREFIX}/sales/contracts/{contract['id']}/payment-plans",
