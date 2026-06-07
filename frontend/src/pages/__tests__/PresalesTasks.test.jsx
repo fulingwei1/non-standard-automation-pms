@@ -572,6 +572,45 @@ describe('PresalesTasks', () => {
     );
   });
 
+  it('shows feasibility assessment tickets under the technical assessment filter', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 94,
+            title: '夹具方案可行性评估',
+            ticket_type: 'FEASIBILITY_ASSESSMENT',
+            status: 'IN_PROGRESS',
+            urgency: 'HIGH',
+            customer_name: '华南电子',
+            applicant_name: '张销售',
+            description: '评估客户夹具接口和节拍风险',
+            lead_id: 21,
+            opportunity_id: 2,
+            project_id: 42,
+            assessment_status: 'PENDING',
+            current_assessment_id: 703,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage(
+      '/presales/technical-solutions?tab=reviews&type=assessment&lead_id=21&opportunity_id=2&ticket_id=94',
+    );
+
+    await screen.findByText('夹具方案可行性评估');
+    expect(screen.getAllByText('技术评估').length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByText('夹具方案可行性评估'));
+    fireEvent.click(screen.getByRole('button', { name: /打开技术评估/ }));
+
+    expect(navigateSpy).toHaveBeenCalledWith(
+      '/sales/assessments/opportunity/2?assessment_id=703&ticket_id=94&lead_id=21&project_id=42',
+    );
+  });
+
   it('creates an internal presale task from the task center and refreshes the list', async () => {
     renderPage('/sales/presales-tasks');
 

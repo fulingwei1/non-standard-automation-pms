@@ -10,6 +10,7 @@ import {
   DollarSign,
   Target,
   LifeBuoy,
+  Cpu,
 } from "lucide-react";
 
 // 任务类型配置
@@ -20,6 +21,12 @@ export const taskTypes = [
     name: "售前支持",
     icon: LifeBuoy,
     color: "text-cyan-400",
+  },
+  {
+    id: "assessment",
+    name: "技术评估",
+    icon: Cpu,
+    color: "text-sky-400",
   },
   {
     id: "survey",

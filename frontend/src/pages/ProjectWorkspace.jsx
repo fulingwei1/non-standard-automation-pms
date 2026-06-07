@@ -94,7 +94,7 @@ const PRESALE_TICKET_TASK_TYPE_MAP = {
   TECHNICAL_EXCHANGE: "exchange",
   SURVEY: "survey",
   REQUIREMENT_RESEARCH: "survey",
-  FEASIBILITY_ASSESSMENT: "survey",
+  FEASIBILITY_ASSESSMENT: "assessment",
   CONSULT: "survey",
   SITE_VISIT: "survey",
 };

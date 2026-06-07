@@ -116,6 +116,7 @@ const INITIAL_CREATE_FORM = {
 
 const createTaskTypes = [
   { value: "REQUIREMENT_RESEARCH", label: "需求调研" },
+  { value: "FEASIBILITY_ASSESSMENT", label: "技术评估" },
   { value: "TECHNICAL_EXCHANGE", label: "技术交流" },
   { value: "SOLUTION_DESIGN", label: "方案设计" },
   { value: "COST_ESTIMATE", label: "成本核算" },
@@ -159,7 +160,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
       TECHNICAL_EXCHANGE: "exchange",
       SURVEY: "survey",
       REQUIREMENT_RESEARCH: "survey",
-      FEASIBILITY_ASSESSMENT: "survey",
+      FEASIBILITY_ASSESSMENT: "assessment",
       CONSULT: "survey",
       SITE_VISIT: "survey"
     };

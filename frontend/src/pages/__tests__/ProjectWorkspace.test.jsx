@@ -368,4 +368,61 @@ describe("ProjectWorkspace", () => {
       "/projects/1/delivery?ticket_id=91&lead_id=2026&opportunity_id=2&project_id=1",
     );
   });
+
+  it("links feasibility assessment presale tickets to the technical assessment task filter", async () => {
+    projectWorkspaceApi.getWorkspace.mockResolvedValue({
+      data: {
+        project: {
+          id: 7,
+          project_name: "夹具自动化项目",
+          project_code: "PRJ-007",
+          lead_id: 2027,
+          progress_pct: 10,
+          health: "H1",
+        },
+        team: [],
+        tasks: [],
+        bonus: {},
+        meetings: {},
+        issues: {},
+        solutions: {},
+        documents: [],
+        handover_context: {
+          opportunity: {
+            id: 8,
+            opp_code: "OPP-008",
+            opp_name: "夹具自动化商机",
+          },
+          presale_tickets: [
+            {
+              id: 94,
+              ticket_no: "PST-094",
+              title: "夹具方案可行性评估",
+              ticket_type: "FEASIBILITY_ASSESSMENT",
+              status: "PROCESSING",
+              assessment_status: "PENDING",
+              current_assessment_id: 703,
+              lead_id: 2027,
+              opportunity_id: 8,
+              project_id: 7,
+            },
+          ],
+        },
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/projects/7/workspace"]}>
+        <Routes>
+          <Route path="/projects/:id/workspace" element={<ProjectWorkspace />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("项目交接包")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /PST-094/ })).toHaveAttribute(
+      "href",
+      "/presales/technical-solutions?tab=reviews&type=assessment&ticket_id=94&lead_id=2027&opportunity_id=8&project_id=7",
+    );
+  });
 });
