@@ -25,7 +25,13 @@ from app.core.config import settings
 from app.models.enums import AssessmentStatusEnum
 from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Project
-from app.models.sales import AssessmentRisk, Opportunity, ScoringRule, TechnicalAssessment
+from app.models.sales import (
+    AssessmentRisk,
+    Opportunity,
+    QuoteVersion,
+    ScoringRule,
+    TechnicalAssessment,
+)
 from app.models.user import User
 
 
@@ -424,6 +430,116 @@ class TestQuoteManagement:
         quote = _create_quote(client, admin_token)
         assert quote["opportunity_id"] is not None
         assert "quote_code" in quote
+
+    def test_create_quote_inherits_approved_presale_solution_cost_baseline(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """报价从已审批售前方案创建时，应继承成本、建议售价和交期。"""
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid.uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-QPRE-{unique}",
+            customer_name=f"报价继承客户-{unique}",
+            industry="电子制造",
+            contact_person="王工",
+            contact_phone="021-88888888",
+            created_by=admin_user.id,
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPQPRE{unique[:6]}",
+            customer_id=customer.id,
+            opp_name=f"报价继承商机-{unique}",
+            stage="QUOTATION",
+            probability=80,
+            est_amount=Decimal("250000"),
+            expected_close_date=date.today() + timedelta(days=30),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add(opportunity)
+        db_session.flush()
+
+        ticket = PresaleSupportTicket(
+            ticket_no=_unique_code("TICKET-QPRE"),
+            title=f"报价继承售前工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            assessment_status=AssessmentStatusEnum.COMPLETED.value,
+            created_by=admin_user.id,
+        )
+        db_session.add(ticket)
+        db_session.flush()
+
+        solution = PresaleSolution(
+            solution_no=_unique_code("SOL-QPRE"),
+            name=f"报价继承方案-{unique}",
+            solution_type="CUSTOM",
+            industry="电子制造",
+            test_type="FCT",
+            ticket_id=ticket.id,
+            customer_id=customer.id,
+            opportunity_id=opportunity.id,
+            requirement_summary="报价前冻结的客户需求",
+            solution_overview="FCT自动化测试平台方案",
+            technical_spec="自动上下料、扫码、FCT测试、数据追溯",
+            estimated_cost=Decimal("150000"),
+            suggested_price=Decimal("250000"),
+            estimated_duration=45,
+            status="APPROVED",
+            review_status="APPROVED",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        db_session.add(solution)
+        db_session.commit()
+
+        response = client.post(
+            f"{prefix}/sales/quotes",
+            json={
+                "quote_code": _unique_code("QUOTE-PRE"),
+                "opportunity_id": opportunity.id,
+                "customer_id": customer.id,
+                "solution_id": solution.id,
+                "valid_until": (date.today() + timedelta(days=45)).isoformat(),
+                "version": {
+                    "version_no": "V1",
+                    "items": [],
+                },
+            },
+            headers=headers,
+        )
+
+        assert response.status_code == 201, response.text
+        quote = response.json()
+        version = db_session.get(QuoteVersion, quote["current_version_id"])
+        assert version is not None
+        assert version.cost_total == Decimal("150000")
+        assert version.total_price == Decimal("250000")
+        assert version.gross_margin == Decimal("40.00")
+        assert version.lead_time_days == 45
+
+        detail_response = client.get(f"{prefix}/sales/quotes/{quote['id']}", headers=headers)
+        assert detail_response.status_code == 200, detail_response.text
+        current_version = detail_response.json()["data"]["current_version"]
+        assert current_version["cost_total"] == 150000.0
+        assert current_version["total_price"] == 250000.0
+        assert current_version["gross_margin"] == 40.0
+        assert current_version["lead_time_days"] == 45
 
     def test_create_quote_version(self, client: TestClient, admin_token: str, quote_id: int = None):
         """测试创建报价版本"""
