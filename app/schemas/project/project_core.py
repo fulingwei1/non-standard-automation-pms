@@ -170,6 +170,8 @@ class ProjectListResponse(BaseSchema):
     pm_id: Optional[int] = None
     sales_id: Optional[int] = None  # 对应 salesperson_id
     te_id: Optional[int] = None  # 技术负责人ID（如有）
+    contract_id: Optional[int] = None
+    opportunity_id: Optional[int] = None
     # 成本摘要（可选，通过include_cost=true参数启用）
     cost_summary: Optional[ProjectCostSummary] = None
 

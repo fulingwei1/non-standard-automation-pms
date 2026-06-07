@@ -78,6 +78,9 @@ def read_projects(
     pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（项目名称/编码/合同编号）"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
+    project_id: Optional[int] = Query(None, description="项目ID筛选"),
+    contract_id: Optional[int] = Query(None, description="合同ID筛选"),
+    opportunity_id: Optional[int] = Query(None, description="商机ID筛选"),
     stage: Optional[str] = Query(None, description="阶段筛选（S1-S9）"),
     status: Optional[str] = Query(None, description="状态筛选（ST01-ST30）"),
     health: Optional[str] = Query(None, description="健康度筛选（H1-H4）"),
@@ -102,7 +105,19 @@ def read_projects(
     # 判断是否使用缓存
     use_cache = (
         not keyword 
-        and not any([customer_id, stage, status, health, project_type, pm_id, min_progress, max_progress])
+        and not any([
+            customer_id,
+            project_id,
+            contract_id,
+            opportunity_id,
+            stage,
+            status,
+            health,
+            project_type,
+            pm_id,
+            min_progress,
+            max_progress,
+        ])
         and not include_cost
         and not overrun_only
         and not sort
@@ -129,6 +144,9 @@ def read_projects(
         pagination=pagination,
         keyword=keyword,
         customer_id=customer_id,
+        project_id=project_id,
+        contract_id=contract_id,
+        opportunity_id=opportunity_id,
         stage=stage,
         status=status,
         health=health,
@@ -174,6 +192,8 @@ def read_projects(
             "pm_id": p.pm_id,
             "sales_id": p.salesperson_id,
             "te_id": getattr(p, "te_id", None),
+            "contract_id": p.contract_id,
+            "opportunity_id": p.opportunity_id,
             "cost_summary": cost_summaries.get(p.id) if include_cost else None,
         }
         project_items.append(ProjectListResponse(**item_dict))

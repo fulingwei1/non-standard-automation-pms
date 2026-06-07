@@ -62,6 +62,106 @@ class TestProjectWorkspaceFrontendContractRoutes:
         assert not missing, f"前端声明但后端未注册的项目工作台路由: {missing}"
 
 
+class TestProjectListContextFilters:
+    """验证项目中心能承接销售/合同/商机上下文筛选。"""
+
+    def test_project_list_filters_by_project_contract_and_opportunity_context(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-PLC-{unique}",
+            customer_name=f"项目列表上下文客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPLC{unique[:6]}",
+            customer=customer,
+            opp_name=f"项目列表上下文商机-{unique}",
+            project_type="FCT",
+            equipment_type="EOL",
+            stage="WON",
+            probability=95,
+            est_amount=Decimal("680000"),
+            expected_close_date=date.today(),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        contract = Contract(
+            contract_code=f"CTPLC{unique[:6]}",
+            contract_name=f"项目列表上下文合同-{unique}",
+            contract_type="sales",
+            customer=customer,
+            opportunity=opportunity,
+            total_amount=Decimal("680000"),
+            signing_date=date.today(),
+            status="signed",
+            sales_owner_id=admin_user.id,
+        )
+        db_session.add_all([customer, opportunity, contract])
+        db_session.flush()
+
+        matching_project = Project(
+            project_code=f"PRJPLC{unique[:6]}",
+            project_name=f"项目列表上下文项目-{unique}",
+            customer=customer,
+            customer_name=customer.customer_name,
+            opportunity=opportunity,
+            contract=contract,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            pm_id=admin_user.id,
+            pm_name=admin_user.real_name or admin_user.username,
+            created_by=admin_user.id,
+        )
+        noise_project = Project(
+            project_code=f"PRJPLN{unique[:6]}",
+            project_name=f"项目列表噪声项目-{unique}",
+            customer=customer,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            pm_id=admin_user.id,
+            pm_name=admin_user.real_name or admin_user.username,
+            created_by=admin_user.id,
+        )
+        db_session.add_all([matching_project, noise_project])
+        db_session.flush()
+        contract.project_id = matching_project.id
+        db_session.commit()
+
+        response = client.get(
+            f"{prefix}/projects/",
+            params={
+                "project_id": matching_project.id,
+                "contract_id": contract.id,
+                "opportunity_id": opportunity.id,
+                "page_size": 100,
+                "sort": "created_at_desc",
+            },
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+
+        payload = response.json()
+        assert payload["total"] == 1
+        assert [item["id"] for item in payload["items"]] == [matching_project.id]
+        assert payload["items"][0]["contract_id"] == contract.id
+        assert payload["items"][0]["opportunity_id"] == opportunity.id
+
+
 class TestProjectWorkspaceHandoverContext:
     """验证销售/售前交接信息进入项目工作台。"""
 

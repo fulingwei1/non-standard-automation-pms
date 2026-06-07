@@ -41,6 +41,9 @@ class ProjectCrudService:
         self,
         keyword: Optional[str] = None,
         customer_id: Optional[int] = None,
+        project_id: Optional[int] = None,
+        contract_id: Optional[int] = None,
+        opportunity_id: Optional[int] = None,
         stage: Optional[str] = None,
         status: Optional[str] = None,
         health: Optional[str] = None,
@@ -63,6 +66,14 @@ class ProjectCrudService:
         # 客户筛选
         if customer_id:
             query = query.filter(Project.customer_id == customer_id)
+
+        # 上游业务上下文筛选：销售/合同/商机跳入项目中心时使用
+        if project_id:
+            query = query.filter(Project.id == project_id)
+        if contract_id:
+            query = query.filter(Project.contract_id == contract_id)
+        if opportunity_id:
+            query = query.filter(Project.opportunity_id == opportunity_id)
 
         # 阶段筛选
         if stage:
@@ -131,6 +142,9 @@ class ProjectCrudService:
         pagination: PaginationParams,
         keyword: Optional[str] = None,
         customer_id: Optional[int] = None,
+        project_id: Optional[int] = None,
+        contract_id: Optional[int] = None,
+        opportunity_id: Optional[int] = None,
         stage: Optional[str] = None,
         status: Optional[str] = None,
         health: Optional[str] = None,
@@ -147,6 +161,9 @@ class ProjectCrudService:
         query = self.get_projects_query(
             keyword=keyword,
             customer_id=customer_id,
+            project_id=project_id,
+            contract_id=contract_id,
+            opportunity_id=opportunity_id,
             stage=stage,
             status=status,
             health=health,

@@ -35,8 +35,42 @@ import MatrixView from "./MatrixView";
 import ListView from "./ListView";
 import ProjectDetailView from "./ProjectDetailView";
 
+const getFirstSearchParam = (searchParams, names) => {
+  for (const name of names) {
+    const value = searchParams.get(name);
+    if (value) {
+      return value;
+    }
+  }
+  return null;
+};
+
+const getProjectContextFilters = (searchParams) => {
+  const filters = {};
+  const projectId = getFirstSearchParam(searchParams, ["project_id", "projectId"]);
+  const contractId = getFirstSearchParam(searchParams, ["contract_id", "contractId"]);
+  const opportunityId = getFirstSearchParam(searchParams, ["opportunity_id", "opportunityId"]);
+
+  if (projectId) {
+    filters.project_id = projectId;
+  }
+  if (contractId) {
+    filters.contract_id = contractId;
+  }
+  if (opportunityId) {
+    filters.opportunity_id = opportunityId;
+  }
+
+  return filters;
+};
+
 export default function ProjectBoard() {
   const [searchParams] = useSearchParams();
+  const projectContextFilters = useMemo(
+    () => getProjectContextFilters(searchParams),
+    [searchParams]
+  );
+  const hasProjectContext = Object.keys(projectContextFilters).length > 0;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -51,7 +85,7 @@ export default function ProjectBoard() {
 
   // 筛选状态
   const [viewMode, setViewMode] = useState(getInitialViewMode);
-  const [filterMode, setFilterMode] = useState("my");
+  const [filterMode, setFilterMode] = useState(hasProjectContext ? "all" : "my");
   const [statusFilter, setStatusFilter] = useState("all");
   const [healthFilter, setHealthFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,7 +126,9 @@ export default function ProjectBoard() {
     setLoading(true);
     setError(null);
     try {
-      const response = await projectApi.list();
+      const response = hasProjectContext
+        ? await projectApi.list(projectContextFilters)
+        : await projectApi.list();
       // API返回分页格式：{ items: [], total: 0, page: 1, page_size: 20, pages: 0 }
       const items = response.data?.items || response.data?.items || response.data || [];
       setProjects(Array.isArray(items) ? items : []);
@@ -103,7 +139,7 @@ export default function ProjectBoard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [hasProjectContext, projectContextFilters]);
 
   useEffect(() => {
     fetchData();
