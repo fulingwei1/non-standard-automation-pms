@@ -303,12 +303,8 @@ class TestProjectWorkspaceHandoverContext:
         )
         db_session.add(solution)
         db_session.commit()
-        assert (
-            db_session.query(PresaleSolution)
-            .filter(PresaleSolution.project_id == project.id)
-            .count()
-            == 1
-        )
+        assert solution.ticket_id == ticket.id
+        assert ticket.project_id == project.id
 
         response = client.get(
             f"{prefix}/project-workspace/projects/{project.id}/workspace/context",
