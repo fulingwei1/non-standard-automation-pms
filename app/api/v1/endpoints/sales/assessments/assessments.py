@@ -5,7 +5,7 @@
 包含技术评估的申请、执行、查询等核心端点
 """
 
-from typing import Any, List
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import and_, desc
@@ -29,6 +29,57 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
+OPEN_ASSESSMENT_STATUSES = {
+    AssessmentStatusEnum.PENDING.value,
+    AssessmentStatusEnum.IN_PROGRESS.value,
+}
+
+
+def _find_open_assessment(
+    db: Session, source_type: str, source_id: int, assessment_id: Optional[int] = None
+) -> Optional[TechnicalAssessment]:
+    query = db.query(TechnicalAssessment).filter(
+        TechnicalAssessment.source_type == source_type,
+        TechnicalAssessment.source_id == source_id,
+        TechnicalAssessment.status.in_(OPEN_ASSESSMENT_STATUSES),
+    )
+    if assessment_id:
+        linked_assessment = query.filter(TechnicalAssessment.id == assessment_id).first()
+        if linked_assessment:
+            return linked_assessment
+
+    return query.order_by(desc(TechnicalAssessment.created_at)).first()
+
+
+def _get_or_create_open_assessment(
+    db: Session,
+    *,
+    source_type: str,
+    source_id: int,
+    evaluator_id: int,
+    existing_assessment_id: Optional[int] = None,
+) -> TechnicalAssessment:
+    assessment = _find_open_assessment(
+        db,
+        source_type=source_type,
+        source_id=source_id,
+        assessment_id=existing_assessment_id,
+    )
+    if assessment:
+        assessment.evaluator_id = evaluator_id
+        return assessment
+
+    assessment = TechnicalAssessment(
+        source_type=source_type,
+        source_id=source_id,
+        evaluator_id=evaluator_id,
+        status=AssessmentStatusEnum.PENDING.value,
+    )
+    db.add(assessment)
+    db.flush()
+    return assessment
+
+
 @router.post("/leads/{lead_id}/assessments/apply", response_model=ResponseModel, status_code=201)
 def apply_lead_assessment(
     *,
@@ -40,20 +91,17 @@ def apply_lead_assessment(
     """申请技术评估（线索）"""
     lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
 
-    # 创建评估申请
-    assessment = TechnicalAssessment(
+    assessment = _get_or_create_open_assessment(
+        db,
         source_type=AssessmentSourceTypeEnum.LEAD.value,
         source_id=lead_id,
         evaluator_id=request.evaluator_id or current_user.id,
-        status=AssessmentStatusEnum.PENDING.value,
+        existing_assessment_id=lead.assessment_id,
     )
-
-    db.add(assessment)
-    db.flush()
 
     # 更新线索
     lead.assessment_id = assessment.id
-    lead.assessment_status = AssessmentStatusEnum.PENDING.value
+    lead.assessment_status = assessment.status
 
     db.commit()
 
@@ -73,20 +121,17 @@ def apply_opportunity_assessment(
     """申请技术评估（商机）"""
     opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
-    # 创建评估申请
-    assessment = TechnicalAssessment(
+    assessment = _get_or_create_open_assessment(
+        db,
         source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
         source_id=opp_id,
         evaluator_id=request.evaluator_id or current_user.id,
-        status=AssessmentStatusEnum.PENDING.value,
+        existing_assessment_id=opportunity.assessment_id,
     )
-
-    db.add(assessment)
-    db.flush()
 
     # 更新商机
     opportunity.assessment_id = assessment.id
-    opportunity.assessment_status = AssessmentStatusEnum.PENDING.value
+    opportunity.assessment_status = assessment.status
 
     db.commit()
 

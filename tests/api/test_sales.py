@@ -1154,6 +1154,60 @@ class TestTechnicalAssessmentClosedLoop:
         assert [item["id"] for item in assessments] == [assessment_id]
         assert assessments[0]["status"] == "COMPLETED"
 
+    def test_reapplying_pending_assessment_reuses_existing_record(
+        self, client: TestClient, admin_token: str
+    ):
+        """线索/商机重复申请待评估技术评估时，不应生成重复待办。"""
+        headers = _auth_headers(admin_token)
+
+        lead = _create_lead(client, admin_token)
+        first_lead_apply = client.post(
+            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}/assessments/apply",
+            json={},
+            headers=headers,
+        )
+        assert first_lead_apply.status_code == 201, first_lead_apply.text
+        first_lead_assessment_id = first_lead_apply.json()["data"]["assessment_id"]
+
+        second_lead_apply = client.post(
+            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}/assessments/apply",
+            json={},
+            headers=headers,
+        )
+        assert second_lead_apply.status_code == 201, second_lead_apply.text
+        assert second_lead_apply.json()["data"]["assessment_id"] == first_lead_assessment_id
+
+        lead_assessments = client.get(
+            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}/assessments",
+            headers=headers,
+        )
+        assert lead_assessments.status_code == 200, lead_assessments.text
+        assert [item["id"] for item in lead_assessments.json()] == [first_lead_assessment_id]
+
+        opportunity = _create_opportunity(client, admin_token)
+        first_opp_apply = client.post(
+            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}/assessments/apply",
+            json={},
+            headers=headers,
+        )
+        assert first_opp_apply.status_code == 201, first_opp_apply.text
+        first_opp_assessment_id = first_opp_apply.json()["data"]["assessment_id"]
+
+        second_opp_apply = client.post(
+            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}/assessments/apply",
+            json={},
+            headers=headers,
+        )
+        assert second_opp_apply.status_code == 201, second_opp_apply.text
+        assert second_opp_apply.json()["data"]["assessment_id"] == first_opp_assessment_id
+
+        opp_assessments = client.get(
+            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}/assessments",
+            headers=headers,
+        )
+        assert opp_assessments.status_code == 200, opp_assessments.text
+        assert [item["id"] for item in opp_assessments.json()] == [first_opp_assessment_id]
+
     def test_evaluating_lead_assessment_updates_linked_presale_ticket(
         self, client: TestClient, admin_token: str
     ):
