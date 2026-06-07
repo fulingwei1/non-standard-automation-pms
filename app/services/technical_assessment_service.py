@@ -860,7 +860,7 @@ class TechnicalAssessmentService:
 
     def _sync_presale_ticket_assessment(self, assessment: TechnicalAssessment) -> None:
         """将技术评估完成状态同步到关联或同来源的售前工单。"""
-        from app.models.presale import PresaleSupportTicket
+        from app.models.presale import PresaleSupportTicket, TicketStatusEnum
 
         if not assessment.id:
             return
@@ -891,9 +891,14 @@ class TechnicalAssessmentService:
         if not tickets:
             return
 
+        completed_at = datetime.now()
+        terminal_statuses = {TicketStatusEnum.CANCELLED.value, TicketStatusEnum.CLOSED.value}
         for ticket in tickets:
             ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
             ticket.current_assessment_id = assessment.id
+            if ticket.status not in terminal_statuses:
+                ticket.status = TicketStatusEnum.COMPLETED.value
+                ticket.complete_time = ticket.complete_time or completed_at
 
         if not assessment.presale_ticket_id and len(tickets) == 1:
             assessment.presale_ticket_id = tickets[0].id

@@ -329,10 +329,14 @@ def test_evaluate_bound_assessment_does_not_complete_other_ticket_assessment(
 
     assert preserved_first_assessment.status == AssessmentStatusEnum.PENDING.value
     assert preserved_first_assessment.presale_ticket_id == first_ticket.id
+    assert preserved_first_ticket.status == "PROCESSING"
     assert preserved_first_ticket.assessment_status == AssessmentStatusEnum.PENDING.value
     assert preserved_first_ticket.current_assessment_id == first_assessment.id
+    assert preserved_first_ticket.complete_time is None
+    assert refreshed_second_ticket.status == "COMPLETED"
     assert refreshed_second_ticket.assessment_status == AssessmentStatusEnum.COMPLETED.value
     assert refreshed_second_ticket.current_assessment_id == second_assessment.id
+    assert refreshed_second_ticket.complete_time is not None
 
 
 def test_completing_ticket_does_not_reuse_another_ticket_assessment(
