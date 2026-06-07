@@ -95,6 +95,9 @@ class TicketResponse(TimestampSchema):
     customer_id: Optional[int] = None
     customer_name: Optional[str] = None
     opportunity_id: Optional[int] = None
+    opportunity_code: Optional[str] = Field(None, description="关联商机编码")
+    opportunity_name: Optional[str] = Field(None, description="关联商机名称")
+    estimated_amount: Optional[float] = Field(None, description="关联商机预估金额（元）")
     project_id: Optional[int] = None
     applicant_id: int
     applicant_name: Optional[str] = None

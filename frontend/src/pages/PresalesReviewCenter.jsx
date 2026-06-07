@@ -85,7 +85,9 @@ export default function PresalesReviewCenter() {
 
   const handleTabChange = (value) => {
     if (isUnifiedRoute) {
-      setSearchParams({ tab: value });
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set("tab", value);
+      setSearchParams(nextParams);
       setActiveTab(value);
       return;
     }

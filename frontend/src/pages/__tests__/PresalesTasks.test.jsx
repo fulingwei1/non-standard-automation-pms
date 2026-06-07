@@ -197,6 +197,8 @@ describe('PresalesTasks', () => {
             expected_date: '2026-06-20',
             description: '商机编号：OPP-002',
             opportunity_id: 2,
+            opportunity_name: 'ERP 改造商机',
+            estimated_amount: 800000,
           },
         ],
         total: 1,
@@ -220,6 +222,7 @@ describe('PresalesTasks', () => {
 
     expect(screen.getByText('售前支持申请 - ERP 改造项目')).toBeInTheDocument();
     expect(screen.getAllByText('售前支持').length).toBeGreaterThan(0);
+    expect(screen.getByText('¥80万')).toBeInTheDocument();
   });
 
   it('does not show progress update controls for backend REVIEW tickets', async () => {

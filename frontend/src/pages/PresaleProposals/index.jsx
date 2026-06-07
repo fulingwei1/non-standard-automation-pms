@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Sparkles,
   FileText,
@@ -26,8 +26,28 @@ import SolutionGenerateTab from "./SolutionGenerateTab";
 import SolutionReviewTab from "./SolutionReviewTab";
 import SolutionVersionsTab from "./SolutionVersionsTab";
 
+function parseContextId(value) {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 export default function PresaleProposals({ embedded = false } = {}) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const contextTicketId = searchParams.get("ticket_id") || "";
+  const contextOpportunityId = searchParams.get("opportunity_id") || "";
+  const contextTicketIdNumber = useMemo(
+    () => parseContextId(contextTicketId),
+    [contextTicketId],
+  );
+  const contextOpportunityIdNumber = useMemo(
+    () => parseContextId(contextOpportunityId),
+    [contextOpportunityId],
+  );
   const [activeTab, setActiveTab] = useState("list");
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -68,6 +88,12 @@ export default function PresaleProposals({ embedded = false } = {}) {
       if (searchKeyword.trim()) {
         params.keyword = searchKeyword.trim();
       }
+      if (contextOpportunityIdNumber) {
+        params.opportunity_id = contextOpportunityId;
+      }
+      if (contextTicketIdNumber) {
+        params.ticket_id = contextTicketId;
+      }
 
       const response = await presaleApi.solutions.list(params);
       const list = extractItems(response).map(normalizeSolution);
@@ -79,7 +105,14 @@ export default function PresaleProposals({ embedded = false } = {}) {
       setSolutions(filteredList);
 
       if (filteredList.length > 0) {
-        setSelectedSolutionId((previous) => previous || String(filteredList[0].id));
+        setSelectedSolutionId((previous) => {
+          const stillVisible = filteredList.some(
+            (solution) => String(solution.id) === String(previous),
+          );
+          return stillVisible ? previous : String(filteredList[0].id);
+        });
+      } else {
+        setSelectedSolutionId("");
       }
     } catch (requestError) {
       console.error("加载方案失败:", requestError);
@@ -87,7 +120,14 @@ export default function PresaleProposals({ embedded = false } = {}) {
     } finally {
       setLoading(false);
     }
-  }, [searchKeyword, statusFilter]);
+  }, [
+    contextOpportunityId,
+    contextOpportunityIdNumber,
+    contextTicketId,
+    contextTicketIdNumber,
+    searchKeyword,
+    statusFilter,
+  ]);
 
   const loadVersions = useCallback(async (solutionId) => {
     if (!solutionId) {
@@ -194,6 +234,12 @@ export default function PresaleProposals({ embedded = false } = {}) {
         solution_overview: solutionOverview,
         technical_spec: technicalSpec,
       };
+      if (contextOpportunityIdNumber) {
+        payload.opportunity_id = contextOpportunityIdNumber;
+      }
+      if (contextTicketIdNumber) {
+        payload.ticket_id = contextTicketIdNumber;
+      }
 
       if (generatorForm.estimatedCost) {
         payload.estimated_cost = Number(generatorForm.estimatedCost);

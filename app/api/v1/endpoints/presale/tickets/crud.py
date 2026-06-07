@@ -77,7 +77,18 @@ def read_tickets(
         query.order_by(desc(PresaleSupportTicket.created_at)), pagination.offset, pagination.limit
     ).all()
 
-    items = [build_ticket_response(ticket) for ticket in tickets]
+    opportunity_ids = {
+        ticket.opportunity_id for ticket in tickets if ticket.opportunity_id is not None
+    }
+    opportunities_by_id = {}
+    if opportunity_ids:
+        opportunities = db.query(Opportunity).filter(Opportunity.id.in_(opportunity_ids)).all()
+        opportunities_by_id = {opportunity.id: opportunity for opportunity in opportunities}
+
+    items = [
+        build_ticket_response(ticket, opportunities_by_id.get(ticket.opportunity_id))
+        for ticket in tickets
+    ]
 
     return pagination.to_response(items, total)
 
@@ -190,7 +201,11 @@ def create_ticket(
     # 保存工单
     save_obj(db, ticket)
 
-    return build_ticket_response(ticket)
+    opportunity = None
+    if ticket.opportunity_id:
+        opportunity = db.query(Opportunity).filter(Opportunity.id == ticket.opportunity_id).first()
+
+    return build_ticket_response(ticket, opportunity)
 
 
 @router.put("/{ticket_id}", response_model=TicketResponse)
@@ -227,7 +242,11 @@ def read_ticket(
     """
     ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
 
-    return build_ticket_response(ticket)
+    opportunity = None
+    if ticket.opportunity_id:
+        opportunity = db.query(Opportunity).filter(Opportunity.id == ticket.opportunity_id).first()
+
+    return build_ticket_response(ticket, opportunity)
 
 
 @router.put("/{ticket_id}", response_model=TicketResponse)
@@ -251,4 +270,4 @@ def update_ticket(
 
     save_obj(db, ticket)
 
-    return build_ticket_response(ticket)
+    return read_ticket(db=db, ticket_id=ticket_id, current_user=current_user)

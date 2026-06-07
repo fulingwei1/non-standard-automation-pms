@@ -46,13 +46,15 @@ export const getStageName = (stage) => {
 
 // Map backend status to frontend stage
 export const mapTenderStatus = (backendStatus) => {
+  const normalizedStatus = String(backendStatus || "").toUpperCase();
   const statusMap = {
     TRACKING: "tracking",
+    PENDING: "tracking",
     PREPARING: "preparing",
     SUBMITTED: "submitted",
     EVALUATING: "evaluating",
     WON: "won",
     LOST: "lost",
   };
-  return statusMap[backendStatus] || "tracking";
+  return statusMap[normalizedStatus] || "tracking";
 };

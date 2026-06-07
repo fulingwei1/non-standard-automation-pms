@@ -1,5 +1,5 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useSearchParams } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import BiddingCenter from "../BiddingCenter";
@@ -33,8 +33,8 @@ const tenders = [
     tender_name: "智能制造系统",
     customer_name: "上海智能制造有限公司",
     status: "PREPARING",
-    submission_deadline: "2030-03-15T00:00:00Z",
-    budget: 5000000,
+    deadline: "2030-03-15T00:00:00Z",
+    budget_amount: 5000000,
     responsible_name: "张三",
     sales_person_name: "李四",
     progress: 45,
@@ -45,9 +45,9 @@ const tenders = [
     tender_no: "BID-2026-002",
     tender_name: "ERP系统升级",
     customer_name: "北京科技公司",
-    status: "WON",
-    submission_deadline: "2030-04-20T00:00:00Z",
-    budget: 3000000,
+    result: "WON",
+    deadline: "2030-04-20T00:00:00Z",
+    budget_amount: 3000000,
     responsible_name: "王五",
     sales_person_name: "赵六",
     progress: 100,
@@ -66,6 +66,7 @@ function renderPage(props = {}) {
 describe("BiddingCenter", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
     presaleApi.tenders.list.mockResolvedValue({ data: { items: tenders } });
   });
 
@@ -75,6 +76,7 @@ describe("BiddingCenter", () => {
     expect(screen.getByRole("heading", { name: "投标中心" })).toBeInTheDocument();
     expect(await screen.findByText("智能制造系统")).toBeInTheDocument();
     expect(screen.getByText("ERP系统升级")).toBeInTheDocument();
+    expect(screen.getByText("¥500万")).toBeInTheDocument();
     expect(screen.getAllByText("准备中").length).toBeGreaterThan(0);
     expect(screen.getAllByText("已中标").length).toBeGreaterThan(0);
     expect(presaleApi.tenders.list).toHaveBeenCalledWith({ page: 1, page_size: 100 });
@@ -107,6 +109,26 @@ describe("BiddingCenter", () => {
 
     expect(screen.queryByText("智能制造系统")).not.toBeInTheDocument();
     expect(screen.getByText("ERP系统升级")).toBeInTheDocument();
+  });
+
+  it("scopes tender list by sales support ticket context", async () => {
+    useSearchParams.mockReturnValue([
+      new URLSearchParams("tab=bids&type=support&opportunity_id=2&ticket_id=501"),
+      vi.fn(),
+    ]);
+
+    renderPage({ embedded: true });
+
+    await waitFor(() => {
+      expect(presaleApi.tenders.list).toHaveBeenCalledWith(
+        expect.objectContaining({
+          page: 1,
+          page_size: 100,
+          opportunity_id: "2",
+          ticket_id: "501",
+        }),
+      );
+    });
   });
 
   it("shows backend load errors", async () => {

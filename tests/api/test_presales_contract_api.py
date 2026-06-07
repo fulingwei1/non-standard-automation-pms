@@ -557,6 +557,79 @@ class TestPresalesFrontendContractBehavior:
             ).delete(synchronize_session=False)
             db_session.commit()
 
+    def test_ticket_list_enriches_sales_opportunity_context_for_presales_tasks(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-PST-{unique}",
+            customer_name=f"售前任务客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPPST{unique[:6]}",
+            customer=customer,
+            opp_name=f"售前任务商机-{unique}",
+            stage="QUALIFICATION",
+            probability=65,
+            est_amount=Decimal("860000"),
+            expected_close_date=date.today(),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add_all([customer, opportunity])
+        db_session.flush()
+
+        ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-PST-{unique}",
+            title=f"售前支持申请-{unique}",
+            ticket_type="TECHNICAL_SUPPORT",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PENDING",
+            created_by=admin_user.id,
+        )
+        db_session.add(ticket)
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{prefix}/presale/tickets",
+                params={"opportunity_id": opportunity.id, "ticket_id": ticket.id},
+                headers=headers,
+            )
+            assert response.status_code == 200, response.text
+            items = response.json()["items"]
+            assert len(items) == 1
+
+            item = items[0]
+            assert item["id"] == ticket.id
+            assert item["opportunity_id"] == opportunity.id
+            assert item["opportunity_code"] == opportunity.opp_code
+            assert item["opportunity_name"] == opportunity.opp_name
+            assert item["estimated_amount"] == pytest.approx(860000.0)
+        finally:
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id == ticket.id
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
     def test_completing_opportunity_ticket_updates_sales_assessment_status(
         self, client: TestClient, db_session: Session, admin_token: str
     ):
@@ -1254,6 +1327,96 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(TechnicalAssessment).filter(
                 TechnicalAssessment.source_type == "OPPORTUNITY",
                 TechnicalAssessment.source_id == opportunity.id,
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
+    def test_tender_list_filters_by_sales_support_context(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-BID-{unique}",
+            customer_name=f"投标筛选客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPBID{unique[:6]}",
+            customer=customer,
+            opp_name=f"投标筛选商机-{unique}",
+            stage="QUALIFICATION",
+            probability=60,
+            est_amount=Decimal("1200000"),
+            expected_close_date=date.today(),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add_all([customer, opportunity])
+        db_session.flush()
+
+        ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-BID-{unique}",
+            title=f"投标支持申请-{unique}",
+            ticket_type="TECHNICAL_SUPPORT",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PENDING",
+            created_by=admin_user.id,
+        )
+        db_session.add(ticket)
+        db_session.flush()
+
+        matching_tender = PresaleTenderRecord(
+            ticket_id=ticket.id,
+            opportunity_id=opportunity.id,
+            tender_no=f"BID-MATCH-{unique}",
+            tender_name=f"匹配投标-{unique}",
+            customer_name=customer.customer_name,
+            budget_amount=Decimal("900000"),
+            result="PENDING",
+        )
+        noise_tender = PresaleTenderRecord(
+            tender_no=f"BID-NOISE-{unique}",
+            tender_name=f"不应出现投标-{unique}",
+            customer_name=customer.customer_name,
+            budget_amount=Decimal("100000"),
+            result="PENDING",
+        )
+        db_session.add_all([matching_tender, noise_tender])
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{prefix}/presale/tenders",
+                params={"opportunity_id": opportunity.id, "ticket_id": ticket.id},
+                headers=headers,
+            )
+            assert response.status_code == 200, response.text
+            items = response.json()["items"]
+            assert [item["id"] for item in items] == [matching_tender.id]
+            assert items[0]["opportunity_id"] == opportunity.id
+            assert items[0]["ticket_id"] == ticket.id
+        finally:
+            db_session.query(PresaleTenderRecord).filter(
+                PresaleTenderRecord.id.in_([matching_tender.id, noise_tender.id])
+            ).delete(synchronize_session=False)
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id == ticket.id
             ).delete(synchronize_session=False)
             db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
             db_session.query(Customer).filter(Customer.id == customer.id).delete()

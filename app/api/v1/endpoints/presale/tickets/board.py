@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.presale import PresaleSupportTicket
+from app.models.sales import Opportunity
 from app.models.user import User
 from app.schemas.presale import TicketBoardResponse
 
@@ -33,6 +34,13 @@ def get_ticket_board(
         query = query.filter(PresaleSupportTicket.assignee_id == assignee_id)
 
     tickets = query.order_by(PresaleSupportTicket.created_at).all()
+    opportunity_ids = {
+        ticket.opportunity_id for ticket in tickets if ticket.opportunity_id is not None
+    }
+    opportunities_by_id = {}
+    if opportunity_ids:
+        opportunities = db.query(Opportunity).filter(Opportunity.id.in_(opportunity_ids)).all()
+        opportunities_by_id = {opportunity.id: opportunity for opportunity in opportunities}
 
     pending = []
     accepted = []
@@ -41,7 +49,9 @@ def get_ticket_board(
     completed = []
 
     for ticket in tickets:
-        ticket_resp = build_ticket_response(ticket)
+        ticket_resp = build_ticket_response(
+            ticket, opportunities_by_id.get(ticket.opportunity_id)
+        )
 
         if ticket.status == "PENDING":
             pending.append(ticket_resp)

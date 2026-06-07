@@ -81,6 +81,8 @@ def read_tenders(
     keyword: Optional[str] = Query(None, description="关键词搜索（招标编号/项目名称）"),
     result: Optional[str] = Query(None, description="结果筛选"),
     customer_name: Optional[str] = Query(None, description="招标单位筛选"),
+    ticket_id: Optional[int] = Query(None, description="工单ID筛选"),
+    opportunity_id: Optional[int] = Query(None, description="商机ID筛选"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
@@ -92,6 +94,12 @@ def read_tenders(
 
     if result:
         query = query.filter(PresaleTenderRecord.result == result)
+
+    if ticket_id:
+        query = query.filter(PresaleTenderRecord.ticket_id == ticket_id)
+
+    if opportunity_id:
+        query = query.filter(PresaleTenderRecord.opportunity_id == opportunity_id)
 
     # 应用关键词过滤（招标单位）
     query = apply_keyword_filter(query, PresaleTenderRecord, customer_name, ["customer_name"])

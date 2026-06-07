@@ -3,6 +3,7 @@
  * 管理投标项目、技术标书、竞争分析
  */
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Target,
@@ -19,7 +20,21 @@ import { StatsCards } from "./StatsCards";
 import { BiddingKanban } from "./BiddingKanban";
 import { BiddingDetailPanel } from "./BiddingDetailPanel";
 
+function parseContextId(value) {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 export default function BiddingCenter({ embedded = false } = {}) {
+  const [searchParams] = useSearchParams();
+  const contextTicketId = searchParams.get("ticket_id") || "";
+  const contextOpportunityId = searchParams.get("opportunity_id") || "";
+  const contextTicketIdNumber = parseContextId(contextTicketId);
+  const contextOpportunityIdNumber = parseContextId(contextOpportunityId);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBidding, setSelectedBidding] = useState(null);
   const [biddings, setBiddings] = useState([]);
@@ -40,15 +55,21 @@ export default function BiddingCenter({ embedded = false } = {}) {
       if (searchTerm) {
         params.keyword = searchTerm;
       }
+      if (contextOpportunityIdNumber) {
+        params.opportunity_id = contextOpportunityId;
+      }
+      if (contextTicketIdNumber) {
+        params.ticket_id = contextTicketId;
+      }
 
       const response = await presaleApi.tenders.list(params);
       const tendersData = response.data?.items || response.data?.items || response.data || [];
 
       // Transform tenders
       const transformedTenders = (tendersData || []).map((tender) => {
-        const deadline = tender.submission_deadline ?
-        new Date(tender.submission_deadline) :
-        null;
+        const deadlineValue = tender.submission_deadline || tender.deadline;
+        const deadline = deadlineValue ? new Date(deadlineValue) : null;
+        const budgetAmount = Number(tender.budget ?? tender.budget_amount ?? 0);
         const now = new Date();
         const daysLeft = deadline ?
         Math.ceil((deadline - now) / (1000 * 60 * 60 * 24)) :
@@ -56,21 +77,23 @@ export default function BiddingCenter({ embedded = false } = {}) {
 
         return {
           id: tender.id,
+          ticketId: tender.ticket_id,
+          opportunityId: tender.opportunity_id,
           code: tender.tender_no || `BID-${tender.id}`,
           name: tender.tender_name || tender.project_name || "",
           customer: tender.customer_name || "",
           customerId: tender.customer_id,
-          stage: mapTenderStatus(tender.status),
+          stage: mapTenderStatus(tender.status || tender.result),
           deadline: deadline ? deadline.toISOString().split("T")[0] : "",
           daysLeft: daysLeft > 0 ? daysLeft : 0,
-          amount: tender.budget ? tender.budget / 10000 : 0,
+          amount: Number.isFinite(budgetAmount) ? budgetAmount / 10000 : 0,
           engineer: tender.responsible_name || "",
           salesPerson: tender.sales_person_name || "",
           progress: tender.progress || 0,
           solution: tender.solution_id ? `SOL-${tender.solution_id}` : null,
           solutionName: tender.solution_name || null,
           techRequirements:
-          tender.tech_requirements || tender.description || "",
+          tender.tech_requirements || tender.technical_requirements || tender.description || "",
           competitors: [],
           documents: [],
           timeline: [],
@@ -94,7 +117,13 @@ export default function BiddingCenter({ embedded = false } = {}) {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm]);
+  }, [
+    contextOpportunityId,
+    contextOpportunityIdNumber,
+    contextTicketId,
+    contextTicketIdNumber,
+    searchTerm,
+  ]);
 
   useEffect(() => {
     loadTenders();

@@ -1,0 +1,121 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import PresaleProposals from "../PresaleProposals";
+import { presaleApi } from "../../services/api";
+
+const routeState = vi.hoisted(() => ({
+  search: "tab=solutions&type=support&opportunity_id=2&ticket_id=501",
+}));
+
+vi.mock("react-router-dom", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useNavigate: () => vi.fn(),
+    useSearchParams: () => [new URLSearchParams(routeState.search), vi.fn()],
+  };
+});
+
+vi.mock("../../services/api", () => ({
+  presaleApi: {
+    solutions: {
+      list: vi.fn(),
+      create: vi.fn(),
+      getVersions: vi.fn(),
+      review: vi.fn(),
+    },
+  },
+}));
+
+vi.mock("framer-motion", () => ({
+  motion: new Proxy(
+    {},
+    {
+      get: (_, tag) => {
+        const Tag = typeof tag === "string" ? tag : "div";
+        return ({ children, ...props }) => {
+          const motionProps = new Set([
+            "initial",
+            "animate",
+            "exit",
+            "variants",
+            "transition",
+            "whileHover",
+            "whileTap",
+            "layout",
+          ]);
+          const domProps = Object.fromEntries(
+            Object.entries(props).filter(([key]) => !motionProps.has(key)),
+          );
+          return <Tag {...domProps}>{children}</Tag>;
+        };
+      },
+    },
+  ),
+  AnimatePresence: ({ children }) => children,
+}));
+
+function renderPage(
+  initialEntry = "/presales/technical-solutions?tab=solutions&type=support&opportunity_id=2&ticket_id=501",
+) {
+  const url = new URL(initialEntry, "http://localhost");
+  routeState.search = url.search.replace(/^\?/, "");
+
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <PresaleProposals embedded />
+    </MemoryRouter>,
+  );
+}
+
+describe("PresaleProposals", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    presaleApi.solutions.list.mockResolvedValue({ data: { items: [], total: 0 } });
+    presaleApi.solutions.create.mockResolvedValue({
+      data: {
+        id: 900,
+        name: "ERP 改造售前技术方案",
+        status: "DRAFT",
+      },
+    });
+    presaleApi.solutions.getVersions.mockResolvedValue({ data: { items: [], total: 0 } });
+    presaleApi.solutions.review.mockResolvedValue({ data: { id: 900 } });
+  });
+
+  it("scopes solution list by sales support ticket context", async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(presaleApi.solutions.list).toHaveBeenCalledWith(
+        expect.objectContaining({
+          page: 1,
+          page_size: 100,
+          opportunity_id: "2",
+          ticket_id: "501",
+        }),
+      );
+    });
+  });
+
+  it("links generated solutions to the current opportunity and support ticket", async () => {
+    renderPage();
+
+    fireEvent.click(screen.getByText("方案生成"));
+    fireEvent.change(screen.getByPlaceholderText("例如：新能源PACK线FCT测试方案"), {
+      target: { value: "ERP 改造售前技术方案" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "生成并保存方案" }));
+
+    await waitFor(() => {
+      expect(presaleApi.solutions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "ERP 改造售前技术方案",
+          opportunity_id: 2,
+          ticket_id: 501,
+        }),
+      );
+    });
+  });
+});

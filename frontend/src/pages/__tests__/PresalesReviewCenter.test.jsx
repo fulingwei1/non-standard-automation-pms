@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import PresalesReviewCenter from "../PresalesReviewCenter";
 
 const presaleProposalsMock = vi.hoisted(() => vi.fn(({ embedded }) => (
@@ -110,5 +110,18 @@ describe("PresalesReviewCenter", () => {
 
     expect(screen.getByText(/知识模板中心 embedded/)).toBeInTheDocument();
     expect(screen.queryByText("工单看板中心")).not.toBeInTheDocument();
+  });
+
+  it("preserves sales support context params when switching center tabs", () => {
+    routeState.search = "tab=reviews&type=support&status=pending&opportunity_id=2&ticket_id=501";
+
+    render(<PresalesReviewCenter />);
+
+    fireEvent.click(screen.getByText("方案管理"));
+
+    const nextParams = setSearchParamsMock.mock.calls[0][0];
+    expect(nextParams.toString()).toBe(
+      "tab=solutions&type=support&status=pending&opportunity_id=2&ticket_id=501",
+    );
   });
 });

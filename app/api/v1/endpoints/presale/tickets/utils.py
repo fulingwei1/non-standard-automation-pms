@@ -98,7 +98,7 @@ def _build_deliverable_response(deliverable) -> dict:
     }
 
 
-def build_ticket_response(ticket: PresaleSupportTicket) -> TicketResponse:
+def build_ticket_response(ticket: PresaleSupportTicket, opportunity=None) -> TicketResponse:
     """构建工单响应对象"""
     latest_progress = _latest_progress_record(ticket)
     progress_note = None
@@ -117,6 +117,13 @@ def build_ticket_response(ticket: PresaleSupportTicket) -> TicketResponse:
         customer_id=ticket.customer_id,
         customer_name=ticket.customer_name,
         opportunity_id=ticket.opportunity_id,
+        opportunity_code=getattr(opportunity, "opp_code", None),
+        opportunity_name=getattr(opportunity, "opp_name", None),
+        estimated_amount=(
+            float(opportunity.est_amount)
+            if getattr(opportunity, "est_amount", None) is not None
+            else None
+        ),
         project_id=ticket.project_id,
         applicant_id=ticket.applicant_id,
         applicant_name=ticket.applicant_name,
