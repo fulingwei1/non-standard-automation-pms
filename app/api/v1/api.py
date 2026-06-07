@@ -221,12 +221,18 @@ def create_api_router() -> APIRouter:
     
     # ==================== 预售AI ====================
     try:
+        from app.api.presale_ai_emotion import router as presale_ai_emotion_router
+        from app.api.presale_ai_routes import router as presale_ai_solution_router
         from app.api.v1.presale_ai_cost import router as presale_ai_cost_router
+        from app.api.v1.presale_ai_knowledge import router as presale_ai_knowledge_router
         from app.api.v1.presale_ai_integration import router as presale_ai_integration_router
         from app.api.v1.presale_ai_quotation import router as presale_ai_quotation_router
         from app.api.v1.presale_ai_win_rate import router as presale_ai_win_rate_router
         api_router.include_router(presale_ai_integration_router, prefix="/presale/ai", tags=["presale-ai"])
         api_router.include_router(presale_ai_cost_router, tags=["presale-ai-cost"])
+        api_router.include_router(presale_ai_solution_router, tags=["presale-ai-solution"])
+        api_router.include_router(presale_ai_knowledge_router, tags=["presale-ai-knowledge"])
+        api_router.include_router(presale_ai_emotion_router, tags=["presale-ai-emotion"])
         api_router.include_router(presale_ai_quotation_router, tags=["presale-ai"])
         api_router.include_router(presale_ai_win_rate_router, tags=["presale-ai"])
         print("✓ 预售AI模块加载成功")

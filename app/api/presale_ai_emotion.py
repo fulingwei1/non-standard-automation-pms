@@ -23,7 +23,7 @@ from app.schemas.presale_ai_emotion import (
 )
 from app.services.ai_emotion_service import AIEmotionService
 
-router = APIRouter(prefix="/api/v1/presale/ai", tags=["AI情绪分析"])
+router = APIRouter(prefix="/presale/ai", tags=["AI情绪分析"])
 
 
 @router.post("/analyze-emotion", response_model=EmotionAnalysisResponse, summary="分析客户情绪")

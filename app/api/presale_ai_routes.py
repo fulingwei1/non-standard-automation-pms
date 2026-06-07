@@ -31,7 +31,7 @@ from app.services.presale.presale_ai_export_service import PresaleAIExportServic
 from app.services.presale.presale_ai_service import PresaleAIService
 from app.services.presale.presale_ai_template_service import PresaleAITemplateService
 
-router = APIRouter(prefix="/api/v1/presale/ai", tags=["Presale AI Solution"])
+router = APIRouter(prefix="/presale/ai", tags=["Presale AI Solution"])
 
 
 # ==================== 模板匹配 ====================

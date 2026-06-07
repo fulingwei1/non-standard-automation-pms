@@ -175,7 +175,7 @@ class PresaleAIService {
    */
   async generateSolution(solutionData) {
     const response = await api.post(
-      '/presale/ai/solution/generate',
+      '/presale/ai/generate-solution',
       solutionData
     );
     return response.data;
@@ -222,8 +222,8 @@ class PresaleAIService {
    * @param {string} query - 查询内容
    */
   async searchKnowledge(query) {
-    const response = await api.get('/presale/ai/knowledge/search', {
-      params: { query },
+    const response = await api.get('/presale/ai/knowledge-base/search', {
+      params: { keyword: query },
     });
     return response.data;
   }
@@ -233,9 +233,24 @@ class PresaleAIService {
    * @param {Object} scriptData - 话术数据
    */
   async recommendScript(scriptData) {
-    const response = await api.post(
-      '/presale/ai/script/recommend',
-      scriptData
+    const customerId = scriptData?.customer_id ?? scriptData?.customerId;
+    if (!customerId) {
+      throw new Error('customer_id is required for script recommendation');
+    }
+
+    const opportunityId = scriptData.opportunity_id ?? scriptData.opportunityId;
+    const scenarioType = scriptData.scenario_type ?? scriptData.scenarioType;
+    const params = {};
+    if (opportunityId != null) {
+      params.opportunity_id = opportunityId;
+    }
+    if (scenarioType != null) {
+      params.scenario_type = scenarioType;
+    }
+
+    const response = await api.get(
+      `/sales/ai/customers/${customerId}/recommend-scripts`,
+      { params }
     );
     return response.data;
   }
@@ -246,7 +261,7 @@ class PresaleAIService {
    */
   async analyzeEmotion(emotionData) {
     const response = await api.post(
-      '/presale/ai/emotion/analyze',
+      '/presale/ai/analyze-emotion',
       emotionData
     );
     return response.data;

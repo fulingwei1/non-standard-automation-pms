@@ -159,6 +159,32 @@ class TestPresalesFrontendContractRoutes:
         assert not missing, f"售前 AI 单前缀路由未注册: {missing}"
         assert not doubled, f"售前 AI 路由仍然存在双 /api/v1 前缀: {doubled}"
 
+    def test_presale_ai_solution_knowledge_and_emotion_routes_exist(
+        self, client: TestClient
+    ):
+        """售前 AI 方案、知识库和情绪模块应注册到主 /api/v1 路由树。"""
+        routes = _route_map(client.app)
+        prefix = settings.API_V1_PREFIX
+
+        expected_routes = {
+            ("POST", f"{prefix}/presale/ai/generate-solution"),
+            ("GET", f"{prefix}/presale/ai/solution/{{solution_id}}"),
+            ("GET", f"{prefix}/presale/ai/knowledge-base/search"),
+            ("POST", f"{prefix}/presale/ai/search-similar-cases"),
+            ("POST", f"{prefix}/presale/ai/analyze-emotion"),
+            ("POST", f"{prefix}/presale/ai/recommend-follow-up"),
+        }
+        forbidden_routes = {
+            ("POST", f"{prefix}{prefix}/presale/ai/generate-solution"),
+            ("GET", f"{prefix}{prefix}/presale/ai/knowledge-base/search"),
+            ("POST", f"{prefix}{prefix}/presale/ai/analyze-emotion"),
+        }
+
+        missing = sorted(expected_routes - routes)
+        doubled = sorted(forbidden_routes & routes)
+        assert not missing, f"售前 AI 后续模块路由未注册: {missing}"
+        assert not doubled, f"售前 AI 后续模块仍存在双 /api/v1 前缀: {doubled}"
+
 
 class TestPresalesFrontendContractBehavior:
     """验证这几个曾经炸出 404/字段不匹配的接口现在真能用。"""

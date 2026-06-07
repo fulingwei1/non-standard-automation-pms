@@ -26,7 +26,7 @@ from app.schemas.presale_ai_knowledge import (
 )
 from app.services.presale.presale_ai_knowledge_service import PresaleAIKnowledgeService
 
-router = APIRouter(prefix="/api/v1/presale/ai", tags=["售前AI知识库"])
+router = APIRouter(prefix="/presale/ai", tags=["售前AI知识库"])
 
 
 def get_ai_service(db: Session = Depends(get_db)) -> PresaleAIKnowledgeService:

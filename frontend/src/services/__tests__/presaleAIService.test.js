@@ -151,4 +151,64 @@ describe("presaleAIService", () => {
       "/api/v1/presale/ai/generate-quotation",
     ]);
   });
+
+  it("uses registered solution, knowledge, emotion, and script endpoints", async () => {
+    const solution = {
+      presale_ticket_id: 501,
+      requirements: { equipment_type: "FCT" },
+      generate_architecture: true,
+      generate_bom: true,
+    };
+    const emotion = {
+      presale_ticket_id: 501,
+      customer_id: 77,
+      communication_content: "客户反馈方案方向认可，但担心交期",
+    };
+
+    mock.onPost("/api/v1/presale/ai/generate-solution").reply((config) => {
+      expect(JSON.parse(config.data)).toEqual(solution);
+      return [200, { solution: { id: 51 }, generation_time_seconds: 1.2 }];
+    });
+    mock.onGet("/api/v1/presale/ai/knowledge-base/search").reply((config) => {
+      expect(config.params).toEqual({ keyword: "FCT夹具案例" });
+      return [200, { cases: [], total: 0, page: 1, page_size: 20, total_pages: 0 }];
+    });
+    mock.onPost("/api/v1/presale/ai/analyze-emotion").reply((config) => {
+      expect(JSON.parse(config.data)).toEqual(emotion);
+      return [200, { id: 61, sentiment: "neutral", customer_id: 77 }];
+    });
+    mock.onGet("/api/v1/sales/ai/customers/77/recommend-scripts").reply((config) => {
+      expect(config.params).toEqual({
+        opportunity_id: 88,
+        scenario_type: "technical_followup",
+      });
+      return [200, { scripts: ["强调交付计划"] }];
+    });
+
+    await expect(
+      presaleAIService.generateSolution(solution)
+    ).resolves.toMatchObject({ solution: { id: 51 } });
+    await expect(
+      presaleAIService.searchKnowledge("FCT夹具案例")
+    ).resolves.toMatchObject({ total: 0 });
+    await expect(
+      presaleAIService.analyzeEmotion(emotion)
+    ).resolves.toMatchObject({ sentiment: "neutral" });
+    await expect(
+      presaleAIService.recommendScript({
+        customer_id: 77,
+        opportunity_id: 88,
+        scenario_type: "technical_followup",
+      })
+    ).resolves.toMatchObject({ scripts: ["强调交付计划"] });
+
+    expect(mock.history.post.map((request) => api.getUri(request))).toEqual([
+      "/api/v1/presale/ai/generate-solution",
+      "/api/v1/presale/ai/analyze-emotion",
+    ]);
+    expect(mock.history.get.map((request) => api.getUri(request))).toEqual([
+      "/api/v1/presale/ai/knowledge-base/search?keyword=FCT%E5%A4%B9%E5%85%B7%E6%A1%88%E4%BE%8B",
+      "/api/v1/sales/ai/customers/77/recommend-scripts?opportunity_id=88&scenario_type=technical_followup",
+    ]);
+  });
 });
