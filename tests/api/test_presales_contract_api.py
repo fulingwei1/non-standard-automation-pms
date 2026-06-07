@@ -1,11 +1,20 @@
 # -*- coding: utf-8 -*-
 """售前前后端 API 契约对账测试。"""
 
+from datetime import date
+from decimal import Decimal
+from uuid import uuid4
+
 import pytest
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.enums import LeadOutcomeEnum
+from app.models.project import Project
+from app.models.timesheet import Timesheet
+from app.models.user import User
 
 
 def _auth_headers(token: str) -> dict:
@@ -53,6 +62,18 @@ class TestPresalesFrontendContractRoutes:
             ("POST", f"{prefix}/presale/templates"),
             ("GET", f"{prefix}/presale/templates/{{template_id}}"),
             ("PUT", f"{prefix}/presale/templates/{{template_id}}"),
+            # technicalParameterApi
+            ("GET", f"{prefix}/presale/technical-parameters/templates"),
+            ("POST", f"{prefix}/presale/technical-parameters/templates"),
+            ("GET", f"{prefix}/presale/technical-parameters/templates/match"),
+            ("GET", f"{prefix}/presale/technical-parameters/templates/{{template_id}}"),
+            ("PUT", f"{prefix}/presale/technical-parameters/templates/{{template_id}}"),
+            ("DELETE", f"{prefix}/presale/technical-parameters/templates/{{template_id}}"),
+            ("POST", f"{prefix}/presale/technical-parameters/estimate-cost"),
+            ("POST", f"{prefix}/presale/technical-parameters/batch-estimate-cost"),
+            ("GET", f"{prefix}/presale/technical-parameters/statistics"),
+            ("GET", f"{prefix}/presale/technical-parameters/statistics/industries"),
+            ("GET", f"{prefix}/presale/technical-parameters/statistics/test-types"),
             # presaleApi.tenders
             ("GET", f"{prefix}/presale/tenders"),
             ("POST", f"{prefix}/presale/tenders"),
@@ -166,6 +187,89 @@ class TestPresalesFrontendContractBehavior:
         assert payload["usage_count"] == 3
         assert payload["used_count"] == 3
 
+    def test_technical_parameter_routes_match_frontend_contract(
+        self, client: TestClient, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+
+        created = client.post(
+            f"{prefix}/presale/technical-parameters/templates",
+            json={
+                "name": "FCT 标准测试模板",
+                "code": "FCT-CONTRACT-001",
+                "industry": "CONSUMER",
+                "test_type": "FCT",
+                "description": "用于前后端契约对账",
+                "parameters": {
+                    "test_station_count": {
+                        "label": "测试工位数",
+                        "type": "number",
+                        "default": 4,
+                        "unit": "个",
+                    }
+                },
+                "cost_factors": {
+                    "base_cost": 50000,
+                    "factors": {
+                        "test_station_count": {
+                            "type": "linear",
+                            "coefficient": 8000,
+                        }
+                    },
+                    "category_ratios": {
+                        "MECHANICAL": 0.35,
+                        "ELECTRICAL": 0.30,
+                        "SOFTWARE": 0.20,
+                        "LABOR": 0.15,
+                    },
+                },
+                "typical_labor_hours": {
+                    "design_hours": 80,
+                    "assembly_hours": 120,
+                },
+            },
+            headers=headers,
+        )
+        assert created.status_code in {200, 201}, created.text
+        template = created.json()
+        template_id = template["id"]
+
+        listed = client.get(
+            f"{prefix}/presale/technical-parameters/templates",
+            params={"industry": "CONSUMER", "test_type": "FCT"},
+            headers=headers,
+        )
+        assert listed.status_code == 200, listed.text
+        assert any(item["id"] == template_id for item in listed.json()["items"])
+
+        matched = client.get(
+            f"{prefix}/presale/technical-parameters/templates/match",
+            params={"industry": "CONSUMER", "test_type": "FCT"},
+            headers=headers,
+        )
+        assert matched.status_code == 200, matched.text
+        assert any(item["id"] == template_id for item in matched.json())
+
+        estimated = client.post(
+            f"{prefix}/presale/technical-parameters/estimate-cost",
+            json={"template_id": template_id, "parameters": {"test_station_count": 4}},
+            headers=headers,
+        )
+        assert estimated.status_code == 200, estimated.text
+        assert estimated.json()["total_cost"] == pytest.approx(82000.0)
+
+        stats = client.get(
+            f"{prefix}/presale/technical-parameters/statistics",
+            headers=headers,
+        )
+        assert stats.status_code == 200, stats.text
+        assert "industries" in stats.json()
+        assert "test_types" in stats.json()
+
     def test_tender_update_contract(self, client: TestClient, admin_token: str):
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -191,3 +295,84 @@ class TestPresalesFrontendContractBehavior:
         payload = updated.json()
         assert payload["customer_name"] == "新客户"
         assert payload["our_bid_amount"] == pytest.approx(12345.67)
+
+    def test_presales_compat_analytics_use_timesheets(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8]
+        source_lead_id = f"XS26{unique[:6].upper()}"
+        project_code = f"PJ26{unique[:6].upper()}"
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        project = Project(
+            project_code=project_code,
+            project_name="售前工时契约项目",
+            customer_name="契约测试客户",
+            contract_amount=Decimal("120000"),
+            source_lead_id=source_lead_id,
+            outcome=LeadOutcomeEnum.LOST.value,
+            loss_reason="PRICE",
+            salesperson_id=admin_user.id,
+            is_active=True,
+        )
+        db_session.add(project)
+        db_session.flush()
+
+        timesheet = Timesheet(
+            user_id=admin_user.id,
+            user_name=admin_user.real_name or admin_user.username,
+            project_id=project.id,
+            project_code=project.project_code,
+            project_name=project.project_name,
+            work_date=date.today(),
+            hours=Decimal("6.50"),
+            status="APPROVED",
+        )
+        db_session.add(timesheet)
+        db_session.commit()
+
+        try:
+            dashboard = client.get(f"{prefix}/presales/dashboard", headers=headers)
+            assert dashboard.status_code == 200, dashboard.text
+            dashboard_data = dashboard.json()["data"]
+            assert dashboard_data["total_wasted_hours"] >= 6.5
+
+            investment = client.get(
+                f"{prefix}/presales/lead/{source_lead_id}/resource-investment",
+                headers=headers,
+            )
+            assert investment.status_code == 200, investment.text
+            investment_data = investment.json()["data"]
+            assert investment_data["lead_name"] == "售前工时契约项目"
+            assert investment_data["total_hours"] == pytest.approx(6.5)
+            assert investment_data["engineer_count"] == 1
+
+            waste = client.get(
+                f"{prefix}/presales/resource-waste-analysis",
+                params={"period": str(date.today().year)},
+                headers=headers,
+            )
+            assert waste.status_code == 200, waste.text
+            waste_data = waste.json()["data"]
+            assert waste_data["total_investment_hours"] >= 6.5
+            assert waste_data["wasted_hours"] >= 6.5
+
+            performance = client.get(
+                f"{prefix}/presales/salesperson/{admin_user.id}/performance",
+                headers=headers,
+            )
+            assert performance.status_code == 200, performance.text
+            performance_data = performance.json()["data"]
+            assert performance_data["total_resource_hours"] >= 6.5
+            assert performance_data["wasted_hours"] >= 6.5
+        finally:
+            db_session.query(Timesheet).filter(Timesheet.project_id == project.id).delete()
+            db_session.query(Project).filter(Project.id == project.id).delete()
+            db_session.commit()

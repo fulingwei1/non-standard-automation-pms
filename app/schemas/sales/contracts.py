@@ -52,6 +52,9 @@ class ContractCreate(BaseModel):
     contract_code: Optional[str] = Field(
         default=None, max_length=20, description="合同编码（内部）"
     )
+    contract_name: Optional[str] = Field(
+        default=None, max_length=200, description="合同名称"
+    )
     customer_contract_no: Optional[str] = Field(
         default=None, max_length=100, description="客户合同编号（外部）"
     )
@@ -74,6 +77,7 @@ class ContractUpdate(BaseModel):
     """更新合同（与 Contract ORM 字段对齐）"""
 
     contract_code: Optional[str] = None
+    contract_name: Optional[str] = None
     customer_contract_no: Optional[str] = None
     opportunity_id: Optional[int] = None
     quote_version_id: Optional[int] = None
@@ -93,6 +97,7 @@ class ContractResponse(TimestampSchema):
 
     id: int = Field(description="合同ID")
     contract_code: str = Field(description="合同编码（内部）")
+    contract_name: Optional[str] = Field(default=None, description="合同名称")
     customer_contract_no: Optional[str] = Field(default=None, description="客户合同编号（外部）")
     # 兼容历史数据中的 NULL，避免列表接口因脏数据返回 500
     opportunity_id: Optional[int] = Field(default=None, description="商机ID")
@@ -164,12 +169,22 @@ class ContractSignRequest(BaseModel):
 
 
 class ContractProjectCreateRequest(BaseModel):
-    """合同项目关联请求"""
+    """合同项目创建/关联请求"""
 
     model_config = ConfigDict(populate_by_name=True)
 
-    contract_id: int = Field(description="合同ID")
-    project_id: int = Field(description="项目ID")
+    # 兼容 path 已提供 contract_id 的调用；project_id 存在时表示绑定已有项目。
+    contract_id: Optional[int] = Field(default=None, description="合同ID")
+    project_id: Optional[int] = Field(default=None, description="项目ID")
+    project_code: Optional[str] = Field(
+        default=None, max_length=50, description="项目编码"
+    )
+    project_name: Optional[str] = Field(
+        default=None, max_length=200, description="项目名称"
+    )
+    pm_id: Optional[int] = Field(default=None, description="项目经理ID")
+    planned_start_date: Optional[date] = Field(default=None, description="计划开始日期")
+    planned_end_date: Optional[date] = Field(default=None, description="计划结束日期")
     allocation_amount: Optional[Decimal] = Field(default=None, description="分配金额")
     allocation_ratio: Optional[Decimal] = Field(default=None, description="分配比例")
     remark: Optional[str] = Field(default=None, description="备注")

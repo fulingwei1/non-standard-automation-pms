@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import date, datetime
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,24 +19,26 @@ class TestNotifyContractSigned:
 
     def test_contract_no_owner(self):
         db = MagicMock()
-        contract = MagicMock()
-        contract.owner_id = None
+        contract = SimpleNamespace(sales_owner_id=None)
         db.query.return_value.filter.return_value.first.return_value = contract
         assert notify_contract_signed(db, 1) is None
 
     @patch("app.services.sales_reminder.contract_reminders.create_notification")
     def test_contract_signed_success(self, mock_notify):
         db = MagicMock()
-        contract = MagicMock()
-        contract.owner_id = 1
-        contract.id = 10
-        contract.contract_code = "C001"
-        contract.contract_amount = 50000
-        contract.signed_date = date(2024, 1, 1)
+        contract = SimpleNamespace(
+            sales_owner_id=1,
+            id=10,
+            contract_code="C001",
+            contract_amount=50000,
+            signing_date=date(2024, 1, 1),
+        )
         db.query.return_value.filter.return_value.first.return_value = contract
         mock_notify.return_value = MagicMock()
         result = notify_contract_signed(db, 10)
         mock_notify.assert_called_once()
+        assert mock_notify.call_args.kwargs["user_id"] == 1
+        assert result == mock_notify.return_value
 
 
 class TestNotifyContractExpiring:

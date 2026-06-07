@@ -13,7 +13,9 @@ from sqlalchemy import func
 
 from app.models.enums import LeadOutcomeEnum
 from app.models.project import Project
-from app.models.work_log import WorkLog
+from app.models.timesheet import Timesheet
+
+WorkLog = Timesheet  # Backward-compatible symbol for older tests/imports.
 
 
 class WasteCalculationMixin:
@@ -53,7 +55,7 @@ class WasteCalculationMixin:
         pending_projects = [
             p
             for p in projects
-            if p.outcome in [LeadOutcomeEnum.PENDING.value, LeadOutcomeEnum.ON_HOLD.value, None]
+            if p.outcome in ["PENDING", LeadOutcomeEnum.ON_HOLD.value, None]
         ]
 
         # 计算各类项目的工时
@@ -66,16 +68,16 @@ class WasteCalculationMixin:
         project_ids = [p.id for p in projects]
         if project_ids:
             work_hours_map = dict(
-                self.db.query(WorkLog.project_id, func.sum(WorkLog.work_hours))
-                .filter(WorkLog.project_id.in_(project_ids))
-                .group_by(WorkLog.project_id)
+                self.db.query(Timesheet.project_id, func.sum(Timesheet.hours))
+                .filter(Timesheet.project_id.in_(project_ids))
+                .group_by(Timesheet.project_id)
                 .all()
             )
         else:
             work_hours_map = {}
 
         for project in projects:
-            hours = work_hours_map.get(project.id, 0) or 0
+            hours = float(work_hours_map.get(project.id, 0) or 0)
             total_investment_hours += hours
 
             if project.outcome == LeadOutcomeEnum.WON.value:

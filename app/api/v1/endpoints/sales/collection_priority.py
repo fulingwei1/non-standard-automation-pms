@@ -37,7 +37,7 @@ def get_collection_priority_list(
         description="是否包含未逾期的应收",
     ),
     limit: int = Query(50, ge=1, le=200, description="返回数量限制"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:read")),
 ) -> Any:
     """
     获取催款优先级排序列表
@@ -54,6 +54,7 @@ def get_collection_priority_list(
         user_id=current_user.id,
         include_non_overdue=include_non_overdue,
         limit=limit,
+        current_user=current_user,
     )
 
     # 按紧急程度过滤
@@ -101,7 +102,7 @@ def get_collection_priority_list(
 @router.get("/priority/summary", response_model=ResponseModel)
 def get_collection_priority_summary(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:read")),
 ) -> Any:
     """
     获取催款优先级汇总
@@ -115,7 +116,7 @@ def get_collection_priority_summary(
     适合在首页或仪表盘展示。
     """
     service = CollectionPriorityService(db)
-    summary = service.get_collection_summary(current_user.id)
+    summary = service.get_collection_summary(current_user.id, current_user=current_user)
 
     return ResponseModel(
         code=200,
@@ -127,7 +128,7 @@ def get_collection_priority_summary(
 @router.get("/priority/critical", response_model=ResponseModel)
 def get_critical_collections(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:read")),
 ) -> Any:
     """
     获取紧急催款项（需立即处理）
@@ -138,6 +139,7 @@ def get_critical_collections(
     items = service.get_prioritized_collections(
         user_id=current_user.id,
         limit=20,
+        current_user=current_user,
     )
 
     critical_items = [item for item in items if item.urgency == CollectionUrgency.CRITICAL]

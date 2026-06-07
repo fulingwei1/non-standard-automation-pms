@@ -15,6 +15,7 @@ const PresaleBids = lazyLoad(() => import("../../pages/PresaleBids"));
 const KnowledgeBase = lazyLoad(() => import("../../pages/KnowledgeBase"));
 const PresaleTemplates = lazyLoad(() => import("../../pages/PresaleTemplates"));
 const PresaleTicketBoard = lazyLoad(() => import("../../pages/PresaleTicketBoard"));
+const TechnicalParameterManagement = lazyLoad(() => import("../../pages/TechnicalParameterManagement"));
 
 export function PresalesRoutes() {
   return (
@@ -39,6 +40,7 @@ export function PresalesRoutes() {
       <Route path="/presales/bids" element={<PresaleBids />} />
       <Route path="/knowledge-base" element={<KnowledgeBase />} />
       <Route path="/presales/templates" element={<PresaleTemplates />} />
+      <Route path="/presales/technical-parameters" element={<TechnicalParameterManagement />} />
       <Route path="/presales/ticket-board" element={<PresaleTicketBoard />} />
       <Route path="/presale-templates" element={<PresaleTemplates />} />
     </>

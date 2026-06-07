@@ -16,6 +16,7 @@ from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.enums import LeadOutcomeEnum
 from app.models.project import Project
+from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.presales import SalespersonPerformance, SalespersonRanking
@@ -65,15 +66,13 @@ async def get_salesperson_performance(
         if p.outcome == LeadOutcomeEnum.WON.value
     )
 
-    from app.models.work_log import WorkLog
-
-    total_resource_hours = 0
-    wasted_hours = 0
+    total_resource_hours = 0.0
+    wasted_hours = 0.0
     loss_reason_count = {}
 
     for project in projects:
-        hours = (
-            db.query(func.sum(WorkLog.work_hours)).filter(WorkLog.project_id == project.id).scalar()
+        hours = float(
+            db.query(func.sum(Timesheet.hours)).filter(Timesheet.project_id == project.id).scalar()
             or 0
         )
         total_resource_hours += hours

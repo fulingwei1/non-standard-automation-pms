@@ -1,23 +1,38 @@
-/**
- * Signature Manager Component
- * 合同签署管理组件（占位实现，保证页面可运行）
- */
-
 import { useMemo, useState } from 'react';
 import { Card, Table, Tag, Space, Button, message } from 'antd';
 import { CONTRACT_STATUS, SIGNATURE_STATUS } from '@/lib/constants/contractManagement';
+import { signContract } from '@/services/contractService';
 
 const SignatureManager = ({ contracts = [], loading = false, onRefresh, onSignComplete }) => {
   const [signingId, setSigningId] = useState(null);
 
-  const handleMockSign = (contract) => {
-    setSigningId(contract?.id ?? null);
-    setTimeout(() => {
-      message.success('已模拟签署完成');
+  const handleSign = async (contract) => {
+    if (!contract?.id) {
+      return;
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    setSigningId(contract.id);
+
+    try {
+      const response = await signContract(contract.id, {
+        signed_date: contract.signing_date || contract.signed_date || today,
+        auto_create_project: false,
+      });
+
+      message.success(response?.message || '合同已签署，待发起PMO立项');
+      onSignComplete?.(contract, response);
+      await onRefresh?.();
+    } catch (error) {
+      const detail =
+        error?.response?.data?.detail ||
+        error?.response?.data?.message ||
+        error?.message ||
+        '未知错误';
+      message.error(`签署失败：${detail}`);
+    } finally {
       setSigningId(null);
-      onSignComplete?.(contract);
-      onRefresh?.();
-    }, 600);
+    }
   };
 
   const columns = useMemo(() => {
@@ -53,9 +68,9 @@ const SignatureManager = ({ contracts = [], loading = false, onRefresh, onSignCo
               type="primary"
               size="small"
               loading={signingId === record.id}
-              onClick={() => handleMockSign(record)}
+              onClick={() => handleSign(record)}
             >
-              模拟签署
+              确认签署
             </Button>
           </Space>
         )
@@ -86,4 +101,3 @@ const SignatureManager = ({ contracts = [], loading = false, onRefresh, onSignCo
 };
 
 export default SignatureManager;
-

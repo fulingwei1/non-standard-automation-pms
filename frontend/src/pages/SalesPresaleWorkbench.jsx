@@ -431,7 +431,7 @@ export default function SalesPresaleWorkbench() {
           <CardHeader>
             <CardTitle>评估与技术入口提示</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 lg:grid-cols-3">
+          <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-lg bg-gray-950 p-4">
               <div className="mb-2 flex items-center gap-2">
                 <Activity className="h-4 w-4 text-blue-400" />
@@ -442,6 +442,22 @@ export default function SalesPresaleWorkbench() {
               </div>
               <Link to="/sales/leads" className="mt-3 inline-flex items-center gap-2 text-sm text-blue-300">
                 进入线索池
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="rounded-lg bg-gray-950 p-4">
+              <div className="mb-2 flex items-center gap-2">
+                <LayoutTemplate className="h-4 w-4 text-cyan-400" />
+                <span className="font-medium">参数模板</span>
+              </div>
+              <div className="text-sm text-gray-400">
+                维护 ICT、FCT、EOL 等技术参数模板，为评估和成本估算提供标准输入。
+              </div>
+              <Link
+                to="/presales/technical-parameters"
+                className="mt-3 inline-flex items-center gap-2 text-sm text-blue-300"
+              >
+                管理技术参数
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>

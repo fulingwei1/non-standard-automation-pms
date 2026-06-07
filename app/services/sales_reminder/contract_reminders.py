@@ -16,17 +16,22 @@ from app.models.sales import Contract
 from app.services.sales_reminder.base import create_notification
 
 
+def _get_contract_owner_id(contract: Contract) -> Optional[int]:
+    return getattr(contract, "sales_owner_id", None) or getattr(contract, "owner_id", None)
+
+
 def notify_contract_signed(db: Session, contract_id: int) -> Optional[Notification]:
     """
     合同签订提醒
     """
     contract = db.query(Contract).filter(Contract.id == contract_id).first()
-    if not contract or not contract.owner_id:
+    owner_id = _get_contract_owner_id(contract) if contract else None
+    if not contract or not owner_id:
         return None
 
     return create_notification(
         db=db,
-        user_id=contract.owner_id,
+        user_id=owner_id,
         notification_type="CONTRACT_SIGNED",
         title=f"合同已签订：{contract.contract_code}",
         content=f"合同 {contract.contract_code} 已签订，金额：{contract.contract_amount}，请及时跟进后续流程。",
@@ -68,8 +73,9 @@ def notify_contract_expiring(db: Session) -> int:
         if days_left in settings.SALES_CONTRACT_EXPIRE_REMINDER_DAYS and days_left > 0:
             # 获取需要通知的用户：合同负责人、项目经理、财务
             user_ids = set()
-            if contract.owner_id:
-                user_ids.add(contract.owner_id)
+            owner_id = _get_contract_owner_id(contract)
+            if owner_id:
+                user_ids.add(owner_id)
             if contract.project_id:
                 project = contract.project
                 if project and project.pm_id:

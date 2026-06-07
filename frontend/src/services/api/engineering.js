@@ -105,6 +105,47 @@ export const engineersApi = {
     api.get(`/engineers/projects/${projectId}/progress-visibility`),
 };
 
+function normalizeAssessmentSourceType(sourceType) {
+  const value = String(sourceType || "").trim().toLowerCase();
+  if (value === "lead" || value === "leads") {
+    return "lead";
+  }
+  if (value === "opportunity" || value === "opportunities") {
+    return "opportunity";
+  }
+  return value;
+}
+
+function getAssessmentSourceConfig(sourceType) {
+  const normalizedSourceType = normalizeAssessmentSourceType(sourceType);
+  if (normalizedSourceType === "lead") {
+    return { pathSegment: "leads", apiType: "LEAD" };
+  }
+  if (normalizedSourceType === "opportunity") {
+    return { pathSegment: "opportunities", apiType: "OPPORTUNITY" };
+  }
+  throw new Error(`不支持的来源类型: ${sourceType}`);
+}
+
+function normalizeAssessmentSourceId(sourceId) {
+  const numericSourceId = Number(sourceId);
+  return Number.isFinite(numericSourceId) ? numericSourceId : sourceId;
+}
+
+function getAssessmentSourcePath(sourceType, sourceId, resource) {
+  const { pathSegment } = getAssessmentSourceConfig(sourceType);
+  return `/sales/${pathSegment}/${sourceId}/${resource}`;
+}
+
+function getAssessmentSourceParams(sourceType, sourceId, params = {}) {
+  const { apiType } = getAssessmentSourceConfig(sourceType);
+  return {
+    source_type: apiType,
+    source_id: normalizeAssessmentSourceId(sourceId),
+    ...params,
+  };
+}
+
 export const technicalAssessmentApi = {
   // 申请技术评估
   applyForLead: (leadId, data) =>
@@ -140,10 +181,16 @@ export const technicalAssessmentApi = {
 
   // 未决事项
   getOpenItems: (params) => api.get("/sales/open-items", { params }),
+  getOpenItemsForSource: (sourceType, sourceId, params = {}) =>
+    api.get("/sales/open-items", {
+      params: getAssessmentSourceParams(sourceType, sourceId, params),
+    }),
   createOpenItemForLead: (leadId, data) =>
     api.post(`/sales/leads/${leadId}/open-items`, data),
   createOpenItemForOpportunity: (oppId, data) =>
     api.post(`/sales/opportunities/${oppId}/open-items`, data),
+  createOpenItem: (sourceType, sourceId, data) =>
+    api.post(getAssessmentSourcePath(sourceType, sourceId, "open-items"), data),
   updateOpenItem: (itemId, data) =>
     api.put(`/sales/open-items/${itemId}`, data),
   closeOpenItem: (itemId) => api.post(`/sales/open-items/${itemId}/close`),
@@ -157,28 +204,27 @@ export const technicalAssessmentApi = {
     api.put(`/sales/leads/${leadId}/requirement-detail`, data),
 
   // 需求冻结管理
-  getRequirementFreezes: (sourceType, sourceId) => {
-    const path =
-      sourceType === "lead"
-        ? `/sales/leads/${sourceId}/requirement-freezes`
-        : `/sales/opportunities/${sourceId}/requirement-freezes`;
-    return api.get(path);
-  },
-  createRequirementFreeze: (sourceType, sourceId, data) => {
-    const path =
-      sourceType === "lead"
-        ? `/sales/leads/${sourceId}/requirement-freezes`
-        : `/sales/opportunities/${sourceId}/requirement-freezes`;
-    return api.post(path, data);
-  },
+  getRequirementFreezes: (sourceType, sourceId) =>
+    api.get(getAssessmentSourcePath(sourceType, sourceId, "requirement-freezes")),
+  createRequirementFreeze: (sourceType, sourceId, data) =>
+    api.post(getAssessmentSourcePath(sourceType, sourceId, "requirement-freezes"), data),
 
   // AI澄清管理
   getAIClarifications: (params) =>
     api.get("/sales/ai-clarifications", { params }),
+  getAIClarificationsForSource: (sourceType, sourceId, params = {}) =>
+    api.get("/sales/ai-clarifications", {
+      params: getAssessmentSourceParams(sourceType, sourceId, params),
+    }),
   createAIClarificationForLead: (leadId, data) =>
     api.post(`/sales/leads/${leadId}/ai-clarifications`, data),
   createAIClarificationForOpportunity: (oppId, data) =>
     api.post(`/sales/opportunities/${oppId}/ai-clarifications`, data),
+  createAIClarification: (sourceType, sourceId, data) =>
+    api.post(
+      getAssessmentSourcePath(sourceType, sourceId, "ai-clarifications"),
+      data,
+    ),
   updateAIClarification: (clarificationId, data) =>
     api.put(`/sales/ai-clarifications/${clarificationId}`, data),
   getAIClarification: (clarificationId) =>

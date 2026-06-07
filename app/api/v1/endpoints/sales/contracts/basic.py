@@ -52,6 +52,7 @@ def _map_contract_payload_to_model(payload: dict, *, is_create: bool = False) ->
 
     field_map = {
         "contract_code": "contract_code",
+        "contract_name": "contract_name",
         "customer_contract_no": "customer_contract_no",
         "opportunity_id": "opportunity_id",
         "quote_version_id": "quote_id",

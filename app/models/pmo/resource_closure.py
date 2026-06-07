@@ -2,6 +2,8 @@
 """
 PMO模型 - 资源分配和项目结项
 """
+from datetime import date, datetime, time
+
 from sqlalchemy import Column, Date, ForeignKey, Index, Integer, Numeric, String, Text
 
 from ..base import Base, TimestampMixin
@@ -91,3 +93,40 @@ class PmoProjectClosure(Base, TimestampMixin):
     review_result = Column(String(20), comment="评审结果:APPROVED/REJECTED")
 
     __table_args__ = {"comment": "项目结项表"}
+
+    @property
+    def status(self) -> str:
+        """兼容旧接口字段；复用 archive_status 存储结项流程状态。"""
+        if self.archive_status in {"DRAFT", "REVIEWED", "ARCHIVED"}:
+            return self.archive_status
+        if self.review_result:
+            return "REVIEWED"
+        return "DRAFT"
+
+    @status.setter
+    def status(self, value: str) -> None:
+        self.archive_status = value
+
+    @property
+    def reviewed_at(self):
+        if not self.review_date:
+            return None
+        return datetime.combine(self.review_date, time.min)
+
+    @reviewed_at.setter
+    def reviewed_at(self, value) -> None:
+        if isinstance(value, datetime):
+            self.review_date = value.date()
+        elif isinstance(value, date):
+            self.review_date = value
+        elif value is None:
+            self.review_date = None
+
+    @property
+    def review_notes(self):
+        return None
+
+    @review_notes.setter
+    def review_notes(self, value) -> None:
+        # 当前表没有评审备注列；保留 setter 兼容旧端点写入。
+        return None

@@ -67,6 +67,7 @@ class TestPaymentPlanService(unittest.TestCase):
 
         # 验证生成了4个收款计划
         self.assertEqual(len(plans), 4)
+        self.assertEqual(self.db.add.call_count, 4)
 
         # 验证预付款
         self.assertEqual(plans[0].payment_name, "预付款")

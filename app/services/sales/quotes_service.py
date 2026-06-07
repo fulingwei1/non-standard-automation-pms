@@ -4,14 +4,15 @@
 """
 
 from datetime import date
+import re
 from typing import Optional
 
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.pagination import get_pagination_params
-from app.common.query_filters import apply_keyword_filter, apply_pagination
-from app.models.sales import Quote
+from app.common.query_filters import apply_pagination, build_keyword_conditions
+from app.models.sales import Contract, Quote
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import QuoteCreate
@@ -49,8 +50,13 @@ class QuotesService:
             from app.core.sales_permissions import filter_sales_data_by_scope
             query = filter_sales_data_by_scope(query, current_user, self.db, Quote, "owner_id")
 
-        # 搜索条件
-        query = apply_keyword_filter(query, Quote, keyword, "quote_code")
+        # 搜索条件：兼容前端展示编号 QT-000123（实际库存 quote_code + id）。
+        keyword_conditions = build_keyword_conditions(Quote, keyword, "quote_code")
+        display_id = self._parse_display_quote_id(keyword)
+        if display_id is not None:
+            keyword_conditions.append(Quote.id == display_id)
+        if keyword_conditions:
+            query = query.filter(or_(*keyword_conditions))
 
         # 筛选条件
         if status:
@@ -76,6 +82,14 @@ class QuotesService:
         quote_responses = []
         for quote in items:
             current_version = self._pick_display_version(quote)
+            contract_id = None
+            if current_version:
+                contract_id = (
+                    self.db.query(Contract.id)
+                    .filter(Contract.quote_id == current_version.id)
+                    .order_by(desc(Contract.id))
+                    .scalar()
+                )
             version_payload = None
             if current_version:
                 version_payload = {
@@ -96,8 +110,10 @@ class QuotesService:
             quote_responses.append({
                 "id": quote.id,
                 "quote_code": quote.quote_code,
+                "quote_no": f"QT-{quote.id:06d}",
                 "opportunity_id": quote.opportunity_id,
                 "customer_id": quote.customer_id,
+                "contract_id": contract_id,
                 "status": quote.status,
                 "valid_until": quote.valid_until,
                 "owner_id": quote.owner_id,
@@ -149,6 +165,15 @@ class QuotesService:
         ).count()
 
         return f"QT{today.strftime('%Y%m%d')}{count+1:04d}"
+
+    @staticmethod
+    def _parse_display_quote_id(keyword: Optional[str]) -> Optional[int]:
+        if not keyword:
+            return None
+        match = re.fullmatch(r"\s*QT-(\d{1,})\s*", keyword, flags=re.IGNORECASE)
+        if not match:
+            return None
+        return int(match.group(1))
 
     @staticmethod
     def _pick_display_version(quote: Quote):

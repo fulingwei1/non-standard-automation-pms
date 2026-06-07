@@ -136,6 +136,9 @@ def create_contract_project(
     """
     合同生成项目（G4阶段门验证）
     """
+    if project_request.contract_id and project_request.contract_id != contract_id:
+        raise HTTPException(status_code=400, detail="请求体合同ID与路径合同ID不一致")
+
     contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
     # 数据权限：校验当前用户是否有权操作该合同
@@ -154,6 +157,33 @@ def create_contract_project(
         raise HTTPException(
             status_code=400,
             detail=f"合同已关联项目（ID: {contract.project_id}），不能重复创建",
+        )
+
+    if project_request.project_id:
+        project = get_or_404(db, Project, project_request.project_id, detail="项目不存在")
+        if project.contract_id and project.contract_id != contract.id:
+            raise HTTPException(status_code=400, detail="项目已关联其他合同")
+
+        project.contract_id = contract.id
+        project.customer_id = project.customer_id or contract.customer_id
+        project.contract_no = project.contract_no or contract.contract_code
+        project.customer_contract_no = (
+            project.customer_contract_no or getattr(contract, "customer_contract_no", None)
+        )
+        project.contract_amount = project.contract_amount or contract.contract_amount
+        project.contract_date = project.contract_date or contract.signing_date
+        project.opportunity_id = project.opportunity_id or contract.opportunity_id
+        contract.project_id = project.id
+        db.commit()
+
+        logger.info(f"合同 {contract_id} 成功关联已有项目 {project.id}")
+        return ResponseModel(
+            code=200, message="项目关联成功", data={"project_id": project.id}
+        )
+
+    if not project_request.project_code or not project_request.project_name:
+        raise HTTPException(
+            status_code=400, detail="创建项目必须提供项目编码和项目名称"
         )
 
     # 获取交付物清单

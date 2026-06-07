@@ -24,6 +24,32 @@ import {
 "../components/ui";
 import { technicalAssessmentApi } from "../services/api";
 
+const isLeadSource = (sourceType) =>
+  ["lead", "leads"].includes(String(sourceType || "").toLowerCase());
+
+const getResponseItems = (response) => {
+  const payload = response?.formatted ?? response?.data?.data ?? response?.data ?? response;
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  return payload?.items || [];
+};
+
+const parseJsonArray = (value) => {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  if (!value) {
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 export default function AIClarificationChat() {
   const { sourceType, sourceId } = useParams();
   const _navigate = useNavigate();
@@ -42,11 +68,11 @@ export default function AIClarificationChat() {
   const loadClarifications = async () => {
     try {
       setLoading(true);
-      const response = await technicalAssessmentApi.getAIClarifications({
-        source_type: sourceType?.toUpperCase(),
-        source_id: parseInt(sourceId)
-      });
-      const items = response.data.items || response.data?.items || response.data || [];
+      const response = await technicalAssessmentApi.getAIClarificationsForSource(
+        sourceType,
+        parseInt(sourceId)
+      );
+      const items = getResponseItems(response);
       setClarifications(items);
       if (items?.length > 0) {
         const maxRound = Math.max(...(items || []).map((item) => item.round));
@@ -70,17 +96,11 @@ export default function AIClarificationChat() {
       const questionsArray = questions.split("\n").filter((q) => q.trim());
       const questionsJson = JSON.stringify(questionsArray);
 
-      if (sourceType === "lead") {
-        await technicalAssessmentApi.createAIClarificationForLead(
-          parseInt(sourceId),
-          { questions: questionsJson }
-        );
-      } else {
-        await technicalAssessmentApi.createAIClarificationForOpportunity(
-          parseInt(sourceId),
-          { questions: questionsJson }
-        );
-      }
+      await technicalAssessmentApi.createAIClarification(
+        sourceType,
+        parseInt(sourceId),
+        { questions: questionsJson }
+      );
 
       setQuestions("");
       await loadClarifications();
@@ -98,7 +118,7 @@ export default function AIClarificationChat() {
     );
     if (!currentClarification) {return;}
 
-    const questionsArray = JSON.parse(currentClarification.questions);
+    const questionsArray = parseJsonArray(currentClarification.questions);
     const answersArray = (questionsArray || []).map((_, idx) => answers[idx] || "");
 
     if ((answersArray || []).some((a) => !a.trim())) {
@@ -132,9 +152,9 @@ export default function AIClarificationChat() {
         breadcrumbs={[
         { label: "销售管理", path: "/sales" },
         {
-          label: sourceType === "lead" ? "线索管理" : "商机管理",
+          label: isLeadSource(sourceType) ? "线索管理" : "商机管理",
           path:
-          sourceType === "lead" ? "/sales/leads" : "/sales/opportunities"
+          isLeadSource(sourceType) ? "/sales/leads" : "/sales/opportunities"
         },
         { label: "AI澄清", path: "" }]
         } />
@@ -143,9 +163,9 @@ export default function AIClarificationChat() {
       <div className="mt-6 space-y-6">
         {/* 澄清记录列表 */}
         {(clarifications || []).map((clarification) => {
-          const questionsArray = JSON.parse(clarification.questions || "[]");
+          const questionsArray = parseJsonArray(clarification.questions);
           const answersArray = clarification.answers ?
-          JSON.parse(clarification.answers) :
+          parseJsonArray(clarification.answers) :
           [];
           const hasAnswers = answersArray.length > 0;
 
@@ -241,7 +261,7 @@ export default function AIClarificationChat() {
                   className="bg-gray-700 border-gray-600 text-white"
                   placeholder="请输入问题，每行一个&#10;例如：&#10;接口协议是否已确定？&#10;节拍要求是否可调整？"
                   rows={6}
-                  value={questions || "unknown"}
+                  value={questions}
                   onChange={(e) => setQuestions(e.target.value)} />
 
               </div>

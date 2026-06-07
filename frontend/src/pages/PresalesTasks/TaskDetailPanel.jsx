@@ -205,7 +205,7 @@ export default function TaskDetailPanel({ task, onClose, onUpdate }) {
                   <span className="text-slate-400">完成进度</span>
                   <span className="text-white">{progress}%</span>
                 </div>
-                <Progress value={progress || "unknown"} className="h-2" />
+                <Progress value={progress} className="h-2" />
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-400">工时</span>
@@ -275,17 +275,17 @@ export default function TaskDetailPanel({ task, onClose, onUpdate }) {
                 type="number"
                 min="0"
                 max="100"
-                value={progress || "unknown"}
+                value={progress}
                 onChange={(e) => setProgress(parseInt(e.target.value) || 0)}
                 className="flex-1" />
 
                 <span className="text-sm text-slate-400">%</span>
               </div>
-              <Progress value={progress || "unknown"} className="h-2" />
+              <Progress value={progress} className="h-2" />
               <Input
               type="text"
               placeholder="进度说明..."
-              value={progressNote || "unknown"}
+              value={progressNote}
               onChange={(e) => setProgressNote(e.target.value)}
               className="w-full" />
 
@@ -304,7 +304,7 @@ export default function TaskDetailPanel({ task, onClose, onUpdate }) {
               <Input
               type="number"
               min="0"
-              value={actualHours || "unknown"}
+              value={actualHours}
               onChange={(e) =>
               setActualHours(parseFloat(e.target.value) || 0)
               }

@@ -141,6 +141,46 @@ def create_template(
     )
 
 
+# ==================== 模板匹配 ====================
+
+
+@router.get(
+    "/templates/match",
+    response_model=List[TechnicalParameterTemplateListItem],
+    summary="匹配技术参数模板",
+    description="根据行业和测试类型智能匹配推荐模板",
+)
+def match_templates(
+    industry: str = Query(..., description="行业"),
+    test_type: str = Query(..., description="测试类型"),
+    top_k: int = Query(5, ge=1, le=20, description="返回数量"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    """根据行业和测试类型匹配推荐模板"""
+    service = TechnicalParameterService(db)
+    templates = service.match_templates(
+        industry=industry,
+        test_type=test_type,
+        top_k=top_k,
+    )
+
+    return [
+        TechnicalParameterTemplateListItem(
+            id=t.id,
+            name=t.name,
+            code=t.code,
+            industry=t.industry,
+            test_type=t.test_type,
+            description=t.description,
+            use_count=t.use_count or 0,
+            is_active=t.is_active,
+            created_at=t.created_at,
+        )
+        for t in templates
+    ]
+
+
 @router.get(
     "/templates/{template_id}",
     response_model=TechnicalParameterTemplateResponse,
@@ -247,46 +287,6 @@ def delete_template(
         )
 
 
-# ==================== 模板匹配 ====================
-
-
-@router.get(
-    "/templates/match",
-    response_model=List[TechnicalParameterTemplateListItem],
-    summary="匹配技术参数模板",
-    description="根据行业和测试类型智能匹配推荐模板",
-)
-def match_templates(
-    industry: str = Query(..., description="行业"),
-    test_type: str = Query(..., description="测试类型"),
-    top_k: int = Query(5, ge=1, le=20, description="返回数量"),
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
-):
-    """根据行业和测试类型匹配推荐模板"""
-    service = TechnicalParameterService(db)
-    templates = service.match_templates(
-        industry=industry,
-        test_type=test_type,
-        top_k=top_k,
-    )
-
-    return [
-        TechnicalParameterTemplateListItem(
-            id=t.id,
-            name=t.name,
-            code=t.code,
-            industry=t.industry,
-            test_type=t.test_type,
-            description=t.description,
-            use_count=t.use_count or 0,
-            is_active=t.is_active,
-            created_at=t.created_at,
-        )
-        for t in templates
-    ]
-
-
 # ==================== 成本估算 ====================
 
 
@@ -339,6 +339,28 @@ def batch_estimate_cost(
 
 
 # ==================== 统计分析 ====================
+
+
+@router.get(
+    "/statistics",
+    summary="获取技术参数模板统计汇总",
+)
+def get_statistics(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    """获取行业和测试类型维度的统计汇总，兼容前端单接口调用。"""
+    service = TechnicalParameterService(db)
+    return {
+        "industries": [
+            IndustryStatistics(**item).model_dump()
+            for item in service.get_industry_statistics()
+        ],
+        "test_types": [
+            TestTypeStatistics(**item).model_dump()
+            for item in service.get_test_type_statistics()
+        ],
+    }
 
 
 @router.get(

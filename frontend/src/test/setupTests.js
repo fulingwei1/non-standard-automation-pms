@@ -21,12 +21,23 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Mock window.ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+// Mock window.ResizeObserver. rc-resize-observer instantiates it with `new`,
+// so this must be a constructable class under Vitest 4.
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+window.ResizeObserver = global.ResizeObserver;
+
+// Mock getComputedStyle for rc-table/antd in jsdom.
+window.getComputedStyle = () => ({
+  getPropertyValue: () => '',
+  overflowX: 'hidden',
+  overflowY: 'hidden',
+  width: '0px',
+  height: '0px',
+});
 
 // Mock localStorage
 const localStorageStore = {};

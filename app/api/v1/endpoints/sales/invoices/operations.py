@@ -19,10 +19,10 @@ from app.models.enums import (
     WorkflowTypeEnum,
 )
 from app.models.sales import Invoice
+from app.models.sales.workflow import ApprovalRecord
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import InvoiceIssueRequest
-from app.services.approval_engine import ApprovalEngineService as ApprovalWorkflowService
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +44,18 @@ def issue_invoice(
     """
     invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 
-    # 检查是否已通过审批（如果启用了审批工作流）
-    workflow_service = ApprovalWorkflowService(db)
-    record = workflow_service.get_approval_record(
-        entity_type=WorkflowTypeEnum.INVOICE, entity_id=invoice_id
+    # 检查是否已通过审批（如果启用了审批工作流）。
+    record = (
+        db.query(ApprovalRecord)
+        .filter(
+            ApprovalRecord.entity_type == WorkflowTypeEnum.INVOICE.value,
+            ApprovalRecord.entity_id == invoice_id,
+        )
+        .order_by(ApprovalRecord.created_at.desc())
+        .first()
     )
 
-    if record and record.status != ApprovalRecordStatusEnum.APPROVED:
+    if record and record.status != ApprovalRecordStatusEnum.APPROVED.value:
         raise HTTPException(status_code=400, detail="发票尚未通过审批，无法开票")
 
     invoice.issue_date = issue_request.issue_date

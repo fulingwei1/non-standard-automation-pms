@@ -74,6 +74,14 @@ class Invoice(Base, TimestampMixin):
         self.amount = value
 
     @property
+    def invoice_date(self):
+        return self.issue_date
+
+    @invoice_date.setter
+    def invoice_date(self, value):
+        self.issue_date = value
+
+    @property
     def customer_name(self):
         return self.buyer_name
 

@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import and_, case, func
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.sales_permissions import filter_sales_finance_data_by_scope
 from app.models.sales import Contract, Customer, Invoice
 
 logger = logging.getLogger(__name__)
@@ -117,6 +118,7 @@ class CollectionPriorityService:
         user_id: int,
         include_non_overdue: bool = False,
         limit: int = 50,
+        current_user: Optional[Any] = None,
     ) -> List[CollectionItem]:
         """
         获取优先级排序的催款列表
@@ -142,6 +144,14 @@ class CollectionPriorityService:
                 Invoice.payment_status.in_(["PENDING", "PARTIAL", "OVERDUE"]),
             )
         )
+        if current_user is not None:
+            query = filter_sales_finance_data_by_scope(
+                query.outerjoin(Contract, Invoice.contract_id == Contract.id),
+                current_user,
+                self.db,
+                Contract,
+                "sales_owner_id",
+            )
 
         # 仅查询逾期的
         if not include_non_overdue:
@@ -399,14 +409,23 @@ class CollectionPriorityService:
 
         return suggestion, action_points
 
-    def get_collection_summary(self, user_id: int) -> Dict[str, Any]:
+    def get_collection_summary(
+        self,
+        user_id: int,
+        current_user: Optional[Any] = None,
+    ) -> Dict[str, Any]:
         """
         获取催款汇总统计
 
         Returns:
             包含各维度统计数据的汇总
         """
-        items = self.get_prioritized_collections(user_id, include_non_overdue=True, limit=500)
+        items = self.get_prioritized_collections(
+            user_id,
+            include_non_overdue=True,
+            limit=500,
+            current_user=current_user,
+        )
 
         summary = {
             "total_count": len(items),

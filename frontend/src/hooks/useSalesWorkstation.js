@@ -16,7 +16,49 @@ import {
   contractMilestoneApi,
   quickCostApi,
   quoteComparisonApi,
+  salesStatisticsApi,
 } from "../services/api/sales";
+import { pmoApi } from "../services/api/pmo";
+
+const getResponsePayload = (response) => response?.data?.data ?? response?.data ?? {};
+
+function formatDateParam(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getCurrentMonthRange(now = new Date()) {
+  return {
+    start_date: formatDateParam(new Date(now.getFullYear(), now.getMonth(), 1)),
+    end_date: formatDateParam(new Date(now.getFullYear(), now.getMonth() + 1, 0)),
+  };
+}
+
+function readStoredUser() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const rawUser = window.localStorage.getItem("user");
+    return rawUser ? JSON.parse(rawUser) : null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function countUniqueInitiations(items = []) {
+  const keys = new Set();
+  (items || []).forEach((item) => {
+    const key = item?.contract_no || item?.project_id || item?.id;
+    if (key) {
+      keys.add(String(key));
+    }
+  });
+  return keys.size;
+}
 
 /**
  * 智能跟进提醒 Hook
@@ -391,24 +433,51 @@ export function useSalesWorkstationData() {
     collectionSummary: null,
     healthSummary: null,
     milestoneSummary: null,
+    salesFunnelSummary: null,
+    initiationSummary: null,
   });
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [followUp, collection, health, milestone] = await Promise.allSettled([
+      const currentUser = readStoredUser();
+      const funnelParams = getCurrentMonthRange();
+      const initiationParams = {
+        page: 1,
+        page_size: 100,
+        ...(currentUser?.id ? { applicant_id: currentUser.id } : {}),
+      };
+
+      const [followUp, collection, health, milestone, funnel, initiations] = await Promise.allSettled([
         followUpReminderApi.getSummary(),
         collectionPriorityApi.getSummary(),
         opportunityHealthApi.getSummary(),
         contractMilestoneApi.getSummary(),
+        salesStatisticsApi.funnel(funnelParams),
+        pmoApi.initiations.list(initiationParams),
       ]);
+
+      const initiationPayload = initiations.status === "fulfilled"
+        ? getResponsePayload(initiations.value)
+        : null;
+      const initiationItems = Array.isArray(initiationPayload?.items)
+        ? initiationPayload.items
+        : [];
+      const uniqueInitiationCount = countUniqueInitiations(initiationItems);
 
       setData({
         followUpSummary: followUp.status === "fulfilled" ? followUp.value.data?.data : null,
         collectionSummary: collection.status === "fulfilled" ? collection.value.data?.data : null,
         healthSummary: health.status === "fulfilled" ? health.value.data?.data : null,
         milestoneSummary: milestone.status === "fulfilled" ? milestone.value.data?.data : null,
+        salesFunnelSummary: funnel.status === "fulfilled" ? getResponsePayload(funnel.value) : null,
+        initiationSummary: initiationPayload
+          ? {
+            total_count: Number(initiationPayload.total || initiationItems.length || 0),
+            unique_count: uniqueInitiationCount || Number(initiationPayload.total || 0),
+          }
+          : null,
       });
     } catch (err) {
       setError(err.message || "获取工作站数据失败");

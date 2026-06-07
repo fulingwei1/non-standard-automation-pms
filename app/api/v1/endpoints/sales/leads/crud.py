@@ -16,7 +16,7 @@ from app.common.crud import SalesQueryBuilder, SalesQueryConfig
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.advantage_product import AdvantageProduct
-from app.models.sales import Lead, LeadFollowUp
+from app.models.sales import Lead, LeadFollowUp, Opportunity
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.sales import (
@@ -76,6 +76,19 @@ def _get_advantage_products_for_lead(db: Session, lead: Lead) -> List[dict]:
         for p in products
     ]
 
+
+def _get_latest_opportunity_summary(db: Session, lead_id: int) -> dict:
+    """Return latest opportunity linked to a lead for legacy/front-end contract fields."""
+    opportunity = (
+        db.query(Opportunity)
+        .filter(Opportunity.lead_id == lead_id)
+        .order_by(desc(Opportunity.created_at), desc(Opportunity.id))
+        .first()
+    )
+    if not opportunity:
+        return {"opportunity_id": None, "opportunity_name": None}
+    return {"opportunity_id": opportunity.id, "opportunity_name": opportunity.opp_name}
+
 router = APIRouter()
 
 
@@ -100,6 +113,7 @@ def read_leads(
         lead_dict = {
             **{c.name: getattr(lead, c.name) for c in lead.__table__.columns},
             "owner_name": lead.owner.real_name if lead.owner else None,
+            **_get_latest_opportunity_summary(db, lead.id),
             "advantage_products": _get_advantage_products_for_lead(db, lead),
         }
 
@@ -199,6 +213,7 @@ def create_lead(
     lead_dict = {
         **{c.name: getattr(lead, c.name) for c in lead.__table__.columns},
         "owner_name": lead.owner.real_name if lead.owner else None,
+        **_get_latest_opportunity_summary(db, lead.id),
     }
 
     # 获取优势产品详情（使用 safe_json_loads 避免解析异常）
@@ -222,6 +237,7 @@ def read_lead(
     lead_dict = {
         **{c.name: getattr(lead, c.name) for c in lead.__table__.columns},
         "owner_name": lead.owner.real_name if lead.owner else None,
+        **_get_latest_opportunity_summary(db, lead.id),
     }
 
     # 获取优势产品详情（使用 safe_json_loads 避免解析异常）
@@ -263,6 +279,7 @@ def update_lead(
     lead_dict = {
         **{c.name: getattr(lead, c.name) for c in lead.__table__.columns},
         "owner_name": lead.owner.real_name if lead.owner else None,
+        **_get_latest_opportunity_summary(db, lead.id),
     }
     return LeadResponse(**lead_dict)
 

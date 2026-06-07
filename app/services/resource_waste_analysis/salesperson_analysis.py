@@ -13,8 +13,10 @@ from sqlalchemy import func
 
 from app.models.enums import LeadOutcomeEnum
 from app.models.project import Project
+from app.models.timesheet import Timesheet
 from app.models.user import User
-from app.models.work_log import WorkLog
+
+WorkLog = Timesheet  # Backward-compatible symbol for older tests/imports.
 
 
 class SalespersonAnalysisMixin:
@@ -55,9 +57,9 @@ class SalespersonAnalysisMixin:
         work_hours_map = {}
         if project_ids:
             work_hours_map = dict(
-                self.db.query(WorkLog.project_id, func.sum(WorkLog.work_hours))
-                .filter(WorkLog.project_id.in_(project_ids))
-                .group_by(WorkLog.project_id)
+                self.db.query(Timesheet.project_id, func.sum(Timesheet.hours))
+                .filter(Timesheet.project_id.in_(project_ids))
+                .group_by(Timesheet.project_id)
                 .all()
             )
 
@@ -69,7 +71,7 @@ class SalespersonAnalysisMixin:
             stats = salesperson_stats[sp_id]
             stats["total_leads"] += 1
 
-            hours = work_hours_map.get(project.id, 0) or 0
+            hours = float(work_hours_map.get(project.id, 0) or 0)
             stats["total_hours"] += hours
 
             if project.outcome == LeadOutcomeEnum.WON.value:
@@ -107,8 +109,8 @@ class SalespersonAnalysisMixin:
             results.append(
                 {
                     "salesperson_id": sp_id,
-                    "salesperson_name": user.name if user else f"Sales_{sp_id}",
-                    "department": getattr(user, "department_name", None) if user else None,
+                    "salesperson_name": user.display_name if user else f"Sales_{sp_id}",
+                    "department": getattr(user, "department", None) if user else None,
                     "total_leads": stats["total_leads"],
                     "won_leads": stats["won_leads"],
                     "lost_leads": stats["lost_leads"],

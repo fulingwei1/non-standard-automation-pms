@@ -1,6 +1,8 @@
 import { api } from "./client.js";
 
 export { api };
+export { presaleWorkbenchApi } from "./presaleWorkbench.js";
+export { technicalAssessmentApi } from "./engineering.js";
 
 // AI销售助手API
 export const aiSalesApi = {

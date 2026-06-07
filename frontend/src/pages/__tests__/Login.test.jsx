@@ -246,9 +246,9 @@ describe('Login 页面', () => {
     it('应该显示快捷登录按钮', () => {
       render(<Login onLoginSuccess={mockOnLoginSuccess} />);
 
-      expect(screen.getByText('郑汝才')).toBeInTheDocument();
-      expect(screen.getByText('骆奕兴')).toBeInTheDocument();
+      expect(screen.getByText('系统管理员')).toBeInTheDocument();
       expect(screen.getByText('符凌维')).toBeInTheDocument();
+      expect(screen.queryByText('郑汝才')).not.toBeInTheDocument();
     });
   });
 
@@ -455,32 +455,32 @@ describe('Login 页面', () => {
     it('点击快捷登录应该填充用户名和密码', () => {
       render(<Login onLoginSuccess={mockOnLoginSuccess} />);
 
-      const quickLoginButton = screen.getByText('郑汝才').closest('button');
+      const quickLoginButton = screen.getByText('系统管理员').closest('button');
       fireEvent.click(quickLoginButton);
 
       const usernameInput = screen.getByPlaceholderText('请输入用户名');
       const passwordInput = screen.getByPlaceholderText('请输入密码');
 
-      expect(usernameInput.value).toBe('zhengrucai');
-      expect(passwordInput.value).toBe('123456');
+      expect(usernameInput.value).toBe('admin');
+      expect(passwordInput.value).toBe('admin123');
     });
 
-    it('所有快捷登录按钮都应该可用', () => {
+    it('所有快捷登录按钮都应该填充当前可验证账号', () => {
       render(<Login onLoginSuccess={mockOnLoginSuccess} />);
 
       const quickLogins = [
-        { name: '郑汝才', username: 'zhengrucai' },
-        { name: '骆奕兴', username: 'luoyixing' },
-        { name: '符凌维', username: 'fulingwei' },
-        { name: '宋魁', username: 'songkui' },
+        { name: '系统管理员', username: 'admin', password: 'admin123' },
+        { name: '符凌维', username: 'fulingwei', password: 'admin123' },
       ];
 
-      quickLogins.forEach(({ name, username }) => {
+      quickLogins.forEach(({ name, username, password }) => {
         const button = screen.getByText(name).closest('button');
         fireEvent.click(button);
 
         const usernameInput = screen.getByPlaceholderText('请输入用户名');
+        const passwordInput = screen.getByPlaceholderText('请输入密码');
         expect(usernameInput.value).toBe(username);
+        expect(passwordInput.value).toBe(password);
       });
     });
   });
@@ -685,7 +685,7 @@ describe('Login 页面', () => {
     it('应该显示快捷登录提示文本', () => {
       render(<Login onLoginSuccess={mockOnLoginSuccess} />);
 
-      expect(screen.getByText(/点击上方按钮自动填充账号/)).toBeInTheDocument();
+      expect(screen.getByText(/点击上方按钮自动填充已验证账号/)).toBeInTheDocument();
     });
   });
 });

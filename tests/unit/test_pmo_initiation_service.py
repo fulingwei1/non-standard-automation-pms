@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session
 
 from app.models.pmo.initiation_phase import PmoProjectInitiation
 from app.models.project import Customer, Project
+from app.models.sales import Contract, Opportunity
 from app.models.user import User
 from app.schemas.pmo import (
     InitiationApproveRequest,
@@ -100,6 +101,26 @@ class TestPmoInitiationServiceGetInitiations(unittest.TestCase):
 
         self.assertEqual(total, 3)
 
+    def test_get_initiations_with_contract_no_filter(self):
+        """测试获取立项列表 - 合同编号筛选"""
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.order_by.return_value = mock_query
+        mock_query.offset.return_value = mock_query
+        mock_query.limit.return_value = mock_query
+        mock_query.count.return_value = 1
+        mock_query.all.return_value = [MagicMock(contract_no="CT001")]
+
+        self.db.query.return_value = mock_query
+
+        initiations, total = self.service.get_initiations(
+            offset=0, limit=10, contract_no="CT001"
+        )
+
+        self.assertEqual(total, 1)
+        self.assertEqual(initiations[0].contract_no, "CT001")
+        self.assertGreaterEqual(mock_query.filter.call_count, 1)
+
     def test_get_initiations_with_applicant_filter(self):
         """测试获取立项列表 - 申请人筛选"""
         mock_query = MagicMock()
@@ -175,6 +196,10 @@ class TestPmoInitiationServiceCreate(unittest.TestCase):
     def setUp(self):
         self.db = MagicMock(spec=Session)
         self.service = PmoInitiationService(self.db)
+        no_duplicate_query = MagicMock()
+        no_duplicate_query.filter.return_value = no_duplicate_query
+        no_duplicate_query.first.return_value = None
+        self.db.query.return_value = no_duplicate_query
 
     @patch("app.services.pmo_initiation.service.pmo_codes")
     def test_create_initiation_success(self, mock_pmo_codes):
@@ -244,6 +269,32 @@ class TestPmoInitiationServiceCreate(unittest.TestCase):
         added_obj = self.db.add.call_args[0][0]
         self.assertEqual(added_obj.project_name, "最小项目")
         self.assertEqual(added_obj.applicant_name, "user2")  # 使用username
+
+    def test_create_initiation_rejects_duplicate_active_contract_no(self):
+        """同一合同已有未终态立项时，不能重复创建。"""
+        duplicate = MagicMock(
+            id=8,
+            application_no="INIT-260607-010",
+            status="SUBMITTED",
+        )
+        duplicate_query = MagicMock()
+        duplicate_query.filter.return_value = duplicate_query
+        duplicate_query.first.return_value = duplicate
+        self.db.query.return_value = duplicate_query
+
+        initiation_in = InitiationCreate(
+            project_name="重复项目",
+            customer_name="测试客户",
+            contract_no=" CT001 ",
+        )
+        current_user = MagicMock(id=2, real_name="李四", username="lisi")
+
+        with self.assertRaises(ValueError) as context:
+            self.service.create_initiation(initiation_in, current_user)
+
+        self.assertIn("合同 CT001 已存在未完成的立项申请", str(context.exception))
+        self.db.add.assert_not_called()
+        self.db.commit.assert_not_called()
 
 
 class TestPmoInitiationServiceUpdate(unittest.TestCase):
@@ -598,12 +649,22 @@ class TestPmoInitiationServiceCreateProject(unittest.TestCase):
         mock_project_query.first.return_value = None
 
         def query_side_effect(model):
-            if model == Customer:
+            if model == Contract:
+                no_contract_query = MagicMock()
+                no_contract_query.filter.return_value = no_contract_query
+                no_contract_query.first.return_value = None
+                return no_contract_query
+            elif model == Customer:
                 return mock_customer_query
             elif model == User:
                 return mock_pm_query
             elif model == Project:
                 return mock_project_query
+            elif model == Opportunity:
+                no_opportunity_query = MagicMock()
+                no_opportunity_query.filter.return_value = no_opportunity_query
+                no_opportunity_query.first.return_value = None
+                return no_opportunity_query
             return MagicMock()
 
         self.db.query.side_effect = query_side_effect
@@ -646,6 +707,7 @@ class TestPmoInitiationServiceCreateProject(unittest.TestCase):
             customer_name="老客户",
             contract_no="CT002",
             total_amount=None,  # 测试空金额
+            contract_amount=None,
             required_start_date=date(2026, 4, 1),
             required_end_date=date(2026, 7, 31),
             project_type="UPGRADE",
@@ -667,12 +729,22 @@ class TestPmoInitiationServiceCreateProject(unittest.TestCase):
         mock_project_query.first.return_value = None
 
         def query_side_effect(model):
-            if model == Customer:
+            if model == Contract:
+                no_contract_query = MagicMock()
+                no_contract_query.filter.return_value = no_contract_query
+                no_contract_query.first.return_value = None
+                return no_contract_query
+            elif model == Customer:
                 return mock_customer_query
             elif model == User:
                 return mock_pm_query
             elif model == Project:
                 return mock_project_query
+            elif model == Opportunity:
+                no_opportunity_query = MagicMock()
+                no_opportunity_query.filter.return_value = no_opportunity_query
+                no_opportunity_query.first.return_value = None
+                return no_opportunity_query
             return MagicMock()
 
         self.db.query.side_effect = query_side_effect
@@ -718,12 +790,22 @@ class TestPmoInitiationServiceCreateProject(unittest.TestCase):
         mock_pm_query.first.return_value = mock_pm
 
         def query_side_effect(model):
-            if model == Project:
+            if model == Contract:
+                no_contract_query = MagicMock()
+                no_contract_query.filter.return_value = no_contract_query
+                no_contract_query.first.return_value = None
+                return no_contract_query
+            elif model == Project:
                 return mock_project_query
             elif model == Customer:
                 return mock_customer_query
             elif model == User:
                 return mock_pm_query
+            elif model == Opportunity:
+                no_opportunity_query = MagicMock()
+                no_opportunity_query.filter.return_value = no_opportunity_query
+                no_opportunity_query.first.return_value = None
+                return no_opportunity_query
             return MagicMock()
 
         self.db.query.side_effect = query_side_effect

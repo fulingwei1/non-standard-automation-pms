@@ -15,6 +15,7 @@ from .solution_compare import router as solution_compare_router
 from .statistics import router as statistics_router
 from .task_management import router as task_management_router
 from .templates import router as templates_router
+from .technical_parameters import router as technical_parameters_router
 from .tickets import router as tickets_router
 
 router = APIRouter()
@@ -24,6 +25,11 @@ router.include_router(
 )  # 移除/presale前缀
 router.include_router(proposals_router)
 router.include_router(templates_router)
+router.include_router(
+    technical_parameters_router,
+    prefix="/technical-parameters",
+    tags=["presale-technical-parameters"],
+)
 router.include_router(bids_router, tags=["presale-bids"])  # 移除/presale前缀
 router.include_router(statistics_router)
 router.include_router(analytics_router)

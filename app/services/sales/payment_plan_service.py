@@ -41,6 +41,7 @@ class PaymentPlanService:
         for config in payment_configs:
             plan = self._create_payment_plan(contract, config)
             if plan:
+                self.db.add(plan)
                 plans.append(plan)
 
         self.db.flush()

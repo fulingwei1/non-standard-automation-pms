@@ -1,76 +1,92 @@
-import { renderHook, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { useTechnicalAssessment } from '../useTechnicalAssessment';
-import { technicalAssessmentApi as assessmentApi } from '../../../../services/api';
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock API
-vi.mock('../../../../services/api', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    assessmentApi: {
-    list: vi.fn(),
-    get: vi.fn(),
-    query: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    aiMatch: vi.fn(),
-    getOverdue: vi.fn(),
-    getAging: vi.fn(),
-    getSummary: vi.fn(),
-    batch: vi.fn(),
-    export: vi.fn(),
-    submit: vi.fn(),
-    approve: vi.fn(),
-    reject: vi.fn(),
-    start: vi.fn(),
-    complete: vi.fn(),
-    cancel: vi.fn(),
+import { useTechnicalAssessment } from "../useTechnicalAssessment";
+import { technicalAssessmentApi } from "../../../../services/api";
+
+vi.mock("../../../../services/api", () => ({
+  technicalAssessmentApi: {
+    getLeadAssessments: vi.fn(),
+    getOpportunityAssessments: vi.fn(),
+    applyForLead: vi.fn(),
+    applyForOpportunity: vi.fn(),
+    evaluate: vi.fn(),
   },
-  default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-    patch: vi.fn(),
-    defaults: { baseURL: '/api' },
-  },
-  };
-});
+}));
 
-describe.skip('useTechnicalAssessment Hook', () => {
-  // Setup common mock data
-  const mockItems = [{ id: 1, name: 'Test 1' }, { id: 2, name: 'Test 2' }];
-  const mockDetail = { id: 1, name: 'Test Detail' };
-  const mockResponse = { data: { items: mockItems, total: 2 }, items: mockItems }; 
-
+describe("useTechnicalAssessment", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Auto-setup mocks for known methods
-    const apiObjects = [assessmentApi];
-    apiObjects.forEach(api => {
-        if (api) {
-            if (api.list) api.list.mockResolvedValue(mockResponse);
-            if (api.get) api.get.mockResolvedValue({ data: mockDetail });
-            if (api.query) api.query.mockResolvedValue(mockResponse);
-            if (api.aiMatch) api.aiMatch.mockResolvedValue(mockResponse); // specialized
-        }
-    });
   });
 
-  it('should load data', async () => {
-    const { result } = renderHook(() => useTechnicalAssessment());
+  it("loads assessments from the source-specific lead endpoint", async () => {
+    const leadAssessments = [{ id: 7, status: "PENDING" }];
+    technicalAssessmentApi.getLeadAssessments.mockResolvedValue({
+      data: leadAssessments,
+    });
 
-    // Wait for loading to finish
-    if (Object.prototype.hasOwnProperty.call(result.current, 'loading')) {
-        await waitFor(() => expect(result.current.loading).toBe(false));
-    } else {
-        await waitFor(() => {});
-    }
+    const { result } = renderHook(() => useTechnicalAssessment("lead", "12"));
 
-    // Basic assertion
-    expect(result.current).toBeDefined();
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(technicalAssessmentApi.getLeadAssessments).toHaveBeenCalledWith(12);
+    expect(result.current.assessments).toEqual(leadAssessments);
+    expect(result.current.error).toBeNull();
+  });
+
+  it("applies an opportunity assessment and reloads the same source", async () => {
+    const appliedAssessment = [{ id: 21, status: "PENDING" }];
+    technicalAssessmentApi.getOpportunityAssessments
+      .mockResolvedValueOnce({ data: [] })
+      .mockResolvedValueOnce({ data: appliedAssessment });
+    technicalAssessmentApi.applyForOpportunity.mockResolvedValue({
+      data: { data: { assessment_id: 21 } },
+    });
+
+    const { result } = renderHook(() =>
+      useTechnicalAssessment("opportunity", "9")
+    );
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    let applyResult;
+    await act(async () => {
+      applyResult = await result.current.createAssessment({ evaluator_id: 3 });
+    });
+
+    expect(applyResult).toEqual({ success: true });
+    expect(technicalAssessmentApi.applyForOpportunity).toHaveBeenCalledWith(9, {
+      evaluator_id: 3,
+    });
+    expect(technicalAssessmentApi.getOpportunityAssessments).toHaveBeenCalledTimes(2);
+    expect(result.current.assessments).toEqual(appliedAssessment);
+  });
+
+  it("submits evaluation through the real evaluate endpoint", async () => {
+    const pendingAssessment = [{ id: 7, status: "PENDING" }];
+    const completedAssessment = [{ id: 7, status: "COMPLETED" }];
+    technicalAssessmentApi.getLeadAssessments
+      .mockResolvedValueOnce({ data: pendingAssessment })
+      .mockResolvedValueOnce({ data: completedAssessment });
+    technicalAssessmentApi.evaluate.mockResolvedValue({
+      data: completedAssessment[0],
+    });
+
+    const { result } = renderHook(() => useTechnicalAssessment("lead", "12"));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    let submitResult;
+    await act(async () => {
+      submitResult = await result.current.submitAssessment(7, {
+        requirement_data: { tech_maturity: "mature" },
+        enable_ai: true,
+      });
+    });
+
+    expect(submitResult).toEqual({ success: true });
+    expect(technicalAssessmentApi.evaluate).toHaveBeenCalledWith(7, {
+      requirement_data: { tech_maturity: "mature" },
+      enable_ai: true,
+    });
+    expect(result.current.assessments).toEqual(completedAssessment);
   });
 });

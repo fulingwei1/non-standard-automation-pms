@@ -1,12 +1,48 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import ContractManagement from '../ContractManagement';
 import * as contractService from '../../services/contractService';
+import { paymentPlanApi, pmoApi, receivableApi } from '../../services/api';
+
+const mockNavigate = vi.hoisted(() => vi.fn());
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 vi.mock('../../services/contractService', () => ({
   getContracts: vi.fn(),
   deleteContract: vi.fn(),
+  signContract: vi.fn(),
+  createProjectFromContract: vi.fn(),
+}));
+
+vi.mock('../../services/api', () => ({
+  paymentPlanApi: {
+    list: vi.fn(),
+  },
+  pmoApi: {
+    initiations: {
+      list: vi.fn(),
+      create: vi.fn(),
+    },
+  },
+  receivableApi: {
+    getSummary: vi.fn(),
+  },
+}));
+
+vi.mock('../../hooks/usePermission', () => ({
+  usePermission: () => ({
+    hasPermission: () => false,
+    isLoading: false,
+  }),
 }));
 
 vi.mock('framer-motion', () => ({
@@ -67,11 +103,50 @@ describe('ContractManagement', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockNavigate.mockClear();
     contractService.getContracts.mockResolvedValue({
       items: mockContracts,
       total: mockContracts.length,
     });
     contractService.deleteContract.mockResolvedValue({ success: true });
+    contractService.signContract.mockResolvedValue({
+      code: 200,
+      message: '合同签订成功',
+      data: { contract_id: 2 },
+    });
+    contractService.createProjectFromContract.mockResolvedValue({
+      code: 200,
+      message: '项目创建成功',
+      data: { project_id: 9 },
+    });
+    pmoApi.initiations.create.mockResolvedValue({
+      data: {
+        id: 12,
+        status: 'DRAFT',
+      },
+    });
+    pmoApi.initiations.list.mockResolvedValue({
+      data: {
+        items: [],
+      },
+    });
+    paymentPlanApi.list.mockResolvedValue({
+      data: {
+        items: [],
+        total: 0,
+      },
+    });
+    receivableApi.getSummary.mockResolvedValue({
+      data: {
+        data: {
+          invoice_count: 0,
+          unpaid_amount: 0,
+          overdue_count: 0,
+          overdue_amount: 0,
+          collection_rate: 0,
+        },
+      },
+    });
   });
 
   it('renders page title and loads contracts via contractService', async () => {
@@ -88,9 +163,23 @@ describe('ContractManagement', () => {
     });
   });
 
-  it('shows overview stats based on loaded data', async () => {
+  it('opens the contract list by default for the sales contract center', async () => {
     render(
       <MemoryRouter>
+        <ContractManagement />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/合同列表 \(2\)/)).toBeInTheDocument();
+      expect(screen.getByText('智能制造系统合同')).toBeInTheDocument();
+      expect(screen.getByText('ERP升级合同')).toBeInTheDocument();
+    });
+  });
+
+  it('shows overview stats based on loaded data', async () => {
+    render(
+      <MemoryRouter initialEntries={['/sales/contracts?tab=overview']}>
         <ContractManagement />
       </MemoryRouter>
     );
@@ -128,6 +217,252 @@ describe('ContractManagement', () => {
 
     await waitFor(() => {
       expect(screen.getByText('合同管理')).toBeInTheDocument();
+    });
+  });
+
+  it('starts PMO initiation from a signed contract instead of directly creating a project', async () => {
+    const user = userEvent.setup();
+    contractService.getContracts.mockResolvedValue({
+      items: [
+        {
+          id: 3,
+          contract_code: 'CON-2026-003',
+          contract_name: '非标测试设备合同',
+          customer_name: '金凯博客户',
+          contract_type: 'sales',
+          status: 'SIGNED',
+          total_amount: '600000',
+          signing_date: '2026-06-06',
+        },
+      ],
+      total: 1,
+    });
+
+    render(
+      <MemoryRouter>
+        <ContractManagement />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/合同列表 \(1\)/)).toBeInTheDocument();
+    });
+    const contractsTab = Array.from(document.querySelectorAll('[role="tab"]')).find((tab) =>
+      tab.textContent.includes('合同列表')
+    );
+    await user.click(contractsTab);
+    const initiationButton = await screen.findByRole('button', { name: '发起立项' });
+    await user.click(initiationButton);
+
+    await waitFor(() => {
+      expect(pmoApi.initiations.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          project_name: '非标测试设备合同',
+          customer_name: '金凯博客户',
+          contract_no: 'CON-2026-003',
+          contract_amount: 600000,
+          requirement_summary: '由合同 CON-2026-003 发起立项',
+        }),
+      );
+      expect(contractService.createProjectFromContract).not.toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith('/pmo/initiations/12');
+    });
+  });
+
+  it('shows project, payment plan, invoice, and receivable status in contract list', async () => {
+    const user = userEvent.setup();
+    contractService.getContracts.mockResolvedValue({
+      items: [
+        {
+          id: 3,
+          contract_code: 'CON-2026-003',
+          contract_name: '已立项设备合同',
+          customer_name: '金凯博客户',
+          contract_type: 'sales',
+          status: 'EXECUTING',
+          total_amount: '600000',
+          project_id: 9,
+          project_code: 'PJ202606001',
+        },
+        {
+          id: 4,
+          contract_code: 'CON-2026-004',
+          contract_name: '待立项设备合同',
+          customer_name: '新客户',
+          contract_type: 'sales',
+          status: 'SIGNED',
+          total_amount: '300000',
+        },
+      ],
+      total: 2,
+    });
+    paymentPlanApi.list.mockImplementation(({ contract_id }) =>
+      Promise.resolve({
+        data: {
+          items: contract_id === 3 ? [{ id: 1 }, { id: 2 }] : [],
+          total: contract_id === 3 ? 2 : 0,
+        },
+      })
+    );
+    receivableApi.getSummary.mockImplementation(({ contract_id }) =>
+      Promise.resolve({
+        data: {
+          data: contract_id === 3
+            ? {
+                invoice_count: 3,
+                unpaid_amount: 80000,
+                overdue_count: 1,
+                overdue_amount: 20000,
+                collection_rate: 86.7,
+              }
+            : {
+                invoice_count: 0,
+                unpaid_amount: 0,
+                overdue_count: 0,
+                overdue_amount: 0,
+                collection_rate: 0,
+              },
+        },
+      })
+    );
+
+    render(
+      <MemoryRouter>
+        <ContractManagement />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/合同列表 \(2\)/)).toBeInTheDocument();
+    });
+    const contractsTab = Array.from(document.querySelectorAll('[role="tab"]')).find((tab) =>
+      tab.textContent.includes('合同列表')
+    );
+    expect(contractsTab).toBeTruthy();
+    await user.click(contractsTab);
+
+    await waitFor(() => {
+      expect(receivableApi.getSummary).toHaveBeenCalledWith({ contract_id: 3 });
+      expect(paymentPlanApi.list).toHaveBeenCalledWith({ contract_id: 3, page_size: 100 });
+    });
+
+    expect(await screen.findByText('已立项')).toBeInTheDocument();
+    expect(screen.getByText('项目 PJ202606001')).toBeInTheDocument();
+    expect(screen.getByText('待立项')).toBeInTheDocument();
+    expect(screen.getByText('收款计划 2期')).toBeInTheDocument();
+    expect(screen.getByText('已开票 3张')).toBeInTheDocument();
+    expect(screen.getByText('待收 ¥80,000')).toBeInTheDocument();
+    expect(screen.getByText('逾期 1笔')).toBeInTheDocument();
+  });
+
+  it('signs a draft contract through the real API without auto creating a project', async () => {
+    const user = userEvent.setup();
+    contractService.getContracts.mockResolvedValue({
+      items: [
+        {
+          id: 2,
+          contract_code: 'CON-2026-002',
+          contract_name: '待签署设备合同',
+          customer_name: '新客户',
+          contract_type: 'sales',
+          status: 'draft',
+          total_amount: '300000',
+        },
+      ],
+      total: 1,
+    });
+
+    render(
+      <MemoryRouter>
+        <ContractManagement />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/合同列表 \(1\)/)).toBeInTheDocument();
+    });
+    const contractsTab = Array.from(document.querySelectorAll('[role="tab"]')).find((tab) =>
+      tab.textContent.includes('合同列表')
+    );
+    expect(contractsTab).toBeTruthy();
+    await user.click(contractsTab);
+
+    const signButton = await screen.findByRole('button', { name: '签署' });
+    await user.click(signButton);
+    const confirmSignButton = await screen.findByRole('button', { name: '确认签署' });
+    await user.click(confirmSignButton);
+
+    await waitFor(() => {
+      expect(contractService.signContract).toHaveBeenCalledWith(
+        2,
+        expect.objectContaining({
+          auto_create_project: false,
+          signed_date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        }),
+      );
+      expect(contractService.createProjectFromContract).not.toHaveBeenCalled();
+      expect(pmoApi.initiations.create).not.toHaveBeenCalled();
+    });
+  });
+
+  it('opens existing initiation from contract list instead of creating duplicate initiation', async () => {
+    const user = userEvent.setup();
+    contractService.getContracts.mockResolvedValue({
+      items: [
+        {
+          id: 101,
+          contract_code: 'ECMQ2N2LX1',
+          contract_name: 'ECMQ2N2LX1',
+          customer_name: 'E2E立项客户-MQ2N2LX1',
+          contract_type: 'sales',
+          status: 'SIGNED',
+          total_amount: '188000',
+          project_id: null,
+        },
+      ],
+      total: 1,
+    });
+    pmoApi.initiations.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 5,
+            contract_no: 'ECMQ2N2LX1',
+            status: 'DRAFT',
+          },
+          {
+            id: 4,
+            contract_no: 'ECMQ2N2LX1',
+            status: 'SUBMITTED',
+          },
+        ],
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <ContractManagement />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/合同列表 \(1\)/)).toBeInTheDocument();
+    });
+    const contractsTab = Array.from(document.querySelectorAll('[role="tab"]')).find((tab) =>
+      tab.textContent.includes('合同列表')
+    );
+    expect(contractsTab).toBeTruthy();
+    await user.click(contractsTab);
+
+    const initiationButton = await screen.findByRole('button', { name: '发起立项' });
+    await user.click(initiationButton);
+
+    await waitFor(() => {
+      expect(pmoApi.initiations.list).toHaveBeenCalledWith(
+        expect.objectContaining({ contract_no: 'ECMQ2N2LX1' }),
+      );
+      expect(pmoApi.initiations.create).not.toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith('/pmo/initiations/4');
     });
   });
 });

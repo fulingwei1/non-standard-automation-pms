@@ -19,11 +19,22 @@ from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
+from app.core.sales_permissions import filter_sales_finance_data_by_scope
 from app.models.sales import Contract, Invoice
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter()
+
+
+def _apply_receivable_scope(query, current_user: User, db: Session):
+    return filter_sales_finance_data_by_scope(
+        query.outerjoin(Contract, Invoice.contract_id == Contract.id),
+        current_user,
+        db,
+        Contract,
+        "sales_owner_id",
+    )
 
 
 # ==================== 应收账款分析 ====================
@@ -37,13 +48,11 @@ def get_receivables_list(
     customer_id: Optional[int] = Query(None, description="客户 ID 筛选"),
     contract_id: Optional[int] = Query(None, description="合同 ID 筛选"),
     payment_status: Optional[str] = Query(None, description="收款状态筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:read")),
 ) -> Any:
     """
     应收账款列表（已集成数据权限过滤）
     """
-    from app.core.sales_permissions import filter_sales_finance_data_by_scope
-
     today = date.today()
 
     query = db.query(Invoice).filter(
@@ -51,11 +60,11 @@ def get_receivables_list(
         Invoice.payment_status.in_(["PENDING", "PARTIAL", "OVERDUE"])
     )
 
-    # 应用数据权限过滤（发票使用财务数据权限）
-    query = filter_sales_finance_data_by_scope(query, current_user, db, Invoice, "created_by")
+    # 应用数据权限过滤：应收跟随合同销售负责人，而不是发票创建人。
+    query = _apply_receivable_scope(query, current_user, db)
 
     if customer_id:
-        query = query.join(Contract).filter(Contract.customer_id == customer_id)
+        query = query.filter(Contract.customer_id == customer_id)
 
     if contract_id:
         query = query.filter(Invoice.contract_id == contract_id)
@@ -107,22 +116,20 @@ def get_receivables_aging(
     db: Session = Depends(deps.get_db),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     contract_id: Optional[int] = Query(None, description="合同ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:read")),
 ) -> Any:
     """
     应收账龄分析（已集成数据权限过滤）
     """
-    from app.core.sales_permissions import filter_sales_finance_data_by_scope
-
     query = db.query(Invoice).filter(
         Invoice.status == "ISSUED", Invoice.payment_status.in_(["PENDING", "PARTIAL"])
     )
 
-    # 应用数据权限过滤（发票使用财务数据权限）
-    query = filter_sales_finance_data_by_scope(query, current_user, db, Invoice, "created_by")
+    # 应用数据权限过滤：应收跟随合同销售负责人，而不是发票创建人。
+    query = _apply_receivable_scope(query, current_user, db)
 
     if customer_id:
-        query = query.join(Contract).filter(Contract.customer_id == customer_id)
+        query = query.filter(Contract.customer_id == customer_id)
 
     if contract_id:
         query = query.filter(Invoice.contract_id == contract_id)
@@ -200,13 +207,11 @@ def get_overdue_receivables(
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     contract_id: Optional[int] = Query(None, description="合同ID筛选"),
     min_overdue_days: Optional[int] = Query(None, description="最小逾期天数"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:read")),
 ) -> Any:
     """
     逾期应收列表（已集成数据权限过滤）
     """
-    from app.core.sales_permissions import filter_sales_finance_data_by_scope
-
     today = date.today()
 
     query = db.query(Invoice).filter(
@@ -216,11 +221,11 @@ def get_overdue_receivables(
         Invoice.due_date < today,
     )
 
-    # 应用数据权限过滤（发票使用财务数据权限）
-    query = filter_sales_finance_data_by_scope(query, current_user, db, Invoice, "created_by")
+    # 应用数据权限过滤：应收跟随合同销售负责人，而不是发票创建人。
+    query = _apply_receivable_scope(query, current_user, db)
 
     if customer_id:
-        query = query.join(Contract).filter(Contract.customer_id == customer_id)
+        query = query.filter(Contract.customer_id == customer_id)
 
     if contract_id:
         query = query.filter(Invoice.contract_id == contract_id)
@@ -275,20 +280,18 @@ def get_receivables_summary(
     db: Session = Depends(deps.get_db),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     contract_id: Optional[int] = Query(None, description="合同ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:read")),
 ) -> Any:
     """
     应收账款统计（已集成数据权限过滤）
     """
-    from app.core.sales_permissions import filter_sales_finance_data_by_scope
-
     query = db.query(Invoice).filter(Invoice.status == "ISSUED")
 
-    # 应用数据权限过滤（发票使用财务数据权限）
-    query = filter_sales_finance_data_by_scope(query, current_user, db, Invoice, "created_by")
+    # 应用数据权限过滤：应收跟随合同销售负责人，而不是发票创建人。
+    query = _apply_receivable_scope(query, current_user, db)
 
     if customer_id:
-        query = query.join(Contract).filter(Contract.customer_id == customer_id)
+        query = query.filter(Contract.customer_id == customer_id)
 
     if contract_id:
         query = query.filter(Invoice.contract_id == contract_id)

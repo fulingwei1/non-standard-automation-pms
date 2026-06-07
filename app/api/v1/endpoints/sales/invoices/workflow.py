@@ -48,8 +48,10 @@ def start_invoice_approval(
     """
     invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 
-    if invoice.status != InvoiceStatusEnum.APPLIED:
-        raise HTTPException(status_code=400, detail="只有已申请状态的发票才能启动审批流程")
+    if invoice.status not in {"APPLIED", InvoiceStatusEnum.SUBMITTED.value}:
+        raise HTTPException(
+            status_code=400, detail="只有已提交状态的发票才能启动审批流程"
+        )
 
     # 获取发票金额用于路由
     routing_params = {"amount": float(invoice.amount or 0)}
@@ -67,7 +69,7 @@ def start_invoice_approval(
         )
 
         # 更新发票状态
-        invoice.status = InvoiceStatusEnum.IN_REVIEW
+        invoice.status = InvoiceStatusEnum.SUBMITTED
 
         db.commit()
 
@@ -204,7 +206,7 @@ def invoice_approval_action(
             record = workflow_service.withdraw_approval(
                 record_id=record.id, initiator_id=current_user.id, comment=action_request.comment
             )
-            invoice.status = InvoiceStatusEnum.APPLIED
+            invoice.status = InvoiceStatusEnum.SUBMITTED
             message = "审批已撤回"
 
         else:

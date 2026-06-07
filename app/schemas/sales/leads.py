@@ -64,6 +64,8 @@ class LeadResponse(TimestampSchema):
         default=None, description="选择的优势产品ID列表"
     )
     owner_name: Optional[str] = Field(default=None, description="负责人姓名")
+    opportunity_id: Optional[int] = Field(default=None, description="最新关联商机ID")
+    opportunity_name: Optional[str] = Field(default=None, description="最新关联商机名称")
 
     # 跟进摘要（列表快捷展示）
     latest_follow_up_at: Optional[datetime] = Field(default=None, description="最近跟进时间")

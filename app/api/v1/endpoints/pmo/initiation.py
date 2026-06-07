@@ -3,7 +3,7 @@
 立项管理 - 自动生成
 从 pmo.py 拆分
 """
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -59,14 +59,25 @@ def _to_response(initiation) -> InitiationResponse:
     )
 
 
+def _to_project_manager_option(user: User) -> dict[str, Any]:
+    return {
+        "id": user.id,
+        "username": user.username,
+        "real_name": user.real_name,
+        "department": user.department,
+        "position": user.position,
+    }
+
+
 @router.get("/pmo/initiations", response_model=PaginatedResponse[InitiationResponse])
 def read_initiations(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
-    keyword: Optional[str] = Query(None, description="关键词搜索（申请编号/项目名称）"),
-    status: Optional[str] = Query(None, description="状态筛选"),
+    keyword: Optional[str] = Query(None, description="关键词搜索（申请编号/项目名称/合同编号）"),
+    status_filter: Optional[str] = Query(None, alias="status", description="状态筛选"),
     applicant_id: Optional[int] = Query(None, description="申请人ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    contract_no: Optional[str] = Query(None, description="合同编号筛选"),
+    current_user: User = Depends(security.require_permission("project:initiation:read")),
 ) -> Any:
     """立项申请列表"""
     try:
@@ -75,8 +86,9 @@ def read_initiations(
             offset=pagination.offset,
             limit=pagination.limit,
             keyword=keyword,
-            status=status,
+            status=status_filter,
             applicant_id=applicant_id,
+            contract_no=contract_no,
         )
 
         items = [_to_response(init) for init in initiations]
@@ -88,6 +100,20 @@ def read_initiations(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_detail)
 
 
+@router.get("/pmo/initiations/project-managers", response_model=List[dict[str, Any]])
+def read_project_manager_candidates(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("project:initiation:approve")),
+) -> Any:
+    """立项审批可选项目经理列表。"""
+    service = PmoInitiationService(db)
+    return [
+        _to_project_manager_option(user)
+        for user in service.get_project_manager_candidates()
+    ]
+
+
 @router.post(
     "/pmo/initiations",
     response_model=InitiationResponse,
@@ -97,12 +123,15 @@ def create_initiation(
     *,
     db: Session = Depends(deps.get_db),
     initiation_in: InitiationCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:initiation:create")),
 ) -> Any:
     """创建立项申请"""
-    service = PmoInitiationService(db)
-    initiation = service.create_initiation(initiation_in, current_user)
-    return _to_response(initiation)
+    try:
+        service = PmoInitiationService(db)
+        initiation = service.create_initiation(initiation_in, current_user)
+        return _to_response(initiation)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.get("/pmo/initiations/{initiation_id}", response_model=InitiationResponse)
@@ -110,7 +139,7 @@ def read_initiation(
     *,
     db: Session = Depends(deps.get_db),
     initiation_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:initiation:read")),
 ) -> Any:
     """立项申请详情"""
     service = PmoInitiationService(db)
@@ -127,7 +156,7 @@ def update_initiation(
     db: Session = Depends(deps.get_db),
     initiation_id: int,
     initiation_in: InitiationUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:initiation:update")),
 ) -> Any:
     """更新立项申请"""
     try:
@@ -143,7 +172,7 @@ def submit_initiation(
     *,
     db: Session = Depends(deps.get_db),
     initiation_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:initiation:update")),
 ) -> Any:
     """提交立项评审"""
     try:
@@ -160,7 +189,7 @@ def approve_initiation(
     db: Session = Depends(deps.get_db),
     initiation_id: int,
     approve_request: InitiationApproveRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:initiation:approve")),
 ) -> Any:
     """立项评审通过"""
     try:
@@ -181,7 +210,7 @@ def reject_initiation(
     db: Session = Depends(deps.get_db),
     initiation_id: int,
     reject_request: InitiationRejectRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:initiation:approve")),
 ) -> Any:
     """立项评审驳回"""
     try:

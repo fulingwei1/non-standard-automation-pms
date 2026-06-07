@@ -47,6 +47,10 @@ export const receivableApi = {
   getSummary: vi.fn(),
 };
 
+export const paymentPlanApi = {
+  list: vi.fn(),
+};
+
 // PMO API mock - has nested structures
 export const pmoApi = {
   dashboard: vi.fn(),
@@ -204,6 +208,7 @@ export const customerApi = {
 export const contractApi = {
   list: vi.fn(),
   get: vi.fn(),
+  getPaymentPlans: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
   delete: vi.fn(),
@@ -344,6 +349,7 @@ export const adminApi = {
 export default {
   paymentApi,
   receivableApi,
+  paymentPlanApi,
   pmoApi,
   projectApi,
   progressApi,

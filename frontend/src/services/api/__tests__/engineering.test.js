@@ -262,6 +262,95 @@ describe('Engineering API', () => {
       expect(response.status).toBe(200);
     });
 
+    it('getOpenItemsForSource() - 应该兼容线索单复数来源查询参数', async () => {
+      mock.onGet('/api/v1/sales/open-items').reply((config) => {
+        expect(config.params).toEqual({
+          source_type: 'LEAD',
+          source_id: 7,
+          status: 'PENDING',
+        });
+        return [200, { success: true, data: { items: [] } }];
+      });
+
+      const response = await technicalAssessmentApi.getOpenItemsForSource(
+        'leads',
+        7,
+        { status: 'PENDING' },
+      );
+
+      expect(response.status).toBe(200);
+    });
+
+    it('createOpenItem() - 应该兼容商机单复数来源路径', async () => {
+      mock.onPost('/api/v1/sales/opportunities/9/open-items').reply(201, {
+        id: 4,
+        item_type: 'INTERFACE',
+      });
+
+      const response = await technicalAssessmentApi.createOpenItem(
+        'opportunities',
+        9,
+        { item_type: 'INTERFACE', description: '接口协议待确认' },
+      );
+
+      expect(response.status).toBe(201);
+    });
+
+    it('getRequirementFreezes() - 应该兼容线索单复数来源路径', async () => {
+      mock.onGet('/api/v1/sales/leads/7/requirement-freezes').reply(200, []);
+
+      const response = await technicalAssessmentApi.getRequirementFreezes('leads', 7);
+
+      expect(response.status).toBe(200);
+    });
+
+    it('createRequirementFreeze() - 应该兼容商机单复数来源路径', async () => {
+      mock.onPost('/api/v1/sales/opportunities/9/requirement-freezes').reply(201, {
+        id: 3,
+        version_number: 'v1.0',
+      });
+
+      const response = await technicalAssessmentApi.createRequirementFreeze(
+        'opportunities',
+        9,
+        { freeze_type: 'SOLUTION', version_number: 'v1.0' },
+      );
+
+      expect(response.status).toBe(201);
+    });
+
+    it('getAIClarificationsForSource() - 应该兼容商机单复数来源查询参数', async () => {
+      mock.onGet('/api/v1/sales/ai-clarifications').reply((config) => {
+        expect(config.params).toEqual({
+          source_type: 'OPPORTUNITY',
+          source_id: 9,
+        });
+        return [200, { success: true, data: { items: [] } }];
+      });
+
+      const response = await technicalAssessmentApi.getAIClarificationsForSource(
+        'opportunities',
+        9,
+      );
+
+      expect(response.status).toBe(200);
+    });
+
+    it('createAIClarification() - 应该兼容线索单复数来源路径', async () => {
+      mock.onPost('/api/v1/sales/leads/7/ai-clarifications').reply(201, {
+        id: 5,
+        round: 1,
+      });
+
+      const response = await technicalAssessmentApi.createAIClarification(
+        'leads',
+        7,
+        { questions: '["节拍是否确定？"]' },
+      );
+
+      expect(response.status).toBe(201);
+    });
+
     it('closeOpenItem() - 应该关闭未决事项', async () => {
       mock.onPost('/api/v1/sales/open-items/1/close').reply(200, {
         success: true,

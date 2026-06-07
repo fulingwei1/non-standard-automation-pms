@@ -3,19 +3,57 @@
 收款计划管理 endpoints
 """
 from datetime import date
+from decimal import Decimal
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.sales_permissions import (
+    check_sales_data_permission,
+    filter_sales_finance_data_by_scope,
+)
+from app.models.project import ProjectPaymentPlan
+from app.models.sales import Contract
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter()
+
+
+class LegacyPaymentStageCreate(BaseModel):
+    """旧版前端/测试使用的阶段式收款计划。"""
+
+    stage: str = Field(min_length=1, description="阶段名称")
+    percentage: Optional[Decimal] = Field(default=None, description="百分比")
+    amount: Decimal = Field(description="金额")
+
+
+class LegacyPaymentPlanCreateRequest(BaseModel):
+    """旧版支付计划创建请求。"""
+
+    contract_id: int = Field(description="合同ID")
+    total_amount: Optional[Decimal] = Field(default=None, description="总金额")
+    payment_stages: list[LegacyPaymentStageCreate] = Field(default_factory=list)
+
+
+def _infer_payment_type(stage_name: str) -> str:
+    """根据阶段名推断当前模型需要的 payment_type。"""
+    normalized = stage_name.strip().upper()
+    if any(keyword in normalized for keyword in ("签约", "预付款", "首款", "ADVANCE")):
+        return "ADVANCE"
+    if any(keyword in normalized for keyword in ("交付", "发货", "DELIVERY")):
+        return "DELIVERY"
+    if any(keyword in normalized for keyword in ("验收", "ACCEPTANCE")):
+        return "ACCEPTANCE"
+    if any(keyword in normalized for keyword in ("质保", "尾款", "WARRANTY")):
+        return "WARRANTY"
+    return "CUSTOM"
 
 
 @router.get("/payments/plans", response_model=PaginatedResponse)
@@ -26,14 +64,23 @@ def get_payment_plans(
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     contract_id: Optional[int] = Query(None, description="合同ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:read")),
 ) -> Any:
     """
     获取收款计划列表
     """
     from app.models.project import ProjectPaymentPlan
 
-    query = db.query(ProjectPaymentPlan)
+    query = filter_sales_finance_data_by_scope(
+        db.query(ProjectPaymentPlan).outerjoin(
+            Contract,
+            ProjectPaymentPlan.contract_id == Contract.id,
+        ),
+        current_user,
+        db,
+        Contract,
+        "sales_owner_id",
+    )
 
     if project_id:
         query = query.filter(ProjectPaymentPlan.project_id == project_id)
@@ -83,6 +130,71 @@ def get_payment_plans(
     )
 
 
+@router.post("/payments/plans", response_model=ResponseModel, status_code=201)
+def create_payment_plans(
+    *,
+    db: Session = Depends(deps.get_db),
+    payload: LegacyPaymentPlanCreateRequest,
+    current_user: User = Depends(security.require_permission("contract:update")),
+) -> Any:
+    """兼容旧版的分阶段收款计划创建接口。"""
+    contract = db.query(Contract).filter(Contract.id == payload.contract_id).first()
+    if not contract:
+        raise HTTPException(status_code=404, detail="合同不存在")
+
+    if not check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
+        raise HTTPException(status_code=403, detail="无权为该合同创建收款计划")
+
+    if not payload.payment_stages:
+        raise HTTPException(status_code=422, detail="payment_stages 不能为空")
+
+    project_id = contract.project_id
+    if not project_id:
+        raise HTTPException(
+            status_code=409,
+            detail="合同未关联项目，需完成PMO立项或项目创建后再创建收款计划",
+        )
+
+    created_plans = []
+    for index, stage in enumerate(payload.payment_stages, start=1):
+        plan = ProjectPaymentPlan(
+            project_id=project_id,
+            contract_id=contract.id,
+            payment_no=index,
+            payment_name=stage.stage,
+            payment_type=_infer_payment_type(stage.stage),
+            payment_ratio=stage.percentage,
+            planned_amount=stage.amount,
+            actual_amount=Decimal("0"),
+            status="PENDING",
+        )
+        db.add(plan)
+        db.flush()
+        created_plans.append(
+            {
+                "id": plan.id,
+                "payment_no": plan.payment_no,
+                "payment_name": plan.payment_name,
+                "payment_ratio": float(plan.payment_ratio or 0),
+                "planned_amount": float(plan.planned_amount or 0),
+                "status": plan.status,
+            }
+        )
+
+    db.commit()
+
+    return ResponseModel(
+        code=201,
+        message="收款计划创建成功",
+        data={
+            "contract_id": contract.id,
+            "project_id": project_id,
+            "total_amount": float(payload.total_amount or 0),
+            "items": created_plans,
+        },
+    )
+
+
 @router.post("/payments/plans/{plan_id}/adjust", response_model=ResponseModel)
 def adjust_payment_plan(
     *,
@@ -90,7 +202,7 @@ def adjust_payment_plan(
     plan_id: int,
     new_date: date = Query(..., description="新的收款日期"),
     reason: str = Query(..., description="调整原因"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:update")),
 ) -> Any:
     """
     Issue 7.3: 手动调整收款计划
@@ -121,7 +233,7 @@ def get_payment_adjustment_history(
     *,
     db: Session = Depends(deps.get_db),
     plan_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:read")),
 ) -> Any:
     """
     Issue 7.3: 获取收款计划调整历史

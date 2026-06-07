@@ -43,6 +43,17 @@ export const updateContract = async (contractId, data) => {
 };
 
 /**
+ * 签署合同
+ * @param {number} contractId - 合同ID
+ * @param {Object} data - 签署数据
+ * @returns {Promise<Object>} 签署结果
+ */
+export const signContract = async (contractId, data) => {
+  const response = await apiClient.post(`/sales/contracts/${contractId}/sign`, data);
+  return response.data;
+};
+
+/**
  * 删除合同
  * @param {number} contractId - 合同ID
  * @returns {Promise<Object>} 删除结果
@@ -68,6 +79,7 @@ export default {
   getContractDetail,
   createContract,
   updateContract,
+  signContract,
   deleteContract,
   getContractHistory,
 };

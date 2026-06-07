@@ -6,12 +6,13 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional, Tuple
 
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.pmo import PmoProjectInitiation
 from app.models.project import Customer, Project
+from app.models.sales import Contract, Opportunity
 from app.models.user import User
 from app.schemas.pmo import (
     InitiationApproveRequest,
@@ -25,6 +26,8 @@ from app.utils.domain_codes import pmo as pmo_codes
 class PmoInitiationService:
     """PMO 立项管理服务"""
 
+    ACTIVE_INITIATION_STATUSES = ("DRAFT", "SUBMITTED", "REVIEWING")
+
     def __init__(self, db: Session):
         self.db = db
 
@@ -35,6 +38,7 @@ class PmoInitiationService:
         keyword: Optional[str] = None,
         status: Optional[str] = None,
         applicant_id: Optional[int] = None,
+        contract_no: Optional[str] = None,
     ) -> Tuple[List[PmoProjectInitiation], int]:
         """
         获取立项申请列表
@@ -45,6 +49,7 @@ class PmoInitiationService:
             keyword: 关键词搜索
             status: 状态筛选
             applicant_id: 申请人ID筛选
+            contract_no: 合同编号筛选
 
         Returns:
             (立项申请列表, 总数)
@@ -53,7 +58,10 @@ class PmoInitiationService:
 
         # 应用关键词搜索
         query = apply_keyword_filter(
-            query, PmoProjectInitiation, keyword, ["application_no", "project_name"]
+            query,
+            PmoProjectInitiation,
+            keyword,
+            ["application_no", "project_name", "contract_no"],
         )
 
         # 状态筛选
@@ -63,6 +71,10 @@ class PmoInitiationService:
         # 申请人筛选
         if applicant_id:
             query = query.filter(PmoProjectInitiation.applicant_id == applicant_id)
+
+        # 合同编号筛选，用于合同详情页避免重复创建立项申请
+        if contract_no:
+            query = query.filter(PmoProjectInitiation.contract_no == contract_no)
 
         # 计算总数
         total = query.count()
@@ -90,6 +102,40 @@ class PmoInitiationService:
             .first()
         )
 
+    def get_project_manager_candidates(self, limit: int = 200) -> List[User]:
+        """获取立项审批可选项目经理。"""
+        users = (
+            self.db.query(User)
+            .filter(User.is_active.is_(True))
+            .order_by(User.id)
+            .limit(limit)
+            .all()
+        )
+
+        candidates = []
+        for user in users:
+            role_codes = {str(code).lower() for code in (user.role_codes or []) if code}
+            profile_text = " ".join(
+                str(value).lower()
+                for value in [
+                    user.position,
+                    user.department,
+                    user.real_name,
+                    user.username,
+                ]
+                if value
+            )
+
+            if (
+                role_codes.intersection({"pm", "pmc", "pmo", "pmo_dir"})
+                or "项目经理" in profile_text
+                or "pm" in profile_text
+                or "pmc" in profile_text
+            ):
+                candidates.append(user)
+
+        return candidates or users
+
     def create_initiation(
         self, initiation_in: InitiationCreate, current_user: User
     ) -> PmoProjectInitiation:
@@ -103,13 +149,25 @@ class PmoInitiationService:
         Returns:
             创建的立项申请对象
         """
+        contract_no = (initiation_in.contract_no or "").strip() or None
+        if contract_no:
+            existing_initiation = self._find_active_initiation_by_contract_no(contract_no)
+            if existing_initiation:
+                application_no = (
+                    getattr(existing_initiation, "application_no", None)
+                    or f"ID {existing_initiation.id}"
+                )
+                raise ValueError(
+                    f"合同 {contract_no} 已存在未完成的立项申请（{application_no}），请继续处理原申请"
+                )
+
         initiation = PmoProjectInitiation(
             application_no=pmo_codes.generate_initiation_no(self.db),
             project_name=initiation_in.project_name,
             project_type=initiation_in.project_type,
             project_level=initiation_in.project_level,
             customer_name=initiation_in.customer_name,
-            contract_no=initiation_in.contract_no,
+            contract_no=contract_no,
             contract_amount=initiation_in.contract_amount,
             required_start_date=initiation_in.required_start_date,
             required_end_date=initiation_in.required_end_date,
@@ -155,6 +213,22 @@ class PmoInitiationService:
             raise ValueError("只有草稿状态的申请才能修改")
 
         update_data = initiation_in.model_dump(exclude_unset=True)
+        if "contract_no" in update_data:
+            contract_no = (update_data["contract_no"] or "").strip() or None
+            if contract_no:
+                existing_initiation = self._find_active_initiation_by_contract_no(
+                    contract_no, exclude_id=initiation_id
+                )
+                if existing_initiation:
+                    application_no = (
+                        getattr(existing_initiation, "application_no", None)
+                        or f"ID {existing_initiation.id}"
+                    )
+                    raise ValueError(
+                        f"合同 {contract_no} 已存在未完成的立项申请（{application_no}），不能重复关联"
+                    )
+            update_data["contract_no"] = contract_no
+
         for field, value in update_data.items():
             setattr(initiation, field, value)
 
@@ -299,23 +373,75 @@ class PmoInitiationService:
         if existing:
             project_code = f"PJ{today.strftime('%y%m%d')}{initiation.id:04d}"
 
-        # 查找或创建客户
-        customer = (
-            self.db.query(Customer)
-            .filter(Customer.customer_name == initiation.customer_name)
-            .first()
-        )
+        contract = self._find_contract_for_initiation(initiation)
+        if contract and contract.project_id:
+            existing_project = (
+                self.db.query(Project).filter(Project.id == contract.project_id).first()
+            )
+            if existing_project:
+                self._ensure_payment_plans_for_contract(contract)
+                return existing_project
+
+        customer = None
+        if contract and contract.customer_id:
+            customer = (
+                self.db.query(Customer)
+                .filter(Customer.id == contract.customer_id)
+                .first()
+            )
+
+        if not customer:
+            customer = (
+                self.db.query(Customer)
+                .filter(Customer.customer_name == initiation.customer_name)
+                .first()
+            )
+
         customer_id = customer.id if customer else None
+        contract_amount = (
+            getattr(contract, "total_amount", None)
+            if contract
+            else None
+        ) or initiation.contract_amount or Decimal("0")
+        contract_no = (
+            getattr(contract, "contract_code", None)
+            if contract
+            else None
+        ) or initiation.contract_no
+        opportunity_id = getattr(contract, "opportunity_id", None) if contract else None
+        lead_id = None
+        if opportunity_id:
+            opportunity = (
+                self.db.query(Opportunity)
+                .filter(Opportunity.id == opportunity_id)
+                .first()
+            )
+            lead_id = getattr(opportunity, "lead_id", None) if opportunity else None
 
         # 创建项目
         project = Project(
             project_code=project_code,
             project_name=initiation.project_name,
             customer_id=customer_id,
-            customer_name=initiation.customer_name,
-            contract_no=initiation.contract_no,
-            contract_amount=initiation.contract_amount or Decimal("0"),
-            contract_date=initiation.required_start_date,
+            customer_name=(
+                getattr(customer, "customer_name", None)
+                if customer
+                else initiation.customer_name
+            ),
+            customer_contact=getattr(customer, "contact_person", None) if customer else None,
+            customer_phone=getattr(customer, "contact_phone", None) if customer else None,
+            contract_no=contract_no,
+            customer_contract_no=(
+                getattr(contract, "customer_contract_no", None)
+                if contract
+                else None
+            ),
+            contract_amount=contract_amount,
+            contract_date=(
+                getattr(contract, "signing_date", None)
+                if contract
+                else None
+            ) or initiation.required_start_date,
             planned_start_date=initiation.required_start_date,
             planned_end_date=initiation.required_end_date,
             pm_id=pm_id,
@@ -323,6 +449,9 @@ class PmoInitiationService:
             stage="S1",
             status="ST01",
             health="H1",
+            lead_id=lead_id,
+            opportunity_id=opportunity_id,
+            contract_id=getattr(contract, "id", None) if contract else None,
         )
 
         # 填充项目经理信息
@@ -333,9 +462,57 @@ class PmoInitiationService:
         self.db.add(project)
         self.db.flush()
 
+        if contract:
+            contract.project_id = project.id
+            self.db.add(contract)
+
         # 初始化项目阶段
         from app.utils.project_utils import init_project_stages
 
         init_project_stages(self.db, project.id)
+        if contract:
+            self._ensure_payment_plans_for_contract(contract)
 
         return project
+
+    def _find_contract_for_initiation(
+        self, initiation: PmoProjectInitiation
+    ) -> Optional[Contract]:
+        """按立项申请中的合同编号回找销售合同。"""
+        if not initiation.contract_no:
+            return None
+
+        return (
+            self.db.query(Contract)
+            .filter(
+                or_(
+                    Contract.contract_code == initiation.contract_no,
+                    Contract.customer_contract_no == initiation.contract_no,
+                )
+            )
+            .first()
+        )
+
+    def _find_active_initiation_by_contract_no(
+        self, contract_no: str, exclude_id: Optional[int] = None
+    ) -> Optional[PmoProjectInitiation]:
+        """查找同合同号的未终态立项申请，防止销售重复发起。"""
+        query = self.db.query(PmoProjectInitiation).filter(
+            PmoProjectInitiation.contract_no == contract_no,
+            PmoProjectInitiation.status.in_(self.ACTIVE_INITIATION_STATUSES),
+        )
+        if exclude_id is not None:
+            query = query.filter(PmoProjectInitiation.id != exclude_id)
+        return query.first()
+
+    def _ensure_payment_plans_for_contract(self, contract: Contract) -> None:
+        """PMO 审批创建项目后，为已签订合同补齐收款计划。"""
+        if not contract or not getattr(contract, "project_id", None):
+            return
+
+        if str(getattr(contract, "status", "")).upper() != "SIGNED":
+            return
+
+        from app.services.sales.payment_plan_service import PaymentPlanService
+
+        PaymentPlanService(self.db).generate_payment_plans_from_contract(contract)

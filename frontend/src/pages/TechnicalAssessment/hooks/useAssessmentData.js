@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { technicalAssessmentApi } from "../../../services/api";
 
+function normalizeAssessments(response) {
+  const data = response?.data;
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(response?.items)) return response.items;
+  return [];
+}
+
 /**
  * Hook for loading and managing assessment data for a specific source
  */
@@ -22,20 +30,20 @@ export function useAssessmentData(sourceType, sourceId) {
         const response = await technicalAssessmentApi.getLeadAssessments(
           parseInt(sourceId)
         );
-        result = response.data.items || response.data?.items || response.data || [];
+        result = normalizeAssessments(response);
       } else if (sourceType === "opportunity") {
         const response = await technicalAssessmentApi.getOpportunityAssessments(
           parseInt(sourceId)
         );
-        result = response.data.items || response.data?.items || response.data || [];
+        result = normalizeAssessments(response);
       }
 
       setAssessments(result);
-      if (result.length > 0) {
-        setAssessment(result[0]);
-      }
+      setAssessment(result[0] || null);
     } catch (error) {
       console.error("加载评估失败:", error);
+      setAssessments([]);
+      setAssessment(null);
     } finally {
       setLoading(false);
     }

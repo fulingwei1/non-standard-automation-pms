@@ -52,6 +52,17 @@ const statusConfig = {
   CLOSED: { label: "已关闭", color: "bg-gray-500" }
 };
 
+const isLeadSource = (sourceType) =>
+  ["lead", "leads"].includes(String(sourceType || "").toLowerCase());
+
+const getResponseItems = (response) => {
+  const payload = response?.formatted ?? response?.data?.data ?? response?.data ?? response;
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  return payload?.items || [];
+};
+
 export default function OpenItemsManagement() {
   const { sourceType, sourceId } = useParams();
   const _navigate = useNavigate();
@@ -76,11 +87,11 @@ export default function OpenItemsManagement() {
   const loadItems = async () => {
     try {
       setLoading(true);
-      const response = await technicalAssessmentApi.getOpenItems({
-        source_type: sourceType?.toUpperCase(),
-        source_id: parseInt(sourceId)
-      });
-      setItems(response.data.items || response.data?.items || response.data || []);
+      const response = await technicalAssessmentApi.getOpenItemsForSource(
+        sourceType,
+        parseInt(sourceId)
+      );
+      setItems(getResponseItems(response));
     } catch (error) {
       console.error("加载未决事项失败:", error);
     } finally {
@@ -90,17 +101,11 @@ export default function OpenItemsManagement() {
 
   const handleCreate = async () => {
     try {
-      if (sourceType === "lead") {
-        await technicalAssessmentApi.createOpenItemForLead(
-          parseInt(sourceId),
-          formData
-        );
-      } else {
-        await technicalAssessmentApi.createOpenItemForOpportunity(
-          parseInt(sourceId),
-          formData
-        );
-      }
+      await technicalAssessmentApi.createOpenItem(
+        sourceType,
+        parseInt(sourceId),
+        formData
+      );
 
       setShowCreateDialog(false);
       setFormData({
@@ -141,9 +146,9 @@ export default function OpenItemsManagement() {
         breadcrumbs={[
         { label: "销售管理", path: "/sales" },
         {
-          label: sourceType === "lead" ? "线索管理" : "商机管理",
+          label: isLeadSource(sourceType) ? "线索管理" : "商机管理",
           path:
-          sourceType === "lead" ? "/sales/leads" : "/sales/opportunities"
+          isLeadSource(sourceType) ? "/sales/leads" : "/sales/opportunities"
         },
         { label: "未决事项", path: "" }]
         } />

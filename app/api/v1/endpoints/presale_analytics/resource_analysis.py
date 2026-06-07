@@ -15,6 +15,7 @@ from app.api import deps
 from app.core import security
 from app.models.enums import LeadOutcomeEnum
 from app.models.project import Project
+from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.presales import ResourceInvestmentSummary, ResourceWasteAnalysis
@@ -47,40 +48,50 @@ async def get_lead_resource_investment(
     if not project:
         raise HTTPException(status_code=404, detail=f"未找到线索/项目: {lead_id}")
 
-    from app.models.work_log import WorkLog
+    timesheets = db.query(Timesheet).filter(Timesheet.project_id == project.id).all()
 
-    work_logs = db.query(WorkLog).filter(WorkLog.project_id == project.id).all()
-
-    total_hours = sum(log.work_hours or 0 for log in work_logs)
-    engineer_ids = set(log.employee_id for log in work_logs if log.employee_id)
+    total_hours = sum(float(sheet.hours or 0) for sheet in timesheets)
+    engineer_ids = set(sheet.user_id for sheet in timesheets if sheet.user_id)
 
     engineer_hours = {}
-    for log in work_logs:
-        emp_id = log.employee_id
+    for sheet in timesheets:
+        emp_id = sheet.user_id
         if emp_id not in engineer_hours:
-            engineer_hours[emp_id] = 0
-        engineer_hours[emp_id] += log.work_hours or 0
+            engineer_hours[emp_id] = 0.0
+        engineer_hours[emp_id] += float(sheet.hours or 0)
+
+    users = (
+        db.query(User).filter(User.id.in_(engineer_ids)).all()
+        if engineer_ids
+        else []
+    )
+    user_names = {user.id: user.display_name for user in users}
 
     engineers = [
-        {"employee_id": emp_id, "hours": hours} for emp_id, hours in engineer_hours.items()
+        {
+            "employee_id": emp_id,
+            "employee_name": user_names.get(emp_id),
+            "hours": round(hours, 2),
+        }
+        for emp_id, hours in engineer_hours.items()
     ]
 
     investment_by_month = {}
-    for log in work_logs:
-        month_key = log.work_date.strftime("%Y-%m") if log.work_date else "unknown"
+    for sheet in timesheets:
+        month_key = sheet.work_date.strftime("%Y-%m") if sheet.work_date else "unknown"
         if month_key not in investment_by_month:
-            investment_by_month[month_key] = 0
-        investment_by_month[month_key] += log.work_hours or 0
+            investment_by_month[month_key] = 0.0
+        investment_by_month[month_key] += float(sheet.hours or 0)
 
     hourly_rate = Decimal("300")
     estimated_cost = Decimal(str(total_hours)) * hourly_rate
 
     return ResponseModel(
         code=200,
-        message="查询成功",
+            message="查询成功",
         data=ResourceInvestmentSummary(
             lead_id=lead_id,
-            lead_name=project.name,
+            lead_name=project.project_name,
             total_hours=total_hours,
             engineer_hours=total_hours,
             presales_hours=0,
@@ -130,19 +141,18 @@ async def get_resource_waste_analysis(
     won_leads = sum(1 for p in projects if p.outcome == LeadOutcomeEnum.WON.value)
     lost_leads = sum(1 for p in projects if p.outcome == LeadOutcomeEnum.LOST.value)
     abandoned_leads = sum(1 for p in projects if p.outcome == LeadOutcomeEnum.ABANDONED.value)
-    pending_leads = sum(1 for p in projects if p.outcome == LeadOutcomeEnum.PENDING.value)
+    pending_outcomes = {"PENDING", LeadOutcomeEnum.ON_HOLD.value, None}
+    pending_leads = sum(1 for p in projects if p.outcome in pending_outcomes)
 
     overall_win_rate = won_leads / (won_leads + lost_leads) if (won_leads + lost_leads) > 0 else 0
 
-    from app.models.work_log import WorkLog
-
-    total_investment_hours = 0
-    wasted_hours = 0
+    total_investment_hours = 0.0
+    wasted_hours = 0.0
     loss_reasons = {}
 
     for project in projects:
-        project_hours = (
-            db.query(func.sum(WorkLog.work_hours)).filter(WorkLog.project_id == project.id).scalar()
+        project_hours = float(
+            db.query(func.sum(Timesheet.hours)).filter(Timesheet.project_id == project.id).scalar()
             or 0
         )
 

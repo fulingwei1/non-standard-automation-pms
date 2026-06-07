@@ -121,6 +121,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
         const typeInfo = getTypeInfo(type);
         return {
           id: ticket.id,
+          ticketId: ticket.id,
           title: ticket.title,
           type,
           typeName: typeInfo.name,
@@ -247,13 +248,13 @@ export default function PresalesTasks({ embedded = false } = {}) {
               <Input
                 type="text"
                 placeholder="搜索任务..."
-                value={searchTerm || "unknown"}
+                value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 w-64" />
 
             </div>
             <select
-              value={selectedStatus || "unknown"}
+              value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 

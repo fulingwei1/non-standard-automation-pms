@@ -12,7 +12,9 @@ from sqlalchemy import func
 
 from app.models.enums import LeadOutcomeEnum, LossReasonEnum
 from app.models.project import Project
-from app.models.work_log import WorkLog
+from app.models.timesheet import Timesheet
+
+WorkLog = Timesheet  # Backward-compatible symbol for older tests/imports.
 
 
 class FailurePatternsMixin:
@@ -57,15 +59,15 @@ class FailurePatternsMixin:
         work_hours_map = {}
         if project_ids:
             work_hours_map = dict(
-                self.db.query(WorkLog.project_id, func.sum(WorkLog.work_hours))
-                .filter(WorkLog.project_id.in_(project_ids))
-                .group_by(WorkLog.project_id)
+                self.db.query(Timesheet.project_id, func.sum(Timesheet.hours))
+                .filter(Timesheet.project_id.in_(project_ids))
+                .group_by(Timesheet.project_id)
                 .all()
             )
 
         for project in failed_projects:
             reason = project.loss_reason or "OTHER"
-            hours = work_hours_map.get(project.id, 0) or 0
+            hours = float(work_hours_map.get(project.id, 0) or 0)
             loss_reason_distribution[reason]["count"] += 1
             loss_reason_distribution[reason]["total_hours"] += hours
 
@@ -106,16 +108,22 @@ class FailurePatternsMixin:
 
         if sorted_reasons:
             top_reason = sorted_reasons[0][0]
-            if top_reason == LossReasonEnum.PRICE_TOO_HIGH.value:
-                recommendations.append("价格因素导致丢标最多，建议优化成本结构或调整目标客户定位")
-            elif top_reason == LossReasonEnum.TECH_NOT_MATCH.value:
-                recommendations.append("技术不匹配导致丢标最多，建议售前阶段加强技术评估深度")
-            elif top_reason == LossReasonEnum.COMPETITOR_ADVANTAGE.value:
+            if top_reason in {LossReasonEnum.PRICE.value, "PRICE_TOO_HIGH"}:
+                recommendations.append(
+                    "价格因素导致丢标最多，建议优化成本结构或调整目标客户定位"
+                )
+            elif top_reason in {"TECH_NOT_MATCH", "TECHNICAL"}:
+                recommendations.append(
+                    "技术不匹配导致丢标最多，建议售前阶段加强技术评估深度"
+                )
+            elif top_reason in {LossReasonEnum.COMPETITOR.value, "COMPETITOR_ADVANTAGE"}:
                 recommendations.append(
                     "竞对优势导致丢标最多，建议进行系统性竞争分析，寻找差异化突破点"
                 )
-            elif top_reason == LossReasonEnum.RELATIONSHIP.value:
-                recommendations.append("客户关系导致丢标最多，建议加强客户关系管理，建立高层联系")
+            elif top_reason == "RELATIONSHIP":
+                recommendations.append(
+                    "客户关系导致丢标最多，建议加强客户关系管理，建立高层联系"
+                )
 
         recommendations.append("建立线索评估门槛，低于阈值的线索限制资源投入")
         recommendations.append("定期复盘失败案例，将经验沉淀到失败案例库")

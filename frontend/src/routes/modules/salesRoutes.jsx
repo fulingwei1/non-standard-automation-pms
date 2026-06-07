@@ -121,6 +121,7 @@ export function SalesRoutes() {
       <Route path="/quotations" element={<QuotationList />} />
       <Route path="/contracts" element={<ContractList />} />
       <Route path="/contracts/:id" element={<ContractDetail />} />
+      <Route path="/sales/contracts/:id" element={<ContractDetail />} />
       <Route
         path="/payments"
         element={

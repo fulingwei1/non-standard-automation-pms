@@ -126,6 +126,7 @@ async def evaluate_assessment(
         current_user.id,
         request.requirement_data,
         ai_analysis=ai_analysis,
+        assessment_id=assessment.id,
     )
 
     db.commit()

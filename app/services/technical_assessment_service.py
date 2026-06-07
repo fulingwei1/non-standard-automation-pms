@@ -43,6 +43,7 @@ class TechnicalAssessmentService:
         evaluator_id: int,
         requirement_data: Dict[str, Any],
         ai_analysis: Optional[str] = None,
+        assessment_id: Optional[int] = None,
     ) -> TechnicalAssessment:
         """
         执行技术评估
@@ -52,6 +53,7 @@ class TechnicalAssessmentService:
             source_id: 来源ID
             evaluator_id: 评估人ID
             requirement_data: 需求数据字典
+            assessment_id: 已申请的评估记录ID；传入时更新该记录
 
         Returns:
             TechnicalAssessment: 评估结果对象
@@ -81,25 +83,39 @@ class TechnicalAssessmentService:
         # 生成立项条件
         conditions = self._generate_conditions(decision, risks, requirement_data)
 
-        # 创建评估记录
-        assessment = TechnicalAssessment(
-            source_type=source_type,
-            source_id=source_id,
-            evaluator_id=evaluator_id,
-            status=AssessmentStatusEnum.COMPLETED,
-            total_score=total_score,
-            dimension_scores=json.dumps(dimension_scores, ensure_ascii=False),
-            veto_triggered=veto_triggered,
-            veto_rules=json.dumps(veto_rules, ensure_ascii=False) if veto_rules else None,
-            decision=decision,
-            risks=json.dumps(risks, ensure_ascii=False),
-            similar_cases=json.dumps(similar_cases, ensure_ascii=False) if similar_cases else None,
-            conditions=json.dumps(conditions, ensure_ascii=False) if conditions else None,
-            ai_analysis=ai_analysis,
-            evaluated_at=datetime.now(),
-        )
+        assessment = None
+        if assessment_id is not None:
+            assessment = (
+                self.db.query(TechnicalAssessment)
+                .filter(
+                    TechnicalAssessment.id == assessment_id,
+                    TechnicalAssessment.source_type == source_type,
+                    TechnicalAssessment.source_id == source_id,
+                )
+                .first()
+            )
+            if not assessment:
+                raise ValueError("技术评估申请不存在或来源不匹配")
 
-        self.db.add(assessment)
+        if assessment is None:
+            assessment = TechnicalAssessment(source_type=source_type, source_id=source_id)
+            self.db.add(assessment)
+
+        assessment.evaluator_id = evaluator_id
+        assessment.status = AssessmentStatusEnum.COMPLETED.value
+        assessment.total_score = total_score
+        assessment.dimension_scores = json.dumps(dimension_scores, ensure_ascii=False)
+        assessment.veto_triggered = veto_triggered
+        assessment.veto_rules = json.dumps(veto_rules, ensure_ascii=False) if veto_rules else None
+        assessment.decision = decision
+        assessment.risks = json.dumps(risks, ensure_ascii=False)
+        assessment.similar_cases = (
+            json.dumps(similar_cases, ensure_ascii=False) if similar_cases else None
+        )
+        assessment.conditions = json.dumps(conditions, ensure_ascii=False) if conditions else None
+        assessment.ai_analysis = ai_analysis
+        assessment.evaluated_at = datetime.now()
+
         self.db.flush()
 
         # 更新来源对象的评估关联

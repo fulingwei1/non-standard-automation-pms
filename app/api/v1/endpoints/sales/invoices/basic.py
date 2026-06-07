@@ -134,6 +134,12 @@ def _create_invoice_logic(
     创建发票核心逻辑
     """
     invoice_data = invoice_in.model_dump()
+    if invoice_data.get("invoice_amount") is not None:
+        invoice_data["amount"] = invoice_data["invoice_amount"]
+    if not invoice_data.get("issue_date") and invoice_data.get("invoice_date"):
+        invoice_data["issue_date"] = invoice_data["invoice_date"]
+    invoice_data.pop("invoice_amount", None)
+    invoice_data.pop("invoice_date", None)
 
     # 如果没有提供编码，自动生成
     if not invoice_data.get("invoice_code"):
@@ -153,8 +159,8 @@ def _create_invoice_logic(
     db.add(invoice)
     db.flush()
 
-    # 如果发票状态是 APPLIED，自动启动审批流程
-    if invoice.status == InvoiceStatusEnum.APPLIED:
+    # 如果发票状态是已提交，自动启动审批流程。
+    if invoice.status in {"APPLIED", InvoiceStatusEnum.SUBMITTED.value}:
         try:
             workflow_service = ApprovalWorkflowService(db)
             routing_params = {"amount": float(invoice.amount or 0)}
@@ -166,7 +172,7 @@ def _create_invoice_logic(
                 routing_params=routing_params,
                 comment="发票申请",
             )
-            invoice.status = InvoiceStatusEnum.IN_REVIEW
+            invoice.status = InvoiceStatusEnum.SUBMITTED
         except Exception as e:
             # 如果启动审批失败，记录日志但不阻止发票创建
             logger.warning(f"发票审批流程启动失败: invoice_id={invoice.id}, error={str(e)}")
@@ -178,6 +184,8 @@ def _create_invoice_logic(
     customer = contract.customer if contract else None
     invoice_dict = {
         **{c.name: getattr(invoice, c.name) for c in invoice.__table__.columns},
+        "invoice_amount": invoice.amount,
+        "invoice_date": invoice.issue_date,
         "contract_code": contract.contract_code,
         "project_code": project.project_code if project else None,
         "project_name": project.project_name if project else None,

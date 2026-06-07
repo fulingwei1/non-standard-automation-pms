@@ -1,9 +1,10 @@
 /**
  * Contract Management Page (Refactored)
- * Features: Contract list, creation, signing, project generation (重构版本)
+ * Features: Contract list, creation, signing, PMO initiation handoff (重构版本)
  */
 
 import { useState, useEffect, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -17,8 +18,6 @@ import {
   Eye,
   FileText,
   Layers,
-  Download,
-  Upload,
   AlertTriangle,
   MoreHorizontal,
   TrendingUp } from
@@ -50,6 +49,8 @@ import {
   SignatureManager,
   PaymentTracker } from
 '../components/contract-management';
+import ContractApproval from './ContractApproval';
+import { usePermission } from '../hooks/usePermission';
 
 import {
   CONTRACT_TYPES,
@@ -60,29 +61,115 @@ import {
 '@/lib/constants/contractManagement';
 
 // 导入 API service
-import { getContracts, deleteContract } from '../services/contractService';
+import {
+  getContracts,
+  deleteContract,
+} from '../services/contractService';
+import { paymentPlanApi, pmoApi, receivableApi } from '../services/api';
+import { pickExistingInitiationByContractNo } from '../utils/pmoInitiations';
 
 const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
+const getResponsePayload = (response) => response?.data?.data ?? response?.data ?? response ?? {};
+
+const CONTRACT_TAB_KEYS = new Set(['overview', 'contracts', 'editor', 'signature', 'payment', 'approval']);
+
+function getContractTabFromSearch(search, canApproveContracts = false) {
+  const tab = new URLSearchParams(search).get('tab');
+  if (tab === 'approval' && canApproveContracts) {
+    return tab;
+  }
+  if (tab && CONTRACT_TAB_KEYS.has(tab) && tab !== 'approval') {
+    return tab;
+  }
+  return 'contracts';
+}
+
+const getPaginatedPayload = (response) => {
+  const payload = getResponsePayload(response);
+  if (Array.isArray(payload)) {
+    return { items: payload, total: payload.length };
+  }
+  if (payload && Array.isArray(payload.items)) {
+    return {
+      items: payload.items,
+      total: Number(payload.total ?? payload.items.length),
+    };
+  }
+  return { items: [], total: 0 };
+};
+
+const findExistingInitiationByContractNo = async (contractNo) => {
+  if (!contractNo) {
+    return null;
+  }
+
+  const response = await pmoApi.initiations.list({
+    contract_no: String(contractNo),
+    page: 1,
+    page_size: 20,
+  });
+  const payload = getPaginatedPayload(response);
+  return pickExistingInitiationByContractNo(payload.items, contractNo);
+};
+
+const emptyContractOperations = {
+  paymentPlanCount: 0,
+  invoiceCount: 0,
+  unpaidAmount: 0,
+  overdueCount: 0,
+  overdueAmount: 0,
+  collectionRate: 0,
+};
+
+const toNumber = (value) => Number(value || 0);
+
 const ContractManagement = () => {
+  const location = useLocation();
+  const initialParams = new URLSearchParams(location.search);
+  const navigate = useNavigate();
+  const { hasPermission, isLoading: permissionsLoading } = usePermission();
+  const canApproveContracts = hasPermission('contract:approve');
   // 状态管理
   const [loading, setLoading] = useState(false);
   const [contracts, setContracts] = useState([]);
   const [overviewData, setOverviewData] = useState({ contracts: [], total: 0 });
   const [selectedContract, setSelectedContract] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const [searchText, setSearchText] = useState('');  // 搜索框初始化为空字符串
+  const [activeTab, setActiveTab] = useState(
+    getContractTabFromSearch(location.search, canApproveContracts),
+  );
+  const [filters, setFilters] = useState({
+    ...DEFAULT_FILTERS,
+    customerId: initialParams.get("customer_id") || null,
+    startDate: initialParams.get("start_date") || null,
+    endDate: initialParams.get("end_date") || null,
+  });
+  const [searchText, setSearchText] = useState(initialParams.get("keyword") || '');  // 搜索框初始化为空字符串
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [editingContract, setEditingContract] = useState(null);
+  const [messageApi, messageContextHolder] = message.useMessage();
 
   // 数据加载
   useEffect(() => {
     loadData();
   }, [activeTab, filters]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (!permissionsLoading) {
+      setActiveTab(getContractTabFromSearch(location.search, canApproveContracts));
+    }
+    setSearchText(params.get("keyword") || "");
+    setFilters((prev) => ({
+      ...prev,
+      customerId: params.get("customer_id") || null,
+      startDate: params.get("start_date") || null,
+      endDate: params.get("end_date") || null,
+    }));
+  }, [location.search, canApproveContracts, permissionsLoading]);
 
   const loadData = async () => {
     setLoading(true);
@@ -91,27 +178,13 @@ const ContractManagement = () => {
       // 后端返回分页格式：{ items: [...], total: N }
       const items = data?.items || data?.data?.items || data;
       const contractsData = Array.isArray(items) ? items : [];
-      
-      // 调试：打印第一个合同的原始数据
-      if (contractsData.length > 0) {
-        const first = contractsData[0];
-        console.log('[合同数据] 第一个合同原始数据:', {
-          id: first.id,
-          contract_code: first.contract_code,
-          total_amount: first.total_amount,
-          contract_amount: first.contract_amount,
-          amount: first.amount,
-          status: first.status,
-          allKeys: Object.keys(first).filter(k => k.includes('amount') || k.includes('total'))
-        });
-      }
-      
+
       // 转换后端数据格式为前端期望的格式
-      const transformedContracts = contractsData.map((c) => {
+      const baseContracts = contractsData.map((c) => {
         // 金额字段：后端可能返回 total_amount 或 contract_amount
         // Decimal 类型会被序列化为字符串或数字
         let rawAmount = c.total_amount ?? c.contract_amount ?? c.amount ?? 0;
-        
+
         // 处理可能的 Decimal 对象、字符串或数字
         let numericAmount = 0;
         if (rawAmount === null || rawAmount === undefined) {
@@ -124,7 +197,10 @@ const ContractManagement = () => {
           // 处理 Decimal 对象
           numericAmount = parseFloat(rawAmount.toString()) || 0;
         }
-        
+
+        const normalizedStatus = (c.status || 'draft').toLowerCase();
+        const isSigned = ['signed', 'executing', 'completed'].includes(normalizedStatus);
+
         return {
           id: c.id,
           title: c.contract_name || c.contract_code || `合同-${c.id}`,
@@ -134,32 +210,69 @@ const ContractManagement = () => {
           clientName: c.customer_name,
           value: numericAmount,
           amount: numericAmount,
-          status: (c.status || 'draft').toLowerCase(),
+          status: normalizedStatus,
           type: c.contract_type || 'sales',
-          signatureStatus: (c.status || 'draft').toLowerCase() === 'executing' ? 'signed' : 'pending',
+          signatureStatus: isSigned ? 'signed' : 'pending',
           riskLevel: 'normal',
           created_at: c.created_at,
           signing_date: c.signing_date,
           customer_id: c.customer_id,
+          project_id: c.project_id,
+          project_code: c.project_code,
           contract_id: c.id,
+          operations: emptyContractOperations,
         };
       });
-      
+
+      const shouldLoadOperations = activeTab === 'contracts';
+      const transformedContracts = shouldLoadOperations
+        ? await Promise.all(
+          baseContracts.map(async (contract) => {
+            const operations = await loadContractOperations(contract.id);
+            return { ...contract, operations };
+          })
+        )
+        : baseContracts;
+
       setContracts(transformedContracts);
-      
+
       // 同时保存完整数据供概览组件使用
       setOverviewData({
         contracts: transformedContracts,
         total: data?.total || data?.data?.total || transformedContracts.length,
         page: data?.page || data?.data?.page || 1
       });
-      
+
       setLoading(false);
     } catch (_error) {
       console.error('加载合同数据失败:', _error);
-      message.error('加载合同数据失败');
+      messageApi.error('加载合同数据失败');
       setContracts([]);
       setLoading(false);
+    }
+  };
+
+  const loadContractOperations = async (contractId) => {
+    try {
+      const [receivableSummaryResponse, paymentPlansResponse] = await Promise.all([
+        receivableApi.getSummary({ contract_id: contractId }),
+        paymentPlanApi.list({ contract_id: contractId, page_size: 100 }),
+      ]);
+
+      const summary = getResponsePayload(receivableSummaryResponse);
+      const paymentPlans = getPaginatedPayload(paymentPlansResponse);
+
+      return {
+        paymentPlanCount: paymentPlans.total || paymentPlans.items.length,
+        invoiceCount: toNumber(summary.invoice_count),
+        unpaidAmount: toNumber(summary.unpaid_amount),
+        overdueCount: toNumber(summary.overdue_count),
+        overdueAmount: toNumber(summary.overdue_amount),
+        collectionRate: toNumber(summary.collection_rate),
+      };
+    } catch (error) {
+      console.warn('加载合同运营状态失败:', contractId, error);
+      return emptyContractOperations;
     }
   };
 
@@ -174,8 +287,12 @@ const ContractManagement = () => {
       const matchesStatus = !filters.status || contract.status === filters.status;
       const matchesSignature = !filters.signatureStatus || contract.signatureStatus === filters.signatureStatus;
       const matchesRisk = !filters.riskLevel || contract.riskLevel === filters.riskLevel;
+      const matchesCustomer = !filters.customerId || String(contract.customer_id || '') === String(filters.customerId);
+      const createdAt = contract.signing_date || contract.created_at;
+      const matchesStartDate = !filters.startDate || !createdAt || String(createdAt).slice(0, 10) >= filters.startDate;
+      const matchesEndDate = !filters.endDate || !createdAt || String(createdAt).slice(0, 10) <= filters.endDate;
 
-      return matchesSearch && matchesType && matchesStatus && matchesSignature && matchesRisk;
+      return matchesSearch && matchesType && matchesStatus && matchesSignature && matchesRisk && matchesCustomer && matchesStartDate && matchesEndDate;
     });
   }, [contracts, searchText, filters]);
 
@@ -194,9 +311,9 @@ const ContractManagement = () => {
       setLoading(true);
       await deleteContract(contractId);
       setContracts((contracts || []).filter((c) => c.id !== contractId));
-      message.success('删除成功');
+      messageApi.success('删除成功');
     } catch (_error) {
-      message.error('删除失败');
+      messageApi.error('删除失败');
     } finally {
       setLoading(false);
     }
@@ -208,11 +325,45 @@ const ContractManagement = () => {
   };
 
   const handleExportContract = (format) => {
-    message.success(`正在导出${format}格式合同...`);
+    messageApi.success(`正在导出${format}格式合同...`);
   };
 
-  const handleCreateProject = (contract) => {
-    message.success(`正在为合同 ${contract.title} 创建项目...`);
+  const handleCreateProject = async (contract) => {
+    const contractCode = contract.contract_no || contract.contract_code || contract.id || contract.contract_id;
+    const today = new Date().toISOString().slice(0, 10);
+    const projectName = contract.title || contract.contract_name || '销售项目';
+    const contractAmount = contract.value || contract.amount || undefined;
+
+    try {
+      setLoading(true);
+      const existingInitiation = await findExistingInitiationByContractNo(contractCode);
+      if (existingInitiation?.id) {
+        messageApi.success('已存在立项申请，正在打开立项详情');
+        navigate(`/pmo/initiations/${existingInitiation.id}`);
+        return;
+      }
+
+      const response = await pmoApi.initiations.create({
+        project_name: projectName,
+        project_type: 'NEW',
+        customer_name: contract.clientName || contract.client_name || contract.customer_name || '',
+        contract_no: String(contractCode),
+        contract_amount: contractAmount,
+        required_start_date: today,
+        requirement_summary: `由合同 ${contractCode} 发起立项`,
+      });
+
+      const initiation = response?.formatted || response?.data?.data || response?.data || {};
+      const initiationId = initiation.id;
+      messageApi.success('立项申请已创建，正在打开立项详情');
+      await loadData();
+      navigate(initiationId ? `/pmo/initiations/${initiationId}` : '/pmo/initiations');
+    } catch (error) {
+      const detail = error?.response?.data?.detail || error?.response?.data?.message || error.message;
+      messageApi.error(`发起立项失败: ${detail}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 表格列配置
@@ -321,13 +472,15 @@ const ContractManagement = () => {
               签署
       </Button>
       }
-          {record.status === 'signed' &&
+          {!record.project_id &&
+          record.signatureStatus === 'signed' &&
+          ['signed', 'executing', 'completed'].includes(record.status) &&
       <Button
         type="link"
         icon={<Layers size={16} />}
         onClick={() => handleCreateProject(record)}>
 
-              创建项目
+              发起立项
       </Button>
       }
           <Dropdown
@@ -364,6 +517,7 @@ const ContractManagement = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="contract-management-container space-y-6">
+      {messageContextHolder}
 
       {/* 页面头部 */}
       <div className="flex items-center justify-between">
@@ -373,7 +527,7 @@ const ContractManagement = () => {
             合同管理
           </Title>
           <Text className="text-slate-400">
-            合同创建、签署、项目生成和管理
+            合同创建、签署、立项移交和管理
           </Text>
         </div>
         <Space>
@@ -383,16 +537,6 @@ const ContractManagement = () => {
             onClick={handleCreateContract}>
 
             创建合同
-          </Button>
-          <Button
-            icon={<Upload size={16} />}>
-
-            批量导入
-          </Button>
-          <Button
-            icon={<Download size={16} />}>
-
-            导出报表
           </Button>
         </Space>
       </div>
@@ -549,7 +693,21 @@ const ContractManagement = () => {
                 contracts={contracts}
                 loading={loading} />
             )
-          }
+          },
+          ...(canApproveContracts
+            ? [
+              {
+                key: 'approval',
+                label: (
+                  <span>
+                    <FileCheck size={16} />
+                    合同审批
+                  </span>
+                ),
+                children: <ContractApproval />,
+              },
+            ]
+            : [])
         ]} />
 
       {/* 合同创建/编辑模态框 */}

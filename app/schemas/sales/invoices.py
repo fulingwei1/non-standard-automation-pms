@@ -25,6 +25,7 @@ class InvoiceCreate(BaseModel):
     tax_amount: Optional[Decimal] = Field(default=None, description="税额")
     total_amount: Optional[Decimal] = Field(default=None, description="总金额")
     invoice_date: Optional[date] = Field(default=None, description="开票日期")
+    issue_date: Optional[date] = Field(default=None, description="开票日期")
     due_date: Optional[date] = Field(default=None, description="到期日期")
     remark: Optional[str] = Field(default=None, description="备注", alias="remarks")
     amount: Optional[Decimal] = Field(default=None, ge=0, description="金额（兼容字段）")

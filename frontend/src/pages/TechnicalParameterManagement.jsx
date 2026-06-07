@@ -6,14 +6,21 @@
  */
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
-  Settings,
-  FileText,
-  Cpu,
-  Factory,
   Beaker,
+  Calculator,
+  Cpu,
+  Edit,
+  Factory,
+  FileText,
+  Plus,
+  Search,
+  Settings,
+  Trash2,
   Zap,
 } from "lucide-react";
+import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { technicalParameterApi } from "../services/api/technicalParameter";
 
@@ -46,6 +53,41 @@ function StatCard({ icon: Icon, label, value, color = "text-white" }) {
       <div className={`text-2xl font-bold ${color}`}>{value}</div>
     </div>
   );
+}
+
+function normalizeTemplateList(response) {
+  const payload = response?.data ?? response;
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+  if (Array.isArray(payload?.data)) {
+    return payload.data;
+  }
+  if (Array.isArray(payload?.data?.items)) {
+    return payload.data.items;
+  }
+  return [];
+}
+
+function unwrapTemplateDetail(response) {
+  return response?.data?.data ?? response?.data ?? response ?? null;
+}
+
+function hasTemplateDetail(template) {
+  return Boolean(
+    template?.parameters ||
+      template?.cost_factors ||
+      template?.typical_labor_hours ||
+      template?.reference_docs ||
+      template?.sample_images,
+  );
+}
+
+function getParameterDefault(param) {
+  return param?.default_value ?? param?.default ?? 0;
 }
 
 export default function TechnicalParameterManagement() {
@@ -85,7 +127,7 @@ export default function TechnicalParameterManagement() {
           industry: filterIndustry,
           test_type: filterTestType,
         });
-        setTemplates(res.data || res.items || []);
+        setTemplates(normalizeTemplateList(res));
       } catch (err) {
         console.error("Failed to load templates:", err);
       } finally {
@@ -112,19 +154,33 @@ export default function TechnicalParameterManagement() {
   };
 
   // 打开编辑模态框
-  const handleEdit = (template) => {
-    setEditingTemplate(template);
-    setFormData({
-      name: template.name,
-      code: template.code,
-      industry: template.industry,
-      test_type: template.test_type,
-      description: template.description || "",
-      parameters: template.parameters || {},
-      cost_factors: template.cost_factors || {},
-      typical_labor_hours: template.typical_labor_hours || {},
-    });
-    setEditModal(true);
+  const loadTemplateDetail = async (template) => {
+    if (!template?.id || hasTemplateDetail(template)) {
+      return template;
+    }
+
+    const res = await technicalParameterApi.get(template.id);
+    return unwrapTemplateDetail(res) || template;
+  };
+
+  const handleEdit = async (template) => {
+    try {
+      const templateDetail = await loadTemplateDetail(template);
+      setEditingTemplate(templateDetail);
+      setFormData({
+        name: templateDetail.name,
+        code: templateDetail.code,
+        industry: templateDetail.industry,
+        test_type: templateDetail.test_type,
+        description: templateDetail.description || "",
+        parameters: templateDetail.parameters || {},
+        cost_factors: templateDetail.cost_factors || {},
+        typical_labor_hours: templateDetail.typical_labor_hours || {},
+      });
+      setEditModal(true);
+    } catch (err) {
+      alert("加载模板详情失败: " + err.message);
+    }
   };
 
   // 保存模板
@@ -138,7 +194,7 @@ export default function TechnicalParameterManagement() {
       setEditModal(false);
       // 刷新列表
       const res = await technicalParameterApi.list({});
-      setTemplates(res.data || res.items || []);
+      setTemplates(normalizeTemplateList(res));
     } catch (err) {
       alert("保存失败: " + err.message);
     }
@@ -156,19 +212,24 @@ export default function TechnicalParameterManagement() {
   };
 
   // 打开成本估算
-  const handleEstimate = (template) => {
-    setEstimateTemplate(template);
-    // 初始化参数
-    const params = {};
-    if (template.parameters) {
-      Object.keys(template.parameters).forEach((key) => {
-        const param = template.parameters[key];
-        params[key] = param.default_value || 0;
-      });
+  const handleEstimate = async (template) => {
+    try {
+      const templateDetail = await loadTemplateDetail(template);
+      setEstimateTemplate(templateDetail);
+      // 初始化参数
+      const params = {};
+      if (templateDetail.parameters) {
+        Object.keys(templateDetail.parameters).forEach((key) => {
+          const param = templateDetail.parameters[key];
+          params[key] = getParameterDefault(param);
+        });
+      }
+      setEstimateParams(params);
+      setEstimateResult(null);
+      setEstimateModal(true);
+    } catch (err) {
+      alert("加载模板详情失败: " + err.message);
     }
-    setEstimateParams(params);
-    setEstimateResult(null);
-    setEstimateModal(true);
   };
 
   // 执行成本估算
@@ -196,7 +257,7 @@ export default function TechnicalParameterManagement() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="技术参数模板" subtitle="模板管理 · 成本估算 · 行业分类" />
+      <PageHeader title="技术参数模板" description="模板管理 · 成本估算 · 行业分类" />
 
       {loading ? (
         <div className="text-center text-slate-500 py-12">加载中...</div>
@@ -327,7 +388,7 @@ export default function TechnicalParameterManagement() {
                       <div className="flex flex-wrap gap-2">
                         {Object.entries(template.parameters).slice(0, 5).map(([key, param]) => (
                           <span key={key} className="px-2 py-1 bg-slate-800 text-slate-400 text-xs rounded">
-                            {param.label || key}: {param.default_value} {param.unit || ""}
+                            {param.label || key}: {getParameterDefault(param)} {param.unit || ""}
                           </span>
                         ))}
                         {Object.keys(template.parameters).length > 5 && (
@@ -475,10 +536,14 @@ export default function TechnicalParameterManagement() {
               {/* 参数输入 */}
               {estimateTemplate.parameters && Object.entries(estimateTemplate.parameters).map(([key, param]) => (
                 <div key={key}>
-                  <label className="text-xs text-slate-400 mb-1 block">
+                  <label
+                    htmlFor={`estimate-param-${key}`}
+                    className="text-xs text-slate-400 mb-1 block"
+                  >
                     {param.label || key} {param.unit && `(${param.unit})`}
                   </label>
                   <input
+                    id={`estimate-param-${key}`}
                     type="number"
                     className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300"
                     value={estimateParams[key] || ""}

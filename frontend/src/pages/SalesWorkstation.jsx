@@ -8,7 +8,6 @@
  * - 合同里程碑提醒
  */
 
-import React, { useState } from "react";
 import {
   Card,
   Row,
@@ -20,7 +19,6 @@ import {
   Tabs,
   Badge,
   Alert,
-  Spin,
   Empty,
   Typography,
   Space,
@@ -32,12 +30,12 @@ import {
   DollarOutlined,
   HeartOutlined,
   CalendarOutlined,
-  ExclamationCircleOutlined,
   CheckCircleOutlined,
   WarningOutlined,
-  ClockCircleOutlined,
   ReloadOutlined,
+  ArrowRightOutlined,
 } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import {
   useSalesWorkstationData,
   useFollowUpReminders,
@@ -45,6 +43,12 @@ import {
   useOpportunityHealthList,
   useContractMilestones,
 } from "../hooks/useSalesWorkstation";
+import {
+  buildSalesOpportunityCenterPath,
+  buildTechnicalAssessmentPath,
+  SALES_LEAD_LIST_PATH,
+  SALES_OPPORTUNITY_LIST_PATH,
+} from "../lib/salesNavigation";
 
 const { Title, Text } = Typography;
 
@@ -81,6 +85,209 @@ const healthLabels = {
   warning: "警告",
   critical: "危险",
 };
+
+const numberOrZero = (value) => Number(value || 0);
+const COLLECTION_DRILLDOWN_PATH =
+  "/sales/receivables?source=sales_workstation&view=overdue_receivables&overdue_only=true";
+
+const buildCollectionReceivablePath = (record = {}) => {
+  const params = new URLSearchParams({
+    source: "sales_workstation",
+    view: "collection_risk",
+    overdue_only: "true",
+  });
+  if (record.customer_id) {
+    params.set("customer_id", String(record.customer_id));
+  }
+  if (record.contract_id) {
+    params.set("contract_id", String(record.contract_id));
+  }
+  return `/sales/receivables?${params.toString()}`;
+};
+
+const buildFollowUpTargetPath = (record = {}) => {
+  const isLead = record.entity_type === "lead";
+  if (record.entity_id) {
+    return isLead
+      ? `/sales/leads/${record.entity_id}`
+      : `/sales/opportunities/${record.entity_id}`;
+  }
+  return isLead ? SALES_LEAD_LIST_PATH : SALES_OPPORTUNITY_LIST_PATH;
+};
+
+const buildFollowUpAssessmentPath = (record = {}) => {
+  const isLead = record.entity_type === "lead";
+  return buildTechnicalAssessmentPath(
+    isLead ? "lead" : "opportunity",
+    record.entity_id
+  );
+};
+
+const buildOpportunityHealthPath = (record = {}) =>
+  record.opportunity_id
+    ? `/sales/opportunities/${record.opportunity_id}`
+    : SALES_OPPORTUNITY_LIST_PATH;
+
+const buildContractMilestonePath = (record = {}) =>
+  record.contract_id ? `/sales/contracts/${record.contract_id}` : "/sales/contracts";
+
+/**
+ * 今日行动和销售闭环阶段
+ */
+function ActionBoard({ data }) {
+  const navigate = useNavigate();
+  const followUpCount = numberOrZero(data.followUpSummary?.total_count);
+  const overdueFollowUpCount = numberOrZero(
+    data.followUpSummary?.by_urgency?.overdue?.count
+  );
+  const quoteRiskCount = numberOrZero(
+    data.healthSummary?.by_level?.critical?.count
+  );
+  const contractUrgentCount = numberOrZero(
+    data.milestoneSummary?.by_urgency?.urgent?.count
+  ) + numberOrZero(data.milestoneSummary?.by_urgency?.overdue?.count);
+  const collectionCount = numberOrZero(data.collectionSummary?.total_count);
+  const funnelSummary = data.salesFunnelSummary || {};
+  const initiationCount = numberOrZero(
+    data.initiationSummary?.unique_count ?? data.initiationSummary?.total_count
+  );
+
+  const actionItems = [
+    {
+      title: "待跟进",
+      count: followUpCount,
+      emphasis: overdueFollowUpCount > 0 ? `${overdueFollowUpCount} 项逾期` : "按计划推进",
+      button: "处理待跟进",
+      path: SALES_LEAD_LIST_PATH,
+      color: "#1890ff",
+    },
+    {
+      title: "待报价",
+      count: quoteRiskCount,
+      emphasis: "商机风险优先处理",
+      button: "推进报价",
+      path: "/sales/quotes",
+      color: "#52c41a",
+    },
+    {
+      title: "待签约/立项",
+      count: contractUrgentCount,
+      emphasis: "合同节点和立项动作",
+      button: "跟进合同",
+      path: "/sales/contracts",
+      color: "#722ed1",
+    },
+    {
+      title: "待回款",
+      count: collectionCount,
+      emphasis:
+        data.collectionSummary?.critical_count > 0
+          ? `${data.collectionSummary.critical_count} 项紧急`
+          : "按账期跟进",
+      button: "催收回款",
+      path: COLLECTION_DRILLDOWN_PATH,
+      color: "#fa8c16",
+    },
+  ];
+
+  const pipelineStages = [
+    { title: "线索", count: numberOrZero(funnelSummary.leads), path: SALES_LEAD_LIST_PATH },
+    {
+      title: "商机",
+      count: numberOrZero(funnelSummary.opportunities),
+      path: buildSalesOpportunityCenterPath("opportunities"),
+    },
+    { title: "报价", count: numberOrZero(funnelSummary.quotes), path: "/sales/quotes" },
+    { title: "合同", count: numberOrZero(funnelSummary.contracts), path: "/sales/contracts" },
+    { title: "项目立项", count: initiationCount, path: "/pmo/initiations" },
+  ];
+
+  return (
+    <Row gutter={[16, 16]}>
+      <Col xs={24} xl={15}>
+        <Card
+          title="今日销售动作"
+          extra={
+            <Space size={8}>
+              <Button type="link" onClick={() => navigate("/sales/presale-workbench")}>
+                售前工作台
+              </Button>
+              <Button type="link" onClick={() => navigate("/sales/funnel")}>
+                销售数据看板
+              </Button>
+            </Space>
+          }
+        >
+          <Row gutter={[12, 12]}>
+            {actionItems.map((item) => (
+              <Col xs={24} sm={12} lg={6} key={item.title}>
+                <div
+                  style={{
+                    height: "100%",
+                    minHeight: 132,
+                    border: "1px solid #f0f0f0",
+                    borderRadius: 8,
+                    padding: 14,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    borderTop: `3px solid ${item.color}`,
+                  }}
+                >
+                  <Space orientation="vertical" size={2}>
+                    <Text type="secondary">{item.title}</Text>
+                    <Title level={3} style={{ margin: 0 }}>
+                      {item.count}
+                    </Title>
+                    <Text type={item.count > 0 ? "warning" : "secondary"} style={{ fontSize: 12 }}>
+                      {item.emphasis}
+                    </Text>
+                  </Space>
+                  <Button block onClick={() => navigate(item.path)}>
+                    {item.button}
+                  </Button>
+                </div>
+              </Col>
+            ))}
+          </Row>
+        </Card>
+      </Col>
+      <Col xs={24} xl={9}>
+        <Card title="销售闭环" extra={<Text type="secondary">本月真实数据</Text>}>
+          <Space orientation="vertical" size={12} style={{ width: "100%" }}>
+            {pipelineStages.map((stage, index) => (
+              <div
+                key={stage.title}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto auto",
+                  alignItems: "center",
+                  gap: 8,
+                  minHeight: 42,
+                }}
+              >
+                <Button type="text" onClick={() => navigate(stage.path)} style={{ textAlign: "left" }}>
+                  {stage.title}
+                </Button>
+                <Tag
+                  aria-label={`${stage.title}数量 ${stage.count}`}
+                  color={stage.count > 0 ? "blue" : "default"}
+                >
+                  {stage.count}
+                </Tag>
+                {index < pipelineStages.length - 1 ? (
+                  <ArrowRightOutlined style={{ color: "#8c8c8c" }} />
+                ) : (
+                  <CheckCircleOutlined style={{ color: "#52c41a" }} />
+                )}
+              </div>
+            ))}
+          </Space>
+        </Card>
+      </Col>
+    </Row>
+  );
+}
 
 /**
  * 统计卡片组件
@@ -179,13 +386,15 @@ function SummaryCards({ data, loading }) {
             }
             value={healthSummary?.average_score || 0}
             suffix="分"
-            valueStyle={{
-              color:
-                (healthSummary?.average_score || 0) >= 70
-                  ? "#52c41a"
-                  : (healthSummary?.average_score || 0) >= 50
-                  ? "#faad14"
-                  : "#f5222d",
+            styles={{
+              content: {
+                color:
+                  (healthSummary?.average_score || 0) >= 70
+                    ? "#52c41a"
+                    : (healthSummary?.average_score || 0) >= 50
+                    ? "#faad14"
+                    : "#f5222d",
+              },
             }}
           />
           {healthSummary?.by_level?.critical?.count > 0 && (
@@ -234,7 +443,8 @@ function SummaryCards({ data, loading }) {
  * 跟进提醒列表
  */
 function FollowUpList() {
-  const { data, loading, error, refetch } = useFollowUpReminders();
+  const navigate = useNavigate();
+  const { data, loading, error } = useFollowUpReminders();
 
   const columns = [
     {
@@ -242,7 +452,7 @@ function FollowUpList() {
       dataIndex: "entity_name",
       key: "entity_name",
       render: (text, record) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong>{text}</Text>
           <Text type="secondary" style={{ fontSize: 12 }}>
             {record.entity_type === "lead" ? "线索" : "商机"} · {record.entity_code}
@@ -278,7 +488,7 @@ function FollowUpList() {
       dataIndex: "next_follow_date",
       key: "next_follow_date",
       render: (date, record) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text>{date}</Text>
           <Text type={record.days_overdue > 0 ? "danger" : "secondary"} style={{ fontSize: 12 }}>
             {record.days_overdue > 0
@@ -300,6 +510,35 @@ function FollowUpList() {
           <Text>{text}</Text>
         </Tooltip>
       ),
+    },
+    {
+      title: "动作",
+      key: "action",
+      render: (_, record) => {
+        const actionLabel = record.entity_type === "lead" ? "查看线索" : "查看商机";
+        const actionName = `${actionLabel} ${record.entity_name || ""}`.trim();
+        const assessmentName = `技术评估 ${record.entity_name || ""}`.trim();
+        return (
+          <Space size={4}>
+            <Button
+              type="link"
+              size="small"
+              aria-label={actionName}
+              onClick={() => navigate(buildFollowUpTargetPath(record))}
+            >
+              {actionLabel}
+            </Button>
+            <Button
+              type="link"
+              size="small"
+              aria-label={assessmentName}
+              onClick={() => navigate(buildFollowUpAssessmentPath(record))}
+            >
+              技术评估
+            </Button>
+          </Space>
+        );
+      },
     },
   ];
 
@@ -324,7 +563,8 @@ function FollowUpList() {
  * 催款优先级列表
  */
 function CollectionList() {
-  const { data, loading, error, refetch } = useCollectionPriority();
+  const navigate = useNavigate();
+  const { data, loading, error } = useCollectionPriority();
 
   const columns = [
     {
@@ -332,7 +572,7 @@ function CollectionList() {
       dataIndex: "customer_name",
       key: "customer_name",
       render: (text, record) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong>{text}</Text>
           <Text type="secondary" style={{ fontSize: 12 }}>
             {record.contract_code}
@@ -399,6 +639,19 @@ function CollectionList() {
         </Tooltip>
       ),
     },
+    {
+      title: "动作",
+      key: "action",
+      render: (_, record) => (
+        <Button
+          type="link"
+          size="small"
+          onClick={() => navigate(buildCollectionReceivablePath(record))}
+        >
+          查看应收
+        </Button>
+      ),
+    },
   ];
 
   if (error) {
@@ -422,7 +675,8 @@ function CollectionList() {
  * 商机健康度列表
  */
 function HealthList() {
-  const { data, loading, error, refetch } = useOpportunityHealthList();
+  const navigate = useNavigate();
+  const { data, loading, error } = useOpportunityHealthList();
 
   const columns = [
     {
@@ -430,7 +684,7 @@ function HealthList() {
       dataIndex: "opportunity_name",
       key: "opportunity_name",
       render: (text, record) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong>{text}</Text>
           <Text type="secondary" style={{ fontSize: 12 }}>
             {record.opportunity_code} · {record.customer_name}
@@ -452,7 +706,7 @@ function HealthList() {
           <Progress
             type="circle"
             percent={score}
-            width={40}
+            size={40}
             strokeColor={healthColors[record.health_level]}
             format={(p) => `${p}`}
           />
@@ -475,7 +729,7 @@ function HealthList() {
       key: "key_issues",
       render: (issues) =>
         issues && issues.length > 0 ? (
-          <Space direction="vertical" size={0}>
+          <Space orientation="vertical" size={0}>
             {issues.slice(0, 2).map((issue, idx) => (
               <Text key={idx} type="warning" style={{ fontSize: 12 }}>
                 <WarningOutlined /> {issue}
@@ -500,6 +754,20 @@ function HealthList() {
           </Tooltip>
         ) : null,
     },
+    {
+      title: "动作",
+      key: "action",
+      render: (_, record) => (
+        <Button
+          type="link"
+          size="small"
+          aria-label={`查看商机 ${record.opportunity_name || ""}`.trim()}
+          onClick={() => navigate(buildOpportunityHealthPath(record))}
+        >
+          查看商机
+        </Button>
+      ),
+    },
   ];
 
   if (error) {
@@ -523,7 +791,8 @@ function HealthList() {
  * 合同里程碑列表
  */
 function MilestoneList() {
-  const { data, loading, error, refetch } = useContractMilestones();
+  const navigate = useNavigate();
+  const { data, loading, error } = useContractMilestones();
 
   const columns = [
     {
@@ -531,7 +800,7 @@ function MilestoneList() {
       dataIndex: "contract_name",
       key: "contract_name",
       render: (text, record) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong>{text}</Text>
           <Text type="secondary" style={{ fontSize: 12 }}>
             {record.contract_code} · {record.customer_name}
@@ -564,7 +833,7 @@ function MilestoneList() {
       dataIndex: "due_date",
       key: "due_date",
       render: (date, record) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text>{date}</Text>
           <Text
             type={record.days_until < 0 ? "danger" : record.days_until <= 7 ? "warning" : "secondary"}
@@ -601,6 +870,20 @@ function MilestoneList() {
         <Tooltip title={text}>
           <Text>{text}</Text>
         </Tooltip>
+      ),
+    },
+    {
+      title: "动作",
+      key: "action",
+      render: (_, record) => (
+        <Button
+          type="link"
+          size="small"
+          aria-label={`查看合同 ${record.contract_name || ""}`.trim()}
+          onClick={() => navigate(buildContractMilestonePath(record))}
+        >
+          查看合同
+        </Button>
       ),
     },
   ];
@@ -704,6 +987,10 @@ export default function SalesWorkstation() {
         <Button icon={<ReloadOutlined />} onClick={refetch}>
           刷新
         </Button>
+      </div>
+
+      <div style={{ marginBottom: 24 }}>
+        <ActionBoard data={summaryData} />
       </div>
 
       {/* 统计卡片 */}

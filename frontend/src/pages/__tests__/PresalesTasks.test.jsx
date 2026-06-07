@@ -1,539 +1,145 @@
-describe.skip("/**
- * PresalesTasks 组件测试
- * 测试覆盖：渲染、数据加载、交互、错误、权限
- */
-
-describe.skip("
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-describe.skip("
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-describe.skip("
 import { MemoryRouter } from 'react-router-dom';
-describe.skip("
 import PresalesTasks from '../PresalesTasks';
-describe.skip("
 import { presaleApi } from '../../services/api';
 
-// Mock dependencies
 vi.mock('../../services/api', () => ({
-  default: {
-    get: vi.fn().mockResolvedValue({data: { items: [] }}),
-    post: vi.fn().mockResolvedValue({ data: { success: true } }),
-    put: vi.fn().mockResolvedValue({ data: { success: true } }),
-    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
-    defaults: { baseURL: '/api' },
+  presaleApi: {
+    tickets: {
+      list: vi.fn(),
+      accept: vi.fn(),
+      updateProgress: vi.fn(),
+      complete: vi.fn(),
+    },
   },
-    presaleApi: {
-      delete: vi.fn().mockResolvedValue({data: { items: [] }}),
-      tickets: {
-        list: vi.fn().mockResolvedValue({data: { items: [] }}),
-        get: vi.fn().mockResolvedValue({data: { items: [] }}),
-        create: vi.fn().mockResolvedValue({data: { items: [] }}),
-        update: vi.fn().mockResolvedValue({data: { items: [] }}),
-        accept: vi.fn().mockResolvedValue({data: { items: [] }}),
-        updateProgress: vi.fn().mockResolvedValue({data: { items: [] }}),
-        complete: vi.fn().mockResolvedValue({data: { items: [] }}),
-        rate: vi.fn().mockResolvedValue({data: { items: [] }}),
-        getBoard: vi.fn().mockResolvedValue({data: { items: [] }}),
-      },
-      solutions: {
-        list: vi.fn().mockResolvedValue({data: { items: [] }}),
-        get: vi.fn().mockResolvedValue({data: { items: [] }}),
-        create: vi.fn().mockResolvedValue({data: { items: [] }}),
-        update: vi.fn().mockResolvedValue({data: { items: [] }}),
-        review: vi.fn().mockResolvedValue({data: { items: [] }}),
-        getVersions: vi.fn().mockResolvedValue({data: { items: [] }}),
-        getCost: vi.fn().mockResolvedValue({data: { items: [] }}),
-      },
-      templates: {
-        list: vi.fn().mockResolvedValue({data: { items: [] }}),
-        get: vi.fn().mockResolvedValue({data: { items: [] }}),
-        create: vi.fn().mockResolvedValue({data: { items: [] }}),
-        update: vi.fn().mockResolvedValue({data: { items: [] }}),
-      },
-      tenders: {
-        list: vi.fn().mockResolvedValue({data: { items: [] }}),
-        get: vi.fn().mockResolvedValue({data: { items: [] }}),
-        create: vi.fn().mockResolvedValue({data: { items: [] }}),
-        update: vi.fn().mockResolvedValue({data: { items: [] }}),
-        updateResult: vi.fn().mockResolvedValue({data: { items: [] }}),
-      },
-      statistics: {
-        workload: vi.fn().mockResolvedValue({data: { items: [] }}),
-        responseTime: vi.fn().mockResolvedValue({data: { items: [] }}),
-        conversion: vi.fn().mockResolvedValue({data: { items: [] }}),
-        performance: vi.fn().mockResolvedValue({data: { items: [] }}),
-      },
-    }
 }));
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
-    get: (_, tag) => ({ children, ...props }) => {
-      const validProps = ['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'];
-      const filtered = props && Object.entries(props).length > 0 
-        ? Object.fromEntries(Object.entries(props).filter(([k]) => !validProps.includes(k))) 
-        : {};
+    get: (_, tag) => {
       const Tag = typeof tag === 'string' ? tag : 'div';
-      return <Tag {...filtered}>{children}</Tag>;
-    }
+      return ({ children, ...props }) => {
+        const motionProps = new Set([
+          'initial',
+          'animate',
+          'exit',
+          'variants',
+          'transition',
+          'whileHover',
+          'whileTap',
+          'layout',
+        ]);
+        const domProps = Object.fromEntries(
+          Object.entries(props).filter(([key]) => !motionProps.has(key)),
+        );
+        return <Tag {...domProps}>{children}</Tag>;
+      };
+    },
   }),
   AnimatePresence: ({ children }) => children,
-  useAnimation: () => ({ start: vi.fn(), stop: vi.fn() }),
-  useInView: () => true,
 }));
 
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
+const ticketItems = [
+  {
+    id: 11,
+    title: '技术方案编写',
+    ticket_type: 'SOLUTION_DESIGN',
+    status: 'PENDING',
+    urgency: 'HIGH',
+    customer_name: '华东制造',
+    applicant_name: '宋魁',
+    deadline: '2026-06-30',
+    description: '输出非标自动化方案',
+    estimated_hours: 12,
+    actual_hours: 0,
+  },
+  {
+    id: 12,
+    title: '投标成本核算',
+    ticket_type: 'COST_ESTIMATE',
+    status: 'IN_PROGRESS',
+    urgency: 'MEDIUM',
+    customer_name: '苏州装备',
+    applicant_name: '郑琴',
+    deadline: '2026-07-05',
+    progress: 40,
+    description: '核算关键部件成本',
+    estimated_hours: 8,
+    actual_hours: 3,
+  },
+];
+
+function renderPage(initialEntry = '/presales-tasks') {
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <PresalesTasks />
+    </MemoryRouter>,
+  );
+}
 
 describe('PresalesTasks', () => {
-  const mockTasksData = {
-    items: [
-      {
-        id: 1,
-        taskName: '客户需求调研',
-        projectName: '智能制造系统',
-        assignee: '张三',
-        status: 'in_progress',
-        priority: 'high',
-        deadline: '2024-02-28',
-        completionRate: 60
-      },
-      {
-        id: 2,
-        taskName: '技术方案编写',
-        projectName: 'ERP升级',
-        assignee: '李四',
-        status: 'pending',
-        priority: 'medium',
-        deadline: '2024-03-15',
-        completionRate: 0
-      }
-    ],
-    total: 2,
-    page: 1,
-    pageSize: 10
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
-    presaleApi.tickets.list.mockResolvedValue({ data: mockTasksData });
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
+    presaleApi.tickets.list.mockResolvedValue({
+      data: { items: ticketItems, total: ticketItems.length },
+    });
+    presaleApi.tickets.accept.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  // 1. 组件渲染测试
-  describe('Component Rendering', () => {
-    it('should render presales tasks page with title', async () => {
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
+  it('renders technical task cards from presale tickets', async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText(/售前任务|Presales Tasks/i)).toBeInTheDocument();
-      });
+    expect(screen.getByText('技术任务中心')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('技术方案编写')).toBeInTheDocument();
+    });
+    expect(screen.getByText('华东制造')).toBeInTheDocument();
+    expect(screen.getByText('销售：宋魁')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('搜索任务...')).toHaveValue('');
+    expect(presaleApi.tickets.list).toHaveBeenCalledWith({ page: 1, page_size: 100 });
+  });
+
+  it('requests backend status filters using current ticket API parameters', async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.list).toHaveBeenCalledTimes(1);
     });
 
-    it('should render task list table', async () => {
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-        expect(screen.getByText('客户需求调研')).toBeInTheDocument();
-      });
+    fireEvent.change(screen.getByRole('combobox'), {
+      target: { value: 'in_progress' },
     });
 
-    it('should render action buttons', async () => {
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const buttons = screen.getAllByRole('button');
-        expect(buttons.length).toBeGreaterThan(0);
+    await waitFor(() => {
+      expect(presaleApi.tickets.list).toHaveBeenLastCalledWith({
+        page: 1,
+        page_size: 100,
+        status: 'ACCEPTED,IN_PROGRESS,PROCESSING',
       });
     });
   });
 
-  // 2. 数据加载测试
-  describe('Data Loading', () => {
-    it('should load tasks on mount', async () => {
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
+  it('opens details and accepts the selected ticket id', async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(presaleApi.tickets.list).toHaveBeenCalledWith(
-          expect.stringContaining('/presales/tasks')
-        );
-      });
+    await waitFor(() => {
+      expect(screen.getByText('技术方案编写')).toBeInTheDocument();
     });
 
-    it('should display loading state', () => {
-      presaleApi.tickets.list.mockImplementation(() => new Promise(() => {}));
-      
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
+    fireEvent.click(screen.getByText('技术方案编写'));
+    expect(screen.getByText('任务详情')).toBeInTheDocument();
 
-      expect(screen.getByText(/加载中|Loading/i)).toBeInTheDocument();
-    });
+    fireEvent.click(screen.getByRole('button', { name: /接单处理/ }));
 
-    it('should handle empty task list', async () => {
-      presaleApi.tickets.list.mockResolvedValue({ data: { items: [], total: 0 } });
-
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/暂无数据|No Data/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should refresh data when refresh button clicked', async () => {
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(presaleApi.tickets.list).toHaveBeenCalledTimes(1);
-      });
-
-      const refreshButton = screen.getByRole('button', { name: /刷新|Refresh/i });
-      fireEvent.click(refreshButton);
-
-      await waitFor(() => {
-        expect(presaleApi.tickets.list).toHaveBeenCalledTimes(2);
-      });
-    });
-  });
-
-  // 3. 交互测试
-  describe('User Interactions', () => {
-    it('should open create task modal', async () => {
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
-
-      const createButton = screen.getByRole('button', { name: /新建任务|Create Task/i });
-      fireEvent.click(createButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/创建售前任务|Create Presales Task/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should filter tasks by status', async () => {
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
-
-      const statusFilter = screen.getByRole('combobox', { name: /状态|Status/i });
-      fireEvent.change(statusFilter, { target: { value: 'in_progress' } });
-
-      await waitFor(() => {
-        expect(presaleApi.tickets.list).toHaveBeenCalledWith(
-          expect.stringContaining('status=in_progress')
-        );
-      });
-    });
-
-    it('should filter tasks by priority', async () => {
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
-
-      const priorityFilter = screen.getByRole('combobox', { name: /优先级|Priority/i });
-      fireEvent.change(priorityFilter, { target: { value: 'high' } });
-
-      await waitFor(() => {
-        expect(presaleApi.tickets.list).toHaveBeenCalledWith(
-          expect.stringContaining('priority=high')
-        );
-      });
-    });
-
-    it('should search tasks by keyword', async () => {
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
-
-      const searchInput = screen.getByPlaceholderText(/搜索任务|Search tasks/i);
-      fireEvent.change(searchInput, { target: { value: '需求调研' } });
-
-      await waitFor(() => {
-        expect(presaleApi.tickets.list).toHaveBeenCalledWith(
-          expect.stringContaining('keyword=需求调研')
-        );
-      });
-    });
-
-    it('should update task status', async () => {
-      presaleApi.tickets.updateProgress.mockResolvedValue({ data: { success: true } });
-
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('客户需求调研')).toBeInTheDocument();
-      });
-
-      const statusButton = screen.getAllByRole('button', { name: /更新状态|Update Status/i })[0];
-      fireEvent.click(statusButton);
-
-      await waitFor(() => {
-        expect(presaleApi.tickets.updateProgress).toHaveBeenCalledWith(
-          expect.stringContaining('/presales/tasks/1'),
-          expect.any(Object)
-        );
-      });
-    });
-
-    it('should delete task', async () => {
-      presaleApi.delete.mockResolvedValue({ data: { success: true } });
-      window.confirm = vi.fn(() => true);
-
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('客户需求调研')).toBeInTheDocument();
-      });
-
-      const deleteButton = screen.getAllByRole('button', { name: /删除|Delete/i })[0];
-      fireEvent.click(deleteButton);
-
-      await waitFor(() => {
-        expect(presaleApi.delete).toHaveBeenCalledWith('/presales/tasks/1');
-      });
-    });
-
-    it('should assign task to user', async () => {
-      presaleApi.tickets.updateProgress.mockResolvedValue({ data: { success: true } });
-
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('客户需求调研')).toBeInTheDocument();
-      });
-
-      const assignButton = screen.getAllByRole('button', { name: /分配|Assign/i })[0];
-      fireEvent.click(assignButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/分配任务|Assign Task/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should handle pagination', async () => {
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
-
-      const nextPageButton = screen.getByRole('button', { name: /下一页|Next/i });
-      fireEvent.click(nextPageButton);
-
-      await waitFor(() => {
-        expect(presaleApi.tickets.list).toHaveBeenCalledWith(
-          expect.stringContaining('page=2')
-        );
-      });
-    });
-  });
-
-  // 4. 错误处理测试
-  describe('Error Handling', () => {
-    it('should display error message on load failure', async () => {
-      presaleApi.tickets.list.mockRejectedValue(new Error('Network Error'));
-
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/加载失败|Load Failed/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should handle create task failure', async () => {
-      presaleApi.tickets.accept.mockRejectedValue(new Error('Create Failed'));
-
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
-
-      const createButton = screen.getByRole('button', { name: /新建任务|Create Task/i });
-      fireEvent.click(createButton);
-
-      await waitFor(() => {
-        const submitButton = screen.getByRole('button', { name: /提交|Submit/i });
-        fireEvent.click(submitButton);
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText(/创建失败|Create Failed/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should handle update task failure', async () => {
-      presaleApi.tickets.updateProgress.mockRejectedValue(new Error('Update Failed'));
-
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('客户需求调研')).toBeInTheDocument();
-      });
-
-      const statusButton = screen.getAllByRole('button', { name: /更新状态|Update Status/i })[0];
-      fireEvent.click(statusButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/更新失败|Update Failed/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should handle delete task failure', async () => {
-      presaleApi.delete.mockRejectedValue(new Error('Delete Failed'));
-      window.confirm = vi.fn(() => true);
-
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('客户需求调研')).toBeInTheDocument();
-      });
-
-      const deleteButton = screen.getAllByRole('button', { name: /删除|Delete/i })[0];
-      fireEvent.click(deleteButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/删除失败|Delete Failed/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  // 5. 权限测试
-  describe('Permission Control', () => {
-    it('should show create button for authorized users', async () => {
-      localStorage.setItem('userPermissions', JSON.stringify(['presales:create']));
-
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /新建任务|Create Task/i })).toBeInTheDocument();
-      });
-    });
-
-    it('should hide create button for unauthorized users', async () => {
-      localStorage.setItem('userPermissions', JSON.stringify([]));
-
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.queryByRole('button', { name: /新建任务|Create Task/i })).not.toBeInTheDocument();
-      });
-    });
-
-    it('should show delete button for authorized users', async () => {
-      localStorage.setItem('userPermissions', JSON.stringify(['presales:delete']));
-
-      render(
-        <MemoryRouter>
-          <PresalesTasks />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getAllByRole('button', { name: /删除|Delete/i }).length).toBeGreaterThan(0);
-      });
+    await waitFor(() => {
+      expect(presaleApi.tickets.accept).toHaveBeenCalledWith(11, {});
     });
   });
 });

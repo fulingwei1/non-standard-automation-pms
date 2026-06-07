@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.common.dashboard.base import BaseDashboardEndpoint
 from app.models.enums import LeadOutcomeEnum
 from app.models.project import Project
+from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.presales import PresalesDashboardData
 
@@ -40,17 +41,15 @@ class PresaleAnalyticsDashboardEndpoint(BaseDashboardEndpoint):
             else 0
         )
 
-        # 资源浪费统计
-        from app.models.work_log import WorkLog
-
-        total_hours = 0
-        wasted_hours = 0
+        # 资源浪费统计：工时实际落在 Timesheet，WorkLog 只保留日报文本。
+        total_hours = 0.0
+        wasted_hours = 0.0
         loss_reasons = {}
 
         for project in ytd_projects:
-            hours = (
-                db.query(func.sum(WorkLog.work_hours))
-                .filter(WorkLog.project_id == project.id)
+            hours = float(
+                db.query(func.sum(Timesheet.hours))
+                .filter(Timesheet.project_id == project.id)
                 .scalar()
                 or 0
             )

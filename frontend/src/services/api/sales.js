@@ -176,6 +176,7 @@ export const salesTemplateApi = {
 export const contractApi = {
   list: (params) => api.get("/sales/contracts", { params }),
   get: (id) => api.get(`/sales/contracts/${id}`),
+  getPaymentPlans: (id) => api.get(`/sales/contracts/${id}/payment-plans`),
   create: (data) => api.post("/sales/contracts", data),
   update: (id, data) => api.put(`/sales/contracts/${id}`, data),
   sign: (id, data) => api.post(`/sales/contracts/${id}/sign`, data),
@@ -237,7 +238,7 @@ export const receivableApi = {
 };
 
 export const paymentPlanApi = {
-  list: (params) => api.get("/sales/payment-plans", { params }),
+  list: (params) => api.get("/sales/payments/plans", { params }),
 };
 
 export const disputeApi = {
@@ -320,7 +321,7 @@ export const salesApi = {
       page_size: limit || 10,
       ...rest,
     };
-    return api.get("/sales/payment-plans", { params: query });
+    return api.get("/sales/payments/plans", { params: query });
   },
 };
 
