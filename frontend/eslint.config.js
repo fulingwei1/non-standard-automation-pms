@@ -63,6 +63,7 @@ export default defineConfig([
           forbid: ['>', '}'],
         },
       ],
+      'react/jsx-uses-vars': 'error',
       'react/jsx-closing-tag-location': 'off',
       'react/jsx-closing-bracket-location': 'off',
       'react/jsx-indent': 'off',
