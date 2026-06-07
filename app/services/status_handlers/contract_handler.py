@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlalchemy.orm import Session
 
 from app.models.project import Customer, Project, ProjectStatusLog
-from app.models.sales import Contract
+from app.models.sales import Contract, Opportunity, QuoteVersion
 from app.utils.project_utils import generate_project_code, init_project_stages
 
 if TYPE_CHECKING:
@@ -44,6 +44,19 @@ class ContractStatusHandler:
         if not contract:
             return None
 
+        customer = self.db.query(Customer).filter(Customer.id == contract.customer_id).first()
+        quote_version = None
+        if contract.quote_id:
+            quote_version = (
+                self.db.query(QuoteVersion).filter(QuoteVersion.id == contract.quote_id).first()
+            )
+
+        opportunity = None
+        if contract.opportunity_id:
+            opportunity = (
+                self.db.query(Opportunity).filter(Opportunity.id == contract.opportunity_id).first()
+            )
+
         # 如果项目已存在，更新项目信息
         if contract.project_id:
             project = self.db.query(Project).filter(Project.id == contract.project_id).first()
@@ -56,6 +69,15 @@ class ContractStatusHandler:
                 project.status = "ST08"
                 project.contract_date = contract.signing_date
                 project.contract_amount = contract.contract_amount or project.contract_amount
+                if quote_version and quote_version.cost_total is not None:
+                    project.budget_amount = quote_version.cost_total
+                if opportunity:
+                    project.lead_id = project.lead_id or opportunity.lead_id
+                    project.opportunity_id = project.opportunity_id or opportunity.id
+                    project.project_type = project.project_type or opportunity.project_type
+                    project.product_category = project.product_category or opportunity.equipment_type
+                if customer:
+                    project.industry = project.industry or customer.industry
                 # 同步客户合同编号
                 if hasattr(contract, "customer_contract_no") and contract.customer_contract_no:
                     project.customer_contract_no = contract.customer_contract_no
@@ -84,9 +106,6 @@ class ContractStatusHandler:
         # 生成项目编码
         project_code = generate_project_code(self.db)
 
-        # 获取客户信息
-        customer = self.db.query(Customer).filter(Customer.id == contract.customer_id).first()
-
         # 创建项目
         fallback_name = getattr(contract, "contract_name", None)
         if not fallback_name:
@@ -98,15 +117,7 @@ class ContractStatusHandler:
         planned_end_date = getattr(contract, "delivery_deadline", None)
 
         # 获取线索ID（通过商机关联）
-        lead_id = None
-        if contract.opportunity_id:
-            from app.models.sales import Opportunity
-
-            opportunity = (
-                self.db.query(Opportunity).filter(Opportunity.id == contract.opportunity_id).first()
-            )
-            if opportunity and hasattr(opportunity, "lead_id"):
-                lead_id = opportunity.lead_id
+        lead_id = opportunity.lead_id if opportunity else None
 
         project = Project(
             project_code=project_code,
@@ -115,8 +126,16 @@ class ContractStatusHandler:
             contract_no=contract.contract_code,
             customer_contract_no=getattr(contract, "customer_contract_no", None),
             contract_amount=contract.contract_amount or 0,
+            budget_amount=(
+                quote_version.cost_total
+                if quote_version and quote_version.cost_total is not None
+                else 0
+            ),
             contract_date=contract.signing_date,
             planned_end_date=planned_end_date,
+            project_type=opportunity.project_type if opportunity else None,
+            product_category=opportunity.equipment_type if opportunity else None,
+            industry=customer.industry if customer else None,
             stage="S3",
             status="ST08",
             health="H1",

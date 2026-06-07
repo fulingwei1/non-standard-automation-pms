@@ -26,16 +26,22 @@ class TestContractStatusHandler:
         contract = MagicMock()
         contract.id = 1
         contract.project_id = 10
+        contract.customer_id = 5
+        contract.quote_id = None
+        contract.opportunity_id = None
         contract.signed_date = datetime(2024, 1, 1)
         contract.contract_amount = 100000
         contract.customer_contract_no = "CC001"
+
+        customer = MagicMock()
+        customer.industry = "电子制造"
 
         project = MagicMock()
         project.id = 10
         project.stage = "S2"
         project.status = "ST05"
 
-        db.query.return_value.filter.return_value.first.side_effect = [contract, project]
+        db.query.return_value.filter.return_value.first.side_effect = [contract, customer, project]
         db.commit = MagicMock()
 
         result = handler.handle_contract_signed(contract_id=1)
@@ -48,6 +54,9 @@ class TestContractStatusHandler:
         contract = MagicMock()
         contract.id = 1
         contract.project_id = None
+        contract.customer_id = 5
+        contract.quote_id = None
+        contract.opportunity_id = None
         db.query.return_value.filter.return_value.first.return_value = contract
 
         result = handler.handle_contract_signed(contract_id=1, auto_create_project=False)
@@ -69,6 +78,7 @@ class TestContractStatusHandler:
         contract.signed_date = datetime(2024, 2, 1)
         contract.contract_name = "测试合同"
         contract.delivery_deadline = datetime(2024, 12, 31)
+        contract.quote_id = None
         contract.opportunity_id = None
         contract.customer_contract_no = "CC002"
 
@@ -76,6 +86,7 @@ class TestContractStatusHandler:
         customer.customer_name = "客户X"
         customer.contact_person = "张三"
         customer.contact_phone = "13800138000"
+        customer.industry = "电子制造"
 
         db.query.return_value.filter.return_value.first.side_effect = [contract, customer]
         db.add = MagicMock()
