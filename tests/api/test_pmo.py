@@ -11,6 +11,10 @@ from fastapi.testclient import TestClient
 
 from app.core.config import settings
 from app.models.pmo import PmoProjectPhase
+from app.models.presale import PresaleSolution
+from app.models.project import Customer, Project
+from app.models.sales import Opportunity
+from app.models.user import User
 
 
 def _auth_headers(token: str) -> dict:
@@ -215,6 +219,98 @@ class TestInitiations:
 
         _assert_status(response)
         assert response.json()["id"] == initiation["id"]
+
+    def test_approve_initiation_links_presale_solution_to_project(
+        self, client: TestClient, db_session, admin_token: str
+    ):
+        """带售前技术方案的立项审批后，项目和方案要互相关联。"""
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-PMO-{unique}",
+            customer_name=f"售前方案客户-{unique}",
+            contact_person="王工",
+            contact_phone="13800138000",
+            created_by=admin_user.id,
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPP-PMO-{unique}",
+            customer_id=customer.id,
+            opp_name=f"售前方案商机-{unique}",
+            stage="PROPOSAL",
+            probability=80,
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add(opportunity)
+        db_session.flush()
+
+        solution = PresaleSolution(
+            solution_no=f"SOL-PMO-{unique}",
+            name=f"售前方案转项目-{unique}",
+            solution_type="CUSTOM",
+            customer_id=customer.id,
+            opportunity_id=opportunity.id,
+            suggested_price=160000,
+            estimated_cost=120000,
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        db_session.add(solution)
+        db_session.commit()
+
+        created = client.post(
+            f"{prefix}/pmo/initiations",
+            json={
+                "project_name": f"售前方案转项目-{unique}",
+                "project_type": "NEW",
+                "customer_name": customer.customer_name,
+                "technical_solution_id": solution.id,
+                "requirement_summary": "根据已批准售前技术方案发起立项",
+            },
+            headers=headers,
+        )
+        _assert_status(created, 201)
+        initiation_id = created.json()["id"]
+
+        submitted = client.put(
+            f"{prefix}/pmo/initiations/{initiation_id}/submit",
+            headers=headers,
+        )
+        _assert_status(submitted)
+
+        approved = client.put(
+            f"{prefix}/pmo/initiations/{initiation_id}/approve",
+            json={"review_result": "同意立项", "approved_pm_id": admin_user.id},
+            headers=headers,
+        )
+        _assert_status(approved)
+        project_id = approved.json()["data"]["project_id"]
+
+        db_session.expire_all()
+        project = db_session.query(Project).filter(Project.id == project_id).first()
+        linked_solution = (
+            db_session.query(PresaleSolution)
+            .filter(PresaleSolution.id == solution.id)
+            .first()
+        )
+
+        assert project is not None
+        assert project.customer_id == customer.id
+        assert project.customer_name == customer.customer_name
+        assert project.customer_contact == "王工"
+        assert project.customer_phone == "13800138000"
+        assert project.opportunity_id == opportunity.id
+        assert float(project.contract_amount) == 160000.0
+        assert linked_solution.project_id == project.id
 
 
 class TestProjectPhases:

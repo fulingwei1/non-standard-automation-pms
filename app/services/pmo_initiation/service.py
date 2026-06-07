@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.pmo import PmoProjectInitiation
+from app.models.presale import PresaleSolution
 from app.models.project import Customer, Project
 from app.models.sales import Contract, Opportunity
 from app.models.user import User
@@ -374,11 +375,13 @@ class PmoInitiationService:
             project_code = f"PJ{today.strftime('%y%m%d')}{initiation.id:04d}"
 
         contract = self._find_contract_for_initiation(initiation)
+        presale_solution = self._find_solution_for_initiation(initiation)
         if contract and contract.project_id:
             existing_project = (
                 self.db.query(Project).filter(Project.id == contract.project_id).first()
             )
             if existing_project:
+                self._bind_presale_solution_to_project(presale_solution, existing_project.id)
                 self._ensure_payment_plans_for_contract(contract)
                 return existing_project
 
@@ -390,6 +393,13 @@ class PmoInitiationService:
                 .first()
             )
 
+        if not customer and presale_solution and getattr(presale_solution, "customer_id", None):
+            customer = (
+                self.db.query(Customer)
+                .filter(Customer.id == presale_solution.customer_id)
+                .first()
+            )
+
         if not customer:
             customer = (
                 self.db.query(Customer)
@@ -398,17 +408,25 @@ class PmoInitiationService:
             )
 
         customer_id = customer.id if customer else None
+        solution_amount = None
+        if presale_solution:
+            solution_amount = (
+                getattr(presale_solution, "suggested_price", None)
+                or getattr(presale_solution, "estimated_cost", None)
+            )
         contract_amount = (
             getattr(contract, "total_amount", None)
             if contract
             else None
-        ) or initiation.contract_amount or Decimal("0")
+        ) or initiation.contract_amount or solution_amount or Decimal("0")
         contract_no = (
             getattr(contract, "contract_code", None)
             if contract
             else None
         ) or initiation.contract_no
         opportunity_id = getattr(contract, "opportunity_id", None) if contract else None
+        if not opportunity_id and presale_solution:
+            opportunity_id = getattr(presale_solution, "opportunity_id", None)
         lead_id = None
         if opportunity_id:
             opportunity = (
@@ -462,6 +480,8 @@ class PmoInitiationService:
         self.db.add(project)
         self.db.flush()
 
+        self._bind_presale_solution_to_project(presale_solution, project.id)
+
         if contract:
             contract.project_id = project.id
             self.db.add(contract)
@@ -492,6 +512,30 @@ class PmoInitiationService:
             )
             .first()
         )
+
+    def _find_solution_for_initiation(
+        self, initiation: PmoProjectInitiation
+    ) -> Optional[PresaleSolution]:
+        """按立项申请中的售前技术方案ID回找方案。"""
+        solution_id = getattr(initiation, "technical_solution_id", None)
+        if not isinstance(solution_id, int) or solution_id <= 0:
+            return None
+
+        return (
+            self.db.query(PresaleSolution)
+            .filter(PresaleSolution.id == solution_id)
+            .first()
+        )
+
+    def _bind_presale_solution_to_project(
+        self, presale_solution: Optional[PresaleSolution], project_id: Optional[int]
+    ) -> None:
+        """审批立项创建项目后，把售前方案反向绑定到项目。"""
+        if not presale_solution or not project_id:
+            return
+
+        if not getattr(presale_solution, "project_id", None):
+            presale_solution.project_id = project_id
 
     def _find_active_initiation_by_contract_no(
         self, contract_no: str, exclude_id: Optional[int] = None

@@ -19,6 +19,7 @@ from unittest.mock import MagicMock, Mock, call, patch
 from sqlalchemy.orm import Session
 
 from app.models.pmo.initiation_phase import PmoProjectInitiation
+from app.models.presale import PresaleSolution
 from app.models.project import Customer, Project
 from app.models.sales import Contract, Opportunity
 from app.models.user import User
@@ -817,6 +818,95 @@ class TestPmoInitiationServiceCreateProject(unittest.TestCase):
         added_project = self.db.add.call_args_list[-1][0][0]
         self.assertEqual(added_project.project_code, "PJ2602210010")
         self.assertEqual(added_project.pm_name, "pm7")  # 使用username
+
+    @patch("app.utils.project_utils.init_project_stages")
+    @patch("app.services.pmo_initiation.service.date")
+    def test_create_project_links_presale_solution_context(self, mock_date, mock_init_stages):
+        """审批带技术方案的立项时，项目和售前方案要互相关联"""
+        mock_date.today.return_value = date(2026, 2, 21)
+
+        mock_initiation = MagicMock(
+            id=12,
+            project_name="售前方案转项目",
+            customer_name="方案客户",
+            contract_no=None,
+            contract_amount=None,
+            required_start_date=date(2026, 5, 1),
+            required_end_date=date(2026, 8, 31),
+            project_type="NEW",
+            technical_solution_id=55,
+        )
+        mock_solution = MagicMock(
+            id=55,
+            customer_id=20,
+            opportunity_id=9001,
+            project_id=None,
+            suggested_price=Decimal("160000"),
+            estimated_cost=Decimal("120000"),
+        )
+        mock_customer = MagicMock(
+            id=20,
+            customer_name="方案客户",
+            contact_person="王工",
+            contact_phone="13800138000",
+        )
+        mock_pm = MagicMock(id=7, real_name="项目经理", username="pm7")
+        mock_opportunity = MagicMock(id=9001, lead_id=8001)
+
+        mock_project_query = MagicMock()
+        mock_project_query.filter.return_value = mock_project_query
+        mock_project_query.first.return_value = None
+
+        mock_solution_query = MagicMock()
+        mock_solution_query.filter.return_value = mock_solution_query
+        mock_solution_query.first.return_value = mock_solution
+
+        mock_contract_query = MagicMock()
+        mock_contract_query.filter.return_value = mock_contract_query
+        mock_contract_query.first.return_value = None
+
+        mock_customer_query = MagicMock()
+        mock_customer_query.filter.return_value = mock_customer_query
+        mock_customer_query.first.return_value = mock_customer
+
+        mock_pm_query = MagicMock()
+        mock_pm_query.filter.return_value = mock_pm_query
+        mock_pm_query.first.return_value = mock_pm
+
+        mock_opportunity_query = MagicMock()
+        mock_opportunity_query.filter.return_value = mock_opportunity_query
+        mock_opportunity_query.first.return_value = mock_opportunity
+
+        def query_side_effect(model):
+            if model == Contract:
+                return mock_contract_query
+            if model == Project:
+                return mock_project_query
+            if model == PresaleSolution:
+                return mock_solution_query
+            if model == Customer:
+                return mock_customer_query
+            if model == User:
+                return mock_pm_query
+            if model == Opportunity:
+                return mock_opportunity_query
+            return MagicMock()
+
+        self.db.query.side_effect = query_side_effect
+        self.db.flush.side_effect = lambda: setattr(self.db.add.call_args_list[-1][0][0], "id", 400)
+
+        result = self.service._create_project_from_initiation(mock_initiation, pm_id=7)
+
+        added_project = self.db.add.call_args_list[-1][0][0]
+        self.assertEqual(result, added_project)
+        self.assertEqual(added_project.customer_id, 20)
+        self.assertEqual(added_project.customer_name, "方案客户")
+        self.assertEqual(added_project.customer_contact, "王工")
+        self.assertEqual(added_project.customer_phone, "13800138000")
+        self.assertEqual(added_project.contract_amount, Decimal("160000"))
+        self.assertEqual(added_project.opportunity_id, 9001)
+        self.assertEqual(added_project.lead_id, 8001)
+        self.assertEqual(mock_solution.project_id, 400)
 
 
 class TestPmoInitiationServiceEdgeCases(unittest.TestCase):
