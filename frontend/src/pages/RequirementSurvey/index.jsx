@@ -10,7 +10,6 @@ import {
   Search,
   Plus,
   Calendar,
-  Users,
   CheckCircle,
   AlertTriangle,
 } from "lucide-react";
@@ -21,6 +20,16 @@ import {
   CardContent,
 } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { presaleApi } from "../../services/api";
 import { surveyMethods, surveyStatuses } from "./constants";
@@ -36,6 +45,21 @@ function parseContextId(value) {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
+
+const INITIAL_SURVEY_FORM = {
+  title: "",
+  ticket_type: "REQUIREMENT_RESEARCH",
+  urgency: "NORMAL",
+  customer_name: "",
+  expected_date: "",
+  description: "",
+};
+
+const surveyTaskTypes = [
+  { value: "REQUIREMENT_RESEARCH", label: "需求调研" },
+  { value: "TECHNICAL_EXCHANGE", label: "技术交流" },
+  { value: "SITE_VISIT", label: "现场勘察" },
+];
 
 export default function RequirementSurvey({ embedded = false }) {
   const [searchParams] = useSearchParams();
@@ -54,6 +78,9 @@ export default function RequirementSurvey({ embedded = false }) {
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [createForm, setCreateForm] = useState(INITIAL_SURVEY_FORM);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Load surveys from API
   const loadSurveys = useCallback(async () => {
@@ -157,6 +184,63 @@ export default function RequirementSurvey({ embedded = false }) {
     loadSurveys();
   }, [loadSurveys]);
 
+  const updateCreateForm = (field, value) => {
+    setCreateForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const resetCreateForm = () => {
+    setCreateForm(INITIAL_SURVEY_FORM);
+  };
+
+  const handleCreateSurvey = async (event) => {
+    event?.preventDefault();
+
+    const title = createForm.title.trim();
+    if (!title) {
+      alert("请输入调研标题");
+      return;
+    }
+
+    const payload = {
+      title,
+      ticket_type: createForm.ticket_type,
+      urgency: createForm.urgency,
+    };
+
+    const optionalFields = ["customer_name", "expected_date", "description"];
+    optionalFields.forEach((field) => {
+      const value = (createForm[field] || "").trim();
+      if (value) {
+        payload[field] = value;
+      }
+    });
+
+    if (contextLeadIdNumber) {
+      payload.lead_id = contextLeadIdNumber;
+    }
+    if (contextOpportunityIdNumber) {
+      payload.opportunity_id = contextOpportunityIdNumber;
+    }
+    if (contextProjectIdNumber) {
+      payload.project_id = contextProjectIdNumber;
+    }
+
+    try {
+      setIsCreating(true);
+      await presaleApi.tickets.create(payload);
+      setShowCreateDialog(false);
+      resetCreateForm();
+      await loadSurveys();
+      alert("调研工单已创建");
+    } catch (err) {
+      console.error("Failed to create requirement survey:", err);
+      const message = err.response?.data?.detail || err.message || "未知错误";
+      alert(`创建调研失败：${message}`);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   // 筛选调研记录
   const filteredSurveys = (surveys || []).filter((survey) => {
     const matchesStatus =
@@ -182,6 +266,16 @@ export default function RequirementSurvey({ embedded = false }) {
     ),
   };
 
+  const createSurveyButton = (
+    <Button
+      className="flex items-center gap-2"
+      onClick={() => setShowCreateDialog(true)}
+    >
+      <Plus className="w-4 h-4" />
+      新建调研
+    </Button>
+  );
+
   return (
     <motion.div
       variants={staggerContainer}
@@ -195,13 +289,16 @@ export default function RequirementSurvey({ embedded = false }) {
           description="管理客户需求调研记录、现场勘察、问题跟踪"
           actions={
             <motion.div variants={fadeIn} className="flex gap-2">
-              <Button className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                新建调研
-              </Button>
+              {createSurveyButton}
             </motion.div>
           }
         />
+      )}
+
+      {embedded && (
+        <motion.div variants={fadeIn} className="flex justify-end">
+          {createSurveyButton}
+        </motion.div>
       )}
 
       {/* 统计卡片 */}
@@ -281,7 +378,7 @@ export default function RequirementSurvey({ embedded = false }) {
             <Input
               type="text"
               placeholder="搜索客户、商机、调研编号..."
-              value={searchTerm || "unknown"}
+              value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 w-full"
             />
@@ -362,6 +459,124 @@ export default function RequirementSurvey({ embedded = false }) {
           onClose={() => setSelectedSurvey(null)}
         />
       )}
+
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-xl">
+          <form onSubmit={handleCreateSurvey}>
+            <DialogHeader>
+              <DialogTitle>新建调研</DialogTitle>
+              <DialogDescription>
+                从当前售前上下文创建需求调研工单
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="px-6 py-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="requirement-survey-title">调研标题</Label>
+                <Input
+                  id="requirement-survey-title"
+                  value={createForm.title}
+                  onChange={(event) =>
+                    updateCreateForm("title", event.target.value)
+                  }
+                  placeholder="请输入调研标题"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="requirement-survey-type">调研类型</Label>
+                  <select
+                    id="requirement-survey-type"
+                    value={createForm.ticket_type}
+                    onChange={(event) =>
+                      updateCreateForm("ticket_type", event.target.value)
+                    }
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                  >
+                    {surveyTaskTypes.map((type) => (
+                      <option key={type.value} value={type.value}>
+                        {type.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="requirement-survey-urgency">紧急程度</Label>
+                  <select
+                    id="requirement-survey-urgency"
+                    value={createForm.urgency}
+                    onChange={(event) =>
+                      updateCreateForm("urgency", event.target.value)
+                    }
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="NORMAL">普通</option>
+                    <option value="URGENT">紧急</option>
+                    <option value="VERY_URGENT">非常紧急</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="requirement-survey-customer">客户名称</Label>
+                  <Input
+                    id="requirement-survey-customer"
+                    value={createForm.customer_name}
+                    onChange={(event) =>
+                      updateCreateForm("customer_name", event.target.value)
+                    }
+                    placeholder="可选"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="requirement-survey-expected-date">
+                    期望调研日期
+                  </Label>
+                  <Input
+                    id="requirement-survey-expected-date"
+                    type="date"
+                    value={createForm.expected_date}
+                    onChange={(event) =>
+                      updateCreateForm("expected_date", event.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="requirement-survey-description">调研说明</Label>
+                <Textarea
+                  id="requirement-survey-description"
+                  rows={4}
+                  value={createForm.description}
+                  onChange={(event) =>
+                    updateCreateForm("description", event.target.value)
+                  }
+                  placeholder="补充调研背景、现场条件或待确认问题"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCreateDialog(false)}
+                disabled={isCreating}
+              >
+                取消
+              </Button>
+              <Button type="submit" disabled={isCreating}>
+                {isCreating ? "创建中..." : "创建调研"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

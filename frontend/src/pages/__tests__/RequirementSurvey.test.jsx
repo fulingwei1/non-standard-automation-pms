@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, useSearchParams } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -9,6 +9,7 @@ vi.mock("../../services/api", () => ({
   presaleApi: {
     tickets: {
       list: vi.fn(),
+      create: vi.fn(),
     },
   },
 }));
@@ -58,6 +59,15 @@ describe("RequirementSurvey", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     presaleApi.tickets.list.mockResolvedValue({ data: { items: [], total: 0 } });
+    presaleApi.tickets.create.mockResolvedValue({
+      data: {
+        id: 910,
+        title: "线索现场需求调研",
+        ticket_type: "REQUIREMENT_RESEARCH",
+        status: "PENDING",
+      },
+    });
+    vi.spyOn(window, "alert").mockImplementation(() => {});
   });
 
   it("scopes requirement surveys by sales support ticket context", async () => {
@@ -109,5 +119,45 @@ describe("RequirementSurvey", () => {
         }),
       );
     });
+  });
+
+  it("creates a requirement survey ticket from the unified presales context", async () => {
+    renderPage(
+      "/presales/technical-solutions?tab=surveys&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.list).toHaveBeenCalled();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "新建调研" }));
+    fireEvent.change(screen.getByLabelText("调研标题"), {
+      target: { value: "线索现场需求调研" },
+    });
+    fireEvent.change(screen.getByLabelText("客户名称"), {
+      target: { value: "华南电子" },
+    });
+    fireEvent.change(screen.getByLabelText("期望调研日期"), {
+      target: { value: "2026-06-20" },
+    });
+    fireEvent.change(screen.getByLabelText("调研说明"), {
+      target: { value: "确认节拍、治具、上下料和验收口径" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "创建调研" }));
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.create).toHaveBeenCalledWith({
+        title: "线索现场需求调研",
+        ticket_type: "REQUIREMENT_RESEARCH",
+        urgency: "NORMAL",
+        customer_name: "华南电子",
+        expected_date: "2026-06-20",
+        description: "确认节拍、治具、上下料和验收口径",
+        lead_id: 2026,
+        opportunity_id: 2,
+        project_id: 42,
+      });
+    });
+    expect(presaleApi.tickets.list).toHaveBeenCalledTimes(2);
   });
 });
