@@ -64,6 +64,73 @@ const formatRiskLevel = (riskLevel) => {
   return text.includes("风险") ? text : `${text}风险`;
 };
 
+function appendContextParam(params, key, value) {
+  if (value !== undefined && value !== null && value !== "") {
+    params.set(key, String(value));
+  }
+}
+
+function getFirstValue(item, keys) {
+  for (const key of keys) {
+    const value = item?.[key];
+    if (value !== undefined && value !== null && value !== "") {
+      return value;
+    }
+  }
+  return null;
+}
+
+function buildPresaleSolutionPath(solution, ticket, opportunity, project) {
+  const solutionId = getFirstValue(solution, ["id", "solution_id", "solutionId"]);
+  if (!solutionId) {
+    return null;
+  }
+
+  const params = new URLSearchParams();
+  appendContextParam(
+    params,
+    "ticket_id",
+    getFirstValue(solution, ["ticket_id", "ticketId"]) || ticket?.id,
+  );
+  appendContextParam(
+    params,
+    "opportunity_id",
+    getFirstValue(solution, ["opportunity_id", "opportunityId"]) || opportunity?.id,
+  );
+  appendContextParam(
+    params,
+    "project_id",
+    getFirstValue(solution, ["project_id", "projectId"]) || project?.id,
+  );
+
+  const query = params.toString();
+  return `/solutions/${solutionId}${query ? `?${query}` : ""}`;
+}
+
+function buildPresaleTicketPath(ticket, opportunity, project) {
+  const ticketId = getFirstValue(ticket, ["id", "ticket_id", "ticketId"]);
+  if (!ticketId) {
+    return null;
+  }
+
+  const params = new URLSearchParams();
+  params.set("tab", "reviews");
+  params.set("type", ticket?.ticket_type === "SOLUTION_REVIEW" ? "review" : "support");
+  appendContextParam(params, "ticket_id", ticketId);
+  appendContextParam(
+    params,
+    "opportunity_id",
+    getFirstValue(ticket, ["opportunity_id", "opportunityId"]) || opportunity?.id,
+  );
+  appendContextParam(
+    params,
+    "project_id",
+    getFirstValue(ticket, ["project_id", "projectId"]) || project?.id,
+  );
+
+  return `/presales/technical-solutions?${params.toString()}`;
+}
+
 export default function ProjectWorkspace() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -136,6 +203,17 @@ export default function ProjectWorkspace() {
   const quoteVersion = handoverContext?.quote?.version || {};
   const primarySolution = handoverContext?.presale_solutions?.[0];
   const primaryTicket = handoverContext?.presale_tickets?.[0];
+  const primarySolutionPath = buildPresaleSolutionPath(
+    primarySolution,
+    primaryTicket,
+    handoverContext?.opportunity,
+    project,
+  );
+  const primaryTicketPath = buildPresaleTicketPath(
+    primaryTicket,
+    handoverContext?.opportunity,
+    project,
+  );
   const primaryTicketRiskFactors = normalizeRiskFactors(
     primaryTicket?.pm_involvement_risk_factors,
   );
@@ -326,9 +404,12 @@ export default function ProjectWorkspace() {
 
                 <div className="rounded-lg border p-4">
                   <p className="text-sm text-gray-500">售前方案</p>
-                  <p className="mt-1 font-medium">
+                  {primarySolutionPath ?
+                  <Link className="mt-1 block font-medium text-primary hover:underline" to={primarySolutionPath}>
                     {primarySolution?.name || "未关联"}
-                  </p>
+                  </Link> :
+                  <p className="mt-1 font-medium">{primarySolution?.name || "未关联"}</p>
+                  }
                   <p className="mt-2 text-sm text-gray-500">
                     {presaleCost != null ? formatCurrency(presaleCost) : "未估算"}
                   </p>
@@ -336,9 +417,12 @@ export default function ProjectWorkspace() {
 
                 <div className="rounded-lg border p-4">
                   <p className="text-sm text-gray-500">售前工单</p>
-                  <p className="mt-1 font-medium">
+                  {primaryTicketPath ?
+                  <Link className="mt-1 block font-medium text-primary hover:underline" to={primaryTicketPath}>
                     {primaryTicket?.ticket_no || "未关联"}
-                  </p>
+                  </Link> :
+                  <p className="mt-1 font-medium">{primaryTicket?.ticket_no || "未关联"}</p>
+                  }
                   <p className="mt-2 truncate text-sm text-gray-500">
                     {primaryTicket?.actual_hours != null ?
                     `${primaryTicket.actual_hours} 小时` :

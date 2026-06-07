@@ -55,6 +55,7 @@ describe("ProjectWorkspace", () => {
             total_amount: 580000,
           },
           opportunity: {
+            id: 2,
             opp_code: "OPP-001",
             opp_name: "电源测试线商机",
           },
@@ -68,8 +69,12 @@ describe("ProjectWorkspace", () => {
           },
           presale_solutions: [
             {
+              id: 88,
               solution_no: "SOL-001",
               name: "FCT测试方案",
+              ticket_id: 91,
+              opportunity_id: 2,
+              project_id: 1,
               estimated_cost: 355000,
               suggested_price: 580000,
             },
@@ -81,6 +86,8 @@ describe("ProjectWorkspace", () => {
               title: "FCT售前技术支持",
               ticket_type: "SOLUTION",
               status: "COMPLETED",
+              opportunity_id: 2,
+              project_id: 1,
               applicant_name: "张销售",
               assignee_name: "王工",
               actual_hours: 18.5,
@@ -258,6 +265,14 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("QT-001")).toBeInTheDocument();
     expect(screen.getByText("FCT测试方案")).toBeInTheDocument();
     expect(screen.getByText("PST-091")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /FCT测试方案/ })).toHaveAttribute(
+      "href",
+      "/solutions/88?ticket_id=91&opportunity_id=2&project_id=1",
+    );
+    expect(screen.getByRole("link", { name: /PST-091/ })).toHaveAttribute(
+      "href",
+      "/presales/technical-solutions?tab=reviews&type=support&ticket_id=91&opportunity_id=2&project_id=1",
+    );
     expect(screen.getByText(/18.5 小时/)).toBeInTheDocument();
     expect(screen.getByText("PM提前介入")).toBeInTheDocument();
     expect(screen.getByText("高风险")).toBeInTheDocument();
