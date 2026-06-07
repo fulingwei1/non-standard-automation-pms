@@ -154,72 +154,6 @@ def create_tender(
     return build_tender_response(tender)
 
 
-@router.get("/tenders/{tender_id}", response_model=TenderResponse)
-def read_tender(
-    *,
-    db: Session = Depends(deps.get_db),
-    tender_id: int,
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    投标详情
-    """
-    tender = get_or_404(db, PresaleTenderRecord, tender_id, detail="投标记录不存在")
-
-    return build_tender_response(tender)
-
-
-@router.put("/tenders/{tender_id}", response_model=TenderResponse)
-def update_tender(
-    *,
-    db: Session = Depends(deps.get_db),
-    tender_id: int,
-    tender_in: TenderUpdate,
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    更新投标记录基础信息
-
-    兼容前端 `presaleApi.tenders.update` 直接 PUT /presale/tenders/{id}。
-    """
-    tender = get_or_404(db, PresaleTenderRecord, tender_id, detail="投标记录不存在")
-
-    update_data = tender_in.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(tender, field, value)
-
-    save_obj(db, tender)
-
-    return build_tender_response(tender)
-
-
-@router.put("/tenders/{tender_id}/result", response_model=TenderResponse)
-def update_tender_result(
-    *,
-    db: Session = Depends(deps.get_db),
-    tender_id: int,
-    result_request: TenderResultUpdate,
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    更新投标结果
-    """
-    tender = get_or_404(db, PresaleTenderRecord, tender_id, detail="投标记录不存在")
-
-    tender.result = result_request.result
-    tender.result_reason = result_request.result_reason
-    if result_request.technical_score:
-        tender.technical_score = result_request.technical_score
-    if result_request.commercial_score:
-        tender.commercial_score = result_request.commercial_score
-    if result_request.total_score:
-        tender.total_score = result_request.total_score
-
-    save_obj(db, tender)
-
-    return build_tender_response(tender)
-
-
 @router.get("/tenders/analysis", response_model=ResponseModel)
 def get_tender_analysis(
     db: Session = Depends(deps.get_db),
@@ -337,3 +271,69 @@ def get_tender_analysis(
             ],
         },
     )
+
+
+@router.get("/tenders/{tender_id}", response_model=TenderResponse)
+def read_tender(
+    *,
+    db: Session = Depends(deps.get_db),
+    tender_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    投标详情
+    """
+    tender = get_or_404(db, PresaleTenderRecord, tender_id, detail="投标记录不存在")
+
+    return build_tender_response(tender)
+
+
+@router.put("/tenders/{tender_id}", response_model=TenderResponse)
+def update_tender(
+    *,
+    db: Session = Depends(deps.get_db),
+    tender_id: int,
+    tender_in: TenderUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新投标记录基础信息
+
+    兼容前端 `presaleApi.tenders.update` 直接 PUT /presale/tenders/{id}。
+    """
+    tender = get_or_404(db, PresaleTenderRecord, tender_id, detail="投标记录不存在")
+
+    update_data = tender_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(tender, field, value)
+
+    save_obj(db, tender)
+
+    return build_tender_response(tender)
+
+
+@router.put("/tenders/{tender_id}/result", response_model=TenderResponse)
+def update_tender_result(
+    *,
+    db: Session = Depends(deps.get_db),
+    tender_id: int,
+    result_request: TenderResultUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新投标结果
+    """
+    tender = get_or_404(db, PresaleTenderRecord, tender_id, detail="投标记录不存在")
+
+    tender.result = result_request.result
+    tender.result_reason = result_request.result_reason
+    if result_request.technical_score:
+        tender.technical_score = result_request.technical_score
+    if result_request.commercial_score:
+        tender.commercial_score = result_request.commercial_score
+    if result_request.total_score:
+        tender.total_score = result_request.total_score
+
+    save_obj(db, tender)
+
+    return build_tender_response(tender)

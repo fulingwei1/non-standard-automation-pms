@@ -1674,6 +1674,21 @@ class TestPresalesFrontendContractBehavior:
         assert payload["customer_name"] == "新客户"
         assert payload["our_bid_amount"] == pytest.approx(12345.67)
 
+    def test_tender_analysis_route_is_not_shadowed_by_tender_detail(
+        self, client: TestClient, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+
+        response = client.get(f"{prefix}/presale/tenders/analysis", headers=headers)
+
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["data"]["summary"]["total_tenders"] >= 0
+
     def test_presales_compat_analytics_use_timesheets(
         self, client: TestClient, db_session: Session, admin_token: str
     ):
