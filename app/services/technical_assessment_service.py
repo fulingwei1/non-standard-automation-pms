@@ -22,9 +22,11 @@ from app.models.enums import (
     AssessmentStatusEnum,
 )
 from app.models.sales import (
+    AssessmentRisk,
     FailureCase,
     Lead,
     Opportunity,
+    RiskStatusEnum,
     ScoringRule,
     TechnicalAssessment,
 )
@@ -117,6 +119,7 @@ class TechnicalAssessmentService:
         assessment.evaluated_at = datetime.now()
 
         self.db.flush()
+        self._sync_structured_risks(assessment.id, evaluator_id, risks)
 
         # 更新来源对象的评估关联
         self._update_source_assessment(source_type, source_id, assessment.id)
@@ -481,6 +484,84 @@ class TechnicalAssessmentService:
             )
 
         return risks
+
+    def _sync_structured_risks(
+        self,
+        assessment_id: int,
+        evaluator_id: int,
+        risks: List[Dict[str, Any]],
+    ) -> None:
+        """将评估生成的JSON风险同步到可跟踪的结构化风险表。"""
+        if not isinstance(assessment_id, int) or assessment_id <= 0 or not risks:
+            return
+
+        risk_code_prefix = self._assessment_risk_code_prefix()
+        risk_code_seq = self._next_assessment_risk_code_seq(risk_code_prefix)
+        for risk in risks:
+            description = str(risk.get("description") or "").strip()
+            if not description:
+                continue
+
+            existing_risk = (
+                self.db.query(AssessmentRisk.id)
+                .filter(
+                    AssessmentRisk.assessment_id == assessment_id,
+                    AssessmentRisk.risk_description == description,
+                )
+                .first()
+            )
+            if existing_risk:
+                continue
+
+            dimension = str(risk.get("dimension") or "assessment")
+            probability, impact = self._risk_probability_and_impact(risk.get("level"))
+            structured_risk = AssessmentRisk(
+                assessment_id=assessment_id,
+                risk_code=f"{risk_code_prefix}{risk_code_seq:04d}",
+                risk_title=f"{dimension}维度风险",
+                risk_category=dimension,
+                risk_description=description,
+                probability=probability,
+                impact=impact,
+                owner_id=evaluator_id,
+                status=RiskStatusEnum.OPEN,
+            )
+            structured_risk.risk_score = structured_risk.calculate_risk_score()
+            structured_risk.risk_level = self._risk_level_from_score(structured_risk.risk_score)
+            self.db.add(structured_risk)
+            risk_code_seq += 1
+
+    def _risk_probability_and_impact(self, level: Any) -> tuple[str, str]:
+        level_value = str(level or "").upper()
+        if level_value == "LOW":
+            return "LOW", "LOW"
+        if level_value == "MEDIUM":
+            return "LOW", "MEDIUM"
+        if level_value == "CRITICAL":
+            return "HIGH", "MEDIUM"
+        return "MEDIUM", "MEDIUM"
+
+    def _risk_level_from_score(self, risk_score: int) -> str:
+        if risk_score >= 6:
+            return "CRITICAL"
+        if risk_score >= 4:
+            return "HIGH"
+        if risk_score >= 2:
+            return "MEDIUM"
+        return "LOW"
+
+    def _assessment_risk_code_prefix(self) -> str:
+        today = datetime.now()
+        return f"RSK{today.strftime('%Y%m%d')}"
+
+    def _next_assessment_risk_code_seq(self, prefix: str) -> int:
+        last_risk = (
+            self.db.query(AssessmentRisk)
+            .filter(AssessmentRisk.risk_code.like(f"{prefix}%"))
+            .order_by(AssessmentRisk.risk_code.desc())
+            .first()
+        )
+        return int(last_risk.risk_code[-4:]) + 1 if last_risk else 1
 
     def _generate_conditions(
         self, decision: str, risks: List[Dict[str, Any]], requirement_data: Dict[str, Any]

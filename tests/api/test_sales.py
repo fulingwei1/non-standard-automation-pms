@@ -862,6 +862,53 @@ class TestTechnicalAssessmentClosedLoop:
         assert [item["id"] for item in assessments] == [assessment_id]
         assert assessments[0]["status"] == "COMPLETED"
 
+    def test_evaluation_generated_risks_are_available_as_structured_risks(
+        self, client: TestClient, admin_token: str
+    ):
+        """评估生成的风险应进入结构化风险列表，供售前工作台继续跟踪"""
+
+        _create_active_scoring_rule(client, admin_token)
+        lead = _create_lead(client, admin_token)
+        headers = _auth_headers(admin_token)
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}/assessments/apply",
+            json={},
+            headers=headers,
+        )
+        assert response.status_code == 201, response.text
+        assessment_id = response.json()["data"]["assessment_id"]
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/assessments/{assessment_id}/evaluate",
+            json={
+                "requirement_data": {
+                    "tech_maturity": "immature",
+                    "budget_status": "unclear",
+                    "requirement_maturity": 1,
+                    "has_sow": False,
+                },
+                "enable_ai": False,
+            },
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+        evaluated_assessment = response.json()
+        assert evaluated_assessment["id"] == assessment_id
+        assert evaluated_assessment["risks"]
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/sales/assessments/{assessment_id}/risks",
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+        payload = response.json()["data"]
+        assert payload["total"] >= 1
+        risk_descriptions = {item["risk_description"] for item in payload["items"]}
+        assert "technology维度评分较低(0分)，存在较高风险" in risk_descriptions
+        assert any(item["risk_title"] == "technology维度风险" for item in payload["items"])
+        assert any(item["risk_type"] == "technology" for item in payload["items"])
+
 
 class TestPermissionControl:
     """权限控制测试"""
