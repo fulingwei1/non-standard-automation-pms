@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
@@ -279,7 +279,10 @@ def _funnel_health(db: Session) -> dict[str, Any]:
         db.query(PresaleSolution).filter(PresaleSolution.status == "APPROVED").count()
     )
     completed_assessments = (
-        db.query(TechnicalAssessment).filter(TechnicalAssessment.status == "COMPLETED").count()
+        db.query(func.count(TechnicalAssessment.id))
+        .filter(TechnicalAssessment.status == "COMPLETED")
+        .scalar()
+        or 0
     )
     score = max(0, min(100, 70 + min(approved_solutions, 10) * 2 - min(active_tickets, 10)))
     return {
