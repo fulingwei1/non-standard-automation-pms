@@ -17,6 +17,7 @@ def _make_mock_contract(
     project_id=100,
     contract_amount=100000.0,
     signing_date=None,
+    payment_terms=None,
 ):
     """创建模拟合同对象"""
     contract = MagicMock(spec=Contract)
@@ -24,6 +25,7 @@ def _make_mock_contract(
     contract.project_id = project_id
     contract.contract_amount = contract_amount
     contract.signing_date = signing_date or date(2025, 1, 1)
+    contract.payment_terms = payment_terms
     return contract
 
 
@@ -150,6 +152,24 @@ class TestPaymentPlanService(unittest.TestCase):
         # 验证质保款配置
         self.assertEqual(configs[3]["payment_name"], "质保款")
         self.assertEqual(configs[3]["payment_ratio"], 5.0)
+
+    def test_get_payment_configurations_honors_contract_terms(self):
+        """合同付款条款明确为3-3-3-1时，应按合同生成收款比例。"""
+        contract = _make_mock_contract(
+            payment_terms="30%预付款 + 30%中期款 + 30%验收款 + 10%质保金"
+        )
+
+        configs = self.svc._get_payment_configurations(contract)
+
+        self.assertEqual([cfg["payment_ratio"] for cfg in configs], [30.0, 30.0, 30.0, 10.0])
+        self.assertEqual([cfg["payment_type"] for cfg in configs], [
+            "ADVANCE",
+            "DELIVERY",
+            "ACCEPTANCE",
+            "WARRANTY",
+        ])
+        self.assertEqual(configs[1]["payment_name"], "中期款")
+        self.assertEqual(configs[3]["payment_name"], "质保金")
 
     def test_calculate_planned_date_advance(self):
         """测试预付款日期计算 - 合同签订后7天"""

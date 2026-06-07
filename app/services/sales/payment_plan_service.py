@@ -5,6 +5,7 @@
 将原来157行的复杂函数拆分为多个小函数，提高可维护性和可测试性
 """
 
+import re
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
@@ -35,7 +36,7 @@ class PaymentPlanService:
         if not self._validate_contract(contract):
             return []
 
-        payment_configs = self._get_payment_configurations()
+        payment_configs = self._get_payment_configurations(contract)
         plans = []
 
         for config in payment_configs:
@@ -70,8 +71,20 @@ class PaymentPlanService:
         )
         return existing_plans == 0
 
-    def _get_payment_configurations(self) -> List[Dict[str, Any]]:
-        """获取收款计划配置"""
+    def _get_payment_configurations(
+        self, contract: Optional[Contract] = None
+    ) -> List[Dict[str, Any]]:
+        """获取收款计划配置，优先使用合同中可识别的付款条款。"""
+        parsed_configs = self._parse_payment_terms_configurations(
+            getattr(contract, "payment_terms", None) if contract else None
+        )
+        if parsed_configs:
+            return parsed_configs
+
+        return self._get_default_payment_configurations()
+
+    def _get_default_payment_configurations(self) -> List[Dict[str, Any]]:
+        """获取默认收款计划配置"""
         return [
             {
                 "payment_no": 1,
@@ -106,6 +119,98 @@ class PaymentPlanService:
                 "trigger_condition": "质保期结束后",
             },
         ]
+
+    def _parse_payment_terms_configurations(
+        self, payment_terms: Optional[str]
+    ) -> Optional[List[Dict[str, Any]]]:
+        """从合同付款条款解析收款比例。
+
+        支持常见表达：30/60/10、30-30-30-10、3-3-3-1、30%预付款 + 30%中期款。
+        无法确定合计为100%时回退默认规则，避免把交期天数误当付款比例。
+        """
+        if not payment_terms:
+            return None
+
+        term_text = str(payment_terms)
+        matches = list(
+            re.finditer(
+                r"(?P<ratio>\d+(?:\.\d+)?)\s*%?\s*(?P<label>[^+\n，,、;/／\\-]*)",
+                term_text,
+            )
+        )
+        if len(matches) < 2:
+            return None
+
+        ratios = [float(match.group("ratio")) for match in matches]
+        total = sum(ratios)
+        if abs(total - 10.0) < 0.01 and all(ratio <= 10 for ratio in ratios):
+            ratios = [ratio * 10 for ratio in ratios]
+            total = sum(ratios)
+
+        if abs(total - 100.0) >= 0.01:
+            return None
+
+        return [
+            self._payment_config_from_term(index + 1, ratio, match.group("label"), len(matches))
+            for index, (ratio, match) in enumerate(zip(ratios, matches))
+        ]
+
+    def _payment_config_from_term(
+        self, payment_no: int, ratio: float, raw_label: str, total_count: int
+    ) -> Dict[str, Any]:
+        """根据条款片段生成单期收款配置。"""
+        label = (raw_label or "").strip(" ：:（）()[]【】")
+        payment_type = self._infer_payment_type(payment_no, label, total_count)
+        default_names = {
+            "ADVANCE": "预付款",
+            "DELIVERY": "发货款",
+            "ACCEPTANCE": "验收款",
+            "WARRANTY": "质保款",
+        }
+        trigger_milestones = {
+            "ADVANCE": "合同签订",
+            "DELIVERY": "发货",
+            "ACCEPTANCE": "终验通过",
+            "WARRANTY": "质保结束",
+        }
+        trigger_conditions = {
+            "ADVANCE": "合同签订后",
+            "DELIVERY": "设备发货后",
+            "ACCEPTANCE": "验收通过后",
+            "WARRANTY": "质保期结束后",
+        }
+
+        return {
+            "payment_no": payment_no,
+            "payment_name": label if self._is_payment_label(label) else default_names[payment_type],
+            "payment_type": payment_type,
+            "payment_ratio": ratio,
+            "trigger_milestone": trigger_milestones[payment_type],
+            "trigger_condition": trigger_conditions[payment_type],
+        }
+
+    def _infer_payment_type(self, payment_no: int, label: str, total_count: int) -> str:
+        """从付款名称和期次推断付款类型。"""
+        if any(keyword in label for keyword in ["质保", "保证"]):
+            return "WARRANTY"
+        if any(keyword in label for keyword in ["验收", "终验", "FAT", "SAT"]):
+            return "ACCEPTANCE"
+        if any(keyword in label for keyword in ["中期", "图纸", "方案", "发货", "交货", "到货"]):
+            return "DELIVERY"
+        if any(keyword in label for keyword in ["预付", "首付", "合同签订"]):
+            return "ADVANCE"
+
+        if total_count >= 4 and payment_no == total_count:
+            return "WARRANTY"
+        if payment_no == 1:
+            return "ADVANCE"
+        if payment_no == total_count:
+            return "ACCEPTANCE"
+        return "DELIVERY"
+
+    def _is_payment_label(self, label: str) -> bool:
+        """过滤“分期付款”等非节点名称。"""
+        return bool(label) and any(keyword in label for keyword in ["款", "金", "验收", "发货", "交货"])
 
     def _create_payment_plan(
         self, contract: Contract, config: Dict[str, Any]
