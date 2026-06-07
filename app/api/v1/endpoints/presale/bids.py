@@ -50,6 +50,7 @@ def build_tender_response(tender: PresaleTenderRecord) -> TenderResponse:
         id=tender.id,
         ticket_id=tender.ticket_id,
         opportunity_id=tender.opportunity_id,
+        project_id=tender.project_id,
         tender_no=tender.tender_no,
         tender_name=tender.tender_name,
         customer_name=tender.customer_name,
@@ -83,6 +84,7 @@ def read_tenders(
     customer_name: Optional[str] = Query(None, description="招标单位筛选"),
     ticket_id: Optional[int] = Query(None, description="工单ID筛选"),
     opportunity_id: Optional[int] = Query(None, description="商机ID筛选"),
+    project_id: Optional[int] = Query(None, description="项目ID筛选"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
@@ -100,6 +102,9 @@ def read_tenders(
 
     if opportunity_id:
         query = query.filter(PresaleTenderRecord.opportunity_id == opportunity_id)
+
+    if project_id:
+        query = query.filter(PresaleTenderRecord.project_id == project_id)
 
     # 应用关键词过滤（招标单位）
     query = apply_keyword_filter(query, PresaleTenderRecord, customer_name, ["customer_name"])
@@ -127,6 +132,7 @@ def create_tender(
     tender = PresaleTenderRecord(
         ticket_id=tender_in.ticket_id,
         opportunity_id=tender_in.opportunity_id,
+        project_id=tender_in.project_id,
         tender_no=tender_in.tender_no or generate_tender_no(db),
         tender_name=tender_in.tender_name,
         customer_name=tender_in.customer_name,

@@ -1462,6 +1462,90 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(Customer).filter(Customer.id == customer.id).delete()
             db_session.commit()
 
+    def test_tender_create_and_list_preserve_project_context(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        project_a = Project(
+            project_code=f"PTA{unique[:6]}",
+            project_name=f"投标过滤项目A-{unique}",
+            customer_name=f"投标过滤客户A-{unique}",
+            project_type="FCT",
+            status="ST01",
+            stage="S1",
+            health="H1",
+            created_by=admin_user.id,
+        )
+        project_b = Project(
+            project_code=f"PTB{unique[:6]}",
+            project_name=f"投标过滤项目B-{unique}",
+            customer_name=f"投标过滤客户B-{unique}",
+            project_type="ICT",
+            status="ST01",
+            stage="S1",
+            health="H1",
+            created_by=admin_user.id,
+        )
+        db_session.add_all([project_a, project_b])
+        db_session.flush()
+        project_a_id = project_a.id
+        project_b_id = project_b.id
+
+        created = client.post(
+            f"{prefix}/presale/tenders",
+            json={
+                "tender_name": f"项目A投标-{unique}",
+                "customer_name": project_a.customer_name,
+                "project_id": project_a_id,
+                "opportunity_id": 9101,
+            },
+            headers=headers,
+        )
+        assert created.status_code == 201, created.text
+        created_payload = created.json()
+        assert created_payload["project_id"] == project_a_id
+
+        noise_tender = PresaleTenderRecord(
+            tender_no=f"BID-NOISE-PROJ-{unique}",
+            tender_name=f"项目B投标-{unique}",
+            customer_name=project_b.customer_name,
+            project_id=project_b_id,
+            opportunity_id=9102,
+            budget_amount=Decimal("100000"),
+            result="PENDING",
+        )
+        db_session.add(noise_tender)
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{prefix}/presale/tenders",
+                params={"project_id": project_a_id},
+                headers=headers,
+            )
+            assert response.status_code == 200, response.text
+            items = response.json()["items"]
+            assert [item["id"] for item in items] == [created_payload["id"]]
+            assert items[0]["project_id"] == project_a_id
+            assert items[0]["opportunity_id"] == 9101
+        finally:
+            db_session.query(PresaleTenderRecord).filter(
+                PresaleTenderRecord.id.in_([created_payload["id"], noise_tender.id])
+            ).delete(synchronize_session=False)
+            db_session.query(Project).filter(
+                Project.id.in_([project_a_id, project_b_id])
+            ).delete(synchronize_session=False)
+            db_session.commit()
+
     def test_tender_update_contract(self, client: TestClient, admin_token: str):
         if not admin_token:
             pytest.skip("Admin token not available")

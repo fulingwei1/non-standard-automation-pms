@@ -33,8 +33,10 @@ export default function BiddingCenter({ embedded = false } = {}) {
   const [searchParams] = useSearchParams();
   const contextTicketId = searchParams.get("ticket_id") || "";
   const contextOpportunityId = searchParams.get("opportunity_id") || "";
+  const contextProjectId = searchParams.get("project_id") || "";
   const contextTicketIdNumber = parseContextId(contextTicketId);
   const contextOpportunityIdNumber = parseContextId(contextOpportunityId);
+  const contextProjectIdNumber = parseContextId(contextProjectId);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBidding, setSelectedBidding] = useState(null);
   const [biddings, setBiddings] = useState([]);
@@ -60,6 +62,9 @@ export default function BiddingCenter({ embedded = false } = {}) {
       }
       if (contextTicketIdNumber) {
         params.ticket_id = contextTicketId;
+      }
+      if (contextProjectIdNumber) {
+        params.project_id = contextProjectId;
       }
 
       const response = await presaleApi.tenders.list(params);
@@ -120,6 +125,8 @@ export default function BiddingCenter({ embedded = false } = {}) {
   }, [
     contextOpportunityId,
     contextOpportunityIdNumber,
+    contextProjectId,
+    contextProjectIdNumber,
     contextTicketId,
     contextTicketIdNumber,
     searchTerm,

@@ -449,6 +449,7 @@ class PresaleTenderRecord(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     ticket_id = Column(Integer, ForeignKey("presale_support_ticket.id"), comment="关联工单ID")
     opportunity_id = Column(Integer, comment="关联商机ID")
+    project_id = Column(Integer, ForeignKey("projects.id"), comment="关联项目ID")
 
     # 投标信息
     tender_no = Column(String(50), comment="招标编号")
@@ -484,6 +485,7 @@ class PresaleTenderRecord(Base, TimestampMixin):
 
     __table_args__ = (
         Index("idx_tender_opportunity", "opportunity_id"),
+        Index("idx_tender_project", "project_id"),
         Index("idx_tender_result", "result"),
         {"comment": "投标记录表"},
     )

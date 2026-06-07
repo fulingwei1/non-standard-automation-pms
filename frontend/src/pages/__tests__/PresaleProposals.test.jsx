@@ -118,4 +118,39 @@ describe("PresaleProposals", () => {
       );
     });
   });
+
+  it("keeps project context when listing and generating solutions from project presales entry", async () => {
+    renderPage(
+      "/presales/technical-solutions?tab=solutions&type=support&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+
+    await waitFor(() => {
+      expect(presaleApi.solutions.list).toHaveBeenCalledWith(
+        expect.objectContaining({
+          page: 1,
+          page_size: 100,
+          opportunity_id: "2",
+          ticket_id: "501",
+          project_id: "42",
+        }),
+      );
+    });
+
+    fireEvent.click(screen.getByText("方案生成"));
+    fireEvent.change(screen.getByPlaceholderText("例如：新能源PACK线FCT测试方案"), {
+      target: { value: "项目现场交付补充方案" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "生成并保存方案" }));
+
+    await waitFor(() => {
+      expect(presaleApi.solutions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "项目现场交付补充方案",
+          opportunity_id: 2,
+          ticket_id: 501,
+          project_id: 42,
+        }),
+      );
+    });
+  });
 });

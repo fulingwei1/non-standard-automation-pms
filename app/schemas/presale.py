@@ -305,6 +305,7 @@ class TenderCreate(BaseModel):
     tender_name: str = Field(..., description="投标项目名称")
     ticket_id: Optional[int] = Field(None, description="关联工单ID")
     opportunity_id: Optional[int] = Field(None, description="关联商机ID")
+    project_id: Optional[int] = Field(None, description="关联项目ID")
     customer_name: Optional[str] = Field(None, description="招标单位")
     publish_date: Optional[date] = Field(None, description="发布日期")
     deadline: Optional[datetime] = Field(None, description="投标截止时间")
@@ -335,6 +336,7 @@ class TenderUpdate(BaseModel):
     tender_name: Optional[str] = Field(None, description="投标项目名称")
     ticket_id: Optional[int] = Field(None, description="关联工单ID")
     opportunity_id: Optional[int] = Field(None, description="关联商机ID")
+    project_id: Optional[int] = Field(None, description="关联项目ID")
     customer_name: Optional[str] = Field(None, description="招标单位")
     publish_date: Optional[date] = Field(None, description="发布日期")
     deadline: Optional[datetime] = Field(None, description="投标截止时间")
@@ -354,6 +356,7 @@ class TenderResponse(TimestampSchema):
     id: int
     ticket_id: Optional[int] = None
     opportunity_id: Optional[int] = None
+    project_id: Optional[int] = None
     tender_no: Optional[str] = None
     tender_name: str
     customer_name: Optional[str] = None

@@ -41,8 +41,10 @@ export default function RequirementSurvey({ embedded = false }) {
   const [searchParams] = useSearchParams();
   const contextTicketId = searchParams.get("ticket_id") || "";
   const contextOpportunityId = searchParams.get("opportunity_id") || "";
+  const contextProjectId = searchParams.get("project_id") || "";
   const contextTicketIdNumber = parseContextId(contextTicketId);
   const contextOpportunityIdNumber = parseContextId(contextOpportunityId);
+  const contextProjectIdNumber = parseContextId(contextProjectId);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedMethod, setSelectedMethod] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -81,6 +83,9 @@ export default function RequirementSurvey({ embedded = false }) {
       }
       if (contextTicketIdNumber) {
         params.ticket_id = contextTicketId;
+      }
+      if (contextProjectIdNumber) {
+        params.project_id = contextProjectId;
       }
 
       const response = await presaleApi.tickets.list(params);
@@ -133,6 +138,8 @@ export default function RequirementSurvey({ embedded = false }) {
   }, [
     contextOpportunityId,
     contextOpportunityIdNumber,
+    contextProjectId,
+    contextProjectIdNumber,
     contextTicketId,
     contextTicketIdNumber,
     selectedStatus,

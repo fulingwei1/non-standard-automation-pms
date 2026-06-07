@@ -74,4 +74,22 @@ describe("RequirementSurvey", () => {
       );
     });
   });
+
+  it("keeps project context when loading surveys from project presales entry", async () => {
+    renderPage(
+      "/presales/technical-solutions?tab=surveys&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.list).toHaveBeenCalledWith(
+        expect.objectContaining({
+          page: 1,
+          page_size: 100,
+          opportunity_id: "2",
+          ticket_id: "501",
+          project_id: "42",
+        }),
+      );
+    });
+  });
 });

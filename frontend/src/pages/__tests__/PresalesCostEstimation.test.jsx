@@ -6,7 +6,7 @@ import { presaleApi } from "../../services/api";
 import { toast } from "../../components/ui/toast";
 
 const routeState = vi.hoisted(() => ({
-  search: "tab=cost&type=support&opportunity_id=2&ticket_id=501",
+  search: "tab=cost&type=support&opportunity_id=2&ticket_id=501&project_id=42",
 }));
 
 vi.mock("react-router-dom", async (importOriginal) => {
@@ -56,11 +56,14 @@ vi.mock("../../components/presales/CostEstimateForm", () => ({
   ),
 }));
 
-function renderPage() {
-  routeState.search = "tab=cost&type=support&opportunity_id=2&ticket_id=501";
+function renderPage(
+  initialEntry = "/presales/technical-solutions?tab=cost&type=support&opportunity_id=2&ticket_id=501&project_id=42",
+) {
+  const url = new URL(initialEntry, "http://localhost");
+  routeState.search = url.search.replace(/^\?/, "");
 
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <PresalesCostEstimation embedded />
     </MemoryRouter>,
   );
@@ -84,7 +87,7 @@ describe("PresalesCostEstimation", () => {
     presaleApi.solutions.update.mockResolvedValue({ data: { id: 88 } });
   });
 
-  it("loads linked solution context from sales support ids", async () => {
+  it("loads linked solution context from sales support and project ids", async () => {
     renderPage();
 
     await waitFor(() => {
@@ -93,6 +96,7 @@ describe("PresalesCostEstimation", () => {
         page_size: 1,
         opportunity_id: "2",
         ticket_id: "501",
+        project_id: "42",
       });
     });
     expect(await screen.findByText("当前方案：ERP 改造售前技术方案")).toBeInTheDocument();
@@ -112,5 +116,18 @@ describe("PresalesCostEstimation", () => {
       });
     });
     expect(toast.success).toHaveBeenCalledWith("成本估算草稿已保存");
+  });
+
+  it("loads linked solution by project context when opened from project presales entry", async () => {
+    renderPage("/presales/technical-solutions?tab=cost&project_id=42");
+
+    await waitFor(() => {
+      expect(presaleApi.solutions.list).toHaveBeenCalledWith({
+        page: 1,
+        page_size: 1,
+        project_id: "42",
+      });
+    });
+    expect(await screen.findByText("当前方案：ERP 改造售前技术方案")).toBeInTheDocument();
   });
 });

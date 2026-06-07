@@ -131,6 +131,27 @@ describe("BiddingCenter", () => {
     });
   });
 
+  it("keeps project context when listing tenders from project presales entry", async () => {
+    useSearchParams.mockReturnValue([
+      new URLSearchParams("tab=bids&type=support&opportunity_id=2&ticket_id=501&project_id=42"),
+      vi.fn(),
+    ]);
+
+    renderPage({ embedded: true });
+
+    await waitFor(() => {
+      expect(presaleApi.tenders.list).toHaveBeenCalledWith(
+        expect.objectContaining({
+          page: 1,
+          page_size: 100,
+          opportunity_id: "2",
+          ticket_id: "501",
+          project_id: "42",
+        }),
+      );
+    });
+  });
+
   it("shows backend load errors", async () => {
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 

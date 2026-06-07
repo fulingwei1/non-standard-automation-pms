@@ -59,11 +59,16 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
   );
   const contextTicketId = searchParams.get("ticket_id") || "";
   const contextOpportunityId = searchParams.get("opportunity_id") || "";
+  const contextProjectId = searchParams.get("project_id") || "";
   const contextTicketIdNumber = parseContextId(contextTicketId);
   const contextOpportunityIdNumber = parseContextId(contextOpportunityId);
+  const contextProjectIdNumber = parseContextId(contextProjectId);
 
   const loadLinkedSolution = useCallback(async () => {
-    if (explicitSolutionId || (!contextTicketIdNumber && !contextOpportunityIdNumber)) {
+    if (
+      explicitSolutionId ||
+      (!contextTicketIdNumber && !contextOpportunityIdNumber && !contextProjectIdNumber)
+    ) {
       setLinkedSolution(null);
       return;
     }
@@ -74,6 +79,9 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
     }
     if (contextTicketIdNumber) {
       params.ticket_id = contextTicketId;
+    }
+    if (contextProjectIdNumber) {
+      params.project_id = contextProjectId;
     }
 
     setSolutionLoading(true);
@@ -90,6 +98,8 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
   }, [
     contextOpportunityId,
     contextOpportunityIdNumber,
+    contextProjectId,
+    contextProjectIdNumber,
     contextTicketId,
     contextTicketIdNumber,
     explicitSolutionId,
@@ -110,12 +120,14 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
         id: explicitSolutionId || linkedSolution?.id || undefined,
         ticketId: contextTicketIdNumber || undefined,
         opportunityId: contextOpportunityIdNumber || undefined,
+        projectId: contextProjectIdNumber || undefined,
         name: searchParams.get("name") || linkedSolution?.name || "售前技术方案",
         amount: queryAmount > 0 ? queryAmount : solutionAmount,
       };
     },
     [
       contextOpportunityIdNumber,
+      contextProjectIdNumber,
       contextTicketIdNumber,
       explicitSolutionId,
       linkedSolution,

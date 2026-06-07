@@ -40,6 +40,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
   const [searchParams] = useSearchParams();
   const contextTicketId = searchParams.get("ticket_id") || "";
   const contextOpportunityId = searchParams.get("opportunity_id") || "";
+  const contextProjectId = searchParams.get("project_id") || "";
   const contextTicketIdNumber = useMemo(
     () => parseContextId(contextTicketId),
     [contextTicketId],
@@ -47,6 +48,10 @@ export default function PresaleProposals({ embedded = false } = {}) {
   const contextOpportunityIdNumber = useMemo(
     () => parseContextId(contextOpportunityId),
     [contextOpportunityId],
+  );
+  const contextProjectIdNumber = useMemo(
+    () => parseContextId(contextProjectId),
+    [contextProjectId],
   );
   const [activeTab, setActiveTab] = useState("list");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -94,6 +99,9 @@ export default function PresaleProposals({ embedded = false } = {}) {
       if (contextTicketIdNumber) {
         params.ticket_id = contextTicketId;
       }
+      if (contextProjectIdNumber) {
+        params.project_id = contextProjectId;
+      }
 
       const response = await presaleApi.solutions.list(params);
       const list = extractItems(response).map(normalizeSolution);
@@ -123,6 +131,8 @@ export default function PresaleProposals({ embedded = false } = {}) {
   }, [
     contextOpportunityId,
     contextOpportunityIdNumber,
+    contextProjectId,
+    contextProjectIdNumber,
     contextTicketId,
     contextTicketIdNumber,
     searchKeyword,
@@ -239,6 +249,9 @@ export default function PresaleProposals({ embedded = false } = {}) {
       }
       if (contextTicketIdNumber) {
         payload.ticket_id = contextTicketIdNumber;
+      }
+      if (contextProjectIdNumber) {
+        payload.project_id = contextProjectIdNumber;
       }
 
       if (generatorForm.estimatedCost) {
