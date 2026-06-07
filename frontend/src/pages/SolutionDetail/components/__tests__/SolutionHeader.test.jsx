@@ -1,0 +1,33 @@
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
+import { SolutionHeader } from "../SolutionHeader";
+
+const draftSolution = {
+  id: 88,
+  code: "SOL-20260607-001",
+  name: "华南电子FCT方案",
+  status: "draft",
+  version: "V1.0",
+};
+
+describe("SolutionHeader", () => {
+  it("submits a draft solution for review from the action menu", async () => {
+    const onSubmitReview = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <SolutionHeader
+        solution={draftSolution}
+        navigate={vi.fn()}
+        onSubmitReview={onSubmitReview}
+      />,
+    );
+
+    const buttons = screen.getAllByRole("button");
+    await user.click(buttons[buttons.length - 1]);
+    await user.click(await screen.findByText("提交评审"));
+
+    expect(onSubmitReview).toHaveBeenCalledTimes(1);
+  });
+});

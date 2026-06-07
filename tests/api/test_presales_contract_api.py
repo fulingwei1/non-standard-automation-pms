@@ -14,7 +14,7 @@ from app.core.config import settings
 from app.models.enums import AssessmentStatusEnum, LeadOutcomeEnum
 from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Machine, Project
-from app.models.sales import Opportunity
+from app.models.sales import Opportunity, TechnicalAssessment
 from app.models.timesheet import Timesheet
 from app.models.user import User
 
@@ -697,6 +697,126 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(PresaleSolution).filter(PresaleSolution.id == solution_id).delete(
                 synchronize_session=False
             )
+            db_session.commit()
+
+    def test_approved_solution_completes_opportunity_assessment_for_g2_gate(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-G2-{unique}",
+            customer_name=f"G2闭环客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPPG2{unique[:6]}",
+            customer_id=customer.id,
+            opp_name=f"G2闭环商机-{unique}",
+            stage="QUALIFICATION",
+            probability=65,
+            est_amount=Decimal("280000"),
+            expected_close_date=date.today(),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+            assessment_status=AssessmentStatusEnum.PENDING.value,
+            requirement_maturity=3,
+        )
+        db_session.add(opportunity)
+        db_session.commit()
+
+        created_ticket = client.post(
+            f"{prefix}/presale/tickets",
+            json={
+                "title": f"G2方案支持工单-{unique}",
+                "ticket_type": "SOLUTION",
+                "urgency": "NORMAL",
+                "customer_id": customer.id,
+                "customer_name": customer.customer_name,
+                "opportunity_id": opportunity.id,
+            },
+            headers=headers,
+        )
+        assert created_ticket.status_code == 201, created_ticket.text
+        ticket_id = created_ticket.json()["id"]
+
+        created_solution = client.post(
+            f"{prefix}/presale/proposals/solutions",
+            json={
+                "name": f"G2阶段门方案-{unique}",
+                "solution_type": "CUSTOM",
+                "ticket_id": ticket_id,
+                "requirement_summary": "客户需求已澄清",
+                "solution_overview": "技术路线可行",
+                "estimated_cost": 180000,
+                "suggested_price": 280000,
+            },
+            headers=headers,
+        )
+        assert created_solution.status_code == 201, created_solution.text
+        solution_id = created_solution.json()["id"]
+
+        try:
+            approved = client.put(
+                f"{prefix}/presale/proposals/solutions/{solution_id}/review",
+                json={"review_status": "APPROVED", "review_comment": "方案评审通过"},
+                headers=headers,
+            )
+            assert approved.status_code == 200, approved.text
+            assert approved.json()["status"] == "APPROVED"
+
+            db_session.expire_all()
+            refreshed_opportunity = db_session.get(Opportunity, opportunity.id)
+            assert refreshed_opportunity.assessment_status == AssessmentStatusEnum.COMPLETED.value
+            assert refreshed_opportunity.assessment_id is not None
+
+            assessment = db_session.get(TechnicalAssessment, refreshed_opportunity.assessment_id)
+            assert assessment is not None
+            assert assessment.source_type == "OPPORTUNITY"
+            assert assessment.source_id == opportunity.id
+            assert assessment.status == AssessmentStatusEnum.COMPLETED.value
+            assert assessment.decision == "推荐立项"
+            assert assessment.presale_ticket_id == ticket_id
+
+            refreshed_ticket = db_session.get(PresaleSupportTicket, ticket_id)
+            assert refreshed_ticket.status == "COMPLETED"
+            assert refreshed_ticket.assessment_status == AssessmentStatusEnum.COMPLETED.value
+            assert refreshed_ticket.current_assessment_id == assessment.id
+
+            gate = client.post(
+                f"{prefix}/sales/funnel/validate-gate",
+                json={"gate_type": "G2", "entity_id": opportunity.id, "save_result": False},
+                headers=headers,
+            )
+            assert gate.status_code == 200, gate.text
+            gate_data = gate.json()["data"]
+            assert gate_data["is_valid"] is True
+            assert "技术评估通过" in gate_data["checked_items"]
+        finally:
+            db_session.query(PresaleSolution).filter(PresaleSolution.id == solution_id).delete(
+                synchronize_session=False
+            )
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id == ticket_id
+            ).delete(synchronize_session=False)
+            db_session.query(TechnicalAssessment).filter(
+                TechnicalAssessment.source_type == "OPPORTUNITY",
+                TechnicalAssessment.source_id == opportunity.id,
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
             db_session.commit()
 
     def test_tender_update_contract(self, client: TestClient, admin_token: str):

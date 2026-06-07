@@ -26,6 +26,9 @@ export default function SolutionDetail() {
         loading,
         error,
         costEstimate,
+        submittingReview,
+        reviewError,
+        submitForReview,
     } = useSolutionDetail();
 
     if (loading) {
@@ -62,7 +65,18 @@ export default function SolutionDetail() {
             animate="visible"
             className="space-y-6"
         >
-            <SolutionHeader solution={solution} navigate={navigate} />
+            <SolutionHeader
+                solution={solution}
+                navigate={navigate}
+                onSubmitReview={submitForReview}
+                submittingReview={submittingReview}
+            />
+
+            {reviewError && (
+                <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                    {reviewError}
+                </div>
+            )}
 
             <SolutionStatsCards solution={solution} />
 

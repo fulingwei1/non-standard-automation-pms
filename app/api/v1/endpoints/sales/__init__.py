@@ -24,6 +24,7 @@ from . import (
     delay_analysis,
     disputes,
     expenses,
+    funnel,
     health,
     information_gap,
     invoices,
@@ -94,6 +95,7 @@ router.include_router(receivables.router, tags=["sales-receivables"])
 router.include_router(workflows.router, tags=["sales-workflows"])
 router.include_router(requirements.router, tags=["sales-requirements"])
 router.include_router(sales_funnel.pipeline_router, tags=["sales-pipeline-analysis"])
+router.include_router(funnel.router, tags=["sales-funnel-state-machine"])
 router.include_router(accountability.router, tags=["sales-accountability"])
 router.include_router(health.router, tags=["sales-health"])
 router.include_router(delay_analysis.router, tags=["sales-delay-analysis"])

@@ -89,6 +89,8 @@ export function useSolutionDetail() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [costEstimate, setCostEstimate] = useState(null);
+    const [submittingReview, setSubmittingReview] = useState(false);
+    const [reviewError, setReviewError] = useState(null);
 
     const loadSolution = useCallback(async () => {
         if (!id) return;
@@ -123,7 +125,7 @@ export function useSolutionDetail() {
                 customer: solutionData.customer_name || "",
                 customerId: solutionData.customer_id,
                 version: solutionData.version || "V1.0",
-                status: solutionData.status?.toLowerCase() || "draft",
+                status: (solutionData.status || solutionData.review_status)?.toLowerCase() || "draft",
                 deviceType: solutionData.solution_type?.toLowerCase() || "",
                 deviceTypeName: solutionData.solution_type || "",
                 progress: solutionData.progress || 0,
@@ -144,6 +146,8 @@ export function useSolutionDetail() {
                 requirementSummary: solutionData.requirement_summary || "",
                 solutionOverview: solutionData.solution_overview || "",
                 technicalSpec: solutionData.technical_spec || "",
+                reviewStatus: solutionData.review_status || "",
+                reviewComment: solutionData.review_comment || "",
                 techSpecs: normalizeTechSpecs(solutionData),
                 equipment: solutionData.equipment || {},
                 deliverables: solutionData.deliverables || [],
@@ -162,6 +166,29 @@ export function useSolutionDetail() {
         }
     }, [id]);
 
+    const submitForReview = useCallback(async (comment = "提交评审") => {
+        if (!id || submittingReview) {
+            return;
+        }
+
+        try {
+            setSubmittingReview(true);
+            setReviewError(null);
+            await presaleApi.solutions.review(id, {
+                review_status: "REVIEW",
+                review_comment: comment,
+            });
+            await loadSolution();
+        } catch (err) {
+            console.error("Failed to submit solution review:", err);
+            const message = err.response?.data?.detail || err.message || "提交评审失败";
+            setReviewError(message);
+            throw err;
+        } finally {
+            setSubmittingReview(false);
+        }
+    }, [id, loadSolution, submittingReview]);
+
     useEffect(() => {
         loadSolution();
     }, [loadSolution]);
@@ -173,6 +200,9 @@ export function useSolutionDetail() {
         loading,
         error,
         costEstimate,
-        loadSolution
+        submittingReview,
+        reviewError,
+        loadSolution,
+        submitForReview
     };
 }

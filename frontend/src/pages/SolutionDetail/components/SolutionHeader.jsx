@@ -7,8 +7,9 @@ import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 import { getStatusStyle } from "../constants";
 
-export function SolutionHeader({ solution, navigate }) {
+export function SolutionHeader({ solution, navigate, onSubmitReview, submittingReview = false }) {
     const statusStyle = getStatusStyle(solution.status);
+    const canSubmitReview = ["draft", "rejected"].includes(solution.status);
 
     return (
         <motion.div variants={fadeIn} className="flex items-center gap-4">
@@ -47,7 +48,7 @@ export function SolutionHeader({ solution, navigate }) {
                 </Button>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" aria-label="更多操作">
                             <MoreHorizontal className="w-4 h-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -56,9 +57,12 @@ export function SolutionHeader({ solution, navigate }) {
                             <Copy className="w-4 h-4 mr-2" />
                             复制方案
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem
+                            disabled={!canSubmitReview || submittingReview}
+                            onSelect={() => onSubmitReview?.("提交评审")}
+                        >
                             <Send className="w-4 h-4 mr-2" />
-                            提交评审
+                            {submittingReview ? "提交中..." : "提交评审"}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>

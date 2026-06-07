@@ -20,11 +20,13 @@ from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
+from app.models.enums import AssessmentSourceTypeEnum, AssessmentStatusEnum
 from app.models.presale import (
     PresaleSupportTicket,
     PresaleSolution,
     PresaleSolutionCost,
 )
+from app.models.sales import Opportunity, TechnicalAssessment
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.presale import (
@@ -82,6 +84,79 @@ def build_solution_response(solution: PresaleSolution) -> SolutionResponse:
         created_at=solution.created_at,
         updated_at=solution.updated_at,
     )
+
+
+def complete_opportunity_assessment_for_solution(
+    db: Session,
+    solution: PresaleSolution,
+    current_user: User,
+) -> None:
+    """方案评审通过后补齐商机 G2 所需的技术评估闭环。"""
+    ticket = None
+    if solution.ticket_id:
+        ticket = (
+            db.query(PresaleSupportTicket)
+            .filter(PresaleSupportTicket.id == solution.ticket_id)
+            .first()
+        )
+
+    opportunity_id = solution.opportunity_id or (ticket.opportunity_id if ticket else None)
+    if not opportunity_id:
+        return
+
+    opportunity = (
+        db.query(Opportunity)
+        .filter(Opportunity.id == opportunity_id)
+        .first()
+    )
+    if not opportunity:
+        return
+
+    assessment = None
+    if opportunity.assessment_id:
+        assessment = (
+            db.query(TechnicalAssessment)
+            .filter(TechnicalAssessment.id == opportunity.assessment_id)
+            .first()
+        )
+    if assessment is None and ticket and ticket.current_assessment_id:
+        assessment = (
+            db.query(TechnicalAssessment)
+            .filter(TechnicalAssessment.id == ticket.current_assessment_id)
+            .first()
+        )
+
+    if assessment is None:
+        assessment = TechnicalAssessment(
+            source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
+            source_id=opportunity.id,
+            evaluator_id=current_user.id,
+            status=AssessmentStatusEnum.COMPLETED.value,
+            decision="推荐立项",
+            evaluated_at=datetime.now(),
+            presale_ticket_id=ticket.id if ticket else None,
+        )
+        db.add(assessment)
+        db.flush()
+    else:
+        assessment.source_type = AssessmentSourceTypeEnum.OPPORTUNITY.value
+        assessment.source_id = opportunity.id
+        assessment.status = AssessmentStatusEnum.COMPLETED.value
+        assessment.decision = assessment.decision or "推荐立项"
+        assessment.evaluator_id = assessment.evaluator_id or current_user.id
+        assessment.evaluated_at = assessment.evaluated_at or datetime.now()
+        if ticket and not assessment.presale_ticket_id:
+            assessment.presale_ticket_id = ticket.id
+
+    opportunity.assessment_id = assessment.id
+    opportunity.assessment_status = AssessmentStatusEnum.COMPLETED.value
+    opportunity.updated_by = current_user.id
+
+    if ticket:
+        ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
+        ticket.current_assessment_id = assessment.id
+        ticket.status = "COMPLETED"
+        ticket.complete_time = ticket.complete_time or datetime.now()
 
 
 @router.get("/solutions", response_model=PaginatedResponse)
@@ -298,6 +373,9 @@ def review_solution(
     solution.reviewer_id = current_user.id
     solution.review_time = datetime.now()
     solution.status = status_map[review_status]
+
+    if review_status == "APPROVED":
+        complete_opportunity_assessment_for_solution(db, solution, current_user)
 
     save_obj(db, solution)
 
