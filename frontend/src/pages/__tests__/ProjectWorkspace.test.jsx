@@ -131,6 +131,83 @@ describe("ProjectWorkspace", () => {
               ],
             },
           },
+          production: {
+            plans: {
+              total: 1,
+              open_count: 1,
+              items: [
+                {
+                  plan_no: "PP-001",
+                  plan_name: "整线生产计划",
+                  status: "RELEASED",
+                  progress: 40,
+                },
+              ],
+            },
+            work_orders: {
+              total: 2,
+              open_count: 1,
+              avg_progress: 70,
+              items: [
+                {
+                  work_order_no: "WO-001",
+                  task_name: "电气接线",
+                  task_type: "ASSEMBLY",
+                  status: "IN_PROGRESS",
+                  progress: 40,
+                },
+              ],
+            },
+          },
+          quality: {
+            inspections: {
+              total: 2,
+              failed_count: 1,
+              defect_qty: 1,
+              items: [
+                {
+                  inspection_no: "QI-FAIL",
+                  inspection_type: "IPQC",
+                  inspection_result: "FAIL",
+                  defect_type: "接线错误",
+                },
+              ],
+            },
+          },
+          delivery: {
+            schedules: {
+              total: 1,
+              active_count: 1,
+              items: [
+                {
+                  schedule_no: "PDS-001",
+                  schedule_name: "整线交付排产",
+                  status: "CONFIRMED",
+                },
+              ],
+            },
+            tasks: {
+              total: 2,
+              open_count: 1,
+              conflict_count: 1,
+              avg_progress: 65,
+            },
+          },
+          acceptance: {
+            orders: {
+              total: 1,
+              open_count: 1,
+              failed_items: 1,
+              items: [
+                {
+                  order_no: "ACC-001",
+                  acceptance_type: "FAT",
+                  status: "IN_PROGRESS",
+                  pass_rate: 60,
+                },
+              ],
+            },
+          },
         },
       },
     });
@@ -155,5 +232,13 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("BOM-001")).toBeInTheDocument();
     expect(screen.getByText("50%")).toBeInTheDocument();
     expect(screen.getByText(/MAT-001/)).toBeInTheDocument();
+    expect(screen.getByText("生产/装配")).toBeInTheDocument();
+    expect(screen.getByText("WO-001")).toBeInTheDocument();
+    expect(screen.getByText("质检")).toBeInTheDocument();
+    expect(screen.getByText("QI-FAIL")).toBeInTheDocument();
+    expect(screen.getByText("交付排产")).toBeInTheDocument();
+    expect(screen.getByText("PDS-001")).toBeInTheDocument();
+    expect(screen.getByText("验收")).toBeInTheDocument();
+    expect(screen.getByText("ACC-001")).toBeInTheDocument();
   });
 });

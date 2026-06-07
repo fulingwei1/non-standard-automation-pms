@@ -115,9 +115,20 @@ export default function ProjectWorkspace() {
   const ecns = downstreamContext?.engineering?.ecns || {};
   const bomContext = downstreamContext?.supply_chain?.bom || {};
   const kitting = downstreamContext?.supply_chain?.kitting || {};
+  const productionPlans = downstreamContext?.production?.plans || {};
+  const workOrders = downstreamContext?.production?.work_orders || {};
+  const qualityInspections = downstreamContext?.quality?.inspections || {};
+  const deliverySchedules = downstreamContext?.delivery?.schedules || {};
+  const deliveryTasks = downstreamContext?.delivery?.tasks || {};
+  const acceptanceOrders = downstreamContext?.acceptance?.orders || {};
   const latestReview = technicalReviews.items?.[0];
   const latestEcn = ecns.items?.[0];
   const latestBom = bomContext.items?.[0];
+  const latestProductionPlan = productionPlans.items?.[0];
+  const latestWorkOrder = workOrders.items?.[0];
+  const latestInspection = qualityInspections.items?.[0];
+  const latestDeliverySchedule = deliverySchedules.items?.[0];
+  const latestAcceptance = acceptanceOrders.items?.[0];
   const firstShortage = kitting.shortage_details?.[0];
 
   return (
@@ -322,6 +333,48 @@ export default function ProjectWorkspace() {
                   </p>
                   <p className="mt-2 text-sm text-gray-500">
                     缺料 {kitting.shortage_items || 0} 项
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+                <div className="rounded-lg border p-4">
+                  <p className="text-sm text-gray-500">生产/装配</p>
+                  <p className="mt-1 font-medium">
+                    {latestWorkOrder?.work_order_no || latestProductionPlan?.plan_no || "暂无工单"}
+                  </p>
+                  <p className="mt-2 truncate text-sm text-gray-500">
+                    未完成 {workOrders.open_count || 0} 项，进度 {workOrders.avg_progress ?? 0}%
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <p className="text-sm text-gray-500">质检</p>
+                  <p className="mt-1 font-medium">
+                    {latestInspection?.inspection_no || "暂无质检"}
+                  </p>
+                  <p className="mt-2 truncate text-sm text-gray-500">
+                    不合格 {qualityInspections.failed_count || 0} 项，不良 {qualityInspections.defect_qty || 0}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <p className="text-sm text-gray-500">交付排产</p>
+                  <p className="mt-1 font-medium">
+                    {latestDeliverySchedule?.schedule_no || "暂无排产"}
+                  </p>
+                  <p className="mt-2 truncate text-sm text-gray-500">
+                    冲突 {deliveryTasks.conflict_count || 0} 项，未完成 {deliveryTasks.open_count || 0} 项
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <p className="text-sm text-gray-500">验收</p>
+                  <p className="mt-1 font-medium">
+                    {latestAcceptance?.order_no || "暂无验收"}
+                  </p>
+                  <p className="mt-2 truncate text-sm text-gray-500">
+                    未完成 {acceptanceOrders.open_count || 0} 单，通过率 {latestAcceptance?.pass_rate ?? 0}%
                   </p>
                 </div>
               </div>

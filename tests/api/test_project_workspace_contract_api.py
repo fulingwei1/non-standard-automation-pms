@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """项目工作台前后端契约与交接上下文测试。"""
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -14,10 +14,13 @@ from app.core.config import settings
 from app.models.ecn import Ecn
 from app.models.material import BomHeader, BomItem, Material
 from app.models.presale import PresaleSolution, PresaleSupportTicket
+from app.models.production import ProductionPlan, QualityInspection, WorkOrder
 from app.models.project import Customer, Project
+from app.models.project_delivery import ProjectDeliverySchedule, ProjectDeliveryTask
 from app.models.sales import Contract, Opportunity, Quote, QuoteVersion
 from app.models.technical_review import TechnicalReview
 from app.models.user import User
+from app.models.acceptance import AcceptanceOrder
 
 
 def _auth_headers(token: str) -> dict:
@@ -356,3 +359,191 @@ class TestProjectWorkspaceHandoverContext:
         assert payload["supply_chain"]["kitting"]["shortage_items"] == 1
         assert payload["supply_chain"]["kitting"]["shortage_details"][0]["material_code"] == shortage_material.material_code
         assert payload["next_actions"][0]["domain"] == "supply_chain"
+
+    def test_project_workspace_downstream_context_includes_production_quality_delivery_and_acceptance(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-PWF-{unique}",
+            customer_name=f"全链路后续客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        project = Project(
+            project_code=f"PRJFL{unique[:6]}",
+            project_name=f"全链路后续项目-{unique}",
+            customer=customer,
+            customer_name=customer.customer_name,
+            project_type="FCT",
+            product_category="测试设备",
+            industry="电子制造",
+            stage="S5",
+            status="ST05",
+            health="H2",
+            pm_id=admin_user.id,
+            pm_name=admin_user.real_name or admin_user.username,
+            created_by=admin_user.id,
+        )
+        db_session.add_all([customer, project])
+        db_session.flush()
+
+        plan = ProductionPlan(
+            plan_no=f"PP-PWF-{unique}",
+            plan_name=f"全链路生产计划-{unique}",
+            plan_type="MASTER",
+            project_id=project.id,
+            plan_start_date=date.today(),
+            plan_end_date=date.today() + timedelta(days=20),
+            status="RELEASED",
+            progress=40,
+            created_by=admin_user.id,
+        )
+        db_session.add(plan)
+        db_session.flush()
+
+        completed_order = WorkOrder(
+            work_order_no=f"WO-PWF-A-{unique}",
+            task_name="机架装配",
+            task_type="ASSEMBLY",
+            project_id=project.id,
+            production_plan_id=plan.id,
+            plan_qty=1,
+            completed_qty=1,
+            qualified_qty=1,
+            status="COMPLETED",
+            progress=100,
+            created_by=admin_user.id,
+        )
+        open_order = WorkOrder(
+            work_order_no=f"WO-PWF-B-{unique}",
+            task_name="电气接线",
+            task_type="ASSEMBLY",
+            project_id=project.id,
+            production_plan_id=plan.id,
+            plan_qty=1,
+            completed_qty=0,
+            defect_qty=1,
+            status="IN_PROGRESS",
+            progress=40,
+            created_by=admin_user.id,
+        )
+        db_session.add_all([completed_order, open_order])
+        db_session.flush()
+
+        inspection_pass = QualityInspection(
+            inspection_no=f"QI-PWF-A-{unique}",
+            work_order_id=completed_order.id,
+            inspection_type="IPQC",
+            inspection_date=datetime.now(),
+            inspector_id=admin_user.id,
+            inspection_qty=1,
+            qualified_qty=1,
+            defect_qty=0,
+            inspection_result="PASS",
+            created_by=admin_user.id,
+        )
+        inspection_fail = QualityInspection(
+            inspection_no=f"QI-PWF-B-{unique}",
+            work_order_id=open_order.id,
+            inspection_type="IPQC",
+            inspection_date=datetime.now(),
+            inspector_id=admin_user.id,
+            inspection_qty=1,
+            qualified_qty=0,
+            defect_qty=1,
+            inspection_result="FAIL",
+            defect_type="接线错误",
+            defect_description="线号与图纸不一致",
+            created_by=admin_user.id,
+        )
+        acceptance = AcceptanceOrder(
+            order_no=f"ACC-PWF-{unique}",
+            project_id=project.id,
+            acceptance_type="FAT",
+            planned_date=date.today() + timedelta(days=25),
+            status="IN_PROGRESS",
+            total_items=10,
+            passed_items=6,
+            failed_items=1,
+            pass_rate=Decimal("60.00"),
+            overall_result="CONDITIONAL",
+            created_by=admin_user.id,
+        )
+        delivery_schedule = ProjectDeliverySchedule(
+            schedule_no=f"PDS-PWF-{unique}",
+            schedule_name=f"全链路交付排产-{unique}",
+            project_id=project.id,
+            version="V1.0",
+            status="CONFIRMED",
+            usage_type="BOTH",
+            initiator_id=admin_user.id,
+            initiator_name=admin_user.real_name or admin_user.username,
+            is_pre_contract=False,
+            is_active=True,
+        )
+        db_session.add_all([inspection_pass, inspection_fail, acceptance, delivery_schedule])
+        db_session.flush()
+
+        db_session.add_all(
+            [
+                ProjectDeliveryTask(
+                    schedule_id=delivery_schedule.id,
+                    task_no=f"DT-PWF-A-{unique}",
+                    task_type="PRODUCTION",
+                    task_name="装配完成",
+                    planned_start=date.today(),
+                    planned_end=date.today() + timedelta(days=10),
+                    status="COMPLETED",
+                    progress_pct=Decimal("100"),
+                ),
+                ProjectDeliveryTask(
+                    schedule_id=delivery_schedule.id,
+                    task_no=f"DT-PWF-B-{unique}",
+                    task_type="ACCEPTANCE",
+                    task_name="客户预验收",
+                    planned_start=date.today() + timedelta(days=12),
+                    planned_end=date.today() + timedelta(days=20),
+                    has_conflict=True,
+                    conflict_details={"reason": "测试工程师资源冲突"},
+                    status="IN_PROGRESS",
+                    progress_pct=Decimal("30"),
+                ),
+            ]
+        )
+        db_session.commit()
+
+        response = client.get(
+            f"{prefix}/project-workspace/projects/{project.id}/downstream-context",
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+
+        payload = response.json()
+        assert payload["production"]["plans"]["total"] == 1
+        assert payload["production"]["plans"]["items"][0]["plan_no"] == plan.plan_no
+        assert payload["production"]["work_orders"]["total"] == 2
+        assert payload["production"]["work_orders"]["open_count"] == 1
+        assert payload["production"]["work_orders"]["avg_progress"] == 70.0
+        assert payload["quality"]["inspections"]["total"] == 2
+        assert payload["quality"]["inspections"]["failed_count"] == 1
+        assert payload["quality"]["inspections"]["defect_qty"] == 1
+        assert payload["quality"]["inspections"]["items"][0]["inspection_no"] == inspection_fail.inspection_no
+        assert payload["delivery"]["schedules"]["total"] == 1
+        assert payload["delivery"]["schedules"]["items"][0]["schedule_no"] == delivery_schedule.schedule_no
+        assert payload["delivery"]["tasks"]["total"] == 2
+        assert payload["delivery"]["tasks"]["conflict_count"] == 1
+        assert payload["acceptance"]["orders"]["total"] == 1
+        assert payload["acceptance"]["orders"]["open_count"] == 1
+        assert payload["acceptance"]["orders"]["items"][0]["order_no"] == acceptance.order_no
+        action_domains = {action["domain"] for action in payload["next_actions"]}
+        assert {"production", "quality", "delivery", "acceptance"}.issubset(action_domains)

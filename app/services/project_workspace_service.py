@@ -6,14 +6,17 @@
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import or_
+from sqlalchemy import inspect, or_
 from sqlalchemy.orm import Session, joinedload
 
+from app.models.acceptance import AcceptanceOrder
 from app.models.ecn import Ecn
 from app.models.issue import Issue
 from app.models.material import BomHeader, BomItem, Material
 from app.models.presale import PresaleSolution, PresaleSupportTicket
+from app.models.production import ProductionPlan, QualityInspection, WorkOrder
 from app.models.project import Project, ProjectDocument, ProjectMember
+from app.models.project_delivery import ProjectDeliverySchedule, ProjectDeliveryTask
 from app.models.sales import Contract, Opportunity, Quote, QuoteVersion
 from app.models.task_center import TaskUnified
 from app.models.technical_review import TechnicalReview
@@ -34,6 +37,13 @@ def _dec(value: Any) -> Decimal:
         return Decimal(str(value))
     except Exception:
         return Decimal("0")
+
+
+def _model_table_exists(db: Session, model: Any) -> bool:
+    try:
+        return inspect(db.get_bind()).has_table(model.__tablename__)
+    except Exception:
+        return False
 
 
 def build_project_basic_info(project: Project) -> Dict[str, Any]:
@@ -679,8 +689,117 @@ def _calculate_project_kitting(db: Session, project_id: int) -> Dict[str, Any]:
     }
 
 
+def _build_production_plan_payload(plan: ProductionPlan) -> Dict[str, Any]:
+    return {
+        "id": plan.id,
+        "plan_no": plan.plan_no,
+        "plan_name": plan.plan_name,
+        "plan_type": plan.plan_type,
+        "status": plan.status,
+        "progress": float(plan.progress or 0),
+        "plan_start_date": plan.plan_start_date.isoformat() if plan.plan_start_date else None,
+        "plan_end_date": plan.plan_end_date.isoformat() if plan.plan_end_date else None,
+        "approved_at": plan.approved_at.isoformat() if plan.approved_at else None,
+    }
+
+
+def _build_work_order_payload(order: WorkOrder) -> Dict[str, Any]:
+    return {
+        "id": order.id,
+        "work_order_no": order.work_order_no,
+        "task_name": order.task_name,
+        "task_type": order.task_type,
+        "status": order.status,
+        "priority": order.priority,
+        "progress": float(order.progress or 0),
+        "plan_qty": order.plan_qty or 0,
+        "completed_qty": order.completed_qty or 0,
+        "qualified_qty": order.qualified_qty or 0,
+        "defect_qty": order.defect_qty or 0,
+        "plan_start_date": order.plan_start_date.isoformat() if order.plan_start_date else None,
+        "plan_end_date": order.plan_end_date.isoformat() if order.plan_end_date else None,
+    }
+
+
+def _build_quality_inspection_payload(inspection: QualityInspection) -> Dict[str, Any]:
+    return {
+        "id": inspection.id,
+        "inspection_no": inspection.inspection_no,
+        "work_order_id": inspection.work_order_id,
+        "inspection_type": inspection.inspection_type,
+        "inspection_date": (
+            inspection.inspection_date.isoformat() if inspection.inspection_date else None
+        ),
+        "inspection_qty": inspection.inspection_qty or 0,
+        "qualified_qty": inspection.qualified_qty or 0,
+        "defect_qty": inspection.defect_qty or 0,
+        "inspection_result": inspection.inspection_result,
+        "defect_rate": _num(inspection.defect_rate),
+        "defect_type": inspection.defect_type,
+        "defect_description": inspection.defect_description,
+        "handling_result": inspection.handling_result,
+    }
+
+
+def _build_acceptance_order_payload(order: AcceptanceOrder) -> Dict[str, Any]:
+    return {
+        "id": order.id,
+        "order_no": order.order_no,
+        "acceptance_type": order.acceptance_type,
+        "status": order.status,
+        "planned_date": order.planned_date.isoformat() if order.planned_date else None,
+        "actual_start_date": (
+            order.actual_start_date.isoformat() if order.actual_start_date else None
+        ),
+        "actual_end_date": order.actual_end_date.isoformat() if order.actual_end_date else None,
+        "total_items": order.total_items or 0,
+        "passed_items": order.passed_items or 0,
+        "failed_items": order.failed_items or 0,
+        "pass_rate": _num(order.pass_rate),
+        "overall_result": order.overall_result,
+        "is_officially_completed": bool(order.is_officially_completed),
+        "officially_completed_at": (
+            order.officially_completed_at.isoformat()
+            if order.officially_completed_at
+            else None
+        ),
+    }
+
+
+def _build_delivery_schedule_payload(schedule: ProjectDeliverySchedule) -> Dict[str, Any]:
+    return {
+        "id": schedule.id,
+        "schedule_no": schedule.schedule_no,
+        "schedule_name": schedule.schedule_name,
+        "version": schedule.version,
+        "status": schedule.status,
+        "usage_type": schedule.usage_type,
+        "is_active": bool(schedule.is_active),
+        "is_pre_contract": bool(schedule.is_pre_contract),
+        "confirmed_at": schedule.confirmed_at.isoformat() if schedule.confirmed_at else None,
+    }
+
+
+def _build_delivery_task_payload(task: ProjectDeliveryTask) -> Dict[str, Any]:
+    return {
+        "id": task.id,
+        "task_no": task.task_no,
+        "task_type": task.task_type,
+        "task_name": task.task_name,
+        "machine_name": task.machine_name,
+        "module_name": task.module_name,
+        "assigned_engineer_name": task.assigned_engineer_name,
+        "planned_start": task.planned_start.isoformat() if task.planned_start else None,
+        "planned_end": task.planned_end.isoformat() if task.planned_end else None,
+        "status": task.status,
+        "progress_pct": _num(task.progress_pct),
+        "has_conflict": bool(task.has_conflict),
+        "conflict_details": task.conflict_details,
+    }
+
+
 def build_project_downstream_context(db: Session, project: Project) -> Dict[str, Any]:
-    """构建项目进入工程、BOM、采购齐套后的最小上下文。"""
+    """构建项目进入工程、供应链、生产、交付、验收后的最小上下文。"""
     review_query = db.query(TechnicalReview).filter(TechnicalReview.project_id == project.id)
     reviews = (
         review_query.order_by(TechnicalReview.scheduled_date.desc(), TechnicalReview.id.desc())
@@ -704,6 +823,192 @@ def build_project_downstream_context(db: Session, project: Project) -> Dict[str,
     bom_query = db.query(BomHeader).filter(BomHeader.project_id == project.id)
     boms = bom_query.order_by(BomHeader.is_latest.desc(), BomHeader.id.desc()).limit(10).all()
     kitting = _calculate_project_kitting(db, project.id)
+
+    if _model_table_exists(db, ProductionPlan):
+        plan_query = db.query(ProductionPlan).filter(ProductionPlan.project_id == project.id)
+        production_plans = (
+            plan_query.order_by(ProductionPlan.plan_start_date.desc(), ProductionPlan.id.desc())
+            .limit(10)
+            .all()
+        )
+        plan_total = plan_query.count()
+        open_plan_count = sum(
+            1
+            for status, in plan_query.with_entities(ProductionPlan.status).all()
+            if str(status or "").upper() not in {"COMPLETED", "CLOSED", "CANCELLED"}
+        )
+    else:
+        production_plans = []
+        plan_total = 0
+        open_plan_count = 0
+
+    if _model_table_exists(db, WorkOrder):
+        work_order_query = db.query(WorkOrder).filter(WorkOrder.project_id == project.id)
+        work_orders = (
+            work_order_query.order_by(WorkOrder.plan_end_date.asc(), WorkOrder.id.desc())
+            .limit(10)
+            .all()
+        )
+        work_order_total = work_order_query.count()
+        all_work_order_statuses = work_order_query.with_entities(
+            WorkOrder.status,
+            WorkOrder.progress,
+        ).all()
+        open_work_order_count = sum(
+            1
+            for status, _progress in all_work_order_statuses
+            if str(status or "").upper() not in {"COMPLETED", "CLOSED", "CANCELLED"}
+        )
+        completed_work_order_count = sum(
+            1
+            for status, _progress in all_work_order_statuses
+            if str(status or "").upper() == "COMPLETED"
+        )
+        avg_work_order_progress = (
+            round(
+                sum(float(progress or 0) for _status, progress in all_work_order_statuses)
+                / len(all_work_order_statuses),
+                1,
+            )
+            if all_work_order_statuses
+            else 0.0
+        )
+    else:
+        work_orders = []
+        work_order_total = 0
+        open_work_order_count = 0
+        completed_work_order_count = 0
+        avg_work_order_progress = 0.0
+
+    if _model_table_exists(db, QualityInspection) and _model_table_exists(db, WorkOrder):
+        quality_query = (
+            db.query(QualityInspection)
+            .join(WorkOrder, QualityInspection.work_order_id == WorkOrder.id)
+            .filter(WorkOrder.project_id == project.id)
+        )
+        inspections = (
+            quality_query.order_by(
+                QualityInspection.inspection_date.desc(),
+                QualityInspection.id.desc(),
+            )
+            .limit(10)
+            .all()
+        )
+        quality_total = quality_query.count()
+        quality_rows = quality_query.with_entities(
+            QualityInspection.inspection_result,
+            QualityInspection.defect_qty,
+        ).all()
+        failed_inspection_count = sum(
+            1 for result, _defect_qty in quality_rows if str(result or "").upper() == "FAIL"
+        )
+        pending_inspection_count = sum(
+            1 for result, _defect_qty in quality_rows if str(result or "").upper() == "PENDING"
+        )
+        total_defect_qty = sum(int(defect_qty or 0) for _result, defect_qty in quality_rows)
+    else:
+        inspections = []
+        quality_total = 0
+        failed_inspection_count = 0
+        pending_inspection_count = 0
+        total_defect_qty = 0
+
+    if _model_table_exists(db, ProjectDeliverySchedule):
+        delivery_schedule_query = db.query(ProjectDeliverySchedule).filter(
+            ProjectDeliverySchedule.project_id == project.id
+        )
+        delivery_schedules = (
+            delivery_schedule_query.order_by(
+                ProjectDeliverySchedule.is_active.desc(),
+                ProjectDeliverySchedule.id.desc(),
+            )
+            .limit(10)
+            .all()
+        )
+        delivery_schedule_total = delivery_schedule_query.count()
+        active_delivery_count = sum(
+            1
+            for is_active, in delivery_schedule_query.with_entities(
+                ProjectDeliverySchedule.is_active
+            ).all()
+            if is_active
+        )
+    else:
+        delivery_schedules = []
+        delivery_schedule_total = 0
+        active_delivery_count = 0
+
+    delivery_schedule_ids = [schedule.id for schedule in delivery_schedules]
+    if delivery_schedule_ids and _model_table_exists(db, ProjectDeliveryTask):
+        delivery_task_query = db.query(ProjectDeliveryTask).filter(
+            ProjectDeliveryTask.schedule_id.in_(delivery_schedule_ids)
+        )
+        delivery_tasks = (
+            delivery_task_query.order_by(
+                ProjectDeliveryTask.planned_end.asc(),
+                ProjectDeliveryTask.id.desc(),
+            )
+            .limit(10)
+            .all()
+        )
+        all_delivery_tasks = delivery_task_query.with_entities(
+            ProjectDeliveryTask.status,
+            ProjectDeliveryTask.progress_pct,
+            ProjectDeliveryTask.has_conflict,
+        ).all()
+    else:
+        delivery_tasks = []
+        all_delivery_tasks = []
+    open_delivery_task_count = sum(
+        1
+        for status, _progress, _has_conflict in all_delivery_tasks
+        if str(status or "").upper() not in {"COMPLETED", "CLOSED", "CANCELLED"}
+    )
+    conflict_delivery_task_count = sum(
+        1 for _status, _progress, has_conflict in all_delivery_tasks if has_conflict
+    )
+    avg_delivery_progress = (
+        round(
+            sum(float(progress or 0) for _status, progress, _has_conflict in all_delivery_tasks)
+            / len(all_delivery_tasks),
+            1,
+        )
+        if all_delivery_tasks
+        else 0.0
+    )
+
+    if _model_table_exists(db, AcceptanceOrder):
+        acceptance_query = db.query(AcceptanceOrder).filter(
+            AcceptanceOrder.project_id == project.id
+        )
+        acceptance_orders = (
+            acceptance_query.order_by(
+                AcceptanceOrder.planned_date.asc(),
+                AcceptanceOrder.id.desc(),
+            )
+            .limit(10)
+            .all()
+        )
+        acceptance_total = acceptance_query.count()
+        acceptance_rows = acceptance_query.with_entities(
+            AcceptanceOrder.status,
+            AcceptanceOrder.failed_items,
+            AcceptanceOrder.is_officially_completed,
+        ).all()
+        open_acceptance_count = sum(
+            1
+            for status, _failed_items, is_officially_completed in acceptance_rows
+            if not is_officially_completed
+            and str(status or "").upper() not in {"COMPLETED", "CLOSED", "CANCELLED"}
+        )
+        failed_acceptance_item_count = sum(
+            int(failed_items or 0) for _status, failed_items, _official in acceptance_rows
+        )
+    else:
+        acceptance_orders = []
+        acceptance_total = 0
+        open_acceptance_count = 0
+        failed_acceptance_item_count = 0
 
     next_actions: List[Dict[str, Any]] = []
     if kitting["shortage_items"] > 0:
@@ -738,6 +1043,64 @@ def build_project_downstream_context(db: Session, project: Project) -> Dict[str,
                 "description": f"项目仍有 {open_review_count} 个技术评审未完成",
             }
         )
+    if open_work_order_count > 0:
+        next_actions.append(
+            {
+                "domain": "production",
+                "priority": "HIGH" if avg_work_order_progress < 50 else "MEDIUM",
+                "title": "推进生产/装配工单",
+                "description": (
+                    f"项目仍有 {open_work_order_count} 个生产/装配工单未完成，"
+                    f"平均进度 {avg_work_order_progress}%"
+                ),
+            }
+        )
+    if failed_inspection_count > 0:
+        next_actions.append(
+            {
+                "domain": "quality",
+                "priority": "HIGH",
+                "title": "处理质检不合格项",
+                "description": (
+                    f"项目有 {failed_inspection_count} 条质检不合格记录，"
+                    f"不良数量 {total_defect_qty}"
+                ),
+            }
+        )
+    if conflict_delivery_task_count > 0:
+        next_actions.append(
+            {
+                "domain": "delivery",
+                "priority": "HIGH",
+                "title": "解决交付排产冲突",
+                "description": f"项目交付计划中有 {conflict_delivery_task_count} 个任务存在冲突",
+            }
+        )
+    elif open_delivery_task_count > 0:
+        next_actions.append(
+            {
+                "domain": "delivery",
+                "priority": "MEDIUM",
+                "title": "推进交付计划任务",
+                "description": f"项目仍有 {open_delivery_task_count} 个交付任务未完成",
+            }
+        )
+    if open_acceptance_count > 0:
+        next_actions.append(
+            {
+                "domain": "acceptance",
+                "priority": "HIGH" if failed_acceptance_item_count else "MEDIUM",
+                "title": "推进验收闭环",
+                "description": (
+                    f"项目仍有 {open_acceptance_count} 个验收单未完成"
+                    + (
+                        f"，存在 {failed_acceptance_item_count} 个未通过检查项"
+                        if failed_acceptance_item_count
+                        else ""
+                    )
+                ),
+            }
+        )
 
     return {
         "project": build_project_basic_info(project),
@@ -760,6 +1123,60 @@ def build_project_downstream_context(db: Session, project: Project) -> Dict[str,
                 "latest_count": sum(1 for bom in boms if bom.is_latest),
             },
             "kitting": kitting,
+        },
+        "production": {
+            "plans": {
+                "items": [_build_production_plan_payload(plan) for plan in production_plans],
+                "total": plan_total,
+                "open_count": open_plan_count,
+            },
+            "work_orders": {
+                "items": [_build_work_order_payload(order) for order in work_orders],
+                "total": work_order_total,
+                "completed_count": completed_work_order_count,
+                "open_count": open_work_order_count,
+                "avg_progress": avg_work_order_progress,
+            },
+        },
+        "quality": {
+            "inspections": {
+                "items": [
+                    _build_quality_inspection_payload(inspection)
+                    for inspection in inspections
+                ],
+                "total": quality_total,
+                "failed_count": failed_inspection_count,
+                "pending_count": pending_inspection_count,
+                "defect_qty": total_defect_qty,
+            },
+        },
+        "delivery": {
+            "schedules": {
+                "items": [
+                    _build_delivery_schedule_payload(schedule)
+                    for schedule in delivery_schedules
+                ],
+                "total": delivery_schedule_total,
+                "active_count": active_delivery_count,
+            },
+            "tasks": {
+                "items": [_build_delivery_task_payload(task) for task in delivery_tasks],
+                "total": len(all_delivery_tasks),
+                "open_count": open_delivery_task_count,
+                "conflict_count": conflict_delivery_task_count,
+                "avg_progress": avg_delivery_progress,
+            },
+        },
+        "acceptance": {
+            "orders": {
+                "items": [
+                    _build_acceptance_order_payload(order)
+                    for order in acceptance_orders
+                ],
+                "total": acceptance_total,
+                "open_count": open_acceptance_count,
+                "failed_items": failed_acceptance_item_count,
+            },
         },
         "next_actions": next_actions,
     }
