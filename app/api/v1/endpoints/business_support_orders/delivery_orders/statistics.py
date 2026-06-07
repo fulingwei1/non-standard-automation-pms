@@ -4,8 +4,9 @@
 """
 
 from datetime import date, datetime, timedelta
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -23,7 +24,9 @@ router = APIRouter()
     summary="获取发货统计",
 )
 async def get_delivery_statistics(
-    db: Session = Depends(deps.get_db), current_user: User = Depends(deps.get_current_user)
+    project_id: Optional[int] = Query(None, description="项目ID筛选"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
 ):
     """
     发货统计（给生产总监看）
@@ -35,14 +38,20 @@ async def get_delivery_statistics(
         # 本周开始日期
         week_start = today - timedelta(days=today.weekday())
 
+        def scoped_delivery_query():
+            query = db.query(DeliveryOrder)
+            if project_id:
+                query = query.filter(DeliveryOrder.project_id == project_id)
+            return query
+
         # 待发货（已审批但未发货）
         pending_shipments = (
-            db.query(DeliveryOrder).filter(DeliveryOrder.delivery_status == "approved").count()
+            scoped_delivery_query().filter(DeliveryOrder.delivery_status == "approved").count()
         )
 
         # 今日已发
         shipped_today = (
-            db.query(DeliveryOrder)
+            scoped_delivery_query()
             .filter(
                 DeliveryOrder.delivery_status == "shipped", DeliveryOrder.ship_date >= today_start
             )
@@ -51,7 +60,7 @@ async def get_delivery_statistics(
 
         # 在途订单（已发货但未签收）
         in_transit = (
-            db.query(DeliveryOrder)
+            scoped_delivery_query()
             .filter(
                 DeliveryOrder.delivery_status == "shipped", DeliveryOrder.receive_date.is_(None)
             )
@@ -60,7 +69,7 @@ async def get_delivery_statistics(
 
         # 本周已送达
         delivered_this_week = (
-            db.query(DeliveryOrder)
+            scoped_delivery_query()
             .filter(
                 DeliveryOrder.delivery_status == "received",
                 DeliveryOrder.receive_date >= week_start,
@@ -70,7 +79,7 @@ async def get_delivery_statistics(
 
         # 准时发货率（计划发货日期 vs 实际发货日期）
         all_shipped = (
-            db.query(DeliveryOrder)
+            scoped_delivery_query()
             .filter(
                 DeliveryOrder.delivery_status.in_(["shipped", "received"]),
                 DeliveryOrder.delivery_date.isnot(None),
@@ -88,7 +97,7 @@ async def get_delivery_statistics(
 
         # 平均发货时间（从发货到签收）
         delivered_orders = (
-            db.query(DeliveryOrder)
+            scoped_delivery_query()
             .filter(
                 DeliveryOrder.delivery_status == "received",
                 DeliveryOrder.ship_date.isnot(None),
@@ -105,7 +114,7 @@ async def get_delivery_statistics(
             avg_shipping_time = total_days / len(delivered_orders) if delivered_orders else 0.0
 
         # 总订单数
-        total_orders = db.query(DeliveryOrder).count()
+        total_orders = scoped_delivery_query().count()
 
         return ResponseModel(
             code=200,

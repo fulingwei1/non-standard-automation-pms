@@ -35,6 +35,7 @@ router = APIRouter()
 )
 async def get_delivery_orders(
     pagination: PaginationParams = Depends(get_pagination_query),
+    project_id: Optional[int] = Query(None, description="项目ID筛选"),
     order_id: Optional[int] = Query(None, description="销售订单ID筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     approval_status: Optional[str] = Query(None, description="审批状态筛选"),
@@ -48,6 +49,8 @@ async def get_delivery_orders(
         query = db.query(DeliveryOrder)
 
         # 筛选条件
+        if project_id:
+            query = query.filter(DeliveryOrder.project_id == project_id)
         if order_id:
             query = query.filter(DeliveryOrder.order_id == order_id)
         if customer_id:

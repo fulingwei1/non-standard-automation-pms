@@ -53,6 +53,7 @@ const DeliveryManagement = () => {
     setSearchText,
     loadData,
     handleBack,
+    buildDeliveryPath,
     navigate,
   } = useDeliveryManagement();
 
@@ -104,7 +105,7 @@ const DeliveryManagement = () => {
       className="delivery-management-container p-6 bg-slate-900 min-h-screen"
     >
       <PageHeader
-        onNew={() => navigate("/pmc/delivery-orders/new")}
+        onNew={() => navigate(buildDeliveryPath("/pmc/delivery-orders/new"))}
         onRefresh={loadData}
       />
 

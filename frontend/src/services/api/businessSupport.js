@@ -36,7 +36,7 @@ export const businessSupportApi = {
     create: (data) => api.post("/business-support/delivery-orders", data),
     update: (id, data) =>
       api.put(`/business-support/delivery-orders/${id}`, data),
-    statistics: () => api.get("/business-support/delivery-orders/statistics"),
+    statistics: (params) => api.get("/business-support/delivery-orders/statistics", { params }),
   },
   salesOrders: {
     list: (params) => api.get("/business-support/sales-orders", { params }),

@@ -8,6 +8,7 @@ import { useSearchParams, useNavigate, useParams, useLocation } from "react-rout
 
 import { toast } from "../../components/ui";
 import { businessSupportApi } from "../../services/api";
+import { getProjectContextFilters } from "../../lib/projectContext";
 import { getItemsCompat } from "../../utils/apiResponse";
 import { normalizeDelivery } from "./constants";
 
@@ -20,12 +21,20 @@ const getViewMode = (location, params) => {
 };
 
 const useDeliveryManagement = () => {
-  const [_searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const params = useParams();
   const location = useLocation();
 
   const viewMode = getViewMode(location, params);
+  const projectContextFilters = useMemo(
+    () => getProjectContextFilters(searchParams),
+    [searchParams],
+  );
+  const buildDeliveryPath = (path) => {
+    const query = searchParams.toString();
+    return `${path}${query ? `?${query}` : ""}`;
+  };
 
   // ── state ──────────────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(false);
@@ -45,8 +54,14 @@ const useDeliveryManagement = () => {
     setLoading(true);
     try {
       const [listRes, statsRes] = await Promise.all([
-        businessSupportApi.deliveryOrders.list({ page: 1, page_size: 200 }),
-        businessSupportApi.deliveryOrders.statistics().catch(() => ({ data: null })),
+        businessSupportApi.deliveryOrders.list({
+          page: 1,
+          page_size: 200,
+          ...projectContextFilters,
+        }),
+        businessSupportApi.deliveryOrders
+          .statistics(projectContextFilters)
+          .catch(() => ({ data: null })),
       ]);
       const items = getItemsCompat(listRes);
       setDeliveries(Array.isArray(items) ? items.map(normalizeDelivery) : []);
@@ -77,7 +92,7 @@ const useDeliveryManagement = () => {
   }, [deliveries, searchText]);
 
   // ── navigation helpers ─────────────────────────────────────────────────────
-  const handleBack = () => navigate("/pmc/delivery-orders");
+  const handleBack = () => navigate(buildDeliveryPath("/pmc/delivery-orders"));
 
   return {
     viewMode,
@@ -92,6 +107,7 @@ const useDeliveryManagement = () => {
     setSearchText,
     loadData,
     handleBack,
+    buildDeliveryPath,
     navigate,
   };
 };

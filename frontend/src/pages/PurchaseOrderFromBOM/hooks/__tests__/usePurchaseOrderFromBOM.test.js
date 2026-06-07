@@ -1,116 +1,106 @@
-import { renderHook, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { usePurchaseOrderFromBOM } from '../usePurchaseOrderFromBOM';
-import { bomApi, purchaseApi, supplierApi } from '../../../../services/api';
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useSearchParams } from "react-router-dom";
+import { bomApi, purchaseApi, supplierApi } from "../../../../services/api";
+import { usePurchaseOrderFromBOM } from "../usePurchaseOrderFromBOM";
 
-// Mock API
-vi.mock('../../../../services/api', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    bomApi: {
+vi.mock("react-router-dom", () => ({
+  useSearchParams: vi.fn(),
+}));
+
+vi.mock("../../../../components/ui/toast", () => ({
+  toast: {
+    error: vi.fn(),
+    success: vi.fn(),
+  },
+}));
+
+vi.mock("../../../../services/api", () => ({
+  bomApi: {
     list: vi.fn(),
-    get: vi.fn(),
-    query: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    aiMatch: vi.fn(),
-    getOverdue: vi.fn(),
-    getAging: vi.fn(),
-    getSummary: vi.fn(),
-    batch: vi.fn(),
-    export: vi.fn(),
-    submit: vi.fn(),
-    approve: vi.fn(),
-    reject: vi.fn(),
-    start: vi.fn(),
-    complete: vi.fn(),
-    cancel: vi.fn(),
   },
   purchaseApi: {
-    list: vi.fn(),
-    get: vi.fn(),
-    query: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    aiMatch: vi.fn(),
-    getOverdue: vi.fn(),
-    getAging: vi.fn(),
-    getSummary: vi.fn(),
-    batch: vi.fn(),
-    export: vi.fn(),
-    submit: vi.fn(),
-    approve: vi.fn(),
-    reject: vi.fn(),
-    start: vi.fn(),
-    complete: vi.fn(),
-    cancel: vi.fn(),
+    orders: {
+      createFromBOM: vi.fn(),
+    },
   },
   supplierApi: {
     list: vi.fn(),
-    get: vi.fn(),
-    query: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    aiMatch: vi.fn(),
-    getOverdue: vi.fn(),
-    getAging: vi.fn(),
-    getSummary: vi.fn(),
-    batch: vi.fn(),
-    export: vi.fn(),
-    submit: vi.fn(),
-    approve: vi.fn(),
-    reject: vi.fn(),
-    start: vi.fn(),
-    complete: vi.fn(),
-    cancel: vi.fn(),
   },
-  default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-    patch: vi.fn(),
-    defaults: { baseURL: '/api' },
-  },
-  };
-});
+}));
 
-describe.skip('usePurchaseOrderFromBOM Hook', () => {
-  // Setup common mock data
-  const mockItems = [{ id: 1, name: 'Test 1' }, { id: 2, name: 'Test 2' }];
-  const mockDetail = { id: 1, name: 'Test Detail' };
-  const mockResponse = { data: { items: mockItems, total: 2 }, items: mockItems }; 
-
+describe("usePurchaseOrderFromBOM", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Auto-setup mocks for known methods
-    const apiObjects = [bomApi, purchaseApi, supplierApi];
-    apiObjects.forEach(api => {
-        if (api) {
-            if (api.list) api.list.mockResolvedValue(mockResponse);
-            if (api.get) api.get.mockResolvedValue({ data: mockDetail });
-            if (api.query) api.query.mockResolvedValue(mockResponse);
-            if (api.aiMatch) api.aiMatch.mockResolvedValue(mockResponse); // specialized
-        }
+    useSearchParams.mockReturnValue([new URLSearchParams("project_id=42"), vi.fn()]);
+    bomApi.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 88,
+            bom_no: "BOM-42",
+            project_id: 42,
+            project_name: "合同转项目",
+          },
+        ],
+      },
+    });
+    supplierApi.list.mockResolvedValue({
+      data: {
+        items: [{ id: 7, supplier_name: "默认供应商" }],
+      },
+    });
+    purchaseApi.orders.createFromBOM.mockResolvedValue({
+      data: {
+        data: {
+          bom_id: 88,
+          preview: [{ supplier_id: 7, items: [] }],
+          created_orders: [{ id: 901 }],
+        },
+      },
     });
   });
 
-  it('should load data', async () => {
+  it("loads released BOMs within the upstream project context and preselects the only match", async () => {
     const { result } = renderHook(() => usePurchaseOrderFromBOM());
 
-    // Wait for loading to finish
-    if (Object.prototype.hasOwnProperty.call(result.current, 'loading')) {
-        await waitFor(() => expect(result.current.loading).toBe(false));
-    } else {
-        await waitFor(() => {});
-    }
+    await waitFor(() => {
+      expect(bomApi.list).toHaveBeenCalledWith({
+        status: "RELEASED",
+        page_size: 1000,
+        project_id: "42",
+      });
+    });
+    await waitFor(() => {
+      expect(result.current.selectedBomId).toBe("88");
+    });
+  });
 
-    // Basic assertion
-    expect(result.current).toBeDefined();
+  it("keeps project context when generating preview and creating purchase orders", async () => {
+    const { result } = renderHook(() => usePurchaseOrderFromBOM());
+
+    await waitFor(() => {
+      expect(result.current.selectedBomId).toBe("88");
+    });
+
+    await act(async () => {
+      await result.current.handleGeneratePreview();
+    });
+
+    expect(purchaseApi.orders.createFromBOM).toHaveBeenCalledWith({
+      bom_id: 88,
+      create_orders: false,
+      project_id: "42",
+    });
+
+    await act(async () => {
+      await result.current.handleCreateOrders();
+    });
+
+    expect(purchaseApi.orders.createFromBOM).toHaveBeenLastCalledWith({
+      bom_id: 88,
+      create_orders: true,
+      project_id: "42",
+    });
   });
 });

@@ -65,6 +65,12 @@ describe("ProjectOverviewDashboard", () => {
 
     fireEvent.click(screen.getByText(/采购状态/));
     expect(mockNavigate).toHaveBeenCalledWith("/material-demands?project_id=42");
+
+    fireEvent.click(screen.getByText(/交付状态/));
+    expect(mockNavigate).toHaveBeenCalledWith("/projects/42/delivery");
+
+    fireEvent.click(screen.getByText(/售后状态/));
+    expect(mockNavigate).toHaveBeenCalledWith("/projects/42/after-sales");
   });
 
   it("runs downstream data flow actions for the current project", async () => {

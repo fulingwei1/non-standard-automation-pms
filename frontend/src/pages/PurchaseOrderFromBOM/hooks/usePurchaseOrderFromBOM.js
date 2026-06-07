@@ -1,8 +1,17 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { purchaseApi, bomApi, supplierApi } from "../../../services/api";
 import { toast } from "../../../components/ui/toast";
+import { getProjectContextFilters } from "../../../lib/projectContext";
 
 export function usePurchaseOrderFromBOM() {
+    const [searchParams] = useSearchParams();
+    const projectContextFilters = useMemo(
+        () => getProjectContextFilters(searchParams),
+        [searchParams],
+    );
+    const contextProjectId = projectContextFilters.project_id || "";
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [step, setStep] = useState(1); // 1: 选择BOM, 2: 预览订单, 3: 完成
@@ -25,15 +34,23 @@ export function usePurchaseOrderFromBOM() {
     useEffect(() => {
         const loadBOMs = async () => {
             try {
-                const res = await bomApi.list({ status: "RELEASED", page_size: 1000 });
+                const res = await bomApi.list({
+                    status: "RELEASED",
+                    page_size: 1000,
+                    ...projectContextFilters,
+                });
                 const data = res.data?.data || res.data;
-                setBoms(data?.items || data || []);
+                const items = data?.items || data || [];
+                setBoms(items);
+                if (contextProjectId && items.length === 1) {
+                    setSelectedBomId(String(items[0].id));
+                }
             } catch (err) {
                 console.error("Failed to load BOMs:", err);
             }
         };
         loadBOMs();
-    }, []);
+    }, [contextProjectId, projectContextFilters]);
 
     useEffect(() => {
         const loadSuppliers = async () => {
@@ -59,7 +76,8 @@ export function usePurchaseOrderFromBOM() {
 
             const params = {
                 bom_id: parseInt(selectedBomId),
-                create_orders: false // Preview only
+                create_orders: false, // Preview only
+                ...projectContextFilters,
             };
             if (defaultSupplierId) {
                 params.supplier_id = defaultSupplierId;
@@ -104,7 +122,8 @@ export function usePurchaseOrderFromBOM() {
 
             const params = {
                 bom_id: preview.bom_id,
-                create_orders: true
+                create_orders: true,
+                ...projectContextFilters,
             };
             if (defaultSupplierId) {
                 params.supplier_id = defaultSupplierId;
