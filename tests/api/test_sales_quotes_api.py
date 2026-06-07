@@ -6,11 +6,15 @@
 """
 
 from datetime import datetime, timedelta
+from decimal import Decimal
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.sales import Customer, Opportunity, Quote, QuoteTemplate, QuoteTemplateVersion
 
 
 def _auth_headers(token: str) -> dict:
@@ -149,6 +153,19 @@ class TestSalesQuotesAPI:
 
         assert response.status_code in [200, 201, 404], response.text
 
+    def test_submit_missing_quote_returns_404(self, client: TestClient, admin_token: str):
+        """不存在的报价提交审批应返回 404，而不是业务 400"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/quotes/999999/submit", headers=headers
+        )
+
+        assert response.status_code == 404, response.text
+
     def test_quote_approval_approve(self, client: TestClient, admin_token: str):
         """测试审批通过报价单"""
         if not admin_token:
@@ -285,3 +302,90 @@ class TestSalesQuotesAPI:
             pytest.skip("Quote template API not implemented")
 
         assert response.status_code in [200, 201, 404], response.text
+
+    def test_create_quote_from_template_static_route(
+        self, client: TestClient, admin_token: str, db_session: Session
+    ):
+        """旧入口 /quotes/from-template 应按当前模板模型创建报价，不应被动态路由遮住"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        suffix = uuid4().hex[:8]
+        customer = Customer(
+            customer_code=f"CUST-QT-{suffix}",
+            customer_name=f"模板客户-{suffix}",
+            status="ACTIVE",
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPP-QT-{suffix}",
+            customer_id=customer.id,
+            opp_name=f"模板商机-{suffix}",
+            stage="QUOTE",
+            est_amount=Decimal("200000"),
+            owner_id=1,
+        )
+        db_session.add(opportunity)
+        db_session.flush()
+
+        template = QuoteTemplate(
+            template_code=f"TPL-QT-{suffix}",
+            template_name=f"模板报价-{suffix}",
+            status="ACTIVE",
+            visibility_scope="TEAM",
+            owner_id=1,
+        )
+        db_session.add(template)
+        db_session.flush()
+
+        version = QuoteTemplateVersion(
+            template_id=template.id,
+            version_no="V1",
+            status="PUBLISHED",
+            sections={
+                "items": [
+                    {
+                        "item_type": "equipment",
+                        "item_name": "ICT测试工站",
+                        "specification": "双工位",
+                        "unit": "套",
+                        "qty": 2,
+                        "unit_price": 100000,
+                        "cost": 65000,
+                        "lead_time_days": 45,
+                    }
+                ]
+            },
+            pricing_rules={"total_price": 200000, "cost_total": 130000, "lead_time_days": 45},
+            created_by=1,
+            published_by=1,
+        )
+        db_session.add(version)
+        db_session.flush()
+        template.current_version_id = version.id
+        db_session.commit()
+
+        headers = _auth_headers(admin_token)
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/quotes/from-template",
+            headers=headers,
+            json={
+                "template_id": template.id,
+                "customer_id": customer.id,
+                "opportunity_id": opportunity.id,
+                "valid_until": "2026-07-08",
+            },
+        )
+
+        assert response.status_code == 201, response.text
+        data = response.json()["data"]
+        assert data["template_id"] == template.id
+        assert data["customer_id"] == customer.id
+        assert data["opportunity_id"] == opportunity.id
+        assert data["current_version_id"]
+
+        quote = db_session.query(Quote).filter(Quote.id == data["quote_id"]).one()
+        assert quote.current_version.total_price == Decimal("200000.00")
+        assert quote.current_version.items[0].item_name == "ICT测试工站"

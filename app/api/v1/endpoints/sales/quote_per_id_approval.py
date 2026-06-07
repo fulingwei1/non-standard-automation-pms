@@ -71,11 +71,13 @@ def submit_quote_for_approval(
         comment=request.comment,
     )
 
-    db.commit()
-
     if result.get("errors"):
         error = result["errors"][0]
-        raise HTTPException(status_code=400, detail=error.get("error", "提交失败"))
+        message = error.get("error", "提交失败")
+        status_code = status.HTTP_404_NOT_FOUND if message == "报价不存在" else status.HTTP_400_BAD_REQUEST
+        raise HTTPException(status_code=status_code, detail=message)
+
+    db.commit()
 
     logger.info(f"报价 {quote_id} 已提交审批, 操作人: {current_user.id}")
 

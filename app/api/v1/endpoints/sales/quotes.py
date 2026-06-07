@@ -11,7 +11,7 @@ nested `version` object and expects endpoints:
 
 import json
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Optional
 
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.models.sales import Opportunity, Quote, QuoteItem, QuoteVersion
+from app.models.sales import Customer, Opportunity, Quote, QuoteItem, QuoteTemplate, QuoteTemplateVersion, QuoteVersion
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 
@@ -92,6 +92,204 @@ def _build_item_remark(raw_remark: Optional[str], meta: dict) -> Optional[str]:
 
     packed = json.dumps(meta, ensure_ascii=False)
     return f"{base} [tech-meta]{packed}".strip()
+
+
+def _as_dict(value) -> dict:
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+        except (TypeError, ValueError):
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    return {}
+
+
+def _as_list(value) -> list:
+    return value if isinstance(value, list) else []
+
+
+def _parse_date(value, fallback: date) -> date:
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str) and value:
+        return date.fromisoformat(value)
+    return fallback
+
+
+def _generate_quote_code() -> str:
+    # quotes.quote_code is limited to 20 chars.
+    return f"QFT{datetime.now().strftime('%y%m%d%H%M%S%f')[:17]}"
+
+
+def _get_template_version(
+    db: Session, template: QuoteTemplate, version_id: Optional[int]
+) -> Optional[QuoteTemplateVersion]:
+    if version_id:
+        return (
+            db.query(QuoteTemplateVersion)
+            .filter(
+                QuoteTemplateVersion.id == version_id,
+                QuoteTemplateVersion.template_id == template.id,
+            )
+            .first()
+        )
+    if template.current_version_id:
+        return (
+            db.query(QuoteTemplateVersion)
+            .filter(QuoteTemplateVersion.id == template.current_version_id)
+            .first()
+        )
+    return (
+        db.query(QuoteTemplateVersion)
+        .filter(QuoteTemplateVersion.template_id == template.id)
+        .order_by(QuoteTemplateVersion.id.desc())
+        .first()
+    )
+
+
+@router.post(
+    "/quotes/from-template",
+    response_model=ResponseModel,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_quote_from_template(
+    template_data: dict = Body(...),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+):
+    """兼容旧入口：从当前 QuoteTemplate/QuoteTemplateVersion 生成报价草稿。"""
+    template_id = template_data.get("template_id")
+    if not template_id:
+        raise HTTPException(status_code=422, detail="template_id 必填")
+
+    template = db.query(QuoteTemplate).filter(QuoteTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="报价模板不存在")
+
+    version = _get_template_version(db, template, template_data.get("version_id"))
+    if not version:
+        raise HTTPException(status_code=400, detail="报价模板没有版本，无法生成报价")
+
+    customer_id = template_data.get("customer_id")
+    opportunity_id = template_data.get("opportunity_id")
+    opportunity = None
+    if opportunity_id:
+        opportunity = db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
+        if not opportunity:
+            raise HTTPException(status_code=404, detail="商机不存在")
+        customer_id = customer_id or opportunity.customer_id
+
+    if not customer_id:
+        raise HTTPException(status_code=422, detail="customer_id 或 opportunity_id 必填")
+
+    customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="客户不存在")
+
+    if not opportunity:
+        opportunity = (
+            db.query(Opportunity)
+            .filter(Opportunity.customer_id == customer.id)
+            .order_by(Opportunity.id.desc())
+            .first()
+        )
+    if not opportunity:
+        raise HTTPException(status_code=422, detail="opportunity_id 必填")
+    if opportunity.customer_id != customer.id:
+        raise HTTPException(status_code=400, detail="商机与客户不匹配")
+
+    sections = _as_dict(version.sections)
+    pricing_rules = _as_dict(version.pricing_rules)
+    items = _as_list(sections.get("items") or pricing_rules.get("items"))
+
+    quote = Quote(
+        quote_code=(template_data.get("quote_code") or template_data.get("quote_no") or _generate_quote_code())[:20],
+        opportunity_id=opportunity.id,
+        customer_id=customer.id,
+        valid_until=_parse_date(
+            template_data.get("valid_until"), date.today() + timedelta(days=30)
+        ),
+        owner_id=current_user.id,
+        status="DRAFT",
+    )
+    db.add(quote)
+    db.flush()
+
+    total_price = _to_decimal(
+        template_data.get("total_price")
+        or template_data.get("total_amount")
+        or pricing_rules.get("total_price")
+        or pricing_rules.get("final_price")
+    )
+    cost_total = _to_decimal(pricing_rules.get("cost_total") or pricing_rules.get("total_cost"))
+
+    quote_version = QuoteVersion(
+        quote_id=quote.id,
+        version_no=str(version.version_no or "V1"),
+        total_price=total_price,
+        cost_total=cost_total,
+        lead_time_days=pricing_rules.get("lead_time_days"),
+        risk_terms=pricing_rules.get("risk_terms"),
+        created_by=current_user.id,
+    )
+    db.add(quote_version)
+    db.flush()
+
+    calculated_total = Decimal("0")
+    calculated_cost = Decimal("0")
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        qty = _to_decimal(item.get("qty") or item.get("quantity") or 1)
+        unit_price = _to_decimal(item.get("unit_price") or item.get("price"))
+        item_cost = _to_decimal(item.get("cost") or item.get("unit_cost"))
+        calculated_total += qty * unit_price
+        calculated_cost += qty * item_cost
+        db.add(
+            QuoteItem(
+                quote_version_id=quote_version.id,
+                item_type=item.get("item_type") or item.get("type") or "equipment",
+                item_name=item.get("item_name") or item.get("product_name") or item.get("name"),
+                specification=item.get("specification"),
+                unit=item.get("unit"),
+                qty=qty,
+                unit_price=unit_price,
+                cost=item_cost,
+                lead_time_days=item.get("lead_time_days"),
+                remark=item.get("remark"),
+            )
+        )
+
+    if not quote_version.total_price:
+        quote_version.total_price = calculated_total
+    if not quote_version.cost_total:
+        quote_version.cost_total = calculated_cost
+    if quote_version.total_price and quote_version.total_price > 0:
+        quote_version.gross_margin = (
+            (quote_version.total_price - (quote_version.cost_total or Decimal("0")))
+            / quote_version.total_price
+            * Decimal("100")
+        ).quantize(Decimal("0.01"))
+
+    quote.current_version_id = quote_version.id
+    db.commit()
+    db.refresh(quote)
+
+    return ResponseModel(
+        code=201,
+        message="已从模板创建报价",
+        data={
+            "quote_id": quote.id,
+            "quote_code": quote.quote_code,
+            "template_id": template.id,
+            "template_version_id": version.id,
+            "opportunity_id": quote.opportunity_id,
+            "customer_id": quote.customer_id,
+            "current_version_id": quote.current_version_id,
+        },
+    )
 
 
 @router.get("/quotes", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
