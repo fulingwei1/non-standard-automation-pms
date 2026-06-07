@@ -451,6 +451,9 @@ def _build_presale_solution_payload(solution: PresaleSolution) -> Dict[str, Any]
         "industry": solution.industry,
         "test_type": solution.test_type,
         "ticket_id": solution.ticket_id,
+        "project_id": solution.project_id,
+        "customer_id": solution.customer_id,
+        "opportunity_id": solution.opportunity_id,
         "status": solution.status,
         "review_status": solution.review_status,
         "requirement_summary": solution.requirement_summary,
@@ -509,13 +512,11 @@ def _get_presale_solutions(db: Session, project: Project, limit: int = 10) -> Li
     ]
 
     filters = []
+    filters.append(PresaleSolution.project_id == project.id)
     if project.opportunity_id:
         filters.append(PresaleSolution.opportunity_id == project.opportunity_id)
     if ticket_ids:
         filters.append(PresaleSolution.ticket_id.in_(ticket_ids))
-
-    if not filters:
-        return []
 
     return (
         db.query(PresaleSolution)

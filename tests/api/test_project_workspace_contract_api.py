@@ -303,6 +303,12 @@ class TestProjectWorkspaceHandoverContext:
         )
         db_session.add(solution)
         db_session.commit()
+        assert (
+            db_session.query(PresaleSolution)
+            .filter(PresaleSolution.project_id == project.id)
+            .count()
+            == 1
+        )
 
         response = client.get(
             f"{prefix}/project-workspace/projects/{project.id}/workspace/context",
@@ -325,6 +331,82 @@ class TestProjectWorkspaceHandoverContext:
         assert payload["presale_solutions"][0]["solution_no"] == solution.solution_no
         assert payload["handover_status"]["ready"] is True
         assert payload["handover_status"]["missing"] == []
+
+    def test_project_workspace_context_includes_project_scoped_presale_solution_without_ticket(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-PWS-{unique}",
+            customer_name=f"项目方案回流客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        project = Project(
+            project_code=f"PRJPWS{unique[:6]}",
+            project_name=f"项目方案回流项目-{unique}",
+            customer=customer,
+            customer_name=customer.customer_name,
+            project_type="FCT",
+            product_category="测试设备",
+            industry="电子制造",
+            stage="S1",
+            status="ST01",
+            health="H1",
+            pm_id=admin_user.id,
+            pm_name=admin_user.real_name or admin_user.username,
+            created_by=admin_user.id,
+        )
+        db_session.add_all([customer, project])
+        db_session.flush()
+
+        solution = PresaleSolution(
+            solution_no=f"SOL-PWS-{unique}",
+            name=f"项目上下文方案-{unique}",
+            solution_type="CUSTOM",
+            industry="电子制造",
+            test_type="FCT",
+            project_id=project.id,
+            customer_id=customer.id,
+            requirement_summary="项目上下文补充方案需求",
+            solution_overview="从项目工作区进入售前技术后生成",
+            technical_spec="FCT测试设备技术方案",
+            estimated_cost=Decimal("128000"),
+            suggested_price=Decimal("210000"),
+            estimated_hours=64,
+            estimated_duration=20,
+            status="DRAFT",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        db_session.add(solution)
+        db_session.commit()
+
+        response = client.get(
+            f"{prefix}/project-workspace/projects/{project.id}/workspace/context",
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+
+        payload = response.json()
+        assert payload["presale_solutions"][0]["id"] == solution.id
+        assert payload["presale_solutions"][0]["solution_no"] == solution.solution_no
+        assert payload["presale_solutions"][0]["project_id"] == project.id
+        assert payload["presale_solutions"][0]["customer_id"] == customer.id
+        assert payload["presale_solutions"][0]["opportunity_id"] is None
+        assert payload["baseline_cost"]["presale_estimated_cost"] == 128000.0
+        assert payload["baseline_cost"]["presale_suggested_price"] == 210000.0
+        assert "presale_solution" not in payload["handover_status"]["missing"]
+        assert "baseline_cost" not in payload["handover_status"]["missing"]
 
     def test_project_workspace_downstream_context_includes_engineering_bom_and_kitting(
         self, client: TestClient, db_session: Session, admin_token: str
