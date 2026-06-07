@@ -802,6 +802,43 @@
 - 验收通过 -> 可结算/复盘
 - 服务关闭 -> 满意度/知识库沉淀
 
+## 全链路归并矩阵
+
+这次合并不能只看“售前 + 项目”。售前技术支持只是第一个典型问题：入口散、上下文散、完成结果不回流。后面的项目、工程、采购、生产、质量、财务也要用同一套口径处理。
+
+| 业务段 | 合并后中心 | 统一入口 | 主上下文 | 必须回流的状态/结果 | 第一验收断点 |
+| --- | --- | --- | --- | --- | --- |
+| 销售/商机 | 销售经营中心 | `/sales/workstation` | `customer_id / lead_id / opportunity_id` | 售前评估状态、方案结论、报价状态、合同状态 | 商机能看到售前工单、评估、方案和下一步 |
+| 售前技术 | 售前技术中心 | `/presales/workbench` | `opportunity_id / presale_ticket_id / assessment_id / solution_id` | 工单完成结论、交付物、技术评估、成本建议、G2 结果 | 完成工单后销售侧能看到评审结论 |
+| 报价/合同 | 销售经营中心 + 财务经营中心 | `/sales/workstation?view=quote` | `quote_id / contract_id` | 方案引用、成本基线、毛利、合同签署结果 | 报价能读取售前方案和成本，不重复录入 |
+| 立项/项目 | 项目交付中心 | `/project/workbench` | `project_id / contract_id / opportunity_id` | 项目章程、范围、里程碑、预算、团队 | 合同转项目带入售前方案和成本基线 |
+| 工程技术 | 工程技术中心 | `/engineering/workbench` | `project_id / review_id / ecn_id / spec_id` | 技术评审结论、设计输出、ECN 影响、工程未决项 | PM 能在项目上下文看到工程问题和 ECN |
+| BOM/采购/仓储 | 供应链中心 | `/supply-chain/workbench` | `project_id / bom_id / material_id / purchase_order_id` | BOM 发布、物料需求、缺料、到货、齐套率、库存 | 项目能看到齐套率和关键缺料 |
+| 生产/装配 | 生产执行中心 | `/production/workbench` | `project_id / work_order_id / assembly_task_id` | 工单进度、领料、装配完成、异常、发货状态 | 生产异常能反写项目风险 |
+| 质量/验收/服务 | 质量交付服务中心 | `/delivery-service/workbench` | `project_id / acceptance_order_id / service_ticket_id` | 检验结果、NC、验收问题、服务关闭、满意度 | 验收通过能驱动结算和复盘 |
+| 财务/经营 | 财务经营中心 | `/finance/workbench` | `project_id / quote_id / contract_id / settlement_id` | 预算、实际成本、收款、发票、结算、毛利 | 项目能对比报价成本、预算和实际成本 |
+| 人力/绩效 | 人力与组织中心 | `/people/workbench` | `user_id / department_id / project_id` | 工时、负荷、能力标签、项目贡献、绩效 | 绩效从真实项目工时和交付贡献取数 |
+| 系统治理 | 系统治理中心 | `/system/workbench` | `user_id / role_id / permission_code / menu_id` | 权限、菜单、审批、通知、审计 | 岗位菜单和按钮权限可解释、可测试 |
+
+## 统一协同任务模型
+
+售前技术支持、项目问题、工程评审、ECN、采购缺料、生产异常、验收问题，本质都是“跨部门协同任务”。不要每个模块都重新造一套散工单。
+
+建议沉淀一个通用协同任务口径，先不一定马上新建大表，但新功能都按这个字段组织：
+
+- `source_domain`：来源中心，例如 `sales / project / production`
+- `source_id`：来源对象，例如 `opportunity_id / project_id / work_order_id`
+- `target_domain`：承接中心，例如 `presale / engineering / supply_chain`
+- `task_type`：协同类型，例如 `SOLUTION_REVIEW / ECN_REVIEW / SHORTAGE_RESOLVE`
+- `assignee_id / owner_role`：责任人或责任角色
+- `deliverables`：方案、图纸、报价资料、检验报告等交付物
+- `completion_note`：完成说明、评审结论、异常处理结论
+- `outcome`：`APPROVED / REJECTED / NEED_MORE_INFO / RISK_ACCEPTED`
+- `next_actions`：下一步动作，必须可回到来源对象
+- `linked_project_id / opportunity_id / contract_id`：关键业务链路 ID
+
+第一批先在售前工单上补齐 `completion_note` 和完成进度回流；后续项目、工程、采购、生产、验收都按同一模式补。
+
 ## 菜单合并方式
 
 不是把菜单越砍越少，而是让一级菜单按岗位任务清晰。

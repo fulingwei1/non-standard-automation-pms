@@ -80,6 +80,7 @@ class TicketCompleteRequest(BaseModel):
     """完成工单请求"""
 
     actual_hours: Optional[float] = Field(None, ge=0, description="实际工时")
+    completion_note: Optional[str] = Field(None, description="完成说明/评审结论")
 
 
 class TicketResponse(TimestampSchema):

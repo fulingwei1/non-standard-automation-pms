@@ -17,6 +17,7 @@ import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { Progress } from "../../components/ui/progress";
+import { Textarea } from "../../components/ui/textarea";
 import { cn } from "../../lib/utils";
 import { presaleApi } from "../../services/api";
 import { taskStatuses, getPriorityStyle } from "./constants";
@@ -47,6 +48,7 @@ export default function TaskDetailPanel({ task, onClose, onUpdate, onDeliverable
   const [progress, setProgress] = useState(task?.progress || 0);
   const [progressNote, setProgressNote] = useState("");
   const [actualHours, setActualHours] = useState(task?.actualHours || 0);
+  const [completionNote, setCompletionNote] = useState("");
   const [deliverableName, setDeliverableName] = useState("");
   const [deliverableType, setDeliverableType] = useState("SOLUTION");
   const [deliverablePath, setDeliverablePath] = useState("");
@@ -149,9 +151,14 @@ export default function TaskDetailPanel({ task, onClose, onUpdate, onDeliverable
 
     try {
       setIsCompleting(true);
-      await presaleApi.tickets.complete(task.ticketId, {
+      const payload = {
         actual_hours: actualHours
-      });
+      };
+      const note = completionNote.trim();
+      if (note) {
+        payload.completion_note = note;
+      }
+      await presaleApi.tickets.complete(task.ticketId, payload);
       alert("工单已完成！");
       onUpdate?.();
       onClose();
@@ -423,8 +430,14 @@ export default function TaskDetailPanel({ task, onClose, onUpdate, onDeliverable
             </div>
             }
             <div className="space-y-2">
-              <label className="text-sm text-slate-400">实际工时（小时）</label>
+              <label
+                htmlFor="presale-complete-hours"
+                className="text-sm text-slate-400"
+              >
+                实际工时（小时）
+              </label>
               <Input
+              id="presale-complete-hours"
               type="number"
               min="0"
               value={actualHours}
@@ -432,6 +445,20 @@ export default function TaskDetailPanel({ task, onClose, onUpdate, onDeliverable
               setActualHours(parseFloat(e.target.value) || 0)
               }
               className="w-full" />
+
+              <label
+                htmlFor="presale-completion-note"
+                className="text-sm text-slate-400"
+              >
+                完成说明 / 评审结论
+              </label>
+              <Textarea
+                id="presale-completion-note"
+                value={completionNote}
+                onChange={(e) => setCompletionNote(e.target.value)}
+                placeholder="填写交付结果、评审结论、报价建议或后续风险..."
+                className="w-full min-h-[88px]"
+              />
 
               <Button
               onClick={handleComplete}

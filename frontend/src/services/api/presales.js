@@ -1,5 +1,26 @@
 import { api } from "./client.js";
 
+function buildTicketCompletePayload(data = {}) {
+  if (!data || typeof data !== "object") {
+    return undefined;
+  }
+
+  const payload = { ...data };
+  if (payload.actualHours != null && payload.actual_hours == null) {
+    payload.actual_hours = payload.actualHours;
+  }
+  delete payload.actualHours;
+
+  Object.keys(payload).forEach((key) => {
+    const value = payload[key];
+    if (value === undefined || value === null || value === "") {
+      delete payload[key];
+    }
+  });
+
+  return Object.keys(payload).length > 0 ? payload : undefined;
+}
+
 
 
 export const presaleApi = {
@@ -14,12 +35,7 @@ export const presaleApi = {
     createDeliverable: (id, data) =>
       api.post(`/presale/tickets/${id}/deliverables`, data),
     complete: (id, data = {}) =>
-      api.put(`/presale/tickets/${id}/complete`, undefined, {
-        params:
-          data?.actual_hours != null || data?.actualHours != null
-            ? { actual_hours: data.actual_hours ?? data.actualHours }
-            : undefined,
-      }),
+      api.put(`/presale/tickets/${id}/complete`, buildTicketCompletePayload(data)),
     rate: (id, data) => api.put(`/presale/tickets/${id}/rating`, data),
     getBoard: (params) => api.get("/presale/tickets/board", { params }),
   },

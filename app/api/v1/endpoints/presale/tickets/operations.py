@@ -163,6 +163,21 @@ def complete_ticket(
     if resolved_actual_hours is not None:
         ticket.actual_hours = Decimal(str(resolved_actual_hours))
 
+    completion_note = "工单已完成"
+    if complete_request and complete_request.completion_note:
+        completion_note = complete_request.completion_note.strip() or completion_note
+
+    progress = PresaleTicketProgress(
+        ticket_id=ticket_id,
+        progress_type="COMPLETE",
+        content=completion_note,
+        progress_percent=100,
+        operator_id=current_user.id,
+        operator_name=current_user.real_name or current_user.username,
+        created_at=datetime.now(),
+    )
+    db.add(progress)
+
     ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
     if ticket.opportunity_id:
         opportunity = db.query(Opportunity).filter(Opportunity.id == ticket.opportunity_id).first()

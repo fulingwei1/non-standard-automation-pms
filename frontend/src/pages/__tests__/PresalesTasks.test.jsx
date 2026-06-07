@@ -211,6 +211,48 @@ describe('PresalesTasks', () => {
     expect(screen.getByRole('button', { name: /完成工单/ })).toBeInTheDocument();
   });
 
+  it('completes a review ticket with a sales-visible review conclusion', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 33,
+            title: '方案评审申请 - 视觉检测项目',
+            ticket_type: 'SOLUTION_REVIEW',
+            status: 'REVIEW',
+            urgency: 'NORMAL',
+            customer_name: '苏州电子',
+            applicant_name: '吴敏',
+            expected_date: '2026-06-22',
+            description: '审核方案边界和成本测算',
+          },
+        ],
+        total: 1,
+      },
+    });
+    presaleApi.tickets.complete.mockResolvedValue({ data: { success: true } });
+
+    renderPage('/sales/presales-tasks?type=review&status=reviewing');
+
+    await screen.findByText('方案评审申请 - 视觉检测项目');
+    fireEvent.click(screen.getByText('方案评审申请 - 视觉检测项目'));
+
+    fireEvent.change(screen.getByLabelText('实际工时（小时）'), {
+      target: { value: '5.5' },
+    });
+    fireEvent.change(screen.getByLabelText('完成说明 / 评审结论'), {
+      target: { value: '方案可行，成本边界清楚，建议进入报价' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /完成工单/ }));
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.complete).toHaveBeenCalledWith(33, {
+        actual_hours: 5.5,
+        completion_note: '方案可行，成本边界清楚，建议进入报价',
+      });
+    });
+  });
+
   it('uses backend progress_percent when rendering in-progress tickets', async () => {
     presaleApi.tickets.list.mockResolvedValue({
       data: {

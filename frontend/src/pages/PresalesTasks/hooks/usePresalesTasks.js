@@ -17,6 +17,21 @@ function resolveActualHours(payload) {
     return null;
 }
 
+function resolveCompletePayload(payload) {
+    const completePayload = {
+        actual_hours: resolveActualHours(payload),
+    };
+
+    if (payload && typeof payload === 'object') {
+        const completionNote = payload.completion_note ?? payload.completionNote;
+        if (completionNote) {
+            completePayload.completion_note = completionNote;
+        }
+    }
+
+    return completePayload;
+}
+
 /**
  * 售前任务数据 Hook
  */
@@ -55,9 +70,7 @@ export function usePresalesTasks() {
                     progress_percent: options.progressPercent ?? 50,
                 });
             } else if (status === 'COMPLETED') {
-                await presaleApi.tickets.complete(id, {
-                    actual_hours: resolveActualHours(options),
-                });
+                await presaleApi.tickets.complete(id, resolveCompletePayload(options));
             } else {
                 throw new Error(`暂不支持更新到状态: ${status}`);
             }
@@ -71,9 +84,7 @@ export function usePresalesTasks() {
 
     const completeTask = useCallback(async (id, payload) => {
         try {
-            await presaleApi.tickets.complete(id, {
-                actual_hours: resolveActualHours(payload),
-            });
+            await presaleApi.tickets.complete(id, resolveCompletePayload(payload));
             await loadTasks();
             return { success: true };
         } catch (err) {

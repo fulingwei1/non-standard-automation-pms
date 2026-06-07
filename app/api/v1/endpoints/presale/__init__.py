@@ -17,6 +17,7 @@ from .task_management import router as task_management_router
 from .templates import router as templates_router
 from .technical_parameters import router as technical_parameters_router
 from .tickets import router as tickets_router
+from .workbench import router as workbench_router
 
 router = APIRouter()
 
@@ -38,5 +39,6 @@ router.include_router(task_management_router)
 router.include_router(expenses_router)
 router.include_router(solution_compare_router)
 router.include_router(forecast_router)
+router.include_router(workbench_router, prefix="/workbench", tags=["presale-workbench"])
 
 __all__ = ["router"]

@@ -1,0 +1,690 @@
+# -*- coding: utf-8 -*-
+"""售前工作台聚合接口。"""
+
+from datetime import date, datetime
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
+
+from app.api import deps
+from app.api.v1.endpoints.presale.proposals import build_solution_response
+from app.api.v1.endpoints.presale.tickets.utils import build_ticket_response
+from app.core import security
+from app.models.presale import (
+    PresaleSolution,
+    PresaleSupportTicket,
+    TechnicalParameterTemplate,
+)
+from app.models.sales import (
+    AssessmentRisk,
+    AssessmentTemplate,
+    AssessmentVersion,
+    Contract,
+    Lead,
+    Opportunity,
+    Quote,
+    TechnicalAssessment,
+)
+from app.models.sales.sales_funnel import (
+    FunnelTransitionLog,
+    GateTypeEnum,
+    SalesFunnelStage,
+    StageDwellTimeAlert,
+    StageGateConfig,
+)
+from app.models.sales.technical_assessment import LeadRequirementDetail
+from app.models.user import User
+from app.schemas.common import ResponseModel
+from app.services.sales.gate_validators import GateValidatorFactory
+
+router = APIRouter()
+
+
+def _json_value(value: Any) -> Any:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, list):
+        return [_json_value(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _json_value(item) for key, item in value.items()}
+    return value
+
+
+def _model_to_dict(model: Any, *, only: Optional[list[str]] = None) -> dict[str, Any]:
+    if model is None:
+        return {}
+
+    column_names = [column.name for column in model.__table__.columns]
+    if only is not None:
+        column_names = [name for name in only if name in column_names]
+
+    return {name: _json_value(getattr(model, name, None)) for name in column_names}
+
+
+def _page_payload(items: list[Any], total: int, page: int = 1, page_size: int = 20) -> dict:
+    pages = (total + page_size - 1) // page_size if page_size > 0 else 0
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "pages": pages,
+    }
+
+
+def _dump_response(model: Any) -> dict[str, Any]:
+    if hasattr(model, "model_dump"):
+        return model.model_dump(mode="json")
+    return model.dict()
+
+
+def _ticket_payload(ticket: PresaleSupportTicket) -> dict[str, Any]:
+    return _dump_response(build_ticket_response(ticket))
+
+
+def _solution_payload(solution: PresaleSolution) -> dict[str, Any]:
+    return _dump_response(build_solution_response(solution))
+
+
+def _assessment_payload(assessment: TechnicalAssessment) -> dict[str, Any]:
+    data = _model_to_dict(
+        assessment,
+        only=[
+            "id",
+            "source_type",
+            "source_id",
+            "evaluator_id",
+            "status",
+            "total_score",
+            "dimension_scores",
+            "veto_triggered",
+            "veto_rules",
+            "decision",
+            "risks",
+            "similar_cases",
+            "ai_analysis",
+            "conditions",
+            "evaluated_at",
+            "presale_ticket_id",
+            "template_id",
+            "version_no",
+            "is_latest",
+            "created_at",
+            "updated_at",
+        ],
+    )
+    evaluator = getattr(assessment, "evaluator", None)
+    data["evaluator_name"] = (
+        (getattr(evaluator, "real_name", None) or getattr(evaluator, "username", None))
+        if evaluator
+        else None
+    )
+    return data
+
+
+def _assessment_template_payload(template: AssessmentTemplate) -> dict[str, Any]:
+    return _model_to_dict(
+        template,
+        only=[
+            "id",
+            "template_code",
+            "template_name",
+            "category",
+            "description",
+            "dimension_weights",
+            "veto_rules",
+            "score_thresholds",
+            "version",
+            "is_active",
+            "is_default",
+            "created_by",
+            "created_at",
+            "updated_at",
+        ],
+    )
+
+
+def _technical_template_payload(template: TechnicalParameterTemplate) -> dict[str, Any]:
+    return _model_to_dict(
+        template,
+        only=[
+            "id",
+            "name",
+            "code",
+            "industry",
+            "test_type",
+            "description",
+            "parameters",
+            "cost_factors",
+            "typical_labor_hours",
+            "reference_docs",
+            "sample_images",
+            "use_count",
+            "is_active",
+            "created_by",
+            "created_at",
+            "updated_at",
+        ],
+    )
+
+
+def _active_assessment_templates(db: Session, *, limit: int = 50) -> dict:
+    query = db.query(AssessmentTemplate).filter(AssessmentTemplate.is_active == True)
+    total = query.count()
+    items = [
+        _assessment_template_payload(template)
+        for template in query.order_by(desc(AssessmentTemplate.updated_at), desc(AssessmentTemplate.id))
+        .limit(limit)
+        .all()
+    ]
+    return {"items": items, "total": total}
+
+
+def _active_technical_templates(db: Session, *, page: int = 1, page_size: int = 20) -> dict:
+    query = db.query(TechnicalParameterTemplate).filter(TechnicalParameterTemplate.is_active == True)
+    total = query.count()
+    offset = max(page - 1, 0) * page_size
+    templates = (
+        query.order_by(desc(TechnicalParameterTemplate.updated_at), desc(TechnicalParameterTemplate.id))
+        .offset(offset)
+        .limit(page_size)
+        .all()
+    )
+    return _page_payload([_technical_template_payload(item) for item in templates], total, page, page_size)
+
+
+def _funnel_summary(db: Session) -> dict[str, int]:
+    return {
+        "leads": db.query(Lead).count(),
+        "opportunities": db.query(Opportunity).count(),
+        "quotes": db.query(Quote).count(),
+        "contracts": db.query(Contract).count(),
+    }
+
+
+def _funnel_health(db: Session) -> dict[str, Any]:
+    active_tickets = (
+        db.query(PresaleSupportTicket)
+        .filter(~PresaleSupportTicket.status.in_(["COMPLETED", "CLOSED", "CANCELLED"]))
+        .count()
+    )
+    approved_solutions = (
+        db.query(PresaleSolution).filter(PresaleSolution.status == "APPROVED").count()
+    )
+    completed_assessments = (
+        db.query(TechnicalAssessment).filter(TechnicalAssessment.status == "COMPLETED").count()
+    )
+    score = max(0, min(100, 70 + min(approved_solutions, 10) * 2 - min(active_tickets, 10)))
+    return {
+        "dashboard_date": date.today().isoformat(),
+        "overall_health": {
+            "score": score,
+            "level": "GOOD" if score >= 70 else "WARNING",
+        },
+        "key_metrics": {
+            "active_presale_tickets": active_tickets,
+            "approved_solutions": approved_solutions,
+            "completed_assessments": completed_assessments,
+        },
+        "alerts": [],
+    }
+
+
+def _conversion_payload(summary: dict[str, int]) -> dict[str, Any]:
+    return {
+        "stages": [
+            {"stage": "LEAD", "count": summary["leads"]},
+            {"stage": "OPPORTUNITY", "count": summary["opportunities"]},
+            {"stage": "QUOTE", "count": summary["quotes"]},
+            {"stage": "CONTRACT", "count": summary["contracts"]},
+        ],
+        "overall_metrics": {
+            "total_leads": summary["leads"],
+            "total_won": summary["contracts"],
+        },
+    }
+
+
+def _dwell_alert_payload(alert: StageDwellTimeAlert) -> dict[str, Any]:
+    return _model_to_dict(
+        alert,
+        only=[
+            "id",
+            "entity_type",
+            "entity_id",
+            "stage_id",
+            "alert_code",
+            "severity",
+            "alert_message",
+            "entered_stage_at",
+            "dwell_hours",
+            "threshold_hours",
+            "amount",
+            "owner_id",
+            "owner_name",
+            "status",
+            "created_at",
+            "updated_at",
+        ],
+    )
+
+
+def _active_dwell_alerts(
+    db: Session,
+    *,
+    entity_type: Optional[str] = None,
+    entity_id: Optional[int] = None,
+    limit: int = 10,
+) -> dict:
+    query = db.query(StageDwellTimeAlert).filter(StageDwellTimeAlert.status == "ACTIVE")
+    if entity_type:
+        query = query.filter(StageDwellTimeAlert.entity_type == entity_type)
+    if entity_id:
+        query = query.filter(StageDwellTimeAlert.entity_id == entity_id)
+    total = query.count()
+    alerts = query.order_by(desc(StageDwellTimeAlert.created_at), desc(StageDwellTimeAlert.id)).limit(limit).all()
+    return {"items": [_dwell_alert_payload(alert) for alert in alerts], "total": total}
+
+
+def _gate_configs(db: Session) -> dict:
+    configs = (
+        db.query(StageGateConfig)
+        .filter(StageGateConfig.is_active == True)
+        .order_by(StageGateConfig.gate_type)
+        .all()
+    )
+    return {
+        "items": [
+            _model_to_dict(
+                config,
+                only=[
+                    "id",
+                    "gate_type",
+                    "gate_name",
+                    "description",
+                    "validation_rules",
+                    "required_fields",
+                    "requires_approval",
+                    "can_be_waived",
+                    "version",
+                ],
+            )
+            for config in configs
+        ],
+        "total": len(configs),
+    }
+
+
+def _stages(db: Session, entity_type: Optional[str]) -> dict:
+    query = db.query(SalesFunnelStage).filter(SalesFunnelStage.is_active == True)
+    if entity_type:
+        query = query.filter(SalesFunnelStage.entity_type == entity_type)
+    stages = query.order_by(SalesFunnelStage.sequence, SalesFunnelStage.id).all()
+    return {
+        "items": [
+            _model_to_dict(
+                stage,
+                only=[
+                    "id",
+                    "stage_code",
+                    "stage_name",
+                    "entity_type",
+                    "sequence",
+                    "description",
+                    "color",
+                    "icon",
+                    "default_probability",
+                    "required_gate",
+                    "is_active",
+                    "is_terminal",
+                    "is_won",
+                    "is_lost",
+                ],
+            )
+            for stage in stages
+        ],
+        "total": len(stages),
+    }
+
+
+def _transition_logs(db: Session, entity_type: Optional[str], entity_id: Optional[int], limit: int) -> dict:
+    query = db.query(FunnelTransitionLog)
+    if entity_type:
+        query = query.filter(FunnelTransitionLog.entity_type == entity_type)
+    if entity_id:
+        query = query.filter(FunnelTransitionLog.entity_id == entity_id)
+    total = query.count()
+    logs = query.order_by(desc(FunnelTransitionLog.transitioned_at), desc(FunnelTransitionLog.id)).limit(limit).all()
+    return {
+        "items": [
+            _model_to_dict(
+                log,
+                only=[
+                    "id",
+                    "entity_type",
+                    "entity_id",
+                    "entity_code",
+                    "from_stage",
+                    "to_stage",
+                    "gate_type",
+                    "gate_result_id",
+                    "transition_reason",
+                    "transitioned_by",
+                    "transitioned_at",
+                    "extra_data",
+                    "dwell_hours",
+                ],
+            )
+            for log in logs
+        ],
+        "total": total,
+    }
+
+
+def _gate_payload(gate_type: GateTypeEnum, result: Any) -> dict[str, Any]:
+    return {
+        "gate_type": gate_type.value,
+        "is_valid": result.passed,
+        "passed": result.passed,
+        "errors": result.failed_rules,
+        "failed_rules": result.failed_rules,
+        "warnings": result.warnings,
+        "checked_items": result.passed_rules,
+        "passed_rules": result.passed_rules,
+        "score": result.score,
+        "threshold": result.threshold,
+        "details": result.details,
+    }
+
+
+def _validate_gate_status(
+    db: Session,
+    *,
+    entity_type: Optional[str],
+    entity_id: Optional[int],
+    current_user: User,
+) -> Optional[dict[str, Any]]:
+    if not entity_type or not entity_id:
+        return None
+
+    gate_by_entity = {
+        "LEAD": GateTypeEnum.G1,
+        "OPPORTUNITY": GateTypeEnum.G2,
+        "QUOTE": GateTypeEnum.G3,
+        "CONTRACT": GateTypeEnum.G4,
+    }
+    gate_type = gate_by_entity.get(entity_type)
+    if gate_type is None:
+        return None
+
+    result, _ = GateValidatorFactory.validate_gate(
+        gate_type=gate_type,
+        entity_id=entity_id,
+        db=db,
+        validated_by=current_user.id,
+        save_result=False,
+    )
+    return _gate_payload(gate_type, result)
+
+
+def _normalize_source_type(source_type: str) -> str:
+    normalized = str(source_type or "").strip().lower()
+    if normalized not in {"lead", "opportunity"}:
+        raise HTTPException(status_code=400, detail="source_type 仅支持 lead/opportunity")
+    return normalized
+
+
+def _normalize_entity_type(entity_type: Optional[str], fallback_source_type: str) -> str:
+    raw = entity_type or fallback_source_type
+    normalized = str(raw or "").strip().upper()
+    mapping = {
+        "LEAD": "LEAD",
+        "OPPORTUNITY": "OPPORTUNITY",
+        "QUOTE": "QUOTE",
+        "CONTRACT": "CONTRACT",
+    }
+    if normalized not in mapping:
+        raise HTTPException(status_code=400, detail="entity_type 无效")
+    return mapping[normalized]
+
+
+def _ensure_source_exists(db: Session, source_type: str, source_id: int) -> None:
+    model = Lead if source_type == "lead" else Opportunity
+    if not db.query(model).filter(model.id == source_id).first():
+        raise HTTPException(status_code=404, detail="来源对象不存在")
+
+
+@router.get("/overview", response_model=ResponseModel)
+def get_workbench_overview(
+    *,
+    db: Session = Depends(deps.get_db),
+    ticket_page: int = Query(1, ge=1),
+    ticket_page_size: int = Query(6, ge=1, le=50),
+    solution_page: int = Query(1, ge=1),
+    solution_page_size: int = Query(6, ge=1, le=50),
+    current_user: User = Depends(security.get_current_active_user),
+) -> ResponseModel:
+    """聚合售前工作台首页所需数据，避免前端拼散接口。"""
+    ticket_query = db.query(PresaleSupportTicket)
+    ticket_total = ticket_query.count()
+    ticket_offset = (ticket_page - 1) * ticket_page_size
+    tickets = (
+        ticket_query.order_by(desc(PresaleSupportTicket.created_at), desc(PresaleSupportTicket.id))
+        .offset(ticket_offset)
+        .limit(ticket_page_size)
+        .all()
+    )
+
+    solution_query = db.query(PresaleSolution)
+    solution_total = solution_query.count()
+    solution_offset = (solution_page - 1) * solution_page_size
+    solutions = (
+        solution_query.order_by(desc(PresaleSolution.created_at), desc(PresaleSolution.id))
+        .offset(solution_offset)
+        .limit(solution_page_size)
+        .all()
+    )
+
+    summary = _funnel_summary(db)
+    return ResponseModel(
+        message="查询成功",
+        data={
+            "tickets": _page_payload(
+                [_ticket_payload(ticket) for ticket in tickets],
+                ticket_total,
+                ticket_page,
+                ticket_page_size,
+            ),
+            "solutions": _page_payload(
+                [_solution_payload(solution) for solution in solutions],
+                solution_total,
+                solution_page,
+                solution_page_size,
+            ),
+            "templates": {
+                "assessment": _active_assessment_templates(db, limit=20),
+                "technical": _active_technical_templates(db, page=1, page_size=20),
+            },
+            "funnel": {
+                "summary": summary,
+                "health": _funnel_health(db),
+                "conversion": _conversion_payload(summary),
+                "dwellAlerts": _active_dwell_alerts(db, limit=8),
+            },
+            "meta": {"failures": []},
+        },
+    )
+
+
+@router.get("/context", response_model=ResponseModel)
+def get_workbench_context(
+    *,
+    db: Session = Depends(deps.get_db),
+    source_type: str = Query(...),
+    source_id: int = Query(...),
+    entity_type: Optional[str] = Query(None),
+    entity_id: Optional[int] = Query(None),
+    presale_ticket_id: Optional[int] = Query(None),
+    ticket_id: Optional[int] = Query(None),
+    transition_log_limit: int = Query(20, ge=1, le=100),
+    active_alert_limit: int = Query(10, ge=1, le=100),
+    current_user: User = Depends(security.get_current_active_user),
+) -> ResponseModel:
+    """聚合单个线索/商机售前上下文。"""
+    normalized_source_type = _normalize_source_type(source_type)
+    _ensure_source_exists(db, normalized_source_type, source_id)
+
+    resolved_entity_type = _normalize_entity_type(entity_type, normalized_source_type)
+    resolved_entity_id = entity_id or source_id
+    resolved_ticket_id = presale_ticket_id or ticket_id
+
+    ticket = None
+    if resolved_ticket_id:
+        ticket = (
+            db.query(PresaleSupportTicket)
+            .filter(PresaleSupportTicket.id == resolved_ticket_id)
+            .first()
+        )
+        if not ticket:
+            raise HTTPException(status_code=404, detail="售前工单不存在")
+    elif normalized_source_type == "opportunity":
+        ticket = (
+            db.query(PresaleSupportTicket)
+            .filter(PresaleSupportTicket.opportunity_id == source_id)
+            .order_by(desc(PresaleSupportTicket.created_at), desc(PresaleSupportTicket.id))
+            .first()
+        )
+
+    assessments = (
+        db.query(TechnicalAssessment)
+        .filter(
+            TechnicalAssessment.source_type == normalized_source_type.upper(),
+            TechnicalAssessment.source_id == source_id,
+        )
+        .order_by(
+            desc(TechnicalAssessment.evaluated_at),
+            desc(TechnicalAssessment.updated_at),
+            desc(TechnicalAssessment.id),
+        )
+        .all()
+    )
+    if ticket and ticket.current_assessment_id and not any(
+        item.id == ticket.current_assessment_id for item in assessments
+    ):
+        current_from_ticket = (
+            db.query(TechnicalAssessment)
+            .filter(TechnicalAssessment.id == ticket.current_assessment_id)
+            .first()
+        )
+        if current_from_ticket:
+            assessments.insert(0, current_from_ticket)
+
+    current_assessment = assessments[0] if assessments else None
+    risks = {"items": [], "total": 0}
+    versions = {"items": [], "total": 0}
+    if current_assessment:
+        risk_items = (
+            db.query(AssessmentRisk)
+            .filter(AssessmentRisk.assessment_id == current_assessment.id)
+            .order_by(desc(AssessmentRisk.created_at), desc(AssessmentRisk.id))
+            .all()
+        )
+        version_items = (
+            db.query(AssessmentVersion)
+            .filter(AssessmentVersion.assessment_id == current_assessment.id)
+            .order_by(desc(AssessmentVersion.evaluated_at), desc(AssessmentVersion.id))
+            .all()
+        )
+        risks = {"items": [_model_to_dict(risk) for risk in risk_items], "total": len(risk_items)}
+        versions = {
+            "items": [_model_to_dict(version) for version in version_items],
+            "total": len(version_items),
+        }
+
+    requirement_detail = None
+    if normalized_source_type == "lead":
+        requirement_detail = (
+            db.query(LeadRequirementDetail)
+            .filter(LeadRequirementDetail.lead_id == source_id)
+            .first()
+        )
+
+    solution_query = db.query(PresaleSolution)
+    if ticket:
+        solution_query = solution_query.filter(PresaleSolution.ticket_id == ticket.id)
+    elif normalized_source_type == "opportunity":
+        solution_query = solution_query.filter(PresaleSolution.opportunity_id == source_id)
+    else:
+        solution_query = solution_query.filter(False)
+    solution_total = solution_query.count()
+    solution_items = (
+        solution_query.order_by(desc(PresaleSolution.created_at), desc(PresaleSolution.id)).all()
+    )
+
+    gate_status = _validate_gate_status(
+        db,
+        entity_type=resolved_entity_type,
+        entity_id=resolved_entity_id,
+        current_user=current_user,
+    )
+
+    return ResponseModel(
+        message="查询成功",
+        data={
+            "source": {
+                "type": normalized_source_type,
+                "id": source_id,
+            },
+            "ticket": _ticket_payload(ticket) if ticket else None,
+            "assessment": {
+                "items": [_assessment_payload(assessment) for assessment in assessments],
+                "total": len(assessments),
+                "current": _assessment_payload(current_assessment)
+                if current_assessment
+                else None,
+                "requirementDetail": _model_to_dict(requirement_detail)
+                if requirement_detail
+                else None,
+                "risks": risks,
+                "versions": versions,
+            },
+            "templates": {
+                "assessment": _active_assessment_templates(db, limit=50),
+                "technical": _active_technical_templates(db, page=1, page_size=20),
+            },
+            "solutions": {
+                "items": [_solution_payload(solution) for solution in solution_items],
+                "total": solution_total,
+            },
+            "funnel": {
+                "entityType": resolved_entity_type,
+                "entityId": resolved_entity_id,
+                "gateConfigs": _gate_configs(db),
+                "stages": _stages(db, resolved_entity_type),
+                "transitionLogs": _transition_logs(
+                    db,
+                    resolved_entity_type,
+                    resolved_entity_id,
+                    transition_log_limit,
+                ),
+                "dwellAlerts": _active_dwell_alerts(
+                    db,
+                    entity_type=resolved_entity_type,
+                    entity_id=resolved_entity_id,
+                    limit=active_alert_limit,
+                ),
+                "gateStatus": gate_status,
+            },
+            "meta": {"failures": []},
+        },
+    )

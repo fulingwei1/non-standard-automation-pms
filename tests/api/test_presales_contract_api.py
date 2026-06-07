@@ -12,9 +12,14 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.enums import AssessmentStatusEnum, LeadOutcomeEnum
-from app.models.presale import PresaleSolution, PresaleSupportTicket
+from app.models.presale import (
+    PresaleSolution,
+    PresaleSupportTicket,
+    PresaleTicketProgress,
+    TechnicalParameterTemplate,
+)
 from app.models.project import Customer, Machine, Project
-from app.models.sales import Opportunity, TechnicalAssessment
+from app.models.sales import AssessmentTemplate, Opportunity, TechnicalAssessment
 from app.models.timesheet import Timesheet
 from app.models.user import User
 
@@ -77,6 +82,9 @@ class TestPresalesFrontendContractRoutes:
             ("GET", f"{prefix}/presale/technical-parameters/statistics"),
             ("GET", f"{prefix}/presale/technical-parameters/statistics/industries"),
             ("GET", f"{prefix}/presale/technical-parameters/statistics/test-types"),
+            # presaleWorkbenchApi
+            ("GET", f"{prefix}/presale/workbench/overview"),
+            ("GET", f"{prefix}/presale/workbench/context"),
             # presaleApi.tenders
             ("GET", f"{prefix}/presale/tenders"),
             ("POST", f"{prefix}/presale/tenders"),
@@ -105,8 +113,251 @@ class TestPresalesFrontendContractRoutes:
 class TestPresalesFrontendContractBehavior:
     """验证这几个曾经炸出 404/字段不匹配的接口现在真能用。"""
 
+    def test_presale_workbench_overview_aggregates_presale_and_funnel_context(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-WBO-{unique}",
+            customer_name=f"工作台概览客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPWBO{unique[:6]}",
+            customer=customer,
+            opp_name=f"工作台概览商机-{unique}",
+            stage="QUALIFICATION",
+            probability=70,
+            est_amount=Decimal("320000"),
+            expected_close_date=date.today(),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-WBO-{unique}",
+            title=f"工作台概览工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_name=customer.customer_name,
+            opportunity_id=None,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PROCESSING",
+            created_by=admin_user.id,
+        )
+        assessment_template = AssessmentTemplate(
+            template_code=f"AT-WBO-{unique}",
+            template_name=f"概览评估模板-{unique}",
+            category="CUSTOM",
+            is_active=True,
+            created_by=admin_user.id,
+        )
+        technical_template = TechnicalParameterTemplate(
+            code=f"TP-WBO-{unique}",
+            name=f"概览技术模板-{unique}",
+            industry="NEW_ENERGY",
+            test_type="FCT",
+            is_active=True,
+            created_by=admin_user.id,
+        )
+        db_session.add_all(
+            [customer, opportunity, ticket, assessment_template, technical_template]
+        )
+        db_session.flush()
+        ticket.customer_id = customer.id
+        ticket.opportunity_id = opportunity.id
+        solution = PresaleSolution(
+            solution_no=f"SOL-WBO-{unique}",
+            name=f"工作台概览方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=ticket.id,
+            customer_id=customer.id,
+            opportunity_id=opportunity.id,
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+            status="DRAFT",
+        )
+        db_session.add(solution)
+        db_session.commit()
+
+        try:
+            response = client.get(f"{prefix}/presale/workbench/overview", headers=headers)
+            assert response.status_code == 200, response.text
+            payload = response.json()
+            assert payload["success"] is True
+            data = payload["data"]
+
+            assert any(
+                item["ticket_no"] == ticket.ticket_no
+                for item in data["tickets"]["items"]
+            )
+            assert any(
+                item["solution_no"] == solution.solution_no
+                for item in data["solutions"]["items"]
+            )
+            assert any(
+                item["template_code"] == assessment_template.template_code
+                for item in data["templates"]["assessment"]["items"]
+            )
+            assert any(
+                item["code"] == technical_template.code
+                for item in data["templates"]["technical"]["items"]
+            )
+            assert data["funnel"]["summary"]["opportunities"] >= 1
+            assert data["meta"]["failures"] == []
+        finally:
+            db_session.query(PresaleSolution).filter(PresaleSolution.id == solution.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id == ticket.id
+            ).delete(synchronize_session=False)
+            db_session.query(TechnicalParameterTemplate).filter(
+                TechnicalParameterTemplate.id == technical_template.id
+            ).delete(synchronize_session=False)
+            db_session.query(AssessmentTemplate).filter(
+                AssessmentTemplate.id == assessment_template.id
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
+    def test_presale_workbench_context_returns_opportunity_assessment_ticket_solution_and_g2(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-WBC-{unique}",
+            customer_name=f"工作台上下文客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPWBC{unique[:6]}",
+            customer=customer,
+            opp_name=f"工作台上下文商机-{unique}",
+            stage="QUALIFICATION",
+            probability=75,
+            est_amount=Decimal("420000"),
+            expected_close_date=date.today(),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+            assessment_status=AssessmentStatusEnum.COMPLETED.value,
+            requirement_maturity=4,
+        )
+        db_session.add_all([customer, opportunity])
+        db_session.flush()
+
+        ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-WBC-{unique}",
+            title=f"工作台上下文工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            assessment_status=AssessmentStatusEnum.COMPLETED.value,
+            created_by=admin_user.id,
+        )
+        db_session.add(ticket)
+        db_session.flush()
+
+        assessment = TechnicalAssessment(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            evaluator_id=admin_user.id,
+            status=AssessmentStatusEnum.COMPLETED.value,
+            total_score=86,
+            decision="推荐立项",
+            presale_ticket_id=ticket.id,
+        )
+        solution = PresaleSolution(
+            solution_no=f"SOL-WBC-{unique}",
+            name=f"工作台上下文方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=ticket.id,
+            customer_id=customer.id,
+            opportunity_id=opportunity.id,
+            estimated_cost=Decimal("260000"),
+            suggested_price=Decimal("420000"),
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+            status="APPROVED",
+        )
+        db_session.add_all([assessment, solution])
+        db_session.flush()
+        opportunity.assessment_id = assessment.id
+        ticket.current_assessment_id = assessment.id
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{prefix}/presale/workbench/context",
+                params={
+                    "source_type": "opportunity",
+                    "source_id": opportunity.id,
+                    "presale_ticket_id": ticket.id,
+                },
+                headers=headers,
+            )
+            assert response.status_code == 200, response.text
+            data = response.json()["data"]
+
+            assert data["source"] == {"type": "opportunity", "id": opportunity.id}
+            assert data["ticket"]["id"] == ticket.id
+            assert data["assessment"]["current"]["id"] == assessment.id
+            assert data["assessment"]["current"]["status"] == AssessmentStatusEnum.COMPLETED.value
+            assert data["solutions"]["items"][0]["id"] == solution.id
+            assert data["funnel"]["entityType"] == "OPPORTUNITY"
+            assert data["funnel"]["entityId"] == opportunity.id
+            assert data["funnel"]["gateStatus"]["gate_type"] == "G2"
+            assert data["funnel"]["gateStatus"]["is_valid"] is True
+            assert "技术评估通过" in data["funnel"]["gateStatus"]["checked_items"]
+            assert data["meta"]["failures"] == []
+        finally:
+            db_session.query(PresaleSolution).filter(PresaleSolution.id == solution.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id == ticket.id
+            ).update(
+                {"current_assessment_id": None},
+                synchronize_session=False,
+            )
+            db_session.query(TechnicalAssessment).filter(
+                TechnicalAssessment.id == assessment.id
+            ).delete(synchronize_session=False)
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id == ticket.id
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
     def test_ticket_update_and_complete_accept_json_body(
-        self, client: TestClient, admin_token: str
+        self, client: TestClient, db_session: Session, admin_token: str
     ):
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -197,12 +448,25 @@ class TestPresalesFrontendContractBehavior:
 
         completed = client.put(
             f"{prefix}/presale/tickets/{ticket_id}/complete",
-            json={"actual_hours": 8},
+            json={"actual_hours": 8, "completion_note": "方案可行，建议进入报价"},
             headers=headers,
         )
         assert completed.status_code == 200, completed.text
         assert completed.json()["status"] == "COMPLETED"
         assert completed.json()["actual_hours"] == pytest.approx(8.0)
+        assert completed.json()["progress_percent"] == 100
+        assert completed.json()["progress_note"] == "方案可行，建议进入报价"
+
+        progress = (
+            db_session.query(PresaleTicketProgress)
+            .filter(PresaleTicketProgress.ticket_id == ticket_id)
+            .order_by(PresaleTicketProgress.id.desc())
+            .first()
+        )
+        assert progress is not None
+        assert progress.progress_type == "COMPLETE"
+        assert progress.content == "方案可行，建议进入报价"
+        assert progress.progress_percent == 100
 
     def test_completing_opportunity_ticket_updates_sales_assessment_status(
         self, client: TestClient, db_session: Session, admin_token: str

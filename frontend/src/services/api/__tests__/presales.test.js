@@ -21,16 +21,31 @@ describe('presaleApi', () => {
     teardownApiTest(mock);
   });
 
-  it('tickets.complete() - should send actual_hours as query params', async () => {
+  it('tickets.complete() - should send completion context as JSON body', async () => {
     mock.onPut('/api/v1/presale/tickets/42/complete').reply((config) => {
-      expect(config.params).toEqual({ actual_hours: 8.5 });
-      expect(config.data).toBeUndefined();
-      return [200, { id: 42, status: 'COMPLETED', actual_hours: 8.5 }];
+      expect(config.params).toBeUndefined();
+      expect(JSON.parse(config.data)).toEqual({
+        actual_hours: 8.5,
+        completion_note: '方案可行，建议进入报价',
+      });
+      return [
+        200,
+        {
+          id: 42,
+          status: 'COMPLETED',
+          actual_hours: 8.5,
+          progress_note: '方案可行，建议进入报价',
+        },
+      ];
     });
 
-    const response = await presaleApi.tickets.complete(42, { actualHours: 8.5 });
+    const response = await presaleApi.tickets.complete(42, {
+      actualHours: 8.5,
+      completion_note: '方案可行，建议进入报价',
+    });
 
     expect(response.data.status).toBe('COMPLETED');
+    expect(response.data.progress_note).toBe('方案可行，建议进入报价');
   });
 
   it('tickets.createDeliverable() - should post deliverable payload to ticket route', async () => {

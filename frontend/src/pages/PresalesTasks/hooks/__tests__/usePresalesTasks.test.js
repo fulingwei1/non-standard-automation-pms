@@ -63,17 +63,23 @@ describe('usePresalesTasks Hook', () => {
     expect(presaleApi.tickets.list).toHaveBeenCalledTimes(2);
   });
 
-  it('should complete task with normalized actual hours payload', async () => {
+  it('should complete task with normalized completion payload', async () => {
     const { result } = renderHook(() => usePresalesTasks());
 
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     await act(async () => {
-      const response = await result.current.completeTask(8, { actualHours: 6.5 });
+      const response = await result.current.completeTask(8, {
+        actualHours: 6.5,
+        completionNote: '方案可行，建议进入报价',
+      });
       expect(response).toEqual({ success: true });
     });
 
-    expect(presaleApi.tickets.complete).toHaveBeenCalledWith(8, { actual_hours: 6.5 });
+    expect(presaleApi.tickets.complete).toHaveBeenCalledWith(8, {
+      actual_hours: 6.5,
+      completion_note: '方案可行，建议进入报价',
+    });
     expect(presaleApi.tickets.list).toHaveBeenCalledTimes(2);
   });
 });
