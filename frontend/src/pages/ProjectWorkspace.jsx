@@ -106,6 +106,7 @@ export default function ProjectWorkspace() {
   const missingItems = handoverStatus?.missing || [];
   const quoteVersion = handoverContext?.quote?.version || {};
   const primarySolution = handoverContext?.presale_solutions?.[0];
+  const primaryTicket = handoverContext?.presale_tickets?.[0];
   const quoteCost =
     handoverContext?.baseline_cost?.quote_cost_total ?? quoteVersion.cost_total;
   const presaleCost =
@@ -241,7 +242,7 @@ export default function ProjectWorkspace() {
               </div>
               }
 
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
                 <div className="rounded-lg border p-4">
                   <p className="text-sm text-gray-500">合同</p>
                   <p className="mt-1 font-medium">
@@ -279,6 +280,18 @@ export default function ProjectWorkspace() {
                   </p>
                   <p className="mt-2 text-sm text-gray-500">
                     {presaleCost != null ? formatCurrency(presaleCost) : "未估算"}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <p className="text-sm text-gray-500">售前工单</p>
+                  <p className="mt-1 font-medium">
+                    {primaryTicket?.ticket_no || "未关联"}
+                  </p>
+                  <p className="mt-2 truncate text-sm text-gray-500">
+                    {primaryTicket?.actual_hours != null ?
+                    `${primaryTicket.actual_hours} 小时` :
+                    primaryTicket?.title || "未记录工时"}
                   </p>
                 </div>
               </div>

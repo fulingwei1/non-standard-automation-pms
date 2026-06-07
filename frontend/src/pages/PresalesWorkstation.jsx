@@ -526,9 +526,8 @@ export default function PresalesWorkstation() {
       }
 
       if (selectedCostTask?.ticketId && costData.status === "submitted") {
-        await presaleApi.tickets.updateProgress(selectedCostTask.ticketId, {
-          progress_note: `成本估算已完成，总成本：¥${costData.totalAmount}万，建议报价：¥${costData.suggestedPrice}万`,
-          progress_percent: 100
+        await presaleApi.tickets.complete(selectedCostTask.ticketId, {
+          completion_note: `成本估算已完成，总成本：¥${costData.totalAmount}万，建议报价：¥${costData.suggestedPrice}万`
         });
       }
 

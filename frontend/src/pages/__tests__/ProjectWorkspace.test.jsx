@@ -74,6 +74,18 @@ describe("ProjectWorkspace", () => {
               suggested_price: 580000,
             },
           ],
+          presale_tickets: [
+            {
+              id: 91,
+              ticket_no: "PST-091",
+              title: "FCT售前技术支持",
+              ticket_type: "SOLUTION",
+              status: "COMPLETED",
+              applicant_name: "张销售",
+              assignee_name: "王工",
+              actual_hours: 18.5,
+            },
+          ],
           baseline_cost: {
             quote_cost_total: 360000,
             presale_estimated_cost: 355000,
@@ -225,6 +237,8 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("OPP-001")).toBeInTheDocument();
     expect(screen.getByText("QT-001")).toBeInTheDocument();
     expect(screen.getByText("FCT测试方案")).toBeInTheDocument();
+    expect(screen.getByText("PST-091")).toBeInTheDocument();
+    expect(screen.getByText(/18.5 小时/)).toBeInTheDocument();
     expect(screen.getByText(/[¥￥]360,000.00/)).toBeInTheDocument();
     expect(screen.getByText("后续模块状态")).toBeInTheDocument();
     expect(screen.getByText("RV-001")).toBeInTheDocument();
