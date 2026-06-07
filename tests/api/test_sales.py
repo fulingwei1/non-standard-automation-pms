@@ -1057,6 +1057,63 @@ class TestTechnicalAssessmentClosedLoop:
         assert [item["id"] for item in assessments] == [assessment_id]
         assert assessments[0]["status"] == "COMPLETED"
 
+    def test_evaluating_lead_assessment_updates_linked_presale_ticket(
+        self, client: TestClient, admin_token: str
+    ):
+        """线索技术评估完成后，应回写同线索售前工单的评估状态。"""
+
+        _create_active_scoring_rule(client, admin_token)
+        lead = _create_lead(client, admin_token)
+        headers = _auth_headers(admin_token)
+
+        ticket_response = client.post(
+            f"{settings.API_V1_PREFIX}/presale/tickets",
+            json={
+                "title": f"线索技术支持-{uuid.uuid4().hex[:4]}",
+                "ticket_type": "TECHNICAL_SUPPORT",
+                "urgency": "NORMAL",
+                "customer_name": lead["customer_name"],
+                "lead_id": lead["id"],
+            },
+            headers=headers,
+        )
+        assert ticket_response.status_code == 201, ticket_response.text
+        ticket_id = ticket_response.json()["id"]
+        assert ticket_response.json()["assessment_status"] == AssessmentStatusEnum.PENDING.value
+
+        apply_response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}/assessments/apply",
+            json={},
+            headers=headers,
+        )
+        assert apply_response.status_code == 201, apply_response.text
+        assessment_id = apply_response.json()["data"]["assessment_id"]
+
+        evaluate_response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/assessments/{assessment_id}/evaluate",
+            json={
+                "requirement_data": {
+                    "tech_maturity": "mature",
+                    "budget_status": "confirmed",
+                    "has_sow": True,
+                },
+                "enable_ai": False,
+            },
+            headers=headers,
+        )
+        assert evaluate_response.status_code == 200, evaluate_response.text
+        assert evaluate_response.json()["id"] == assessment_id
+
+        refreshed_ticket = client.get(
+            f"{settings.API_V1_PREFIX}/presale/tickets/{ticket_id}",
+            headers=headers,
+        )
+        assert refreshed_ticket.status_code == 200, refreshed_ticket.text
+        ticket = refreshed_ticket.json()
+        assert ticket["status"] == "PENDING"
+        assert ticket["assessment_status"] == AssessmentStatusEnum.COMPLETED.value
+        assert ticket["current_assessment_id"] == assessment_id
+
     def test_evaluation_generated_risks_are_available_as_structured_risks(
         self, client: TestClient, admin_token: str
     ):

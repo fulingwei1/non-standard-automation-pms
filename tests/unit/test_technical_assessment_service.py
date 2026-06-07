@@ -15,12 +15,17 @@
 - _generate_risks: 生成风险列表
 """
 
+import json
 from datetime import datetime
+from uuid import uuid4
 from unittest.mock import MagicMock
 
 import pytest
 from sqlalchemy.orm import Session
 
+from app.models.enums import AssessmentSourceTypeEnum, AssessmentStatusEnum
+from app.models.presale import PresaleSupportTicket
+from app.models.sales import Lead, ScoringRule
 from app.services.technical_assessment_service import TechnicalAssessmentService
 
 # ============================================================================
@@ -613,6 +618,83 @@ class TestEvaluate:
 
         with pytest.raises(ValueError, match="未找到启用的评分规则"):
             service.evaluate("LEAD", 1, 1, {})
+
+    def test_evaluate_syncs_presale_ticket_for_same_lead_source(
+        self, db_session: Session, test_sales_user
+    ):
+        """销售线索技术评估完成后，应同步关联线索的售前工单评估状态。"""
+        scoring_rule = ScoringRule(
+            version=f"TA-UNIT-{uuid4().hex[:8]}",
+            rules_json=json.dumps(
+                {
+                    "evaluation_criteria": {
+                        "tech_maturity": {
+                            "field": "tech_maturity",
+                            "max_points": 10,
+                            "options": [{"value": "mature", "points": 10}],
+                        },
+                        "budget_status": {
+                            "field": "budget_status",
+                            "max_points": 10,
+                            "options": [{"value": "confirmed", "points": 10}],
+                        },
+                    },
+                    "scales": {
+                        "decision_thresholds": [
+                            {"min_score": 80, "decision": "推荐立项"},
+                            {"min_score": 60, "decision": "有条件立项"},
+                            {"min_score": 40, "decision": "暂缓"},
+                            {"min_score": 0, "decision": "不建议立项"},
+                        ]
+                    },
+                    "veto_rules": [],
+                },
+                ensure_ascii=False,
+            ),
+            is_active=True,
+            created_by=test_sales_user.id,
+        )
+        lead = Lead(
+            lead_code=f"LD-TA-{uuid4().hex[:8].upper()}",
+            customer_name="售前同步客户",
+            source="展会",
+            industry="电子制造",
+            owner_id=test_sales_user.id,
+            assessment_status=AssessmentStatusEnum.PENDING.value,
+        )
+        db_session.add_all([scoring_rule, lead])
+        db_session.flush()
+
+        ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-TA-{uuid4().hex[:8].upper()}",
+            title="线索售前技术支持",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            lead_id=lead.id,
+            customer_name=lead.customer_name,
+            applicant_id=test_sales_user.id,
+            applicant_name=test_sales_user.real_name,
+            status="PROCESSING",
+            assessment_status=AssessmentStatusEnum.IN_PROGRESS.value,
+            created_by=test_sales_user.id,
+        )
+        db_session.add(ticket)
+        db_session.commit()
+
+        service = TechnicalAssessmentService(db_session)
+        assessment = service.evaluate(
+            AssessmentSourceTypeEnum.LEAD.value,
+            lead.id,
+            test_sales_user.id,
+            {"tech_maturity": "mature", "budget_status": "confirmed", "hasSOW": True},
+        )
+
+        db_session.expire_all()
+        refreshed_ticket = db_session.get(PresaleSupportTicket, ticket.id)
+        assert refreshed_ticket.assessment_status == AssessmentStatusEnum.COMPLETED.value
+        assert refreshed_ticket.current_assessment_id == assessment.id
+        assert refreshed_ticket.status == "PROCESSING"
+        assert assessment.presale_ticket_id == ticket.id
 
             # ============================================================================
             # 集成测试

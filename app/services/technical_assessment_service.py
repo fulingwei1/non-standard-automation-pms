@@ -120,6 +120,7 @@ class TechnicalAssessmentService:
 
         self.db.flush()
         self._sync_structured_risks(assessment.id, evaluator_id, risks)
+        self._sync_presale_ticket_assessment(assessment)
 
         # 更新来源对象的评估关联
         self._update_source_assessment(source_type, source_id, assessment.id)
@@ -598,6 +599,42 @@ class TechnicalAssessmentService:
                     conditions.append(f"解决{len(blocking_items)}个阻塞报价的未决事项")
 
         return conditions
+
+    def _sync_presale_ticket_assessment(self, assessment: TechnicalAssessment) -> None:
+        """将技术评估完成状态同步到关联或同来源的售前工单。"""
+        from app.models.presale import PresaleSupportTicket
+
+        if not assessment.id:
+            return
+
+        conditions = [PresaleSupportTicket.current_assessment_id == assessment.id]
+        if assessment.presale_ticket_id:
+            conditions.append(PresaleSupportTicket.id == assessment.presale_ticket_id)
+
+        source_condition = None
+        if assessment.source_type == AssessmentSourceTypeEnum.LEAD.value:
+            source_condition = PresaleSupportTicket.lead_id == assessment.source_id
+        elif assessment.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value:
+            source_condition = PresaleSupportTicket.opportunity_id == assessment.source_id
+
+        if source_condition is not None:
+            conditions.append(
+                and_(
+                    source_condition,
+                    PresaleSupportTicket.status.notin_(("CANCELLED", "CLOSED")),
+                )
+            )
+
+        tickets = self.db.query(PresaleSupportTicket).filter(or_(*conditions)).all()
+        if not tickets:
+            return
+
+        for ticket in tickets:
+            ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
+            ticket.current_assessment_id = assessment.id
+
+        if not assessment.presale_ticket_id and len(tickets) == 1:
+            assessment.presale_ticket_id = tickets[0].id
 
     def _update_source_assessment(self, source_type: str, source_id: int, assessment_id: int):
         """更新来源对象的评估关联"""
