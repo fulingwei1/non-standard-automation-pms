@@ -3,6 +3,7 @@
  * 管理客户需求调研记录、现场勘察、问题跟踪
  */
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ClipboardList,
@@ -27,7 +28,21 @@ import { mapTicketTypeToMethod, mapTicketStatus } from "./utils";
 import SurveyCard from "./SurveyCard";
 import SurveyDetailPanel from "./SurveyDetailPanel";
 
+function parseContextId(value) {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 export default function RequirementSurvey({ embedded = false }) {
+  const [searchParams] = useSearchParams();
+  const contextTicketId = searchParams.get("ticket_id") || "";
+  const contextOpportunityId = searchParams.get("opportunity_id") || "";
+  const contextTicketIdNumber = parseContextId(contextTicketId);
+  const contextOpportunityIdNumber = parseContextId(contextOpportunityId);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedMethod, setSelectedMethod] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -60,6 +75,12 @@ export default function RequirementSurvey({ embedded = false }) {
 
       if (searchTerm) {
         params.keyword = searchTerm;
+      }
+      if (contextOpportunityIdNumber) {
+        params.opportunity_id = contextOpportunityId;
+      }
+      if (contextTicketIdNumber) {
+        params.ticket_id = contextTicketId;
       }
 
       const response = await presaleApi.tickets.list(params);
@@ -109,7 +130,14 @@ export default function RequirementSurvey({ embedded = false }) {
     } finally {
       setLoading(false);
     }
-  }, [selectedStatus, searchTerm]);
+  }, [
+    contextOpportunityId,
+    contextOpportunityIdNumber,
+    contextTicketId,
+    contextTicketIdNumber,
+    selectedStatus,
+    searchTerm,
+  ]);
 
   useEffect(() => {
     loadSurveys();
