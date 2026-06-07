@@ -188,6 +188,33 @@ class Contract(Base, TimestampMixin):
     def contract_amount(self, value):
         self.total_amount = value
 
+    @property
+    def payment_terms_summary(self):
+        """Backward-compatible alias for legacy G4 validation code."""
+        return self.payment_terms
+
+    @payment_terms_summary.setter
+    def payment_terms_summary(self, value):
+        self.payment_terms = value
+
+    @property
+    def acceptance_summary(self):
+        """Backward-compatible alias for legacy contract-to-project code."""
+        return self.contract_subject
+
+    @acceptance_summary.setter
+    def acceptance_summary(self, value):
+        self.contract_subject = value
+
+    @property
+    def signed_date(self):
+        """Backward-compatible alias for legacy code paths."""
+        return self.signing_date
+
+    @signed_date.setter
+    def signed_date(self, value):
+        self.signing_date = value
+
 
 class ContractDeliverable(Base, TimestampMixin):
     """合同交付物清单表"""

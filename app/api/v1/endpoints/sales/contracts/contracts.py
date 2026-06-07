@@ -7,17 +7,14 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_active_user, get_db
-from app.common.query_filters import build_like_conditions
-from app.models.project import Project
-from app.models.project.financial import ProjectMilestone
-from app.models.project.financial import ProjectPaymentPlan as PaymentPlan
+from app.api import deps
+from app.core import security
 from app.models.sales.contracts import Contract
-from app.utils.json_helpers import safe_json_loads
+from app.services.sales.payment_plan_service import PaymentPlanService
+from app.services.status_transition_service import StatusTransitionService
 
 from ..utils.gate_validation import validate_g4_contract_to_project
 
@@ -30,10 +27,10 @@ router = APIRouter(prefix="/contracts", tags=["contracts"])
 
 
 @router.post("/{contract_id}/create-project")
-async def create_project_from_contract(
+def create_project_from_contract(
     contract_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_active_user),
+    db: Session = Depends(deps.get_db),
+    current_user=Depends(security.require_permission("contract:create")),
 ):
     """
     从合同创建项目，自动绑定付款节点到里程碑
@@ -48,16 +45,12 @@ async def create_project_from_contract(
     7. 同步SOW/验收标准到项目
     """
 
-    # 1. 查询合同（包含客户信息和交付物）
-    result = await db.execute(
-        select(Contract)
-        .options(
-            selectinload(Contract.customer),
-            selectinload(Contract.deliverables),
-        )
-        .where(Contract.id == contract_id)
+    contract = (
+        db.query(Contract)
+        .options(selectinload(Contract.customer), selectinload(Contract.deliverables))
+        .filter(Contract.id == contract_id)
+        .first()
     )
-    contract = result.scalar_one_or_none()
 
     if not contract:
         raise HTTPException(status_code=404, detail=f"合同不存在: {contract_id}")
@@ -79,135 +72,40 @@ async def create_project_from_contract(
             detail=f"G4 阶段门验证失败: {'; '.join(g4_errors)}",
         )
 
-    customer = contract.customer
-
-    # 4. 安全解析付款节点（使用 safe_json_loads 避免 JSON 解析异常）
-    payment_nodes = safe_json_loads(
-        contract.payment_nodes,
-        default=[],
-        field_name="payment_nodes",
-    )
-
-    # 5. 使用事务保护创建项目及相关数据
     try:
-        async with db.begin_nested():
-            # 创建项目
-            project = Project(
-                code=await _generate_project_code(db),
-                name=f"{contract.contract_code}-{customer.name}",
-                customer_id=customer.id,
-                contract_id=contract.id,
-                amount=contract.contract_amount,
-                sow_text=contract.sow_text or "",
-                acceptance_criteria=contract.acceptance_criteria or [],
-                stage="S1",  # 需求进入
-                status="ST01",  # 未启动
-                health_status="H1",  # 正常
-            )
+        transition_service = StatusTransitionService(db)
+        project = transition_service.handle_contract_signed(
+            contract_id, auto_create_project=True
+        )
+        if not project:
+            raise HTTPException(status_code=500, detail="创建项目失败")
 
-            db.add(project)
-            await db.flush()
-
-            # 处理付款节点
-            milestone_count = 0
-            if payment_nodes:
-                milestone_count = len(payment_nodes)
-
-                for idx, node in enumerate(payment_nodes, 1):
-                    # 计算里程碑序号
-                    milestone_seq = idx + 1
-
-                    # 创建收款计划
-                    payment_plan = PaymentPlan(
-                        project_id=project.id,
-                        contract_id=contract.id,
-                        node_name=node.get("name", f"付款节点{milestone_seq}"),
-                        percentage=node.get("percentage", 0),
-                        amount=(
-                            contract.contract_amount * node.get("percentage", 0) / 100
-                            if node.get("percentage")
-                            else 0
-                        ),
-                        due_date=node.get("due_date"),
-                        status="PENDING",
-                    )
-
-                    db.add(payment_plan)
-                    await db.flush()
-
-                    # 创建对应的里程碑
-                    milestone = ProjectMilestone(
-                        project_id=project.id,
-                        name=f"M{milestone_seq}",
-                        description=node.get("description", f"付款里程碑{milestone_seq}"),
-                        planned_date=node.get("due_date"),
-                        sequence=milestone_seq,
-                        status="NOT_STARTED",
-                    )
-
-                    db.add(milestone)
-                    await db.flush()
-
-        await db.commit()
+        db.refresh(contract)
+        payment_plans = PaymentPlanService(db).generate_payment_plans_from_contract(contract)
+        db.commit()
 
         logger.info(
-            "合同 %s 成功创建项目 %s，付款节点数: %d",
+            "合同 %s 通过兼容入口成功创建项目 %s，收款计划数: %d",
             contract.contract_code,
-            project.code,
-            milestone_count,
+            project.project_code,
+            len(payment_plans),
         )
 
         return {
             "success": True,
-            "message": "项目创建成功，付款节点已关联到里程碑",
+            "message": "项目创建成功，销售/售前上下文已同步",
             "project_id": project.id,
-            "project_code": project.code,
-            "payment_plans_count": milestone_count,
-            "milestones_count": milestone_count,
+            "project_code": project.project_code,
+            "payment_plans_count": len(payment_plans),
         }
 
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
-        await db.rollback()
+        db.rollback()
         logger.error("从合同 %s 创建项目失败: %s", contract_id, str(e))
         raise HTTPException(
             status_code=500,
             detail=f"创建项目失败: {str(e)}",
         )
-
-
-# 辅助函数
-async def _generate_project_code(db: AsyncSession) -> str:
-    """生成项目编码"""
-    from datetime import datetime
-
-    now = datetime.now()
-    year = now.year
-    month = now.month
-
-    # 查找当月已有项目编码
-    month_prefix = f"PJ{year:04d}{month:02d}"
-    month_conditions = build_like_conditions(
-        Project,
-        f"{month_prefix}%",
-        "code",
-        use_ilike=False,
-    )
-
-    # 获取当月最后一个编码
-    result = await db.execute(
-        select(Project.code).where(month_conditions[0]).order_by(Project.code.desc()).limit(1)
-    )
-    last_project_code = result.scalar_one_or_none()
-
-    seq_num = 1
-    if last_project_code:
-        # 提取序号数字部分（格式：PJyyyymm###）
-        try:
-            seq_num = int(last_project_code[-3:]) + 1
-        except (ValueError, IndexError, TypeError):
-            seq_num = 1
-
-    seq_str = f"{seq_num:03d}"
-    project_code = f"{month_prefix}{seq_str}"
-
-    return project_code

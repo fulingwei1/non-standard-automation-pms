@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.project import Customer, Project
-from app.models.sales import Contract, Lead, Opportunity, Quote, QuoteVersion
+from app.models.sales import Contract, ContractDeliverable, Lead, Opportunity, Quote, QuoteVersion
 from app.models.user import User
 
 
@@ -284,6 +284,150 @@ class TestSalesContractsAPI:
             db_session.query(Project).filter(Project.contract_id == contract.id).delete(
                 synchronize_session=False
             )
+            db_session.query(Contract).filter(Contract.id == contract.id).delete(
+                synchronize_session=False
+            )
+            quote.current_version_id = None
+            db_session.flush()
+            db_session.query(QuoteVersion).filter(QuoteVersion.id == quote_version.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(Quote).filter(Quote.id == quote.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(Lead).filter(Lead.id == lead.id).delete(synchronize_session=False)
+            db_session.query(Customer).filter(Customer.id == customer.id).delete(
+                synchronize_session=False
+            )
+            db_session.commit()
+
+    def test_legacy_create_project_endpoint_preserves_sales_presale_context(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """旧合同转项目入口也不能生成缺销售/售前上下文的项目。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-LCP-{unique}",
+            customer_name=f"旧入口建项客户-{unique}",
+            industry="新能源",
+            contact_person="王工",
+            contact_phone="13800138000",
+            created_by=admin_user.id,
+        )
+        lead = Lead(
+            lead_code=f"LEADLCP{unique[:6]}",
+            customer_name=customer.customer_name,
+            industry="新能源",
+            demand_summary="旧合同转项目入口也要保留线索与售前上下文",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([customer, lead])
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPPLCP{unique[:6]}",
+            lead_id=lead.id,
+            customer=customer,
+            opp_name=f"旧入口建项商机-{unique}",
+            project_type="ATE",
+            equipment_type="PACK_EOL",
+            stage="WON",
+            probability=95,
+            est_amount=Decimal("880000"),
+            est_margin=Decimal("40.90"),
+            acceptance_basis="按冻结需求和终验清单验收",
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        quote = Quote(
+            quote_code=f"QLCP{unique[:6]}",
+            opportunity=opportunity,
+            customer=customer,
+            status="APPROVED",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([opportunity, quote])
+        db_session.flush()
+
+        quote_version = QuoteVersion(
+            quote_id=quote.id,
+            version_no="V1",
+            total_price=Decimal("880000"),
+            cost_total=Decimal("520000"),
+            gross_margin=Decimal("40.90"),
+            created_by=admin_user.id,
+        )
+        db_session.add(quote_version)
+        db_session.flush()
+        quote.current_version_id = quote_version.id
+
+        contract = Contract(
+            contract_code=f"CTLCP{unique[:6]}",
+            contract_name=f"旧入口建项合同-{unique}",
+            contract_type="sales",
+            customer=customer,
+            opportunity=opportunity,
+            quote_id=quote_version.id,
+            total_amount=Decimal("880000"),
+            contract_subject="交付一套 PACK EOL 测试线，按终验标准验收",
+            payment_terms="30-60-10",
+            status="SIGNED",
+            sales_owner_id=admin_user.id,
+        )
+        db_session.add(contract)
+        db_session.flush()
+
+        deliverable = ContractDeliverable(
+            contract_id=contract.id,
+            deliverable_name="PACK EOL 测试线",
+            deliverable_type="EQUIPMENT",
+            required_for_payment=True,
+        )
+        db_session.add(deliverable)
+        db_session.commit()
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/contracts/{contract.id}/create-project",
+            headers=headers,
+        )
+
+        try:
+            assert response.status_code == 200, response.text
+            data = response.json()
+            project = db_session.get(Project, data["project_id"])
+            assert project is not None
+            assert project.project_code == data["project_code"]
+            assert project.contract_id == contract.id
+            assert project.customer_id == customer.id
+            assert project.lead_id == lead.id
+            assert project.opportunity_id == opportunity.id
+            assert project.contract_no == contract.contract_code
+            assert float(project.contract_amount) == 880000.0
+            assert float(project.budget_amount) == 520000.0
+            assert project.project_type == "ATE"
+            assert project.product_category == "PACK_EOL"
+            assert project.industry == "新能源"
+
+            db_session.refresh(contract)
+            assert contract.project_id == project.id
+        finally:
+            db_session.query(Project).filter(Project.contract_id == contract.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(ContractDeliverable).filter(
+                ContractDeliverable.contract_id == contract.id
+            ).delete(synchronize_session=False)
             db_session.query(Contract).filter(Contract.id == contract.id).delete(
                 synchronize_session=False
             )

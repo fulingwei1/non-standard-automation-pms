@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.enums import AssessmentStatusEnum
+from app.models.enums import AssessmentStatusEnum, OpenItemStatusEnum
 from app.models.ecn import Ecn
 from app.models.issue import Issue
 from app.models.material import BomHeader, BomItem, Material
@@ -24,6 +24,7 @@ from app.models.sales import (
     Contract,
     Lead,
     Opportunity,
+    OpenItem,
     Quote,
     QuoteVersion,
     TechnicalAssessment,
@@ -676,6 +677,114 @@ class TestProjectWorkspaceHandoverContext:
         assert payload["baseline_cost"]["presale_estimated_cost"] == 255000.0
         assert "presale_solution" not in payload["handover_status"]["missing"]
         assert "technical_assessment" not in payload["handover_status"]["missing"]
+
+    def test_project_workspace_context_surfaces_unclosed_sales_open_items(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-PWO-{unique}",
+            customer_name=f"未决交接客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPPWO{unique[:6]}",
+            customer=customer,
+            opp_name=f"未决交接商机-{unique}",
+            project_type="FCT",
+            equipment_type="EOL",
+            stage="WON",
+            probability=95,
+            est_amount=Decimal("420000"),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        project = Project(
+            project_code=f"PRJPWO{unique[:6]}",
+            project_name=f"未决交接项目-{unique}",
+            customer=customer,
+            customer_name=customer.customer_name,
+            opportunity=opportunity,
+            project_type="FCT",
+            product_category="测试设备",
+            industry="电子制造",
+            contract_amount=Decimal("420000"),
+            budget_amount=Decimal("260000"),
+            stage="S1",
+            status="ST01",
+            health="H1",
+            pm_id=admin_user.id,
+            pm_name=admin_user.real_name or admin_user.username,
+            created_by=admin_user.id,
+        )
+        db_session.add_all([customer, opportunity, project])
+        db_session.flush()
+
+        blocking_item = OpenItem(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            item_code=f"OI-PWO-A-{unique}",
+            item_type="TECHNICAL",
+            description="客户样品治具接口图未冻结，影响项目启动范围确认",
+            responsible_party="CUSTOMER",
+            responsible_person_id=admin_user.id,
+            due_date=datetime.now() + timedelta(days=3),
+            status=OpenItemStatusEnum.PENDING.value,
+            blocks_quotation=True,
+        )
+        non_blocking_item = OpenItem(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            item_code=f"OI-PWO-B-{unique}",
+            item_type="COMMERCIAL",
+            description="客户付款节点口径待确认",
+            responsible_party="INTERNAL",
+            status=OpenItemStatusEnum.IN_PROGRESS.value,
+            blocks_quotation=False,
+        )
+        closed_item = OpenItem(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            item_code=f"OI-PWO-C-{unique}",
+            item_type="OTHER",
+            description="已关闭的历史未决事项不应进入项目交接",
+            responsible_party="INTERNAL",
+            status=OpenItemStatusEnum.CLOSED.value,
+            blocks_quotation=True,
+            closed_at=datetime.now(),
+        )
+        db_session.add_all([blocking_item, non_blocking_item, closed_item])
+        db_session.commit()
+
+        response = client.get(
+            f"{prefix}/project-workspace/projects/{project.id}/workspace/context",
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+
+        payload = response.json()
+        assert payload["open_items"]["total"] == 2
+        assert payload["open_items"]["blocking_count"] == 1
+        assert [item["item_code"] for item in payload["open_items"]["items"]] == [
+            blocking_item.item_code,
+            non_blocking_item.item_code,
+        ]
+        assert payload["open_items"]["items"][0]["description"] == blocking_item.description
+        assert payload["open_items"]["items"][0]["responsible_person_name"] == (
+            admin_user.real_name or admin_user.username
+        )
+        assert payload["handover_status"]["blockers"] == ["open_items"]
+        assert payload["handover_status"]["ready"] is False
 
     def test_project_workspace_downstream_context_includes_engineering_bom_and_kitting(
         self, client: TestClient, db_session: Session, admin_token: str

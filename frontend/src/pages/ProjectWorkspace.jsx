@@ -146,6 +146,28 @@ function buildPresaleTicketPath(ticket, opportunity, project) {
   return `/presales/technical-solutions?${params.toString()}`;
 }
 
+function buildOpenItemsPath(openItems, opportunity, project) {
+  const primaryItem = openItems?.items?.[0];
+  const sourceType = getFirstValue(primaryItem, ["source_type", "sourceType"]);
+  const sourceId = getFirstValue(primaryItem, ["source_id", "sourceId"]);
+  if (sourceType && sourceId) {
+    const normalizedType =
+      String(sourceType).toLowerCase() === "opportunity" ? "opportunity" : "lead";
+    return `/sales/${normalizedType}/${sourceId}/open-items`;
+  }
+
+  if (opportunity?.id) {
+    return `/sales/opportunity/${opportunity.id}/open-items`;
+  }
+
+  const leadId = getFirstValue(project, ["lead_id", "leadId"]);
+  if (leadId) {
+    return `/sales/lead/${leadId}/open-items`;
+  }
+
+  return null;
+}
+
 function appendMissingContextParam(params, key, value) {
   if (!params.has(key)) {
     appendContextParam(params, key, value);
@@ -245,6 +267,8 @@ export default function ProjectWorkspace() {
   const currentAssessment = technicalAssessment.current;
   const assessmentRisks = technicalAssessment.risks || {};
   const primaryAssessmentRisk = assessmentRisks.items?.[0];
+  const openItems = handoverContext?.open_items || {};
+  const primaryOpenItem = openItems.items?.[0];
   const primarySolutionPath = buildPresaleSolutionPath(
     primarySolution,
     primaryTicket,
@@ -253,6 +277,11 @@ export default function ProjectWorkspace() {
   );
   const primaryTicketPath = buildPresaleTicketPath(
     primaryTicket,
+    handoverContext?.opportunity,
+    project,
+  );
+  const openItemsPath = buildOpenItemsPath(
+    openItems,
     handoverContext?.opportunity,
     project,
   );
@@ -532,6 +561,52 @@ export default function ProjectWorkspace() {
                   }
                 </div>
               </div>
+
+              {openItems.total > 0 &&
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <p className="text-sm text-amber-100/80">未闭环事项</p>
+                    <p className="mt-1 font-medium text-amber-50">
+                      {openItems.total} 项未闭环
+                      {openItems.blocking_count > 0 ?
+                      `，${openItems.blocking_count} 项阻塞报价/交接` :
+                      ""}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant={openItems.blocking_count > 0 ? "destructive" : "outline"}>
+                      {openItems.blocking_count > 0 ? "有阻塞" : "待跟进"}
+                    </Badge>
+                    {openItemsPath &&
+                    <Button asChild size="sm" variant="outline">
+                      <Link to={openItemsPath}>查看未决事项</Link>
+                    </Button>
+                    }
+                  </div>
+                </div>
+                {primaryOpenItem &&
+                <div className="mt-3 rounded-lg border border-amber-500/20 bg-background/40 p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">{primaryOpenItem.item_code}</Badge>
+                    <Badge variant="outline">{primaryOpenItem.item_type}</Badge>
+                  </div>
+                  <p className="mt-2 text-sm text-amber-50">
+                    {primaryOpenItem.description}
+                  </p>
+                  <p className="mt-2 text-xs text-amber-100/80">
+                    责任方：{primaryOpenItem.responsible_party || "-"}
+                    {primaryOpenItem.responsible_person_name ?
+                    ` / 责任人：${primaryOpenItem.responsible_person_name}` :
+                    ""}
+                    {primaryOpenItem.due_date ?
+                    ` / 截止：${formatDate(primaryOpenItem.due_date)}` :
+                    ""}
+                  </p>
+                </div>
+                }
+              </div>
+              }
             </CardContent>
           </Card>
           }

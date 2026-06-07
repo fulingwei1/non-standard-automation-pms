@@ -121,13 +121,33 @@ describe("ProjectWorkspace", () => {
               ],
             },
           },
+          open_items: {
+            total: 2,
+            blocking_count: 1,
+            items: [
+              {
+                id: 901,
+                source_type: "OPPORTUNITY",
+                source_id: 2,
+                item_code: "OI-001",
+                item_type: "TECHNICAL",
+                description: "客户样品治具接口图未冻结",
+                responsible_party: "CUSTOMER",
+                responsible_person_name: "王工",
+                due_date: "2026-06-15T00:00:00",
+                status: "PENDING",
+                blocks_quotation: true,
+              },
+            ],
+          },
           baseline_cost: {
             quote_cost_total: 360000,
             presale_estimated_cost: 355000,
           },
           handover_status: {
-            ready: true,
+            ready: false,
             missing: [],
+            blockers: ["open_items"],
           },
         },
         downstream_context: {
@@ -305,6 +325,15 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("技术评估")).toBeInTheDocument();
     expect(screen.getByText("82 分")).toBeInTheDocument();
     expect(screen.getByText("交期压缩风险")).toBeInTheDocument();
+    expect(screen.getByText("未闭环事项")).toBeInTheDocument();
+    expect(screen.getByText("2 项未闭环，1 项阻塞报价/交接")).toBeInTheDocument();
+    expect(screen.getByText("OI-001")).toBeInTheDocument();
+    expect(screen.getByText("客户样品治具接口图未冻结")).toBeInTheDocument();
+    expect(screen.getByText(/责任方：CUSTOMER/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /查看未决事项/ })).toHaveAttribute(
+      "href",
+      "/sales/opportunity/2/open-items",
+    );
     expect(screen.getByText(/[¥￥]360,000.00/)).toBeInTheDocument();
     expect(screen.getByText("后续模块状态")).toBeInTheDocument();
     expect(screen.getByText("RV-001")).toBeInTheDocument();

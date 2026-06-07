@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, desc, inspect, or_
 from sqlalchemy.orm import Session, joinedload
 
-from app.models.enums import AssessmentSourceTypeEnum
+from app.models.enums import AssessmentSourceTypeEnum, OpenItemStatusEnum
 from app.models.acceptance import AcceptanceOrder
 from app.models.ecn import Ecn
 from app.models.issue import Issue
@@ -18,7 +18,15 @@ from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.production import ProductionPlan, QualityInspection, WorkOrder
 from app.models.project import Project, ProjectDocument, ProjectMember
 from app.models.project_delivery import ProjectDeliverySchedule, ProjectDeliveryTask
-from app.models.sales import AssessmentRisk, Contract, Opportunity, Quote, QuoteVersion, TechnicalAssessment
+from app.models.sales import (
+    AssessmentRisk,
+    Contract,
+    OpenItem,
+    Opportunity,
+    Quote,
+    QuoteVersion,
+    TechnicalAssessment,
+)
 from app.models.task_center import TaskUnified
 from app.models.technical_review import TechnicalReview
 from app.services.bonus.project_bonus_service import ProjectBonusService
@@ -679,6 +687,95 @@ def build_technical_assessment_handover_context(
     }
 
 
+def _build_open_item_payload(item: OpenItem) -> Dict[str, Any]:
+    responsible_person = getattr(item, "responsible_person", None)
+
+    return {
+        "id": item.id,
+        "source_type": item.source_type,
+        "source_id": item.source_id,
+        "item_code": item.item_code,
+        "item_type": item.item_type,
+        "description": item.description,
+        "responsible_party": item.responsible_party,
+        "responsible_person_id": item.responsible_person_id,
+        "responsible_person_name": (
+            getattr(responsible_person, "real_name", None)
+            or getattr(responsible_person, "username", None)
+            if responsible_person
+            else None
+        ),
+        "due_date": item.due_date.isoformat() if item.due_date else None,
+        "status": item.status,
+        "close_evidence": item.close_evidence,
+        "blocks_quotation": bool(item.blocks_quotation),
+        "closed_at": item.closed_at.isoformat() if item.closed_at else None,
+        "created_at": item.created_at.isoformat() if item.created_at else None,
+        "updated_at": item.updated_at.isoformat() if item.updated_at else None,
+    }
+
+
+def build_open_items_handover_context(
+    db: Session,
+    *,
+    opportunity: Optional[Opportunity] = None,
+    lead_id: Optional[int] = None,
+    limit: int = 10,
+) -> Dict[str, Any]:
+    source_filters = []
+    if opportunity:
+        source_filters.append(
+            and_(
+                OpenItem.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value,
+                OpenItem.source_id == opportunity.id,
+            )
+        )
+        lead_id = lead_id or getattr(opportunity, "lead_id", None)
+    if lead_id:
+        source_filters.append(
+            and_(
+                OpenItem.source_type == AssessmentSourceTypeEnum.LEAD.value,
+                OpenItem.source_id == lead_id,
+            )
+        )
+
+    if not source_filters:
+        return {"items": [], "total": 0, "blocking_count": 0}
+
+    closed_statuses = (
+        OpenItemStatusEnum.CLOSED.value,
+        OpenItemStatusEnum.CANCELLED.value,
+        OpenItemStatusEnum.RESOLVED.value,
+    )
+    query = (
+        db.query(OpenItem)
+        .options(joinedload(OpenItem.responsible_person))
+        .filter(
+            or_(*source_filters),
+            or_(OpenItem.status.is_(None), OpenItem.status.notin_(closed_statuses)),
+        )
+    )
+
+    total = query.count()
+    blocking_count = query.filter(OpenItem.blocks_quotation.is_(True)).count()
+    items = (
+        query.order_by(
+            desc(OpenItem.blocks_quotation),
+            OpenItem.due_date.asc(),
+            desc(OpenItem.updated_at),
+            desc(OpenItem.id),
+        )
+        .limit(limit)
+        .all()
+    )
+
+    return {
+        "items": [_build_open_item_payload(item) for item in items],
+        "total": total,
+        "blocking_count": blocking_count,
+    }
+
+
 def _project_presale_ticket_filters(project: Project) -> List[Any]:
     filters = [PresaleSupportTicket.project_id == project.id]
     if project.opportunity_id:
@@ -755,6 +852,11 @@ def build_project_handover_context(db: Session, project: Project) -> Dict[str, A
         tickets=presale_tickets,
         lead_id=project.lead_id,
     )
+    open_items = build_open_items_handover_context(
+        db,
+        opportunity=opportunity,
+        lead_id=project.lead_id,
+    )
     primary_solution = presale_solutions[0] if presale_solutions else None
 
     quote_cost_total = _num(quote_version.cost_total) if quote_version else None
@@ -795,6 +897,10 @@ def build_project_handover_context(db: Session, project: Project) -> Dict[str, A
     ):
         missing.append("baseline_cost")
 
+    blockers = []
+    if open_items["blocking_count"] > 0:
+        blockers.append("open_items")
+
     return {
         "project": build_project_basic_info(project),
         "contract": _build_contract_payload(contract),
@@ -807,10 +913,12 @@ def build_project_handover_context(db: Session, project: Project) -> Dict[str, A
             _build_presale_solution_payload(solution) for solution in presale_solutions
         ],
         "technical_assessment": technical_assessment,
+        "open_items": open_items,
         "baseline_cost": baseline_cost,
         "handover_status": {
-            "ready": not missing,
+            "ready": not missing and not blockers,
             "missing": missing,
+            "blockers": blockers,
         },
     }
 
