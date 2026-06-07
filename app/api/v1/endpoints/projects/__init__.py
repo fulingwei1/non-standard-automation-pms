@@ -25,6 +25,7 @@ from . import (
     archive,
     cache,
     core,
+    data_flow,
     extended,
     ext_best_practices,
     ext_lessons,
@@ -229,6 +230,13 @@ router.include_router(
     schedule_prediction_router,
     prefix="/{project_id}/schedule",
     tags=["projects-schedule-prediction"],
+)
+
+# 项目全链路数据流通操作（WBS/BOM/里程碑/验收向后续模块生成数据）
+router.include_router(
+    data_flow.router,
+    prefix="/{project_id}/data-flow",
+    tags=["projects-data-flow"],
 )
 
 # 全局风险概览路由（无project_id前缀）

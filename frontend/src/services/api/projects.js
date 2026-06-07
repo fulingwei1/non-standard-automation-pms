@@ -100,6 +100,14 @@ export const projectApi = {
   // 项目工时汇总
   getTimesheetSummary: (projectId, params) =>
     api.get(`/projects/${projectId}/timesheet/summary`, { params }),
+  createWorkOrdersFromWbs: (projectId) =>
+    api.post(`/projects/${projectId}/data-flow/wbs-work-orders`),
+  createPurchaseRequestsFromBom: (projectId) =>
+    api.post(`/projects/${projectId}/data-flow/bom-purchase-requests`),
+  createDeliverySchedule: (projectId) =>
+    api.post(`/projects/${projectId}/data-flow/delivery-schedule`),
+  transferToAfterSales: (projectId) =>
+    api.post(`/projects/${projectId}/data-flow/after-sales`),
 };
 
 export const machineApi = {

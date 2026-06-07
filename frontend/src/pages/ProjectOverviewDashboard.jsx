@@ -5,12 +5,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Progress } from '@/components/ui';
+import { projectApi } from '../services/api';
 
 export default function ProjectOverviewDashboard() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState(null);
+  const [flowAction, setFlowAction] = useState(null);
 
   useEffect(() => { loadOverview(); }, [projectId]);
 
@@ -21,6 +23,19 @@ export default function ProjectOverviewDashboard() {
       setOverview(await res.json());
     } catch (error) { console.error('加载失败:', error); }
     finally { setLoading(false); }
+  };
+
+  const runDataFlowAction = async (actionKey, actionLabel, request) => {
+    try {
+      setFlowAction(actionKey);
+      const response = await request(projectId);
+      alert(response?.data?.message || `${actionLabel}已完成`);
+      await loadOverview();
+    } catch (error) {
+      alert(`操作失败：${error.response?.data?.detail || error.message || "未知错误"}`);
+    } finally {
+      setFlowAction(null);
+    }
   };
 
   if (loading) return <div className="p-6">加载中...</div>;
@@ -105,10 +120,26 @@ export default function ProjectOverviewDashboard() {
         <CardHeader><CardTitle>📊 数据流通操作</CardTitle></CardHeader>
         <CardContent>
           <div className="grid grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center"><span className="text-lg mb-1">📋→🏭</span><span className="text-sm">WBS→生产工单</span></Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center"><span className="text-lg mb-1">📦→🛒</span><span className="text-sm">BOM→采购申请</span></Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center"><span className="text-lg mb-1">🎯→📦</span><span className="text-sm">里程碑→交付计划</span></Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center"><span className="text-lg mb-1">✅→🔧</span><span className="text-sm">验收→售后</span></Button>
+            <Button
+              variant="outline"
+              disabled={flowAction === "wbs"}
+              onClick={() => runDataFlowAction("wbs", "WBS→生产工单", projectApi.createWorkOrdersFromWbs)}
+              className="h-20 flex flex-col items-center justify-center"><span className="text-lg mb-1">📋→🏭</span><span className="text-sm">WBS→生产工单</span></Button>
+            <Button
+              variant="outline"
+              disabled={flowAction === "bom"}
+              onClick={() => runDataFlowAction("bom", "BOM→采购申请", projectApi.createPurchaseRequestsFromBom)}
+              className="h-20 flex flex-col items-center justify-center"><span className="text-lg mb-1">📦→🛒</span><span className="text-sm">BOM→采购申请</span></Button>
+            <Button
+              variant="outline"
+              disabled={flowAction === "delivery"}
+              onClick={() => runDataFlowAction("delivery", "里程碑→交付计划", projectApi.createDeliverySchedule)}
+              className="h-20 flex flex-col items-center justify-center"><span className="text-lg mb-1">🎯→📦</span><span className="text-sm">里程碑→交付计划</span></Button>
+            <Button
+              variant="outline"
+              disabled={flowAction === "afterSales"}
+              onClick={() => runDataFlowAction("afterSales", "验收→售后", projectApi.transferToAfterSales)}
+              className="h-20 flex flex-col items-center justify-center"><span className="text-lg mb-1">✅→🔧</span><span className="text-sm">验收→售后</span></Button>
           </div>
         </CardContent>
       </Card>

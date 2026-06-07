@@ -134,6 +134,25 @@ describe('Projects API', () => {
       });
     });
 
+    it('data flow actions - 应该调用项目全链路数据流通端点', async () => {
+      mock.onPost('/api/v1/projects/42/data-flow/wbs-work-orders').reply(200, { success: true });
+      mock.onPost('/api/v1/projects/42/data-flow/bom-purchase-requests').reply(200, { success: true });
+      mock.onPost('/api/v1/projects/42/data-flow/delivery-schedule').reply(200, { success: true });
+      mock.onPost('/api/v1/projects/42/data-flow/after-sales').reply(200, { success: true });
+
+      await projectApi.createWorkOrdersFromWbs(42);
+      await projectApi.createPurchaseRequestsFromBom(42);
+      await projectApi.createDeliverySchedule(42);
+      await projectApi.transferToAfterSales(42);
+
+      expect(mock.history.post.map((request) => request.url)).toEqual([
+        '/projects/42/data-flow/wbs-work-orders',
+        '/projects/42/data-flow/bom-purchase-requests',
+        '/projects/42/data-flow/delivery-schedule',
+        '/projects/42/data-flow/after-sales',
+      ]);
+    });
+
     it('应该处理API错误', async () => {
       mock.onGet('/api/v1/projects/999').reply(404, {
         success: false,
