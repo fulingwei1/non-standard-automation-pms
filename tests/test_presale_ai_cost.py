@@ -4,6 +4,7 @@
 
 from datetime import datetime
 from decimal import Decimal
+from unittest.mock import Mock
 
 import pytest
 from sqlalchemy.orm import Session
@@ -23,6 +24,26 @@ from app.schemas.sales.presale_ai_cost import (
 from app.services.sales.ai_cost_estimation_service import AICostEstimationService
 
 # ============= 测试数据准备 =============
+
+
+def _query_with_count(count: int) -> Mock:
+    query = Mock()
+    query.filter.return_value = query
+    query.count.return_value = count
+    return query
+
+
+def _query_with_all(rows: list) -> Mock:
+    query = Mock()
+    query.all.return_value = rows
+    return query
+
+
+def _query_with_first(row) -> Mock:
+    query = Mock()
+    query.filter.return_value = query
+    query.first.return_value = row
+    return query
 
 
 @pytest.fixture
@@ -146,11 +167,7 @@ class TestCostEstimation:
 
     def test_calculate_confidence_score(self, service, sample_estimation_input):
         """测试10: 计算置信度评分"""
-        service.db.query = lambda x: type(
-            "obj",
-            (object,),
-            {"filter": lambda *args, **kwargs: type("obj", (object,), {"count": lambda: 15})()},
-        )()
+        service.db.query.return_value = _query_with_count(15)
 
         score = service._calculate_confidence_score(sample_estimation_input)
         assert score >= Decimal("0.5")
@@ -386,7 +403,7 @@ class TestHistoricalLearning:
     @pytest.mark.asyncio
     async def test_get_historical_accuracy_no_data(self, service):
         """测试23: 历史准确度 - 无数据"""
-        service.db.query = lambda x: type("obj", (object,), {"all": lambda: []})()
+        service.db.query.return_value = _query_with_all([])
 
         result = await service.get_historical_accuracy()
 
@@ -403,7 +420,7 @@ class TestHistoricalLearning:
             type("obj", (object,), {"variance_rate": Decimal("12.1")})(),
         ]
 
-        service.db.query = lambda x: type("obj", (object,), {"all": lambda: mock_histories})()
+        service.db.query.return_value = _query_with_all(mock_histories)
 
         result = await service.get_historical_accuracy()
 
@@ -424,15 +441,7 @@ class TestHistoricalLearning:
             },
         )()
 
-        service.db.query = lambda x: type(
-            "obj",
-            (object,),
-            {
-                "filter": lambda *args, **kwargs: type(
-                    "obj", (object,), {"first": lambda: mock_estimation}
-                )()
-            },
-        )()
+        service.db.query.return_value = _query_with_first(mock_estimation)
 
         service.db.add = lambda x: None
         service.db.commit = lambda: None
@@ -460,15 +469,7 @@ class TestHistoricalLearning:
             },
         )()
 
-        service.db.query = lambda x: type(
-            "obj",
-            (object,),
-            {
-                "filter": lambda *args, **kwargs: type(
-                    "obj", (object,), {"first": lambda: mock_estimation}
-                )()
-            },
-        )()
+        service.db.query.return_value = _query_with_first(mock_estimation)
 
         service.db.add = lambda x: None
         service.db.commit = lambda: None
@@ -497,15 +498,7 @@ class TestHistoricalLearning:
             "obj", (object,), {"id": 1, "total_cost": Decimal("100000"), "input_parameters": {}}
         )()
 
-        service.db.query = lambda x: type(
-            "obj",
-            (object,),
-            {
-                "filter": lambda *args, **kwargs: type(
-                    "obj", (object,), {"first": lambda: mock_estimation}
-                )()
-            },
-        )()
+        service.db.query.return_value = _query_with_first(mock_estimation)
 
         service.db.add = lambda x: None
         service.db.commit = lambda: None
@@ -519,11 +512,7 @@ class TestHistoricalLearning:
     @pytest.mark.asyncio
     async def test_update_actual_cost_estimation_not_found(self, service):
         """测试28: 更新实际成本 - 估算记录不存在"""
-        service.db.query = lambda x: type(
-            "obj",
-            (object,),
-            {"filter": lambda *args, **kwargs: type("obj", (object,), {"first": lambda: None})()},
-        )()
+        service.db.query.return_value = _query_with_first(None)
 
         input_data = UpdateActualCostInput(estimation_id=999, actual_cost=Decimal("100000"))
 
