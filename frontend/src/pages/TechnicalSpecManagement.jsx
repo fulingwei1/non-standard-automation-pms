@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -35,15 +36,17 @@ import api from "../services/api";
 
 import { confirmAction } from "@/lib/confirmAction";
 export default function TechnicalSpecManagement() {
+  const [searchParams] = useSearchParams();
+  const contextProjectId = searchParams.get("project_id") || "";
   const [requirements, setRequirements] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [projectId, _setProjectId] = useState(null);
+  const [projectId, _setProjectId] = useState(contextProjectId);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingRequirement, setEditingRequirement] = useState(null);
 
   const [formData, setFormData] = useState({
-    project_id: "",
+    project_id: contextProjectId,
     document_id: "",
     material_code: "",
     material_name: "",
@@ -57,6 +60,16 @@ export default function TechnicalSpecManagement() {
   useEffect(() => {
     loadRequirements();
   }, [projectId, searchKeyword]);
+
+  useEffect(() => {
+    _setProjectId(contextProjectId);
+    if (contextProjectId) {
+      setFormData((prev) => ({
+        ...prev,
+        project_id: prev.project_id || contextProjectId,
+      }));
+    }
+  }, [contextProjectId]);
 
   const loadRequirements = async () => {
     setLoading(true);
@@ -117,7 +130,7 @@ export default function TechnicalSpecManagement() {
 
   const resetForm = () => {
     setFormData({
-      project_id: "",
+      project_id: contextProjectId,
       document_id: "",
       material_code: "",
       material_name: "",

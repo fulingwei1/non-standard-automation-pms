@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   AlertTriangle,
   RefreshCw,
@@ -23,12 +24,20 @@ import {
 import api from "../services/api";
 
 export default function SpecMatchCheck() {
+  const [searchParams] = useSearchParams();
+  const contextProjectId = searchParams.get("project_id") || "";
   const [matchRecords, setMatchRecords] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [projectId, setProjectId] = useState("");
+  const [projectId, setProjectId] = useState(contextProjectId);
   const [matchType, setMatchType] = useState("");
   const [matchStatus, setMatchStatus] = useState("");
   const [checking, setChecking] = useState(false);
+
+  useEffect(() => {
+    if (contextProjectId) {
+      setProjectId(contextProjectId);
+    }
+  }, [contextProjectId]);
 
   useEffect(() => {
     loadMatchRecords();
@@ -39,8 +48,8 @@ export default function SpecMatchCheck() {
     try {
       const params = { page: 1, page_size: 100 };
       if (projectId) {params.project_id = parseInt(projectId);}
-      if (matchType) {params.match_type = matchType;}
-      if (matchStatus) {params.match_status = matchStatus;}
+      if (matchType && matchType !== "all") {params.match_type = matchType;}
+      if (matchStatus && matchStatus !== "all") {params.match_status = matchStatus;}
 
       const response = await api.get("/technical-spec/match/records", {
         params,
@@ -63,7 +72,7 @@ export default function SpecMatchCheck() {
     try {
       await api.post("/technical-spec/match/check", {
         project_id: parseInt(projectId),
-        match_type: matchType || undefined,
+        match_type: matchType && matchType !== "all" ? matchType : undefined,
         match_target_id: undefined,
       });
       alert("匹配检查完成");
@@ -112,7 +121,7 @@ export default function SpecMatchCheck() {
               <Input
                 type="number"
                 placeholder="项目ID"
-                value={projectId || "unknown"}
+                value={projectId}
                 onChange={(e) => setProjectId(e.target.value)}
                 className="w-32"
               />
