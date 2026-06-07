@@ -1090,6 +1090,7 @@ def build_project_downstream_context(db: Session, project: Project) -> Dict[str,
                 "domain": "supply_chain",
                 "priority": "HIGH" if key_shortage_count else "MEDIUM",
                 "title": "处理项目缺料",
+                "href": f"/material-analysis?project_id={project.id}",
                 "description": (
                     f"当前齐套率 {kitting['kitting_rate']}%，"
                     f"{kitting['shortage_items']} 项缺料"
@@ -1103,6 +1104,7 @@ def build_project_downstream_context(db: Session, project: Project) -> Dict[str,
                 "domain": "engineering",
                 "priority": "HIGH",
                 "title": "关闭未完成 ECN",
+                "href": f"/ecn?project_id={project.id}",
                 "description": f"项目仍有 {open_ecn_count} 个 ECN 未关闭",
             }
         )
@@ -1112,6 +1114,7 @@ def build_project_downstream_context(db: Session, project: Project) -> Dict[str,
                 "domain": "engineering",
                 "priority": "MEDIUM",
                 "title": "推进技术评审闭环",
+                "href": f"/technical-reviews?project_id={project.id}",
                 "description": f"项目仍有 {open_review_count} 个技术评审未完成",
             }
         )
@@ -1121,6 +1124,7 @@ def build_project_downstream_context(db: Session, project: Project) -> Dict[str,
                 "domain": "production",
                 "priority": "HIGH" if avg_work_order_progress < 50 else "MEDIUM",
                 "title": "推进生产/装配工单",
+                "href": f"/work-orders?project_id={project.id}",
                 "description": (
                     f"项目仍有 {open_work_order_count} 个生产/装配工单未完成，"
                     f"平均进度 {avg_work_order_progress}%"
@@ -1133,6 +1137,7 @@ def build_project_downstream_context(db: Session, project: Project) -> Dict[str,
                 "domain": "quality",
                 "priority": "HIGH",
                 "title": "处理质检不合格项",
+                "href": f"/quality/inspections?project_id={project.id}",
                 "description": (
                     f"项目有 {failed_inspection_count} 条质检不合格记录，"
                     f"不良数量 {total_defect_qty}"
@@ -1145,6 +1150,7 @@ def build_project_downstream_context(db: Session, project: Project) -> Dict[str,
                 "domain": "delivery",
                 "priority": "HIGH",
                 "title": "解决交付排产冲突",
+                "href": f"/projects/{project.id}/delivery",
                 "description": f"项目交付计划中有 {conflict_delivery_task_count} 个任务存在冲突",
             }
         )
@@ -1154,6 +1160,7 @@ def build_project_downstream_context(db: Session, project: Project) -> Dict[str,
                 "domain": "delivery",
                 "priority": "MEDIUM",
                 "title": "推进交付计划任务",
+                "href": f"/projects/{project.id}/delivery",
                 "description": f"项目仍有 {open_delivery_task_count} 个交付任务未完成",
             }
         )
@@ -1163,6 +1170,7 @@ def build_project_downstream_context(db: Session, project: Project) -> Dict[str,
                 "domain": "acceptance",
                 "priority": "HIGH" if failed_acceptance_item_count else "MEDIUM",
                 "title": "推进验收闭环",
+                "href": f"/quality/acceptance?project_id={project.id}",
                 "description": (
                     f"项目仍有 {open_acceptance_count} 个验收单未完成"
                     + (

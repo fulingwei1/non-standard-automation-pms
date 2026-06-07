@@ -230,12 +230,14 @@ describe("ProjectWorkspace", () => {
               priority: "HIGH",
               title: "处理质检不合格项",
               description: "项目有 1 条质检不合格记录，不良数量 1",
+              href: "/quality/inspections?project_id=1",
             },
             {
               domain: "delivery",
               priority: "HIGH",
               title: "解决交付排产冲突",
               description: "项目交付计划中有 1 个任务存在冲突",
+              href: "/projects/1/delivery",
             },
           ],
         },
@@ -279,5 +281,13 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("后续动作")).toBeInTheDocument();
     expect(screen.getByText("处理质检不合格项")).toBeInTheDocument();
     expect(screen.getByText("解决交付排产冲突")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /处理质检不合格项/ })).toHaveAttribute(
+      "href",
+      "/quality/inspections?project_id=1",
+    );
+    expect(screen.getByRole("link", { name: /解决交付排产冲突/ })).toHaveAttribute(
+      "href",
+      "/projects/1/delivery",
+    );
   });
 });

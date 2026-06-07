@@ -467,6 +467,7 @@ class TestProjectWorkspaceHandoverContext:
         assert payload["supply_chain"]["kitting"]["shortage_items"] == 1
         assert payload["supply_chain"]["kitting"]["shortage_details"][0]["material_code"] == shortage_material.material_code
         assert payload["next_actions"][0]["domain"] == "supply_chain"
+        assert payload["next_actions"][0]["href"] == f"/material-analysis?project_id={project.id}"
 
     def test_project_workspace_downstream_context_includes_production_quality_delivery_and_acceptance(
         self, client: TestClient, db_session: Session, admin_token: str
@@ -653,5 +654,10 @@ class TestProjectWorkspaceHandoverContext:
         assert payload["acceptance"]["orders"]["total"] == 1
         assert payload["acceptance"]["orders"]["open_count"] == 1
         assert payload["acceptance"]["orders"]["items"][0]["order_no"] == acceptance.order_no
-        action_domains = {action["domain"] for action in payload["next_actions"]}
+        actions_by_domain = {action["domain"]: action for action in payload["next_actions"]}
+        action_domains = set(actions_by_domain)
         assert {"production", "quality", "delivery", "acceptance"}.issubset(action_domains)
+        assert actions_by_domain["production"]["href"] == f"/work-orders?project_id={project.id}"
+        assert actions_by_domain["quality"]["href"] == f"/quality/inspections?project_id={project.id}"
+        assert actions_by_domain["delivery"]["href"] == f"/projects/{project.id}/delivery"
+        assert actions_by_domain["acceptance"]["href"] == f"/quality/acceptance?project_id={project.id}"

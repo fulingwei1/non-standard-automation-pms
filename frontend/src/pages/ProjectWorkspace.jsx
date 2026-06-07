@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { projectWorkspaceApi } from "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -468,22 +468,34 @@ export default function ProjectWorkspace() {
                   <Badge variant="outline">{nextActions.length} 项</Badge>
                 </div>
                 <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
-                  {nextActions.map((action, index) =>
-                  <div key={`${action.domain}-${action.title}-${index}`} className="rounded-lg border p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="font-medium">{action.title}</p>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <Badge variant={action.priority === "HIGH" ? "default" : "secondary"}>
-                          {actionPriorityLabels[action.priority] || action.priority}
-                        </Badge>
-                        <Badge variant="outline">
-                          {actionDomainLabels[action.domain] || action.domain}
-                        </Badge>
-                      </div>
-                    </div>
-                    <p className="mt-2 text-sm text-gray-500">{action.description}</p>
-                  </div>
-                  )}
+                  {nextActions.map((action, index) => {
+                    const ActionWrapper = action.href ? Link : "div";
+                    const actionWrapperProps = action.href ? { to: action.href } : {};
+                    return (
+                      <ActionWrapper
+                        key={`${action.domain}-${action.title}-${index}`}
+                        {...actionWrapperProps}
+                        className={`rounded-lg border p-3 ${
+                          action.href ?
+                          "block transition-colors hover:border-primary/40 hover:bg-white/[0.03]" :
+                          ""
+                        }`}>
+
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="font-medium">{action.title}</p>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <Badge variant={action.priority === "HIGH" ? "default" : "secondary"}>
+                              {actionPriorityLabels[action.priority] || action.priority}
+                            </Badge>
+                            <Badge variant="outline">
+                              {actionDomainLabels[action.domain] || action.domain}
+                            </Badge>
+                          </div>
+                        </div>
+                        <p className="mt-2 text-sm text-gray-500">{action.description}</p>
+                      </ActionWrapper>
+                    );
+                  })}
                 </div>
               </div>
               }
