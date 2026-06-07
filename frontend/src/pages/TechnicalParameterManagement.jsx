@@ -90,6 +90,35 @@ function getParameterDefault(param) {
   return param?.default_value ?? param?.default ?? 0;
 }
 
+function getCostBreakdownEntries(result) {
+  const breakdown = result?.cost_breakdown ?? result?.breakdown ?? {};
+  return Object.entries(breakdown)
+    .map(([key, value]) => {
+      const amount = typeof value === "object" && value !== null ? value.amount : value;
+      return [key, Number(amount) || 0];
+    })
+    .filter(([, amount]) => amount > 0);
+}
+
+function getLaborHoursTotal(laborHours) {
+  if (typeof laborHours === "number") {
+    return laborHours;
+  }
+  if (!laborHours || typeof laborHours !== "object") {
+    return null;
+  }
+  if (typeof laborHours.total === "number") {
+    return laborHours.total;
+  }
+  if (laborHours.detail && typeof laborHours.detail === "object") {
+    return Object.values(laborHours.detail).reduce(
+      (total, value) => total + (Number(value) || 0),
+      0,
+    );
+  }
+  return null;
+}
+
 export default function TechnicalParameterManagement() {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -254,6 +283,8 @@ export default function TechnicalParameterManagement() {
 
   const getIndustryLabel = (value) => INDUSTRIES.find((i) => i.value === value)?.label || value;
   const getTestTypeLabel = (value) => TEST_TYPES.find((t) => t.value === value)?.label || value;
+  const estimateCostBreakdown = getCostBreakdownEntries(estimateResult);
+  const estimateLaborHoursTotal = getLaborHoursTotal(estimateResult?.labor_hours);
 
   return (
     <div className="space-y-6">
@@ -573,23 +604,23 @@ export default function TechnicalParameterManagement() {
                     <div className="text-xs text-slate-500 mt-1">预估总成本</div>
                   </div>
 
-                  {estimateResult.breakdown && (
+                  {estimateCostBreakdown.length > 0 && (
                     <div className="pt-3 border-t border-white/5 space-y-2">
                       <div className="text-xs text-slate-400 font-medium">成本拆解:</div>
-                      {Object.entries(estimateResult.breakdown).map(([key, value]) => (
+                      {estimateCostBreakdown.map(([key, amount]) => (
                         <div key={key} className="flex justify-between text-sm">
                           <span className="text-slate-400">{key}</span>
-                          <span className="text-slate-300">¥{(value / 10000).toFixed(2)}万</span>
+                          <span className="text-slate-300">¥{(amount / 10000).toFixed(2)}万</span>
                         </div>
                       ))}
                     </div>
                   )}
 
-                  {estimateResult.labor_hours && (
+                  {estimateLaborHoursTotal !== null && (
                     <div className="pt-3 border-t border-white/5">
                       <div className="text-xs text-slate-400 font-medium mb-2">人工工时:</div>
                       <div className="text-sm text-slate-300">
-                        预估 {estimateResult.labor_hours} 小时
+                        预估 {estimateLaborHoursTotal} 小时
                       </div>
                     </div>
                   )}
