@@ -318,7 +318,7 @@ describe("ProjectWorkspace", () => {
     );
     expect(screen.getByRole("link", { name: /PST-091/ })).toHaveAttribute(
       "href",
-      "/presales/technical-solutions?tab=reviews&type=support&ticket_id=91&lead_id=2026&opportunity_id=2&project_id=1",
+      "/presales/technical-solutions?tab=reviews&type=solution&ticket_id=91&lead_id=2026&opportunity_id=2&project_id=1",
     );
     expect(screen.getByText(/18.5 小时/)).toBeInTheDocument();
     expect(screen.getByText("PM提前介入")).toBeInTheDocument();

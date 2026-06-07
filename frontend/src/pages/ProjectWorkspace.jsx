@@ -80,6 +80,30 @@ function getFirstValue(item, keys) {
   return null;
 }
 
+const PRESALE_TICKET_TASK_TYPE_MAP = {
+  SOLUTION: "solution",
+  SOLUTION_DESIGN: "solution",
+  SOLUTION_REVIEW: "review",
+  TECHNICAL_SUPPORT: "support",
+  QUOTATION: "costing",
+  COST_ESTIMATE: "costing",
+  COST_SUPPORT: "costing",
+  TENDER: "bidding",
+  TENDER_SUPPORT: "bidding",
+  MEETING: "exchange",
+  TECHNICAL_EXCHANGE: "exchange",
+  SURVEY: "survey",
+  REQUIREMENT_RESEARCH: "survey",
+  FEASIBILITY_ASSESSMENT: "survey",
+  CONSULT: "survey",
+  SITE_VISIT: "survey",
+};
+
+function getPresaleTicketTaskFilter(ticketType) {
+  const normalizedType = String(ticketType || "").toUpperCase();
+  return PRESALE_TICKET_TASK_TYPE_MAP[normalizedType] || "solution";
+}
+
 function buildPresaleSolutionPath(solution, ticket, opportunity, project) {
   const solutionId = getFirstValue(solution, ["id", "solution_id", "solutionId"]);
   if (!solutionId) {
@@ -123,7 +147,7 @@ function buildPresaleTicketPath(ticket, opportunity, project) {
 
   const params = new URLSearchParams();
   params.set("tab", "reviews");
-  params.set("type", ticket?.ticket_type === "SOLUTION_REVIEW" ? "review" : "support");
+  params.set("type", getPresaleTicketTaskFilter(ticket?.ticket_type));
   appendContextParam(params, "ticket_id", ticketId);
   appendContextParam(
     params,
