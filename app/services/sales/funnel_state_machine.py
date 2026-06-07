@@ -6,7 +6,7 @@
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from sqlalchemy.orm import Session, joinedload
@@ -17,13 +17,11 @@ from app.models.sales.quotes import Quote, QuoteVersion
 from app.models.sales.sales_funnel import (
     FunnelEntityTypeEnum,
     FunnelTransitionLog,
-    GateResultEnum,
     GateTypeEnum,
     SalesFunnelStage,
-    StageGateResult,
 )
 
-from .gate_validators import GateValidatorFactory, ValidationResult
+from .gate_validators import GateValidatorFactory
 
 logger = logging.getLogger(__name__)
 
@@ -62,10 +60,7 @@ class FunnelStateMachine:
         elif entity_type == FunnelEntityTypeEnum.OPPORTUNITY:
             return entity.stage
         elif entity_type == FunnelEntityTypeEnum.QUOTE:
-            # 报价阶段通过当前版本状态判断 - 使用预加载的关联对象
-            if entity.current_version:
-                return entity.current_version.status
-            return "DRAFT"
+            return entity.status or "DRAFT"
         elif entity_type == FunnelEntityTypeEnum.CONTRACT:
             return entity.status
 
@@ -282,15 +277,7 @@ class FunnelStateMachine:
             entity.gate_status = "PASSED"
             entity.gate_passed_at = datetime.now()
         elif entity_type == FunnelEntityTypeEnum.QUOTE:
-            # 报价状态通过版本更新
-            if entity.current_version_id:
-                version = (
-                    self.db.query(QuoteVersion)
-                    .filter(QuoteVersion.id == entity.current_version_id)
-                    .first()
-                )
-                if version:
-                    version.status = to_stage
+            entity.status = to_stage
         elif entity_type == FunnelEntityTypeEnum.CONTRACT:
             entity.status = to_stage
 
@@ -437,6 +424,14 @@ class FunnelStateMachine:
         if not opportunity:
             return False, None, ["商机不存在"]
 
+        valid_until = quote_data.get("valid_until")
+        if not valid_until:
+            try:
+                validity_days = int(quote_data.get("validity_days", 30))
+            except (TypeError, ValueError):
+                validity_days = 30
+            valid_until = datetime.now().date() + timedelta(days=validity_days)
+
         # 创建报价
         quote = Quote(
             quote_code=quote_data.get("quote_code") or f"QT{datetime.now().strftime('%Y%m%d%H%M%S')}",
@@ -444,7 +439,8 @@ class FunnelStateMachine:
             customer_id=opportunity.customer_id,
             quote_name=quote_data.get("quote_name") or f"报价-{opportunity.opp_name}",
             status="DRAFT",
-            created_by=transitioned_by,
+            owner_id=transitioned_by or opportunity.owner_id,
+            valid_until=valid_until,
         )
 
         self.db.add(quote)
@@ -513,6 +509,7 @@ class FunnelStateMachine:
                 .filter(QuoteVersion.id == quote.current_version_id)
                 .first()
             )
+        from_stage = quote.status or "DRAFT"
 
         # 创建合同
         contract = Contract(
@@ -522,7 +519,7 @@ class FunnelStateMachine:
             opportunity_id=quote.opportunity_id,
             quote_id=quote.current_version_id,
             customer_id=quote.customer_id,
-            total_amount=current_version.total_amount if current_version else 0,
+            total_amount=current_version.total_price if current_version else 0,
             status="draft",
             sales_owner_id=transitioned_by,
         )
@@ -536,7 +533,7 @@ class FunnelStateMachine:
             entity_type=FunnelEntityTypeEnum.QUOTE.value,
             entity_id=quote_id,
             entity_code=quote.quote_code,
-            from_stage=current_version.status if current_version else "DRAFT",
+            from_stage=from_stage,
             to_stage="ACCEPTED",
             gate_type="G3",
             gate_result_id=gate_result.id if gate_result else None,
@@ -549,8 +546,7 @@ class FunnelStateMachine:
         self.db.add(log)
 
         # 更新报价状态
-        if current_version:
-            current_version.status = "ACCEPTED"
+        quote.status = "ACCEPTED"
 
         self.db.commit()
 

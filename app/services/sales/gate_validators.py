@@ -9,24 +9,22 @@ G1-G4 阶段门验证逻辑：
 - G4: 合同转项目（Contract → Project）
 """
 
-import json
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Dict, List, Optional, Tuple, Type
 
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.sales.contracts import Contract
 from app.models.sales.leads import Lead, Opportunity
-from app.models.sales.quotes import Quote, QuoteVersion
+from app.models.sales.quotes import Quote
 from app.models.sales.sales_funnel import (
     GateResultEnum,
     GateTypeEnum,
     StageGateConfig,
     StageGateResult,
 )
-from app.models.sales.technical_assessment import TechnicalAssessment
 
 logger = logging.getLogger(__name__)
 
@@ -190,7 +188,6 @@ class G1Validator(BaseGateValidator):
         warnings = []
         details = {}
         score = 0
-        max_score = 100
 
         # 规则 1: 客户名称（20分）
         if lead.customer_name:
@@ -412,6 +409,10 @@ class G3Validator(BaseGateValidator):
 
         # 使用预加载的关联对象
         current_version = quote.current_version
+        quote_status = str(quote.status or "").upper()
+        total_amount = current_version.total_price if current_version else None
+        margin_rate = current_version.gross_margin if current_version else None
+        valid_until = quote.valid_until
 
         passed_rules = []
         failed_rules = []
@@ -427,17 +428,17 @@ class G3Validator(BaseGateValidator):
             failed_rules.append("报价无有效版本")
 
         # 规则 2: 报价状态检查（25分）
-        if current_version and current_version.status == "APPROVED":
+        if current_version and quote_status == "APPROVED":
             passed_rules.append("报价已审批通过")
             score += 25
-        elif current_version and current_version.status == "SUBMITTED":
+        elif current_version and quote_status == "SUBMITTED":
             failed_rules.append("报价待审批")
         else:
             failed_rules.append("报价未提交审批")
 
         # 规则 3: 金额检查（15分）
-        if current_version and current_version.total_amount:
-            if float(current_version.total_amount) > 0:
+        if current_version and total_amount:
+            if float(total_amount) > 0:
                 passed_rules.append("报价金额有效")
                 score += 15
             else:
@@ -446,8 +447,8 @@ class G3Validator(BaseGateValidator):
             failed_rules.append("报价金额缺失")
 
         # 规则 4: 毛利率检查（20分）
-        if current_version and current_version.margin_rate is not None:
-            margin = float(current_version.margin_rate)
+        if current_version and margin_rate is not None:
+            margin = float(margin_rate)
             min_margin = 15.0  # 最低毛利率要求
             if self.config and self.config.validation_rules:
                 min_margin = self.config.validation_rules.get("min_margin_rate", 15.0)
@@ -471,8 +472,8 @@ class G3Validator(BaseGateValidator):
             failed_rules.append("客户信息未关联")
 
         # 规则 6: 有效期检查（10分）
-        if current_version and current_version.valid_until:
-            if current_version.valid_until >= datetime.now().date():
+        if current_version and valid_until:
+            if valid_until >= datetime.now().date():
                 passed_rules.append("报价在有效期内")
                 score += 10
             else:
@@ -487,13 +488,9 @@ class G3Validator(BaseGateValidator):
         details = {
             "quote_code": quote.quote_code,
             "version_no": current_version.version_no if current_version else None,
-            "status": current_version.status if current_version else None,
-            "total_amount": str(current_version.total_amount)
-            if current_version and current_version.total_amount
-            else None,
-            "margin_rate": str(current_version.margin_rate)
-            if current_version and current_version.margin_rate
-            else None,
+            "status": quote.status,
+            "total_amount": str(total_amount) if total_amount else None,
+            "margin_rate": str(margin_rate) if margin_rate else None,
         }
 
         return ValidationResult(
