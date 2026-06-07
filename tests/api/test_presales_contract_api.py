@@ -1353,11 +1353,23 @@ class TestPresalesFrontendContractBehavior:
 
         estimated = client.post(
             f"{prefix}/presale/technical-parameters/estimate-cost",
-            json={"template_id": template_id, "parameters": {"test_station_count": 4}},
+            json={
+                "template_id": template_id,
+                "lead_id": 2026,
+                "opportunity_id": 2,
+                "ticket_id": 501,
+                "project_id": 42,
+                "parameters": {"test_station_count": 4},
+            },
             headers=headers,
         )
         assert estimated.status_code == 200, estimated.text
-        assert estimated.json()["total_cost"] == pytest.approx(82000.0)
+        estimate_payload = estimated.json()
+        assert estimate_payload["total_cost"] == pytest.approx(82000.0)
+        assert estimate_payload["lead_id"] == 2026
+        assert estimate_payload["opportunity_id"] == 2
+        assert estimate_payload["ticket_id"] == 501
+        assert estimate_payload["project_id"] == 42
 
         stats = client.get(
             f"{prefix}/presale/technical-parameters/statistics",
@@ -1632,6 +1644,71 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
             db_session.query(Project).filter(Project.id == project.id).delete()
             db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
+    def test_solution_created_from_lead_context_is_visible_in_lead_scope(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        lead = Lead(
+            lead_code=f"LD-SOL-{unique}",
+            customer_name=f"线索方案客户-{unique}",
+            source="展会",
+            industry="电子制造",
+            owner_id=admin_user.id,
+        )
+        db_session.add(lead)
+        db_session.commit()
+
+        created_solution = client.post(
+            f"{prefix}/presale/proposals/solutions",
+            json={
+                "name": f"线索阶段售前方案-{unique}",
+                "solution_type": "CUSTOM",
+                "lead_id": lead.id,
+                "requirement_summary": "从销售线索直接进入售前方案管理生成",
+            },
+            headers=headers,
+        )
+        assert created_solution.status_code == 201, created_solution.text
+        solution = created_solution.json()
+        ticket_id = solution.get("ticket_id")
+
+        try:
+            assert solution["lead_id"] == lead.id
+            assert ticket_id is not None
+
+            db_session.expire_all()
+            ticket = db_session.get(PresaleSupportTicket, ticket_id)
+            assert ticket is not None
+            assert ticket.lead_id == lead.id
+            assert ticket.ticket_type == "SOLUTION_DESIGN"
+
+            by_lead = client.get(
+                f"{prefix}/presale/proposals/solutions",
+                params={"lead_id": lead.id},
+                headers=headers,
+            )
+            assert by_lead.status_code == 200, by_lead.text
+            assert any(item["id"] == solution["id"] for item in by_lead.json()["items"])
+        finally:
+            db_session.query(PresaleSolution).filter(
+                PresaleSolution.id == solution["id"]
+            ).delete(synchronize_session=False)
+            if ticket_id:
+                db_session.query(PresaleSupportTicket).filter(
+                    PresaleSupportTicket.id == ticket_id
+                ).delete(synchronize_session=False)
+            db_session.query(Lead).filter(Lead.id == lead.id).delete()
             db_session.commit()
 
     def test_solution_update_preserves_cost_breakdown(

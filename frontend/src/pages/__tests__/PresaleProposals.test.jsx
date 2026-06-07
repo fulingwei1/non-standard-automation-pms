@@ -175,6 +175,27 @@ describe("PresaleProposals", () => {
     });
   });
 
+  it("links generated lead-stage solutions back to the current lead", async () => {
+    renderPage(
+      "/presales/technical-solutions?tab=solutions&type=support&lead_id=2026",
+    );
+
+    fireEvent.click(screen.getByText("方案生成"));
+    fireEvent.change(screen.getByPlaceholderText("例如：新能源PACK线FCT测试方案"), {
+      target: { value: "线索阶段售前技术方案" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "生成并保存方案" }));
+
+    await waitFor(() => {
+      expect(presaleApi.solutions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "线索阶段售前技术方案",
+          lead_id: 2026,
+        }),
+      );
+    });
+  });
+
   it("keeps sales and project context when opening a solution detail", async () => {
     presaleApi.solutions.list.mockResolvedValue({
       data: {

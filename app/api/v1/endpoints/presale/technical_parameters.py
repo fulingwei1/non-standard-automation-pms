@@ -308,6 +308,10 @@ def estimate_cost(
         result = service.estimate_cost(
             template_id=data.template_id,
             parameters=data.parameters,
+            lead_id=data.lead_id,
+            opportunity_id=data.opportunity_id,
+            ticket_id=data.ticket_id,
+            project_id=data.project_id,
         )
         return CostEstimateResponse(**result)
     except ValueError as e:

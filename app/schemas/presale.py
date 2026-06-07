@@ -170,6 +170,7 @@ class SolutionCreate(BaseModel):
     solution_type: str = Field(default="CUSTOM", description="方案类型")
     industry: Optional[str] = Field(None, description="所属行业")
     test_type: Optional[str] = Field(None, description="测试类型")
+    lead_id: Optional[int] = Field(None, description="关联线索ID")
     ticket_id: Optional[int] = Field(None, description="关联工单ID")
     project_id: Optional[int] = Field(None, description="关联项目ID")
     customer_id: Optional[int] = Field(None, description="客户ID")

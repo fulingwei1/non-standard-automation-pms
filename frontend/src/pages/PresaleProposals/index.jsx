@@ -260,6 +260,9 @@ export default function PresaleProposals({ embedded = false } = {}) {
         solution_overview: solutionOverview,
         technical_spec: technicalSpec,
       };
+      if (contextLeadIdNumber) {
+        payload.lead_id = contextLeadIdNumber;
+      }
       if (contextOpportunityIdNumber) {
         payload.opportunity_id = contextOpportunityIdNumber;
       }

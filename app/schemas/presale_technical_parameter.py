@@ -123,6 +123,7 @@ class CostEstimateRequest(BaseModel):
     """成本估算请求"""
 
     template_id: int = Field(..., description="模板ID")
+    lead_id: Optional[int] = Field(None, description="关联销售线索ID")
     opportunity_id: Optional[int] = Field(None, description="关联销售商机ID")
     ticket_id: Optional[int] = Field(None, description="关联售前支持工单ID")
     project_id: Optional[int] = Field(None, description="关联项目ID")
@@ -157,6 +158,10 @@ class CostEstimateResponse(BaseModel):
     template_id: int
     template_name: str
     template_code: str
+    lead_id: Optional[int] = Field(None, description="关联销售线索ID")
+    opportunity_id: Optional[int] = Field(None, description="关联销售商机ID")
+    ticket_id: Optional[int] = Field(None, description="关联售前支持工单ID")
+    project_id: Optional[int] = Field(None, description="关联项目ID")
     base_cost: float = Field(..., description="基础成本（元）")
     adjustment: float = Field(..., description="调整金额（元）")
     total_cost: float = Field(..., description="总成本（元）")

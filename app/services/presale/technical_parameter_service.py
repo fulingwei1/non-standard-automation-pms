@@ -233,6 +233,10 @@ class TechnicalParameterService:
         self,
         template_id: int,
         parameters: Dict[str, Any],
+        lead_id: Optional[int] = None,
+        opportunity_id: Optional[int] = None,
+        ticket_id: Optional[int] = None,
+        project_id: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         基于模板和参数估算成本
@@ -318,6 +322,10 @@ class TechnicalParameterService:
             "template_id": template_id,
             "template_name": template.name,
             "template_code": template.code,
+            "lead_id": lead_id,
+            "opportunity_id": opportunity_id,
+            "ticket_id": ticket_id,
+            "project_id": project_id,
             "base_cost": float(base_cost),
             "adjustment": float(total_adjustment),
             "total_cost": float(total_cost),
