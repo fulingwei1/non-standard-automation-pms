@@ -47,9 +47,11 @@ router = APIRouter(tags=["bids"])
 
 
 def build_tender_response(tender: PresaleTenderRecord) -> TenderResponse:
+    ticket = getattr(tender, "ticket", None)
     return TenderResponse(
         id=tender.id,
         ticket_id=tender.ticket_id,
+        lead_id=getattr(ticket, "lead_id", None),
         opportunity_id=tender.opportunity_id,
         project_id=tender.project_id,
         tender_no=tender.tender_no,

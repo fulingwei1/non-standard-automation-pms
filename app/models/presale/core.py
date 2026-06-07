@@ -524,6 +524,8 @@ class PresaleTenderRecord(Base, TimestampMixin):
     leader_id = Column(Integer, ForeignKey("users.id"), comment="投标负责人")
     team_members = Column(JSON, comment="投标团队")
 
+    ticket = relationship("PresaleSupportTicket", foreign_keys=[ticket_id])
+
     __table_args__ = (
         Index("idx_tender_opportunity", "opportunity_id"),
         Index("idx_tender_project", "project_id"),

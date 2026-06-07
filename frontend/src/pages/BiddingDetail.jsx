@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Download,
@@ -35,9 +35,41 @@ import { formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { presaleApi } from "../services/api";
 
+function appendContextParam(params, key, value) {
+  if (value !== undefined && value !== null && value !== "") {
+    params.set(key, String(value));
+  }
+}
+
+function getContextValue(searchParams, snakeKey, biddingValue) {
+  return searchParams.get(snakeKey) || biddingValue || "";
+}
+
+function buildBidsCenterUrl(search, bidding) {
+  const currentParams = new URLSearchParams(search);
+  const ticketId = getContextValue(currentParams, "ticket_id", bidding?.ticketId);
+  const leadId = getContextValue(currentParams, "lead_id", bidding?.leadId);
+  const opportunityId = getContextValue(currentParams, "opportunity_id", bidding?.opportunityId);
+  const projectId = getContextValue(currentParams, "project_id", bidding?.projectId);
+  const type = currentParams.get("type");
+
+  const params = new URLSearchParams();
+  params.set("tab", "bids");
+  if (type || ticketId || leadId || opportunityId || projectId) {
+    params.set("type", type || "support");
+  }
+  appendContextParam(params, "ticket_id", ticketId);
+  appendContextParam(params, "lead_id", leadId);
+  appendContextParam(params, "opportunity_id", opportunityId);
+  appendContextParam(params, "project_id", projectId);
+
+  return `/presales/technical-solutions?${params.toString()}`;
+}
+
 export default function BiddingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [bidding, setBidding] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -79,6 +111,10 @@ export default function BiddingDetail() {
       // Transform data
       const transformedBidding = {
         id: tenderData.tender_no || `BID-${tenderData.id}`,
+        ticketId: tenderData.ticket_id,
+        leadId: tenderData.lead_id,
+        opportunityId: tenderData.opportunity_id,
+        projectId: tenderData.project_id,
         projectName: tenderData.tender_name || "",
         customerName: tenderData.customer_name || "",
         bidAmount: tenderData.our_bid_amount ?
@@ -218,6 +254,7 @@ export default function BiddingDetail() {
     submitted: { label: "已提交", color: "bg-emerald-500/20 text-emerald-400" },
     approved: { label: "已批准", color: "bg-blue-500/20 text-blue-400" }
   };
+  const bidsCenterUrl = buildBidsCenterUrl(location.search, bidding);
 
   if (loading) {
     return (
@@ -238,7 +275,7 @@ export default function BiddingDetail() {
         <div className="text-center py-16 text-red-400">
           <div className="text-lg font-medium">加载失败</div>
           <div className="text-sm mt-2">{error || "投标项目不存在"}</div>
-          <Button className="mt-4" onClick={() => navigate("/presales/technical-solutions?tab=bids")}>
+          <Button className="mt-4" onClick={() => navigate(bidsCenterUrl)}>
             返回投标中心
           </Button>
         </div>
@@ -252,7 +289,8 @@ export default function BiddingDetail() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate("/presales/technical-solutions?tab=bids")}
+          aria-label="返回投标中心"
+          onClick={() => navigate(bidsCenterUrl)}
           className="text-slate-400 hover:text-white">
 
           <ArrowLeft className="w-5 h-5" />

@@ -359,6 +359,7 @@ class TenderResponse(TimestampSchema):
 
     id: int
     ticket_id: Optional[int] = None
+    lead_id: Optional[int] = None
     opportunity_id: Optional[int] = None
     project_id: Optional[int] = None
     tender_no: Optional[str] = None
