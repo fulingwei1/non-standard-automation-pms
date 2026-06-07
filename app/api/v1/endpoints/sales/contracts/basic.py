@@ -5,11 +5,11 @@
 """
 
 import logging
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session, joinedload
 
@@ -104,6 +104,74 @@ def _build_contract_response_dict(contract: Contract, deliverables: list[Contrac
     return contract_dict
 
 
+def _latest_quote_version(db: Session, quote: Quote) -> Optional[QuoteVersion]:
+    """获取报价当前版本，缺失时回退到最新版本。"""
+
+    if quote.current_version_id:
+        version = (
+            db.query(QuoteVersion)
+            .filter(QuoteVersion.id == quote.current_version_id)
+            .first()
+        )
+        if version:
+            return version
+
+    return (
+        db.query(QuoteVersion)
+        .filter(QuoteVersion.quote_id == quote.id)
+        .order_by(QuoteVersion.created_at.desc(), QuoteVersion.id.desc())
+        .first()
+    )
+
+
+def _apply_quote_context_to_contract_data(
+    db: Session,
+    contract_payload: dict,
+    contract_data: dict,
+) -> Tuple[Optional[Quote], Optional[QuoteVersion], List[QuoteItem]]:
+    """解析报价/报价版本，并补齐合同创建所需上下文。"""
+
+    quote = None
+    version = None
+    items: List[QuoteItem] = []
+
+    quote_version_id = contract_data.get("quote_id")
+    if quote_version_id:
+        version = (
+            db.query(QuoteVersion)
+            .filter(QuoteVersion.id == quote_version_id)
+            .first()
+        )
+        if not version:
+            raise HTTPException(status_code=404, detail="报价版本不存在")
+        quote = db.query(Quote).filter(Quote.id == version.quote_id).first()
+        if not quote:
+            raise HTTPException(status_code=404, detail="报价不存在")
+
+    legacy_quote_id = contract_payload.get("quote_id")
+    if not version and legacy_quote_id:
+        quote = db.query(Quote).filter(Quote.id == legacy_quote_id).first()
+        if not quote:
+            raise HTTPException(status_code=404, detail="报价不存在")
+        version = _latest_quote_version(db, quote)
+        if not version:
+            raise HTTPException(status_code=404, detail="报价无任何版本")
+        contract_data["quote_id"] = version.id
+
+    if quote and version:
+        if not contract_data.get("opportunity_id"):
+            contract_data["opportunity_id"] = quote.opportunity_id
+        if not contract_data.get("customer_id"):
+            contract_data["customer_id"] = quote.customer_id
+        if contract_data.get("total_amount") in (None, 0) and version.total_price is not None:
+            contract_data["total_amount"] = version.total_price
+        if not contract_data.get("sales_owner_id") and quote.owner_id:
+            contract_data["sales_owner_id"] = quote.owner_id
+        items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).all()
+
+    return quote, version, items
+
+
 @router.get("/contracts", response_model=PaginatedResponse[ContractResponse])
 def read_contracts(
     db: Session = Depends(deps.get_db),
@@ -172,35 +240,20 @@ def create_contract(
     contract_payload = contract_in.model_dump(exclude={"deliverables"})
     contract_data = _map_contract_payload_to_model(contract_payload, is_create=True)
 
-    # 检查报价是否存在（如果提供了 quote_id）
-    quote = None
-    version = None
-    items: List[QuoteItem] = []
-    if contract_data.get("quote_id"):
-        version = (
-            db.query(QuoteVersion)
-            .filter(QuoteVersion.id == contract_data["quote_id"])
-            .first()
-        )
-        if not version:
-            raise HTTPException(status_code=404, detail="报价版本不存在")
+    quote, version, items = _apply_quote_context_to_contract_data(
+        db, contract_payload, contract_data
+    )
 
-        quote = db.query(Quote).filter(Quote.id == version.quote_id).first()
-        if not quote:
-            raise HTTPException(status_code=404, detail="报价不存在")
-
-        items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).all()
-
-        # G3验证
-        if not skip_g3_validation:
-            is_valid, errors, warning = validate_g3_quote_to_contract(quote, version, items, db)
-            if not is_valid:
-                raise HTTPException(
-                    status_code=400, detail=f"G3阶段门验证失败: {', '.join(errors)}"
-                )
-            if warning:
-                # 警告信息可以通过响应返回，但不阻止创建
-                pass
+    # G3验证
+    if quote and version and not skip_g3_validation:
+        is_valid, errors, warning = validate_g3_quote_to_contract(quote, version, items, db)
+        if not is_valid:
+            raise HTTPException(
+                status_code=400, detail=f"G3阶段门验证失败: {', '.join(errors)}"
+            )
+        if warning:
+            # 警告信息可以通过响应返回，但不阻止创建
+            pass
 
     # 如果没有提供编码，自动生成
     if not contract_data.get("contract_code"):
@@ -226,11 +279,17 @@ def create_contract(
             or f"销售合同-{current_user.id}"
         )
 
+    if not contract_data.get("opportunity_id"):
+        raise HTTPException(status_code=400, detail="商机不能为空")
+
     opportunity = (
         db.query(Opportunity).filter(Opportunity.id == contract_data["opportunity_id"]).first()
     )
     if not opportunity:
         raise HTTPException(status_code=404, detail="商机不存在")
+
+    if not contract_data.get("customer_id"):
+        raise HTTPException(status_code=400, detail="客户不能为空")
 
     customer = db.query(Customer).filter(Customer.id == contract_data["customer_id"]).first()
     if not customer:
@@ -255,6 +314,26 @@ def create_contract(
         db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract.id).all()
     )
     return ContractResponse(**_build_contract_response_dict(contract, deliverables))
+
+
+@router.delete("/contracts/{contract_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_contract(
+    *,
+    db: Session = Depends(deps.get_db),
+    contract_id: int,
+    current_user: User = Depends(security.require_permission("contract:delete")),
+) -> Response:
+    """
+    删除合同。
+    """
+    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
+
+    if not security.check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
+        raise HTTPException(status_code=403, detail="无权删除该合同")
+
+    db.delete(contract)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 class ContractFromQuoteRequest(BaseModel):

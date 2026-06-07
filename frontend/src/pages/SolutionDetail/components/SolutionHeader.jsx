@@ -13,22 +13,46 @@ function appendContextParam(params, key, value) {
     }
 }
 
-function buildSolutionListUrl(solution) {
+function getContextParam(params, snakeKey, camelKey) {
+    return params.get(snakeKey) || params.get(camelKey) || "";
+}
+
+function getContextValue(solutionValue, currentParams, snakeKey, camelKey) {
+    return solutionValue || getContextParam(currentParams, snakeKey, camelKey);
+}
+
+function buildSolutionListUrl(solution, search = "") {
+    const currentParams = new URLSearchParams(search);
+    const ticketId = getContextValue(solution.ticketId, currentParams, "ticket_id", "ticketId");
+    const leadId = getContextValue(solution.leadId, currentParams, "lead_id", "leadId");
+    const opportunityId = getContextValue(
+        solution.opportunityId,
+        currentParams,
+        "opportunity_id",
+        "opportunityId",
+    );
+    const projectId = getContextValue(solution.projectId, currentParams, "project_id", "projectId");
     const params = new URLSearchParams();
     params.set("tab", "solutions");
 
-    if (solution.ticketId || solution.leadId || solution.opportunityId || solution.projectId) {
+    if (ticketId || leadId || opportunityId || projectId) {
         params.set("type", "support");
     }
-    appendContextParam(params, "ticket_id", solution.ticketId);
-    appendContextParam(params, "lead_id", solution.leadId);
-    appendContextParam(params, "opportunity_id", solution.opportunityId);
-    appendContextParam(params, "project_id", solution.projectId);
+    appendContextParam(params, "ticket_id", ticketId);
+    appendContextParam(params, "lead_id", leadId);
+    appendContextParam(params, "opportunity_id", opportunityId);
+    appendContextParam(params, "project_id", projectId);
 
     return `/presales/technical-solutions?${params.toString()}`;
 }
 
-export function SolutionHeader({ solution, navigate, onSubmitReview, submittingReview = false }) {
+export function SolutionHeader({
+    solution,
+    navigate,
+    onSubmitReview,
+    submittingReview = false,
+    contextSearch = "",
+}) {
     const statusStyle = getStatusStyle(solution.status);
     const canSubmitReview = ["draft", "rejected"].includes(solution.status);
 
@@ -37,7 +61,7 @@ export function SolutionHeader({ solution, navigate, onSubmitReview, submittingR
             <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate(buildSolutionListUrl(solution))}
+                onClick={() => navigate(buildSolutionListUrl(solution, contextSearch))}
                 className="text-slate-400 hover:text-white"
             >
                 <ArrowLeft className="w-5 h-5" />

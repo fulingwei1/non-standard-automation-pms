@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 from ..common import TimestampSchema
 
@@ -50,7 +50,10 @@ class ContractCreate(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     contract_code: Optional[str] = Field(
-        default=None, max_length=20, description="合同编码（内部）"
+        default=None,
+        max_length=20,
+        validation_alias=AliasChoices("contract_code", "contract_no"),
+        description="合同编码（内部）",
     )
     contract_name: Optional[str] = Field(
         default=None, max_length=200, description="合同名称"
@@ -58,14 +61,27 @@ class ContractCreate(BaseModel):
     customer_contract_no: Optional[str] = Field(
         default=None, max_length=100, description="客户合同编号（外部）"
     )
-    opportunity_id: int = Field(description="商机ID")
+    opportunity_id: Optional[int] = Field(default=None, description="商机ID")
+    quote_id: Optional[int] = Field(default=None, description="报价ID（兼容旧前端）")
     quote_version_id: Optional[int] = Field(default=None, description="报价版本ID")
-    customer_id: int = Field(description="客户ID")
+    customer_id: Optional[int] = Field(default=None, description="客户ID")
     project_id: Optional[int] = Field(default=None, description="项目ID")
-    contract_amount: Optional[Decimal] = Field(default=None, description="合同金额")
-    signed_date: Optional[date] = Field(default=None, description="签订日期")
+    contract_amount: Optional[Decimal] = Field(
+        default=None,
+        validation_alias=AliasChoices("contract_amount", "total_amount"),
+        description="合同金额",
+    )
+    signed_date: Optional[date] = Field(
+        default=None,
+        validation_alias=AliasChoices("signed_date", "sign_date"),
+        description="签订日期",
+    )
     status: Optional[str] = Field(default=None, description="状态")
-    payment_terms_summary: Optional[str] = Field(default=None, description="付款条款摘要")
+    payment_terms_summary: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("payment_terms_summary", "payment_terms"),
+        description="付款条款摘要",
+    )
     acceptance_summary: Optional[str] = Field(default=None, description="验收摘要")
     owner_id: Optional[int] = Field(default=None, description="负责人ID")
     deliverables: Optional[List[ContractDeliverableCreate]] = Field(

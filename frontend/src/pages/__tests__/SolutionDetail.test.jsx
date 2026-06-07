@@ -116,4 +116,76 @@ describe("SolutionDetail", () => {
       "/presales/technical-solutions?tab=cost&solution_id=88&ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
     );
   });
+
+  it("uses URL context when opening cost estimation for a legacy solution without context fields", () => {
+    useSolutionDetail.mockReturnValue({
+      activeTab: "cost",
+      setActiveTab: vi.fn(),
+      solution: {
+        id: 88,
+        code: "SOL-20260607-001",
+        name: "旧方案",
+        status: "draft",
+        version: "V1.0",
+      },
+      loading: false,
+      error: null,
+      costEstimate: null,
+      submittingReview: false,
+      reviewError: null,
+      submitForReview: vi.fn(),
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/solutions/88?ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
+        ]}
+      >
+        <SolutionDetail />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /去做成本估算/ }));
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      "/presales/technical-solutions?tab=cost&solution_id=88&ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
+    );
+  });
+
+  it("uses URL context when returning from a legacy solution without context fields", () => {
+    useSolutionDetail.mockReturnValue({
+      activeTab: "overview",
+      setActiveTab: vi.fn(),
+      solution: {
+        id: 88,
+        code: "SOL-20260607-001",
+        name: "旧方案",
+        status: "draft",
+        version: "V1.0",
+      },
+      loading: false,
+      error: null,
+      costEstimate: null,
+      submittingReview: false,
+      reviewError: null,
+      submitForReview: vi.fn(),
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/solutions/88?ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
+        ]}
+      >
+        <SolutionDetail />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getAllByRole("button")[0]);
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      "/presales/technical-solutions?tab=solutions&type=support&ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
+    );
+  });
 });

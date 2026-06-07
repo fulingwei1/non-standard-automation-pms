@@ -47,14 +47,35 @@ function buildFallbackSolutionListUrl(search) {
     return `/presales/technical-solutions?${params.toString()}`;
 }
 
-function buildCostEstimateUrl(solution) {
+function getContextValue(solutionValue, currentParams, snakeKey, camelKey) {
+    return solutionValue || getContextParam(currentParams, snakeKey, camelKey);
+}
+
+function buildCostEstimateUrl(solution, search = "") {
+    const currentParams = new URLSearchParams(search);
     const params = new URLSearchParams();
     params.set("tab", "cost");
     appendContextParam(params, "solution_id", solution?.id);
-    appendContextParam(params, "ticket_id", solution?.ticketId);
-    appendContextParam(params, "lead_id", solution?.leadId);
-    appendContextParam(params, "opportunity_id", solution?.opportunityId);
-    appendContextParam(params, "project_id", solution?.projectId);
+    appendContextParam(
+        params,
+        "ticket_id",
+        getContextValue(solution?.ticketId, currentParams, "ticket_id", "ticketId"),
+    );
+    appendContextParam(
+        params,
+        "lead_id",
+        getContextValue(solution?.leadId, currentParams, "lead_id", "leadId"),
+    );
+    appendContextParam(
+        params,
+        "opportunity_id",
+        getContextValue(solution?.opportunityId, currentParams, "opportunity_id", "opportunityId"),
+    );
+    appendContextParam(
+        params,
+        "project_id",
+        getContextValue(solution?.projectId, currentParams, "project_id", "projectId"),
+    );
     return `/presales/technical-solutions?${params.toString()}`;
 }
 
@@ -112,6 +133,7 @@ export default function SolutionDetail() {
                 navigate={navigate}
                 onSubmitReview={submitForReview}
                 submittingReview={submittingReview}
+                contextSearch={location.search}
             />
 
             {reviewError && (
@@ -134,7 +156,7 @@ export default function SolutionDetail() {
                         costEstimate={costEstimate}
                         solution={solution}
                         onCreateEstimate={(targetSolution) =>
-                            navigate(buildCostEstimateUrl(targetSolution))
+                            navigate(buildCostEstimateUrl(targetSolution, location.search))
                         }
                     />
                 )}

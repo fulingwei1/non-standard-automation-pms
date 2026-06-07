@@ -6,11 +6,17 @@
 """
 
 from datetime import datetime, timedelta
+from decimal import Decimal
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.project import Customer
+from app.models.sales import Contract, Opportunity, Quote, QuoteVersion
+from app.models.user import User
 
 
 def _auth_headers(token: str) -> dict:
@@ -65,6 +71,101 @@ class TestSalesContractsAPI:
             pytest.skip("Contracts API not implemented")
 
         assert response.status_code in [200, 201], response.text
+
+    def test_create_contract_accepts_legacy_quote_payload_and_infers_context(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """旧前端合同 payload 也应能从报价反推出商机、客户和报价版本。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-CONTRACT-{unique}",
+            customer_name=f"合同兼容客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPCON{unique[:6]}",
+            customer=customer,
+            opp_name=f"合同兼容商机-{unique}",
+            stage="QUOTATION",
+            probability=80,
+            est_amount=Decimal("500000"),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        quote = Quote(
+            quote_code=f"QCON{unique[:6]}",
+            opportunity=opportunity,
+            customer=customer,
+            status="APPROVED",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([customer, opportunity, quote])
+        db_session.flush()
+        quote_version = QuoteVersion(
+            quote_id=quote.id,
+            version_no="V1",
+            total_price=Decimal("500000"),
+            cost_total=Decimal("300000"),
+            gross_margin=Decimal("40.00"),
+            created_by=admin_user.id,
+        )
+        db_session.add(quote_version)
+        db_session.flush()
+        quote.current_version_id = quote_version.id
+        db_session.commit()
+
+        contract_code = f"CTCON{unique[:6]}"
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/contracts?skip_g3_validation=true",
+            headers=headers,
+            json={
+                "contract_no": contract_code,
+                "quote_id": quote.id,
+                "contract_name": f"合同兼容测试-{unique}",
+                "total_amount": 500000,
+                "sign_date": "2026-06-08",
+                "payment_terms": "30-60-10",
+            },
+        )
+
+        try:
+            assert response.status_code == 201, response.text
+            payload = response.json()
+            assert payload["contract_code"] == contract_code
+            assert payload["opportunity_id"] == opportunity.id
+            assert payload["customer_id"] == customer.id
+            assert payload["quote_version_id"] == quote_version.id
+            assert float(payload["contract_amount"]) == 500000.0
+            assert payload["signed_date"] == "2026-06-08"
+            assert payload["payment_terms_summary"] == "30-60-10"
+        finally:
+            db_session.query(Contract).filter(Contract.contract_code == contract_code).delete(
+                synchronize_session=False
+            )
+            quote.current_version_id = None
+            db_session.flush()
+            db_session.query(QuoteVersion).filter(QuoteVersion.id == quote_version.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(Quote).filter(Quote.id == quote.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(Customer).filter(Customer.id == customer.id).delete(
+                synchronize_session=False
+            )
+            db_session.commit()
 
     def test_get_contract_detail(self, client: TestClient, admin_token: str):
         """测试获取合同详情"""
