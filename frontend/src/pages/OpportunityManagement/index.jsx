@@ -38,6 +38,39 @@ import GateDialog from "./GateDialog";
 import DetailDialog from "./DetailDialog";
 import ReviewDialog from "./ReviewDialog";
 
+const appendReviewLine = (lines, label, value, suffix = "") => {
+  if (value === undefined || value === null || value === "") {
+    return;
+  }
+  lines.push(`${label}：${value}${suffix}`);
+};
+
+const buildReviewDescription = (opp) => {
+  if (!opp) {
+    return "";
+  }
+
+  const requirement = opp.requirement || {};
+  const stageLabel = stageConfig[opp.stage]?.label || opp.stage;
+  const lines = [];
+
+  appendReviewLine(lines, "商机编号", opp.opp_code);
+  appendReviewLine(lines, "客户", opp.customer_name);
+  appendReviewLine(lines, "负责人", opp.owner_name);
+  appendReviewLine(lines, "预计金额", opp.est_amount);
+  appendReviewLine(lines, "阶段", stageLabel);
+  appendReviewLine(lines, "项目类型", opp.project_type);
+  appendReviewLine(lines, "设备类型", opp.equipment_type);
+  appendReviewLine(lines, "赢率", opp.probability, "%");
+  appendReviewLine(lines, "产品对象", requirement.product_object);
+  appendReviewLine(lines, "节拍", requirement.ct_seconds, " 秒");
+  appendReviewLine(lines, "接口", requirement.interface_desc);
+  appendReviewLine(lines, "现场约束", requirement.site_constraints);
+  appendReviewLine(lines, "验收依据", requirement.acceptance_criteria);
+
+  return lines.join("\n");
+};
+
 export default function OpportunityManagement({ embedded = false }) {
   const [opportunities, setOpportunities] = useState([]);
   const [customers, setCustomers] = useState([]);
@@ -331,9 +364,7 @@ export default function OpportunityManagement({ embedded = false }) {
     setReviewTarget(opp);
     setReviewForm({
       title,
-      description: opp?.opp_code ?
-        `商机编号：${opp.opp_code}` :
-        "",
+      description: buildReviewDescription(opp),
       urgency: "NORMAL",
       expected_date: ""
     });
@@ -354,7 +385,10 @@ export default function OpportunityManagement({ embedded = false }) {
         title: reviewForm.title.trim(),
         ticket_type: "SOLUTION_REVIEW",
         urgency: reviewForm.urgency,
-        description: reviewForm.description?.trim() || undefined,
+        description:
+          reviewForm.description?.trim() ||
+          buildReviewDescription(reviewTarget) ||
+          undefined,
         customer_id: reviewTarget.customer_id || undefined,
         customer_name: reviewTarget.customer_name || undefined,
         opportunity_id: reviewTarget.id,

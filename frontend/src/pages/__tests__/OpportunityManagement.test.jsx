@@ -124,10 +124,19 @@ describe('OpportunityManagement', () => {
       customer_name: '某大型企业',
       owner_name: '张三',
       stage: 'DISCOVERY',
+      project_type: '自动化测试线',
+      equipment_type: 'FCT',
       est_amount: 1200000,
       probability: 65,
       created_at: '2026-04-01T10:00:00Z',
       gate_status: 'PASS',
+      requirement: {
+        product_object: '动力电池模组',
+        ct_seconds: 12,
+        interface_desc: 'MES 对接',
+        site_constraints: '三班倒不停线',
+        acceptance_criteria: 'UPH 达标',
+      },
     },
     {
       id: 2,
@@ -255,9 +264,21 @@ describe('OpportunityManagement', () => {
           customer_id: 101,
           customer_name: '某大型企业',
           opportunity_id: 1,
+          description: expect.stringContaining('商机编号：OPP-001'),
         }),
       );
     });
+
+    const payload = presaleApi.tickets.create.mock.calls[0][0];
+    expect(payload.description).toContain('预计金额：1200000');
+    expect(payload.description).toContain('阶段：需求澄清');
+    expect(payload.description).toContain('项目类型：自动化测试线');
+    expect(payload.description).toContain('设备类型：FCT');
+    expect(payload.description).toContain('产品对象：动力电池模组');
+    expect(payload.description).toContain('节拍：12 秒');
+    expect(payload.description).toContain('接口：MES 对接');
+    expect(payload.description).toContain('现场约束：三班倒不停线');
+    expect(payload.description).toContain('验收依据：UPH 达标');
 
     expect(mockNavigate).toHaveBeenCalledWith('/sales/presales-tasks?type=review&status=reviewing');
   });
