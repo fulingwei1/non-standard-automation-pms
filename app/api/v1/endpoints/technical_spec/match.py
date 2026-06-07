@@ -21,9 +21,10 @@ from app.schemas.technical_spec import (
     SpecMatchCheckResponse,
     SpecMatchRecordListResponse,
     SpecMatchRecordResponse,
-    TechnicalSpecRequirementResponse,
 )
 from app.utils.spec_matcher import SpecMatcher
+
+from .serializers import serialize_requirement
 
 router = APIRouter()
 
@@ -166,27 +167,7 @@ def list_match_records(
                 differences=record.differences,
                 alert_id=record.alert_id,
                 spec_requirement=(
-                    TechnicalSpecRequirementResponse(
-                        id=record.spec_requirement.id,
-                        project_id=record.spec_requirement.project_id,
-                        document_id=record.spec_requirement.document_id,
-                        material_code=record.spec_requirement.material_code,
-                        material_name=record.spec_requirement.material_name,
-                        specification=record.spec_requirement.specification,
-                        brand=record.spec_requirement.brand,
-                        model=record.spec_requirement.model,
-                        key_parameters=record.spec_requirement.key_parameters,
-                        requirement_level=record.spec_requirement.requirement_level,
-                        remark=record.spec_requirement.remark,
-                        extracted_by=record.spec_requirement.extracted_by,
-                        extracted_by_name=(
-                            record.spec_requirement.extractor.name
-                            if record.spec_requirement.extractor
-                            else None
-                        ),
-                        created_at=record.spec_requirement.created_at,
-                        updated_at=record.spec_requirement.updated_at,
-                    )
+                    serialize_requirement(record.spec_requirement)
                     if record.spec_requirement
                     else None
                 ),

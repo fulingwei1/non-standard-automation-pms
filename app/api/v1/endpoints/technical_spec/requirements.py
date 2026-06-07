@@ -25,6 +25,8 @@ from app.schemas.technical_spec import (
 )
 from app.utils.spec_extractor import SpecExtractor
 
+from .serializers import serialize_requirement
+
 router = APIRouter()
 
 
@@ -70,23 +72,7 @@ def list_requirements(
     # 构建响应
     items = []
     for req in requirements:
-        item = TechnicalSpecRequirementResponse(
-            id=req.id,
-            project_id=req.project_id,
-            document_id=req.document_id,
-            material_code=req.material_code,
-            material_name=req.material_name,
-            specification=req.specification,
-            brand=req.brand,
-            model=req.model,
-            key_parameters=req.key_parameters,
-            requirement_level=req.requirement_level,
-            remark=req.remark,
-            extracted_by=req.extracted_by,
-            extracted_by_name=req.extractor.name if req.extractor else None,
-            created_at=req.created_at,
-            updated_at=req.updated_at,
-        )
+        item = serialize_requirement(req)
         items.append(item)
 
     return TechnicalSpecRequirementListResponse(
@@ -114,23 +100,7 @@ def get_requirement(
     if not requirement:
         raise HTTPException(status_code=404, detail="规格要求不存在")
 
-    return TechnicalSpecRequirementResponse(
-        id=requirement.id,
-        project_id=requirement.project_id,
-        document_id=requirement.document_id,
-        material_code=requirement.material_code,
-        material_name=requirement.material_name,
-        specification=requirement.specification,
-        brand=requirement.brand,
-        model=requirement.model,
-        key_parameters=requirement.key_parameters,
-        requirement_level=requirement.requirement_level,
-        remark=requirement.remark,
-        extracted_by=requirement.extracted_by,
-        extracted_by_name=requirement.extractor.name if requirement.extractor else None,
-        created_at=requirement.created_at,
-        updated_at=requirement.updated_at,
-    )
+    return serialize_requirement(requirement)
 
 
 @router.post(
@@ -168,23 +138,7 @@ def create_requirement(
     db.commit()
     db.refresh(requirement)
 
-    return TechnicalSpecRequirementResponse(
-        id=requirement.id,
-        project_id=requirement.project_id,
-        document_id=requirement.document_id,
-        material_code=requirement.material_code,
-        material_name=requirement.material_name,
-        specification=requirement.specification,
-        brand=requirement.brand,
-        model=requirement.model,
-        key_parameters=requirement.key_parameters,
-        requirement_level=requirement.requirement_level,
-        remark=requirement.remark,
-        extracted_by=requirement.extracted_by,
-        extracted_by_name=requirement.extractor.name if requirement.extractor else None,
-        created_at=requirement.created_at,
-        updated_at=requirement.updated_at,
-    )
+    return serialize_requirement(requirement)
 
 
 @router.put("/requirements/{requirement_id}", response_model=TechnicalSpecRequirementResponse)
@@ -220,23 +174,7 @@ def update_requirement(
     db.commit()
     db.refresh(requirement)
 
-    return TechnicalSpecRequirementResponse(
-        id=requirement.id,
-        project_id=requirement.project_id,
-        document_id=requirement.document_id,
-        material_code=requirement.material_code,
-        material_name=requirement.material_name,
-        specification=requirement.specification,
-        brand=requirement.brand,
-        model=requirement.model,
-        key_parameters=requirement.key_parameters,
-        requirement_level=requirement.requirement_level,
-        remark=requirement.remark,
-        extracted_by=requirement.extracted_by,
-        extracted_by_name=requirement.extractor.name if requirement.extractor else None,
-        created_at=requirement.created_at,
-        updated_at=requirement.updated_at,
-    )
+    return serialize_requirement(requirement)
 
 
 @router.delete("/requirements/{requirement_id}", status_code=status.HTTP_200_OK)

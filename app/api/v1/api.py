@@ -825,6 +825,7 @@ def create_api_router() -> APIRouter:
     # ==================== 技术规格 ====================
     try:
         from app.api.v1.endpoints.technical_spec import router as technical_spec_router
+        api_router.include_router(technical_spec_router, prefix="/technical-spec", tags=["technical-spec"])
         api_router.include_router(technical_spec_router, prefix="/technical-specs", tags=["technical-specs"])
         print("✓ 技术规格模块加载成功")
     except Exception as e:
