@@ -49,6 +49,7 @@ export function normalizeSolution(solution) {
     solutionType: solution?.solution_type || "CUSTOM",
     industry: solution?.industry || "未分类行业",
     testType: solution?.test_type || "-",
+    leadId: solution?.lead_id ?? solution?.leadId,
     ticketId: solution?.ticket_id ?? solution?.ticketId,
     opportunityId: solution?.opportunity_id ?? solution?.opportunityId,
     projectId: solution?.project_id ?? solution?.projectId,

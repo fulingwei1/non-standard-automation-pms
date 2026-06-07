@@ -123,6 +123,24 @@ describe("PresalesCostEstimation", () => {
     expect(await screen.findByText("当前方案：ERP 改造售前技术方案")).toBeInTheDocument();
   });
 
+  it("keeps lead context when loading linked solution for cost estimation", async () => {
+    renderPage(
+      "/presales/technical-solutions?tab=cost&type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+
+    await waitFor(() => {
+      expect(presaleApi.solutions.list).toHaveBeenCalledWith({
+        page: 1,
+        page_size: 1,
+        lead_id: "2026",
+        opportunity_id: "2",
+        ticket_id: "501",
+        project_id: "42",
+      });
+    });
+    expect(await screen.findByText("当前方案：ERP 改造售前技术方案")).toBeInTheDocument();
+  });
+
   it("saves cost estimate back to the linked solution", async () => {
     renderPage();
 

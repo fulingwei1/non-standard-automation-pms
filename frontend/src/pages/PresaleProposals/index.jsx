@@ -44,9 +44,14 @@ function appendContextParam(params, key, value) {
 export default function PresaleProposals({ embedded = false } = {}) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const contextLeadId = searchParams.get("lead_id") || "";
   const contextTicketId = searchParams.get("ticket_id") || "";
   const contextOpportunityId = searchParams.get("opportunity_id") || "";
   const contextProjectId = searchParams.get("project_id") || "";
+  const contextLeadIdNumber = useMemo(
+    () => parseContextId(contextLeadId),
+    [contextLeadId],
+  );
   const contextTicketIdNumber = useMemo(
     () => parseContextId(contextTicketId),
     [contextTicketId],
@@ -99,6 +104,9 @@ export default function PresaleProposals({ embedded = false } = {}) {
       if (searchKeyword.trim()) {
         params.keyword = searchKeyword.trim();
       }
+      if (contextLeadIdNumber) {
+        params.lead_id = contextLeadId;
+      }
       if (contextOpportunityIdNumber) {
         params.opportunity_id = contextOpportunityId;
       }
@@ -135,6 +143,8 @@ export default function PresaleProposals({ embedded = false } = {}) {
       setLoading(false);
     }
   }, [
+    contextLeadId,
+    contextLeadIdNumber,
     contextOpportunityId,
     contextOpportunityIdNumber,
     contextProjectId,
@@ -312,6 +322,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
   const buildSolutionDetailPath = (solution) => {
     const params = new URLSearchParams();
     appendContextParam(params, "ticket_id", solution?.ticketId || contextTicketId);
+    appendContextParam(params, "lead_id", solution?.leadId || contextLeadId);
     appendContextParam(params, "opportunity_id", solution?.opportunityId || contextOpportunityId);
     appendContextParam(params, "project_id", solution?.projectId || contextProjectId);
     const query = params.toString();

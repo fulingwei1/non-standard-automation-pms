@@ -80,9 +80,11 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
     searchParams.get("solution_id") || searchParams.get("id"),
   );
   const contextTicketId = searchParams.get("ticket_id") || "";
+  const contextLeadId = searchParams.get("lead_id") || "";
   const contextOpportunityId = searchParams.get("opportunity_id") || "";
   const contextProjectId = searchParams.get("project_id") || "";
   const contextTicketIdNumber = parseContextId(contextTicketId);
+  const contextLeadIdNumber = parseContextId(contextLeadId);
   const contextOpportunityIdNumber = parseContextId(contextOpportunityId);
   const contextProjectIdNumber = parseContextId(contextProjectId);
 
@@ -102,12 +104,20 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
       return;
     }
 
-    if (!contextTicketIdNumber && !contextOpportunityIdNumber && !contextProjectIdNumber) {
+    if (
+      !contextTicketIdNumber &&
+      !contextLeadIdNumber &&
+      !contextOpportunityIdNumber &&
+      !contextProjectIdNumber
+    ) {
       setLinkedSolution(null);
       return;
     }
 
     const params = { page: 1, page_size: 1 };
+    if (contextLeadIdNumber) {
+      params.lead_id = contextLeadId;
+    }
     if (contextOpportunityIdNumber) {
       params.opportunity_id = contextOpportunityId;
     }
@@ -130,6 +140,8 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
       setSolutionLoading(false);
     }
   }, [
+    contextLeadId,
+    contextLeadIdNumber,
     contextOpportunityId,
     contextOpportunityIdNumber,
     contextProjectId,

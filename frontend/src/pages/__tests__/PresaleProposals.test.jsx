@@ -156,6 +156,25 @@ describe("PresaleProposals", () => {
     });
   });
 
+  it("keeps lead context when listing solutions from a converted lead support flow", async () => {
+    renderPage(
+      "/presales/technical-solutions?tab=solutions&type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+
+    await waitFor(() => {
+      expect(presaleApi.solutions.list).toHaveBeenCalledWith(
+        expect.objectContaining({
+          page: 1,
+          page_size: 100,
+          lead_id: "2026",
+          opportunity_id: "2",
+          ticket_id: "501",
+          project_id: "42",
+        }),
+      );
+    });
+  });
+
   it("keeps sales and project context when opening a solution detail", async () => {
     presaleApi.solutions.list.mockResolvedValue({
       data: {
@@ -183,6 +202,36 @@ describe("PresaleProposals", () => {
 
     expect(navigateMock).toHaveBeenCalledWith(
       "/solutions/88?ticket_id=501&opportunity_id=2&project_id=42",
+    );
+  });
+
+  it("keeps lead context when opening a linked solution detail", async () => {
+    presaleApi.solutions.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 88,
+            solution_no: "SOL-88",
+            name: "线索转商机售前方案",
+            status: "DRAFT",
+            ticket_id: 501,
+            opportunity_id: 2,
+            project_id: 42,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage(
+      "/presales/technical-solutions?tab=solutions&type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+
+    await screen.findByText("线索转商机售前方案");
+    fireEvent.click(screen.getByRole("button", { name: "查看详情" }));
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      "/solutions/88?ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
     );
   });
 

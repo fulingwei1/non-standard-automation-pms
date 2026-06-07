@@ -1442,6 +1442,85 @@ class TestPresalesFrontendContractBehavior:
             ).delete(synchronize_session=False)
             db_session.commit()
 
+    def test_solution_list_filters_by_lead_id_through_support_ticket(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        lead_id = 92001
+        other_lead_id = 92002
+        target_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-SOL-LEAD-{unique}",
+            title=f"线索方案工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            lead_id=lead_id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            created_by=admin_user.id,
+        )
+        other_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-SOL-OTHER-{unique}",
+            title=f"其他线索方案工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            lead_id=other_lead_id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            created_by=admin_user.id,
+        )
+        db_session.add_all([target_ticket, other_ticket])
+        db_session.flush()
+
+        target_solution = PresaleSolution(
+            solution_no=f"SOL-LEAD-{unique}",
+            name=f"目标线索方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=target_ticket.id,
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        other_solution = PresaleSolution(
+            solution_no=f"SOL-LEAD-NOISE-{unique}",
+            name=f"其他线索方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=other_ticket.id,
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        db_session.add_all([target_solution, other_solution])
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{prefix}/presale/proposals/solutions",
+                params={"lead_id": lead_id, "keyword": unique},
+                headers=headers,
+            )
+            assert response.status_code == 200, response.text
+            items = response.json()["items"]
+
+            assert [item["id"] for item in items] == [target_solution.id]
+            assert items[0]["ticket_id"] == target_ticket.id
+        finally:
+            db_session.query(PresaleSolution).filter(
+                PresaleSolution.id.in_([target_solution.id, other_solution.id])
+            ).delete(synchronize_session=False)
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id.in_([target_ticket.id, other_ticket.id])
+            ).delete(synchronize_session=False)
+            db_session.commit()
+
     def test_solution_created_from_ticket_inherits_project_context(
         self, client: TestClient, db_session: Session, admin_token: str
     ):

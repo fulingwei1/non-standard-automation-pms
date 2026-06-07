@@ -167,6 +167,7 @@ def read_solutions(
     status: Optional[str] = Query(None, description="状态筛选"),
     solution_type: Optional[str] = Query(None, description="方案类型筛选"),
     industry: Optional[str] = Query(None, description="行业筛选"),
+    lead_id: Optional[int] = Query(None, description="线索ID筛选"),
     ticket_id: Optional[int] = Query(None, description="工单ID筛选"),
     opportunity_id: Optional[int] = Query(None, description="商机ID筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
@@ -191,6 +192,13 @@ def read_solutions(
 
     if industry:
         query = query.filter(PresaleSolution.industry == industry)
+
+    if lead_id:
+        lead_ticket_ids = (
+            db.query(PresaleSupportTicket.id)
+            .filter(PresaleSupportTicket.lead_id == lead_id)
+        )
+        query = query.filter(PresaleSolution.ticket_id.in_(lead_ticket_ids))
 
     if ticket_id:
         query = query.filter(PresaleSolution.ticket_id == ticket_id)
