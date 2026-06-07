@@ -264,51 +264,17 @@ export default function PresalesWorkstation() {
     return statusMap[backendStatus] || backendStatus;
   };
 
-  // 演示数据 - 当 API 不可用时使用
-  const getMockData = () => {
-    const mockTasks = [
-      { id: 1, title: "新能源电池测试方案", type: "方案设计", typeColor: "bg-blue-500", source: "销售：张经理", deadline: "2026-03-15", priority: "high", customer: "宁德时代" },
-      { id: 2, title: "汽车电子成本核算", type: "成本核算", typeColor: "bg-amber-500", source: "销售：李总", deadline: "2026-03-12", priority: "medium", customer: "比亚迪" },
-      { id: 3, title: "充电桩测试可行性评估", type: "可行性评估", typeColor: "bg-violet-500", source: "内部流程", deadline: "2026-03-18", priority: "low", customer: "特来电" },
-    ];
-    const mockSolutions = [
-      { id: 1, name: "动力电池EOL测试系统", customer: "宁德时代", version: "V2.1", status: "评审中", statusColor: "bg-amber-500", progress: 85, amount: 3800000 },
-      { id: 2, name: "BMS测试方案", customer: "比亚迪", version: "V1.0", status: "设计中", statusColor: "bg-blue-500", progress: 60, amount: 2500000 },
-    ];
-    const mockTenders = [
-      { id: 1, name: "新能源汽车测试设备采购", customer: "广汽埃安", deadline: "2026-03-20", status: "准备中", statusColor: "bg-amber-500", amount: 5000000, progress: 60, daysLeft: 11 },
-    ];
-    const mockOpportunities = [
-      { id: 1, name: "储能系统测试项目", customer: "阳光电源", stage: "方案跟进", stageColor: "bg-violet-500/20 text-violet-300", amount: 8000000, winRate: 60, salesPerson: "张经理", expectedDate: "2026-04-30" },
-    ];
-    return { mockTasks, mockSolutions, mockTenders, mockOpportunities };
-  };
-
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      let tickets = [];
-      try {
-        const ticketsResponse = await presaleApi.tickets.list({
-          page: 1,
-          page_size: 50,
-          status: "PENDING,ACCEPTED,PROCESSING,REVIEW,IN_PROGRESS"
-        });
-        tickets = extractItems(ticketsResponse);
-      } catch (apiErr) {
-        // API 调用失败，使用演示数据
-        console.warn("售前工单 API 不可用，使用演示数据:", apiErr.message);
-        const { mockTasks, mockSolutions, mockTenders, mockOpportunities } = getMockData();
-        setTodoTasks(mockTasks);
-        setOngoingSolutions(mockSolutions);
-        setRecentTenders(mockTenders);
-        setRelatedOpportunities(mockOpportunities);
-        setStats(statsData);
-        setLoading(false);
-        return;
-      }
+      const ticketsResponse = await presaleApi.tickets.list({
+        page: 1,
+        page_size: 50,
+        status: "PENDING,ACCEPTED,PROCESSING,REVIEW,IN_PROGRESS"
+      });
+      const tickets = extractItems(ticketsResponse);
 
       const solutionsResponse = await presaleApi.solutions.list({
         page: 1,
