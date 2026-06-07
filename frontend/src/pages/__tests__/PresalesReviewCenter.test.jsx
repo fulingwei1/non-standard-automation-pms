@@ -7,7 +7,9 @@ const presaleProposalsMock = vi.hoisted(() => vi.fn(({ embedded }) => (
 )));
 
 const setSearchParamsMock = vi.hoisted(() => vi.fn());
+const navigateMock = vi.hoisted(() => vi.fn());
 const routeState = vi.hoisted(() => ({
+  pathname: "/presales/technical-solutions",
   search: "tab=solutions",
 }));
 
@@ -16,12 +18,12 @@ vi.mock("react-router-dom", async (importOriginal) => {
   return {
     ...actual,
     useLocation: () => ({
-      pathname: "/presales/technical-solutions",
+      pathname: routeState.pathname,
       search: `?${routeState.search}`,
       hash: "",
       state: null,
     }),
-    useNavigate: () => vi.fn(),
+    useNavigate: () => navigateMock,
     useSearchParams: () => [new URLSearchParams(routeState.search), setSearchParamsMock],
   };
 });
@@ -60,8 +62,10 @@ vi.mock("../PresaleTemplates", () => ({
 
 describe("PresalesReviewCenter", () => {
   beforeEach(() => {
+    routeState.pathname = "/presales/technical-solutions";
     routeState.search = "tab=solutions";
     setSearchParamsMock.mockClear();
+    navigateMock.mockClear();
     presaleProposalsMock.mockClear();
   });
 
@@ -113,7 +117,7 @@ describe("PresalesReviewCenter", () => {
   });
 
   it("preserves sales support context params when switching center tabs", () => {
-    routeState.search = "tab=reviews&type=support&status=pending&opportunity_id=2&ticket_id=501";
+    routeState.search = "tab=reviews&type=support&status=pending&lead_id=2026&opportunity_id=2&ticket_id=501";
 
     render(<PresalesReviewCenter />);
 
@@ -121,7 +125,20 @@ describe("PresalesReviewCenter", () => {
 
     const nextParams = setSearchParamsMock.mock.calls[0][0];
     expect(nextParams.toString()).toBe(
-      "tab=solutions&type=support&status=pending&opportunity_id=2&ticket_id=501",
+      "tab=solutions&type=support&status=pending&lead_id=2026&opportunity_id=2&ticket_id=501",
+    );
+  });
+
+  it("keeps sales support context when switching tabs from a legacy presales route", () => {
+    routeState.pathname = "/presales/solutions";
+    routeState.search = "type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42";
+
+    render(<PresalesReviewCenter />);
+
+    fireEvent.click(screen.getByText("投标支持"));
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      "/presales/technical-solutions?type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42&tab=bids",
     );
   });
 });

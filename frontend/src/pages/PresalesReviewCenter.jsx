@@ -57,6 +57,12 @@ function getTabFromSearch(searchParams) {
   return null;
 }
 
+function buildUnifiedTabPath(tab, searchParams) {
+  const nextParams = new URLSearchParams(searchParams);
+  nextParams.set("tab", tab);
+  return `/presales/technical-solutions?${nextParams.toString()}`;
+}
+
 export default function PresalesReviewCenter() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -92,11 +98,8 @@ export default function PresalesReviewCenter() {
       return;
     }
 
-    const target = (tabs || []).find((tab) => tab.value === value);
-    if (target) {
-      navigate(target.path);
-      setActiveTab(value);
-    }
+    navigate(buildUnifiedTabPath(value, searchParams));
+    setActiveTab(value);
   };
 
   return (
