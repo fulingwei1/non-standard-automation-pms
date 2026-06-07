@@ -868,20 +868,24 @@ class TechnicalAssessmentService:
         conditions = [PresaleSupportTicket.current_assessment_id == assessment.id]
         if assessment.presale_ticket_id:
             conditions.append(PresaleSupportTicket.id == assessment.presale_ticket_id)
+        else:
+            source_condition = None
+            if assessment.source_type == AssessmentSourceTypeEnum.LEAD.value:
+                source_condition = PresaleSupportTicket.lead_id == assessment.source_id
+            elif assessment.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value:
+                source_condition = PresaleSupportTicket.opportunity_id == assessment.source_id
 
-        source_condition = None
-        if assessment.source_type == AssessmentSourceTypeEnum.LEAD.value:
-            source_condition = PresaleSupportTicket.lead_id == assessment.source_id
-        elif assessment.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value:
-            source_condition = PresaleSupportTicket.opportunity_id == assessment.source_id
-
-        if source_condition is not None:
-            conditions.append(
-                and_(
-                    source_condition,
-                    PresaleSupportTicket.status.notin_(("CANCELLED", "CLOSED")),
+            if source_condition is not None:
+                source_tickets = (
+                    self.db.query(PresaleSupportTicket)
+                    .filter(
+                        source_condition,
+                        PresaleSupportTicket.status.notin_(("CANCELLED", "CLOSED")),
+                    )
+                    .all()
                 )
-            )
+                if len(source_tickets) == 1:
+                    conditions.append(PresaleSupportTicket.id == source_tickets[0].id)
 
         tickets = self.db.query(PresaleSupportTicket).filter(or_(*conditions)).all()
         if not tickets:

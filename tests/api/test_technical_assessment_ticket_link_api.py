@@ -203,3 +203,133 @@ def test_apply_opportunity_assessment_does_not_steal_another_ticket_assessment(
     assert refreshed_first_assessment.presale_ticket_id == first_ticket.id
     assert refreshed_first_ticket.current_assessment_id == first_assessment.id
     assert refreshed_second_ticket.current_assessment_id == second_assessment_id
+
+
+def test_evaluate_bound_assessment_does_not_complete_other_ticket_assessment(
+    client: TestClient, db_session: Session, admin_token: str
+):
+    """完成当前工单的技术评估时，不应把同商机其它未完成工单一起完成。"""
+    if not admin_token:
+        pytest.skip("Admin token not available")
+
+    headers = _auth_headers(admin_token)
+    prefix = settings.API_V1_PREFIX
+    unique = uuid4().hex[:8].upper()
+
+    admin_user = db_session.query(User).filter(User.username == "admin").first()
+    assert admin_user is not None
+
+    customer = Customer(
+        customer_code=f"CUST-TEV-{unique}",
+        customer_name=f"技术评估完成隔离客户-{unique}",
+        industry="电子制造",
+        created_by=admin_user.id,
+    )
+    opportunity = Opportunity(
+        opp_code=f"OPPTEV{unique[:6]}",
+        customer=customer,
+        opp_name=f"技术评估完成隔离商机-{unique}",
+        stage="QUALIFICATION",
+        probability=60,
+        est_amount=Decimal("420000"),
+        owner_id=admin_user.id,
+        updated_by=admin_user.id,
+        assessment_status=AssessmentStatusEnum.PENDING.value,
+    )
+    db_session.add_all([customer, opportunity])
+    db_session.flush()
+
+    first_ticket = PresaleSupportTicket(
+        ticket_no=f"TICKET-TEV-A-{unique}",
+        title=f"前序待评估工单-{unique}",
+        ticket_type="FEASIBILITY_ASSESSMENT",
+        urgency="NORMAL",
+        customer_id=customer.id,
+        customer_name=customer.customer_name,
+        opportunity_id=opportunity.id,
+        applicant_id=admin_user.id,
+        applicant_name=admin_user.real_name or admin_user.username,
+        status="PROCESSING",
+        assessment_status=AssessmentStatusEnum.PENDING.value,
+        created_by=admin_user.id,
+    )
+    second_ticket = PresaleSupportTicket(
+        ticket_no=f"TICKET-TEV-B-{unique}",
+        title=f"当前完成评估工单-{unique}",
+        ticket_type="FEASIBILITY_ASSESSMENT",
+        urgency="NORMAL",
+        customer_id=customer.id,
+        customer_name=customer.customer_name,
+        opportunity_id=opportunity.id,
+        applicant_id=admin_user.id,
+        applicant_name=admin_user.real_name or admin_user.username,
+        status="PROCESSING",
+        assessment_status=AssessmentStatusEnum.PENDING.value,
+        created_by=admin_user.id,
+    )
+    db_session.add_all([first_ticket, second_ticket])
+    db_session.flush()
+
+    first_assessment = TechnicalAssessment(
+        source_type="OPPORTUNITY",
+        source_id=opportunity.id,
+        evaluator_id=admin_user.id,
+        status=AssessmentStatusEnum.PENDING.value,
+        presale_ticket_id=first_ticket.id,
+    )
+    second_assessment = TechnicalAssessment(
+        source_type="OPPORTUNITY",
+        source_id=opportunity.id,
+        evaluator_id=admin_user.id,
+        status=AssessmentStatusEnum.PENDING.value,
+        presale_ticket_id=second_ticket.id,
+    )
+    db_session.add_all([first_assessment, second_assessment])
+    db_session.flush()
+    first_ticket.current_assessment_id = first_assessment.id
+    first_ticket.assessment_status = first_assessment.status
+    second_ticket.current_assessment_id = second_assessment.id
+    second_ticket.assessment_status = second_assessment.status
+    opportunity.assessment_id = second_assessment.id
+    db_session.commit()
+
+    response = client.post(
+        f"{prefix}/sales/assessments/{second_assessment.id}/evaluate",
+        json={
+            "requirement_data": {
+                "tech_maturity": "mature",
+                "process_difficulty": "standard",
+                "precision_requirement": "normal",
+                "sample_support": "available",
+                "budget_status": "confirmed",
+                "price_sensitivity": "low",
+                "gross_margin_safety": "safe",
+                "payment_terms": "good",
+                "resource_occupancy": "available",
+                "has_similar_case": "yes",
+                "delivery_feasibility": "feasible",
+                "delivery_months": 3,
+                "change_risk": "low",
+                "customer_nature": "strategic",
+                "customer_potential": "high",
+                "relationship_depth": "deep",
+                "contact_level": "decision_maker",
+            },
+            "enable_ai": False,
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 200, response.text
+
+    db_session.expire_all()
+    preserved_first_assessment = db_session.get(TechnicalAssessment, first_assessment.id)
+    preserved_first_ticket = db_session.get(PresaleSupportTicket, first_ticket.id)
+    refreshed_second_ticket = db_session.get(PresaleSupportTicket, second_ticket.id)
+
+    assert preserved_first_assessment.status == AssessmentStatusEnum.PENDING.value
+    assert preserved_first_assessment.presale_ticket_id == first_ticket.id
+    assert preserved_first_ticket.assessment_status == AssessmentStatusEnum.PENDING.value
+    assert preserved_first_ticket.current_assessment_id == first_assessment.id
+    assert refreshed_second_ticket.assessment_status == AssessmentStatusEnum.COMPLETED.value
+    assert refreshed_second_ticket.current_assessment_id == second_assessment.id
