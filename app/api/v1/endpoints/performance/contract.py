@@ -8,7 +8,6 @@
 - L3: 部门经理↔员工 — 个人绩效合约
 """
 
-import os
 import sqlite3
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -17,12 +16,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.core.config import settings
 from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
 # 数据库路径
-DB_PATH = os.path.join(os.path.dirname(__file__), "../../../../data/app.db")
+DB_PATH = settings.SQLITE_DB_PATH
 
 
 def get_db_connection():
