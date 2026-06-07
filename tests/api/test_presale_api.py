@@ -8,10 +8,17 @@
 注意: proposals, templates, bids, statistics 等端点尚未实现
 """
 
+from decimal import Decimal
+from uuid import uuid4
+
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.presale import PresaleSupportTicket
+from app.models.sales import Customer, Lead, Opportunity
+from app.models.user import User
 
 
 def _auth_headers(token: str) -> dict:
@@ -96,6 +103,78 @@ class TestPresaleTicketsAPI:
             pytest.skip("Ticket creation validation error")
 
         assert response.status_code in [200, 201], response.text
+
+    def test_create_ticket_from_opportunity_inherits_sales_context(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """只传商机创建售前工单时，应自动继承客户、线索和销售金额上下文。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        unique = uuid4().hex[:8].upper()
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-PT-{unique}",
+            customer_name=f"售前工单客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        lead = Lead(
+            lead_code=f"LEADPT{unique[:6]}",
+            customer_name=customer.customer_name,
+            industry="电子制造",
+            demand_summary="客户需要EOL/FCT整线测试方案",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([customer, lead])
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPPPT{unique[:6]}",
+            lead_id=lead.id,
+            customer=customer,
+            opp_name=f"售前工单商机-{unique}",
+            project_type="FCT",
+            equipment_type="EOL",
+            stage="QUOTE",
+            probability=70,
+            est_amount=Decimal("680000"),
+            est_margin=Decimal("36.50"),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add(opportunity)
+        db_session.commit()
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/presale/tickets",
+            headers=_auth_headers(admin_token),
+            json={
+                "title": f"EOL/FCT售前方案支持-{unique}",
+                "ticket_type": "SOLUTION",
+                "urgency": "URGENT",
+                "description": "销售从商机发起售前技术支持",
+                "opportunity_id": opportunity.id,
+            },
+        )
+
+        assert response.status_code == 201, response.text
+        payload = response.json()
+        assert payload["opportunity_id"] == opportunity.id
+        assert payload["opportunity_code"] == opportunity.opp_code
+        assert payload["opportunity_name"] == opportunity.opp_name
+        assert payload["estimated_amount"] == 680000.0
+        assert payload["customer_id"] == customer.id
+        assert payload["customer_name"] == customer.customer_name
+        assert payload["lead_id"] == lead.id
+
+        ticket = db_session.get(PresaleSupportTicket, payload["id"])
+        assert ticket is not None
+        assert ticket.customer_id == customer.id
+        assert ticket.customer_name == customer.customer_name
+        assert ticket.lead_id == lead.id
 
     def test_get_ticket_detail(self, client: TestClient, admin_token: str):
         """测试获取工单详情"""

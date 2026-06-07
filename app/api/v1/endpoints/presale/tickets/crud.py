@@ -123,10 +123,13 @@ def create_ticket(
 
     logger = logging.getLogger(__name__)
 
-    if ticket_in.ticket_type == "SOLUTION_REVIEW":
-        if not ticket_in.opportunity_id:
-            raise HTTPException(status_code=400, detail="方案评审必须关联商机")
+    opportunity = None
+    if ticket_in.opportunity_id:
         opportunity = get_or_404(db, Opportunity, ticket_in.opportunity_id, "商机不存在")
+
+    if ticket_in.ticket_type == "SOLUTION_REVIEW":
+        if not opportunity:
+            raise HTTPException(status_code=400, detail="方案评审必须关联商机")
         gate_status = (opportunity.gate_status or "").upper()
         if gate_status not in {"PASS", "PASSED"}:
             raise HTTPException(status_code=400, detail="商机阶段门未通过，无法申请评审")
@@ -142,9 +145,14 @@ def create_ticket(
         ticket_type=ticket_in.ticket_type,
         urgency=ticket_in.urgency,
         description=ticket_in.description,
-        customer_id=ticket_in.customer_id,
-        customer_name=ticket_in.customer_name,
-        lead_id=ticket_in.lead_id,
+        customer_id=ticket_in.customer_id or (opportunity.customer_id if opportunity else None),
+        customer_name=ticket_in.customer_name
+        or (
+            opportunity.customer.customer_name
+            if opportunity and getattr(opportunity, "customer", None)
+            else None
+        ),
+        lead_id=ticket_in.lead_id or (opportunity.lead_id if opportunity else None),
         opportunity_id=ticket_in.opportunity_id,
         project_id=ticket_in.project_id,
         applicant_id=current_user.id,
@@ -214,10 +222,6 @@ def create_ticket(
 
     # 保存工单
     save_obj(db, ticket)
-
-    opportunity = None
-    if ticket.opportunity_id:
-        opportunity = db.query(Opportunity).filter(Opportunity.id == ticket.opportunity_id).first()
 
     return build_ticket_response(ticket, opportunity)
 
