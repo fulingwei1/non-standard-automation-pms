@@ -4,6 +4,7 @@ import { setupApiTest, teardownApiTest } from './_test-setup.js';
 describe('presaleApi', () => {
   let mock;
   let presaleApi;
+  let presalesIntegrationApi;
 
   beforeEach(async () => {
     const setup = await setupApiTest();
@@ -11,6 +12,7 @@ describe('presaleApi', () => {
 
     const presalesModule = await import('../presales.js');
     presaleApi = presalesModule.presaleApi;
+    presalesIntegrationApi = presalesModule.presalesIntegrationApi;
 
     vi.clearAllMocks();
   });
@@ -49,5 +51,33 @@ describe('presaleApi', () => {
 
     expect(response.data.id).toBe(7);
     expect(response.data.ticket_id).toBe(42);
+  });
+
+  it('createProjectFromLead() - should post approved lead payload to compatibility route', async () => {
+    const payload = {
+      lead_id: 'XS260607001',
+      lead_name: '自动化测试站',
+      customer_name: '测试客户',
+      salesperson_id: 1,
+      salesperson_name: '销售员',
+      decision: 'GO',
+      evaluation_score: 82,
+      dimension_scores: {
+        requirement_maturity: 85,
+        technical_feasibility: 80,
+        business_feasibility: 78,
+        delivery_risk: 82,
+        customer_relationship: 86,
+      },
+    };
+
+    mock.onPost('/api/v1/presales/from-lead').reply((config) => {
+      expect(JSON.parse(config.data)).toEqual(payload);
+      return [200, { success: true, data: { project_code: 'PJ260607001' } }];
+    });
+
+    const response = await presalesIntegrationApi.createProjectFromLead(payload);
+
+    expect(response.data.data.project_code).toBe('PJ260607001');
   });
 });

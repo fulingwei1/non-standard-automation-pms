@@ -11,20 +11,23 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.enums import (
-    EvaluationDecisionEnum,
-    MachineStatusEnum,
-    ProjectHealthEnum,
-    ProjectStageEnum,
-)
+from app.models.enums import EvaluationDecisionEnum
 from app.models.project import Customer, Machine, Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.presales import LeadConversionRequest, LeadConversionResponse
+from app.utils.number_generator import generate_customer_code
 
 from .utils import convert_lead_code_to_project_code
 
 router = APIRouter()
+
+APPROVED_DECISIONS = {
+    EvaluationDecisionEnum.GO.value,
+    EvaluationDecisionEnum.GO_WITH_CONDITIONS.value,
+    "APPROVED",
+    "approved",
+}
 
 
 @router.post("/from-lead", response_model=ResponseModel[LeadConversionResponse])
@@ -38,7 +41,7 @@ async def create_project_from_lead(
     由 presales-evaluation-system 在评估通过后调用
     """
     # 验证评估决策
-    if lead_data.decision != EvaluationDecisionEnum.APPROVED.value:
+    if lead_data.decision not in APPROVED_DECISIONS:
         return ResponseModel(
             code=400,
             message=f"线索评估未通过，当前决策: {lead_data.decision}",
@@ -68,31 +71,40 @@ async def create_project_from_lead(
         )
 
     # 查找或创建客户
-    customer = db.query(Customer).filter(Customer.name == lead_data.customer_name).first()
+    customer = db.query(Customer).filter(Customer.customer_name == lead_data.customer_name).first()
     if not customer:
         customer = Customer(
-            name=lead_data.customer_name,
+            customer_code=generate_customer_code(db),
+            customer_name=lead_data.customer_name,
             industry=lead_data.customer_industry,
-            contact_name=lead_data.customer_contact,
+            contact_person=lead_data.customer_contact,
             contact_phone=lead_data.customer_phone,
-            is_active=True,
+            status="ACTIVE",
             created_at=datetime.now(timezone.utc),
+            created_by=current_user.id,
         )
         db.add(customer)
         db.flush()
 
-    # 创建项目（S0 售前跟进阶段）
+    # 创建项目。当前项目模型以 S1 作为售前/需求进入的起点。
     project = Project(
         project_code=project_code,
-        name=lead_data.lead_name,
+        project_name=lead_data.lead_name,
         customer_id=customer.id,
+        customer_name=customer.customer_name,
+        customer_contact=lead_data.customer_contact,
+        customer_phone=lead_data.customer_phone,
         salesperson_id=lead_data.salesperson_id,
-        current_stage=ProjectStageEnum.S0,
-        health_status=ProjectHealthEnum.H1,
+        stage="S1",
+        status="ST01",
+        health="H1",
         contract_amount=lead_data.estimated_amount,
-        expected_delivery_date=lead_data.expected_delivery_date,
-        machine_count=lead_data.machine_count,
+        contract_date=lead_data.expected_contract_date,
+        planned_end_date=lead_data.expected_delivery_date,
         description=lead_data.requirement_summary,
+        requirements=lead_data.requirement_summary,
+        industry=lead_data.customer_industry,
+        project_category="SALES",
         is_active=True,
         created_at=datetime.now(timezone.utc),
         created_by=current_user.id,
@@ -108,9 +120,12 @@ async def create_project_from_lead(
     for i in range(lead_data.machine_count):
         machine = Machine(
             project_id=project.id,
-            machine_code=f"M{str(i+1).zfill(3)}",
-            name=f"{lead_data.lead_name}-设备{i+1}",
-            status=MachineStatusEnum.PLANNING,
+            machine_code=f"{project_code}-PN{i + 1:03d}",
+            machine_name=f"{lead_data.lead_name}-设备{i+1}",
+            machine_no=i + 1,
+            stage="S1",
+            status="ST01",
+            health="H1",
             created_at=datetime.now(timezone.utc),
         )
         db.add(machine)

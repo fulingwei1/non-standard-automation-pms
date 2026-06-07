@@ -70,7 +70,10 @@ class LeadConversionRequest(BaseModel):
     salesperson_name: str = Field(..., description="销售人员姓名")
 
     # 评估信息
-    decision: str = Field(..., description="评估决策: approved/rejected/deferred")
+    decision: str = Field(
+        ...,
+        description="评估决策: GO/GO_WITH_CONDITIONS/NO_GO；兼容旧值 approved",
+    )
     evaluation_score: float = Field(..., ge=0, le=100, description="评估总分")
     dimension_scores: DimensionScore = Field(..., description="五维评估分数")
     veto_rules: Optional[List[VetoRule]] = Field(None, description="一票否决规则")

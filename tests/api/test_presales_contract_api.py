@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.enums import AssessmentStatusEnum, LeadOutcomeEnum
-from app.models.project import Customer, Project
+from app.models.project import Customer, Machine, Project
 from app.models.sales import Opportunity
 from app.models.timesheet import Timesheet
 from app.models.user import User
@@ -477,3 +477,82 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(Timesheet).filter(Timesheet.project_id == project.id).delete()
             db_session.query(Project).filter(Project.id == project.id).delete()
             db_session.commit()
+
+    def test_presales_from_lead_creates_current_project_models(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+        lead_id = f"XS26{unique[:6]}"
+        project_code = f"PJ26{unique[:6]}"
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        response = client.post(
+            f"{prefix}/presales/from-lead",
+            json={
+                "lead_id": lead_id,
+                "lead_name": f"售前转项目-{unique}",
+                "customer_name": f"售前转项目客户-{unique}",
+                "customer_industry": "电子制造",
+                "customer_contact": "王工",
+                "customer_phone": "021-88888888",
+                "salesperson_id": admin_user.id,
+                "salesperson_name": admin_user.real_name or admin_user.username,
+                "decision": "GO",
+                "evaluation_score": 82,
+                "dimension_scores": {
+                    "requirement_maturity": 85,
+                    "technical_feasibility": 80,
+                    "business_feasibility": 78,
+                    "delivery_risk": 82,
+                    "customer_relationship": 86,
+                },
+                "estimated_amount": "250000",
+                "expected_delivery_date": "2026-09-30",
+                "machine_count": 2,
+                "requirement_summary": "测试站自动化产线",
+                "predicted_win_rate": 0.72,
+            },
+            headers=headers,
+        )
+
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["success"] is True
+        assert payload["data"]["success"] is True
+        assert payload["data"]["project_code"] == project_code
+
+        project = db_session.query(Project).filter(Project.project_code == project_code).first()
+        try:
+            assert project is not None
+            assert project.project_name == f"售前转项目-{unique}"
+            assert project.customer_name == f"售前转项目客户-{unique}"
+            assert project.source_lead_id == lead_id
+            assert project.salesperson_id == admin_user.id
+            assert project.stage == "S1"
+            assert project.health == "H1"
+            assert float(project.contract_amount) == pytest.approx(250000.0)
+            assert float(project.predicted_win_rate) == pytest.approx(0.72)
+
+            machines = (
+                db_session.query(Machine)
+                .filter(Machine.project_id == project.id)
+                .order_by(Machine.machine_no)
+                .all()
+            )
+            assert [machine.machine_no for machine in machines] == [1, 2]
+            assert machines[0].machine_name == f"售前转项目-{unique}-设备1"
+        finally:
+            if project is not None:
+                db_session.query(Machine).filter(Machine.project_id == project.id).delete()
+                db_session.query(Project).filter(Project.id == project.id).delete()
+                db_session.query(Customer).filter(
+                    Customer.customer_name == f"售前转项目客户-{unique}"
+                ).delete()
+                db_session.commit()
