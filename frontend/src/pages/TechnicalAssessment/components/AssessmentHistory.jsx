@@ -6,6 +6,7 @@ import {
   Badge,
 } from "../../../components/ui";
 import { statusConfig, decisionConfig } from "../utils/pageConstants";
+import { parseAssessmentObject } from "../utils/assessmentPayload";
 
 export function AssessmentHistory({ assessments, currentAssessment, onSelect }) {
   return (
@@ -16,9 +17,7 @@ export function AssessmentHistory({ assessments, currentAssessment, onSelect }) 
       <CardContent>
         <div className="space-y-3">
           {(assessments || []).map((item) => {
-            const itemScores = item.dimension_scores
-              ? JSON.parse(item.dimension_scores)
-              : null;
+            const itemScores = parseAssessmentObject(item.dimension_scores);
             return (
               <div
                 key={item.id}

@@ -19,6 +19,7 @@ import {
   dimensionLabels,
   dimensionNames,
 } from "../utils/pageConstants";
+import { parseAssessmentObject } from "../utils/assessmentPayload";
 
 export function AssessmentResults({
   assessment,
@@ -171,15 +172,16 @@ function TrendTab({ assessments, dimensionScores }) {
           <div className="space-y-4">
             {Object.keys(dimensionLabels).map((dim) => {
               const trendData = assessments
-                .filter((a) => a.dimension_scores)
                 .map((a, idx) => {
-                  const scores = JSON.parse(a.dimension_scores);
+                  const scores = parseAssessmentObject(a.dimension_scores);
+                  if (!scores) return null;
                   return {
                     date: a.evaluated_at || a.created_at,
                     value: scores[dim] || 0,
                     label: `评估${idx + 1}`,
                   };
                 })
+                .filter(Boolean)
                 .sort((a, b) => new Date(a.date) - new Date(b.date));
 
               if (trendData.length === 0) return null;
@@ -215,11 +217,11 @@ function ComparisonTab({ assessments }) {
         <h4 className="text-sm font-semibold mb-4">评估维度对比</h4>
         <ComparisonChart
           data={assessments
-            .filter((a) => a.dimension_scores)
+            .filter((a) => parseAssessmentObject(a.dimension_scores))
             .slice(0, 5)
             .map((a, idx) => ({
               name: `评估${idx + 1} (${a.total_score}分)`,
-              scores: JSON.parse(a.dimension_scores),
+              scores: parseAssessmentObject(a.dimension_scores, {}),
             }))}
           height={300}
         />

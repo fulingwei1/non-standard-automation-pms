@@ -11,6 +11,7 @@ import { AssessmentStatusCard } from "./components/AssessmentStatusCard";
 import { AssessmentHistory } from "./components/AssessmentHistory";
 import { AssessmentResults } from "./components/AssessmentResults";
 import { RequirementDataForm } from "./components/RequirementDataForm";
+import { parseAssessmentList, parseAssessmentObject } from "./utils/assessmentPayload";
 
 export default function TechnicalAssessment() {
   const { sourceType, sourceId } = useParams();
@@ -37,16 +38,10 @@ export default function TechnicalAssessment() {
     return <div className="p-6">加载中...</div>;
   }
 
-  const dimensionScores = assessment?.dimension_scores
-    ? JSON.parse(assessment.dimension_scores)
-    : null;
-  const risks = assessment?.risks ? JSON.parse(assessment.risks) : [];
-  const similarCases = assessment?.similar_cases
-    ? JSON.parse(assessment.similar_cases)
-    : [];
-  const conditions = assessment?.conditions
-    ? JSON.parse(assessment.conditions)
-    : [];
+  const dimensionScores = parseAssessmentObject(assessment?.dimension_scores);
+  const risks = parseAssessmentList(assessment?.risks);
+  const similarCases = parseAssessmentList(assessment?.similar_cases);
+  const conditions = parseAssessmentList(assessment?.conditions);
 
   const handleExportReport = () => {
     exportReport(assessment, { dimensionScores, risks, similarCases, conditions });
