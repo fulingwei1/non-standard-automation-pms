@@ -86,6 +86,12 @@ def _latest_progress_record(ticket: PresaleSupportTicket):
 def build_ticket_response(ticket: PresaleSupportTicket) -> TicketResponse:
     """构建工单响应对象"""
     latest_progress = _latest_progress_record(ticket)
+    progress_note = None
+    if latest_progress is not None:
+        progress_note = getattr(latest_progress, "progress_note", None) or getattr(
+            latest_progress, "content", None
+        )
+
     return TicketResponse(
         id=ticket.id,
         ticket_no=ticket.ticket_no,
@@ -108,7 +114,7 @@ def build_ticket_response(ticket: PresaleSupportTicket) -> TicketResponse:
         deadline=ticket.deadline,
         status=ticket.status,
         progress_percent=getattr(latest_progress, "progress_percent", None),
-        progress_note=getattr(latest_progress, "progress_note", None),
+        progress_note=progress_note,
         complete_time=ticket.complete_time,
         actual_hours=float(ticket.actual_hours) if ticket.actual_hours else None,
         satisfaction_score=ticket.satisfaction_score,

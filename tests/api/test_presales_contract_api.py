@@ -46,6 +46,7 @@ class TestPresalesFrontendContractRoutes:
             ("PUT", f"{prefix}/presale/tickets/{{ticket_id}}"),
             ("PUT", f"{prefix}/presale/tickets/{{ticket_id}}/accept"),
             ("PUT", f"{prefix}/presale/tickets/{{ticket_id}}/progress"),
+            ("POST", f"{prefix}/presale/tickets/{{ticket_id}}/deliverables"),
             ("PUT", f"{prefix}/presale/tickets/{{ticket_id}}/complete"),
             ("PUT", f"{prefix}/presale/tickets/{{ticket_id}}/rating"),
             ("GET", f"{prefix}/presale/tickets/board"),
@@ -142,6 +143,36 @@ class TestPresalesFrontendContractBehavior:
         )
         assert accepted.status_code == 200, accepted.text
         assert accepted.json()["status"] == "ACCEPTED"
+
+        progressed = client.put(
+            f"{prefix}/presale/tickets/{ticket_id}/progress",
+            json={"progress_note": "方案边界已澄清", "progress_percent": 60},
+            headers=headers,
+        )
+        assert progressed.status_code == 200, progressed.text
+        assert progressed.json()["status"] == "IN_PROGRESS"
+        assert progressed.json()["progress_percent"] == 60
+        assert progressed.json()["progress_note"] == "方案边界已澄清"
+
+        deliverable = client.post(
+            f"{prefix}/presale/tickets/{ticket_id}/deliverables",
+            json={
+                "deliverable_name": "初版技术方案",
+                "deliverable_type": "SOLUTION",
+                "file_path": "/files/solution-v1.pdf",
+                "file_url": "https://files.example.com/solution-v1.pdf",
+                "description": "方案初稿",
+            },
+            headers=headers,
+        )
+        assert deliverable.status_code == 201, deliverable.text
+        deliverable_payload = deliverable.json()
+        assert deliverable_payload["ticket_id"] == ticket_id
+        assert deliverable_payload["deliverable_name"] == "初版技术方案"
+        assert deliverable_payload["deliverable_type"] == "SOLUTION"
+        assert deliverable_payload["file_path"] == "/files/solution-v1.pdf"
+        assert deliverable_payload["file_url"] == "https://files.example.com/solution-v1.pdf"
+        assert deliverable_payload["description"] == "方案初稿"
 
         completed = client.put(
             f"{prefix}/presale/tickets/{ticket_id}/complete",

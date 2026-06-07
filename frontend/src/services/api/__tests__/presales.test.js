@@ -30,4 +30,24 @@ describe('presaleApi', () => {
 
     expect(response.data.status).toBe('COMPLETED');
   });
+
+  it('tickets.createDeliverable() - should post deliverable payload to ticket route', async () => {
+    const payload = {
+      deliverable_name: '初版技术方案',
+      deliverable_type: 'SOLUTION',
+      file_path: '/files/solution-v1.pdf',
+      file_url: 'https://files.example.com/solution-v1.pdf',
+      description: '方案初稿',
+    };
+
+    mock.onPost('/api/v1/presale/tickets/42/deliverables').reply((config) => {
+      expect(JSON.parse(config.data)).toEqual(payload);
+      return [201, { id: 7, ticket_id: 42, ...payload }];
+    });
+
+    const response = await presaleApi.tickets.createDeliverable(42, payload);
+
+    expect(response.data.id).toBe(7);
+    expect(response.data.ticket_id).toBe(42);
+  });
 });

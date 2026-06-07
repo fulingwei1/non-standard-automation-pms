@@ -11,6 +11,8 @@ export const presaleApi = {
     accept: (id, data) => api.put(`/presale/tickets/${id}/accept`, data),
     updateProgress: (id, data) =>
       api.put(`/presale/tickets/${id}/progress`, data),
+    createDeliverable: (id, data) =>
+      api.post(`/presale/tickets/${id}/deliverables`, data),
     complete: (id, data = {}) =>
       api.put(`/presale/tickets/${id}/complete`, undefined, {
         params:

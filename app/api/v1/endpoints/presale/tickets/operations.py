@@ -79,10 +79,12 @@ def update_ticket_progress(
     # 记录进度
     progress = PresaleTicketProgress(
         ticket_id=ticket_id,
-        progress_note=progress_request.progress_note,
+        progress_type="PROGRESS",
+        content=progress_request.progress_note,
         progress_percent=progress_request.progress_percent,
-        updated_by=current_user.id,
-        updated_at=datetime.now(),
+        operator_id=current_user.id,
+        operator_name=current_user.real_name or current_user.username,
+        created_at=datetime.now(),
     )
     db.add(progress)
 
@@ -110,11 +112,9 @@ def create_deliverable(
 
     deliverable = PresaleTicketDeliverable(
         ticket_id=ticket_id,
-        deliverable_name=deliverable_in.deliverable_name,
-        deliverable_type=deliverable_in.deliverable_type,
-        file_path=deliverable_in.file_path,
-        file_url=deliverable_in.file_url,
-        description=deliverable_in.description,
+        name=deliverable_in.deliverable_name,
+        file_type=deliverable_in.deliverable_type,
+        file_path=deliverable_in.file_path or deliverable_in.file_url,
         created_by=current_user.id,
     )
 
@@ -123,11 +123,11 @@ def create_deliverable(
     return DeliverableResponse(
         id=deliverable.id,
         ticket_id=deliverable.ticket_id,
-        deliverable_name=deliverable.deliverable_name,
-        deliverable_type=deliverable.deliverable_type,
+        deliverable_name=deliverable.name,
+        deliverable_type=deliverable.file_type or deliverable_in.deliverable_type,
         file_path=deliverable.file_path,
-        file_url=deliverable.file_url,
-        description=deliverable.description,
+        file_url=deliverable_in.file_url,
+        description=deliverable_in.description,
         created_at=deliverable.created_at,
         updated_at=deliverable.updated_at,
     )
