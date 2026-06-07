@@ -7,7 +7,7 @@
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
@@ -98,6 +98,14 @@ class RiskStatusUpdateRequest(BaseModel):
 
     status: str = Field(..., description="新状态")
     note: Optional[str] = Field(None, description="备注")
+
+
+class VersionCreateRequest(BaseModel):
+    """创建评估版本请求"""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    change_summary: str = Field(..., description="变更摘要")
 
 
 # ==================== 模板 API ====================
@@ -432,14 +440,19 @@ def create_assessment_version(
     *,
     db: Session = Depends(deps.get_db),
     assessment_id: int,
-    change_summary: str = Query(..., description="变更摘要"),
+    request: Optional[VersionCreateRequest] = Body(None),
+    change_summary: Optional[str] = Query(None, description="变更摘要"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建评估版本快照"""
     service = AssessmentVersionService(db)
+    summary = request.change_summary if request else change_summary
+    if not summary:
+        raise HTTPException(status_code=422, detail="变更摘要不能为空")
+
     version = service.create_version_snapshot(
         assessment_id=assessment_id,
-        change_summary=change_summary,
+        change_summary=summary,
         created_by=current_user.id,
     )
 

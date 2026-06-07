@@ -47,12 +47,22 @@ class TestSalesRoutesInit:
         # 销售模块应该包含多个 tags
         assert len(all_tags) > 0
 
-    def test_router_prefix(self):
-        """测试路由前缀"""
+    def test_router_prefix_is_applied_by_parent_api_router(self):
+        """销售子路由不自带前缀，父级 API router 统一挂载到 /sales"""
         from app.api.v1.endpoints.sales import router
-        
-        # 销售模块的路由应该有 /sales 前缀
-        assert router.prefix == "/sales"
+
+        assert router.prefix == ""
+
+    def test_presale_workbench_assessment_routes_included(self):
+        """售前工作台需要的评估风险和版本路由必须被销售路由聚合"""
+        from app.api.v1.endpoints.sales import router
+
+        route_paths = {r.path for r in router.routes}
+
+        assert "/assessments/{assessment_id}/risks" in route_paths
+        assert "/assessments/risks/{risk_id}/status" in route_paths
+        assert "/assessments/{assessment_id}/versions" in route_paths
+        assert "/assessments/versions/{version_id}/compare" in route_paths
 
     def test_customers_router_included(self):
         """测试客户路由已包含"""

@@ -10,6 +10,7 @@ from fastapi import APIRouter
 # 导入所有模块
 from . import (
     accountability,
+    assessment_templates,
     assessments,
     contacts,
     contracts,
@@ -75,6 +76,7 @@ router.include_router(statistics.router, tags=["sales-statistics"])
 router.include_router(loss_analysis.router, tags=["sales-loss-analysis"])
 router.include_router(expenses.router, tags=["sales-expenses"])
 router.include_router(assessments.router, tags=["sales-assessments"])
+router.include_router(assessment_templates.router, tags=["sales-assessment-templates"])
 router.include_router(disputes.router, tags=["sales-disputes"])
 router.include_router(targets.router, tags=["sales-targets"])
 router.include_router(team.router, tags=["sales-team"])
