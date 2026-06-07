@@ -35,6 +35,35 @@ import {
   Activity } from
 "lucide-react";
 
+const normalizeRiskFactors = (value) => {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean);
+  }
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(Boolean);
+      }
+    } catch {
+      // Plain comma or Chinese-comma separated text is accepted below.
+    }
+    return value
+      .split(/[、,，]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+const formatRiskLevel = (riskLevel) => {
+  if (!riskLevel) {
+    return "风险待判";
+  }
+  const text = String(riskLevel);
+  return text.includes("风险") ? text : `${text}风险`;
+};
+
 export default function ProjectWorkspace() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -107,6 +136,14 @@ export default function ProjectWorkspace() {
   const quoteVersion = handoverContext?.quote?.version || {};
   const primarySolution = handoverContext?.presale_solutions?.[0];
   const primaryTicket = handoverContext?.presale_tickets?.[0];
+  const primaryTicketRiskFactors = normalizeRiskFactors(
+    primaryTicket?.pm_involvement_risk_factors,
+  );
+  const primaryTicketRiskFactorsText = primaryTicketRiskFactors.join("、");
+  const primaryTicketRiskLabel = formatRiskLevel(
+    primaryTicket?.pm_involvement_risk_level,
+  );
+  const primaryTicketPmAssignmentLabel = primaryTicket?.pm_assigned ? "PM已分配" : "PM未分配";
   const quoteCost =
     handoverContext?.baseline_cost?.quote_cost_total ?? quoteVersion.cost_total;
   const presaleCost =
@@ -307,6 +344,24 @@ export default function ProjectWorkspace() {
                     `${primaryTicket.actual_hours} 小时` :
                     primaryTicket?.title || "未记录工时"}
                   </p>
+                  {primaryTicket?.pm_involvement_required &&
+                  <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-sm text-amber-100">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 shrink-0" />
+                      <span className="font-medium">PM提前介入</span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Badge variant="outline">需PM介入</Badge>
+                      <Badge variant="outline">{primaryTicketRiskLabel}</Badge>
+                      <Badge variant="outline">{primaryTicketPmAssignmentLabel}</Badge>
+                    </div>
+                    {primaryTicketRiskFactorsText &&
+                    <p className="mt-2 text-xs text-amber-100/80">
+                      {primaryTicketRiskFactorsText}
+                    </p>
+                    }
+                  </div>
+                  }
                 </div>
               </div>
             </CardContent>

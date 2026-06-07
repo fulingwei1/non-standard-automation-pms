@@ -268,6 +268,10 @@ class TestProjectWorkspaceHandoverContext:
             applicant_name=admin_user.real_name or admin_user.username,
             status="COMPLETED",
             actual_hours=Decimal("18.5"),
+            pm_involvement_required=True,
+            pm_involvement_risk_level="高",
+            pm_involvement_risk_factors=["金额高", "交期紧"],
+            pm_assigned=False,
             created_by=admin_user.id,
         )
         db_session.add_all([contract, project, ticket])
@@ -314,6 +318,10 @@ class TestProjectWorkspaceHandoverContext:
         assert payload["quote"]["version"]["cost_total"] == 360000.0
         assert payload["baseline_cost"]["quote_cost_total"] == 360000.0
         assert payload["baseline_cost"]["presale_estimated_cost"] == 355000.0
+        assert payload["presale_tickets"][0]["pm_involvement_required"] is True
+        assert payload["presale_tickets"][0]["pm_involvement_risk_level"] == "高"
+        assert payload["presale_tickets"][0]["pm_involvement_risk_factors"] == ["金额高", "交期紧"]
+        assert payload["presale_tickets"][0]["pm_assigned"] is False
         assert payload["presale_solutions"][0]["solution_no"] == solution.solution_no
         assert payload["handover_status"]["ready"] is True
         assert payload["handover_status"]["missing"] == []

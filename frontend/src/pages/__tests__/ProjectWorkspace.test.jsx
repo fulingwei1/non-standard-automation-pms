@@ -84,6 +84,10 @@ describe("ProjectWorkspace", () => {
               applicant_name: "张销售",
               assignee_name: "王工",
               actual_hours: 18.5,
+              pm_involvement_required: true,
+              pm_involvement_risk_level: "高",
+              pm_involvement_risk_factors: ["金额高", "交期紧"],
+              pm_assigned: false,
             },
           ],
           baseline_cost: {
@@ -253,6 +257,10 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("FCT测试方案")).toBeInTheDocument();
     expect(screen.getByText("PST-091")).toBeInTheDocument();
     expect(screen.getByText(/18.5 小时/)).toBeInTheDocument();
+    expect(screen.getByText("PM提前介入")).toBeInTheDocument();
+    expect(screen.getByText("高风险")).toBeInTheDocument();
+    expect(screen.getByText("金额高、交期紧")).toBeInTheDocument();
+    expect(screen.getByText("PM未分配")).toBeInTheDocument();
     expect(screen.getByText(/[¥￥]360,000.00/)).toBeInTheDocument();
     expect(screen.getByText("后续模块状态")).toBeInTheDocument();
     expect(screen.getByText("RV-001")).toBeInTheDocument();

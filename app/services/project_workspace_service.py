@@ -466,6 +466,9 @@ def _build_presale_solution_payload(solution: PresaleSolution) -> Dict[str, Any]
 
 
 def _build_presale_ticket_payload(ticket: PresaleSupportTicket) -> Dict[str, Any]:
+    pm_involvement_checked_at = getattr(ticket, "pm_involvement_checked_at", None)
+    pm_assigned_at = getattr(ticket, "pm_assigned_at", None)
+
     return {
         "id": ticket.id,
         "ticket_no": ticket.ticket_no,
@@ -484,6 +487,15 @@ def _build_presale_ticket_payload(ticket: PresaleSupportTicket) -> Dict[str, Any
         "deadline": ticket.deadline.isoformat() if ticket.deadline else None,
         "complete_time": ticket.complete_time.isoformat() if ticket.complete_time else None,
         "satisfaction_score": ticket.satisfaction_score,
+        "pm_involvement_required": bool(getattr(ticket, "pm_involvement_required", False)),
+        "pm_involvement_risk_level": getattr(ticket, "pm_involvement_risk_level", None),
+        "pm_involvement_risk_factors": getattr(ticket, "pm_involvement_risk_factors", None) or [],
+        "pm_involvement_checked_at": (
+            pm_involvement_checked_at.isoformat() if pm_involvement_checked_at else None
+        ),
+        "pm_assigned": bool(getattr(ticket, "pm_assigned", False)),
+        "pm_user_id": getattr(ticket, "pm_user_id", None),
+        "pm_assigned_at": pm_assigned_at.isoformat() if pm_assigned_at else None,
         "updated_at": ticket.updated_at.isoformat() if ticket.updated_at else None,
     }
 
