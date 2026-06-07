@@ -5,8 +5,9 @@
  * - 基于模板的成本估算
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
+import { useSearchParams } from "react-router-dom";
 import {
   Beaker,
   Calculator,
@@ -119,7 +120,42 @@ function getLaborHoursTotal(laborHours) {
   return null;
 }
 
+const TECHNICAL_CONTEXT_KEYS = ["opportunity_id", "ticket_id", "project_id"];
+
+function getTechnicalContextFilters(searchParams) {
+  const filters = {};
+  TECHNICAL_CONTEXT_KEYS.forEach((key) => {
+    const value = searchParams.get(key);
+    if (value) {
+      filters[key] = value;
+    }
+  });
+  return filters;
+}
+
+function parseContextId(value) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function getTechnicalContextPayload(filters) {
+  const payload = {};
+  TECHNICAL_CONTEXT_KEYS.forEach((key) => {
+    const parsed = parseContextId(filters[key]);
+    if (parsed) {
+      payload[key] = parsed;
+    }
+  });
+  return payload;
+}
+
 export default function TechnicalParameterManagement({ embedded = false } = {}) {
+  const [searchParams] = useSearchParams();
+  const searchParamsKey = searchParams.toString();
+  const technicalContextFilters = useMemo(
+    () => getTechnicalContextFilters(searchParams),
+    [searchParamsKey],
+  );
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -155,6 +191,7 @@ export default function TechnicalParameterManagement({ embedded = false } = {}) 
           keyword: searchKeyword,
           industry: filterIndustry,
           test_type: filterTestType,
+          ...technicalContextFilters,
         });
         setTemplates(normalizeTemplateList(res));
       } catch (err) {
@@ -164,7 +201,7 @@ export default function TechnicalParameterManagement({ embedded = false } = {}) 
       }
     };
     load();
-  }, [searchKeyword, filterIndustry, filterTestType]);
+  }, [searchKeyword, filterIndustry, filterTestType, technicalContextFilters]);
 
   // 打开创建模态框
   const handleCreate = () => {
@@ -222,7 +259,12 @@ export default function TechnicalParameterManagement({ embedded = false } = {}) 
       }
       setEditModal(false);
       // 刷新列表
-      const res = await technicalParameterApi.list({});
+      const res = await technicalParameterApi.list({
+        keyword: searchKeyword,
+        industry: filterIndustry,
+        test_type: filterTestType,
+        ...technicalContextFilters,
+      });
       setTemplates(normalizeTemplateList(res));
     } catch (err) {
       alert("保存失败: " + err.message);
@@ -267,6 +309,7 @@ export default function TechnicalParameterManagement({ embedded = false } = {}) 
       const res = await technicalParameterApi.estimateCost({
         template_id: estimateTemplate.id,
         parameters: estimateParams,
+        ...getTechnicalContextPayload(technicalContextFilters),
       });
       setEstimateResult(res.data || res);
     } catch (err) {

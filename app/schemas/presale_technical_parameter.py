@@ -123,6 +123,9 @@ class CostEstimateRequest(BaseModel):
     """成本估算请求"""
 
     template_id: int = Field(..., description="模板ID")
+    opportunity_id: Optional[int] = Field(None, description="关联销售商机ID")
+    ticket_id: Optional[int] = Field(None, description="关联售前支持工单ID")
+    project_id: Optional[int] = Field(None, description="关联项目ID")
     parameters: Dict[str, Any] = Field(
         ...,
         description="技术参数值",
