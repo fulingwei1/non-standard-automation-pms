@@ -215,19 +215,30 @@ def complete_opportunity_assessment_for_solution(
     if not opportunity:
         return
 
+    def load_assessment(assessment_id: Optional[int]) -> Optional[TechnicalAssessment]:
+        if not assessment_id:
+            return None
+        return (
+            db.query(TechnicalAssessment)
+            .filter(TechnicalAssessment.id == assessment_id)
+            .first()
+        )
+
+    def can_use_assessment_for_ticket(assessment: TechnicalAssessment) -> bool:
+        if not ticket:
+            return True
+        return assessment.presale_ticket_id in (None, ticket.id)
+
     assessment = None
-    if opportunity.assessment_id:
-        assessment = (
-            db.query(TechnicalAssessment)
-            .filter(TechnicalAssessment.id == opportunity.assessment_id)
-            .first()
-        )
-    if assessment is None and ticket and ticket.current_assessment_id:
-        assessment = (
-            db.query(TechnicalAssessment)
-            .filter(TechnicalAssessment.id == ticket.current_assessment_id)
-            .first()
-        )
+    if ticket:
+        ticket_assessment = load_assessment(ticket.current_assessment_id)
+        if ticket_assessment and can_use_assessment_for_ticket(ticket_assessment):
+            assessment = ticket_assessment
+
+    if assessment is None:
+        opportunity_assessment = load_assessment(opportunity.assessment_id)
+        if opportunity_assessment and can_use_assessment_for_ticket(opportunity_assessment):
+            assessment = opportunity_assessment
 
     if assessment is None:
         assessment = TechnicalAssessment(

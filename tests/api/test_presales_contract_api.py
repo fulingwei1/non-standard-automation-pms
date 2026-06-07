@@ -2239,6 +2239,155 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(Customer).filter(Customer.id == customer.id).delete()
             db_session.commit()
 
+    def test_approved_solution_does_not_steal_other_ticket_assessment(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-G2X-{unique}",
+            customer_name=f"G2多工单客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPG2X{unique[:6]}",
+            customer=customer,
+            opp_name=f"G2多工单商机-{unique}",
+            stage="QUALIFICATION",
+            probability=65,
+            est_amount=Decimal("280000"),
+            expected_close_date=date.today(),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+            assessment_status=AssessmentStatusEnum.PENDING.value,
+            requirement_maturity=3,
+        )
+        db_session.add_all([customer, opportunity])
+        db_session.flush()
+
+        first_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-G2X-A-{unique}",
+            title=f"前序方案支持工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            assessment_status=AssessmentStatusEnum.PENDING.value,
+            status="PROCESSING",
+            created_by=admin_user.id,
+        )
+        second_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-G2X-B-{unique}",
+            title=f"当前方案支持工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            assessment_status=AssessmentStatusEnum.PENDING.value,
+            status="PROCESSING",
+            created_by=admin_user.id,
+        )
+        db_session.add_all([first_ticket, second_ticket])
+        db_session.flush()
+
+        first_assessment = TechnicalAssessment(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            evaluator_id=admin_user.id,
+            status=AssessmentStatusEnum.PENDING.value,
+            decision=None,
+            presale_ticket_id=first_ticket.id,
+        )
+        db_session.add(first_assessment)
+        db_session.flush()
+        first_ticket.current_assessment_id = first_assessment.id
+        opportunity.assessment_id = first_assessment.id
+        db_session.commit()
+
+        created_solution = client.post(
+            f"{prefix}/presale/proposals/solutions",
+            json={
+                "name": f"当前工单G2方案-{unique}",
+                "solution_type": "CUSTOM",
+                "ticket_id": second_ticket.id,
+                "opportunity_id": opportunity.id,
+                "requirement_summary": "当前工单需求已澄清",
+                "solution_overview": "当前工单技术路线可行",
+                "estimated_cost": 180000,
+                "suggested_price": 280000,
+            },
+            headers=headers,
+        )
+        assert created_solution.status_code == 201, created_solution.text
+        solution_id = created_solution.json()["id"]
+
+        try:
+            approved = client.put(
+                f"{prefix}/presale/proposals/solutions/{solution_id}/review",
+                json={"review_status": "APPROVED", "review_comment": "当前方案评审通过"},
+                headers=headers,
+            )
+            assert approved.status_code == 200, approved.text
+            assert approved.json()["status"] == "APPROVED"
+
+            db_session.expire_all()
+            preserved_assessment = db_session.get(TechnicalAssessment, first_assessment.id)
+            assert preserved_assessment.status == AssessmentStatusEnum.PENDING.value
+            assert preserved_assessment.presale_ticket_id == first_ticket.id
+
+            preserved_ticket = db_session.get(PresaleSupportTicket, first_ticket.id)
+            assert preserved_ticket.status == "PROCESSING"
+            assert preserved_ticket.assessment_status == AssessmentStatusEnum.PENDING.value
+            assert preserved_ticket.current_assessment_id == first_assessment.id
+
+            refreshed_second_ticket = db_session.get(PresaleSupportTicket, second_ticket.id)
+            assert refreshed_second_ticket.status == "COMPLETED"
+            assert refreshed_second_ticket.assessment_status == AssessmentStatusEnum.COMPLETED.value
+            assert refreshed_second_ticket.current_assessment_id != first_assessment.id
+
+            completed_assessment = db_session.get(
+                TechnicalAssessment, refreshed_second_ticket.current_assessment_id
+            )
+            assert completed_assessment is not None
+            assert completed_assessment.source_type == "OPPORTUNITY"
+            assert completed_assessment.source_id == opportunity.id
+            assert completed_assessment.status == AssessmentStatusEnum.COMPLETED.value
+            assert completed_assessment.decision == "推荐立项"
+            assert completed_assessment.presale_ticket_id == second_ticket.id
+
+            refreshed_opportunity = db_session.get(Opportunity, opportunity.id)
+            assert refreshed_opportunity.assessment_status == AssessmentStatusEnum.COMPLETED.value
+            assert refreshed_opportunity.assessment_id == completed_assessment.id
+        finally:
+            db_session.query(PresaleSolution).filter(PresaleSolution.id == solution_id).delete(
+                synchronize_session=False
+            )
+            db_session.query(TechnicalAssessment).filter(
+                TechnicalAssessment.source_type == "OPPORTUNITY",
+                TechnicalAssessment.source_id == opportunity.id,
+            ).delete(synchronize_session=False)
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id.in_([first_ticket.id, second_ticket.id])
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
     def test_tender_list_filters_by_sales_support_context(
         self, client: TestClient, db_session: Session, admin_token: str
     ):
