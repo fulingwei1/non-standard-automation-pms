@@ -131,6 +131,20 @@ export default function ProjectWorkspace() {
   const latestDeliverySchedule = deliverySchedules.items?.[0];
   const latestAcceptance = acceptanceOrders.items?.[0];
   const firstShortage = kitting.shortage_details?.[0];
+  const nextActions = downstreamContext?.next_actions || [];
+  const actionDomainLabels = {
+    engineering: "工程",
+    supply_chain: "供应链",
+    production: "生产",
+    quality: "质检",
+    delivery: "交付",
+    acceptance: "验收"
+  };
+  const actionPriorityLabels = {
+    HIGH: "高",
+    MEDIUM: "中",
+    LOW: "低"
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -391,6 +405,33 @@ export default function ProjectWorkspace() {
                   </p>
                 </div>
               </div>
+
+              {nextActions.length > 0 &&
+              <div className="rounded-lg border p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium">后续动作</p>
+                  <Badge variant="outline">{nextActions.length} 项</Badge>
+                </div>
+                <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+                  {nextActions.map((action, index) =>
+                  <div key={`${action.domain}-${action.title}-${index}`} className="rounded-lg border p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-medium">{action.title}</p>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Badge variant={action.priority === "HIGH" ? "default" : "secondary"}>
+                          {actionPriorityLabels[action.priority] || action.priority}
+                        </Badge>
+                        <Badge variant="outline">
+                          {actionDomainLabels[action.domain] || action.domain}
+                        </Badge>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-sm text-gray-500">{action.description}</p>
+                  </div>
+                  )}
+                </div>
+              </div>
+              }
 
               {firstShortage &&
               <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">

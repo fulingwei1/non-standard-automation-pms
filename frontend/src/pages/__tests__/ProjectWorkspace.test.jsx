@@ -220,6 +220,20 @@ describe("ProjectWorkspace", () => {
               ],
             },
           },
+          next_actions: [
+            {
+              domain: "quality",
+              priority: "HIGH",
+              title: "处理质检不合格项",
+              description: "项目有 1 条质检不合格记录，不良数量 1",
+            },
+            {
+              domain: "delivery",
+              priority: "HIGH",
+              title: "解决交付排产冲突",
+              description: "项目交付计划中有 1 个任务存在冲突",
+            },
+          ],
         },
       },
     });
@@ -248,11 +262,14 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText(/MAT-001/)).toBeInTheDocument();
     expect(screen.getByText("生产/装配")).toBeInTheDocument();
     expect(screen.getByText("WO-001")).toBeInTheDocument();
-    expect(screen.getByText("质检")).toBeInTheDocument();
+    expect(screen.getAllByText("质检").length).toBeGreaterThan(0);
     expect(screen.getByText("QI-FAIL")).toBeInTheDocument();
     expect(screen.getByText("交付排产")).toBeInTheDocument();
     expect(screen.getByText("PDS-001")).toBeInTheDocument();
     expect(screen.getByText("验收")).toBeInTheDocument();
     expect(screen.getByText("ACC-001")).toBeInTheDocument();
+    expect(screen.getByText("后续动作")).toBeInTheDocument();
+    expect(screen.getByText("处理质检不合格项")).toBeInTheDocument();
+    expect(screen.getByText("解决交付排产冲突")).toBeInTheDocument();
   });
 });
