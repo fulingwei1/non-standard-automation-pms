@@ -28,6 +28,8 @@
 - 技术参数模板：`/presales/technical-parameters`
 - 成本估算：`/presales/cost-estimation`
 - 投标：`/presales/bids`
+- 模板库：`/presales/templates`、`/presale-templates`
+- 项目侧售前工单：`/project-presales-tasks`
 
 后端也分散在：
 
@@ -131,6 +133,35 @@
 
 6. 经理看板
    - 工程师负荷、响应时效、瓶颈、返工、赢单贡献。
+
+### 当前落地状态
+
+截至 2026-06-07，已先把售前技术支持的执行入口收敛到：
+
+`/presales/technical-solutions`
+
+中心内已包含：
+
+- 需求调研
+- 方案管理
+- 技术参数
+- 成本估算
+- 投标支持
+- 知识模板
+- 工单看板
+
+以下旧入口已改为兼容跳转：
+
+- `/requirement-survey` -> `tab=surveys`
+- `/presales/solutions`、`/solutions` -> `tab=solutions`
+- `/presales/technical-parameters` -> `tab=parameters`
+- `/presales/cost-estimation` -> `tab=cost`
+- `/bidding`、`/presales/bids` -> `tab=bids`
+- `/presales/templates`、`/presale-templates` -> `tab=knowledge`
+- `/presales-tasks`、`/presales/ticket-board`、`/presales/assessments` -> `tab=reviews`
+- `/sales/presales-tasks`、`/project-presales-tasks` -> `tab=reviews`，并保留原查询参数。
+
+本次没有把全局 `/knowledge-base` 并入售前中心。它仍作为公司级知识库保留，售前专用模板走 `PresaleTemplates`。
 
 ### 统一数据上下文
 
@@ -415,20 +446,15 @@
 - 不建议把售前技术评估完全并进销售模块；售前有自己的执行和经理视角。
 - 不建议把项目管理所有页面塞进一个超大页面；应该是一个工作台，多视图，多上下文。
 
-## 最近可执行的第一步
+## 最近可执行的下一步
 
-先做售前入口合并：
+先沿着本次售前中心化的样板继续做两件事：
 
-1. 新增统一路由 `/presales/workbench`。
-2. `/presales-workbench` 和 `/sales/presale-workbench` 统一重定向过去。
-3. 统一工作台显示三类入口：
-   - 销售协同
-   - 售前执行
-   - 经理调度
-4. 保留旧页面为子视图。
-5. 加前端路由测试和工作台渲染测试。
+1. 新建或扩展项目管理中心，把项目看板、PMO、任务计划、甘特资源、技术评审、风险变更、成本毛利、交付收尾放到一个主入口。
+2. 做售前到项目交接包：赢单后把客户、合同、需求、方案、参数、成本、风险、里程碑和未闭环事项带入项目。
+3. 把售前中心的数据加载从多个散接口逐步迁到统一上下文接口。
 
-这一步风险小，能马上让用户感知“售前技术支持不是散的”。
+这三步完成后，系统才会从“很多模块都有”变成“从销售到交付能按一条线跑”。
 
 ## 最终验收口径
 

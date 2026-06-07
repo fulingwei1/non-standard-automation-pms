@@ -8,12 +8,14 @@ from uuid import uuid4
 import pytest
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.enums import AssessmentStatusEnum, LeadOutcomeEnum
 from app.models.presale import (
     PresaleSolution,
+    PresaleSolutionTemplate,
     PresaleSupportTicket,
     PresaleTenderRecord,
     PresaleTicketProgress,
@@ -690,6 +692,56 @@ class TestPresalesFrontendContractBehavior:
         assert payload["apply_count"] == 3
         assert payload["usage_count"] == 3
         assert payload["used_count"] == 3
+
+    def test_template_list_normalizes_legacy_null_active_flag(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        template = PresaleSolutionTemplate(
+            template_no=f"TMP-NULL-{unique}",
+            name=f"历史空启用标记模板-{unique}",
+            industry="新能源",
+            test_type="EOL",
+            description="兼容历史 is_active 为空的数据",
+            is_active=True,
+            created_by=admin_user.id,
+        )
+        db_session.add(template)
+        db_session.commit()
+
+        db_session.execute(
+            text("UPDATE presale_solution_template SET is_active = NULL WHERE id = :id"),
+            {"id": template.id},
+        )
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{prefix}/presale/templates",
+                params={"keyword": unique},
+                headers=headers,
+            )
+            assert response.status_code == 200, response.text
+
+            payload = response.json()
+            item = next(
+                item for item in payload["items"] if item["template_no"] == template.template_no
+            )
+            assert item["is_active"] is True
+        finally:
+            db_session.query(PresaleSolutionTemplate).filter(
+                PresaleSolutionTemplate.template_no == template.template_no
+            ).delete(synchronize_session=False)
+            db_session.commit()
 
     def test_technical_parameter_routes_match_frontend_contract(
         self, client: TestClient, admin_token: str

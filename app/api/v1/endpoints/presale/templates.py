@@ -42,6 +42,7 @@ router = APIRouter(prefix="/templates", tags=["templates"])
 
 def build_template_response(template: PresaleSolutionTemplate) -> TemplateResponse:
     use_count = template.use_count or 0
+    is_active = template.is_active if template.is_active is not None else True
     return TemplateResponse(
         id=template.id,
         template_no=template.template_no,
@@ -53,7 +54,7 @@ def build_template_response(template: PresaleSolutionTemplate) -> TemplateRespon
         apply_count=use_count,
         usage_count=use_count,
         used_count=use_count,
-        is_active=template.is_active,
+        is_active=is_active,
         created_at=template.created_at,
         updated_at=template.updated_at,
     )

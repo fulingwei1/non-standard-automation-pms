@@ -1,5 +1,6 @@
 import { Route, Navigate } from "react-router-dom";
 import { ProjectReviewProtectedRoute } from "../../components/common/ProtectedRoute";
+import { PresalesCenterRedirect } from "./presalesRedirects";
 import { lazyLoad } from "../lazyLoad";
 
 // ProjectList 已整合到 ProjectBoard 的卡片视图
@@ -29,7 +30,6 @@ import EngineerWorkstation from "../../pages/EngineerWorkstation";
 // ProjectStageView 已整合到 ProjectBoard 的流水线视图
 // import ProjectStageView from "../../pages/ProjectStageView";
 import ProjectTimelineView from "../../pages/ProjectTimelineView";
-import PresalesTasks from "../../pages/PresalesTasks";
 import ProjectListWithCost from "../../pages/ProjectListWithCost";
 import ResourceOverview from "../../pages/ResourceOverview";
 import AcceptanceManagement from "../../pages/AcceptanceManagement";
@@ -178,7 +178,7 @@ export function ProjectRoutes() {
       <Route path="/projects/:projectId/schedule-optimization" element={<ScheduleOptimization />} />
       <Route path="/projects/:projectId/engineer-recommendation" element={<EngineerRecommendation />} />
       <Route path="/projects/:projectId/engineer-workload-board" element={<EngineerWorkloadBoard />} />
-      <Route path="/project-presales-tasks" element={<PresalesTasks />} />
+      <Route path="/project-presales-tasks" element={<PresalesCenterRedirect tab="reviews" />} />
       <Route path="/tasks" element={<TaskCenter />} />
       <Route path="/assembly-tasks" element={<AssemblerTaskCenter />} />
       <Route path="/workstation" element={<EngineerWorkstation />} />

@@ -54,5 +54,14 @@ describe("SalesPresaleWorkbench", () => {
       "href",
       "/presales/technical-solutions?tab=parameters",
     );
+    expect(screen.getByRole("link", { name: /售前任务/ })).toHaveAttribute(
+      "href",
+      "/presales/technical-solutions?tab=reviews",
+    );
+    expect(
+      screen
+        .getAllByRole("link", { name: /查看全部/ })
+        .some((link) => link.getAttribute("href") === "/presales/technical-solutions?tab=reviews"),
+    ).toBe(true);
   });
 });

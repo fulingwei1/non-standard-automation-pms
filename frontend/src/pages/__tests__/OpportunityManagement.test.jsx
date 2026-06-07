@@ -246,7 +246,7 @@ describe('OpportunityManagement', () => {
     });
   });
 
-  it('creates a solution review ticket and navigates to the sales presales task list', async () => {
+  it('creates a solution review ticket and opens the unified presales review board', async () => {
     renderPage();
 
     await screen.findByText('智能制造升级项目');
@@ -280,6 +280,6 @@ describe('OpportunityManagement', () => {
     expect(payload.description).toContain('现场约束：三班倒不停线');
     expect(payload.description).toContain('验收依据：UPH 达标');
 
-    expect(mockNavigate).toHaveBeenCalledWith('/sales/presales-tasks?type=review&status=reviewing');
+    expect(mockNavigate).toHaveBeenCalledWith('/presales/technical-solutions?tab=reviews&type=review&status=reviewing');
   });
 });

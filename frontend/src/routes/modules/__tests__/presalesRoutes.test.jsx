@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter, Routes } from "react-router-dom";
+import { BrowserRouter, MemoryRouter, Routes } from "react-router-dom";
 import { PresalesRoutes } from "../presalesRoutes";
+import { buildPresalesCenterSearch } from "../presalesRedirects";
+
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
+  return actual;
+});
 
 vi.mock("../../../pages/PresalesReviewCenter", async () => {
   const { useLocation } = await vi.importActual("react-router-dom");
@@ -32,6 +38,12 @@ vi.mock("../../../hooks/usePermission", () => ({
 }));
 
 describe("PresalesRoutes", () => {
+  it("preserves legacy filter params when building unified center redirects", () => {
+    expect(buildPresalesCenterSearch("reviews", "?type=review&status=reviewing")).toBe(
+      "?tab=reviews&type=review&status=reviewing",
+    );
+  });
+
   it("redirects the legacy technical parameter route to the unified center", async () => {
     render(
       <MemoryRouter initialEntries={["/presales/technical-parameters"]}>
@@ -56,6 +68,20 @@ describe("PresalesRoutes", () => {
     );
 
     expect(await screen.findByText(`售前技术支持中心 ${expectedSearch}`)).toBeInTheDocument();
+  });
+
+  it("preserves filters when redirecting the legacy presales task route", async () => {
+    window.history.pushState({}, "", "/presales-tasks?type=review&status=reviewing");
+
+    render(
+      <BrowserRouter>
+        <Routes>{PresalesRoutes()}</Routes>
+      </BrowserRouter>,
+    );
+
+    expect(
+      await screen.findByText("售前技术支持中心 ?tab=reviews&type=review&status=reviewing"),
+    ).toBeInTheDocument();
   });
 
   it("mounts the unified presales workbench as the primary entry", async () => {

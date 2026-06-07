@@ -1,5 +1,6 @@
 import { Route, Navigate } from "react-router-dom";
 import { lazyLoad } from "../lazyLoad";
+import { PresalesCenterRedirect } from "./presalesRedirects";
 
 const PresalesWorkstation = lazyLoad(() => import("../../pages/PresalesWorkstation"));
 const PresalesWorkbench = lazyLoad(() => import("../../pages/PresalesWorkbench"));
@@ -24,22 +25,22 @@ export function PresalesRoutes() {
         element={<PresalesManagerWorkstation />}
       />
       <Route path="/presales/technical-solutions" element={<PresalesReviewCenter />} />
-      <Route path="/presales/cost-estimation" element={<Navigate to="/presales/technical-solutions?tab=cost" replace />} />
-      <Route path="/presales-tasks" element={<Navigate to="/presales/technical-solutions?tab=reviews" replace />} />
-      <Route path="/presales/assessments" element={<Navigate to="/presales/technical-solutions?tab=reviews" replace />} />
+      <Route path="/presales/cost-estimation" element={<PresalesCenterRedirect tab="cost" />} />
+      <Route path="/presales-tasks" element={<PresalesCenterRedirect tab="reviews" />} />
+      <Route path="/presales/assessments" element={<PresalesCenterRedirect tab="reviews" />} />
       <Route path="/presales/presale-analytics" element={<PresaleAnalytics />} />
       <Route path="/presale-analytics" element={<Navigate to="/presales/presale-analytics" replace />} />
-      <Route path="/presales/solutions" element={<Navigate to="/presales/technical-solutions?tab=solutions" replace />} />
-      <Route path="/solutions" element={<Navigate to="/presales/technical-solutions?tab=solutions" replace />} />
+      <Route path="/presales/solutions" element={<PresalesCenterRedirect tab="solutions" />} />
+      <Route path="/solutions" element={<PresalesCenterRedirect tab="solutions" />} />
       <Route path="/solutions/:id" element={<SolutionDetail />} />
-      <Route path="/requirement-survey" element={<Navigate to="/presales/technical-solutions?tab=surveys" replace />} />
-      <Route path="/bidding" element={<Navigate to="/presales/technical-solutions?tab=bids" replace />} />
-      <Route path="/presales/bids" element={<Navigate to="/presales/technical-solutions?tab=bids" replace />} />
+      <Route path="/requirement-survey" element={<PresalesCenterRedirect tab="surveys" />} />
+      <Route path="/bidding" element={<PresalesCenterRedirect tab="bids" />} />
+      <Route path="/presales/bids" element={<PresalesCenterRedirect tab="bids" />} />
       <Route path="/knowledge-base" element={<KnowledgeBase />} />
-      <Route path="/presales/templates" element={<Navigate to="/presales/technical-solutions?tab=knowledge" replace />} />
-      <Route path="/presales/technical-parameters" element={<Navigate to="/presales/technical-solutions?tab=parameters" replace />} />
-      <Route path="/presales/ticket-board" element={<Navigate to="/presales/technical-solutions?tab=reviews" replace />} />
-      <Route path="/presale-templates" element={<Navigate to="/presales/technical-solutions?tab=knowledge" replace />} />
+      <Route path="/presales/templates" element={<PresalesCenterRedirect tab="knowledge" />} />
+      <Route path="/presales/technical-parameters" element={<PresalesCenterRedirect tab="parameters" />} />
+      <Route path="/presales/ticket-board" element={<PresalesCenterRedirect tab="reviews" />} />
+      <Route path="/presale-templates" element={<PresalesCenterRedirect tab="knowledge" />} />
     </>
   );
 }

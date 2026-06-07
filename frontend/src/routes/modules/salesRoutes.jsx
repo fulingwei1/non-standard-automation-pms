@@ -1,6 +1,7 @@
 import { Route, Navigate } from "react-router-dom";
 import { FinanceProtectedRoute } from "../../components/common/ProtectedRoute";
 import { lazyLoad } from "../lazyLoad";
+import { PresalesCenterRedirect } from "./presalesRedirects";
 
 // 客户管理
 const CustomerList = lazyLoad(() => import("../../pages/CustomerList"));
@@ -57,7 +58,6 @@ const SalesFunnel = lazyLoad(() => import("../../pages/SalesFunnel"));
 import SalesDashboard from "../../pages/SalesDashboard";
 
 // 售前相关
-const PresalesTasks = lazyLoad(() => import("../../pages/PresalesTasks"));
 const TechnicalAssessment = lazyLoad(() => import("../../pages/TechnicalAssessment"));
 const OpenItemsManagement = lazyLoad(() => import("../../pages/OpenItemsManagement"));
 const RequirementFreezeManagement = lazyLoad(() => import("../../pages/RequirementFreezeManagement"));
@@ -143,7 +143,7 @@ export function SalesRoutes() {
       <Route path="/sales/leads/:id" element={<LeadDetail />} />
       <Route path="/sales/opportunities" element={<OpportunityManagement />} />
       <Route path="/sales/opportunities/:id" element={<OpportunityDetail />} />
-      <Route path="/sales/presales-tasks" element={<PresalesTasks />} />
+      <Route path="/sales/presales-tasks" element={<PresalesCenterRedirect tab="reviews" />} />
       <Route path="/sales/presales-workbench" element={<Navigate to="/presales/workbench" replace />} />
       <Route path="/sales/presale-workbench" element={<Navigate to="/presales/workbench" replace />} />
       <Route

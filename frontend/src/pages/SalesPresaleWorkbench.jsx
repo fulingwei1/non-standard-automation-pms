@@ -75,7 +75,7 @@ const quickLinks = [
   {
     title: "售前任务",
     description: "进入售前工单、协同任务和交付追踪。",
-    to: "/sales/presales-tasks",
+    to: "/presales/technical-solutions?tab=reviews",
     icon: ClipboardList,
   },
   {
@@ -263,7 +263,7 @@ export default function SalesPresaleWorkbench() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-medium text-gray-300">售前工单</div>
-                  <Link to="/sales/presales-tasks">
+                  <Link to="/presales/technical-solutions?tab=reviews">
                     <Button variant="outline" size="sm">
                       查看全部
                     </Button>

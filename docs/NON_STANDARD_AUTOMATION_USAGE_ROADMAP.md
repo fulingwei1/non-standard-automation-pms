@@ -53,22 +53,22 @@
 | 成本估算 | 初版成本、毛利预警、报价输入 | `PresalesCostEstimation` |
 | 投标支持 | 技术标、商务标协同、投标状态 | `BiddingCenter`、`PresaleBids` |
 | 工单看板 | 销售发起支持、售前处理、经理派工 | `PresalesTasks`、`PresaleTicketBoard` |
-| 知识模板 | 方案模板、案例、知识库 | `KnowledgeBase`、`PresaleTemplates` |
+| 知识模板 | 方案模板、案例、售前复用资产 | `PresaleTemplates` |
 
 保留旧 URL，但逐步重定向到中心页签，避免老链接失效。
 
 当前已落地：
 
-- `需求调研 / 技术方案 / 技术参数 / 工单看板` 已能在售前技术方案中心内切换。
-- 技术参数仍保留独立页面，作为兼容入口。
+- `/presales/technical-solutions` 已扩展为售前技术支持中心。
+- `需求调研 / 技术方案 / 技术参数 / 成本估算 / 投标支持 / 知识模板 / 工单看板` 已能在中心内切换。
+- `/requirement-survey`、`/presales/solutions`、`/presales/technical-parameters`、`/presales/cost-estimation`、`/bidding`、`/presales/bids`、`/presales/templates`、`/presale-templates`、`/presales-tasks`、`/presales/ticket-board` 已作为兼容入口跳到中心页签。
+- `/sales/presales-tasks`、`/project-presales-tasks` 已作为兼容入口跳到 `tab=reviews`，并保留 `type/status/projectId` 等筛选条件。
+- 全局 `/knowledge-base` 暂不并入售前中心，保留为公司级知识库。
 
 下一批建议：
 
-1. 把 `/presales/cost-estimation` 合并为 `tab=cost`。
-2. 把 `/bidding`、`/presales/bids` 合并为 `tab=bids`。
-3. 把 `/knowledge-base`、`/presales/templates` 合并为 `tab=knowledge`。
-4. 把 `/presales/ticket-board` 合并为 `tab=tickets`。
-5. 销售工作台里的“发起售前支持”统一落到同一张售前工单，不再新造一套申请表。
+1. 销售工作台里的“发起售前支持”统一落到同一张售前工单，不再新造一套申请表。
+2. 把售前中心的数据加载从多个散接口逐步迁到聚合上下文接口。
 
 ## 项目管理合并方案
 
@@ -170,7 +170,7 @@
 
 ## 最近三步执行建议
 
-1. 继续把售前成本、投标、知识模板、工单看板并入售前技术支持中心。
+1. 统一销售工作台里的“发起售前支持”动作，确保商机、方案评审、技术支持都落到同一张售前工单。
 2. 新建或扩展项目管理中心，把项目看板、PMO、任务计划、甘特资源、技术评审、风险变更、成本毛利、交付收尾放到同一入口。
 3. 做一条端到端验收脚本：商机 -> 售前工单 -> 方案/成本 -> 赢单交接 -> 项目 -> 任务/评审 -> 验收/收尾。
 
