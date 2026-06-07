@@ -13,7 +13,7 @@ from app.api import deps
 from app.core import security
 from app.models.enums import AssessmentSourceTypeEnum, AssessmentStatusEnum
 from app.models.presale import PresaleSupportTicket, PresaleTicketDeliverable, PresaleTicketProgress
-from app.models.sales import Opportunity, TechnicalAssessment
+from app.models.sales import Lead, Opportunity, TechnicalAssessment
 from app.models.user import User
 from app.schemas.presale import (
     DeliverableCreate,
@@ -90,6 +90,69 @@ def _complete_opportunity_assessment_for_ticket(
     opportunity.assessment_id = assessment.id
     opportunity.assessment_status = AssessmentStatusEnum.COMPLETED.value
     opportunity.updated_by = current_user.id
+    ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
+    ticket.current_assessment_id = assessment.id
+    return assessment
+
+
+def _complete_lead_assessment_for_ticket(
+    *,
+    db: Session,
+    ticket: PresaleSupportTicket,
+    lead: Lead,
+    current_user: User,
+) -> TechnicalAssessment:
+    """补齐线索关联售前工单的技术评估闭环。"""
+    assessment = None
+    if lead.assessment_id:
+        assessment = (
+            db.query(TechnicalAssessment)
+            .filter(TechnicalAssessment.id == lead.assessment_id)
+            .first()
+        )
+
+    if assessment is None and ticket.current_assessment_id:
+        assessment = (
+            db.query(TechnicalAssessment)
+            .filter(TechnicalAssessment.id == ticket.current_assessment_id)
+            .first()
+        )
+
+    if assessment is None:
+        assessment = (
+            db.query(TechnicalAssessment)
+            .filter(
+                TechnicalAssessment.source_type == AssessmentSourceTypeEnum.LEAD.value,
+                TechnicalAssessment.source_id == lead.id,
+            )
+            .order_by(TechnicalAssessment.id.desc())
+            .first()
+        )
+
+    if assessment is None:
+        assessment = TechnicalAssessment(
+            source_type=AssessmentSourceTypeEnum.LEAD.value,
+            source_id=lead.id,
+            evaluator_id=current_user.id,
+            status=AssessmentStatusEnum.COMPLETED.value,
+            decision="推荐立项",
+            evaluated_at=datetime.now(),
+            presale_ticket_id=ticket.id,
+        )
+        db.add(assessment)
+        db.flush()
+    else:
+        assessment.source_type = AssessmentSourceTypeEnum.LEAD.value
+        assessment.source_id = lead.id
+        assessment.status = AssessmentStatusEnum.COMPLETED.value
+        assessment.decision = assessment.decision or "推荐立项"
+        assessment.evaluator_id = assessment.evaluator_id or current_user.id
+        assessment.evaluated_at = assessment.evaluated_at or datetime.now()
+        if not assessment.presale_ticket_id:
+            assessment.presale_ticket_id = ticket.id
+
+    lead.assessment_id = assessment.id
+    lead.assessment_status = AssessmentStatusEnum.COMPLETED.value
     ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
     ticket.current_assessment_id = assessment.id
     return assessment
@@ -252,6 +315,16 @@ def complete_ticket(
                 current_user=current_user,
             )
             db.add(opportunity)
+    elif ticket.lead_id:
+        lead = db.query(Lead).filter(Lead.id == ticket.lead_id).first()
+        if lead:
+            _complete_lead_assessment_for_ticket(
+                db=db,
+                ticket=ticket,
+                lead=lead,
+                current_user=current_user,
+            )
+            db.add(lead)
     else:
         ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
 

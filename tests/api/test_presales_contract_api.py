@@ -22,7 +22,14 @@ from app.models.presale import (
     TechnicalParameterTemplate,
 )
 from app.models.project import Customer, Machine, Project
-from app.models.sales import AssessmentTemplate, Opportunity, Quote, QuoteVersion, TechnicalAssessment
+from app.models.sales import (
+    AssessmentTemplate,
+    Lead,
+    Opportunity,
+    Quote,
+    QuoteVersion,
+    TechnicalAssessment,
+)
 from app.models.timesheet import Timesheet
 from app.models.user import User
 
@@ -876,6 +883,73 @@ class TestPresalesFrontendContractBehavior:
         assert context_data["assessment"]["current"]["id"] == assessment.id
         assert context_data["funnel"]["gateStatus"]["is_valid"] is True
         assert "技术评估通过" in context_data["funnel"]["gateStatus"]["checked_items"]
+
+    def test_completing_lead_ticket_updates_sales_assessment_status(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        lead = Lead(
+            lead_code=f"LD-PS-{unique}",
+            customer_name=f"线索售前闭环客户-{unique}",
+            source="展会",
+            industry="电子制造",
+            owner_id=admin_user.id,
+            assessment_status=AssessmentStatusEnum.PENDING.value,
+        )
+        db_session.add(lead)
+        db_session.commit()
+
+        created = client.post(
+            f"{prefix}/presale/tickets",
+            json={
+                "title": "线索可行性评估支持",
+                "ticket_type": "FEASIBILITY_ASSESSMENT",
+                "urgency": "NORMAL",
+                "description": "完成后应反写线索技术评估状态",
+                "customer_name": lead.customer_name,
+                "lead_id": lead.id,
+            },
+            headers=headers,
+        )
+        assert created.status_code == 201, created.text
+        ticket_id = created.json()["id"]
+
+        completed = client.put(
+            f"{prefix}/presale/tickets/{ticket_id}/complete",
+            json={"actual_hours": 4, "completion_note": "线索方案可行，建议继续跟进"},
+            headers=headers,
+        )
+        assert completed.status_code == 200, completed.text
+        completed_payload = completed.json()
+        assert completed_payload["status"] == "COMPLETED"
+        assert completed_payload["assessment_status"] == AssessmentStatusEnum.COMPLETED.value
+        assert completed_payload["current_assessment_id"] is not None
+
+        db_session.expire_all()
+        refreshed_lead = db_session.get(Lead, lead.id)
+        assert refreshed_lead.assessment_status == AssessmentStatusEnum.COMPLETED.value
+        assert refreshed_lead.assessment_id is not None
+
+        assessment = db_session.get(TechnicalAssessment, refreshed_lead.assessment_id)
+        assert assessment is not None
+        assert assessment.source_type == "LEAD"
+        assert assessment.source_id == lead.id
+        assert assessment.status == AssessmentStatusEnum.COMPLETED.value
+        assert assessment.decision == "推荐立项"
+        assert assessment.presale_ticket_id == ticket_id
+
+        refreshed_ticket = db_session.get(PresaleSupportTicket, ticket_id)
+        assert refreshed_ticket.assessment_status == AssessmentStatusEnum.COMPLETED.value
+        assert refreshed_ticket.current_assessment_id == assessment.id
 
     def test_ticket_board_keeps_processing_and_review_tickets_visible(
         self, client: TestClient, db_session: Session, admin_token: str
