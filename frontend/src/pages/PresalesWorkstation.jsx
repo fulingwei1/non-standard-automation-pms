@@ -18,7 +18,7 @@ import {
 import { PageHeader } from "../components/layout";
 import { Button } from "../components/ui/button";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { presaleApi, opportunityApi } from "../services/api";
+import { presaleApi, presaleWorkbenchApi } from "../services/api";
 
 import StatsCards from "../components/presales/workstation/StatsCards";
 import TodoTasksCard from "../components/presales/workstation/TodoTasksCard";
@@ -269,18 +269,30 @@ export default function PresalesWorkstation() {
       setLoading(true);
       setError(null);
 
-      const ticketsResponse = await presaleApi.tickets.list({
-        page: 1,
-        page_size: 50,
-        status: "PENDING,ACCEPTED,PROCESSING,REVIEW,IN_PROGRESS"
+      const overview = await presaleWorkbenchApi.loadOverview({
+        ticketParams: {
+          page: 1,
+          page_size: 50,
+          status: "PENDING,ACCEPTED,PROCESSING,REVIEW,IN_PROGRESS"
+        },
+        solutionParams: {
+          page: 1,
+          page_size: 100
+        },
+        tenderParams: {
+          page: 1,
+          page_size: 10
+        },
+        opportunityParams: {
+          page: 1,
+          page_size: 10,
+          stage: "QUALIFICATION,PROPOSAL"
+        }
       });
-      const tickets = extractItems(ticketsResponse);
-
-      const solutionsResponse = await presaleApi.solutions.list({
-        page: 1,
-        page_size: 100
-      });
-      const allSolutions = extractItems(solutionsResponse);
+      const tickets = overview.tickets.items;
+      const allSolutions = overview.solutions.items;
+      const tenders = overview.tenders.items;
+      const opportunities = overview.opportunities.items;
       const latestSolutionByTicketId = new Map();
 
       [...allSolutions]
@@ -358,12 +370,6 @@ export default function PresalesWorkstation() {
 
       setOngoingSolutions(transformedSolutions);
 
-      const tendersResponse = await presaleApi.tenders.list({
-        page: 1,
-        page_size: 10
-      });
-      const tenders = extractItems(tendersResponse);
-
       const transformedTenders = (tenders || []).map((tender) => {
         const tenderStatus = mapTenderStatus(tender.result);
 
@@ -381,13 +387,6 @@ export default function PresalesWorkstation() {
       });
 
       setRecentTenders(transformedTenders);
-
-      const opportunitiesResponse = await opportunityApi.list({
-        page: 1,
-        page_size: 10,
-        stage: "QUALIFICATION,PROPOSAL"
-      });
-      const opportunities = extractItems(opportunitiesResponse);
 
       const transformedOpportunities = (opportunities || []).map((opp) => ({
         id: opp.id,

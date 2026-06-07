@@ -248,6 +248,14 @@ describe('presaleWorkbenchApi', () => {
           items: [{ id: 2, solution_name: '整线方案 A' }],
           total: 1,
         },
+        tenders: {
+          items: [{ id: 6, tender_no: 'TB-001', tender_name: 'FCT 投标项目' }],
+          total: 1,
+        },
+        opportunities: {
+          items: [{ id: 7, opp_code: 'OPP-001', opp_name: 'FCT 商机' }],
+          total: 1,
+        },
         templates: {
           assessment: {
             items: [{ id: 3, template_name: '标准评估模板' }],
@@ -288,6 +296,8 @@ describe('presaleWorkbenchApi', () => {
 
     expect(overview.tickets.total).toBe(1);
     expect(overview.solutions.total).toBe(1);
+    expect(overview.tenders.items[0].tender_no).toBe('TB-001');
+    expect(overview.opportunities.items[0].opp_code).toBe('OPP-001');
     expect(overview.templates.assessment.total).toBe(1);
     expect(overview.funnel.summary.leads).toBe(12);
     expect(overview.funnel.health.overall_health.score).toBe(78);

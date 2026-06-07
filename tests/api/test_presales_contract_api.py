@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """售前前后端 API 契约对账测试。"""
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from uuid import uuid4
 
@@ -15,6 +15,7 @@ from app.models.enums import AssessmentStatusEnum, LeadOutcomeEnum
 from app.models.presale import (
     PresaleSolution,
     PresaleSupportTicket,
+    PresaleTenderRecord,
     PresaleTicketProgress,
     TechnicalParameterTemplate,
 )
@@ -187,7 +188,18 @@ class TestPresalesFrontendContractBehavior:
             author_name=admin_user.real_name or admin_user.username,
             status="DRAFT",
         )
-        db_session.add(solution)
+        tender = PresaleTenderRecord(
+            ticket_id=ticket.id,
+            opportunity_id=opportunity.id,
+            tender_no=f"TENDER-WBO-{unique}",
+            tender_name=f"工作台概览投标-{unique}",
+            customer_name=customer.customer_name,
+            deadline=datetime.now(),
+            budget_amount=Decimal("360000"),
+            result="PENDING",
+            leader_id=admin_user.id,
+        )
+        db_session.add_all([solution, tender])
         db_session.commit()
 
         try:
@@ -206,6 +218,14 @@ class TestPresalesFrontendContractBehavior:
                 for item in data["solutions"]["items"]
             )
             assert any(
+                item["tender_no"] == tender.tender_no
+                for item in data["tenders"]["items"]
+            )
+            assert any(
+                item["id"] == opportunity.id
+                for item in data["opportunities"]["items"]
+            )
+            assert any(
                 item["template_code"] == assessment_template.template_code
                 for item in data["templates"]["assessment"]["items"]
             )
@@ -216,6 +236,9 @@ class TestPresalesFrontendContractBehavior:
             assert data["funnel"]["summary"]["opportunities"] >= 1
             assert data["meta"]["failures"] == []
         finally:
+            db_session.query(PresaleTenderRecord).filter(
+                PresaleTenderRecord.id == tender.id
+            ).delete(synchronize_session=False)
             db_session.query(PresaleSolution).filter(PresaleSolution.id == solution.id).delete(
                 synchronize_session=False
             )

@@ -8,15 +8,17 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.api.v1.endpoints.presale.bids import build_tender_response
 from app.api.v1.endpoints.presale.proposals import build_solution_response
 from app.api.v1.endpoints.presale.tickets.utils import build_ticket_response
 from app.core import security
 from app.models.presale import (
     PresaleSolution,
     PresaleSupportTicket,
+    PresaleTenderRecord,
     TechnicalParameterTemplate,
 )
 from app.models.sales import (
@@ -94,6 +96,61 @@ def _ticket_payload(ticket: PresaleSupportTicket) -> dict[str, Any]:
 
 def _solution_payload(solution: PresaleSolution) -> dict[str, Any]:
     return _dump_response(build_solution_response(solution))
+
+
+def _tender_payload(tender: PresaleTenderRecord) -> dict[str, Any]:
+    return _dump_response(build_tender_response(tender))
+
+
+def _opportunity_payload(opportunity: Opportunity) -> dict[str, Any]:
+    data = _model_to_dict(
+        opportunity,
+        only=[
+            "id",
+            "opp_code",
+            "lead_id",
+            "customer_id",
+            "opp_name",
+            "project_type",
+            "equipment_type",
+            "stage",
+            "probability",
+            "est_amount",
+            "est_margin",
+            "expected_close_date",
+            "budget_range",
+            "decision_chain",
+            "delivery_window",
+            "acceptance_basis",
+            "score",
+            "risk_level",
+            "owner_id",
+            "updated_by",
+            "gate_status",
+            "gate_passed_at",
+            "assessment_id",
+            "requirement_maturity",
+            "assessment_status",
+            "priority_score",
+            "created_at",
+            "updated_at",
+        ],
+    )
+    customer = getattr(opportunity, "customer", None)
+    owner = getattr(opportunity, "owner", None)
+    updater = getattr(opportunity, "updater", None)
+    data["customer_name"] = getattr(customer, "customer_name", None) if customer else None
+    data["owner_name"] = (
+        getattr(owner, "real_name", None) or getattr(owner, "username", None)
+        if owner
+        else None
+    )
+    data["updated_by_name"] = (
+        getattr(updater, "real_name", None) or getattr(updater, "username", None)
+        if updater
+        else None
+    )
+    return data
 
 
 def _assessment_payload(assessment: TechnicalAssessment) -> dict[str, Any]:
@@ -470,12 +527,22 @@ def get_workbench_overview(
     db: Session = Depends(deps.get_db),
     ticket_page: int = Query(1, ge=1),
     ticket_page_size: int = Query(6, ge=1, le=50),
+    ticket_status: Optional[str] = Query(None),
     solution_page: int = Query(1, ge=1),
-    solution_page_size: int = Query(6, ge=1, le=50),
+    solution_page_size: int = Query(6, ge=1, le=100),
+    tender_page: int = Query(1, ge=1),
+    tender_page_size: int = Query(6, ge=1, le=50),
+    opportunity_page: int = Query(1, ge=1),
+    opportunity_page_size: int = Query(6, ge=1, le=50),
+    opportunity_stage: Optional[str] = Query(None),
     current_user: User = Depends(security.get_current_active_user),
 ) -> ResponseModel:
     """聚合售前工作台首页所需数据，避免前端拼散接口。"""
     ticket_query = db.query(PresaleSupportTicket)
+    if ticket_status:
+        statuses = [item.strip() for item in ticket_status.split(",") if item.strip()]
+        if statuses:
+            ticket_query = ticket_query.filter(PresaleSupportTicket.status.in_(statuses))
     ticket_total = ticket_query.count()
     ticket_offset = (ticket_page - 1) * ticket_page_size
     tickets = (
@@ -495,6 +562,34 @@ def get_workbench_overview(
         .all()
     )
 
+    tender_query = db.query(PresaleTenderRecord)
+    tender_total = tender_query.count()
+    tender_offset = (tender_page - 1) * tender_page_size
+    tenders = (
+        tender_query.order_by(desc(PresaleTenderRecord.created_at), desc(PresaleTenderRecord.id))
+        .offset(tender_offset)
+        .limit(tender_page_size)
+        .all()
+    )
+
+    opportunity_query = db.query(Opportunity).options(
+        joinedload(Opportunity.customer),
+        joinedload(Opportunity.owner),
+        joinedload(Opportunity.updater),
+    )
+    if opportunity_stage:
+        stages = [item.strip() for item in opportunity_stage.split(",") if item.strip()]
+        if stages:
+            opportunity_query = opportunity_query.filter(Opportunity.stage.in_(stages))
+    opportunity_total = opportunity_query.count()
+    opportunity_offset = (opportunity_page - 1) * opportunity_page_size
+    opportunities = (
+        opportunity_query.order_by(desc(Opportunity.created_at), desc(Opportunity.id))
+        .offset(opportunity_offset)
+        .limit(opportunity_page_size)
+        .all()
+    )
+
     summary = _funnel_summary(db)
     return ResponseModel(
         message="查询成功",
@@ -510,6 +605,18 @@ def get_workbench_overview(
                 solution_total,
                 solution_page,
                 solution_page_size,
+            ),
+            "tenders": _page_payload(
+                [_tender_payload(tender) for tender in tenders],
+                tender_total,
+                tender_page,
+                tender_page_size,
+            ),
+            "opportunities": _page_payload(
+                [_opportunity_payload(opportunity) for opportunity in opportunities],
+                opportunity_total,
+                opportunity_page,
+                opportunity_page_size,
             ),
             "templates": {
                 "assessment": _active_assessment_templates(db, limit=20),

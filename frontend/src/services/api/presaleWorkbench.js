@@ -300,12 +300,20 @@ export const presaleWorkbenchApi = {
   async loadOverview({
     ticketParams = { page: 1, page_size: 6 },
     solutionParams = { page: 1, page_size: 6 },
+    tenderParams = { page: 1, page_size: 6 },
+    opportunityParams = { page: 1, page_size: 6 },
   } = {}) {
     const response = await this.getOverview(compactParams({
       ticket_page: ticketParams.page,
       ticket_page_size: ticketParams.page_size,
+      ticket_status: ticketParams.status,
       solution_page: solutionParams.page,
       solution_page_size: solutionParams.page_size,
+      tender_page: tenderParams.page,
+      tender_page_size: tenderParams.page_size,
+      opportunity_page: opportunityParams.page,
+      opportunity_page_size: opportunityParams.page_size,
+      opportunity_stage: opportunityParams.stage,
     }));
     const overview = unwrapResponse(response) || {};
     const funnel = overview.funnel || {};
@@ -313,6 +321,8 @@ export const presaleWorkbenchApi = {
     return {
       tickets: normalizeListPayload(overview.tickets),
       solutions: normalizeListPayload(overview.solutions),
+      tenders: normalizeListPayload(overview.tenders),
+      opportunities: normalizeListPayload(overview.opportunities),
       templates: {
         assessment: normalizeListPayload(overview.templates?.assessment),
         technical: normalizeListPayload(overview.templates?.technical),
