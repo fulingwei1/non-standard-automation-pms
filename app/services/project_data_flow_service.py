@@ -33,7 +33,7 @@ class ProjectDataFlowService:
         project = self.db.query(Project).filter(Project.id == project_id).first()
         if not project:
             return {"error": "项目不存在"}
-        
+
         # 查询项目 WBS 中会进入生产执行的任务
         from app.models.progress import Task
 
@@ -198,6 +198,19 @@ class ProjectDataFlowService:
         project = self.db.query(Project).filter(Project.id == project_id).first()
         if not project:
             return {"error": "项目不存在"}
+
+        existing_schedule = self.db.query(ProjectDeliverySchedule).filter(
+            ProjectDeliverySchedule.project_id == project_id,
+            ProjectDeliverySchedule.is_active.is_(True),
+        ).first()
+        if existing_schedule:
+            return {
+                "project_id": project_id,
+                "schedule_id": existing_schedule.id,
+                "schedule_no": existing_schedule.schedule_no,
+                "tasks_created": 0,
+                "skipped_existing": True,
+            }
         
         # 生成计划编号
         schedule_no = f"PDS-{datetime.now().strftime('%Y')}-{project_id:03d}"
@@ -217,7 +230,7 @@ class ProjectDataFlowService:
         self.db.flush()
         
         # 从项目里程碑生成交付任务
-        from app.models.project.lifecycle import ProjectMilestone
+        from app.models.project import ProjectMilestone
         
         milestones = self.db.query(ProjectMilestone).filter(
             ProjectMilestone.project_id == project_id
@@ -225,11 +238,13 @@ class ProjectDataFlowService:
         
         tasks_created = 0
         for i, ms in enumerate(milestones):
+            if not ms.planned_date:
+                continue
             task = ProjectDeliveryTask(
                 schedule_id=schedule.id,
                 task_no=f"T{i+1:03d}",
                 task_type="PRODUCTION",
-                task_name=ms.milestone_name,
+                task_name=ms.milestone_name or ms.milestone_code or f"里程碑 {ms.id}",
                 planned_start=ms.planned_date,
                 planned_end=ms.planned_date,
                 status="PENDING",
