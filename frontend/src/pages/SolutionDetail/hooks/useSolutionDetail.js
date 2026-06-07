@@ -113,9 +113,9 @@ export function useSolutionDetail() {
             }
 
             const amountSource =
-                solutionData.estimated_cost != null
-                    ? solutionData.estimated_cost
-                    : solutionData.suggested_price;
+                solutionData.suggested_price != null
+                    ? solutionData.suggested_price
+                    : solutionData.estimated_cost;
 
             // Transform solution data
             const transformedSolution = {

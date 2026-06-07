@@ -4,6 +4,20 @@ import { Card, CardContent } from "../../../components/ui/card";
 import { Progress } from "../../../components/ui/progress";
 import { fadeIn } from "../../../lib/animations";
 
+function formatSolutionAmount(amountWan) {
+    const amount = Number(amountWan);
+    if (!Number.isFinite(amount) || amount <= 0) {
+        return "¥0";
+    }
+
+    if (amount < 1) {
+        const amountYuan = amount * 10000;
+        return `¥${amountYuan.toLocaleString(undefined, { maximumFractionDigits: 0 })}元`;
+    }
+
+    return `¥${amount.toLocaleString(undefined, { maximumFractionDigits: 1 })}万`;
+}
+
 export function SolutionStatsCards({ solution }) {
     return (
         <>
@@ -50,7 +64,7 @@ export function SolutionStatsCards({ solution }) {
                             <div>
                                 <p className="text-xs text-slate-500">方案金额</p>
                                 <p className="text-sm font-medium text-emerald-400">
-                                    ¥{solution.amount}万
+                                    {formatSolutionAmount(solution.amount)}
                                 </p>
                             </div>
                         </div>

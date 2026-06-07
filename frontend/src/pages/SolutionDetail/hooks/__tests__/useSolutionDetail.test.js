@@ -84,7 +84,7 @@ describe("useSolutionDetail", () => {
       code: "SOL-20260607-001",
       name: "华南电子FCT方案",
       status: "approved",
-      amount: 12,
+      amount: 18,
       opportunityId: 66,
       opportunity: "华南电子二期",
       salesPerson: "宋魁",
