@@ -10,7 +10,7 @@ import { DEFAULT_FORM_DATA } from "../constants";
  */
 export function useTechnicalReviewForm(reviewId) {
     const navigate = useNavigate();
-    const isNew = reviewId === "new";
+    const isNew = !reviewId || reviewId === "new";
 
     const [loading, setLoading] = useState(!isNew);
     const [saving, setSaving] = useState(false);
