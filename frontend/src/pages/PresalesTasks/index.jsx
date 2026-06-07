@@ -415,6 +415,15 @@ export default function PresalesTasks({ embedded = false } = {}) {
 
           {/* 搜索和视图切换 */}
           <div className="flex items-center gap-3">
+            {embedded && (
+              <Button
+                className="flex items-center gap-2"
+                onClick={() => setShowCreateDialog(true)}
+              >
+                <Plus className="w-4 h-4" />
+                新建任务
+              </Button>
+            )}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input

@@ -90,11 +90,11 @@ function toLocation(initialEntry) {
   };
 }
 
-function renderPage(initialEntry = '/presales-tasks') {
+function renderPage(initialEntry = '/presales-tasks', props = {}) {
   useLocation.mockReturnValue(toLocation(initialEntry));
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
-      <PresalesTasks />
+      <PresalesTasks {...props} />
     </MemoryRouter>,
   );
 }
@@ -226,10 +226,13 @@ describe('PresalesTasks', () => {
   });
 
   it('keeps project context when loading and creating tasks from the unified center', async () => {
-    renderPage({
-      pathname: '/presales/technical-solutions',
-      search: '?tab=reviews&type=support&status=pending&opportunity_id=2&ticket_id=501&project_id=42',
-    });
+    renderPage(
+      {
+        pathname: '/presales/technical-solutions',
+        search: '?tab=reviews&type=support&status=pending&opportunity_id=2&ticket_id=501&project_id=42',
+      },
+      { embedded: true },
+    );
 
     await waitFor(() => {
       expect(presaleApi.tickets.list).toHaveBeenLastCalledWith({
