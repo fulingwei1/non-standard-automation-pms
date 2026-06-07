@@ -38,6 +38,7 @@ describe("ProjectWorkspace", () => {
           id: 1,
           project_name: "FCT整线项目",
           project_code: "PRJ-001",
+          lead_id: 2026,
           progress_pct: 20,
           health: "H1",
           contract_amount: 580000,
@@ -88,6 +89,7 @@ describe("ProjectWorkspace", () => {
               status: "COMPLETED",
               assessment_status: "COMPLETED",
               current_assessment_id: 701,
+              lead_id: 2026,
               opportunity_id: 2,
               project_id: 1,
               applicant_name: "张销售",
@@ -274,7 +276,7 @@ describe("ProjectWorkspace", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/projects/1/workspace?ticket_id=91&opportunity_id=2"]}>
+      <MemoryRouter initialEntries={["/projects/1/workspace"]}>
         <Routes>
           <Route path="/projects/:id/workspace" element={<ProjectWorkspace />} />
         </Routes>
@@ -289,11 +291,11 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("PST-091")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /FCT测试方案/ })).toHaveAttribute(
       "href",
-      "/solutions/88?ticket_id=91&opportunity_id=2&project_id=1",
+      "/solutions/88?ticket_id=91&lead_id=2026&opportunity_id=2&project_id=1",
     );
     expect(screen.getByRole("link", { name: /PST-091/ })).toHaveAttribute(
       "href",
-      "/presales/technical-solutions?tab=reviews&type=support&ticket_id=91&opportunity_id=2&project_id=1",
+      "/presales/technical-solutions?tab=reviews&type=support&ticket_id=91&lead_id=2026&opportunity_id=2&project_id=1",
     );
     expect(screen.getByText(/18.5 小时/)).toBeInTheDocument();
     expect(screen.getByText("PM提前介入")).toBeInTheDocument();
@@ -323,11 +325,11 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("解决交付排产冲突")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /处理质检不合格项/ })).toHaveAttribute(
       "href",
-      "/quality/inspections?project_id=1&ticket_id=91&opportunity_id=2",
+      "/quality/inspections?project_id=1&ticket_id=91&lead_id=2026&opportunity_id=2",
     );
     expect(screen.getByRole("link", { name: /解决交付排产冲突/ })).toHaveAttribute(
       "href",
-      "/projects/1/delivery?ticket_id=91&opportunity_id=2&project_id=1",
+      "/projects/1/delivery?ticket_id=91&lead_id=2026&opportunity_id=2&project_id=1",
     );
   });
 });

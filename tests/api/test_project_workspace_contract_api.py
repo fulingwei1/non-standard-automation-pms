@@ -19,7 +19,15 @@ from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.production import ProductionPlan, QualityInspection, WorkOrder
 from app.models.project import Customer, Project
 from app.models.project_delivery import ProjectDeliverySchedule, ProjectDeliveryTask
-from app.models.sales import AssessmentRisk, Contract, Opportunity, Quote, QuoteVersion, TechnicalAssessment
+from app.models.sales import (
+    AssessmentRisk,
+    Contract,
+    Lead,
+    Opportunity,
+    Quote,
+    QuoteVersion,
+    TechnicalAssessment,
+)
 from app.models.technical_review import TechnicalReview
 from app.models.user import User
 from app.models.acceptance import AcceptanceOrder
@@ -534,6 +542,140 @@ class TestProjectWorkspaceHandoverContext:
         assert payload["baseline_cost"]["presale_suggested_price"] == 210000.0
         assert "presale_solution" not in payload["handover_status"]["missing"]
         assert "baseline_cost" not in payload["handover_status"]["missing"]
+
+    def test_project_workspace_context_reuses_lead_scoped_presale_ticket_and_solution(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-PWL-{unique}",
+            customer_name=f"线索交接客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        lead = Lead(
+            lead_code=f"LEADPWL{unique[:6]}",
+            customer_name=customer.customer_name,
+            industry="电子制造",
+            demand_summary="线索阶段已完成现场需求调研",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([customer, lead])
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPPPWL{unique[:6]}",
+            lead_id=lead.id,
+            customer=customer,
+            opp_name=f"线索转商机-{unique}",
+            project_type="FCT",
+            equipment_type="EOL",
+            stage="WON",
+            probability=95,
+            est_amount=Decimal("420000"),
+            expected_close_date=date.today(),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        project = Project(
+            project_code=f"PRJPWL{unique[:6]}",
+            project_name=f"线索转项目-{unique}",
+            customer=customer,
+            customer_name=customer.customer_name,
+            lead_id=lead.id,
+            opportunity=opportunity,
+            project_type="FCT",
+            product_category="测试设备",
+            industry="电子制造",
+            contract_amount=Decimal("420000"),
+            budget_amount=Decimal("260000"),
+            stage="S1",
+            status="ST01",
+            health="H1",
+            pm_id=admin_user.id,
+            pm_name=admin_user.real_name or admin_user.username,
+            created_by=admin_user.id,
+        )
+        ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-PWL-{unique}",
+            title=f"线索售前工单-{unique}",
+            ticket_type="REQUIREMENT_RESEARCH",
+            urgency="NORMAL",
+            lead_id=lead.id,
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            actual_hours=Decimal("9.5"),
+            created_by=admin_user.id,
+        )
+        db_session.add_all([opportunity, project, ticket])
+        db_session.flush()
+
+        assessment = TechnicalAssessment(
+            source_type="LEAD",
+            source_id=lead.id,
+            evaluator_id=admin_user.id,
+            status=AssessmentStatusEnum.COMPLETED.value,
+            total_score=78,
+            decision="RECOMMEND",
+            presale_ticket_id=ticket.id,
+        )
+        db_session.add(assessment)
+        db_session.flush()
+        lead.assessment_id = assessment.id
+        opportunity.assessment_id = assessment.id
+        ticket.current_assessment_id = assessment.id
+        ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
+
+        solution = PresaleSolution(
+            solution_no=f"SOL-PWL-{unique}",
+            name=f"线索售前方案-{unique}",
+            solution_type="CUSTOM",
+            industry="电子制造",
+            test_type="FCT",
+            ticket_id=ticket.id,
+            customer_id=customer.id,
+            requirement_summary="线索阶段冻结的需求摘要",
+            solution_overview="线索售前阶段形成的项目方案",
+            technical_spec="EOL/FCT测试技术规格",
+            estimated_cost=Decimal("255000"),
+            suggested_price=Decimal("420000"),
+            status="APPROVED",
+            review_status="APPROVED",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        db_session.add(solution)
+        db_session.commit()
+
+        response = client.get(
+            f"{prefix}/project-workspace/projects/{project.id}/workspace/context",
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+
+        payload = response.json()
+        assert payload["project"]["id"] == project.id
+        assert payload["presale_tickets"][0]["id"] == ticket.id
+        assert payload["presale_tickets"][0]["lead_id"] == lead.id
+        assert payload["presale_solutions"][0]["id"] == solution.id
+        assert payload["presale_solutions"][0]["ticket_id"] == ticket.id
+        assert payload["technical_assessment"]["current"]["id"] == assessment.id
+        assert payload["technical_assessment"]["current"]["source_type"] == "LEAD"
+        assert payload["baseline_cost"]["presale_estimated_cost"] == 255000.0
+        assert "presale_solution" not in payload["handover_status"]["missing"]
+        assert "technical_assessment" not in payload["handover_status"]["missing"]
 
     def test_project_workspace_downstream_context_includes_engineering_bom_and_kitting(
         self, client: TestClient, db_session: Session, admin_token: str

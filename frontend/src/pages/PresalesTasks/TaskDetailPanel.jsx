@@ -63,10 +63,10 @@ function buildProjectWorkspacePath(task) {
 
 function buildTechnicalAssessmentPath(task) {
   let path = "";
-  if (task.leadId) {
-    path = `/sales/assessments/lead/${task.leadId}`;
-  } else if (task.opportunityId) {
+  if (task.opportunityId) {
     path = `/sales/assessments/opportunity/${task.opportunityId}`;
+  } else if (task.leadId) {
+    path = `/sales/assessments/lead/${task.leadId}`;
   } else {
     return "";
   }

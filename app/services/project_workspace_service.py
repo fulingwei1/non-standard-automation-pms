@@ -64,6 +64,9 @@ def build_project_basic_info(project: Project) -> Dict[str, Any]:
         "progress_pct": float(project.progress_pct or 0),
         "contract_amount": float(project.contract_amount or 0),
         "pm_name": project.pm_name,
+        "lead_id": project.lead_id,
+        "opportunity_id": project.opportunity_id,
+        "contract_id": project.contract_id,
     }
 
 
@@ -497,6 +500,7 @@ def _build_presale_ticket_payload(ticket: PresaleSupportTicket) -> Dict[str, Any
         "status": ticket.status,
         "customer_id": ticket.customer_id,
         "customer_name": ticket.customer_name,
+        "lead_id": getattr(ticket, "lead_id", None),
         "opportunity_id": ticket.opportunity_id,
         "project_id": ticket.project_id,
         "assessment_status": getattr(ticket, "assessment_status", None),
@@ -675,11 +679,20 @@ def build_technical_assessment_handover_context(
     }
 
 
+def _project_presale_ticket_filters(project: Project) -> List[Any]:
+    filters = [PresaleSupportTicket.project_id == project.id]
+    if project.opportunity_id:
+        filters.append(PresaleSupportTicket.opportunity_id == project.opportunity_id)
+    if project.lead_id:
+        filters.append(PresaleSupportTicket.lead_id == project.lead_id)
+    return filters
+
+
 def _get_presale_solutions(db: Session, project: Project, limit: int = 10) -> List[PresaleSolution]:
     ticket_ids = [
         row[0]
         for row in db.query(PresaleSupportTicket.id)
-        .filter(PresaleSupportTicket.project_id == project.id)
+        .filter(or_(*_project_presale_ticket_filters(project)))
         .all()
     ]
 
@@ -705,9 +718,7 @@ def _get_presale_tickets(
     presale_solutions: List[PresaleSolution],
     limit: int = 10,
 ) -> List[PresaleSupportTicket]:
-    filters = [PresaleSupportTicket.project_id == project.id]
-    if project.opportunity_id:
-        filters.append(PresaleSupportTicket.opportunity_id == project.opportunity_id)
+    filters = _project_presale_ticket_filters(project)
 
     solution_ticket_ids = {
         solution.ticket_id

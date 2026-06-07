@@ -94,6 +94,14 @@ function buildPresaleSolutionPath(solution, ticket, opportunity, project) {
   );
   appendContextParam(
     params,
+    "lead_id",
+    getFirstValue(solution, ["lead_id", "leadId"]) ||
+      getFirstValue(ticket, ["lead_id", "leadId"]) ||
+      getFirstValue(opportunity, ["lead_id", "leadId"]) ||
+      getFirstValue(project, ["lead_id", "leadId"]),
+  );
+  appendContextParam(
+    params,
     "opportunity_id",
     getFirstValue(solution, ["opportunity_id", "opportunityId"]) || opportunity?.id,
   );
@@ -117,6 +125,13 @@ function buildPresaleTicketPath(ticket, opportunity, project) {
   params.set("tab", "reviews");
   params.set("type", ticket?.ticket_type === "SOLUTION_REVIEW" ? "review" : "support");
   appendContextParam(params, "ticket_id", ticketId);
+  appendContextParam(
+    params,
+    "lead_id",
+    getFirstValue(ticket, ["lead_id", "leadId"]) ||
+      getFirstValue(opportunity, ["lead_id", "leadId"]) ||
+      getFirstValue(project, ["lead_id", "leadId"]),
+  );
   appendContextParam(
     params,
     "opportunity_id",
@@ -144,6 +159,7 @@ function buildContextualActionPath(href, context) {
 
   const url = new URL(href, "http://localhost");
   appendMissingContextParam(url.searchParams, "ticket_id", context.ticketId);
+  appendMissingContextParam(url.searchParams, "lead_id", context.leadId);
   appendMissingContextParam(url.searchParams, "opportunity_id", context.opportunityId);
   appendMissingContextParam(url.searchParams, "project_id", context.projectId);
 
@@ -246,6 +262,12 @@ export default function ProjectWorkspace() {
       currentParams.get("ticket_id") ||
       currentParams.get("ticketId") ||
       getFirstValue(primaryTicket, ["id", "ticket_id", "ticketId"]),
+    leadId:
+      currentParams.get("lead_id") ||
+      currentParams.get("leadId") ||
+      getFirstValue(primaryTicket, ["lead_id", "leadId"]) ||
+      getFirstValue(handoverContext?.opportunity, ["lead_id", "leadId"]) ||
+      getFirstValue(project, ["lead_id", "leadId"]),
     opportunityId:
       currentParams.get("opportunity_id") ||
       currentParams.get("opportunityId") ||
