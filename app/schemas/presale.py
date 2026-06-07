@@ -190,6 +190,7 @@ class SolutionUpdate(BaseModel):
     technical_spec: Optional[str] = None
     estimated_cost: Optional[Decimal] = None
     suggested_price: Optional[Decimal] = None
+    cost_breakdown: Optional[Dict[str, Any]] = None
     estimated_hours: Optional[int] = None
     estimated_duration: Optional[int] = None
     project_id: Optional[int] = None

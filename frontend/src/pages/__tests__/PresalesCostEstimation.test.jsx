@@ -48,6 +48,15 @@ vi.mock("../../components/presales/CostEstimateForm", () => ({
             costData: {
               estimated_cost: 120000,
               suggested_price: 168000,
+              cost_breakdown: {
+                mechanical: 55000,
+                electrical: 32000,
+                software: 18000,
+                standard: 12000,
+                labor: 26000,
+                other: 7000,
+                notes: "含夹具、PLC、电控和调试人工",
+              },
             },
           })
         }
@@ -125,6 +134,15 @@ describe("PresalesCostEstimation", () => {
       expect(presaleApi.solutions.update).toHaveBeenCalledWith(88, {
         estimated_cost: 120000,
         suggested_price: 168000,
+        cost_breakdown: {
+          mechanical: 55000,
+          electrical: 32000,
+          software: 18000,
+          standard: 12000,
+          labor: 26000,
+          other: 7000,
+          notes: "含夹具、PLC、电控和调试人工",
+        },
       });
     });
     expect(toast.success).toHaveBeenCalledWith("成本估算草稿已保存");

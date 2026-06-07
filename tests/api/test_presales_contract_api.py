@@ -1251,6 +1251,64 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(Customer).filter(Customer.id == customer.id).delete()
             db_session.commit()
 
+    def test_solution_update_preserves_cost_breakdown(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        created = client.post(
+            f"{prefix}/presale/proposals/solutions",
+            json={
+                "name": f"成本明细方案-{unique}",
+                "solution_type": "CUSTOM",
+                "requirement_summary": "用于验证售前成本明细保存",
+            },
+            headers=headers,
+        )
+        assert created.status_code == 201, created.text
+        solution_id = created.json()["id"]
+
+        cost_breakdown = {
+            "mechanical": 55000,
+            "electrical": 32000,
+            "software": 18000,
+            "standard": 12000,
+            "labor": 26000,
+            "other": 7000,
+            "notes": "含夹具、PLC、电控和调试人工",
+        }
+
+        try:
+            updated = client.put(
+                f"{prefix}/presale/proposals/solutions/{solution_id}",
+                json={
+                    "estimated_cost": 150000,
+                    "suggested_price": 240000,
+                    "cost_breakdown": cost_breakdown,
+                },
+                headers=headers,
+            )
+            assert updated.status_code == 200, updated.text
+            payload = updated.json()
+            assert payload["estimated_cost"] == 150000.0
+            assert payload["suggested_price"] == 240000.0
+            assert payload["cost_breakdown"] == cost_breakdown
+
+            db_session.expire_all()
+            solution = db_session.get(PresaleSolution, solution_id)
+            assert solution is not None
+            assert solution.cost_breakdown == cost_breakdown
+        finally:
+            db_session.query(PresaleSolution).filter(PresaleSolution.id == solution_id).delete(
+                synchronize_session=False
+            )
+            db_session.commit()
+
     def test_solution_submit_review_moves_out_of_draft(
         self, client: TestClient, db_session: Session, admin_token: str
     ):
