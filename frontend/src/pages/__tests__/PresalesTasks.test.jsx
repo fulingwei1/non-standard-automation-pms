@@ -225,6 +225,45 @@ describe('PresalesTasks', () => {
     expect(screen.getByText('¥80万')).toBeInTheDocument();
   });
 
+  it('keeps project context when loading and creating tasks from the unified center', async () => {
+    renderPage({
+      pathname: '/presales/technical-solutions',
+      search: '?tab=reviews&type=support&status=pending&opportunity_id=2&ticket_id=501&project_id=42',
+    });
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.list).toHaveBeenLastCalledWith({
+        page: 1,
+        page_size: 100,
+        status: 'PENDING',
+        opportunity_id: '2',
+        ticket_id: '501',
+        project_id: '42',
+      });
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /新建任务/ }));
+    fireEvent.change(screen.getByLabelText('任务标题'), {
+      target: { value: '项目现场方案澄清' },
+    });
+    fireEvent.change(screen.getByLabelText('任务说明'), {
+      target: { value: '补充项目现场约束和验收口径' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '创建任务' }));
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.create).toHaveBeenCalledWith({
+        title: '项目现场方案澄清',
+        ticket_type: 'SOLUTION_DESIGN',
+        urgency: 'NORMAL',
+        description: '补充项目现场约束和验收口径',
+        opportunity_id: 2,
+        project_id: 42,
+      });
+    });
+  });
+
   it('does not show progress update controls for backend REVIEW tickets', async () => {
     presaleApi.tickets.list.mockResolvedValue({
       data: {

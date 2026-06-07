@@ -503,6 +503,31 @@ class TestPresalesFrontendContractBehavior:
         prefix = settings.API_V1_PREFIX
         unique = uuid4().hex[:8].upper()
 
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+        first_project = Project(
+            project_code=f"PRJ-PSF-A-{unique}",
+            project_name=f"售前过滤项目A-{unique}",
+            customer_name="客户A",
+            project_type="FCT",
+            status="ST01",
+            stage="S1",
+            health="H1",
+            created_by=admin_user.id,
+        )
+        second_project = Project(
+            project_code=f"PRJ-PSF-B-{unique}",
+            project_name=f"售前过滤项目B-{unique}",
+            customer_name="客户B",
+            project_type="ICT",
+            status="ST01",
+            stage="S1",
+            health="H1",
+            created_by=admin_user.id,
+        )
+        db_session.add_all([first_project, second_project])
+        db_session.flush()
+
         first = client.post(
             f"{prefix}/presale/tickets",
             json={
@@ -511,6 +536,7 @@ class TestPresalesFrontendContractBehavior:
                 "urgency": "NORMAL",
                 "customer_name": "客户A",
                 "opportunity_id": 9001,
+                "project_id": first_project.id,
             },
             headers=headers,
         )
@@ -525,6 +551,7 @@ class TestPresalesFrontendContractBehavior:
                 "urgency": "NORMAL",
                 "customer_name": "客户B",
                 "opportunity_id": 9002,
+                "project_id": second_project.id,
             },
             headers=headers,
         )
@@ -551,9 +578,22 @@ class TestPresalesFrontendContractBehavior:
             ticket_items = by_ticket.json()["items"]
             assert [item["id"] for item in ticket_items] == [second_id]
             assert ticket_items[0]["opportunity_id"] == 9002
+
+            by_project = client.get(
+                f"{prefix}/presale/tickets",
+                params={"project_id": first_project.id},
+                headers=headers,
+            )
+            assert by_project.status_code == 200, by_project.text
+            project_items = by_project.json()["items"]
+            assert [item["id"] for item in project_items] == [first_id]
+            assert project_items[0]["project_id"] == first_project.id
         finally:
             db_session.query(PresaleSupportTicket).filter(
                 PresaleSupportTicket.id.in_([first_id, second_id])
+            ).delete(synchronize_session=False)
+            db_session.query(Project).filter(
+                Project.id.in_([first_project.id, second_project.id])
             ).delete(synchronize_session=False)
             db_session.commit()
 

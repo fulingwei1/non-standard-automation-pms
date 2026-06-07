@@ -45,8 +45,18 @@ const getInitialTaskFilters = (search) => {
     type: params.get("type") || "all",
     status: params.get("status") || "all",
     opportunityId: params.get("opportunity_id") || "",
-    ticketId: params.get("ticket_id") || ""
+    ticketId: params.get("ticket_id") || "",
+    projectId: params.get("project_id") || ""
   };
+};
+
+const parseContextId = (value) => {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 };
 
 const getTicketItems = (response) => {
@@ -86,6 +96,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
   const [sourceFilters, setSourceFilters] = useState({
     opportunityId: initialFilters.opportunityId,
     ticketId: initialFilters.ticketId,
+    projectId: initialFilters.projectId,
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTask, setSelectedTask] = useState(null);
@@ -177,6 +188,10 @@ export default function PresalesTasks({ embedded = false } = {}) {
         params.ticket_id = sourceFilters.ticketId;
       }
 
+      if (sourceFilters.projectId) {
+        params.project_id = sourceFilters.projectId;
+      }
+
       const response = await presaleApi.tickets.list(params);
       const ticketsData = getTicketItems(response);
 
@@ -220,7 +235,13 @@ export default function PresalesTasks({ embedded = false } = {}) {
     } finally {
       setLoading(false);
     }
-  }, [selectedStatus, searchTerm, sourceFilters.opportunityId, sourceFilters.ticketId]);
+  }, [
+    selectedStatus,
+    searchTerm,
+    sourceFilters.opportunityId,
+    sourceFilters.ticketId,
+    sourceFilters.projectId,
+  ]);
 
   const updateCreateForm = (field, value) => {
     setCreateForm((prev) => ({ ...prev, [field]: value }));
@@ -274,6 +295,15 @@ export default function PresalesTasks({ embedded = false } = {}) {
       }
     });
 
+    const contextOpportunityId = parseContextId(sourceFilters.opportunityId);
+    const contextProjectId = parseContextId(sourceFilters.projectId);
+    if (contextOpportunityId) {
+      payload.opportunity_id = contextOpportunityId;
+    }
+    if (contextProjectId) {
+      payload.project_id = contextProjectId;
+    }
+
     try {
       setIsCreating(true);
       await presaleApi.tickets.create(payload);
@@ -296,13 +326,14 @@ export default function PresalesTasks({ embedded = false } = {}) {
     const status = params.get("status");
     const opportunityId = params.get("opportunity_id") || "";
     const ticketId = params.get("ticket_id") || "";
+    const projectId = params.get("project_id") || "";
     if (type) {
       setSelectedType(type);
     }
     if (status) {
       setSelectedStatus(status);
     }
-    setSourceFilters({ opportunityId, ticketId });
+    setSourceFilters({ opportunityId, ticketId, projectId });
   }, [location.search]);
 
   // Load tasks when filters change
