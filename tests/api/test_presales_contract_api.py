@@ -2016,6 +2016,7 @@ class TestPresalesFrontendContractBehavior:
             items = response.json()["items"]
             assert [item["id"] for item in items] == [matching_tender.id]
             assert items[0]["ticket_id"] == target_ticket.id
+            assert items[0]["lead_id"] == target_ticket.lead_id
         finally:
             db_session.query(PresaleTenderRecord).filter(
                 PresaleTenderRecord.id.in_([matching_tender.id, noise_tender.id])
