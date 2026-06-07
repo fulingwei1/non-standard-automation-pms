@@ -133,7 +133,7 @@ export default function MilestoneManagement() {
       const scopedProjectId = filterProjectId || contextProjectId;
       if (scopedProjectId && scopedProjectId !== "all") params.project_id = scopedProjectId;
       // 假设 milestoneApi.listAll 存在，否则需要调用 /milestones 接口
-      const res = await milestoneApi.listAll ? milestoneApi.listAll(params) : milestoneApi.list(null, params);
+      const res = await milestoneApi.listAll ? milestoneApi.listAll(params) : milestoneApi.list(params);
       const milestoneList = res?.data?.items ?? res?.data ?? res ?? [];
       setMilestones(Array.isArray(milestoneList) ? milestoneList : []);
     } catch (error) {

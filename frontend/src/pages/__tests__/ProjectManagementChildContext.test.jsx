@@ -97,7 +97,6 @@ vi.mock("../../services/api", () => ({
   },
   milestoneApi: {
     list: vi.fn(),
-    listAll: vi.fn(),
     create: vi.fn(),
   },
   progressApi: {
@@ -145,7 +144,6 @@ describe("Project management child pages context handoff", () => {
     });
     projectApi.get.mockResolvedValue({ data: mockProject });
     milestoneApi.list.mockResolvedValue({ data: [] });
-    milestoneApi.listAll.mockResolvedValue({ data: { items: [] } });
     progressApi.reports.getSummary.mockResolvedValue({ data: {} });
     progressApi.wbsTemplates.list.mockResolvedValue({ data: { items: [] } });
     materialReadinessApi.getBatchKitRate.mockResolvedValue({
@@ -204,7 +202,7 @@ describe("Project management child pages context handoff", () => {
       });
     });
     await waitFor(() => {
-      expect(milestoneApi.listAll).toHaveBeenCalledWith(
+      expect(milestoneApi.list).toHaveBeenCalledWith(
         expect.objectContaining({ project_id: "42" }),
       );
     });
