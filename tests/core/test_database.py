@@ -350,6 +350,49 @@ class TestSQLiteSchemaPatches:
         assert "change_description" in stage_template_columns
         assert "delivery_date" in quote_columns
 
+    def test_technical_assessments_patch_adds_workflow_columns(self, tmp_path):
+        from app.models.base import _ensure_sqlite_schema
+
+        db_path = tmp_path / "legacy_technical_assessments.db"
+        engine = create_engine(f"sqlite:///{db_path}")
+
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE technical_assessments (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        source_type VARCHAR(20) NOT NULL,
+                        source_id INTEGER NOT NULL,
+                        evaluator_id INTEGER,
+                        status VARCHAR(20),
+                        total_score INTEGER,
+                        dimension_scores TEXT,
+                        veto_triggered BOOLEAN DEFAULT 0,
+                        veto_rules TEXT,
+                        decision VARCHAR(30),
+                        risks TEXT,
+                        similar_cases TEXT,
+                        ai_analysis TEXT,
+                        conditions TEXT,
+                        evaluated_at DATETIME,
+                        created_at DATETIME,
+                        updated_at DATETIME
+                    )
+                    """
+                )
+            )
+
+        _ensure_sqlite_schema(engine)
+
+        columns = {col["name"] for col in inspect(engine).get_columns("technical_assessments")}
+        assert "presale_ticket_id" in columns
+        assert "template_id" in columns
+        assert "version_no" in columns
+        assert "is_latest" in columns
+        assert "previous_version_id" in columns
+        assert "item_scores" in columns
+
 
 class TestDatabaseSecurity:
     """测试数据库安全"""

@@ -229,6 +229,48 @@ def _ensure_sqlite_schema(engine):
                 except Exception:
                     logger.debug("quotes.delivery_date 列补丁跳过", exc_info=True)
 
+    if "technical_assessments" in tables:
+        columns = {col["name"] for col in inspector.get_columns("technical_assessments")}
+        statements = []
+        if "presale_ticket_id" not in columns:
+            statements.append("ALTER TABLE technical_assessments ADD COLUMN presale_ticket_id INTEGER")
+        if "template_id" not in columns:
+            statements.append("ALTER TABLE technical_assessments ADD COLUMN template_id INTEGER")
+        if "version_no" not in columns:
+            statements.append(
+                "ALTER TABLE technical_assessments ADD COLUMN version_no VARCHAR(20) DEFAULT 'V1.0'"
+            )
+        if "is_latest" not in columns:
+            statements.append(
+                "ALTER TABLE technical_assessments ADD COLUMN is_latest BOOLEAN DEFAULT 1"
+            )
+        if "previous_version_id" not in columns:
+            statements.append(
+                "ALTER TABLE technical_assessments ADD COLUMN previous_version_id INTEGER"
+            )
+        if "item_scores" not in columns:
+            statements.append("ALTER TABLE technical_assessments ADD COLUMN item_scores TEXT")
+
+        if statements:
+            with engine.begin() as conn:
+                for ddl in statements:
+                    try:
+                        conn.execute(text(ddl))
+                    except Exception:
+                        logger.debug("technical_assessments 列补丁跳过", exc_info=True)
+
+        index_statements = [
+            "CREATE INDEX IF NOT EXISTS idx_assessment_ticket ON technical_assessments(presale_ticket_id)",
+            "CREATE INDEX IF NOT EXISTS idx_assessment_template ON technical_assessments(template_id)",
+            "CREATE INDEX IF NOT EXISTS idx_assessment_version ON technical_assessments(version_no)",
+        ]
+        with engine.begin() as conn:
+            for ddl in index_statements:
+                try:
+                    conn.execute(text(ddl))
+                except Exception:
+                    logger.debug("technical_assessments 索引补丁跳过", exc_info=True)
+
     if "report_template" in tables:
         columns = {col["name"] for col in inspector.get_columns("report_template")}
         if "name" in columns and "template_name" in columns:
