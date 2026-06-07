@@ -39,7 +39,7 @@ export default function PresalesCostEstimation() {
   };
 
   const handleCancel = () => {
-    navigate("/presales-workbench");
+    navigate("/presales/workbench");
   };
 
   return (
@@ -76,7 +76,7 @@ export default function PresalesCostEstimation() {
           />
 
           <div className="flex justify-end">
-            <Button variant="ghost" onClick={() => navigate("/presales-workbench")}>
+            <Button variant="ghost" onClick={() => navigate("/presales/workbench")}>
               返回售前工作台
             </Button>
           </div>

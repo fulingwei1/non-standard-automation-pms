@@ -2,9 +2,10 @@ import { Route, Navigate } from "react-router-dom";
 import { lazyLoad } from "../lazyLoad";
 
 const PresalesWorkstation = lazyLoad(() => import("../../pages/PresalesWorkstation"));
+const PresalesWorkbench = lazyLoad(() => import("../../pages/PresalesWorkbench"));
+const SalesPresaleWorkbench = lazyLoad(() => import("../../pages/SalesPresaleWorkbench"));
 const PresaleAnalytics = lazyLoad(() => import("../../pages/PresaleAnalytics"));
 const PresalesManagerWorkstation = lazyLoad(() => import("../../pages/PresalesManagerWorkstation"));
-const PresalesWorkbenchRedirect = lazyLoad(() => import("../../pages/PresalesWorkbenchRedirect"));
 const PresalesCostEstimation = lazyLoad(() => import("../../pages/PresalesCostEstimation"));
 const PresalesReviewCenter = lazyLoad(() => import("../../pages/PresalesReviewCenter"));
 const PresaleProposals = lazyLoad(() => import("../../pages/PresaleProposals"));
@@ -20,7 +21,11 @@ const TechnicalParameterManagement = lazyLoad(() => import("../../pages/Technica
 export function PresalesRoutes() {
   return (
     <>
-      <Route path="/presales-workbench" element={<PresalesWorkbenchRedirect />} />
+      <Route path="/presales/workbench" element={<PresalesWorkbench />} />
+      <Route path="/presales/workbench/sales" element={<SalesPresaleWorkbench />} />
+      <Route path="/presales/workbench/execution" element={<PresalesWorkstation />} />
+      <Route path="/presales/workbench/manager" element={<PresalesManagerWorkstation />} />
+      <Route path="/presales-workbench" element={<Navigate to="/presales/workbench" replace />} />
       <Route path="/presales-dashboard" element={<PresalesWorkstation />} />
       <Route
         path="/presales-manager-dashboard"

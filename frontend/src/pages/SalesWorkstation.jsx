@@ -209,7 +209,7 @@ function ActionBoard({ data }) {
           title="今日销售动作"
           extra={
             <Space size={8}>
-              <Button type="link" onClick={() => navigate("/sales/presale-workbench")}>
+              <Button type="link" onClick={() => navigate("/presales/workbench")}>
                 售前工作台
               </Button>
               <Button type="link" onClick={() => navigate("/sales/funnel")}>

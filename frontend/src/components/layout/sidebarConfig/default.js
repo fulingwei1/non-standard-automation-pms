@@ -87,7 +87,7 @@ export const defaultNavGroups = [
       // 工作台
       {
         name: "售前工作台",
-        path: "/presales-workbench",
+        path: "/presales/workbench",
         icon: "Monitor",
         permissionAny: ["presales:task:read", "presales:task:manage"],
         permissionLabel: "售前工作台"

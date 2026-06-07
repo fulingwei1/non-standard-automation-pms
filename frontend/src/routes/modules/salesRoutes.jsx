@@ -58,7 +58,6 @@ import SalesDashboard from "../../pages/SalesDashboard";
 
 // 售前相关
 const PresalesTasks = lazyLoad(() => import("../../pages/PresalesTasks"));
-const SalesPresaleWorkbench = lazyLoad(() => import("../../pages/SalesPresaleWorkbench"));
 const TechnicalAssessment = lazyLoad(() => import("../../pages/TechnicalAssessment"));
 const OpenItemsManagement = lazyLoad(() => import("../../pages/OpenItemsManagement"));
 const RequirementFreezeManagement = lazyLoad(() => import("../../pages/RequirementFreezeManagement"));
@@ -145,8 +144,8 @@ export function SalesRoutes() {
       <Route path="/sales/opportunities" element={<OpportunityManagement />} />
       <Route path="/sales/opportunities/:id" element={<OpportunityDetail />} />
       <Route path="/sales/presales-tasks" element={<PresalesTasks />} />
-      <Route path="/sales/presales-workbench" element={<Navigate to="/sales/presale-workbench" replace />} />
-      <Route path="/sales/presale-workbench" element={<SalesPresaleWorkbench />} />
+      <Route path="/sales/presales-workbench" element={<Navigate to="/presales/workbench" replace />} />
+      <Route path="/sales/presale-workbench" element={<Navigate to="/presales/workbench" replace />} />
       <Route
         path="/sales/assessments/:sourceType/:sourceId"
         element={<TechnicalAssessment />}
