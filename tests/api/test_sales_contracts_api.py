@@ -14,8 +14,18 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.enums import AssessmentStatusEnum
+from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Project
-from app.models.sales import Contract, ContractDeliverable, Lead, Opportunity, Quote, QuoteVersion
+from app.models.sales import (
+    Contract,
+    ContractDeliverable,
+    Lead,
+    Opportunity,
+    Quote,
+    QuoteVersion,
+    TechnicalAssessment,
+)
 from app.models.user import User
 
 
@@ -289,6 +299,219 @@ class TestSalesContractsAPI:
             )
             quote.current_version_id = None
             db_session.flush()
+            db_session.query(QuoteVersion).filter(QuoteVersion.id == quote_version.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(Quote).filter(Quote.id == quote.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(Lead).filter(Lead.id == lead.id).delete(synchronize_session=False)
+            db_session.query(Customer).filter(Customer.id == customer.id).delete(
+                synchronize_session=False
+            )
+            db_session.commit()
+
+    def test_sign_contract_auto_links_presale_context_to_created_project(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """合同签署自动建项后，售前工单和方案应正式绑定到项目。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-SIGN-PRE-{unique}",
+            customer_name=f"签约售前回填客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        lead = Lead(
+            lead_code=f"LEADPRE{unique[:6]}",
+            customer_name=customer.customer_name,
+            industry="电子制造",
+            demand_summary="售前技术方案已完成，签约后应交给项目继续执行",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([customer, lead])
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPPPRE{unique[:6]}",
+            lead_id=lead.id,
+            customer=customer,
+            opp_name=f"签约售前回填商机-{unique}",
+            project_type="FCT",
+            equipment_type="EOL",
+            stage="WON",
+            probability=95,
+            est_amount=Decimal("680000"),
+            est_margin=Decimal("35.29"),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        quote = Quote(
+            quote_code=f"QPRE{unique[:6]}",
+            opportunity=opportunity,
+            customer=customer,
+            status="APPROVED",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([opportunity, quote])
+        db_session.flush()
+
+        quote_version = QuoteVersion(
+            quote_id=quote.id,
+            version_no="V1",
+            total_price=Decimal("680000"),
+            cost_total=Decimal("440000"),
+            gross_margin=Decimal("35.29"),
+            created_by=admin_user.id,
+        )
+        db_session.add(quote_version)
+        db_session.flush()
+        quote.current_version_id = quote_version.id
+
+        ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-PRE-{unique}",
+            title=f"签约前售前方案工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            lead_id=lead.id,
+            opportunity_id=opportunity.id,
+            project_id=None,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            assessment_status=AssessmentStatusEnum.COMPLETED.value,
+            created_by=admin_user.id,
+        )
+        db_session.add(ticket)
+        db_session.flush()
+
+        assessment = TechnicalAssessment(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            evaluator_id=admin_user.id,
+            status=AssessmentStatusEnum.COMPLETED.value,
+            total_score=86,
+            decision="推荐立项",
+            presale_ticket_id=ticket.id,
+        )
+        db_session.add(assessment)
+        db_session.flush()
+        ticket.current_assessment_id = assessment.id
+        opportunity.assessment_id = assessment.id
+
+        solution = PresaleSolution(
+            solution_no=f"SOL-PRE-{unique}",
+            name=f"签约前售前技术方案-{unique}",
+            solution_type="CUSTOM",
+            industry="电子制造",
+            test_type="FCT",
+            ticket_id=ticket.id,
+            project_id=None,
+            customer_id=customer.id,
+            opportunity_id=opportunity.id,
+            requirement_summary="签约前需求已冻结",
+            solution_overview="FCT/EOL 测试设备方案",
+            estimated_cost=Decimal("430000"),
+            suggested_price=Decimal("680000"),
+            status="APPROVED",
+            review_status="APPROVED",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        contract = Contract(
+            contract_code=f"CTPRE{unique[:6]}",
+            contract_name=f"签约售前回填合同-{unique}",
+            contract_type="sales",
+            customer=customer,
+            opportunity=opportunity,
+            quote_id=quote_version.id,
+            total_amount=Decimal("680000"),
+            status="approved",
+            sales_owner_id=admin_user.id,
+        )
+        db_session.add_all([solution, contract])
+        db_session.commit()
+
+        try:
+            response = client.post(
+                (
+                    f"{prefix}/sales/contracts/{contract.id}/sign"
+                    "?auto_generate_payment_plans=false"
+                ),
+                headers=headers,
+                json={
+                    "sign_date": "2026-06-08",
+                    "signed_by": "张总",
+                    "customer_signed_by": "李经理",
+                    "auto_create_project": True,
+                },
+            )
+            assert response.status_code == 200, response.text
+            data = response.json()["data"]
+            project = db_session.get(Project, data["project_id"])
+            assert project is not None
+
+            db_session.expire_all()
+            refreshed_ticket = db_session.get(PresaleSupportTicket, ticket.id)
+            refreshed_solution = db_session.get(PresaleSolution, solution.id)
+            assert refreshed_ticket.project_id == project.id
+            assert refreshed_solution.project_id == project.id
+
+            tickets_response = client.get(
+                f"{prefix}/presale/tickets",
+                params={"project_id": project.id},
+                headers=headers,
+            )
+            assert tickets_response.status_code == 200, tickets_response.text
+            assert [item["id"] for item in tickets_response.json()["items"]] == [ticket.id]
+
+            solutions_response = client.get(
+                f"{prefix}/presale/proposals/solutions",
+                params={"project_id": project.id},
+                headers=headers,
+            )
+            assert solutions_response.status_code == 200, solutions_response.text
+            assert [item["id"] for item in solutions_response.json()["items"]] == [solution.id]
+        finally:
+            ticket_to_cleanup = db_session.get(PresaleSupportTicket, ticket.id)
+            opportunity_to_cleanup = db_session.get(Opportunity, opportunity.id)
+            quote_to_cleanup = db_session.get(Quote, quote.id)
+            if ticket_to_cleanup:
+                ticket_to_cleanup.current_assessment_id = None
+            if opportunity_to_cleanup:
+                opportunity_to_cleanup.assessment_id = None
+            if quote_to_cleanup:
+                quote_to_cleanup.current_version_id = None
+            db_session.flush()
+            db_session.query(Project).filter(Project.contract_id == contract.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(PresaleSolution).filter(PresaleSolution.id == solution.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(TechnicalAssessment).filter(
+                TechnicalAssessment.id == assessment.id
+            ).delete(synchronize_session=False)
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id == ticket.id
+            ).delete(synchronize_session=False)
+            db_session.query(Contract).filter(Contract.id == contract.id).delete(
+                synchronize_session=False
+            )
             db_session.query(QuoteVersion).filter(QuoteVersion.id == quote_version.id).delete(
                 synchronize_session=False
             )

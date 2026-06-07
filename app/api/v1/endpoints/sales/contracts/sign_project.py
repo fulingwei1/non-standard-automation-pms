@@ -21,6 +21,7 @@ from app.models.sales import Contract, ContractDeliverable, Opportunity, QuoteVe
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import ContractProjectCreateRequest, ContractSignRequest
+from app.services.status_handlers.contract_handler import bind_presale_context_to_project
 from app.utils.db_helpers import get_or_404
 
 from ..utils import validate_g4_contract_to_project
@@ -198,6 +199,7 @@ def create_contract_project(
         project.industry = project.industry or (customer.industry if customer else None)
         project.salesperson_id = project.salesperson_id or salesperson_id
         contract.project_id = project.id
+        bind_presale_context_to_project(db, project)
         db.commit()
 
         logger.info(f"合同 {contract_id} 成功关联已有项目 {project.id}")
@@ -267,6 +269,7 @@ def create_contract_project(
 
         # 关联合同和项目
         contract.project_id = project.id
+        bind_presale_context_to_project(db, project)
         db.commit()
 
         logger.info(f"合同 {contract_id} 成功创建项目 {project.id}")

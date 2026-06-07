@@ -4,14 +4,86 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
+from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Project, ProjectStatusLog
 from app.models.sales import Contract, Opportunity, QuoteVersion
 from app.utils.project_utils import generate_project_code, init_project_stages
 
 if TYPE_CHECKING:
     from app.services.status_transition_service import StatusTransitionService
+
+
+def bind_presale_context_to_project(db: Session, project: Project) -> None:
+    """把签约前的售前工单和方案正式绑定到新项目，避免交接数据只靠商机旁路查询。"""
+    if not project or not project.id:
+        return
+
+    ticket_scope_filters = []
+    if project.opportunity_id:
+        ticket_scope_filters.append(PresaleSupportTicket.opportunity_id == project.opportunity_id)
+    if project.lead_id:
+        ticket_scope_filters.append(PresaleSupportTicket.lead_id == project.lead_id)
+
+    ticket_filters = [PresaleSupportTicket.project_id == project.id]
+    if ticket_scope_filters:
+        ticket_filters.append(
+            and_(
+                PresaleSupportTicket.project_id.is_(None),
+                or_(*ticket_scope_filters),
+            )
+        )
+
+    tickets = db.query(PresaleSupportTicket).filter(or_(*ticket_filters)).all()
+    ticket_project_by_id = {ticket.id: ticket.project_id for ticket in tickets}
+    bound_ticket_ids = set()
+    for ticket in tickets:
+        if ticket.project_id is None:
+            ticket.project_id = project.id
+        if ticket.project_id == project.id:
+            bound_ticket_ids.add(ticket.id)
+            ticket_project_by_id[ticket.id] = project.id
+
+    solution_scope_filters = [PresaleSolution.project_id == project.id]
+    unbound_solution_filters = []
+    if project.opportunity_id:
+        unbound_solution_filters.append(PresaleSolution.opportunity_id == project.opportunity_id)
+    if bound_ticket_ids:
+        unbound_solution_filters.append(PresaleSolution.ticket_id.in_(bound_ticket_ids))
+
+    if unbound_solution_filters:
+        solution_scope_filters.append(
+            and_(
+                PresaleSolution.project_id.is_(None),
+                or_(*unbound_solution_filters),
+            )
+        )
+
+    solutions = db.query(PresaleSolution).filter(or_(*solution_scope_filters)).all()
+    missing_ticket_ids = {
+        solution.ticket_id
+        for solution in solutions
+        if solution.ticket_id and solution.ticket_id not in ticket_project_by_id
+    }
+    if missing_ticket_ids:
+        existing_ticket_projects = (
+            db.query(PresaleSupportTicket.id, PresaleSupportTicket.project_id)
+            .filter(PresaleSupportTicket.id.in_(missing_ticket_ids))
+            .all()
+        )
+        ticket_project_by_id.update(dict(existing_ticket_projects))
+
+    for solution in solutions:
+        if solution.project_id == project.id:
+            continue
+        ticket_project_id = (
+            ticket_project_by_id.get(solution.ticket_id) if solution.ticket_id else None
+        )
+        if ticket_project_id not in (None, project.id):
+            continue
+        solution.project_id = project.id
 
 
 class ContractStatusHandler:
@@ -81,6 +153,7 @@ class ContractStatusHandler:
                 if customer:
                     project.industry = project.industry or customer.industry
                 project.salesperson_id = project.salesperson_id or salesperson_id
+                bind_presale_context_to_project(self.db, project)
                 # 同步客户合同编号
                 if hasattr(contract, "customer_contract_no") and contract.customer_contract_no:
                     project.customer_contract_no = contract.customer_contract_no
@@ -159,6 +232,7 @@ class ContractStatusHandler:
 
         # 关联合同和项目
         contract.project_id = project.id
+        bind_presale_context_to_project(self.db, project)
 
         # 初始化项目阶段
         init_project_stages(self.db, project.id)
