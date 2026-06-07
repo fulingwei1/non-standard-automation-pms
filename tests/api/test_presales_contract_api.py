@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.enums import AssessmentStatusEnum, LeadOutcomeEnum
-from app.models.presale import PresaleSolution
+from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Machine, Project
 from app.models.sales import Opportunity
 from app.models.timesheet import Timesheet
@@ -469,6 +469,111 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(Project).filter(
                 Project.project_code.in_([f"PSFA{unique[:6]}", f"PSFB{unique[:6]}"])
             ).delete(synchronize_session=False)
+            db_session.commit()
+
+    def test_solution_created_from_ticket_inherits_project_context(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-PST-{unique}",
+            customer_name=f"方案继承客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        project = Project(
+            project_code=f"PST{unique[:6]}",
+            project_name=f"方案继承项目-{unique}",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            is_active=True,
+        )
+        db_session.add(project)
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPPT{unique[:6]}",
+            customer_id=customer.id,
+            opp_name=f"方案继承商机-{unique}",
+            stage="QUALIFICATION",
+            probability=60,
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add(opportunity)
+        db_session.commit()
+
+        created_ticket = client.post(
+            f"{prefix}/presale/tickets",
+            json={
+                "title": f"方案继承工单-{unique}",
+                "ticket_type": "SOLUTION",
+                "urgency": "NORMAL",
+                "customer_id": customer.id,
+                "customer_name": customer.customer_name,
+                "opportunity_id": opportunity.id,
+                "project_id": project.id,
+            },
+            headers=headers,
+        )
+        assert created_ticket.status_code == 201, created_ticket.text
+        ticket_id = created_ticket.json()["id"]
+
+        created_solution = client.post(
+            f"{prefix}/presale/proposals/solutions",
+            json={
+                "name": f"方案继承测试-{unique}",
+                "solution_type": "CUSTOM",
+                "ticket_id": ticket_id,
+            },
+            headers=headers,
+        )
+        assert created_solution.status_code == 201, created_solution.text
+        solution = created_solution.json()
+
+        try:
+            assert solution["ticket_id"] == ticket_id
+            assert solution["project_id"] == project.id
+            assert solution["opportunity_id"] == opportunity.id
+            assert solution["customer_id"] == customer.id
+
+            by_project = client.get(
+                f"{prefix}/presale/proposals/solutions",
+                params={"project_id": project.id},
+                headers=headers,
+            )
+            assert by_project.status_code == 200, by_project.text
+            assert any(item["id"] == solution["id"] for item in by_project.json()["items"])
+
+            by_opportunity = client.get(
+                f"{prefix}/presale/proposals/solutions",
+                params={"opportunity_id": opportunity.id},
+                headers=headers,
+            )
+            assert by_opportunity.status_code == 200, by_opportunity.text
+            assert any(item["id"] == solution["id"] for item in by_opportunity.json()["items"])
+        finally:
+            db_session.query(PresaleSolution).filter(
+                PresaleSolution.id == solution["id"]
+            ).delete(synchronize_session=False)
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id == ticket_id
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
+            db_session.query(Project).filter(Project.id == project.id).delete()
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
             db_session.commit()
 
     def test_tender_update_contract(self, client: TestClient, admin_token: str):

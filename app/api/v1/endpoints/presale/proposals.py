@@ -21,6 +21,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.presale import (
+    PresaleSupportTicket,
     PresaleSolution,
     PresaleSolutionCost,
 )
@@ -145,6 +146,10 @@ def create_solution(
     """
     创建方案
     """
+    ticket = None
+    if solution_in.ticket_id:
+        ticket = get_or_404(db, PresaleSupportTicket, solution_in.ticket_id, detail="工单不存在")
+
     solution = PresaleSolution(
         solution_no=generate_solution_no(db),
         name=solution_in.name,
@@ -152,9 +157,15 @@ def create_solution(
         industry=solution_in.industry,
         test_type=solution_in.test_type,
         ticket_id=solution_in.ticket_id,
-        project_id=solution_in.project_id,
-        customer_id=solution_in.customer_id,
-        opportunity_id=solution_in.opportunity_id,
+        project_id=solution_in.project_id if solution_in.project_id is not None else (
+            ticket.project_id if ticket else None
+        ),
+        customer_id=solution_in.customer_id if solution_in.customer_id is not None else (
+            ticket.customer_id if ticket else None
+        ),
+        opportunity_id=solution_in.opportunity_id if solution_in.opportunity_id is not None else (
+            ticket.opportunity_id if ticket else None
+        ),
         requirement_summary=solution_in.requirement_summary,
         solution_overview=solution_in.solution_overview,
         technical_spec=solution_in.technical_spec,
