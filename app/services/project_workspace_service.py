@@ -610,7 +610,17 @@ def _build_bom_payload(bom: BomHeader) -> Dict[str, Any]:
 
 def _calculate_project_kitting(db: Session, project_id: int) -> Dict[str, Any]:
     bom_items = (
-        db.query(BomItem)
+        db.query(
+            BomItem.id,
+            BomItem.material_id,
+            BomItem.material_code,
+            BomItem.material_name,
+            BomItem.specification,
+            BomItem.quantity,
+            BomItem.received_qty,
+            BomItem.purchased_qty,
+            BomItem.is_key_item,
+        )
         .join(BomHeader, BomItem.bom_id == BomHeader.id)
         .filter(
             BomHeader.project_id == project_id,
@@ -667,11 +677,7 @@ def _calculate_project_kitting(db: Session, project_id: int) -> Dict[str, Any]:
                 "shortage_qty": float(shortage_qty),
                 "in_transit_qty": float(in_transit_qty),
                 "is_key_item": bool(item.is_key_item),
-                "expected_arrival_date": (
-                    item.expected_arrival_date.isoformat()
-                    if item.expected_arrival_date
-                    else None
-                ),
+                "expected_arrival_date": None,
             }
         )
 
