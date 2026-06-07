@@ -30,15 +30,17 @@ function getContextParam(params, snakeKey, camelKey) {
 function buildFallbackSolutionListUrl(search) {
     const currentParams = new URLSearchParams(search);
     const ticketId = getContextParam(currentParams, "ticket_id", "ticketId");
+    const leadId = getContextParam(currentParams, "lead_id", "leadId");
     const opportunityId = getContextParam(currentParams, "opportunity_id", "opportunityId");
     const projectId = getContextParam(currentParams, "project_id", "projectId");
 
     const params = new URLSearchParams();
     params.set("tab", "solutions");
-    if (ticketId || opportunityId || projectId) {
+    if (ticketId || leadId || opportunityId || projectId) {
         params.set("type", "support");
     }
     appendContextParam(params, "ticket_id", ticketId);
+    appendContextParam(params, "lead_id", leadId);
     appendContextParam(params, "opportunity_id", opportunityId);
     appendContextParam(params, "project_id", projectId);
 
@@ -50,6 +52,7 @@ function buildCostEstimateUrl(solution) {
     params.set("tab", "cost");
     appendContextParam(params, "solution_id", solution?.id);
     appendContextParam(params, "ticket_id", solution?.ticketId);
+    appendContextParam(params, "lead_id", solution?.leadId);
     appendContextParam(params, "opportunity_id", solution?.opportunityId);
     appendContextParam(params, "project_id", solution?.projectId);
     return `/presales/technical-solutions?${params.toString()}`;

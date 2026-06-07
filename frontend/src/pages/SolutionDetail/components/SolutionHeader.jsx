@@ -17,10 +17,11 @@ function buildSolutionListUrl(solution) {
     const params = new URLSearchParams();
     params.set("tab", "solutions");
 
-    if (solution.ticketId || solution.opportunityId || solution.projectId) {
+    if (solution.ticketId || solution.leadId || solution.opportunityId || solution.projectId) {
         params.set("type", "support");
     }
     appendContextParam(params, "ticket_id", solution.ticketId);
+    appendContextParam(params, "lead_id", solution.leadId);
     appendContextParam(params, "opportunity_id", solution.opportunityId);
     appendContextParam(params, "project_id", solution.projectId);
 

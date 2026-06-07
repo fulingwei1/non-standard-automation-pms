@@ -67,7 +67,7 @@ describe("SolutionDetail", () => {
     render(
       <MemoryRouter
         initialEntries={[
-          "/solutions/88?ticket_id=501&opportunity_id=2&project_id=42",
+          "/solutions/88?ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
         ]}
       >
         <SolutionDetail />
@@ -77,7 +77,43 @@ describe("SolutionDetail", () => {
     fireEvent.click(screen.getByRole("button", { name: "返回方案列表" }));
 
     expect(navigateMock).toHaveBeenCalledWith(
-      "/presales/technical-solutions?tab=solutions&type=support&ticket_id=501&opportunity_id=2&project_id=42",
+      "/presales/technical-solutions?tab=solutions&type=support&ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
+    );
+  });
+
+  it("keeps lead context when opening cost estimation from a solution detail", () => {
+    useSolutionDetail.mockReturnValue({
+      activeTab: "cost",
+      setActiveTab: vi.fn(),
+      solution: {
+        id: 88,
+        code: "SOL-20260607-001",
+        name: "线索阶段方案",
+        status: "draft",
+        version: "V1.0",
+        ticketId: 501,
+        leadId: 2026,
+        opportunityId: 2,
+        projectId: 42,
+      },
+      loading: false,
+      error: null,
+      costEstimate: null,
+      submittingReview: false,
+      reviewError: null,
+      submitForReview: vi.fn(),
+    });
+
+    render(
+      <MemoryRouter>
+        <SolutionDetail />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /去做成本估算/ }));
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      "/presales/technical-solutions?tab=cost&solution_id=88&ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
     );
   });
 });

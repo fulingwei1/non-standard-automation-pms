@@ -40,6 +40,7 @@ describe("SolutionHeader", () => {
         solution={{
           ...draftSolution,
           ticketId: 501,
+          leadId: 2026,
           opportunityId: 2,
           projectId: 42,
         }}
@@ -50,7 +51,7 @@ describe("SolutionHeader", () => {
     await user.click(screen.getAllByRole("button")[0]);
 
     expect(navigate).toHaveBeenCalledWith(
-      "/presales/technical-solutions?tab=solutions&type=support&ticket_id=501&opportunity_id=2&project_id=42",
+      "/presales/technical-solutions?tab=solutions&type=support&ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
     );
   });
 });
