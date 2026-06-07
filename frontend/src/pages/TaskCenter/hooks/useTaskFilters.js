@@ -1,14 +1,20 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 
 /**
  * 任务过滤器 Hook
  * 管理任务列表的所有过滤状态
  */
-export function useTaskFilters() {
+export function useTaskFilters(initialProjectId = null) {
     const [viewMode, setViewMode] = useState('list'); // list | kanban
     const [statusFilter, setStatusFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedProject, setSelectedProject] = useState(null);
+    const [selectedProject, setSelectedProject] = useState(initialProjectId);
+
+    useEffect(() => {
+        if (initialProjectId) {
+            setSelectedProject(initialProjectId);
+        }
+    }, [initialProjectId]);
 
     // 计算过滤参数
     const filterParams = useMemo(() => {

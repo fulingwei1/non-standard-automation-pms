@@ -19,8 +19,7 @@ export function useTaskData(filters = {}) {
 
             const params = {
                 page: 1,
-                page_size: 100,
-                ...filters
+                page_size: 100
             };
 
             // 状态过滤

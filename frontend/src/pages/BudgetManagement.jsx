@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   CreditCard,
@@ -41,11 +41,17 @@ import {
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import { projectApi, costApi } from "../services/api";
+import { mergeProjectContextFilters } from "../lib/projectContext";
 
 // Mock data - 已移除，使用真实API
 
 export default function BudgetManagement({ embedded = false }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const projectListParams = useMemo(
+    () => mergeProjectContextFilters(searchParams, { page: 1, page_size: 100 }),
+    [searchParams]
+  );
   const [loading, setLoading] = useState(true);
   const [budgets, setBudgets] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -56,7 +62,7 @@ export default function BudgetManagement({ embedded = false }) {
     try {
       setLoading(true);
       // Load projects with budget information
-      const res = await projectApi.list({ page: 1, page_size: 100 });
+      const res = await projectApi.list(projectListParams);
       const projects = res.data?.items || res.data?.items || res.data || [];
 
       // Transform projects to budget format
@@ -103,7 +109,7 @@ export default function BudgetManagement({ embedded = false }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [projectListParams]);
 
   useEffect(() => {
     loadBudgets();

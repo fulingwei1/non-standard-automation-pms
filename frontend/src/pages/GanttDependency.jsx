@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { GitBranch, RefreshCw, Trash2, Link2, Route, AlertTriangle, Eye, EyeOff } from "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -6,6 +7,10 @@ import { Button } from "../components/ui/button";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { formatDate } from "../lib/utils";
 import { ganttDependencyApi, projectApi } from "../services/api";
+import {
+  getProjectContextFilters,
+  mergeProjectContextFilters,
+} from "../lib/projectContext";
 
 const STATUS_META = {
   DONE: {
@@ -94,8 +99,19 @@ function getTaskBarPlacement(task, timelineRange) {
 }
 
 export default function GanttDependency() {
+  const [searchParams] = useSearchParams();
+  const projectContextFilters = useMemo(
+    () => getProjectContextFilters(searchParams),
+    [searchParams]
+  );
+  const projectListParams = useMemo(
+    () => mergeProjectContextFilters(searchParams, { page: 1, page_size: 200 }),
+    [searchParams]
+  );
   const [projects, setProjects] = useState([]);
-  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [selectedProjectId, setSelectedProjectId] = useState(
+    projectContextFilters.project_id || ""
+  );
   const [tasks, setTasks] = useState([]);
   const [dependencies, setDependencies] = useState([]);
   const [criticalPathTaskIds, setCriticalPathTaskIds] = useState([]);
@@ -117,10 +133,20 @@ export default function GanttDependency() {
 
   const loadProjects = useCallback(async () => {
     try {
-      const response = await projectApi.list({ page: 1, page_size: 200 });
+      const response = await projectApi.list(projectListParams);
       const payload = extractPayload(response);
       const list = normalizeProjects(payload);
       setProjects(list);
+
+      if (projectContextFilters.project_id) {
+        setSelectedProjectId(String(projectContextFilters.project_id));
+        return;
+      }
+
+      if (list.length === 1) {
+        setSelectedProjectId(String(list[0].id));
+        return;
+      }
 
       if (!selectedProjectId && list.length > 0) {
         setSelectedProjectId(String(list[0].id));
@@ -140,7 +166,7 @@ export default function GanttDependency() {
       setError("加载项目列表失败，请稍后重试。");
       setLoading(false);
     }
-  }, [selectedProjectId]);
+  }, [projectContextFilters.project_id, projectListParams, selectedProjectId]);
 
   const loadProjectData = useCallback(async (projectId) => {
     if (!projectId) {

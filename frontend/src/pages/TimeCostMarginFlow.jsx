@@ -3,7 +3,7 @@
  * 显示工时填报 → 成本计算 → 毛利预测的数据流程
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { Fragment, useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -42,6 +42,10 @@ import { Skeleton } from "../components/ui/skeleton";
 import { projectApi } from "../services/api";
 import SyncStatus from "../components/timesheet/SyncStatus";
 import { formatDate, formatCurrency, cn } from "../lib/utils";
+import {
+  getProjectContextFilters,
+  mergeProjectContextFilters,
+} from "../lib/projectContext";
 
 // 流程节点配置
 const FLOW_NODES = [
@@ -169,7 +173,15 @@ function FlowArrow({ animated }) {
 export default function TimeCostMarginFlow({ embedded = false }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const projectIdFromQuery = searchParams.get("project_id");
+  const projectContextFilters = useMemo(
+    () => getProjectContextFilters(searchParams),
+    [searchParams]
+  );
+  const projectListParams = useMemo(
+    () => mergeProjectContextFilters(searchParams, { page: 1, page_size: 100 }),
+    [searchParams]
+  );
+  const projectIdFromQuery = projectContextFilters.project_id;
 
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState([]);
@@ -186,7 +198,7 @@ export default function TimeCostMarginFlow({ embedded = false }) {
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        const res = await projectApi.list({ page: 1, page_size: 100 });
+        const res = await projectApi.list(projectListParams);
         const items = res.data?.items || res.data || [];
         setProjects(Array.isArray(items) ? items : []);
 
@@ -199,7 +211,13 @@ export default function TimeCostMarginFlow({ embedded = false }) {
       }
     };
     loadProjects();
-  }, []);
+  }, [projectListParams, selectedProjectId]);
+
+  useEffect(() => {
+    if (projectIdFromQuery) {
+      setSelectedProjectId(parseInt(projectIdFromQuery));
+    }
+  }, [projectIdFromQuery]);
 
   // 加载节点数据
   const fetchNodeData = useCallback(async () => {
@@ -415,9 +433,8 @@ export default function TimeCostMarginFlow({ embedded = false }) {
         <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-center">
             {FLOW_NODES.map((node, index) => (
-              <>
+              <Fragment key={node.id}>
                 <FlowNode
-                  key={node.id}
                   node={node}
                   data={getNodeData(node.id)}
                   loading={loading}
@@ -426,7 +443,7 @@ export default function TimeCostMarginFlow({ embedded = false }) {
                 {index < FLOW_NODES.length - 1 && (
                   <FlowArrow key={`arrow-${index}`} animated={isFlowComplete} />
                 )}
-              </>
+              </Fragment>
             ))}
           </div>
         </CardContent>

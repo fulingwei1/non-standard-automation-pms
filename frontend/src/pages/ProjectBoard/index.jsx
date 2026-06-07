@@ -28,6 +28,10 @@ import {
   VIEW_TYPES,
 } from "../../pages/ProjectStageView/constants";
 import { useStageViews, useStageActions } from "../../pages/ProjectStageView/hooks";
+import {
+  getProjectContextFilters,
+  hasProjectContextFilters,
+} from "../../lib/projectContext";
 
 // 导入拆分出的子组件和常量
 import { getStoredUser } from "./constants";
@@ -35,42 +39,13 @@ import MatrixView from "./MatrixView";
 import ListView from "./ListView";
 import ProjectDetailView from "./ProjectDetailView";
 
-const getFirstSearchParam = (searchParams, names) => {
-  for (const name of names) {
-    const value = searchParams.get(name);
-    if (value) {
-      return value;
-    }
-  }
-  return null;
-};
-
-const getProjectContextFilters = (searchParams) => {
-  const filters = {};
-  const projectId = getFirstSearchParam(searchParams, ["project_id", "projectId"]);
-  const contractId = getFirstSearchParam(searchParams, ["contract_id", "contractId"]);
-  const opportunityId = getFirstSearchParam(searchParams, ["opportunity_id", "opportunityId"]);
-
-  if (projectId) {
-    filters.project_id = projectId;
-  }
-  if (contractId) {
-    filters.contract_id = contractId;
-  }
-  if (opportunityId) {
-    filters.opportunity_id = opportunityId;
-  }
-
-  return filters;
-};
-
 export default function ProjectBoard() {
   const [searchParams] = useSearchParams();
   const projectContextFilters = useMemo(
     () => getProjectContextFilters(searchParams),
     [searchParams]
   );
-  const hasProjectContext = Object.keys(projectContextFilters).length > 0;
+  const hasProjectContext = hasProjectContextFilters(projectContextFilters);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [projects, setProjects] = useState([]);

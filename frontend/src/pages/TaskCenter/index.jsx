@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion';
+import { useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../../components/layout';
 import { ApiIntegrationError } from '../../components/ui';
 import { staggerContainer } from '../../lib/animations';
+import { getProjectContextFilters } from '../../lib/projectContext';
 
 // Hooks
 import { useTaskData, useTaskFilters } from './hooks';
@@ -20,12 +22,14 @@ import { AssemblyTaskCard, TaskCard } from '../../components/task-center';
  * - 普通用户有标准视图
  */
 export default function TaskCenter() {
+    const [searchParams] = useSearchParams();
+    const projectContextFilters = getProjectContextFilters(searchParams);
     // 获取当前用户信息
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     const role = currentUser?.role || 'admin';
 
     // 使用自定义 Hooks
-    const filters = useTaskFilters();
+    const filters = useTaskFilters(projectContextFilters.project_id || null);
     const taskData = useTaskData(filters.filterParams);
 
     // 处理错误状态
