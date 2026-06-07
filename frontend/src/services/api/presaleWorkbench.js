@@ -56,6 +56,14 @@ function normalizeEntityType(entityType) {
   return String(entityType).trim().toUpperCase();
 }
 
+function compactParams(params = {}) {
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => (
+      value !== undefined && value !== null && value !== ""
+    )),
+  );
+}
+
 function getAssessmentSortTime(assessment) {
   const timestamp =
     assessment?.evaluated_at ||
@@ -168,6 +176,12 @@ async function collectSettled(taskMap) {
 export const presaleWorkbenchApi = {
   unwrapResponse,
   normalizeListResponse,
+
+  getOverview: (params = {}) =>
+    api.get("/presale/workbench/overview", { params }),
+
+  getContext: (params = {}) =>
+    api.get("/presale/workbench/context", { params }),
 
   getAssessmentTemplates: (params = {}) =>
     api.get("/sales/assessment-templates", { params }),
@@ -286,38 +300,31 @@ export const presaleWorkbenchApi = {
   async loadOverview({
     ticketParams = { page: 1, page_size: 6 },
     solutionParams = { page: 1, page_size: 6 },
-    assessmentTemplateParams = { is_active: true, limit: 20 },
-    technicalTemplateParams = { is_active: true, page: 1, page_size: 20 },
-    alertParams = { status: "ACTIVE", limit: 8 },
-    summaryParams = {},
-    conversionParams = {},
   } = {}) {
-    const overview = await collectSettled({
-      tickets: this.getTickets(ticketParams),
-      solutions: this.getSolutions(solutionParams),
-      assessmentTemplates: this.getAssessmentTemplates(assessmentTemplateParams),
-      technicalTemplates: this.getTechnicalTemplates(technicalTemplateParams),
-      funnelSummary: this.getFunnelSummary(summaryParams),
-      funnelHealth: this.getFunnelHealth(),
-      conversionRates: this.getFunnelConversionRates(conversionParams),
-      dwellAlerts: funnelApi.getDwellTimeAlerts(alertParams),
-    });
+    const response = await this.getOverview(compactParams({
+      ticket_page: ticketParams.page,
+      ticket_page_size: ticketParams.page_size,
+      solution_page: solutionParams.page,
+      solution_page_size: solutionParams.page_size,
+    }));
+    const overview = unwrapResponse(response) || {};
+    const funnel = overview.funnel || {};
 
     return {
-      tickets: normalizeListResponse(overview.data.tickets),
-      solutions: normalizeListResponse(overview.data.solutions),
+      tickets: normalizeListPayload(overview.tickets),
+      solutions: normalizeListPayload(overview.solutions),
       templates: {
-        assessment: normalizeListResponse(overview.data.assessmentTemplates),
-        technical: normalizeListResponse(overview.data.technicalTemplates),
+        assessment: normalizeListPayload(overview.templates?.assessment),
+        technical: normalizeListPayload(overview.templates?.technical),
       },
       funnel: {
-        summary: unwrapResponse(overview.data.funnelSummary),
-        health: unwrapResponse(overview.data.funnelHealth),
-        conversion: unwrapResponse(overview.data.conversionRates),
-        dwellAlerts: normalizeListResponse(overview.data.dwellAlerts),
+        summary: funnel.summary ?? null,
+        health: funnel.health ?? null,
+        conversion: funnel.conversion ?? null,
+        dwellAlerts: normalizeListPayload(funnel.dwellAlerts),
       },
       meta: {
-        failures: overview.failures,
+        failures: overview.meta?.failures || [],
       },
     };
   },
@@ -328,97 +335,58 @@ export const presaleWorkbenchApi = {
     entityType,
     entityId,
     presaleTicketId,
-    assessmentTemplateParams = { is_active: true, limit: 50 },
-    technicalTemplateParams = { is_active: true, page: 1, page_size: 20 },
     transitionLogLimit = 20,
     activeAlertLimit = 10,
-    solutionParams = {},
-  }) {
+  } = {}) {
     const normalizedSourceType = normalizeSourceType(sourceType);
     const resolvedEntityType = normalizeEntityType(entityType || normalizedSourceType);
     const resolvedEntityId = entityId ?? sourceId;
-
-    const primaryTasks = {
-      assessments: this.getAssessments(normalizedSourceType, sourceId),
-      assessmentTemplates: this.getAssessmentTemplates(assessmentTemplateParams),
-      technicalTemplates: this.getTechnicalTemplates(technicalTemplateParams),
-      gateConfigs: funnelApi.getGateConfigs(),
-    };
-
-    if (normalizedSourceType === "lead") {
-      primaryTasks.requirementDetail = this.getRequirementDetail(sourceId);
-    }
-
-    if (presaleTicketId) {
-      primaryTasks.ticket = presaleApi.tickets.get(presaleTicketId);
-      primaryTasks.solutions = this.getSolutionsByTicket(presaleTicketId, solutionParams);
-    } else if (normalizedSourceType === "opportunity") {
-      primaryTasks.solutions = this.getSolutionsByOpportunity(sourceId, solutionParams);
-    }
-
-    if (resolvedEntityType && resolvedEntityId) {
-      primaryTasks.stages = funnelApi.getStages(resolvedEntityType);
-      primaryTasks.transitionLogs = funnelApi.getTransitionLogs({
-        entity_type: resolvedEntityType,
-        entity_id: resolvedEntityId,
-        limit: transitionLogLimit,
-      });
-      primaryTasks.dwellAlerts = funnelApi.getDwellTimeAlerts({
-        entity_type: resolvedEntityType,
-        status: "ACTIVE",
-        limit: activeAlertLimit,
-      });
-    }
-
-    const primary = await collectSettled(primaryTasks);
-    const assessmentList = normalizeListResponse(primary.data.assessments);
+    const response = await this.getContext(compactParams({
+      source_type: normalizedSourceType,
+      source_id: sourceId,
+      entity_type: resolvedEntityType,
+      entity_id: resolvedEntityId,
+      presale_ticket_id: presaleTicketId,
+      transition_log_limit: transitionLogLimit,
+      active_alert_limit: activeAlertLimit,
+    }));
+    const context = unwrapResponse(response) || {};
+    const assessment = context.assessment || {};
+    const assessmentList = normalizeListPayload(assessment);
     const assessments = sortAssessmentsByLatest(assessmentList.items);
-    const currentAssessment = assessments[0] ?? null;
-
-    let risks = { items: [], total: 0 };
-    let versions = { items: [], total: 0 };
-    const failures = [...primary.failures];
-
-    if (currentAssessment?.id) {
-      const assessmentDetails = await collectSettled({
-        risks: this.getAssessmentRisks(currentAssessment.id),
-        versions: this.getAssessmentVersions(currentAssessment.id),
-      });
-
-      risks = normalizeListResponse(assessmentDetails.data.risks);
-      versions = normalizeListResponse(assessmentDetails.data.versions);
-      failures.push(...assessmentDetails.failures);
-    }
+    const currentAssessment = assessment.current ?? assessments[0] ?? null;
+    const funnel = context.funnel || {};
 
     return {
-      source: {
+      source: context.source || {
         type: normalizedSourceType,
         id: sourceId,
       },
-      ticket: unwrapResponse(primary.data.ticket),
+      ticket: context.ticket ?? null,
       assessment: {
         items: assessments,
         total: assessmentList.total,
         current: currentAssessment,
-        requirementDetail: unwrapResponse(primary.data.requirementDetail),
-        risks,
-        versions,
+        requirementDetail: assessment.requirementDetail ?? null,
+        risks: normalizeListPayload(assessment.risks),
+        versions: normalizeListPayload(assessment.versions),
       },
       templates: {
-        assessment: normalizeListResponse(primary.data.assessmentTemplates),
-        technical: normalizeListResponse(primary.data.technicalTemplates),
+        assessment: normalizeListPayload(context.templates?.assessment),
+        technical: normalizeListPayload(context.templates?.technical),
       },
-      solutions: normalizeListResponse(primary.data.solutions),
+      solutions: normalizeListPayload(context.solutions),
       funnel: {
-        entityType: resolvedEntityType,
-        entityId: resolvedEntityId,
-        gateConfigs: normalizeListPayload(unwrapResponse(primary.data.gateConfigs)),
-        stages: normalizeListResponse(primary.data.stages),
-        transitionLogs: normalizeListResponse(primary.data.transitionLogs),
-        dwellAlerts: normalizeListResponse(primary.data.dwellAlerts),
+        entityType: funnel.entityType ?? resolvedEntityType,
+        entityId: funnel.entityId ?? resolvedEntityId,
+        gateConfigs: normalizeListPayload(funnel.gateConfigs),
+        stages: normalizeListPayload(funnel.stages),
+        transitionLogs: normalizeListPayload(funnel.transitionLogs),
+        dwellAlerts: normalizeListPayload(funnel.dwellAlerts),
+        gateStatus: funnel.gateStatus ?? null,
       },
       meta: {
-        failures,
+        failures: context.meta?.failures || [],
       },
     };
   },
