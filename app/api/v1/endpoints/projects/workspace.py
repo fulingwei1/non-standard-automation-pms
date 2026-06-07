@@ -36,6 +36,7 @@ def get_project_workspace(
     from app.services.project_workspace_service import (
         build_bonus_info,
         build_document_info,
+        build_project_handover_context,
         build_issue_info,
         build_meeting_info,
         build_project_basic_info,
@@ -59,6 +60,7 @@ def get_project_workspace(
     issue_info = build_issue_info(db, project_id)
     solution_info = build_solution_info(db, project_id)
     document_info = build_document_info(db, project_id)
+    handover_context = build_project_handover_context(db, project)
 
     return {
         "project": project_info,
@@ -69,7 +71,29 @@ def get_project_workspace(
         "issues": issue_info,
         "solutions": solution_info,
         "documents": document_info,
+        "handover_context": handover_context,
     }
+
+
+@router.get("/projects/{project_id}/workspace/context", response_model=dict)
+def get_project_workspace_context(
+    project_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取项目上游交接上下文。
+
+    包含合同、商机、报价成本、售前方案和成本基准，供项目、采购、
+    生产、验收、售后等后续模块复用。
+    """
+    from app.services.project_workspace_service import build_project_handover_context
+    from app.utils.permission_helpers import check_project_access_or_raise
+
+    check_project_access_or_raise(db, current_user, project_id)
+    project = get_or_404(db, Project, project_id, "项目不存在")
+
+    return build_project_handover_context(db, project)
 
 
 @router.get("/projects/{project_id}/bonuses", response_model=dict)

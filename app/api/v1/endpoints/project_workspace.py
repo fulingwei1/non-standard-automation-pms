@@ -5,11 +5,12 @@ Project Workspace 模块路由
 """
 
 try:
-    # Attempt different possible locations for project_workspace
-    from .projectworkspace import router
+    # Re-export the real project workspace router for the legacy
+    # /project-workspace prefix used by the frontend.
+    from .projects.workspace import router
 except ImportError:
     try:
-        from .project import router
+        from .projectworkspace import router
     except ImportError:
         try:
             from .common.project_workspace import router

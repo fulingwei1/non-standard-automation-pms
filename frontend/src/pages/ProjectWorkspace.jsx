@@ -25,7 +25,9 @@ import ProjectIssuePanel from "../components/project/ProjectIssuePanel";
 import SolutionLibrary from "../components/project/SolutionLibrary";
 import {
   ArrowLeft,
+  AlertTriangle,
   Briefcase,
+  ClipboardCheck,
   Users,
   DollarSign,
   FileText,
@@ -90,8 +92,24 @@ export default function ProjectWorkspace() {
     meetings: _meetings,
     issues: _issues,
     solutions: _solutions,
-    documents
+    documents,
+    handover_context: handoverContext
   } = workspaceData;
+  const handoverStatus = handoverContext?.handover_status;
+  const missingLabels = {
+    contract: "合同",
+    opportunity: "商机",
+    presale_solution: "售前方案",
+    baseline_cost: "成本基准"
+  };
+  const missingItems = handoverStatus?.missing || [];
+  const quoteVersion = handoverContext?.quote?.version || {};
+  const primarySolution = handoverContext?.presale_solutions?.[0];
+  const quoteCost =
+    handoverContext?.baseline_cost?.quote_cost_total ?? quoteVersion.cost_total;
+  const presaleCost =
+    handoverContext?.baseline_cost?.presale_estimated_cost ??
+    primarySolution?.estimated_cost;
 
   return (
     <div className="p-6 space-y-6">
@@ -180,6 +198,74 @@ export default function ProjectWorkspace() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
+          {handoverContext &&
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between gap-3">
+                <span className="flex items-center gap-2">
+                  <ClipboardCheck className="h-5 w-5" />
+                  项目交接包
+                </span>
+                <Badge variant={handoverStatus?.ready ? "default" : "secondary"}>
+                  {handoverStatus?.ready ? "已齐套" : "待补齐"}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {missingItems.length > 0 &&
+              <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  缺少：{missingItems.map((item) => missingLabels[item] || item).join("、")}
+                </span>
+              </div>
+              }
+
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+                <div className="rounded-lg border p-4">
+                  <p className="text-sm text-gray-500">合同</p>
+                  <p className="mt-1 font-medium">
+                    {handoverContext.contract?.contract_code || "未关联"}
+                  </p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    {formatCurrency(handoverContext.contract?.total_amount)}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <p className="text-sm text-gray-500">商机</p>
+                  <p className="mt-1 font-medium">
+                    {handoverContext.opportunity?.opp_code || "未关联"}
+                  </p>
+                  <p className="mt-2 truncate text-sm text-gray-500">
+                    {handoverContext.opportunity?.opp_name || "-"}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <p className="text-sm text-gray-500">报价成本</p>
+                  <p className="mt-1 font-medium">
+                    {handoverContext.quote?.quote_code || "未关联"}
+                  </p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    {quoteCost != null ? formatCurrency(quoteCost) : "未形成"}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <p className="text-sm text-gray-500">售前方案</p>
+                  <p className="mt-1 font-medium">
+                    {primarySolution?.name || "未关联"}
+                  </p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    {presaleCost != null ? formatCurrency(presaleCost) : "未估算"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          }
+
           {/* 团队概览 */}
           <Card>
             <CardHeader>

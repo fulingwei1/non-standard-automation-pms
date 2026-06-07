@@ -417,6 +417,21 @@ describe('Projects API', () => {
       expect(response.status).toBe(200);
     });
 
+    it('getContext() - 应该获取销售售前交接上下文', async () => {
+      mock.onGet('/api/v1/project-workspace/projects/1/workspace/context').reply(200, {
+        project: { id: 1 },
+        contract: { id: 10 },
+        opportunity: { id: 20 },
+        presale_solutions: [],
+        baseline_cost: {},
+        handover_status: { ready: true, missing: [] },
+      });
+
+      const response = await projectWorkspaceApi.getContext(1);
+
+      expect(response.status).toBe(200);
+    });
+
     it('linkMeeting() - 应该关联会议', async () => {
       mock.onPost('/api/v1/project-workspace/projects/1/meetings/1/link').reply(200, {
         success: true,
