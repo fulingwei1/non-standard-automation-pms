@@ -120,7 +120,7 @@ function getLaborHoursTotal(laborHours) {
   return null;
 }
 
-const TECHNICAL_CONTEXT_KEYS = ["opportunity_id", "ticket_id", "project_id"];
+const TECHNICAL_CONTEXT_KEYS = ["lead_id", "opportunity_id", "ticket_id", "project_id"];
 
 function getTechnicalContextFilters(searchParams) {
   const filters = {};

@@ -44,9 +44,11 @@ const INITIAL_TENDER_FORM = {
 
 export default function BiddingCenter({ embedded = false } = {}) {
   const [searchParams] = useSearchParams();
+  const contextLeadId = searchParams.get("lead_id") || "";
   const contextTicketId = searchParams.get("ticket_id") || "";
   const contextOpportunityId = searchParams.get("opportunity_id") || "";
   const contextProjectId = searchParams.get("project_id") || "";
+  const contextLeadIdNumber = parseContextId(contextLeadId);
   const contextTicketIdNumber = parseContextId(contextTicketId);
   const contextOpportunityIdNumber = parseContextId(contextOpportunityId);
   const contextProjectIdNumber = parseContextId(contextProjectId);
@@ -73,6 +75,9 @@ export default function BiddingCenter({ embedded = false } = {}) {
 
       if (searchTerm) {
         params.keyword = searchTerm;
+      }
+      if (contextLeadIdNumber) {
+        params.lead_id = contextLeadId;
       }
       if (contextOpportunityIdNumber) {
         params.opportunity_id = contextOpportunityId;
@@ -140,6 +145,8 @@ export default function BiddingCenter({ embedded = false } = {}) {
       setLoading(false);
     }
   }, [
+    contextLeadId,
+    contextLeadIdNumber,
     contextOpportunityId,
     contextOpportunityIdNumber,
     contextProjectId,

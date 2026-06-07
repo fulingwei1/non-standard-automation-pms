@@ -1939,6 +1939,84 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(Customer).filter(Customer.id == customer.id).delete()
             db_session.commit()
 
+    def test_tender_list_filters_by_lead_id_through_support_ticket(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        target_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-BID-LEAD-{unique}",
+            title=f"线索投标支持申请-{unique}",
+            ticket_type="TECHNICAL_SUPPORT",
+            urgency="NORMAL",
+            customer_name=f"线索投标客户-{unique}",
+            lead_id=810001,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PENDING",
+            created_by=admin_user.id,
+        )
+        noise_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-BID-NOISE-{unique}",
+            title=f"其他线索投标支持申请-{unique}",
+            ticket_type="TECHNICAL_SUPPORT",
+            urgency="NORMAL",
+            customer_name=f"其他线索投标客户-{unique}",
+            lead_id=810002,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PENDING",
+            created_by=admin_user.id,
+        )
+        db_session.add_all([target_ticket, noise_ticket])
+        db_session.flush()
+
+        matching_tender = PresaleTenderRecord(
+            ticket_id=target_ticket.id,
+            tender_no=f"BID-LEAD-MATCH-{unique}",
+            tender_name=f"线索匹配投标-{unique}",
+            customer_name=target_ticket.customer_name,
+            budget_amount=Decimal("900000"),
+            result="PENDING",
+        )
+        noise_tender = PresaleTenderRecord(
+            ticket_id=noise_ticket.id,
+            tender_no=f"BID-LEAD-NOISE-{unique}",
+            tender_name=f"其他线索投标-{unique}",
+            customer_name=noise_ticket.customer_name,
+            budget_amount=Decimal("100000"),
+            result="PENDING",
+        )
+        db_session.add_all([matching_tender, noise_tender])
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{prefix}/presale/tenders",
+                params={"lead_id": target_ticket.lead_id},
+                headers=headers,
+            )
+            assert response.status_code == 200, response.text
+            items = response.json()["items"]
+            assert [item["id"] for item in items] == [matching_tender.id]
+            assert items[0]["ticket_id"] == target_ticket.id
+        finally:
+            db_session.query(PresaleTenderRecord).filter(
+                PresaleTenderRecord.id.in_([matching_tender.id, noise_tender.id])
+            ).delete(synchronize_session=False)
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id.in_([target_ticket.id, noise_ticket.id])
+            ).delete(synchronize_session=False)
+            db_session.commit()
+
     def test_tender_create_and_list_preserve_project_context(
         self, client: TestClient, db_session: Session, admin_token: str
     ):

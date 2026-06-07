@@ -90,6 +90,22 @@ describe("TechnicalParameterManagement", () => {
     });
   });
 
+  it("keeps lead context when listing templates from a lead-stage support flow", async () => {
+    renderPage(
+      "/presales/technical-solutions?tab=parameters&type=support&lead_id=2026&ticket_id=501",
+    );
+
+    await waitFor(() => {
+      expect(technicalParameterApiMock.list).toHaveBeenCalledWith({
+        keyword: "",
+        industry: "",
+        test_type: "",
+        lead_id: "2026",
+        ticket_id: "501",
+      });
+    });
+  });
+
   it("loads template detail before running cost estimation from a list item", async () => {
     const user = userEvent.setup();
     technicalParameterApiMock.list.mockResolvedValueOnce({
@@ -258,6 +274,66 @@ describe("TechnicalParameterManagement", () => {
       opportunity_id: 2,
       ticket_id: 501,
       project_id: 42,
+    });
+  });
+
+  it("keeps lead context when submitting a technical cost estimate", async () => {
+    const user = userEvent.setup();
+    technicalParameterApiMock.list.mockResolvedValueOnce({
+      data: {
+        items: [
+          {
+            id: 1,
+            name: "FCT 标准测试模板",
+            code: "FCT-STD-001",
+            industry: "CONSUMER",
+            test_type: "FCT",
+          },
+        ],
+        total: 1,
+        page: 1,
+      },
+    });
+    technicalParameterApiMock.get.mockResolvedValueOnce({
+      data: {
+        id: 1,
+        name: "FCT 标准测试模板",
+        code: "FCT-STD-001",
+        industry: "CONSUMER",
+        test_type: "FCT",
+        parameters: {
+          test_station_count: {
+            label: "测试工位数",
+            default: 4,
+            unit: "个",
+          },
+        },
+      },
+    });
+    technicalParameterApiMock.estimateCost.mockResolvedValueOnce({
+      data: {
+        total_cost: 82000,
+        cost_breakdown: {},
+        labor_hours: { detail: {}, total: 0 },
+      },
+    });
+
+    renderPage(
+      "/presales/technical-solutions?tab=parameters&type=support&lead_id=2026&ticket_id=501",
+    );
+
+    await screen.findByText("FCT 标准测试模板");
+    await user.click(screen.getByTitle("成本估算"));
+    await screen.findByLabelText("测试工位数 (个)");
+    await user.click(screen.getByRole("button", { name: /计算成本/ }));
+
+    expect(technicalParameterApiMock.estimateCost).toHaveBeenCalledWith({
+      template_id: 1,
+      parameters: {
+        test_station_count: 4,
+      },
+      lead_id: 2026,
+      ticket_id: 501,
     });
   });
 

@@ -140,6 +140,26 @@ describe("BiddingCenter", () => {
     });
   });
 
+  it("keeps lead context when listing tenders from lead-stage presales entry", async () => {
+    useSearchParams.mockReturnValue([
+      new URLSearchParams("tab=bids&type=support&lead_id=2026&ticket_id=501"),
+      vi.fn(),
+    ]);
+
+    renderPage({ embedded: true });
+
+    await waitFor(() => {
+      expect(presaleApi.tenders.list).toHaveBeenCalledWith(
+        expect.objectContaining({
+          page: 1,
+          page_size: 100,
+          lead_id: "2026",
+          ticket_id: "501",
+        }),
+      );
+    });
+  });
+
   it("keeps project context when listing tenders from project presales entry", async () => {
     useSearchParams.mockReturnValue([
       new URLSearchParams("tab=bids&type=support&opportunity_id=2&ticket_id=501&project_id=42"),
