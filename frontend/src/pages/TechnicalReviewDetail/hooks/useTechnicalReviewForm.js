@@ -132,6 +132,39 @@ export function useTechnicalReviewForm(reviewId) {
         }
     };
 
+    const handleAddParticipant = async (participantData) => {
+        try {
+            await technicalReviewApi.addParticipant(reviewId, participantData);
+            setParticipantDialog({ open: false });
+            await fetchReview();
+        } catch (error) {
+            console.error("Failed to add review participant:", error);
+            alert("添加参与人失败：" + (error.response?.data?.detail || error.message));
+        }
+    };
+
+    const handleAddMaterial = async (materialData) => {
+        try {
+            await technicalReviewApi.addMaterial(reviewId, materialData);
+            setMaterialDialog({ open: false });
+            await fetchReview();
+        } catch (error) {
+            console.error("Failed to add review material:", error);
+            alert("添加材料失败：" + (error.response?.data?.detail || error.message));
+        }
+    };
+
+    const handleCreateChecklistRecord = async (recordData) => {
+        try {
+            await technicalReviewApi.createChecklistRecord(reviewId, recordData);
+            setChecklistDialog({ open: false });
+            await fetchReview();
+        } catch (error) {
+            console.error("Failed to create checklist record:", error);
+            alert("添加检查项失败：" + (error.response?.data?.detail || error.message));
+        }
+    };
+
     const updateField = (field, value) =>
         setFormData((prev) => ({ ...prev, [field]: value }));
 
@@ -159,6 +192,9 @@ export function useTechnicalReviewForm(reviewId) {
         issueDialog,
         setIssueDialog,
         handleSave,
+        handleAddParticipant,
+        handleAddMaterial,
+        handleCreateChecklistRecord,
         handleCreateIssue,
         fetchReview,
     };

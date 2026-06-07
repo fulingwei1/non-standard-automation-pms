@@ -20,6 +20,9 @@ vi.mock("../../../../services/api", () => ({
     get: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    addParticipant: vi.fn(),
+    addMaterial: vi.fn(),
+    createChecklistRecord: vi.fn(),
     createIssue: vi.fn(),
   },
   projectApi: {
@@ -57,6 +60,9 @@ describe("useTechnicalReviewForm", () => {
         issues: [],
       },
     });
+    technicalReviewApi.addParticipant.mockResolvedValue({ data: { id: 21 } });
+    technicalReviewApi.addMaterial.mockResolvedValue({ data: { id: 31 } });
+    technicalReviewApi.createChecklistRecord.mockResolvedValue({ data: { id: 41 } });
     technicalReviewApi.createIssue.mockResolvedValue({ data: { id: 11 } });
   });
 
@@ -149,5 +155,108 @@ describe("useTechnicalReviewForm", () => {
     );
     expect(technicalReviewApi.get).toHaveBeenCalledTimes(2);
     expect(result.current.issueDialog.open).toBe(false);
+  });
+
+  it("adds a review participant and refreshes the review detail", async () => {
+    const { result } = renderHook(() => useTechnicalReviewForm("7"));
+
+    await waitFor(() => {
+      expect(technicalReviewApi.get).toHaveBeenCalledWith("7");
+    });
+
+    await act(async () => {
+      await result.current.handleAddParticipant({
+        review_id: 7,
+        user_id: 3,
+        role: "expert",
+        is_required: true,
+      });
+    });
+
+    expect(technicalReviewApi.addParticipant).toHaveBeenCalledWith(
+      "7",
+      expect.objectContaining({
+        review_id: 7,
+        user_id: 3,
+        role: "expert",
+        is_required: true,
+      }),
+    );
+    expect(technicalReviewApi.get).toHaveBeenCalledTimes(2);
+    expect(result.current.participantDialog.open).toBe(false);
+  });
+
+  it("adds a review material and refreshes the review detail", async () => {
+    const { result } = renderHook(() => useTechnicalReviewForm("7"));
+
+    await waitFor(() => {
+      expect(technicalReviewApi.get).toHaveBeenCalledWith("7");
+    });
+
+    await act(async () => {
+      await result.current.handleAddMaterial({
+        review_id: 7,
+        material_type: "drawing",
+        material_name: "总装图纸",
+        file_path: "/reviews/7/assembly.pdf",
+        file_size: 2048,
+        version: "A1",
+        is_required: true,
+      });
+    });
+
+    expect(technicalReviewApi.addMaterial).toHaveBeenCalledWith(
+      "7",
+      expect.objectContaining({
+        review_id: 7,
+        material_type: "drawing",
+        material_name: "总装图纸",
+        file_path: "/reviews/7/assembly.pdf",
+        file_size: 2048,
+        version: "A1",
+        is_required: true,
+      }),
+    );
+    expect(technicalReviewApi.get).toHaveBeenCalledTimes(2);
+    expect(result.current.materialDialog.open).toBe(false);
+  });
+
+  it("creates a checklist record and refreshes the review detail", async () => {
+    const { result } = renderHook(() => useTechnicalReviewForm("7"));
+
+    await waitFor(() => {
+      expect(technicalReviewApi.get).toHaveBeenCalledWith("7");
+    });
+
+    await act(async () => {
+      await result.current.handleCreateChecklistRecord({
+        review_id: 7,
+        checklist_item_id: null,
+        category: "机械设计",
+        check_item: "定位基准是否明确",
+        result: "FAIL",
+        issue_level: "B",
+        issue_desc: "定位销校核缺少计算依据",
+        checker_id: 3,
+        remark: "评审会上提出",
+      });
+    });
+
+    expect(technicalReviewApi.createChecklistRecord).toHaveBeenCalledWith(
+      "7",
+      expect.objectContaining({
+        review_id: 7,
+        checklist_item_id: null,
+        category: "机械设计",
+        check_item: "定位基准是否明确",
+        result: "FAIL",
+        issue_level: "B",
+        issue_desc: "定位销校核缺少计算依据",
+        checker_id: 3,
+        remark: "评审会上提出",
+      }),
+    );
+    expect(technicalReviewApi.get).toHaveBeenCalledTimes(2);
+    expect(result.current.checklistDialog.open).toBe(false);
   });
 });

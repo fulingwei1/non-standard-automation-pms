@@ -20,7 +20,10 @@ import { ParticipantsTab } from "./ParticipantsTab";
 import { MaterialsTab } from "./MaterialsTab";
 import { ChecklistTab } from "./ChecklistTab";
 import { IssuesTab } from "./IssuesTab";
+import { ReviewChecklistDialog } from "./ReviewChecklistDialog";
 import { ReviewIssueDialog } from "./ReviewIssueDialog";
+import { ReviewMaterialDialog } from "./ReviewMaterialDialog";
+import { ReviewParticipantDialog } from "./ReviewParticipantDialog";
 import { buildTechnicalReviewListPath } from "./navigation";
 
 export default function TechnicalReviewDetail() {
@@ -43,12 +46,18 @@ export default function TechnicalReviewDetail() {
         materials,
         checklistRecords,
         issues,
+        participantDialog,
+        materialDialog,
+        checklistDialog,
         issueDialog,
         setParticipantDialog,
         setMaterialDialog,
         setChecklistDialog,
         setIssueDialog,
         handleSave,
+        handleAddParticipant,
+        handleAddMaterial,
+        handleCreateChecklistRecord,
         handleCreateIssue,
         fetchReview,
     } = useTechnicalReviewForm(reviewId);
@@ -164,13 +173,35 @@ export default function TechnicalReviewDetail() {
             </div>
 
             {!isNew && (
-                <ReviewIssueDialog
-                    open={Boolean(issueDialog?.open)}
-                    onOpenChange={(open) => setIssueDialog({ open })}
-                    reviewId={reviewId}
-                    users={users}
-                    onSubmit={handleCreateIssue}
-                />
+                <>
+                    <ReviewParticipantDialog
+                        open={Boolean(participantDialog?.open)}
+                        onOpenChange={(open) => setParticipantDialog({ open })}
+                        reviewId={reviewId}
+                        users={users}
+                        onSubmit={handleAddParticipant}
+                    />
+                    <ReviewMaterialDialog
+                        open={Boolean(materialDialog?.open)}
+                        onOpenChange={(open) => setMaterialDialog({ open })}
+                        reviewId={reviewId}
+                        onSubmit={handleAddMaterial}
+                    />
+                    <ReviewChecklistDialog
+                        open={Boolean(checklistDialog?.open)}
+                        onOpenChange={(open) => setChecklistDialog({ open })}
+                        reviewId={reviewId}
+                        users={users}
+                        onSubmit={handleCreateChecklistRecord}
+                    />
+                    <ReviewIssueDialog
+                        open={Boolean(issueDialog?.open)}
+                        onOpenChange={(open) => setIssueDialog({ open })}
+                        reviewId={reviewId}
+                        users={users}
+                        onSubmit={handleCreateIssue}
+                    />
+                </>
             )}
         </div>
     );
