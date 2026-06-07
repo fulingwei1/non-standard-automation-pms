@@ -30,6 +30,7 @@ export default function ProjectOverviewDashboard() {
   const proc = overview.procurement || {};
   const del_ = overview.delivery || {};
   const as_ = overview.after_sales || {};
+  const projectQuery = `project_id=${encodeURIComponent(projectId)}`;
 
   return (
     <div className="p-6">
@@ -40,7 +41,7 @@ export default function ProjectOverviewDashboard() {
 
       <div className="grid grid-cols-2 gap-6">
         {/* 生产模块 */}
-        <Card className="cursor-pointer hover:shadow-lg transition" onClick={() => navigate(`/projects/${projectId}/production`)}>
+        <Card className="cursor-pointer hover:shadow-lg transition" onClick={() => navigate(`/production-plans?${projectQuery}`)}>
           <CardHeader><CardTitle className="flex items-center justify-between"><span>🏭 生产状态</span><Badge>查看详情</Badge></CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-4 text-center">
@@ -53,7 +54,7 @@ export default function ProjectOverviewDashboard() {
         </Card>
 
         {/* 采购模块 */}
-        <Card className="cursor-pointer hover:shadow-lg transition" onClick={() => navigate(`/projects/${projectId}/procurement`)}>
+        <Card className="cursor-pointer hover:shadow-lg transition" onClick={() => navigate(`/material-demands?${projectQuery}`)}>
           <CardHeader><CardTitle className="flex items-center justify-between"><span>🛒 采购状态</span><Badge>查看详情</Badge></CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-4 text-center">
