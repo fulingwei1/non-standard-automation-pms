@@ -34,38 +34,38 @@ class ProjectDataFlowService:
         if not project:
             return {"error": "项目不存在"}
         
-        # 查询项目的 WBS 任务（生产类型）
-        from app.models.project.extensions import ProjectTask
-        
-        tasks = self.db.query(ProjectTask).filter(
-            ProjectTask.project_id == project_id,
-            ProjectTask.task_type.in_(["ASSEMBLY", "DEBUG", "PRODUCTION"]),
+        # 查询项目 WBS 中会进入生产执行的任务
+        from app.models.progress import Task
+
+        tasks = self.db.query(Task).filter(
+            Task.project_id == project_id,
+            Task.stage.in_(["S4", "S5"]),
         ).all()
         
         created_orders = []
         skipped = 0
         
         for task in tasks:
+            task_code = task.task_code or str(task.id)
+            wo_no = f"WO-{project.project_code}-{task_code}"
+
             # 检查是否已有工单
             existing = self.db.query(WorkOrder).filter(
                 WorkOrder.project_id == project_id,
-                WorkOrder.source_task_id == task.id,
+                WorkOrder.work_order_no == wo_no,
             ).first()
             
             if existing:
                 skipped += 1
                 continue
             
-            # 创建生产工单
-            wo_no = f"WO-{project.project_code}-{task.task_no}"
-            
             work_order = WorkOrder(
                 work_order_no=wo_no,
                 project_id=project_id,
-                source_task_id=task.id,
-                task_name=task.task_name,
-                planned_start=task.planned_start,
-                planned_end=task.planned_end,
+                task_name=task.task_name or task_code,
+                task_type=_work_order_type_for_stage(task.stage),
+                plan_start_date=task.plan_start,
+                plan_end_date=task.plan_end,
                 status="PENDING",
             )
             
@@ -111,12 +111,23 @@ class ProjectDataFlowService:
                 if mid not in material_needs:
                     material_needs[mid] = {
                         "material_id": mid,
+                        "bom_item_id": item.id,
+                        "material_code": item.material_code,
                         "material_name": item.material_name,
+                        "specification": item.specification,
+                        "unit": item.unit or "件",
+                        "unit_price": Decimal(str(item.unit_price or 0)),
+                        "required_date": item.required_date,
                         "total_qty": Decimal("0"),
                         "bom_items": [],
                     }
                 material_needs[mid]["total_qty"] += Decimal(str(item.quantity or 0))
                 material_needs[mid]["bom_items"].append(item.id)
+                if item.required_date and (
+                    material_needs[mid]["required_date"] is None
+                    or item.required_date < material_needs[mid]["required_date"]
+                ):
+                    material_needs[mid]["required_date"] = item.required_date
         
         # 扣减库存
         for mid, need in material_needs.items():
@@ -134,6 +145,8 @@ class ProjectDataFlowService:
         pr = PurchaseRequest(
             request_no=request_no,
             project_id=project_id,
+            source_type="BOM",
+            source_id=bom_headers[0].id,
             request_reason=f"项目 BOM 自动生成",
             status="DRAFT",
         )
@@ -141,15 +154,27 @@ class ProjectDataFlowService:
         self.db.flush()
         
         items_created = 0
+        total_amount = Decimal("0")
         for mid, need in material_needs.items():
             if need["net_qty"] > 0:
+                amount = need["net_qty"] * need["unit_price"]
                 pri = PurchaseRequestItem(
                     request_id=pr.id,
+                    bom_item_id=need["bom_item_id"],
                     material_id=mid,
+                    material_code=need["material_code"],
+                    material_name=need["material_name"],
+                    specification=need["specification"],
+                    unit=need["unit"],
                     quantity=need["net_qty"],
+                    unit_price=need["unit_price"],
+                    amount=amount,
+                    required_date=need["required_date"],
                 )
                 self.db.add(pri)
                 items_created += 1
+                total_amount += amount
+        pr.total_amount = total_amount
         
         self.db.commit()
         
@@ -312,3 +337,11 @@ class ProjectDataFlowService:
 def get_project_data_flow_service(db: Session) -> ProjectDataFlowService:
     """获取项目数据流通服务"""
     return ProjectDataFlowService(db)
+
+
+def _work_order_type_for_stage(stage: Optional[str]) -> str:
+    """把项目 WBS 阶段映射为生产工单类型"""
+    return {
+        "S4": "PRODUCTION",
+        "S5": "ASSEMBLY",
+    }.get(stage or "", "OTHER")
