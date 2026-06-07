@@ -4,7 +4,7 @@ PMO 立项管理服务层
 """
 from datetime import date, datetime
 from decimal import Decimal
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
@@ -136,6 +136,85 @@ class PmoInitiationService:
                 candidates.append(user)
 
         return candidates or users
+
+    def build_presale_handover_context(
+        self, initiation: PmoProjectInitiation
+    ) -> Dict[str, Any]:
+        """构建立项审批前可查看的销售/售前交接包。"""
+        from app.services.project_workspace_service import (
+            _build_contract_payload,
+            _build_opportunity_payload,
+            _build_presale_solution_payload,
+            _build_presale_ticket_payload,
+            _num,
+        )
+
+        contract = self._find_contract_for_initiation(initiation)
+        solution = self._find_solution_for_initiation(initiation)
+        ticket = None
+        if solution and getattr(solution, "ticket_id", None):
+            ticket = (
+                self.db.query(PresaleSupportTicket)
+                .filter(PresaleSupportTicket.id == solution.ticket_id)
+                .first()
+            )
+
+        opportunity = getattr(contract, "opportunity", None) if contract else None
+        if not opportunity and solution and getattr(solution, "opportunity_id", None):
+            opportunity = (
+                self.db.query(Opportunity)
+                .filter(Opportunity.id == solution.opportunity_id)
+                .first()
+            )
+
+        presale_estimated_cost = (
+            getattr(solution, "estimated_cost", None) if solution else None
+        )
+        baseline_cost = {
+            "contract_amount": _num(
+                getattr(contract, "total_amount", None)
+                if contract
+                else initiation.contract_amount
+            ),
+            "presale_estimated_cost": _num(presale_estimated_cost),
+            "presale_suggested_price": _num(
+                getattr(solution, "suggested_price", None) if solution else None
+            ),
+            "estimated_hours": (
+                getattr(solution, "estimated_hours", None)
+                if solution and getattr(solution, "estimated_hours", None) is not None
+                else initiation.estimated_hours
+            ),
+        }
+
+        missing = []
+        if not contract:
+            missing.append("contract")
+        if not opportunity:
+            missing.append("opportunity")
+        if not solution:
+            missing.append("presale_solution")
+        if not ticket:
+            missing.append("presale_ticket")
+        if (
+            baseline_cost["contract_amount"] is None
+            and baseline_cost["presale_estimated_cost"] is None
+        ):
+            missing.append("baseline_cost")
+
+        return {
+            "contract": _build_contract_payload(contract),
+            "opportunity": _build_opportunity_payload(opportunity),
+            "presale_solution": (
+                _build_presale_solution_payload(solution) if solution else None
+            ),
+            "presale_ticket": _build_presale_ticket_payload(ticket) if ticket else None,
+            "baseline_cost": baseline_cost,
+            "handover_status": {
+                "ready": not missing,
+                "missing": missing,
+            },
+        }
 
     def create_initiation(
         self, initiation_in: InitiationCreate, current_user: User

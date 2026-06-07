@@ -671,6 +671,10 @@ class TestSalesClosedLoop:
             applicant_name=admin_user.real_name or admin_user.username,
             status="COMPLETED",
             actual_hours=Decimal("12.5"),
+            pm_involvement_required=True,
+            pm_involvement_risk_level="高",
+            pm_involvement_risk_factors=["金额高", "交期紧"],
+            pm_assigned=False,
             created_by=admin_user.id,
         )
         db_session.add(ticket)
@@ -714,6 +718,25 @@ class TestSalesClosedLoop:
         )
         assert initiation_response.status_code == 201, initiation_response.text
         initiation = initiation_response.json()
+
+        initiation_detail_response = client.get(
+            f"{settings.API_V1_PREFIX}/pmo/initiations/{initiation['id']}",
+            headers=headers,
+        )
+        assert initiation_detail_response.status_code == 200, initiation_detail_response.text
+        initiation_detail = initiation_detail_response.json()
+        handover = initiation_detail["presale_handover_context"]
+        assert handover["contract"]["contract_code"] == contract["contract_code"]
+        assert handover["presale_solution"]["id"] == solution.id
+        assert handover["presale_solution"]["estimated_cost"] == 90000.0
+        assert handover["presale_ticket"]["id"] == ticket.id
+        assert handover["presale_ticket"]["actual_hours"] == 12.5
+        assert handover["presale_ticket"]["pm_involvement_required"] is True
+        assert handover["presale_ticket"]["pm_involvement_risk_level"] == "高"
+        assert handover["presale_ticket"]["pm_involvement_risk_factors"] == ["金额高", "交期紧"]
+        assert handover["presale_ticket"]["pm_assigned"] is False
+        assert handover["baseline_cost"]["presale_estimated_cost"] == 90000.0
+        assert handover["handover_status"]["ready"] is True
 
         submit_response = client.put(
             f"{settings.API_V1_PREFIX}/pmo/initiations/{initiation['id']}/submit",

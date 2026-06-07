@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { pmoApi } from "../../../services/api";
 import { logger } from "../../../utils/logger";
 
-export function useInitiationManagement() {
+export function useInitiationManagement(detailId = null) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [initiations, setInitiations] = useState([]);
@@ -22,6 +22,14 @@ export function useInitiationManagement() {
         try {
             setLoading(true);
             setError(null);
+            if (detailId) {
+                const res = await pmoApi.initiations.get(detailId);
+                const item = res?.data;
+                setInitiations(item ? [item] : []);
+                setTotal(item ? 1 : 0);
+                return;
+            }
+
             const params = {
                 page,
                 page_size: pageSize,
@@ -52,7 +60,7 @@ export function useInitiationManagement() {
         } finally {
             setLoading(false);
         }
-    }, [page, pageSize, keyword, statusFilter]);
+    }, [detailId, page, pageSize, keyword, statusFilter]);
 
     useEffect(() => {
         fetchData();

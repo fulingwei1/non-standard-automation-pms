@@ -17,6 +17,35 @@ const staggerChild = {
     visible: { opacity: 1, y: 0 }
 };
 
+const normalizeRiskFactors = (value) => {
+    if (Array.isArray(value)) {
+        return value.filter(Boolean);
+    }
+    if (typeof value === "string" && value.trim()) {
+        try {
+            const parsed = JSON.parse(value);
+            if (Array.isArray(parsed)) {
+                return parsed.filter(Boolean);
+            }
+        } catch {
+            // Plain comma or Chinese-comma separated text is accepted below.
+        }
+        return value
+            .split(/[、,，]/)
+            .map((item) => item.trim())
+            .filter(Boolean);
+    }
+    return [];
+};
+
+const formatRiskLevel = (riskLevel) => {
+    if (!riskLevel) {
+        return "风险待判";
+    }
+    const text = String(riskLevel);
+    return text.includes("风险") ? text : `${text}风险`;
+};
+
 export function InitiationList({
     loading,
     error,
@@ -87,6 +116,17 @@ export function InitiationList({
                     if (!initiation || !initiation.id) return null;
                     const statusBadge = getStatusBadge(initiation.status);
                     const canReview = ["SUBMITTED", "REVIEWING"].includes(initiation.status);
+                    const handover = initiation.presale_handover_context;
+                    const presaleSolution = handover?.presale_solution;
+                    const presaleTicket = handover?.presale_ticket;
+                    const handoverStatus = handover?.handover_status;
+                    const riskFactors = normalizeRiskFactors(
+                        presaleTicket?.pm_involvement_risk_factors,
+                    );
+                    const riskFactorsText = riskFactors.join("、");
+                    const pmAssignmentLabel = presaleTicket?.pm_assigned
+                        ? "PM已分配"
+                        : "PM未分配";
 
                     return (
                         <motion.div key={initiation.id} variants={staggerChild}>
@@ -141,6 +181,64 @@ export function InitiationList({
                                             </p>
                                         </div>
                                     </div>
+
+                                    {handover && (
+                                        <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <p className="text-sm font-medium text-white">
+                                                    售前交接包
+                                                </p>
+                                                <Badge variant={handoverStatus?.ready ? "success" : "secondary"}>
+                                                    {handoverStatus?.ready ? "已齐套" : "待补齐"}
+                                                </Badge>
+                                            </div>
+                                            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                                <div>
+                                                    <span className="text-xs text-slate-400">售前方案</span>
+                                                    <p className="mt-1 text-sm text-white">
+                                                        {presaleSolution?.name || "未关联"}
+                                                    </p>
+                                                    <p className="mt-1 text-xs text-slate-500">
+                                                        {presaleSolution?.estimated_cost != null
+                                                            ? formatCurrency(presaleSolution.estimated_cost)
+                                                            : "成本未估算"}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs text-slate-400">售前工单</span>
+                                                    <p className="mt-1 text-sm text-white">
+                                                        {presaleTicket?.ticket_no || "未关联"}
+                                                    </p>
+                                                    <p className="mt-1 text-xs text-slate-500">
+                                                        {presaleTicket?.actual_hours != null
+                                                            ? `${presaleTicket.actual_hours} 小时`
+                                                            : "未记录工时"}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs text-slate-400">审批风险</span>
+                                                    {presaleTicket?.pm_involvement_required ? (
+                                                        <div className="mt-1 flex flex-wrap gap-2">
+                                                            <Badge variant="warning">PM提前介入</Badge>
+                                                            <Badge variant="outline">
+                                                                {formatRiskLevel(
+                                                                    presaleTicket.pm_involvement_risk_level,
+                                                                )}
+                                                            </Badge>
+                                                            <Badge variant="outline">{pmAssignmentLabel}</Badge>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="mt-1 text-sm text-slate-500">未触发PM提前介入</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {riskFactorsText && (
+                                                <p className="mt-3 text-xs text-amber-200">
+                                                    {riskFactorsText}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
 
                                     <div className="flex items-center justify-between pt-4 border-t border-white/5">
                                         <div className="flex items-center gap-2">

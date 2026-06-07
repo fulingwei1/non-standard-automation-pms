@@ -25,7 +25,10 @@ from app.services.pmo_initiation import PmoInitiationService
 router = APIRouter(tags=["pmo-initiation"])
 
 
-def _to_response(initiation) -> InitiationResponse:
+def _to_response(
+    initiation,
+    presale_handover_context: Optional[dict[str, Any]] = None,
+) -> InitiationResponse:
     """将 ORM 对象转换为响应模型"""
     return InitiationResponse(
         id=initiation.id,
@@ -56,6 +59,7 @@ def _to_response(initiation) -> InitiationResponse:
         approved_by=initiation.approved_by,
         created_at=initiation.created_at,
         updated_at=initiation.updated_at,
+        presale_handover_context=presale_handover_context,
     )
 
 
@@ -91,7 +95,13 @@ def read_initiations(
             contract_no=contract_no,
         )
 
-        items = [_to_response(init) for init in initiations]
+        items = [
+            _to_response(
+                init,
+                presale_handover_context=service.build_presale_handover_context(init),
+            )
+            for init in initiations
+        ]
         return pagination.to_response(items, total)
     except Exception as e:
         import traceback
@@ -129,7 +139,10 @@ def create_initiation(
     try:
         service = PmoInitiationService(db)
         initiation = service.create_initiation(initiation_in, current_user)
-        return _to_response(initiation)
+        return _to_response(
+            initiation,
+            presale_handover_context=service.build_presale_handover_context(initiation),
+        )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -147,7 +160,10 @@ def read_initiation(
     if not initiation:
         raise HTTPException(status_code=404, detail="立项申请不存在")
 
-    return _to_response(initiation)
+    return _to_response(
+        initiation,
+        presale_handover_context=service.build_presale_handover_context(initiation),
+    )
 
 
 @router.put("/pmo/initiations/{initiation_id}", response_model=InitiationResponse)
@@ -162,7 +178,10 @@ def update_initiation(
     try:
         service = PmoInitiationService(db)
         initiation = service.update_initiation(initiation_id, initiation_in)
-        return _to_response(initiation)
+        return _to_response(
+            initiation,
+            presale_handover_context=service.build_presale_handover_context(initiation),
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

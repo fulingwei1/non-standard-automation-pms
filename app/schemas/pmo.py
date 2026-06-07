@@ -88,6 +88,7 @@ class InitiationResponse(TimestampSchema):
     approved_level: Optional[str] = None
     approved_at: Optional[datetime] = None
     approved_by: Optional[int] = None
+    presale_handover_context: Optional[Dict[str, Any]] = None
 
     @field_validator("application_no", "project_name", "customer_name", mode="before")
     @classmethod

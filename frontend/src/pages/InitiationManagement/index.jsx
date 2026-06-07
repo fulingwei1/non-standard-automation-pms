@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { Button } from "../../components/ui";
@@ -12,6 +12,7 @@ import {
 
 export default function InitiationManagement() {
     const navigate = useNavigate();
+    const { id: initiationId } = useParams();
     const {
         loading,
         error,
@@ -32,13 +33,13 @@ export default function InitiationManagement() {
         openRejectDialog,
         handleReview,
         fetchData
-    } = useInitiationManagement();
+    } = useInitiationManagement(initiationId);
 
     return (
         <div>
             <PageHeader
                 title="立项管理"
-                description="项目立项申请与评审管理"
+                description={initiationId ? "立项申请详情与评审管理" : "项目立项申请与评审管理"}
                 action={
                     <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
                         <Plus className="h-4 w-4" />
