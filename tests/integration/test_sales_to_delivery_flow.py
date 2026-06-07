@@ -491,11 +491,14 @@ class TestSalesLeadToDelivery:
         场景：报价经客户确认后签订合同，
               验证付款节点比例合计 = 100%（3-3-3-1 模式）。
         """
+        from app.models.project import ProjectPaymentPlan
         from app.models.sales import Contract
+        from app.services.sales.payment_plan_service import PaymentPlanService
+        from app.services.status_transition_service import StatusTransitionService
 
         contract_amount = Decimal("300000.00")
 
-        # 4-a 创建合同
+        # 4-a 创建并签订合同
         contract = Contract(
             contract_code=_CTR260217001,
             contract_name="比亚迪电子ADAS ICT测试系统销售合同",
@@ -509,7 +512,7 @@ class TestSalesLeadToDelivery:
             expiry_date=date.today() + timedelta(days=365),
             payment_terms="30%预付款 + 30%中期款 + 30%验收款 + 10%质保金",
             delivery_terms="合同签订后90个工作日内完成FAT验收",
-            status="signed",
+            status="SIGNED",
             sales_owner_id=sales_user.id,
         )
         db.add(contract)
@@ -518,83 +521,44 @@ class TestSalesLeadToDelivery:
         flow_state["contract_id"] = contract.id
         flow_state["contract_amount"] = float(contract_amount)
 
-        # 4-b 创建付款节点（3/3/3/1 比例）
-        payment_nodes = [
-            {
-                "payment_no": 1,
-                "payment_name": "预付款（合同签订）",
-                "payment_type": "ADVANCE",
-                "payment_ratio": Decimal("30.00"),
-                "planned_amount": contract_amount * Decimal("0.30"),
-                "planned_date": date.today() + timedelta(days=7),
-                "trigger_condition": "合同签订后7天内",
-            },
-            {
-                "payment_no": 2,
-                "payment_name": "中期款（图纸确认）",
-                "payment_type": "DELIVERY",
-                "payment_ratio": Decimal("30.00"),
-                "planned_amount": contract_amount * Decimal("0.30"),
-                "planned_date": date.today() + timedelta(days=45),
-                "trigger_condition": "图纸及方案确认后",
-            },
-            {
-                "payment_no": 3,
-                "payment_name": "验收款（FAT通过）",
-                "payment_type": "ACCEPTANCE",
-                "payment_ratio": Decimal("30.00"),
-                "planned_amount": contract_amount * Decimal("0.30"),
-                "planned_date": date.today() + timedelta(days=90),
-                "trigger_condition": "FAT出厂验收通过",
-            },
-            {
-                "payment_no": 4,
-                "payment_name": "质保金（SAT通过后1年）",
-                "payment_type": "WARRANTY",
-                "payment_ratio": Decimal("10.00"),
-                "planned_amount": contract_amount * Decimal("0.10"),
-                "planned_date": date.today() + timedelta(days=365),
-                "trigger_condition": "SAT现场验收通过后12个月质保期满",
-            },
-        ]
+        # 4-b 签约后自动建项，再按合同付款条款生成挂项目的收款计划
+        project = StatusTransitionService(db).handle_contract_signed(
+            contract.id, auto_create_project=True
+        )
+        assert project is not None, "合同签订后应自动创建项目"
 
-        from app.models.project import ProjectPaymentPlan
-
-        plans = []
-        for node in payment_nodes:
-            plan = ProjectPaymentPlan(
-                project_id=None,  # 合同签订时项目尚未立项，project_id 留空
-                contract_id=contract.id,
-                payment_no=node["payment_no"],
-                payment_name=node["payment_name"],
-                payment_type=node["payment_type"],
-                payment_ratio=node["payment_ratio"],
-                planned_amount=node["planned_amount"],
-                planned_date=node["planned_date"],
-                trigger_condition=node["trigger_condition"],
-                status="PENDING",
-            )
-            db.add(plan)
-            plans.append(plan)
-
+        project.planned_start_date = date.today()
+        project.planned_end_date = date.today() + timedelta(days=90)
         db.commit()
+        db.refresh(contract)
+        db.refresh(project)
+
+        plans = PaymentPlanService(db).generate_payment_plans_from_contract(contract)
+        db.commit()
+
+        flow_state["project_id"] = project.id
+        flow_state["project_code"] = project.project_code
         flow_state["payment_plan_ids"] = [
             p.id
-            for p in [
-                db.query(ProjectPaymentPlan)
-                .filter(ProjectPaymentPlan.contract_id == contract.id)
-                .order_by(ProjectPaymentPlan.payment_no)
-                .all()
-            ][0]
-        ]  # flatten
+            for p in db.query(ProjectPaymentPlan)
+            .filter(ProjectPaymentPlan.contract_id == contract.id)
+            .order_by(ProjectPaymentPlan.payment_no)
+            .all()
+        ]
 
         # ── 断言 ──
         all_plans = (
-            db.query(ProjectPaymentPlan).filter(ProjectPaymentPlan.contract_id == contract.id).all()
+            db.query(ProjectPaymentPlan)
+            .filter(ProjectPaymentPlan.contract_id == contract.id)
+            .order_by(ProjectPaymentPlan.payment_no)
+            .all()
         )
         total_ratio = sum(float(p.payment_ratio) for p in all_plans)
         assert abs(total_ratio - 100.0) < 0.01, f"付款节点比例合计 {total_ratio:.1f}% ≠ 100%"
         assert len(all_plans) == 4, "应有 4 个付款节点（3+3+3+1）"
+        assert len(plans) == 4, "签约后应自动生成 4 个收款计划"
+        assert all(p.project_id == project.id for p in all_plans), "收款计划必须关联自动创建的项目"
+        assert [float(p.payment_ratio) for p in all_plans] == [30.0, 30.0, 30.0, 10.0]
         # 验证付款类型顺序
         types = [p.payment_type for p in all_plans]
         assert "ADVANCE" in types and "WARRANTY" in types, "应含预付款和质保金节点"
@@ -602,6 +566,7 @@ class TestSalesLeadToDelivery:
         print(
             f"\n✓ 合同 {contract.contract_code} 签订 | "
             f"金额 ¥{contract_amount:,.0f} | "
+            f"自动建项 {project.project_code} | "
             f"付款节点 {len(all_plans)} 期 | 比例合计 {total_ratio:.0f}%"
         )
 
@@ -611,53 +576,29 @@ class TestSalesLeadToDelivery:
 
     def test_project_initiation_from_contract(self, db, pm_user, byd_customer, flow_state):
         """
-        场景：从已签合同生成项目，
+        场景：复核已签合同自动生成的项目，并补齐项目经理和计划周期，
               验证项目编号格式为 PJyymmddxxx（如 PJ260217001）。
         """
+        from app.models.project import ProjectPaymentPlan
         from app.models.project import Project
 
-        # 5-a 根据合同信息生成项目
-        today = date.today()
-        project_code = f"PJ{today.strftime('%y%m%d')}001"
-
-        project = Project(
-            project_code=project_code,
-            project_name="比亚迪电子ADAS域控制器ICT在线测试系统",
-            short_name="BYD-ADAS-ICT",
-            customer_id=byd_customer.id,
-            customer_name="比亚迪电子",
-            contract_no=f_CTR260217001,
-            project_type="ICT",
-            industry="汽车电子",
-            project_category="销售",
-            stage="S1",
-            status="ST01",
-            health="H1",
-            contract_amount=Decimal(str(flow_state["contract_amount"])),
-            budget_amount=Decimal(str(flow_state["contract_amount"])),
-            planned_start_date=today,
-            planned_end_date=today + timedelta(days=90),
-            pm_id=pm_user.id,
-            pm_name=pm_user.real_name,
-            priority="HIGH",
-            description=(
-                "ADAS域控制器主板ICT在线测试系统，"
-                "兼容8版本测试点，节拍≤10秒/件，源自合同 CTR260217001"
-            ),
+        # 5-a 复核合同签订时自动生成的项目，并补齐项目管理信息
+        project = db.query(Project).filter(Project.id == flow_state["project_id"]).first()
+        assert project is not None, "合同签订后应已有项目"
+        project.short_name = "BYD-ADAS-ICT"
+        project.project_category = "销售"
+        project.pm_id = pm_user.id
+        project.pm_name = pm_user.real_name
+        project.priority = "HIGH"
+        project.description = (
+            "ADAS域控制器主板ICT在线测试系统，"
+            "兼容8版本测试点，节拍≤10秒/件，源自合同 CTR260217001"
         )
-        db.add(project)
         db.commit()
         db.refresh(project)
+
         flow_state["project_id"] = project.id
         flow_state["project_code"] = project.project_code
-
-        # 5-b 将付款计划关联到项目
-        from app.models.project import ProjectPaymentPlan
-
-        db.query(ProjectPaymentPlan).filter(
-            ProjectPaymentPlan.contract_id == flow_state["contract_id"]
-        ).update({"project_id": project.id})
-        db.commit()
 
         # ── 断言 ──
         import re
@@ -668,7 +609,17 @@ class TestSalesLeadToDelivery:
         ), f"项目编号 {project.project_code!r} 不符合 PJyymmddxxx 格式"
         assert project.customer_id == byd_customer.id
         assert float(project.contract_amount) == flow_state["contract_amount"]
+        assert project.contract_no == _CTR260217001
         assert project.pm_id == pm_user.id
+        linked_plan_count = (
+            db.query(ProjectPaymentPlan)
+            .filter(
+                ProjectPaymentPlan.contract_id == flow_state["contract_id"],
+                ProjectPaymentPlan.project_id == project.id,
+            )
+            .count()
+        )
+        assert linked_plan_count == 4, "合同收款计划应已关联到自动创建的项目"
 
         print(
             f"\n✓ 项目立项 {project.project_code} | "
@@ -865,6 +816,7 @@ class TestSalesLeadToDelivery:
         pr_ni = PurchaseRequest(
             request_no="PR260217001",
             project_id=flow_state["project_id"],
+            supplier_id=flow_state["ni_vendor_id"],
             source_type="BOM",
             source_id=flow_state["bom_id"],
             request_reason="BOM缺料自动触发采购申请 - NI仪器仪表",
@@ -896,6 +848,7 @@ class TestSalesLeadToDelivery:
         pr_other = PurchaseRequest(
             request_no="PR260217002",
             project_id=flow_state["project_id"],
+            supplier_id=flow_state["smc_vendor_id"],
             source_type="BOM",
             source_id=flow_state["bom_id"],
             request_reason="BOM缺料自动触发采购申请 - 气动元件/视觉器件",
@@ -952,11 +905,12 @@ class TestSalesLeadToDelivery:
 
         assert len(ni_items) == 1, "NI采购申请应有1行（机箱）"
         assert float(ni_items[0].quantity) == 1.0, "NI机箱数量应为1台"
-        assert ni_items[0].supplier_id == flow_state["ni_vendor_id"], "供应商应为NI"
+        assert pr_ni.supplier_id == flow_state["ni_vendor_id"], "NI采购申请供应商应为NI"
 
         assert len(other_items) == 2, "其他采购申请应有2行（气缸+相机）"
         cyl = next(i for i in other_items if "气缸" in i.material_name)
         assert float(cyl.quantity) == 8.0, "气缸数量应为8个"
+        assert pr_other.supplier_id == flow_state["smc_vendor_id"], "其他采购申请供应商应为SMC"
 
         print(
             f"\n✓ 采购申请 {pr_ni.request_no}（NI机箱）+ "
@@ -1236,12 +1190,12 @@ class TestSalesLeadToDelivery:
 
         # 11-b 核算实际成本（基于 SAMPLE_COSTS 行业基准数据）
         actual_costs = {
-            "硬件采购": 175_000,  # NI机箱+板卡+气缸+相机+夹具材料
-            "人工成本": 72_000,  # 5人×2个月
-            "外协加工": 28_000,  # 夹具机加工（超预算）
-            "差旅费用": 8_500,  # 客户现场调试
+            "硬件采购": 118_000,  # NI机箱+板卡+气缸+相机+夹具材料
+            "人工成本": 46_000,  # 5人×2个月
+            "外协加工": 22_000,  # 夹具机加工
+            "差旅费用": 6_500,  # 客户现场调试
         }
-        total_actual_cost = sum(actual_costs.values())  # 283,500
+        total_actual_cost = sum(actual_costs.values())  # 192,500
 
         contract_amount = flow_state["contract_amount"]  # 300,000
         gross_profit = contract_amount - total_actual_cost
