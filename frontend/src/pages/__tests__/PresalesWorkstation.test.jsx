@@ -287,4 +287,81 @@ describe("PresalesWorkstation", () => {
       .toContain("建议报价");
     expect(apiMocks.presaleApi.tickets.updateProgress).not.toHaveBeenCalled();
   });
+
+  it("creates the cost baseline for a lead-stage cost ticket without opportunity context", async () => {
+    apiMocks.presaleWorkbenchApi.loadOverview.mockResolvedValue({
+      tickets: {
+        items: [
+          {
+            id: 62,
+            ticket_no: "PS-062",
+            title: "线索阶段成本核算",
+            ticket_type: "COST_ESTIMATE",
+            urgency: "NORMAL",
+            customer_id: 8,
+            customer_name: "线索客户",
+            applicant_name: "张销售",
+            status: "PROCESSING",
+            lead_id: 2026,
+            description: "还没有转商机，先核算夹治具成本",
+          },
+        ],
+        total: 1,
+      },
+      solutions: { items: [], total: 0 },
+      tenders: { items: [], total: 0 },
+      opportunities: { items: [], total: 0 },
+      templates: {
+        assessment: { items: [], total: 0 },
+        technical: { items: [], total: 0 },
+      },
+      funnel: {
+        summary: {},
+        health: {},
+        conversion: {},
+        dwellAlerts: { items: [], total: 0 },
+      },
+      meta: { failures: [] },
+    });
+    apiMocks.presaleApi.solutions.list.mockResolvedValue({ data: { items: [], total: 0 } });
+    apiMocks.presaleApi.tickets.get.mockResolvedValue({
+      data: {
+        id: 62,
+        customer_id: 8,
+        lead_id: 2026,
+      },
+    });
+    apiMocks.presaleApi.solutions.create.mockResolvedValue({ data: { id: 72 } });
+    apiMocks.presaleApi.tickets.complete.mockResolvedValue({ data: { id: 62 } });
+    apiMocks.presaleApi.tickets.updateProgress.mockResolvedValue({ data: { id: 62 } });
+
+    render(
+      <MemoryRouter>
+        <PresalesWorkstation />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(await screen.findByText("线索阶段成本核算"));
+    fireEvent.change(screen.getAllByPlaceholderText("0.00")[0], {
+      target: { value: "9" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /提交成本估算/ }));
+
+    await waitFor(() => {
+      expect(apiMocks.presaleApi.tickets.complete).toHaveBeenCalledWith(62, {
+        completion_note: expect.stringContaining("成本估算已完成"),
+      });
+    });
+    expect(apiMocks.presaleApi.solutions.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "线索阶段成本核算",
+        ticket_id: 62,
+        customer_id: 8,
+        estimated_cost: 90000,
+      }),
+    );
+    expect(apiMocks.presaleApi.solutions.create.mock.calls[0][0])
+      .not.toHaveProperty("opportunity_id");
+    expect(apiMocks.presaleApi.tickets.updateProgress).not.toHaveBeenCalled();
+  });
 });
