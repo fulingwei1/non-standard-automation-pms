@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -16,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { cn } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
+import { getProjectContextFilters } from "../lib/projectContext";
 import { purchaseApi } from "../services/api";
 import {
   MaterialStatsOverview } from
@@ -26,6 +28,13 @@ import {
  * 项目材料齐套性分析、风险评估和性能监控
  */
 export default function MaterialAnalysis() {
+  const [searchParams] = useSearchParams();
+  const projectContextQuery = searchParams.toString();
+  const projectContextFilters = useMemo(
+    () => getProjectContextFilters(searchParams),
+    [projectContextQuery],
+  );
+  const contextProjectId = projectContextFilters.project_id || "";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [projectMaterials, setProjectMaterials] = useState([]);
@@ -73,9 +82,13 @@ export default function MaterialAnalysis() {
       setError("");
       const projectMaterialsData = [];
 
-      const kitRateResponse = await purchaseApi.kitRate.dashboard();
+      const kitRateResponse = await purchaseApi.kitRate.dashboard(projectContextFilters);
       const kitRateData = kitRateResponse?.data?.data || kitRateResponse?.data || {};
-      const kitRateProjects = kitRateData.projects || [];
+      const kitRateProjects = contextProjectId
+        ? (kitRateData.projects || []).filter(
+            (project) => String(project.project_id) === String(contextProjectId)
+          )
+        : kitRateData.projects || [];
       (kitRateProjects || []).forEach((project) => {
         const totalItems = project.total_items || 0;
         const fulfilledItems = project.fulfilled_items || 0;
@@ -133,7 +146,7 @@ export default function MaterialAnalysis() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [contextProjectId, projectContextFilters]);
 
   const loadProjectDetail = useCallback(async (projectId) => {
     if (!projectId) {return;}

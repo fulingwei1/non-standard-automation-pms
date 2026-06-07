@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import { Button } from "../../components/ui/button";
+import { getProjectContextFilters } from "../../lib/projectContext";
 import { qualityApi } from "../../services/api/quality";
 
 const INSPECTION_TYPES = [
@@ -71,6 +72,7 @@ export default function InspectionList() {
   const pageSize = 20;
   const inspectionType = searchParams.get("inspection_type") || "";
   const inspectionResult = searchParams.get("inspection_result") || "";
+  const projectId = getProjectContextFilters(searchParams).project_id || "";
   const [searchText, setSearchText] = useState("");
 
   const fetchData = useCallback(async () => {
@@ -83,6 +85,7 @@ export default function InspectionList() {
       };
       if (inspectionType) params.inspection_type = inspectionType;
       if (inspectionResult) params.inspection_result = inspectionResult;
+      if (projectId) params.project_id = projectId;
 
       const res = await qualityApi.inspection.list(params);
       const resData = res.data || res;
@@ -95,7 +98,7 @@ export default function InspectionList() {
     } finally {
       setLoading(false);
     }
-  }, [page, inspectionType, inspectionResult]);
+  }, [page, inspectionType, inspectionResult, projectId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 

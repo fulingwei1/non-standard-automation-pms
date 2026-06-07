@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { PageHeader } from "../components/layout/PageHeader";
 import { staggerContainer, fadeIn } from "../lib/animations";
+import { getProjectContextFilters } from "../lib/projectContext";
 import { ecnBomApi } from "../services/api/ecnBom";
 import {
   Card,
@@ -83,7 +85,39 @@ const statusOptions = [
   { value: "closed", label: "已关闭" },
 ];
 
+const normalizeStatusKey = (status) => String(status || "").toLowerCase();
+
+const normalizePriorityKey = (priority) => {
+  const key = String(priority || "").toLowerCase();
+  return key === "normal" ? "medium" : key;
+};
+
+const normalizeEcnItem = (ecn = {}) => {
+  const projectIds = ecn.affected_projects || (ecn.project_id ? [ecn.project_id] : []);
+  return {
+    ...ecn,
+    title: ecn.title || ecn.ecn_title || "",
+    description: ecn.description || ecn.change_description || ecn.change_reason || "",
+    change_type: ecn.change_type || ecn.ecn_type || "",
+    status: normalizeStatusKey(ecn.status),
+    priority: normalizePriorityKey(ecn.priority),
+    affected_projects: projectIds,
+    affected_projects_count: ecn.affected_projects_count ?? projectIds.length,
+  };
+};
+
 export default function ECNManagement({ embedded = false }) {
+  const [searchParams] = useSearchParams();
+  const projectContextQuery = searchParams.toString();
+  const projectContextFilters = useMemo(
+    () => getProjectContextFilters(searchParams),
+    [projectContextQuery],
+  );
+  const contextProjectId = projectContextFilters.project_id || "";
+  const defaultAffectedProjects = useMemo(() => {
+    const parsed = Number(contextProjectId);
+    return Number.isInteger(parsed) && parsed > 0 ? [parsed] : [];
+  }, [contextProjectId]);
   const [loading, setLoading] = useState(true);
   const [ecns, setEcns] = useState([]);
   const [total, setTotal] = useState(0);
@@ -100,7 +134,7 @@ export default function ECNManagement({ embedded = false }) {
     title: "",
     description: "",
     change_type: "",
-    affected_projects: [],
+    affected_projects: defaultAffectedProjects,
     priority: "medium",
     created_by: null,
   });
@@ -108,7 +142,23 @@ export default function ECNManagement({ embedded = false }) {
 
   useEffect(() => {
     fetchEcns();
-  }, [page, statusFilter, changeTypeFilter]);
+  }, [page, statusFilter, changeTypeFilter, contextProjectId]);
+
+  useEffect(() => {
+    if (!defaultAffectedProjects.length) {
+      return;
+    }
+
+    setFormData((prev) => {
+      if (prev.affected_projects?.includes(defaultAffectedProjects[0])) {
+        return prev;
+      }
+      return {
+        ...prev,
+        affected_projects: [...defaultAffectedProjects, ...(prev.affected_projects || [])],
+      };
+    });
+  }, [defaultAffectedProjects]);
 
   const fetchEcns = async () => {
     try {
@@ -116,11 +166,12 @@ export default function ECNManagement({ embedded = false }) {
       const params = {
         status: statusFilter || undefined,
         change_type: changeTypeFilter || undefined,
+        project_id: contextProjectId || undefined,
         page,
         page_size: pageSize,
       };
       const response = await ecnBomApi.list(params);
-      setEcns(response.data.items || []);
+      setEcns((response.data.items || []).map(normalizeEcnItem));
       setTotal(response.data.total || 0);
     } catch (error) {
       console.error("Failed to load ECNs:", error);
@@ -135,7 +186,7 @@ export default function ECNManagement({ embedded = false }) {
       title: "",
       description: "",
       change_type: "",
-      affected_projects: [],
+      affected_projects: defaultAffectedProjects,
       priority: "medium",
       created_by: null,
     });
@@ -470,7 +521,7 @@ export default function ECNManagement({ embedded = false }) {
               <Label className="text-gray-300">受影响项目 *</Label>
               <div className="flex gap-2 mb-2">
                 <Input
-                  value={projectInput || "unknown"}
+                  value={projectInput}
                   onChange={(e) => setProjectInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddProject())}
                   className="bg-gray-800 border-gray-700 text-white flex-1"

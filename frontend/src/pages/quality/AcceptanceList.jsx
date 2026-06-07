@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import { Button } from "../../components/ui/button";
+import { getProjectContextFilters } from "../../lib/projectContext";
 import { acceptanceApi } from "../../services/api/acceptance";
 
 const STATUS_OPTIONS = [
@@ -48,6 +49,7 @@ export default function AcceptanceList() {
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSize = 20;
   const status = searchParams.get("status") || "";
+  const projectId = getProjectContextFilters(searchParams).project_id || "";
   const [searchText, setSearchText] = useState("");
 
   const fetchData = useCallback(async () => {
@@ -56,6 +58,7 @@ export default function AcceptanceList() {
     try {
       const params = { page, page_size: pageSize };
       if (status) params.status = status;
+      if (projectId) params.project_id = projectId;
 
       const res = await acceptanceApi.orders.list(params);
       const resData = res.data || res;
@@ -68,7 +71,7 @@ export default function AcceptanceList() {
     } finally {
       setLoading(false);
     }
-  }, [page, status]);
+  }, [page, status, projectId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
