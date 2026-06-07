@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ClipboardList,
@@ -37,7 +38,24 @@ import { typeConfigs } from "./constants";
 import AcceptanceCard from "./AcceptanceCard";
 import AcceptanceDetailDialog from "./AcceptanceDetailDialog";
 
+const parseProjectId = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
+const buildDefaultOrder = (projectId) => ({
+  project_id: projectId || null,
+  machine_id: null,
+  acceptance_type: "FAT",
+  template_id: null,
+  planned_date: "",
+  location: "",
+});
+
 export default function Acceptance() {
+  const [searchParams] = useSearchParams();
+  const projectIdFromQuery = searchParams.get("project_id") || "";
+  const contextProjectId = parseProjectId(projectIdFromQuery);
   const [acceptances, setAcceptances] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,14 +66,7 @@ export default function Acceptance() {
   const [showDetail, setShowDetail] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [projects, setProjects] = useState([]);
-  const [newOrder, setNewOrder] = useState({
-    project_id: null,
-    machine_id: null,
-    acceptance_type: "FAT",
-    template_id: null,
-    planned_date: "",
-    location: "",
-  });
+  const [newOrder, setNewOrder] = useState(() => buildDefaultOrder(contextProjectId));
 
   // Map backend status to frontend status
   const mapBackendStatusToFrontend = (backendStatus) => {
@@ -106,6 +117,9 @@ export default function Acceptance() {
       }
       if (searchQuery) {
         params.keyword = searchQuery;
+      }
+      if (projectIdFromQuery) {
+        params.project_id = projectIdFromQuery;
       }
 
       const response = await acceptanceApi.orders.list(params);
@@ -210,23 +224,37 @@ export default function Acceptance() {
     } finally {
       setLoading(false);
     }
-  }, [typeFilter, statusFilter, searchQuery]);
+  }, [typeFilter, statusFilter, searchQuery, projectIdFromQuery]);
 
   // Load projects for create dialog
   const fetchProjects = useCallback(async () => {
     try {
-      const res = await projectApi.list({ page_size: 1000 });
+      const params = { page_size: 1000 };
+      if (projectIdFromQuery) {
+        params.project_id = projectIdFromQuery;
+      }
+      const res = await projectApi.list(params);
       setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
-  }, []);
+  }, [projectIdFromQuery]);
 
   // Load acceptances when component mounts or filters change
   useEffect(() => {
     loadAcceptances();
     fetchProjects();
   }, [loadAcceptances, fetchProjects]);
+
+  useEffect(() => {
+    if (!contextProjectId) {
+      return;
+    }
+    setNewOrder((prev) => ({
+      ...prev,
+      project_id: prev.project_id || contextProjectId,
+    }));
+  }, [contextProjectId]);
 
   // Handle create order
   const handleCreateOrder = async () => {
@@ -237,14 +265,7 @@ export default function Acceptance() {
     try {
       await acceptanceApi.orders.create(newOrder);
       setShowCreateDialog(false);
-      setNewOrder({
-        project_id: null,
-        machine_id: null,
-        acceptance_type: "FAT",
-        template_id: null,
-        planned_date: "",
-        location: "",
-      });
+      setNewOrder(buildDefaultOrder(contextProjectId));
       loadAcceptances();
     } catch (error) {
       console.error("Failed to create order:", error);
