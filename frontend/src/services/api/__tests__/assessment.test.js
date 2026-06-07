@@ -35,7 +35,10 @@ describe("assessmentApi compatibility", () => {
   it("create() maps an opportunity source to the real apply endpoint", async () => {
     mock.onPost("/api/v1/sales/opportunities/9/assessments/apply").reply(
       (config) => {
-        expect(JSON.parse(config.data)).toEqual({ evaluator_id: 3 });
+        expect(JSON.parse(config.data)).toEqual({
+          evaluator_id: 3,
+          presale_ticket_id: 91,
+        });
         return [201, { data: { assessment_id: 12 } }];
       }
     );
@@ -44,6 +47,7 @@ describe("assessmentApi compatibility", () => {
       source_type: "OPPORTUNITY",
       source_id: 9,
       evaluator_id: 3,
+      presale_ticket_id: 91,
     });
 
     expect(response.status).toBe(201);

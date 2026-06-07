@@ -164,7 +164,7 @@ describe("useAssessmentData", () => {
     expect(result.current.collaboration.aiClarifications.total).toBe(1);
   });
 
-  it("applies a lead assessment and reloads the source assessment list", async () => {
+  it("applies a lead assessment with the current presale ticket and reloads the source assessment list", async () => {
     const pendingAssessment = { id: 21, status: "PENDING", source_type: "LEAD" };
     technicalAssessmentApi.getLeadAssessments
       .mockResolvedValueOnce({ data: [] })
@@ -173,14 +173,16 @@ describe("useAssessmentData", () => {
       data: { data: { assessment_id: 21 } },
     });
 
-    const { result } = renderHook(() => useAssessmentData("lead", "4"));
+    const { result } = renderHook(() => useAssessmentData("lead", "4", null, "91"));
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     await act(async () => {
       await result.current.handleApplyAssessment();
     });
 
-    expect(technicalAssessmentApi.applyForLead).toHaveBeenCalledWith(4, {});
+    expect(technicalAssessmentApi.applyForLead).toHaveBeenCalledWith(4, {
+      presale_ticket_id: 91,
+    });
     expect(technicalAssessmentApi.getLeadAssessments).toHaveBeenCalledTimes(2);
     expect(result.current.assessment).toEqual(pendingAssessment);
   });

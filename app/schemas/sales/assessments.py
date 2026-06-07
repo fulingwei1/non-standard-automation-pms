@@ -15,6 +15,7 @@ class TechnicalAssessmentApplyRequest(BaseModel):
     """申请技术评估请求"""
 
     evaluator_id: Optional[int] = Field(default=None, description="指定评估人ID（可选）")
+    presale_ticket_id: Optional[int] = Field(default=None, description="关联售前工单ID（可选）")
 
 
 class TechnicalAssessmentEvaluateRequest(BaseModel):
@@ -43,6 +44,7 @@ class TechnicalAssessmentResponse(TimestampSchema):
     conditions: Optional[str] = None
     evaluated_at: Optional[datetime] = None
     evaluator_name: Optional[str] = None
+    presale_ticket_id: Optional[int] = None
 
 
 class ScoringRuleCreate(BaseModel):

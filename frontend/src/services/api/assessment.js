@@ -32,9 +32,10 @@ export const assessmentApi = {
   list: ({ source_type, source_id } = {}) =>
     api.get(sourceAssessmentPath(source_type, source_id)),
 
-  create: ({ source_type, source_id, evaluator_id } = {}) =>
+  create: ({ source_type, source_id, evaluator_id, presale_ticket_id } = {}) =>
     api.post(`${sourceAssessmentPath(source_type, source_id)}/apply`, {
       ...(evaluator_id ? { evaluator_id } : {}),
+      ...(presale_ticket_id ? { presale_ticket_id } : {}),
     }),
 
   submit: (id, data) =>

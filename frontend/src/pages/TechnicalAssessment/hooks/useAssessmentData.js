@@ -91,6 +91,7 @@ export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, pr
   const [enableAI, setEnableAI] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const numericSourceId = parseContextId(sourceId);
+  const numericPresaleTicketId = parseContextId(presaleTicketId);
 
   const loadAssessment = async () => {
     try {
@@ -111,7 +112,6 @@ export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, pr
         result = normalizeAssessments(response);
       }
 
-      const numericPresaleTicketId = parseContextId(presaleTicketId);
       if (numericSourceId && presaleWorkbenchApi?.loadContext) {
         try {
           const contextParams = {
@@ -158,16 +158,21 @@ export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, pr
 
   const handleApplyAssessment = async () => {
     try {
+      const payload = {};
+      if (numericPresaleTicketId) {
+        payload.presale_ticket_id = numericPresaleTicketId;
+      }
+
       let response;
       if (sourceType === "lead") {
         response = await technicalAssessmentApi.applyForLead(
           parseInt(sourceId),
-          {}
+          payload
         );
       } else {
         response = await technicalAssessmentApi.applyForOpportunity(
           parseInt(sourceId),
-          {}
+          payload
         );
       }
 
