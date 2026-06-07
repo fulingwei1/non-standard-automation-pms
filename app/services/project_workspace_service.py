@@ -6,9 +6,10 @@
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import inspect, or_
+from sqlalchemy import and_, desc, inspect, or_
 from sqlalchemy.orm import Session, joinedload
 
+from app.models.enums import AssessmentSourceTypeEnum
 from app.models.acceptance import AcceptanceOrder
 from app.models.ecn import Ecn
 from app.models.issue import Issue
@@ -17,7 +18,7 @@ from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.production import ProductionPlan, QualityInspection, WorkOrder
 from app.models.project import Project, ProjectDocument, ProjectMember
 from app.models.project_delivery import ProjectDeliverySchedule, ProjectDeliveryTask
-from app.models.sales import Contract, Opportunity, Quote, QuoteVersion
+from app.models.sales import AssessmentRisk, Contract, Opportunity, Quote, QuoteVersion, TechnicalAssessment
 from app.models.task_center import TaskUnified
 from app.models.technical_review import TechnicalReview
 from app.services.bonus.project_bonus_service import ProjectBonusService
@@ -498,6 +499,8 @@ def _build_presale_ticket_payload(ticket: PresaleSupportTicket) -> Dict[str, Any
         "customer_name": ticket.customer_name,
         "opportunity_id": ticket.opportunity_id,
         "project_id": ticket.project_id,
+        "assessment_status": getattr(ticket, "assessment_status", None),
+        "current_assessment_id": getattr(ticket, "current_assessment_id", None),
         "applicant_name": ticket.applicant_name,
         "assignee_name": ticket.assignee_name,
         "actual_hours": _num(ticket.actual_hours),
@@ -515,6 +518,160 @@ def _build_presale_ticket_payload(ticket: PresaleSupportTicket) -> Dict[str, Any
         "pm_user_id": getattr(ticket, "pm_user_id", None),
         "pm_assigned_at": pm_assigned_at.isoformat() if pm_assigned_at else None,
         "updated_at": ticket.updated_at.isoformat() if ticket.updated_at else None,
+    }
+
+
+def _build_technical_assessment_payload(assessment: TechnicalAssessment) -> Dict[str, Any]:
+    evaluator = getattr(assessment, "evaluator", None)
+
+    return {
+        "id": assessment.id,
+        "source_type": assessment.source_type,
+        "source_id": assessment.source_id,
+        "evaluator_id": assessment.evaluator_id,
+        "evaluator_name": (
+            getattr(evaluator, "real_name", None) or getattr(evaluator, "username", None)
+            if evaluator
+            else None
+        ),
+        "status": assessment.status,
+        "total_score": assessment.total_score,
+        "dimension_scores": assessment.dimension_scores,
+        "veto_triggered": bool(assessment.veto_triggered),
+        "veto_rules": assessment.veto_rules,
+        "decision": assessment.decision,
+        "risks": assessment.risks,
+        "similar_cases": assessment.similar_cases,
+        "ai_analysis": assessment.ai_analysis,
+        "conditions": assessment.conditions,
+        "evaluated_at": assessment.evaluated_at.isoformat() if assessment.evaluated_at else None,
+        "presale_ticket_id": assessment.presale_ticket_id,
+        "template_id": assessment.template_id,
+        "version_no": assessment.version_no,
+        "is_latest": bool(assessment.is_latest),
+        "created_at": assessment.created_at.isoformat() if assessment.created_at else None,
+        "updated_at": assessment.updated_at.isoformat() if assessment.updated_at else None,
+    }
+
+
+def _build_assessment_risk_payload(risk: AssessmentRisk) -> Dict[str, Any]:
+    owner = getattr(risk, "owner", None)
+
+    return {
+        "id": risk.id,
+        "assessment_id": risk.assessment_id,
+        "risk_code": risk.risk_code,
+        "risk_title": risk.risk_title,
+        "risk_category": risk.risk_category,
+        "risk_description": risk.risk_description,
+        "probability": risk.probability,
+        "impact": risk.impact,
+        "risk_level": risk.risk_level,
+        "risk_score": risk.risk_score,
+        "mitigation_plan": risk.mitigation_plan,
+        "contingency_plan": risk.contingency_plan,
+        "owner_id": risk.owner_id,
+        "owner_name": (
+            getattr(owner, "real_name", None) or getattr(owner, "username", None)
+            if owner
+            else None
+        ),
+        "status": risk.status,
+        "due_date": risk.due_date.isoformat() if risk.due_date else None,
+        "resolved_at": risk.resolved_at.isoformat() if risk.resolved_at else None,
+        "resolution_notes": risk.resolution_notes,
+        "created_at": risk.created_at.isoformat() if risk.created_at else None,
+        "updated_at": risk.updated_at.isoformat() if risk.updated_at else None,
+    }
+
+
+def _resolve_technical_assessment(
+    db: Session,
+    *,
+    opportunity: Optional[Opportunity] = None,
+    tickets: Optional[List[PresaleSupportTicket]] = None,
+    lead_id: Optional[int] = None,
+) -> Optional[TechnicalAssessment]:
+    filters = []
+    assessment_ids = {
+        ticket.current_assessment_id
+        for ticket in tickets or []
+        if getattr(ticket, "current_assessment_id", None)
+    }
+    if opportunity and getattr(opportunity, "assessment_id", None):
+        assessment_ids.add(opportunity.assessment_id)
+    if assessment_ids:
+        filters.append(TechnicalAssessment.id.in_(assessment_ids))
+
+    ticket_ids = [ticket.id for ticket in tickets or [] if getattr(ticket, "id", None)]
+    if ticket_ids:
+        filters.append(TechnicalAssessment.presale_ticket_id.in_(ticket_ids))
+
+    if opportunity:
+        filters.append(
+            and_(
+                TechnicalAssessment.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value,
+                TechnicalAssessment.source_id == opportunity.id,
+            )
+        )
+
+    if lead_id:
+        filters.append(
+            and_(
+                TechnicalAssessment.source_type == AssessmentSourceTypeEnum.LEAD.value,
+                TechnicalAssessment.source_id == lead_id,
+            )
+        )
+
+    if not filters:
+        return None
+
+    return (
+        db.query(TechnicalAssessment)
+        .filter(or_(*filters))
+        .order_by(
+            desc(TechnicalAssessment.evaluated_at),
+            desc(TechnicalAssessment.updated_at),
+            desc(TechnicalAssessment.id),
+        )
+        .first()
+    )
+
+
+def build_technical_assessment_handover_context(
+    db: Session,
+    *,
+    opportunity: Optional[Opportunity] = None,
+    tickets: Optional[List[PresaleSupportTicket]] = None,
+    lead_id: Optional[int] = None,
+    risk_limit: int = 10,
+) -> Dict[str, Any]:
+    assessment = _resolve_technical_assessment(
+        db,
+        opportunity=opportunity,
+        tickets=tickets,
+        lead_id=lead_id,
+    )
+    if not assessment:
+        return {
+            "current": None,
+            "risks": {"items": [], "total": 0},
+        }
+
+    risk_query = (
+        db.query(AssessmentRisk)
+        .filter(AssessmentRisk.assessment_id == assessment.id)
+        .order_by(desc(AssessmentRisk.risk_score), desc(AssessmentRisk.id))
+    )
+    risk_total = risk_query.count()
+    risk_items = risk_query.limit(risk_limit).all()
+
+    return {
+        "current": _build_technical_assessment_payload(assessment),
+        "risks": {
+            "items": [_build_assessment_risk_payload(risk) for risk in risk_items],
+            "total": risk_total,
+        },
     }
 
 
@@ -581,6 +738,12 @@ def build_project_handover_context(db: Session, project: Project) -> Dict[str, A
     quote, quote_version = _resolve_quote_context(opportunity, contract)
     presale_solutions = _get_presale_solutions(db, project)
     presale_tickets = _get_presale_tickets(db, project, presale_solutions)
+    technical_assessment = build_technical_assessment_handover_context(
+        db,
+        opportunity=opportunity,
+        tickets=presale_tickets,
+        lead_id=project.lead_id,
+    )
     primary_solution = presale_solutions[0] if presale_solutions else None
 
     quote_cost_total = _num(quote_version.cost_total) if quote_version else None
@@ -612,6 +775,8 @@ def build_project_handover_context(db: Session, project: Project) -> Dict[str, A
         missing.append("opportunity")
     if not presale_solutions:
         missing.append("presale_solution")
+    if not technical_assessment["current"]:
+        missing.append("technical_assessment")
     if (
         baseline_cost["quote_cost_total"] is None
         and baseline_cost["presale_estimated_cost"] is None
@@ -630,6 +795,7 @@ def build_project_handover_context(db: Session, project: Project) -> Dict[str, A
         "presale_solutions": [
             _build_presale_solution_payload(solution) for solution in presale_solutions
         ],
+        "technical_assessment": technical_assessment,
         "baseline_cost": baseline_cost,
         "handover_status": {
             "ready": not missing,

@@ -25,7 +25,7 @@ from app.core.config import settings
 from app.models.enums import AssessmentStatusEnum
 from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer
-from app.models.sales import Opportunity, TechnicalAssessment
+from app.models.sales import AssessmentRisk, Opportunity, TechnicalAssessment
 from app.models.user import User
 
 
@@ -679,6 +679,34 @@ class TestSalesClosedLoop:
         )
         db_session.add(ticket)
         db_session.flush()
+        assessment = TechnicalAssessment(
+            source_type="OPPORTUNITY",
+            source_id=contract["opportunity_id"],
+            evaluator_id=admin_user.id,
+            status=AssessmentStatusEnum.COMPLETED.value,
+            total_score=82,
+            decision="RECOMMEND",
+            risks='[{"dimension":"delivery","level":"MEDIUM","description":"交期压缩风险"}]',
+            presale_ticket_id=ticket.id,
+        )
+        db_session.add(assessment)
+        db_session.flush()
+        assessment_risk = AssessmentRisk(
+            assessment_id=assessment.id,
+            risk_code=_unique_code("RSK-PMO"),
+            risk_title="交期压缩风险",
+            risk_category="delivery",
+            risk_description="交付周期偏紧，项目启动后需要 PM 提前排产",
+            probability="MEDIUM",
+            impact="MEDIUM",
+            risk_level="HIGH",
+            risk_score=4,
+            owner_id=admin_user.id,
+            status="OPEN",
+        )
+        db_session.add(assessment_risk)
+        ticket.current_assessment_id = assessment.id
+        ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
         solution = PresaleSolution(
             solution_no=_unique_code("SOL-PMO"),
             name=f"PMO售前交接方案-{uuid.uuid4().hex[:4]}",
@@ -731,10 +759,20 @@ class TestSalesClosedLoop:
         assert handover["presale_solution"]["estimated_cost"] == 90000.0
         assert handover["presale_ticket"]["id"] == ticket.id
         assert handover["presale_ticket"]["actual_hours"] == 12.5
+        assert handover["presale_ticket"]["assessment_status"] == AssessmentStatusEnum.COMPLETED.value
+        assert handover["presale_ticket"]["current_assessment_id"] == assessment.id
         assert handover["presale_ticket"]["pm_involvement_required"] is True
         assert handover["presale_ticket"]["pm_involvement_risk_level"] == "高"
         assert handover["presale_ticket"]["pm_involvement_risk_factors"] == ["金额高", "交期紧"]
         assert handover["presale_ticket"]["pm_assigned"] is False
+        assert handover["technical_assessment"]["current"]["id"] == assessment.id
+        assert handover["technical_assessment"]["current"]["total_score"] == 82
+        assert handover["technical_assessment"]["current"]["decision"] == "RECOMMEND"
+        assert handover["technical_assessment"]["risks"]["total"] == 1
+        assert (
+            handover["technical_assessment"]["risks"]["items"][0]["risk_description"]
+            == "交付周期偏紧，项目启动后需要 PM 提前排产"
+        )
         assert handover["baseline_cost"]["presale_estimated_cost"] == 90000.0
         assert handover["handover_status"]["ready"] is True
 
@@ -783,6 +821,8 @@ class TestSalesClosedLoop:
         assert workspace_context["presale_tickets"][0]["id"] == ticket.id
         assert workspace_context["presale_tickets"][0]["actual_hours"] == 12.5
         assert workspace_context["presale_solutions"][0]["id"] == solution.id
+        assert workspace_context["technical_assessment"]["current"]["id"] == assessment.id
+        assert workspace_context["technical_assessment"]["risks"]["total"] == 1
         assert workspace_context["handover_status"]["ready"] is True
 
         payment_plans_response = client.get(

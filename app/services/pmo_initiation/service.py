@@ -147,6 +147,7 @@ class PmoInitiationService:
             _build_presale_solution_payload,
             _build_presale_ticket_payload,
             _num,
+            build_technical_assessment_handover_context,
         )
 
         contract = self._find_contract_for_initiation(initiation)
@@ -166,6 +167,12 @@ class PmoInitiationService:
                 .filter(Opportunity.id == solution.opportunity_id)
                 .first()
             )
+        technical_assessment = build_technical_assessment_handover_context(
+            self.db,
+            opportunity=opportunity,
+            tickets=[ticket] if ticket else [],
+            lead_id=getattr(opportunity, "lead_id", None) if opportunity else None,
+        )
 
         presale_estimated_cost = (
             getattr(solution, "estimated_cost", None) if solution else None
@@ -196,6 +203,8 @@ class PmoInitiationService:
             missing.append("presale_solution")
         if not ticket:
             missing.append("presale_ticket")
+        if not technical_assessment["current"]:
+            missing.append("technical_assessment")
         if (
             baseline_cost["contract_amount"] is None
             and baseline_cost["presale_estimated_cost"] is None
@@ -209,6 +218,7 @@ class PmoInitiationService:
                 _build_presale_solution_payload(solution) if solution else None
             ),
             "presale_ticket": _build_presale_ticket_payload(ticket) if ticket else None,
+            "technical_assessment": technical_assessment,
             "baseline_cost": baseline_cost,
             "handover_status": {
                 "ready": not missing,

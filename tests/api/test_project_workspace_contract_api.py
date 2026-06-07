@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.enums import AssessmentStatusEnum
 from app.models.ecn import Ecn
 from app.models.issue import Issue
 from app.models.material import BomHeader, BomItem, Material
@@ -18,7 +19,7 @@ from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.production import ProductionPlan, QualityInspection, WorkOrder
 from app.models.project import Customer, Project
 from app.models.project_delivery import ProjectDeliverySchedule, ProjectDeliveryTask
-from app.models.sales import Contract, Opportunity, Quote, QuoteVersion
+from app.models.sales import AssessmentRisk, Contract, Opportunity, Quote, QuoteVersion, TechnicalAssessment
 from app.models.technical_review import TechnicalReview
 from app.models.user import User
 from app.models.acceptance import AcceptanceOrder
@@ -371,6 +372,36 @@ class TestProjectWorkspaceHandoverContext:
         ticket.customer_id = customer.id
         ticket.project_id = project.id
 
+        assessment = TechnicalAssessment(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            evaluator_id=admin_user.id,
+            status=AssessmentStatusEnum.COMPLETED.value,
+            total_score=82,
+            decision="RECOMMEND",
+            risks='[{"dimension":"delivery","level":"MEDIUM","description":"交期压缩风险"}]',
+            presale_ticket_id=ticket.id,
+        )
+        db_session.add(assessment)
+        db_session.flush()
+        assessment_risk = AssessmentRisk(
+            assessment_id=assessment.id,
+            risk_code=f"RSK-PW-{unique}",
+            risk_title="交期压缩风险",
+            risk_category="delivery",
+            risk_description="交付周期偏紧，项目启动后需要 PM 提前排产",
+            probability="MEDIUM",
+            impact="MEDIUM",
+            risk_level="HIGH",
+            risk_score=4,
+            owner_id=admin_user.id,
+            status="OPEN",
+        )
+        db_session.add(assessment_risk)
+        opportunity.assessment_id = assessment.id
+        ticket.current_assessment_id = assessment.id
+        ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
+
         solution = PresaleSolution(
             solution_no=f"SOL-PW-{unique}",
             name=f"项目交接方案-{unique}",
@@ -415,7 +446,16 @@ class TestProjectWorkspaceHandoverContext:
         assert payload["presale_tickets"][0]["pm_involvement_risk_level"] == "高"
         assert payload["presale_tickets"][0]["pm_involvement_risk_factors"] == ["金额高", "交期紧"]
         assert payload["presale_tickets"][0]["pm_assigned"] is False
+        assert payload["presale_tickets"][0]["assessment_status"] == AssessmentStatusEnum.COMPLETED.value
+        assert payload["presale_tickets"][0]["current_assessment_id"] == assessment.id
         assert payload["presale_solutions"][0]["solution_no"] == solution.solution_no
+        assert payload["technical_assessment"]["current"]["id"] == assessment.id
+        assert payload["technical_assessment"]["current"]["total_score"] == 82
+        assert payload["technical_assessment"]["risks"]["total"] == 1
+        assert (
+            payload["technical_assessment"]["risks"]["items"][0]["risk_description"]
+            == "交付周期偏紧，项目启动后需要 PM 提前排产"
+        )
         assert payload["handover_status"]["ready"] is True
         assert payload["handover_status"]["missing"] == []
 

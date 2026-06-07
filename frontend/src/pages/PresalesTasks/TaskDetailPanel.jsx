@@ -62,13 +62,20 @@ function buildProjectWorkspacePath(task) {
 }
 
 function buildTechnicalAssessmentPath(task) {
+  let path = "";
   if (task.leadId) {
-    return `/sales/assessments/lead/${task.leadId}`;
+    path = `/sales/assessments/lead/${task.leadId}`;
+  } else if (task.opportunityId) {
+    path = `/sales/assessments/opportunity/${task.opportunityId}`;
+  } else {
+    return "";
   }
-  if (task.opportunityId) {
-    return `/sales/assessments/opportunity/${task.opportunityId}`;
-  }
-  return "";
+
+  const params = new URLSearchParams();
+  appendContextParam(params, "assessment_id", task.currentAssessmentId);
+  appendContextParam(params, "ticket_id", task.ticketId);
+  const query = params.toString();
+  return `${path}${query ? `?${query}` : ""}`;
 }
 
 export default function TaskDetailPanel({

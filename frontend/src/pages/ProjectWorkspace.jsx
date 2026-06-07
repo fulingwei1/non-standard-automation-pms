@@ -217,6 +217,7 @@ export default function ProjectWorkspace() {
   const missingLabels = {
     contract: "合同",
     opportunity: "商机",
+    technical_assessment: "技术评估",
     presale_solution: "售前方案",
     baseline_cost: "成本基准"
   };
@@ -224,6 +225,10 @@ export default function ProjectWorkspace() {
   const quoteVersion = handoverContext?.quote?.version || {};
   const primarySolution = handoverContext?.presale_solutions?.[0];
   const primaryTicket = handoverContext?.presale_tickets?.[0];
+  const technicalAssessment = handoverContext?.technical_assessment || {};
+  const currentAssessment = technicalAssessment.current;
+  const assessmentRisks = technicalAssessment.risks || {};
+  const primaryAssessmentRisk = assessmentRisks.items?.[0];
   const primarySolutionPath = buildPresaleSolutionPath(
     primarySolution,
     primaryTicket,
@@ -408,7 +413,7 @@ export default function ProjectWorkspace() {
               </div>
               }
 
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-6">
                 <div className="rounded-lg border p-4">
                   <p className="text-sm text-gray-500">合同</p>
                   <p className="mt-1 font-medium">
@@ -437,6 +442,26 @@ export default function ProjectWorkspace() {
                   <p className="mt-2 text-sm text-gray-500">
                     {quoteCost != null ? formatCurrency(quoteCost) : "未形成"}
                   </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <p className="text-sm text-gray-500">技术评估</p>
+                  <p className="mt-1 font-medium">
+                    {currentAssessment?.total_score != null ?
+                    `${currentAssessment.total_score} 分` :
+                    "未完成"}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Badge variant={currentAssessment?.status === "COMPLETED" ? "default" : "secondary"}>
+                      {currentAssessment?.status === "COMPLETED" ? "已完成" : "待评估"}
+                    </Badge>
+                    <Badge variant="outline">{assessmentRisks.total || 0} 项风险</Badge>
+                  </div>
+                  {primaryAssessmentRisk &&
+                  <p className="mt-2 truncate text-sm text-gray-500">
+                    {primaryAssessmentRisk.risk_title || primaryAssessmentRisk.risk_description}
+                  </p>
+                  }
                 </div>
 
                 <div className="rounded-lg border p-4">

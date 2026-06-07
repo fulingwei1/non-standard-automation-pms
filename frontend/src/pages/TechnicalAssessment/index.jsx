@@ -3,7 +3,7 @@
  * 支持线索和商机的技术评估
  */
 
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { PageHeader } from "../../components/layout";
 import { useAssessmentData } from "./hooks/useAssessmentData";
 import { exportReport } from "./utils/exportReport";
@@ -14,6 +14,8 @@ import { RequirementDataForm } from "./components/RequirementDataForm";
 
 export default function TechnicalAssessment() {
   const { sourceType, sourceId } = useParams();
+  const [searchParams] = useSearchParams();
+  const selectedAssessmentId = searchParams.get("assessment_id") || searchParams.get("assessmentId");
 
   const {
     assessment,
@@ -29,7 +31,7 @@ export default function TechnicalAssessment() {
     setShowHistory,
     handleApplyAssessment,
     handleEvaluate,
-  } = useAssessmentData(sourceType, sourceId);
+  } = useAssessmentData(sourceType, sourceId, selectedAssessmentId);
 
   if (loading) {
     return <div className="p-6">加载中...</div>;

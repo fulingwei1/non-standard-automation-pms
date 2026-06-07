@@ -12,7 +12,7 @@ function normalizeAssessments(response) {
 /**
  * Hook for loading and managing assessment data for a specific source
  */
-export function useAssessmentData(sourceType, sourceId) {
+export function useAssessmentData(sourceType, sourceId, selectedAssessmentId) {
   const [assessment, setAssessment] = useState(null);
   const [assessments, setAssessments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,8 +38,12 @@ export function useAssessmentData(sourceType, sourceId) {
         result = normalizeAssessments(response);
       }
 
+      const requestedAssessment = selectedAssessmentId
+        ? result.find((item) => String(item.id) === String(selectedAssessmentId))
+        : null;
+
       setAssessments(result);
-      setAssessment(result[0] || null);
+      setAssessment(requestedAssessment || result[0] || null);
     } catch (error) {
       console.error("加载评估失败:", error);
       setAssessments([]);
@@ -51,7 +55,7 @@ export function useAssessmentData(sourceType, sourceId) {
 
   useEffect(() => {
     loadAssessment();
-  }, [sourceType, sourceId]);
+  }, [sourceType, sourceId, selectedAssessmentId]);
 
   const handleApplyAssessment = async () => {
     try {

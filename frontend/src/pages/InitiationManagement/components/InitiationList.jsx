@@ -119,6 +119,10 @@ export function InitiationList({
                     const handover = initiation.presale_handover_context;
                     const presaleSolution = handover?.presale_solution;
                     const presaleTicket = handover?.presale_ticket;
+                    const technicalAssessment = handover?.technical_assessment || {};
+                    const currentAssessment = technicalAssessment.current;
+                    const assessmentRisks = technicalAssessment.risks || {};
+                    const primaryAssessmentRisk = assessmentRisks.items?.[0];
                     const handoverStatus = handover?.handover_status;
                     const riskFactors = normalizeRiskFactors(
                         presaleTicket?.pm_involvement_risk_factors,
@@ -192,7 +196,7 @@ export function InitiationList({
                                                     {handoverStatus?.ready ? "已齐套" : "待补齐"}
                                                 </Badge>
                                             </div>
-                                            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-4">
                                                 <div>
                                                     <span className="text-xs text-slate-400">售前方案</span>
                                                     <p className="mt-1 text-sm text-white">
@@ -212,8 +216,27 @@ export function InitiationList({
                                                     <p className="mt-1 text-xs text-slate-500">
                                                         {presaleTicket?.actual_hours != null
                                                             ? `${presaleTicket.actual_hours} 小时`
-                                                            : "未记录工时"}
+                                                        : "未记录工时"}
                                                     </p>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs text-slate-400">技术评估</span>
+                                                    <p className="mt-1 text-sm text-white">
+                                                        {currentAssessment?.total_score != null
+                                                            ? `${currentAssessment.total_score} 分`
+                                                            : "未完成"}
+                                                    </p>
+                                                    <div className="mt-1 flex flex-wrap gap-2">
+                                                        <Badge variant={currentAssessment?.status === "COMPLETED" ? "success" : "secondary"}>
+                                                            {currentAssessment?.status === "COMPLETED" ? "已完成" : "待评估"}
+                                                        </Badge>
+                                                        <Badge variant="outline">{assessmentRisks.total || 0} 项风险</Badge>
+                                                    </div>
+                                                    {primaryAssessmentRisk && (
+                                                        <p className="mt-1 truncate text-xs text-slate-500">
+                                                            {primaryAssessmentRisk.risk_title || primaryAssessmentRisk.risk_description}
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <div>
                                                     <span className="text-xs text-slate-400">审批风险</span>

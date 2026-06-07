@@ -528,7 +528,9 @@ describe('PresalesTasks', () => {
     fireEvent.click(screen.getByText('线索售前可行性评估'));
     fireEvent.click(screen.getByRole('button', { name: /打开技术评估/ }));
 
-    expect(navigateSpy).toHaveBeenCalledWith('/sales/assessments/lead/21');
+    expect(navigateSpy).toHaveBeenCalledWith(
+      '/sales/assessments/lead/21?assessment_id=701&ticket_id=92',
+    );
   });
 
   it('creates an internal presale task from the task center and refreshes the list', async () => {

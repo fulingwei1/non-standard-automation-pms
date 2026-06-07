@@ -86,6 +86,8 @@ describe("ProjectWorkspace", () => {
               title: "FCT售前技术支持",
               ticket_type: "SOLUTION",
               status: "COMPLETED",
+              assessment_status: "COMPLETED",
+              current_assessment_id: 701,
               opportunity_id: 2,
               project_id: 1,
               applicant_name: "张销售",
@@ -97,6 +99,26 @@ describe("ProjectWorkspace", () => {
               pm_assigned: false,
             },
           ],
+          technical_assessment: {
+            current: {
+              id: 701,
+              status: "COMPLETED",
+              total_score: 82,
+              decision: "RECOMMEND",
+            },
+            risks: {
+              total: 1,
+              items: [
+                {
+                  id: 801,
+                  risk_title: "交期压缩风险",
+                  risk_description: "交付周期偏紧，项目启动后需要 PM 提前排产",
+                  risk_level: "HIGH",
+                  status: "OPEN",
+                },
+              ],
+            },
+          },
           baseline_cost: {
             quote_cost_total: 360000,
             presale_estimated_cost: 355000,
@@ -278,6 +300,9 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("高风险")).toBeInTheDocument();
     expect(screen.getByText("金额高、交期紧")).toBeInTheDocument();
     expect(screen.getByText("PM未分配")).toBeInTheDocument();
+    expect(screen.getByText("技术评估")).toBeInTheDocument();
+    expect(screen.getByText("82 分")).toBeInTheDocument();
+    expect(screen.getByText("交期压缩风险")).toBeInTheDocument();
     expect(screen.getByText(/[¥￥]360,000.00/)).toBeInTheDocument();
     expect(screen.getByText("后续模块状态")).toBeInTheDocument();
     expect(screen.getByText("RV-001")).toBeInTheDocument();

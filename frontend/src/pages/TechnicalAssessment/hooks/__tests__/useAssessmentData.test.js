@@ -45,6 +45,23 @@ describe("useAssessmentData", () => {
     });
   });
 
+  it("selects the assessment requested by query context when loading a source list", async () => {
+    const olderAssessment = { id: 31, status: "COMPLETED", source_type: "LEAD" };
+    const ticketAssessment = { id: 701, status: "PENDING", source_type: "LEAD" };
+    technicalAssessmentApi.getLeadAssessments.mockResolvedValue({
+      data: [olderAssessment, ticketAssessment],
+    });
+
+    const { result } = renderHook(() =>
+      useAssessmentData("lead", "21", "701")
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.assessments).toEqual([olderAssessment, ticketAssessment]);
+    expect(result.current.assessment).toEqual(ticketAssessment);
+  });
+
   it("applies a lead assessment and reloads the source assessment list", async () => {
     const pendingAssessment = { id: 21, status: "PENDING", source_type: "LEAD" };
     technicalAssessmentApi.getLeadAssessments

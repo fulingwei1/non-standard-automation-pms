@@ -96,10 +96,32 @@ describe("InitiationList", () => {
                 id: 51,
                 ticket_no: "PST-051",
                 actual_hours: 12.5,
+                assessment_status: "COMPLETED",
+                current_assessment_id: 701,
                 pm_involvement_required: true,
                 pm_involvement_risk_level: "高",
                 pm_involvement_risk_factors: ["金额高", "交期紧"],
                 pm_assigned: false,
+              },
+              technical_assessment: {
+                current: {
+                  id: 701,
+                  status: "COMPLETED",
+                  total_score: 82,
+                  decision: "RECOMMEND",
+                },
+                risks: {
+                  total: 1,
+                  items: [
+                    {
+                      id: 801,
+                      risk_title: "交期压缩风险",
+                      risk_description: "交付周期偏紧，项目启动后需要 PM 提前排产",
+                      risk_level: "HIGH",
+                      status: "OPEN",
+                    },
+                  ],
+                },
               },
               baseline_cost: {
                 presale_estimated_cost: 90000,
@@ -132,5 +154,8 @@ describe("InitiationList", () => {
     expect(screen.getByText("高风险")).toBeInTheDocument();
     expect(screen.getByText("金额高、交期紧")).toBeInTheDocument();
     expect(screen.getByText("PM未分配")).toBeInTheDocument();
+    expect(screen.getByText("技术评估")).toBeInTheDocument();
+    expect(screen.getByText("82 分")).toBeInTheDocument();
+    expect(screen.getByText("交期压缩风险")).toBeInTheDocument();
   });
 });
