@@ -3,13 +3,17 @@
 技术评审 - 辅助工具函数
 """
 
+import json
 from datetime import datetime
 
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_like_filter
+from app.api.v1.endpoints.issues.utils import generate_issue_no as generate_project_issue_no
+from app.models.issue import Issue
 from app.models.technical_review import ReviewIssue, TechnicalReview
+from app.models.user import User
 
 
 def generate_review_no(db: Session, review_type: str) -> str:
@@ -64,3 +68,66 @@ def update_review_issue_counts(db: Session, review_id: int):
     review.issue_count_c = sum(1 for i in issues if i.issue_level == "C")
     review.issue_count_d = sum(1 for i in issues if i.issue_level == "D")
     db.commit()
+
+
+_ISSUE_LEVEL_TO_PROJECT_ISSUE = {
+    "A": ("CRITICAL", "URGENT", True),
+    "B": ("MAJOR", "HIGH", True),
+    "C": ("MINOR", "MEDIUM", False),
+    "D": ("MINOR", "LOW", False),
+}
+
+
+def sync_review_issue_to_project_issue(
+    db: Session,
+    *,
+    review: TechnicalReview,
+    issue: ReviewIssue,
+    reporter: User,
+) -> Issue:
+    """把技术评审问题同步到统一项目问题池，并回填关联ID。"""
+    if issue.linked_issue_id:
+        existing_issue = db.query(Issue).filter(Issue.id == issue.linked_issue_id).first()
+        if existing_issue:
+            return existing_issue
+
+    severity, priority, is_blocking = _ISSUE_LEVEL_TO_PROJECT_ISSUE.get(
+        (issue.issue_level or "").upper(),
+        ("MINOR", "MEDIUM", False),
+    )
+
+    assignee_name = None
+    if issue.assignee_id:
+        assignee = db.query(User).filter(User.id == issue.assignee_id).first()
+        if assignee:
+            assignee_name = assignee.real_name or assignee.username
+
+    project_issue = Issue(
+        issue_no=generate_project_issue_no(db),
+        category="TECHNICAL",
+        project_id=review.project_id,
+        issue_type="TECHNICAL_REVIEW",
+        severity=severity,
+        priority=priority,
+        title=f"技术评审问题：{issue.description[:80]}",
+        description=issue.description,
+        reporter_id=reporter.id,
+        reporter_name=reporter.real_name or reporter.username,
+        report_date=datetime.now(),
+        assignee_id=issue.assignee_id,
+        assignee_name=assignee_name,
+        due_date=issue.deadline,
+        status=issue.status,
+        solution=issue.suggestion,
+        impact_scope=f"技术评审 {review.review_no}",
+        impact_level=severity,
+        is_blocking=is_blocking,
+        responsible_engineer_id=issue.assignee_id,
+        responsible_engineer_name=assignee_name,
+        tags=json.dumps(["技术评审"], ensure_ascii=False),
+    )
+
+    db.add(project_issue)
+    db.flush()
+    issue.linked_issue_id = project_issue.id
+    return project_issue

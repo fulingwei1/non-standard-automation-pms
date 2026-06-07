@@ -20,7 +20,7 @@ from app.schemas.technical_review import (
 )
 from app.utils.db_helpers import get_or_404
 
-from .utils import generate_issue_no, update_review_issue_counts
+from .utils import generate_issue_no, sync_review_issue_to_project_issue, update_review_issue_counts
 
 router = APIRouter()
 
@@ -37,7 +37,7 @@ def create_checklist_record(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建评审检查项记录"""
-    get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
+    review = get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
 
     record = ReviewChecklistRecord(
         review_id=review_id,
@@ -68,6 +68,12 @@ def create_checklist_record(
         )
         db.add(issue)
         db.flush()
+        sync_review_issue_to_project_issue(
+            db,
+            review=review,
+            issue=issue,
+            reporter=current_user,
+        )
         record.issue_id = issue.id
 
     db.commit()

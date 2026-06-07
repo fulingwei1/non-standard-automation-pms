@@ -105,6 +105,23 @@ class TestTechnicalReviewDetailSubresourceContract:
         assert material_response.status_code == 201, material_response.text
         assert material_response.json()["material_name"] == "总装图纸"
 
+        issue_response = client.post(
+            f"{prefix}/technical-reviews/{review.id}/issues",
+            headers=headers,
+            json={
+                "review_id": review.id,
+                "issue_level": "B",
+                "category": "设计风险",
+                "description": "夹具定位方案需要复核",
+                "suggestion": "补充定位销校核",
+                "assignee_id": admin_user.id,
+                "deadline": "2026-06-25",
+            },
+        )
+        assert issue_response.status_code == 201, issue_response.text
+        issue_payload = issue_response.json()
+        assert issue_payload["linked_issue_id"] is not None
+
         checklist_response = client.post(
             f"{prefix}/technical-reviews/{review.id}/checklist-records",
             headers=headers,
@@ -137,4 +154,16 @@ class TestTechnicalReviewDetailSubresourceContract:
         assert [c["check_item"] for c in detail["checklist_records"]] == [
             "定位基准是否明确"
         ]
-        assert detail["issues"][0]["description"] == "定位销校核缺少计算依据"
+        linked_issue_ids = [issue["linked_issue_id"] for issue in detail["issues"]]
+        assert all(linked_issue_ids)
+
+        workspace_issues_response = client.get(
+            f"{prefix}/project-workspace/projects/{project.id}/issues",
+            headers=headers,
+        )
+        assert workspace_issues_response.status_code == 200, workspace_issues_response.text
+        workspace_issue_titles = {
+            issue["title"] for issue in workspace_issues_response.json()["issues"]
+        }
+        assert "技术评审问题：夹具定位方案需要复核" in workspace_issue_titles
+        assert "技术评审问题：定位销校核缺少计算依据" in workspace_issue_titles

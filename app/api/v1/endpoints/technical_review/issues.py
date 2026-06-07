@@ -24,7 +24,7 @@ from app.schemas.technical_review import (
 )
 from app.utils.db_helpers import get_or_404
 
-from .utils import generate_issue_no, update_review_issue_counts
+from .utils import generate_issue_no, sync_review_issue_to_project_issue, update_review_issue_counts
 
 router = APIRouter()
 
@@ -64,7 +64,7 @@ def create_review_issue(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """创建评审问题"""
-    get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
+    review = get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
 
     issue_no = generate_issue_no(db)
 
@@ -81,6 +81,13 @@ def create_review_issue(
     )
 
     db.add(issue)
+    db.flush()
+    sync_review_issue_to_project_issue(
+        db,
+        review=review,
+        issue=issue,
+        reporter=current_user,
+    )
     db.commit()
     db.refresh(issue)
 
