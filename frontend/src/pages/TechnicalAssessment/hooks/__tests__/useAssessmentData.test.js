@@ -68,6 +68,28 @@ describe("useAssessmentData", () => {
     expect(result.current.assessment).toEqual(ticketAssessment);
   });
 
+  it("loads assessments from unified API response wrappers", async () => {
+    const olderAssessment = { id: 41, status: "COMPLETED", source_type: "LEAD" };
+    const ticketAssessment = { id: 802, status: "PENDING", source_type: "LEAD" };
+    const wrappedItems = [olderAssessment, ticketAssessment];
+    technicalAssessmentApi.getLeadAssessments.mockResolvedValue({
+      data: {
+        success: true,
+        data: { items: wrappedItems, total: wrappedItems.length },
+      },
+      formatted: { items: wrappedItems, total: wrappedItems.length },
+    });
+
+    const { result } = renderHook(() =>
+      useAssessmentData("lead", "21", "802")
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.assessments).toEqual(wrappedItems);
+    expect(result.current.assessment).toEqual(ticketAssessment);
+  });
+
   it("prefills requirement data from the presale workbench context when opened from a ticket", async () => {
     const ticketAssessment = { id: 702, status: "PENDING", source_type: "OPPORTUNITY" };
     technicalAssessmentApi.getOpportunityAssessments.mockResolvedValue({

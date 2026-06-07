@@ -34,6 +34,27 @@ describe("useTechnicalAssessment", () => {
     expect(result.current.error).toBeNull();
   });
 
+  it("loads assessments from unified paginated API responses", async () => {
+    const pendingAssessment = { id: 17, status: "PENDING", source_type: "OPPORTUNITY" };
+    technicalAssessmentApi.getOpportunityAssessments.mockResolvedValue({
+      data: {
+        code: 0,
+        data: { items: [pendingAssessment], total: 1 },
+      },
+      formatted: { items: [pendingAssessment], total: 1 },
+    });
+
+    const { result } = renderHook(() =>
+      useTechnicalAssessment("opportunity", "9")
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(technicalAssessmentApi.getOpportunityAssessments).toHaveBeenCalledWith(9);
+    expect(result.current.assessments).toEqual([pendingAssessment]);
+    expect(result.current.error).toBeNull();
+  });
+
   it("applies an opportunity assessment and reloads the same source", async () => {
     const appliedAssessment = [{ id: 21, status: "PENDING" }];
     technicalAssessmentApi.getOpportunityAssessments

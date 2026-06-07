@@ -2,10 +2,18 @@ import { useState, useCallback, useEffect } from "react";
 import { technicalAssessmentApi as assessmentApi } from "../../../services/api";
 
 function normalizeAssessments(response) {
-  const data = response?.data;
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.items)) return data.items;
-  if (Array.isArray(response?.items)) return response.items;
+  const candidates = [
+    response?.formatted,
+    response?.data?.data,
+    response?.data,
+    response,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+    if (Array.isArray(candidate?.items)) return candidate.items;
+  }
+
   return [];
 }
 
