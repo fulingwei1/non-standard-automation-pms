@@ -7,6 +7,7 @@ import {
   Clock,
   Users,
   Building2,
+  AlertTriangle,
   Eye,
   Edit,
   Trash2,
@@ -49,6 +50,16 @@ export default function TaskCard({ task, onClick }) {
             <Badge className={cn("text-xs", statusConfig?.color)}>
               {statusConfig?.name}
             </Badge>
+            {task.pmInvolvementRequired && (
+              <>
+                <Badge className="text-xs bg-violet-500/20 text-violet-300 border border-violet-500/40">
+                  需PM介入
+                </Badge>
+                <Badge className="text-xs bg-red-500/20 text-red-300 border border-red-500/40">
+                  {task.pmInvolvementRiskLabel}
+                </Badge>
+              </>
+            )}
           </div>
           <h4 className="text-sm font-medium text-white group-hover:text-primary transition-colors line-clamp-2">
             {task.title}
@@ -85,6 +96,20 @@ export default function TaskCard({ task, onClick }) {
       <p className="text-xs text-slate-500 line-clamp-2 mb-3">
         {task.description}
       </p>
+
+      {task.pmInvolvementRequired && (
+        <div className="mb-3 rounded-lg border border-violet-500/20 bg-violet-500/5 p-2 text-xs">
+          <div className="flex items-center gap-1.5 text-violet-300">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span>{task.pmAssignmentLabel}</span>
+          </div>
+          {task.pmInvolvementRiskFactorsText && (
+            <p className="mt-1 text-slate-400">
+              {task.pmInvolvementRiskFactorsText}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center gap-3 text-xs text-slate-500 mb-3">
         <span className="flex items-center gap-1">

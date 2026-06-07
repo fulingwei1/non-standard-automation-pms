@@ -12,6 +12,7 @@ import {
   User,
   X,
   Briefcase,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -217,6 +218,31 @@ export default function TaskDetailPanel({ task, onClose, onUpdate, onDeliverable
               {task.description}
             </p>
           </div>
+
+          {task.pmInvolvementRequired && (
+            <div className="space-y-2 rounded-lg border border-violet-500/25 bg-violet-500/10 p-4">
+              <h4 className="flex items-center gap-2 text-sm font-medium text-violet-200">
+                <AlertTriangle className="w-4 h-4" />
+                PM提前介入
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                <Badge className="bg-violet-500/20 text-violet-300 border border-violet-500/40">
+                  需PM介入
+                </Badge>
+                <Badge className="bg-red-500/20 text-red-300 border border-red-500/40">
+                  {task.pmInvolvementRiskLabel}
+                </Badge>
+                <Badge className={task.pmAssigned ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" : "bg-amber-500/20 text-amber-300 border border-amber-500/40"}>
+                  {task.pmAssignmentLabel}
+                </Badge>
+              </div>
+              {task.pmInvolvementRiskFactorsText && (
+                <p className="text-sm text-slate-300">
+                  {task.pmInvolvementRiskFactorsText}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Basic Info */}
           <div className="space-y-3">

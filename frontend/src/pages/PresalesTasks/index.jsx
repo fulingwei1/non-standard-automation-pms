@@ -59,6 +59,40 @@ const parseContextId = (value) => {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 };
 
+const normalizeBoolean = (value) =>
+  value === true || value === 1 || value === "1" || value === "true";
+
+const normalizeRiskFactors = (value) => {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean);
+  }
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(Boolean);
+      }
+    } catch {
+      // Plain comma or Chinese-comma separated text is accepted below.
+    }
+    return value
+      .split(/[、,，]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+const formatRiskLevel = (riskLevel) => {
+  if (!riskLevel) {
+    return "风险待判";
+  }
+  if (String(riskLevel).includes("风险")) {
+    return riskLevel;
+  }
+  return `${riskLevel}风险`;
+};
+
 const getTicketItems = (response) => {
   const payload = response?.formatted ?? response?.data?.data ?? response?.data ?? response;
   if (Array.isArray(payload)) {
@@ -199,6 +233,10 @@ export default function PresalesTasks({ embedded = false } = {}) {
       const transformedTasks = (ticketsData || []).map((ticket) => {
         const type = mapTicketType(ticket.ticket_type);
         const typeInfo = getTypeInfo(type);
+        const pmInvolvementRequired = normalizeBoolean(ticket.pm_involvement_required);
+        const pmAssigned = normalizeBoolean(ticket.pm_assigned);
+        const pmInvolvementRiskFactors = normalizeRiskFactors(ticket.pm_involvement_risk_factors);
+        const pmInvolvementRiskLevel = ticket.pm_involvement_risk_level || "";
         return {
           id: ticket.id,
           ticketId: ticket.id,
@@ -223,7 +261,16 @@ export default function PresalesTasks({ embedded = false } = {}) {
           estimatedHours: ticket.estimated_hours || 0,
           actualHours: ticket.actual_hours || 0,
           assignee: ticket.assignee_name || ticket.owner_name || "未分配",
-          deliverables: ticket.deliverables || []
+          deliverables: ticket.deliverables || [],
+          pmInvolvementRequired,
+          pmInvolvementRiskLevel,
+          pmInvolvementRiskLabel: formatRiskLevel(pmInvolvementRiskLevel),
+          pmInvolvementRiskFactors,
+          pmInvolvementRiskFactorsText: pmInvolvementRiskFactors.join("、"),
+          pmAssigned,
+          pmAssignmentLabel: pmAssigned ? "PM已分配" : "PM未分配",
+          pmUserId: ticket.pm_user_id ?? null,
+          pmInvolvementCheckedAt: ticket.pm_involvement_checked_at || "",
         };
       });
 

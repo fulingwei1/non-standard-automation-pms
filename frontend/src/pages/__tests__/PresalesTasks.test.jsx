@@ -367,6 +367,44 @@ describe('PresalesTasks', () => {
     expect(screen.getByText('65%')).toBeInTheDocument();
   });
 
+  it('shows PM involvement warnings from presale tickets in the unified center', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 71,
+            title: '大型线体方案评审',
+            ticket_type: 'SOLUTION_REVIEW',
+            status: 'REVIEW',
+            urgency: 'HIGH',
+            customer_name: '华南电子',
+            applicant_name: '王伟',
+            description: '金额大且交期紧，需要提前拉项目经理评审。',
+            expected_date: '2026-06-12',
+            pm_involvement_required: true,
+            pm_involvement_risk_level: '高',
+            pm_involvement_risk_factors: ['金额高', '交期紧'],
+            pm_assigned: false,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage('/presales/technical-solutions?tab=reviews&type=review&status=reviewing');
+
+    await screen.findByText('大型线体方案评审');
+
+    expect(screen.getByText('需PM介入')).toBeInTheDocument();
+    expect(screen.getByText('高风险')).toBeInTheDocument();
+    expect(screen.getByText('金额高、交期紧')).toBeInTheDocument();
+    expect(screen.getByText('PM未分配')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('大型线体方案评审'));
+
+    expect(screen.getByText('PM提前介入')).toBeInTheDocument();
+  });
+
   it('creates an internal presale task from the task center and refreshes the list', async () => {
     renderPage('/sales/presales-tasks');
 
