@@ -14,6 +14,9 @@ import {
   Clock,
   RefreshCw,
   Plus,
+  FileText,
+  Cpu,
+  ClipboardList,
   ArrowRight,
   AlertTriangle } from
 "lucide-react";
@@ -63,6 +66,9 @@ const followUpTypeConfigs = {
   MEETING: { label: "会议", color: "bg-emerald-500" },
   OTHER: { label: "其他", color: "bg-slate-500" }
 };
+const buildLeadPresalesCenterPath = (leadId) =>
+  `/presales/technical-solutions?tab=reviews&type=assessment&lead_id=${leadId}`;
+
 export default function LeadDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -204,6 +210,27 @@ export default function LeadDetail() {
           <Button variant="outline" onClick={fetchLeadDetail}>
             <RefreshCw className="w-4 h-4 mr-2" />
             刷新
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/sales/leads/${id}/requirement`)}>
+
+            <FileText className="w-4 h-4 mr-2" />
+            需求包
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/sales/assessments/lead/${id}`)}>
+
+            <Cpu className="w-4 h-4 mr-2" />
+            技术评估
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate(buildLeadPresalesCenterPath(id))}>
+
+            <ClipboardList className="w-4 h-4 mr-2" />
+            售前中心
           </Button>
           {lead.status !== "CONVERTED" &&
           <>
