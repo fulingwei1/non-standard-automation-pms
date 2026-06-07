@@ -125,7 +125,11 @@ def create_ticket(
 
     opportunity = None
     if ticket_in.opportunity_id:
-        opportunity = get_or_404(db, Opportunity, ticket_in.opportunity_id, "商机不存在")
+        opportunity = (
+            db.query(Opportunity)
+            .filter(Opportunity.id == ticket_in.opportunity_id)
+            .first()
+        )
 
     if ticket_in.ticket_type == "SOLUTION_REVIEW":
         if not opportunity:
