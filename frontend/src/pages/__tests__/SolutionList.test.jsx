@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { act } from 'react';
 import SolutionList from '../SolutionList';
@@ -218,6 +218,43 @@ describe('SolutionList', () => {
       });
     });
 
+    it('should show backend REVIEW solutions as reviewing instead of draft', async () => {
+      presaleApi.solutions.list.mockResolvedValue({
+        data: {
+          items: [
+            {
+              id: 88,
+              solution_no: 'SOL-20260607-001',
+              name: '提交审核方案',
+              status: 'REVIEW',
+              review_status: 'REVIEW',
+              version: 'V1.0',
+              solution_type: 'CUSTOM',
+              estimated_cost: 120000,
+              author_name: '陈敏',
+              updated_at: '2026-06-07T10:00:00',
+            },
+          ],
+          total: 1,
+        },
+      });
+
+      await act(async () => {
+        render(
+          <MemoryRouter>
+            <SolutionList />
+          </MemoryRouter>
+        );
+      });
+
+      const title = await screen.findByText('提交审核方案');
+      const card = title.closest('.cursor-pointer');
+
+      expect(card).not.toBeNull();
+      expect(within(card).getByText('评审中')).toBeInTheDocument();
+      expect(within(card).queryByText('草稿')).not.toBeInTheDocument();
+    });
+
     it('should display loading state', () => {
       presaleApi.solutions.list.mockImplementation(() => new Promise(() => {}));
       
@@ -324,6 +361,31 @@ describe('SolutionList', () => {
 
       await waitFor(() => {
         expect(presaleApi.solutions.list).toHaveBeenCalled();
+      });
+    });
+
+    it('should request backend REVIEW statuses when filtering reviewing solutions', async () => {
+      await act(async () => {
+        render(
+          <MemoryRouter>
+            <SolutionList />
+          </MemoryRouter>
+        );
+      });
+
+      await waitFor(() => {
+        expect(presaleApi.solutions.list).toHaveBeenCalledTimes(1);
+      });
+
+      await act(async () => {
+        const statusFilter = screen.getAllByRole('combobox')[0];
+        fireEvent.change(statusFilter, { target: { value: 'reviewing' } });
+      });
+
+      await waitFor(() => {
+        expect(presaleApi.solutions.list).toHaveBeenLastCalledWith(
+          expect.objectContaining({ status: 'REVIEW,REVIEWING' })
+        );
       });
     });
 

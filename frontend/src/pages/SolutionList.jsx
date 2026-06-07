@@ -303,16 +303,24 @@ export default function SolutionList({ embedded = false } = {}) {
   });
 
   // Map backend status to frontend status
-  const mapSolutionStatus = (backendStatus) => {
-    const statusMap = {
-      DRAFT: "draft",
-      IN_PROGRESS: "in_progress",
-      REVIEWING: "reviewing",
-      APPROVED: "published",
-      SUBMITTED: "published",
-      ARCHIVED: "archived"
-    };
-    return statusMap[backendStatus] || "draft";
+  const mapSolutionStatus = (backendStatus, reviewStatus) => {
+    const currentStatus = String(backendStatus || "").toUpperCase();
+    const currentReviewStatus = String(reviewStatus || "").toUpperCase();
+
+    if (["APPROVED", "DELIVERED", "WON"].includes(currentStatus)) {
+      return "published";
+    }
+    if (["REVIEW", "REVIEWING"].includes(currentStatus) ||
+      ["REVIEW", "REVIEWING", "PENDING"].includes(currentReviewStatus)) {
+      return "reviewing";
+    }
+    if (["IN_PROGRESS", "SUBMITTED"].includes(currentStatus)) {
+      return "in_progress";
+    }
+    if (["ARCHIVED", "LOST"].includes(currentStatus)) {
+      return "archived";
+    }
+    return "draft";
   };
 
   // Load solutions from API
@@ -330,7 +338,7 @@ export default function SolutionList({ embedded = false } = {}) {
         const statusMap = {
           draft: "DRAFT",
           in_progress: "IN_PROGRESS",
-          reviewing: "REVIEWING",
+          reviewing: "REVIEW,REVIEWING",
           published: "APPROVED,SUBMITTED",
           archived: "ARCHIVED"
         };
@@ -356,7 +364,7 @@ export default function SolutionList({ embedded = false } = {}) {
         customer: solution.customer_name || "",
         customerId: solution.customer_id,
         version: solution.version || "V1.0",
-        status: mapSolutionStatus(solution.status),
+        status: mapSolutionStatus(solution.status, solution.review_status),
         deviceType: solution.solution_type?.toLowerCase() || "",
         deviceTypeName: solution.solution_type || "",
         progress: solution.progress || 0,
