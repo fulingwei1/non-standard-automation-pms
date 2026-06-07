@@ -21,6 +21,9 @@ from .reviews import router as reviews_router
 
 router = APIRouter()
 
+# 问题列表包含 /technical-reviews/issues，必须排在 /technical-reviews/{review_id} 前
+router.include_router(issues_router, tags=["评审问题"])
+
 # 评审主表
 router.include_router(reviews_router, tags=["技术评审"])
 
@@ -32,6 +35,3 @@ router.include_router(materials_router, tags=["评审材料"])
 
 # 检查项
 router.include_router(checklists_router, tags=["评审检查项"])
-
-# 问题
-router.include_router(issues_router, tags=["评审问题"])

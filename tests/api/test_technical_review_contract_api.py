@@ -124,6 +124,16 @@ class TestTechnicalReviewDetailSubresourceContract:
         assert issue_payload["linked_issue_id"] is not None
         linked_project_issue_id = issue_payload["linked_issue_id"]
 
+        issues_list_response = client.get(
+            f"{prefix}/technical-reviews/issues",
+            headers=headers,
+            params={"review_id": review.id},
+        )
+        assert issues_list_response.status_code == 200, issues_list_response.text
+        issues_payload = issues_list_response.json()
+        assert issues_payload["total"] == 1
+        assert issues_payload["items"][0]["id"] == issue_payload["id"]
+
         resolve_response = client.put(
             f"{prefix}/technical-reviews/issues/{issue_payload['id']}",
             headers=headers,
