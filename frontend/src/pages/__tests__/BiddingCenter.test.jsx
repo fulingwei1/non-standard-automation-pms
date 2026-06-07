@@ -215,6 +215,34 @@ describe("BiddingCenter", () => {
     expect(presaleApi.tenders.list).toHaveBeenCalledTimes(2);
   });
 
+  it("keeps lead context when creating a tender from lead-stage presales entry", async () => {
+    vi.spyOn(window, "alert").mockImplementation(() => {});
+    useSearchParams.mockReturnValue([
+      new URLSearchParams("tab=bids&type=support&lead_id=2026"),
+      vi.fn(),
+    ]);
+
+    renderPage({ embedded: true });
+
+    await screen.findByText("智能制造系统");
+    fireEvent.click(screen.getByRole("button", { name: "新建投标" }));
+    fireEvent.change(screen.getByLabelText("投标项目名称"), {
+      target: { value: "线索阶段投标支持" },
+    });
+    fireEvent.change(screen.getByLabelText("招标单位"), {
+      target: { value: "线索客户" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "创建投标" }));
+
+    await waitFor(() => {
+      expect(presaleApi.tenders.create).toHaveBeenCalledWith({
+        tender_name: "线索阶段投标支持",
+        customer_name: "线索客户",
+        lead_id: 2026,
+      });
+    });
+  });
+
   it("opens cost estimation from a bidding card with sales support context", async () => {
     useSearchParams.mockReturnValue([
       new URLSearchParams("tab=bids&type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42"),

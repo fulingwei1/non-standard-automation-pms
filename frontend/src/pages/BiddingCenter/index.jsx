@@ -216,6 +216,9 @@ export default function BiddingCenter({ embedded = false } = {}) {
     if (customerName) {
       payload.customer_name = customerName;
     }
+    if (contextLeadIdNumber) {
+      payload.lead_id = contextLeadIdNumber;
+    }
     if (contextOpportunityIdNumber) {
       payload.opportunity_id = contextOpportunityIdNumber;
     }

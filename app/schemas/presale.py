@@ -308,6 +308,7 @@ class TenderCreate(BaseModel):
 
     tender_no: Optional[str] = Field(None, description="招标编号（可选，自动生成）")
     tender_name: str = Field(..., description="投标项目名称")
+    lead_id: Optional[int] = Field(None, description="关联线索ID")
     ticket_id: Optional[int] = Field(None, description="关联工单ID")
     opportunity_id: Optional[int] = Field(None, description="关联商机ID")
     project_id: Optional[int] = Field(None, description="关联项目ID")

@@ -2244,6 +2244,70 @@ class TestPresalesFrontendContractBehavior:
             ).delete(synchronize_session=False)
             db_session.commit()
 
+    def test_tender_created_from_lead_context_is_visible_in_lead_scope(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        lead = Lead(
+            lead_code=f"LD-BID-{unique}",
+            customer_name=f"线索投标客户-{unique}",
+            source="展会",
+            industry="电子制造",
+            owner_id=admin_user.id,
+        )
+        db_session.add(lead)
+        db_session.commit()
+
+        created = client.post(
+            f"{prefix}/presale/tenders",
+            json={
+                "tender_name": f"线索阶段投标-{unique}",
+                "customer_name": lead.customer_name,
+                "lead_id": lead.id,
+            },
+            headers=headers,
+        )
+        assert created.status_code == 201, created.text
+        tender = created.json()
+        ticket_id = tender.get("ticket_id")
+
+        try:
+            assert tender["lead_id"] == lead.id
+            assert ticket_id is not None
+
+            db_session.expire_all()
+            ticket = db_session.get(PresaleSupportTicket, ticket_id)
+            assert ticket is not None
+            assert ticket.lead_id == lead.id
+            assert ticket.ticket_type == "TENDER_SUPPORT"
+
+            by_lead = client.get(
+                f"{prefix}/presale/tenders",
+                params={"lead_id": lead.id},
+                headers=headers,
+            )
+            assert by_lead.status_code == 200, by_lead.text
+            assert [item["id"] for item in by_lead.json()["items"]] == [tender["id"]]
+        finally:
+            db_session.query(PresaleTenderRecord).filter(
+                PresaleTenderRecord.id == tender["id"]
+            ).delete(synchronize_session=False)
+            if ticket_id:
+                db_session.query(PresaleSupportTicket).filter(
+                    PresaleSupportTicket.id == ticket_id
+                ).delete(synchronize_session=False)
+            db_session.query(Lead).filter(Lead.id == lead.id).delete()
+            db_session.commit()
+
     def test_tender_update_contract(self, client: TestClient, admin_token: str):
         if not admin_token:
             pytest.skip("Admin token not available")

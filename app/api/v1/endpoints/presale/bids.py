@@ -25,7 +25,7 @@ from app.models.presale import (
     PresaleSupportTicket,
     PresaleTenderRecord,
 )
-from app.models.sales import Opportunity
+from app.models.sales import Lead, Opportunity
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.presale import (
@@ -71,6 +71,45 @@ def build_tender_response(tender: PresaleTenderRecord) -> TenderResponse:
         created_at=tender.created_at,
         updated_at=tender.updated_at,
     )
+
+
+def resolve_tender_ticket_from_lead(
+    db: Session,
+    tender_in: TenderCreate,
+    current_user: User,
+) -> Optional[PresaleSupportTicket]:
+    if not tender_in.lead_id:
+        return None
+
+    ticket = (
+        db.query(PresaleSupportTicket)
+        .filter(PresaleSupportTicket.lead_id == tender_in.lead_id)
+        .order_by(desc(PresaleSupportTicket.created_at), desc(PresaleSupportTicket.id))
+        .first()
+    )
+    if ticket:
+        return ticket
+
+    lead = get_or_404(db, Lead, tender_in.lead_id, detail="线索不存在")
+    ticket = PresaleSupportTicket(
+        ticket_no=generate_ticket_no(db),
+        title=f"投标支持 - {tender_in.tender_name}"[:200],
+        ticket_type="TENDER_SUPPORT",
+        urgency="NORMAL",
+        customer_name=tender_in.customer_name or lead.customer_name,
+        lead_id=lead.id,
+        opportunity_id=tender_in.opportunity_id,
+        project_id=tender_in.project_id,
+        applicant_id=current_user.id,
+        applicant_name=current_user.real_name or current_user.username,
+        applicant_dept=current_user.department,
+        apply_time=datetime.now(),
+        status="PENDING",
+        created_by=current_user.id,
+    )
+    db.add(ticket)
+    db.flush()
+    return ticket
 
 
 # 共 5 个路由
@@ -139,10 +178,20 @@ def create_tender(
     """
     创建投标记录
     """
+    ticket = None
+    if tender_in.ticket_id:
+        ticket = get_or_404(db, PresaleSupportTicket, tender_in.ticket_id, detail="工单不存在")
+    elif tender_in.lead_id:
+        ticket = resolve_tender_ticket_from_lead(db, tender_in, current_user)
+
     tender = PresaleTenderRecord(
-        ticket_id=tender_in.ticket_id,
-        opportunity_id=tender_in.opportunity_id,
-        project_id=tender_in.project_id,
+        ticket_id=ticket.id if ticket else tender_in.ticket_id,
+        opportunity_id=tender_in.opportunity_id if tender_in.opportunity_id is not None else (
+            ticket.opportunity_id if ticket else None
+        ),
+        project_id=tender_in.project_id if tender_in.project_id is not None else (
+            ticket.project_id if ticket else None
+        ),
         tender_no=tender_in.tender_no or generate_tender_no(db),
         tender_name=tender_in.tender_name,
         customer_name=tender_in.customer_name,
@@ -158,6 +207,8 @@ def create_tender(
         leader_id=tender_in.leader_id,
         team_members=tender_in.team_members,
     )
+    if ticket:
+        tender.ticket = ticket
 
     save_obj(db, tender)
 
