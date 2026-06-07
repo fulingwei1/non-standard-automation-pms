@@ -118,4 +118,37 @@ describe("presaleAIService", () => {
       "/api/v1/presale/ai/health-check",
     ]);
   });
+
+  it("uses registered requirement and quotation AI endpoints", async () => {
+    const requirement = {
+      presale_ticket_id: 501,
+      raw_requirement: "客户需要一套FCT自动化测试线",
+    };
+    const quotation = {
+      presale_ticket_id: 501,
+      quotation_type: "standard",
+      items: [{ name: "FCT测试线", quantity: 1, unit_price: 180000 }],
+    };
+
+    mock.onPost("/api/v1/presale/ai/analyze-requirement").reply((config) => {
+      expect(JSON.parse(config.data)).toEqual(requirement);
+      return [201, { id: 31, presale_ticket_id: 501 }];
+    });
+    mock.onPost("/api/v1/presale/ai/generate-quotation").reply((config) => {
+      expect(JSON.parse(config.data)).toEqual(quotation);
+      return [200, { id: 41, presale_ticket_id: 501 }];
+    });
+
+    await expect(
+      presaleAIService.analyzeRequirement(requirement)
+    ).resolves.toMatchObject({ id: 31 });
+    await expect(
+      presaleAIService.generateQuotation(quotation)
+    ).resolves.toMatchObject({ id: 41 });
+
+    expect(mock.history.post.map((request) => api.getUri(request))).toEqual([
+      "/api/v1/presale/ai/analyze-requirement",
+      "/api/v1/presale/ai/generate-quotation",
+    ]);
+  });
 });

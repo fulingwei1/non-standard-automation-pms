@@ -17,7 +17,7 @@ from app.api import deps
 from app.core import security
 from app.core.sales_permissions import check_sales_data_permission
 from app.models.project import Customer, Project
-from app.models.sales import Contract, ContractDeliverable
+from app.models.sales import Contract, ContractDeliverable, Opportunity, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import ContractProjectCreateRequest, ContractSignRequest
@@ -152,6 +152,18 @@ def create_contract_project(
             detail=f"合同状态必须为已签订才能创建项目，当前状态: {contract.status}",
         )
 
+    customer = db.query(Customer).filter(Customer.id == contract.customer_id).first()
+    quote_version = None
+    if contract.quote_id:
+        quote_version = db.query(QuoteVersion).filter(QuoteVersion.id == contract.quote_id).first()
+
+    opportunity = None
+    if contract.opportunity_id:
+        opportunity = db.query(Opportunity).filter(Opportunity.id == contract.opportunity_id).first()
+
+    lead_id = opportunity.lead_id if opportunity and hasattr(opportunity, "lead_id") else None
+    salesperson_id = contract.sales_owner_id or (opportunity.owner_id if opportunity else None)
+
     # 检查是否已关联项目
     if contract.project_id:
         raise HTTPException(
@@ -172,7 +184,19 @@ def create_contract_project(
         )
         project.contract_amount = project.contract_amount or contract.contract_amount
         project.contract_date = project.contract_date or contract.signing_date
+        project.budget_amount = (
+            project.budget_amount
+            or (quote_version.cost_total if quote_version and quote_version.cost_total is not None else None)
+            or 0
+        )
+        project.lead_id = project.lead_id or lead_id
         project.opportunity_id = project.opportunity_id or contract.opportunity_id
+        project.project_type = project.project_type or (opportunity.project_type if opportunity else None)
+        project.product_category = project.product_category or (
+            opportunity.equipment_type if opportunity else None
+        )
+        project.industry = project.industry or (customer.industry if customer else None)
+        project.salesperson_id = project.salesperson_id or salesperson_id
         contract.project_id = project.id
         db.commit()
 
@@ -204,17 +228,6 @@ def create_contract_project(
     if existing:
         raise HTTPException(status_code=400, detail="项目编码已存在")
 
-    # 获取线索ID（通过商机关联）
-    lead_id = None
-    if contract.opportunity_id:
-        from app.models.sales import Opportunity
-
-        opportunity = (
-            db.query(Opportunity).filter(Opportunity.id == contract.opportunity_id).first()
-        )
-        if opportunity and hasattr(opportunity, "lead_id"):
-            lead_id = opportunity.lead_id
-
     # P0-2: 使用事务保护确保数据一致性
     try:
         # 创建项目
@@ -225,6 +238,11 @@ def create_contract_project(
             contract_no=contract.contract_code,
             customer_contract_no=getattr(contract, "customer_contract_no", None),
             contract_amount=contract.contract_amount,
+            budget_amount=(
+                quote_version.cost_total
+                if quote_version and quote_version.cost_total is not None
+                else 0
+            ),
             contract_date=contract.signing_date,
             pm_id=project_request.pm_id,
             planned_start_date=project_request.planned_start_date,
@@ -232,10 +250,13 @@ def create_contract_project(
             lead_id=lead_id,
             opportunity_id=contract.opportunity_id,
             contract_id=contract.id,
+            project_type=opportunity.project_type if opportunity else None,
+            product_category=opportunity.equipment_type if opportunity else None,
+            industry=customer.industry if customer else None,
+            salesperson_id=salesperson_id,
         )
 
         # 填充客户信息
-        customer = db.query(Customer).filter(Customer.id == contract.customer_id).first()
         if customer:
             project.customer_name = customer.customer_name
             project.customer_contact = customer.contact_person

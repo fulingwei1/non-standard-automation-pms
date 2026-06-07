@@ -19,7 +19,7 @@ from app.schemas.presale_ai_requirement import (
 )
 from app.services.presale.presale_ai_requirement_service import PresaleAIRequirementService
 
-router = APIRouter(prefix="/api/v1/presale/ai", tags=["presale-ai-requirement"])
+router = APIRouter(prefix="/presale/ai", tags=["presale-ai-requirement"])
 
 
 @router.post(

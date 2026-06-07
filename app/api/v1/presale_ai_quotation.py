@@ -25,7 +25,7 @@ from app.schemas.presale_ai_quotation import (
 from app.services.presale.presale_ai_quotation_service import AIQuotationGeneratorService
 from app.services.quotation_pdf_service import QuotationPDFService
 
-router = APIRouter(prefix="/api/v1/presale/ai", tags=["AI报价单生成"])
+router = APIRouter(prefix="/presale/ai", tags=["AI报价单生成"])
 
 
 @router.post("/generate-quotation", response_model=QuotationResponse, summary="生成报价单")

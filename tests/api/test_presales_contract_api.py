@@ -138,6 +138,27 @@ class TestPresalesFrontendContractRoutes:
         missing = sorted(expected_routes - routes)
         assert not missing, f"售前 AI 前端依赖但后端未注册的路由: {missing}"
 
+    def test_presale_ai_requirement_and_quotation_routes_use_single_api_prefix(
+        self, client: TestClient
+    ):
+        """售前 AI 需求分析和报价生成不能注册成 /api/v1/api/v1 双前缀。"""
+        routes = _route_map(client.app)
+        prefix = settings.API_V1_PREFIX
+
+        expected_routes = {
+            ("POST", f"{prefix}/presale/ai/analyze-requirement"),
+            ("POST", f"{prefix}/presale/ai/generate-quotation"),
+        }
+        forbidden_routes = {
+            ("POST", f"{prefix}{prefix}/presale/ai/analyze-requirement"),
+            ("POST", f"{prefix}{prefix}/presale/ai/generate-quotation"),
+        }
+
+        missing = sorted(expected_routes - routes)
+        doubled = sorted(forbidden_routes & routes)
+        assert not missing, f"售前 AI 单前缀路由未注册: {missing}"
+        assert not doubled, f"售前 AI 路由仍然存在双 /api/v1 前缀: {doubled}"
+
 
 class TestPresalesFrontendContractBehavior:
     """验证这几个曾经炸出 404/字段不匹配的接口现在真能用。"""

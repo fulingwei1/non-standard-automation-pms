@@ -57,6 +57,8 @@ class ContractStatusHandler:
                 self.db.query(Opportunity).filter(Opportunity.id == contract.opportunity_id).first()
             )
 
+        salesperson_id = contract.sales_owner_id or (opportunity.owner_id if opportunity else None)
+
         # 如果项目已存在，更新项目信息
         if contract.project_id:
             project = self.db.query(Project).filter(Project.id == contract.project_id).first()
@@ -78,6 +80,7 @@ class ContractStatusHandler:
                     project.product_category = project.product_category or opportunity.equipment_type
                 if customer:
                     project.industry = project.industry or customer.industry
+                project.salesperson_id = project.salesperson_id or salesperson_id
                 # 同步客户合同编号
                 if hasattr(contract, "customer_contract_no") and contract.customer_contract_no:
                     project.customer_contract_no = contract.customer_contract_no
@@ -142,6 +145,7 @@ class ContractStatusHandler:
             lead_id=lead_id,
             opportunity_id=contract.opportunity_id,
             contract_id=contract.id,
+            salesperson_id=salesperson_id,
         )
 
         # 填充客户信息

@@ -29,9 +29,10 @@ class TestContractStatusHandler:
         contract.customer_id = 5
         contract.quote_id = None
         contract.opportunity_id = None
-        contract.signed_date = datetime(2024, 1, 1)
+        contract.signing_date = datetime(2024, 1, 1)
         contract.contract_amount = 100000
         contract.customer_contract_no = "CC001"
+        contract.sales_owner_id = 7
 
         customer = MagicMock()
         customer.industry = "电子制造"
@@ -40,6 +41,7 @@ class TestContractStatusHandler:
         project.id = 10
         project.stage = "S2"
         project.status = "ST05"
+        project.salesperson_id = None
 
         db.query.return_value.filter.return_value.first.side_effect = [contract, customer, project]
         db.commit = MagicMock()
@@ -47,6 +49,7 @@ class TestContractStatusHandler:
         result = handler.handle_contract_signed(contract_id=1)
         assert project.stage == "S3"
         assert project.status == "ST08"
+        assert project.salesperson_id == 7
         db.commit.assert_called()
 
     def test_no_auto_create(self):
@@ -57,6 +60,7 @@ class TestContractStatusHandler:
         contract.customer_id = 5
         contract.quote_id = None
         contract.opportunity_id = None
+        contract.sales_owner_id = 7
         db.query.return_value.filter.return_value.first.return_value = contract
 
         result = handler.handle_contract_signed(contract_id=1, auto_create_project=False)
@@ -75,12 +79,13 @@ class TestContractStatusHandler:
         contract.customer_id = 5
         contract.contract_code = "C001"
         contract.contract_amount = 200000
-        contract.signed_date = datetime(2024, 2, 1)
+        contract.signing_date = datetime(2024, 2, 1)
         contract.contract_name = "测试合同"
         contract.delivery_deadline = datetime(2024, 12, 31)
         contract.quote_id = None
         contract.opportunity_id = None
         contract.customer_contract_no = "CC002"
+        contract.sales_owner_id = 7
 
         customer = MagicMock()
         customer.customer_name = "客户X"
@@ -95,6 +100,7 @@ class TestContractStatusHandler:
 
         result = handler.handle_contract_signed(contract_id=1)
         db.add.assert_called()
+        assert result.salesperson_id == 7
         db.commit.assert_called()
         mock_init.assert_called()
 

@@ -163,7 +163,7 @@ class PresaleAIService {
    */
   async analyzeRequirement(requirementData) {
     const response = await api.post(
-      '/api/v1/presale/ai/requirement/analyze',
+      '/presale/ai/analyze-requirement',
       requirementData
     );
     return response.data;
@@ -175,7 +175,7 @@ class PresaleAIService {
    */
   async generateSolution(solutionData) {
     const response = await api.post(
-      '/api/v1/presale/ai/solution/generate',
+      '/presale/ai/solution/generate',
       solutionData
     );
     return response.data;
@@ -211,7 +211,7 @@ class PresaleAIService {
    */
   async generateQuotation(quotationData) {
     const response = await api.post(
-      '/api/v1/presale/ai/quotation/generate',
+      '/presale/ai/generate-quotation',
       quotationData
     );
     return response.data;
@@ -222,7 +222,7 @@ class PresaleAIService {
    * @param {string} query - 查询内容
    */
   async searchKnowledge(query) {
-    const response = await api.get('/api/v1/presale/ai/knowledge/search', {
+    const response = await api.get('/presale/ai/knowledge/search', {
       params: { query },
     });
     return response.data;
@@ -234,7 +234,7 @@ class PresaleAIService {
    */
   async recommendScript(scriptData) {
     const response = await api.post(
-      '/api/v1/presale/ai/script/recommend',
+      '/presale/ai/script/recommend',
       scriptData
     );
     return response.data;
@@ -246,7 +246,7 @@ class PresaleAIService {
    */
   async analyzeEmotion(emotionData) {
     const response = await api.post(
-      '/api/v1/presale/ai/emotion/analyze',
+      '/presale/ai/emotion/analyze',
       emotionData
     );
     return response.data;

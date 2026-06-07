@@ -46,16 +46,44 @@ class DataSyncService:
             return {"success": False, "message": "项目不存在"}
 
         updated_fields = []
+        quote_version = getattr(contract, "quote_version", None)
+        opportunity = getattr(contract, "opportunity", None)
+        customer = getattr(contract, "customer", None)
+
+        def sync_field(field_name: str, value) -> None:
+            if value is None:
+                return
+            if getattr(project, field_name, None) != value:
+                setattr(project, field_name, value)
+                updated_fields.append(field_name)
 
         # 同步合同金额
-        if contract.contract_amount and contract.contract_amount != project.contract_amount:
-            project.contract_amount = contract.contract_amount
-            updated_fields.append("contract_amount")
+        sync_field("contract_amount", contract.contract_amount)
 
         # 同步合同日期
-        if contract.signing_date and contract.signing_date != project.contract_date:
-            project.contract_date = contract.signing_date
-            updated_fields.append("contract_date")
+        sync_field("contract_date", contract.signing_date)
+
+        # 同步报价成本基线
+        if quote_version and getattr(quote_version, "cost_total", None) is not None:
+            sync_field("budget_amount", quote_version.cost_total)
+
+        # 同步销售上下文到项目，支撑项目看板、成本复盘和销售归因
+        sync_field("customer_id", contract.customer_id)
+        sync_field("opportunity_id", contract.opportunity_id)
+        sync_field("salesperson_id", contract.sales_owner_id)
+
+        if opportunity:
+            sync_field("lead_id", getattr(opportunity, "lead_id", None))
+            sync_field("project_type", getattr(opportunity, "project_type", None))
+            sync_field("product_category", getattr(opportunity, "equipment_type", None))
+            if not contract.sales_owner_id:
+                sync_field("salesperson_id", getattr(opportunity, "owner_id", None))
+
+        if customer:
+            sync_field("industry", getattr(customer, "industry", None))
+            sync_field("customer_name", getattr(customer, "customer_name", None))
+            sync_field("customer_contact", getattr(customer, "contact_person", None))
+            sync_field("customer_phone", getattr(customer, "contact_phone", None))
 
         # 同步交期（如果有）
         # 优先从 Contract 的 delivery_deadline 字段获取（如果存在）
@@ -64,15 +92,13 @@ class DataSyncService:
         if hasattr(contract, "delivery_deadline") and contract.delivery_deadline:
             delivery_date = contract.delivery_deadline
         elif (
-            contract.quote_version
-            and hasattr(contract.quote_version, "delivery_date")
-            and contract.quote_version.delivery_date
+            quote_version
+            and hasattr(quote_version, "delivery_date")
+            and quote_version.delivery_date
         ):
-            delivery_date = contract.quote_version.delivery_date
+            delivery_date = quote_version.delivery_date
 
-        if delivery_date and delivery_date != project.planned_end_date:
-            project.planned_end_date = delivery_date
-            updated_fields.append("planned_end_date")
+        sync_field("planned_end_date", delivery_date)
 
         if updated_fields:
             self.db.add(project)

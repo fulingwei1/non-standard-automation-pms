@@ -24,7 +24,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.enums import AssessmentStatusEnum
 from app.models.presale import PresaleSolution, PresaleSupportTicket
-from app.models.project import Customer
+from app.models.project import Customer, Project
 from app.models.sales import AssessmentRisk, Opportunity, ScoringRule, TechnicalAssessment
 from app.models.user import User
 
@@ -647,6 +647,100 @@ class TestSalesClosedLoop:
         assert contract_detail["project_id"] == project_data["project_id"]
         assert contract_detail["status"] == "SIGNED"
         assert contract_detail["contract_name"] == contract_name
+
+    def test_manual_contract_project_inherits_quote_cost_and_opportunity_context(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """手动合同建项也必须带入报价成本基线和商机上下文。"""
+
+        headers = _auth_headers(admin_token)
+
+        lead = _create_lead(client, admin_token)
+        customer_id = _create_customer(client, admin_token, name_prefix="手动建项客户")
+
+        convert_response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}/convert",
+            params={"customer_id": customer_id, "skip_validation": "true"},
+            json={},
+            headers=headers,
+        )
+        assert convert_response.status_code == 201, convert_response.text
+        opportunity = convert_response.json()
+
+        quote_response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/quotes",
+            json={
+                "quote_code": _unique_code("QUOTE-MANUAL"),
+                "opportunity_id": opportunity["id"],
+                "customer_id": customer_id,
+                "valid_until": (date.today() + timedelta(days=45)).isoformat(),
+                "version": {
+                    "version_no": "V1",
+                    "total_price": 258000.0,
+                    "cost_total": 154800.0,
+                    "gross_margin": 40.0,
+                    "lead_time_days": 45,
+                    "risk_terms": "Standard delivery terms",
+                    "items": [
+                        {
+                            "item_type": "SYSTEM",
+                            "item_name": "手动建项自动化测试平台",
+                            "qty": 1,
+                            "unit_price": 258000.0,
+                            "cost": 154800.0,
+                            "lead_time_days": 45,
+                        }
+                    ],
+                },
+            },
+            headers=headers,
+        )
+        assert quote_response.status_code == 201, quote_response.text
+        quote = quote_response.json()
+
+        contract_response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/contracts",
+            json={
+                "contract_code": _unique_code("CTMAN"),
+                "contract_name": f"手动建项合同-{uuid.uuid4().hex[:4]}",
+                "opportunity_id": opportunity["id"],
+                "customer_id": customer_id,
+                "quote_version_id": quote["current_version_id"],
+                "contract_amount": 258000.0,
+                "signed_date": date.today().isoformat(),
+            },
+            headers=headers,
+        )
+        assert contract_response.status_code == 201, contract_response.text
+        contract = contract_response.json()
+
+        _sign_contract(client, admin_token, contract["id"], auto_create_project=False)
+
+        project_response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/contracts/{contract['id']}/project",
+            params={"skip_g4_validation": "true"},
+            json={
+                "project_code": _unique_code("PRJMAN"),
+                "project_name": f"手动闭环项目-{uuid.uuid4().hex[:4]}",
+            },
+            headers=headers,
+        )
+        assert project_response.status_code == 200, project_response.text
+        project_id = project_response.json()["data"]["project_id"]
+
+        db_session.expire_all()
+        project = db_session.get(Project, project_id)
+        assert project is not None
+        assert project.lead_id == lead["id"]
+        assert project.opportunity_id == opportunity["id"]
+        assert project.contract_id == contract["id"]
+        assert project.customer_id == customer_id
+        assert float(project.contract_amount) == 258000.0
+        assert float(project.budget_amount) == 154800.0
+        assert project.project_type == opportunity["project_type"]
+        assert project.product_category == opportunity["equipment_type"]
+        assert project.industry == "电子制造"
+        assert project.salesperson_id == opportunity["owner_id"]
 
     def test_contract_pmo_initiation_approval_links_project_back_to_contract(
         self, client: TestClient, db_session: Session, admin_token: str
