@@ -182,6 +182,46 @@ describe('PresalesTasks', () => {
     expect(screen.getByText('某大型企业')).toBeInTheDocument();
   });
 
+  it('passes opportunity and ticket filters when opened from sales presales support', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 501,
+            title: '售前支持申请 - ERP 改造项目',
+            ticket_type: 'TECHNICAL_SUPPORT',
+            status: 'PENDING',
+            urgency: 'NORMAL',
+            customer_name: '科技公司',
+            applicant_name: '李四',
+            expected_date: '2026-06-20',
+            description: '商机编号：OPP-002',
+            opportunity_id: 2,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage({
+      pathname: '/presales/technical-solutions',
+      search: '?tab=reviews&type=support&status=pending&opportunity_id=2&ticket_id=501',
+    });
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.list).toHaveBeenLastCalledWith({
+        page: 1,
+        page_size: 100,
+        status: 'PENDING',
+        opportunity_id: '2',
+        ticket_id: '501',
+      });
+    });
+
+    expect(screen.getByText('售前支持申请 - ERP 改造项目')).toBeInTheDocument();
+    expect(screen.getAllByText('售前支持').length).toBeGreaterThan(0);
+  });
+
   it('does not show progress update controls for backend REVIEW tickets', async () => {
     presaleApi.tickets.list.mockResolvedValue({
       data: {

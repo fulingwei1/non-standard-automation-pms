@@ -2,7 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import OpportunityManagement from '../OpportunityManagement';
-import { opportunityApi, customerApi, userApi, presaleApi } from '../../services/api';
+import {
+  opportunityApi,
+  customerApi,
+  userApi,
+  presaleApi,
+  presaleWorkbenchApi,
+} from '../../services/api';
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy(
@@ -72,6 +78,10 @@ vi.mock('../../services/api', async (importOriginal) => {
         create: vi.fn(),
       },
     },
+    presaleWorkbenchApi: {
+      ...actual.presaleWorkbenchApi,
+      loadContext: vi.fn(),
+    },
   };
 });
 
@@ -92,13 +102,30 @@ vi.mock('../OpportunityManagement/DetailDialog', () => ({
 }));
 
 vi.mock('../OpportunityManagement/ReviewDialog', () => ({
-  default: ({ open, reviewForm, onCreateReviewTicket }) => (
+  default: ({ open, reviewForm, setReviewForm, onCreateReviewTicket }) => (
     <div data-testid="review-dialog">
       {open ? (
         <>
           <span>{reviewForm.title}</span>
+          <select
+            aria-label="支持类型"
+            value={reviewForm.ticket_type}
+            onChange={(event) =>
+              setReviewForm({
+                ...reviewForm,
+                ticket_type: event.target.value,
+                title:
+                  event.target.value === 'SOLUTION_REVIEW'
+                    ? reviewForm.title.replace('售前支持申请', '方案评审申请')
+                    : reviewForm.title.replace('方案评审申请', '售前支持申请'),
+              })
+            }
+          >
+            <option value="TECHNICAL_SUPPORT">售前支持</option>
+            <option value="SOLUTION_REVIEW">方案评审</option>
+          </select>
           <button type="button" onClick={onCreateReviewTicket}>
-            提交评审
+            提交支持
           </button>
         </>
       ) : 'closed'}
@@ -184,6 +211,7 @@ describe('OpportunityManagement', () => {
     opportunityApi.get.mockResolvedValue({ data: opportunities[0] });
     opportunityApi.update.mockResolvedValue({ data: { ...opportunities[0], stage: 'WON' } });
     presaleApi.tickets.create.mockResolvedValue({ data: { id: 501 } });
+    presaleWorkbenchApi.loadContext.mockResolvedValue({ ticket: null });
   });
 
   it('renders the real page skeleton and loads opportunities on mount', async () => {
@@ -246,15 +274,82 @@ describe('OpportunityManagement', () => {
     });
   });
 
-  it('creates a solution review ticket and opens the unified presales review board', async () => {
+  it('creates a general presales support ticket from an opportunity without requiring the gate to pass', async () => {
+    renderPage();
+
+    await screen.findByText('ERP 改造项目');
+
+    fireEvent.click(screen.getAllByRole('button', { name: /发起支持/ })[1]);
+    expect(screen.getByText('售前支持申请 - ERP 改造项目')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '提交支持' }));
+
+    await waitFor(() => {
+      expect(presaleWorkbenchApi.loadContext).toHaveBeenCalledWith({
+        sourceType: 'opportunity',
+        sourceId: 2,
+      });
+      expect(presaleApi.tickets.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: '售前支持申请 - ERP 改造项目',
+          ticket_type: 'TECHNICAL_SUPPORT',
+          customer_id: 102,
+          customer_name: '科技公司',
+          opportunity_id: 2,
+          estimated_amount: 80,
+          description: expect.stringContaining('商机编号：OPP-002'),
+        }),
+      );
+    });
+
+    const payload = presaleApi.tickets.create.mock.calls[0][0];
+    expect(payload.description).toContain('预计金额：800000');
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/presales/technical-solutions?tab=reviews&type=support&status=pending&opportunity_id=2&ticket_id=501',
+    );
+  });
+
+  it('reuses an active opportunity presales support ticket instead of creating duplicates', async () => {
+    presaleWorkbenchApi.loadContext.mockResolvedValueOnce({
+      ticket: {
+        id: 777,
+        ticket_type: 'TECHNICAL_SUPPORT',
+        status: 'IN_PROGRESS',
+      },
+    });
+
     renderPage();
 
     await screen.findByText('智能制造升级项目');
 
-    fireEvent.click(screen.getAllByRole('button', { name: /申请评审/ })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: /发起支持/ })[0]);
+    fireEvent.click(screen.getByRole('button', { name: '提交支持' }));
+
+    await waitFor(() => {
+      expect(presaleWorkbenchApi.loadContext).toHaveBeenCalledWith({
+        sourceType: 'opportunity',
+        sourceId: 1,
+      });
+      expect(presaleApi.tickets.create).not.toHaveBeenCalled();
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/presales/technical-solutions?tab=reviews&type=support&status=in_progress&opportunity_id=1&ticket_id=777',
+    );
+  });
+
+  it('creates a solution review ticket through the same presales support dialog', async () => {
+    renderPage();
+
+    await screen.findByText('智能制造升级项目');
+
+    fireEvent.click(screen.getAllByRole('button', { name: /发起支持/ })[0]);
+    fireEvent.change(screen.getByLabelText('支持类型'), {
+      target: { value: 'SOLUTION_REVIEW' },
+    });
     expect(screen.getByText('方案评审申请 - 智能制造升级项目')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: '提交评审' }));
+    fireEvent.click(screen.getByRole('button', { name: '提交支持' }));
 
     await waitFor(() => {
       expect(presaleApi.tickets.create).toHaveBeenCalledWith(
@@ -280,6 +375,8 @@ describe('OpportunityManagement', () => {
     expect(payload.description).toContain('现场约束：三班倒不停线');
     expect(payload.description).toContain('验收依据：UPH 达标');
 
-    expect(mockNavigate).toHaveBeenCalledWith('/presales/technical-solutions?tab=reviews&type=review&status=reviewing');
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/presales/technical-solutions?tab=reviews&type=review&status=reviewing&opportunity_id=1&ticket_id=501',
+    );
   });
 });

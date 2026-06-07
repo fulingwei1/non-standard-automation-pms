@@ -43,7 +43,9 @@ const getInitialTaskFilters = (search) => {
   const params = new URLSearchParams(search || "");
   return {
     type: params.get("type") || "all",
-    status: params.get("status") || "all"
+    status: params.get("status") || "all",
+    opportunityId: params.get("opportunity_id") || "",
+    ticketId: params.get("ticket_id") || ""
   };
 };
 
@@ -81,6 +83,10 @@ export default function PresalesTasks({ embedded = false } = {}) {
   const [viewMode, setViewMode] = useState("list"); // 'list', 'kanban'
   const [selectedType, setSelectedType] = useState(initialFilters.type);
   const [selectedStatus, setSelectedStatus] = useState(initialFilters.status);
+  const [sourceFilters, setSourceFilters] = useState({
+    opportunityId: initialFilters.opportunityId,
+    ticketId: initialFilters.ticketId,
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTask, setSelectedTask] = useState(null);
   const [tasks, setTasks] = useState([]);
@@ -96,6 +102,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
       SOLUTION: "solution",
       SOLUTION_DESIGN: "solution",
       SOLUTION_REVIEW: "review",
+      TECHNICAL_SUPPORT: "support",
       QUOTATION: "costing",
       COST_ESTIMATE: "costing",
       COST_SUPPORT: "costing",
@@ -162,6 +169,14 @@ export default function PresalesTasks({ embedded = false } = {}) {
         params.keyword = searchTerm;
       }
 
+      if (sourceFilters.opportunityId) {
+        params.opportunity_id = sourceFilters.opportunityId;
+      }
+
+      if (sourceFilters.ticketId) {
+        params.ticket_id = sourceFilters.ticketId;
+      }
+
       const response = await presaleApi.tickets.list(params);
       const ticketsData = getTicketItems(response);
 
@@ -203,7 +218,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
     } finally {
       setLoading(false);
     }
-  }, [selectedStatus, searchTerm]);
+  }, [selectedStatus, searchTerm, sourceFilters.opportunityId, sourceFilters.ticketId]);
 
   const updateCreateForm = (field, value) => {
     setCreateForm((prev) => ({ ...prev, [field]: value }));
@@ -277,12 +292,15 @@ export default function PresalesTasks({ embedded = false } = {}) {
     const params = new URLSearchParams(location.search);
     const type = params.get("type");
     const status = params.get("status");
+    const opportunityId = params.get("opportunity_id") || "";
+    const ticketId = params.get("ticket_id") || "";
     if (type) {
       setSelectedType(type);
     }
     if (status) {
       setSelectedStatus(status);
     }
+    setSourceFilters({ opportunityId, ticketId });
   }, [location.search]);
 
   // Load tasks when filters change

@@ -9,11 +9,18 @@ import {
   Eye,
   DollarSign,
   Target,
+  LifeBuoy,
 } from "lucide-react";
 
 // 任务类型配置
 export const taskTypes = [
   { id: "all", name: "全部", icon: ListTodo, color: "text-slate-400" },
+  {
+    id: "support",
+    name: "售前支持",
+    icon: LifeBuoy,
+    color: "text-cyan-400",
+  },
   {
     id: "survey",
     name: "需求调研",

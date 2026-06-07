@@ -493,6 +493,70 @@ class TestPresalesFrontendContractBehavior:
         assert progress.content == "方案可行，建议进入报价"
         assert progress.progress_percent == 100
 
+    def test_ticket_list_filters_by_opportunity_and_ticket_id(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        first = client.post(
+            f"{prefix}/presale/tickets",
+            json={
+                "title": f"销售侧售前支持-{unique}",
+                "ticket_type": "TECHNICAL_SUPPORT",
+                "urgency": "NORMAL",
+                "customer_name": "客户A",
+                "opportunity_id": 9001,
+            },
+            headers=headers,
+        )
+        assert first.status_code == 201, first.text
+        first_id = first.json()["id"]
+
+        second = client.post(
+            f"{prefix}/presale/tickets",
+            json={
+                "title": f"其它商机售前支持-{unique}",
+                "ticket_type": "TECHNICAL_SUPPORT",
+                "urgency": "NORMAL",
+                "customer_name": "客户B",
+                "opportunity_id": 9002,
+            },
+            headers=headers,
+        )
+        assert second.status_code == 201, second.text
+        second_id = second.json()["id"]
+
+        try:
+            by_opportunity = client.get(
+                f"{prefix}/presale/tickets",
+                params={"opportunity_id": 9001},
+                headers=headers,
+            )
+            assert by_opportunity.status_code == 200, by_opportunity.text
+            opportunity_items = by_opportunity.json()["items"]
+            assert [item["id"] for item in opportunity_items] == [first_id]
+            assert opportunity_items[0]["opportunity_id"] == 9001
+
+            by_ticket = client.get(
+                f"{prefix}/presale/tickets",
+                params={"opportunity_id": 9002, "ticket_id": second_id},
+                headers=headers,
+            )
+            assert by_ticket.status_code == 200, by_ticket.text
+            ticket_items = by_ticket.json()["items"]
+            assert [item["id"] for item in ticket_items] == [second_id]
+            assert ticket_items[0]["opportunity_id"] == 9002
+        finally:
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id.in_([first_id, second_id])
+            ).delete(synchronize_session=False)
+            db_session.commit()
+
     def test_completing_opportunity_ticket_updates_sales_assessment_status(
         self, client: TestClient, db_session: Session, admin_token: str
     ):

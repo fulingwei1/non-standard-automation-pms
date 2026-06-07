@@ -29,7 +29,13 @@ import {
   DropdownMenuTrigger
 } from "../../components/ui";
 import { cn } from "../../lib/utils";
-import { opportunityApi, customerApi, userApi, presaleApi } from "../../services/api";
+import {
+  opportunityApi,
+  customerApi,
+  userApi,
+  presaleApi,
+  presaleWorkbenchApi,
+} from "../../services/api";
 import { stageConfig, isGatePassed } from "./constants";
 import OpportunityGrid from "./OpportunityGrid";
 import OpportunityTable from "./OpportunityTable";
@@ -70,6 +76,72 @@ const buildReviewDescription = (opp) => {
 
   return lines.join("\n");
 };
+
+const SUPPORT_TICKET_TYPE = "TECHNICAL_SUPPORT";
+const REVIEW_TICKET_TYPE = "SOLUTION_REVIEW";
+const ACTIVE_SUPPORT_STATUSES = new Set([
+  "PENDING",
+  "ACCEPTED",
+  "IN_PROGRESS",
+  "PROCESSING",
+]);
+
+const getTicketTitlePrefix = (ticketType) =>
+  ticketType === REVIEW_TICKET_TYPE ? "方案评审申请" : "售前支持申请";
+
+const buildTicketTitle = (opp, ticketType = SUPPORT_TICKET_TYPE) =>
+  opp?.opp_name
+    ? `${getTicketTitlePrefix(ticketType)} - ${opp.opp_name}`
+    : getTicketTitlePrefix(ticketType);
+
+const normalizeTicketStatusForUrl = (status, ticketType) => {
+  if (ticketType === REVIEW_TICKET_TYPE) {
+    return "reviewing";
+  }
+  const normalized = String(status || "").toUpperCase();
+  if (["ACCEPTED", "IN_PROGRESS", "PROCESSING"].includes(normalized)) {
+    return "in_progress";
+  }
+  if (["COMPLETED", "CLOSED", "CANCELLED"].includes(normalized)) {
+    return "completed";
+  }
+  return "pending";
+};
+
+const buildPresalesTicketBoardPath = ({
+  ticketType = SUPPORT_TICKET_TYPE,
+  status,
+  opportunityId,
+  ticketId,
+}) => {
+  const params = new URLSearchParams();
+  params.set("tab", "reviews");
+  params.set("type", ticketType === REVIEW_TICKET_TYPE ? "review" : "support");
+  params.set("status", normalizeTicketStatusForUrl(status, ticketType));
+  if (opportunityId) {
+    params.set("opportunity_id", String(opportunityId));
+  }
+  if (ticketId) {
+    params.set("ticket_id", String(ticketId));
+  }
+  return `/presales/technical-solutions?${params.toString()}`;
+};
+
+const isReusableSupportTicket = (ticket) => (
+  ticket?.ticket_type === SUPPORT_TICKET_TYPE &&
+  ACTIVE_SUPPORT_STATUSES.has(String(ticket.status || "").toUpperCase())
+);
+
+const normalizeEstimatedAmountWan = (amount) => {
+  if (amount === undefined || amount === null || amount === "") {
+    return undefined;
+  }
+  const numericAmount = Number(amount);
+  return Number.isNaN(numericAmount) ? undefined : numericAmount / 10000;
+};
+
+const unwrapTicketId = (response) =>
+  response?.data?.id || response?.data?.data?.id || response?.formatted?.id || null;
 
 export default function OpportunityManagement({ embedded = false }) {
   const [opportunities, setOpportunities] = useState([]);
@@ -125,6 +197,7 @@ export default function OpportunityManagement({ embedded = false }) {
   });
 
   const [reviewForm, setReviewForm] = useState({
+    ticket_type: SUPPORT_TICKET_TYPE,
     title: "",
     description: "",
     urgency: "NORMAL",
@@ -353,22 +426,24 @@ export default function OpportunityManagement({ embedded = false }) {
     }
   }, [selectedOpp]);
 
-  const openReviewDialog = (opp) => {
-    if (!isGatePassed(opp?.gate_status)) {
-      alert("商机阶段门未通过，无法申请评审");
-      return;
-    }
-    const title = opp?.opp_name ?
-      `方案评审申请 - ${opp.opp_name}` :
-      "方案评审申请";
+  const openPresaleSupportDialog = (opp) => {
     setReviewTarget(opp);
     setReviewForm({
-      title,
+      ticket_type: SUPPORT_TICKET_TYPE,
+      title: buildTicketTitle(opp, SUPPORT_TICKET_TYPE),
       description: buildReviewDescription(opp),
       urgency: "NORMAL",
       expected_date: ""
     });
     setShowReviewDialog(true);
+  };
+
+  const handleReviewTicketTypeChange = (ticketType) => {
+    setReviewForm((prev) => ({
+      ...prev,
+      ticket_type: ticketType,
+      title: buildTicketTitle(reviewTarget, ticketType),
+    }));
   };
 
   const handleCreateReviewTicket = async () => {
@@ -379,11 +454,34 @@ export default function OpportunityManagement({ embedded = false }) {
       alert("请输入申请标题");
       return;
     }
+    const ticketType = reviewForm.ticket_type || SUPPORT_TICKET_TYPE;
+    if (ticketType === REVIEW_TICKET_TYPE && !isGatePassed(reviewTarget?.gate_status)) {
+      alert("商机阶段门未通过，无法申请方案评审");
+      return;
+    }
     setReviewSubmitting(true);
     try {
-      await presaleApi.tickets.create({
+      if (ticketType === SUPPORT_TICKET_TYPE) {
+        const context = await presaleWorkbenchApi.loadContext({
+          sourceType: "opportunity",
+          sourceId: reviewTarget.id,
+        });
+        if (isReusableSupportTicket(context?.ticket)) {
+          setShowReviewDialog(false);
+          setReviewTarget(null);
+          navigate(buildPresalesTicketBoardPath({
+            ticketType,
+            status: context.ticket.status,
+            opportunityId: reviewTarget.id,
+            ticketId: context.ticket.id,
+          }));
+          return;
+        }
+      }
+
+      const payload = {
         title: reviewForm.title.trim(),
-        ticket_type: "SOLUTION_REVIEW",
+        ticket_type: ticketType,
         urgency: reviewForm.urgency,
         description:
           reviewForm.description?.trim() ||
@@ -393,15 +491,27 @@ export default function OpportunityManagement({ embedded = false }) {
         customer_name: reviewTarget.customer_name || undefined,
         opportunity_id: reviewTarget.id,
         expected_date: reviewForm.expected_date || undefined
-      });
+      };
+      const estimatedAmount = normalizeEstimatedAmountWan(reviewTarget.est_amount);
+      if (estimatedAmount !== undefined) {
+        payload.estimated_amount = estimatedAmount;
+      }
+
+      const response = await presaleApi.tickets.create(payload);
+      const ticketId = unwrapTicketId(response);
       setShowReviewDialog(false);
       setReviewTarget(null);
-      alert("方案评审已提交");
-      navigate("/presales/technical-solutions?tab=reviews&type=review&status=reviewing");
+      alert(ticketType === REVIEW_TICKET_TYPE ? "方案评审已提交" : "售前支持已提交");
+      navigate(buildPresalesTicketBoardPath({
+        ticketType,
+        status: ticketType === REVIEW_TICKET_TYPE ? "REVIEW" : "PENDING",
+        opportunityId: reviewTarget.id,
+        ticketId,
+      }));
     } catch (error) {
-      console.error("提交方案评审失败:", error);
+      console.error("提交售前支持失败:", error);
       alert(
-        "提交方案评审失败: " +
+        "提交售前支持失败: " +
         (error.response?.data?.detail || error.message)
       );
     } finally {
@@ -690,7 +800,7 @@ export default function OpportunityManagement({ embedded = false }) {
           onEdit={handleEdit}
           onOpenGate={handleOpenGate}
           onStageChange={handleStageChange}
-          onOpenReview={openReviewDialog}
+          onOpenReview={openPresaleSupportDialog}
         />
       ) : (
         <OpportunityTable
@@ -700,7 +810,7 @@ export default function OpportunityManagement({ embedded = false }) {
           onEdit={handleEdit}
           onOpenGate={handleOpenGate}
           onStageChange={handleStageChange}
-          onOpenReview={openReviewDialog}
+          onOpenReview={openPresaleSupportDialog}
         />
       ))
       }
@@ -770,6 +880,8 @@ export default function OpportunityManagement({ embedded = false }) {
         setReviewForm={setReviewForm}
         reviewSubmitting={reviewSubmitting}
         onCreateReviewTicket={handleCreateReviewTicket}
+        onTicketTypeChange={handleReviewTicketTypeChange}
+        canRequestSolutionReview={isGatePassed(reviewTarget?.gate_status)}
       />
     </div>
   );

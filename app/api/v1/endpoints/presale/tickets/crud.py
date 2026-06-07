@@ -32,6 +32,8 @@ def read_tickets(
     keyword: Optional[str] = Query(None, description="关键词搜索（工单编号/标题）"),
     status: Optional[str] = Query(None, description="状态筛选"),
     ticket_type: Optional[str] = Query(None, description="工单类型筛选"),
+    ticket_id: Optional[int] = Query(None, description="工单ID筛选"),
+    opportunity_id: Optional[int] = Query(None, description="商机ID筛选"),
     applicant_id: Optional[int] = Query(None, description="申请人ID筛选"),
     assignee_id: Optional[int] = Query(None, description="处理人ID筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
@@ -54,6 +56,12 @@ def read_tickets(
 
     if ticket_type:
         query = query.filter(PresaleSupportTicket.ticket_type == ticket_type)
+
+    if ticket_id:
+        query = query.filter(PresaleSupportTicket.id == ticket_id)
+
+    if opportunity_id:
+        query = query.filter(PresaleSupportTicket.opportunity_id == opportunity_id)
 
     if applicant_id:
         query = query.filter(PresaleSupportTicket.applicant_id == applicant_id)

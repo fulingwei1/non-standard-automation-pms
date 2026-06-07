@@ -2,7 +2,7 @@ import {
   CheckCircle2,
   Edit,
   Eye,
-  FileText
+  LifeBuoy
 } from "lucide-react";
 import {
   Card,
@@ -10,7 +10,7 @@ import {
   Button
 } from "../../components/ui";
 import { formatDateTime } from "@/lib/formatters";
-import { stageConfig, isGatePassed } from "./constants";
+import { stageConfig } from "./constants";
 
 export default function OpportunityTable({
   opportunities,
@@ -107,14 +107,9 @@ export default function OpportunityTable({
                         size="sm"
                         onClick={() => onOpenReview(opp)}
                         className="h-8 w-8 p-0 text-violet-400"
-                        disabled={!isGatePassed(opp.gate_status)}
-                        title={
-                          isGatePassed(opp.gate_status) ?
-                          "" :
-                          "阶段门未通过，无法申请评审"
-                        }
+                        title="发起售前支持"
                       >
-                        <FileText className="h-4 w-4" />
+                        <LifeBuoy className="h-4 w-4" />
                       </Button>
                     </div>
                   </td>

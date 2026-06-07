@@ -6,9 +6,9 @@ import {
   CheckCircle2,
   Edit,
   Eye,
-  FileText,
   Calendar,
-  Swords
+  Swords,
+  LifeBuoy
 } from "lucide-react";
 import {
   Card,
@@ -20,7 +20,7 @@ import {
   Progress
 } from "../../components/ui";
 import { cn } from "../../lib/utils";
-import { stageConfig, isGatePassed } from "./constants";
+import { stageConfig } from "./constants";
 
 export default function OpportunityGrid({
   opportunities,
@@ -151,15 +151,10 @@ export default function OpportunityGrid({
                   size="sm"
                   onClick={() => onOpenReview(opp)}
                   className="w-full"
-                  disabled={!isGatePassed(opp.gate_status)}
-                  title={
-                    isGatePassed(opp.gate_status) ?
-                    "" :
-                    "阶段门未通过，无法申请评审"
-                  }>
+                  title="发起售前技术支持或方案评审">
 
-                  <FileText className="mr-2 h-4 w-4" />
-                  申请评审
+                  <LifeBuoy className="mr-2 h-4 w-4" />
+                  发起支持
                 </Button>
               </div>
             </CardContent>

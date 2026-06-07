@@ -17,18 +17,37 @@ export default function ReviewDialog({
   reviewForm,
   setReviewForm,
   reviewSubmitting,
-  onCreateReviewTicket
+  onCreateReviewTicket,
+  onTicketTypeChange,
+  canRequestSolutionReview = false
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>申请方案评审</DialogTitle>
+          <DialogTitle>发起售前支持</DialogTitle>
           <DialogDescription>
-            提交后将进入售前技术支持部的方案评审列表
+            提交后将进入售前技术支持中心的工单看板
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          <div>
+            <Label>支持类型</Label>
+            <select
+              value={reviewForm.ticket_type}
+              onChange={(e) =>
+                onTicketTypeChange ?
+                  onTicketTypeChange(e.target.value) :
+                  setReviewForm({ ...reviewForm, ticket_type: e.target.value })
+              }
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
+            >
+              <option value="TECHNICAL_SUPPORT">售前支持</option>
+              <option value="SOLUTION_REVIEW" disabled={!canRequestSolutionReview}>
+                方案评审
+              </option>
+            </select>
+          </div>
           <div>
             <Label>申请标题 *</Label>
             <Input
@@ -89,7 +108,7 @@ export default function ReviewDialog({
             取消
           </Button>
           <Button onClick={onCreateReviewTicket} disabled={reviewSubmitting}>
-            {reviewSubmitting ? "提交中..." : "提交评审"}
+            {reviewSubmitting ? "提交中..." : "提交支持"}
           </Button>
         </DialogFooter>
       </DialogContent>
