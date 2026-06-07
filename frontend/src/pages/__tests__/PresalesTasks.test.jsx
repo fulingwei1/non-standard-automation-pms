@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import PresalesTasks from '../PresalesTasks';
 import { presaleApi } from '../../services/api';
 
@@ -70,7 +70,26 @@ const ticketItems = [
   },
 ];
 
+function toLocation(initialEntry) {
+  if (typeof initialEntry === 'string') {
+    const url = new URL(initialEntry, 'http://localhost');
+    return {
+      pathname: url.pathname,
+      search: url.search,
+      hash: url.hash,
+      state: null,
+    };
+  }
+  return {
+    pathname: initialEntry.pathname || '/presales-tasks',
+    search: initialEntry.search || '',
+    hash: initialEntry.hash || '',
+    state: initialEntry.state || null,
+  };
+}
+
 function renderPage(initialEntry = '/presales-tasks') {
+  useLocation.mockReturnValue(toLocation(initialEntry));
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <PresalesTasks />
@@ -81,6 +100,7 @@ function renderPage(initialEntry = '/presales-tasks') {
 describe('PresalesTasks', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useLocation.mockReturnValue(toLocation('/presales-tasks'));
     vi.spyOn(window, 'alert').mockImplementation(() => {});
     presaleApi.tickets.list.mockResolvedValue({
       data: { items: ticketItems, total: ticketItems.length },
@@ -104,6 +124,43 @@ describe('PresalesTasks', () => {
     expect(screen.getByText('销售：宋魁')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('搜索任务...')).toHaveValue('');
     expect(presaleApi.tickets.list).toHaveBeenCalledWith({ page: 1, page_size: 100 });
+  });
+
+  it('renders review tasks from formatted unified responses and keeps query filters', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      formatted: {
+        items: [
+          {
+            id: 31,
+            title: '方案评审申请 - 智能制造升级项目',
+            ticket_type: 'SOLUTION_REVIEW',
+            status: 'REVIEW',
+            urgency: 'NORMAL',
+            customer_name: '某大型企业',
+            applicant_name: '张三',
+            expected_date: '2026-06-20',
+            description: '商机编号：OPP-001',
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage({
+      pathname: '/sales/presales-tasks',
+      search: '?type=review&status=reviewing',
+    });
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.list).toHaveBeenLastCalledWith({
+        page: 1,
+        page_size: 100,
+        status: 'REVIEW',
+      });
+    });
+
+    expect(screen.getByText('方案评审申请 - 智能制造升级项目')).toBeInTheDocument();
+    expect(screen.getByText('某大型企业')).toBeInTheDocument();
   });
 
   it('requests backend status filters using current ticket API parameters', async () => {

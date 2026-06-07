@@ -29,11 +29,31 @@ import { taskTypes, taskStatuses } from "./constants";
 import TaskCard from "./TaskCard";
 import TaskDetailPanel from "./TaskDetailPanel";
 
+const getInitialTaskFilters = (search) => {
+  const params = new URLSearchParams(search || "");
+  return {
+    type: params.get("type") || "all",
+    status: params.get("status") || "all"
+  };
+};
+
+const getTicketItems = (response) => {
+  const payload = response?.formatted ?? response?.data?.data ?? response?.data ?? response;
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+  return [];
+};
+
 export default function PresalesTasks({ embedded = false } = {}) {
   const location = useLocation();
+  const initialFilters = getInitialTaskFilters(location.search);
   const [viewMode, setViewMode] = useState("list"); // 'list', 'kanban'
-  const [selectedType, setSelectedType] = useState("all");
-  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedType, setSelectedType] = useState(initialFilters.type);
+  const [selectedStatus, setSelectedStatus] = useState(initialFilters.status);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTask, setSelectedTask] = useState(null);
   const [tasks, setTasks] = useState([]);
@@ -113,7 +133,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
       }
 
       const response = await presaleApi.tickets.list(params);
-      const ticketsData = response.data?.items || response.data?.items || response.data || [];
+      const ticketsData = getTicketItems(response);
 
       // Transform tickets to tasks
       const transformedTasks = (ticketsData || []).map((ticket) => {

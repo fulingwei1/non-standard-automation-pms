@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import OpportunityManagement from '../OpportunityManagement';
-import { opportunityApi, customerApi, userApi } from '../../services/api';
+import { opportunityApi, customerApi, userApi, presaleApi } from '../../services/api';
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy(
@@ -92,7 +92,18 @@ vi.mock('../OpportunityManagement/DetailDialog', () => ({
 }));
 
 vi.mock('../OpportunityManagement/ReviewDialog', () => ({
-  default: ({ open }) => <div data-testid="review-dialog">{open ? 'open' : 'closed'}</div>,
+  default: ({ open, reviewForm, onCreateReviewTicket }) => (
+    <div data-testid="review-dialog">
+      {open ? (
+        <>
+          <span>{reviewForm.title}</span>
+          <button type="button" onClick={onCreateReviewTicket}>
+            提交评审
+          </button>
+        </>
+      ) : 'closed'}
+    </div>
+  ),
 }));
 
 function renderPage(props = {}) {
@@ -135,6 +146,7 @@ describe('OpportunityManagement', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    window.alert = vi.fn();
     opportunityApi.list.mockResolvedValue({
       data: { items: opportunities, total: opportunities.length },
     });
@@ -162,6 +174,7 @@ describe('OpportunityManagement', () => {
     });
     opportunityApi.get.mockResolvedValue({ data: opportunities[0] });
     opportunityApi.update.mockResolvedValue({ data: { ...opportunities[0], stage: 'WON' } });
+    presaleApi.tickets.create.mockResolvedValue({ data: { id: 501 } });
   });
 
   it('renders the real page skeleton and loads opportunities on mount', async () => {
@@ -222,5 +235,30 @@ describe('OpportunityManagement', () => {
     await waitFor(() => {
       expect(screen.getByText('暂无商机数据')).toBeInTheDocument();
     });
+  });
+
+  it('creates a solution review ticket and navigates to the sales presales task list', async () => {
+    renderPage();
+
+    await screen.findByText('智能制造升级项目');
+
+    fireEvent.click(screen.getAllByRole('button', { name: /申请评审/ })[0]);
+    expect(screen.getByText('方案评审申请 - 智能制造升级项目')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '提交评审' }));
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: '方案评审申请 - 智能制造升级项目',
+          ticket_type: 'SOLUTION_REVIEW',
+          customer_id: 101,
+          customer_name: '某大型企业',
+          opportunity_id: 1,
+        }),
+      );
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/sales/presales-tasks?type=review&status=reviewing');
   });
 });

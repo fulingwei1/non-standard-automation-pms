@@ -363,7 +363,7 @@ export default function OpportunityManagement({ embedded = false }) {
       setShowReviewDialog(false);
       setReviewTarget(null);
       alert("方案评审已提交");
-      navigate("/presales-tasks?type=review&status=reviewing");
+      navigate("/sales/presales-tasks?type=review&status=reviewing");
     } catch (error) {
       console.error("提交方案评审失败:", error);
       alert(
