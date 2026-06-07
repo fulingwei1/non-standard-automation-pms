@@ -1,5 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { useSearchParams } from 'react-router-dom';
 import { useTechnicalReviewList } from '../useTechnicalReviewList';
 import { projectApi, technicalReviewApi } from '../../../../services/api';
 
@@ -59,38 +60,44 @@ vi.mock('../../../../services/api', async (importOriginal) => {
   };
 });
 
-describe.skip('useTechnicalReviewList Hook', () => {
-  // Setup common mock data
-  const mockItems = [{ id: 1, name: 'Test 1' }, { id: 2, name: 'Test 2' }];
-  const mockDetail = { id: 1, name: 'Test Detail' };
-  const mockResponse = { data: { items: mockItems, total: 2 }, items: mockItems }; 
+describe('useTechnicalReviewList Hook', () => {
+  const mockReviews = [
+    {
+      id: 1,
+      review_no: 'TR-PDR-001',
+      review_name: '合同转项目 PDR',
+      project_id: 42,
+    },
+  ];
+  const mockProjects = [
+    { id: 42, project_code: 'PRJ-42', project_name: '合同转项目' },
+  ];
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Auto-setup mocks for known methods
-    const apiObjects = [projectApi, technicalReviewApi];
-    apiObjects.forEach(api => {
-        if (api) {
-            if (api.list) api.list.mockResolvedValue(mockResponse);
-            if (api.get) api.get.mockResolvedValue({ data: mockDetail });
-            if (api.query) api.query.mockResolvedValue(mockResponse);
-            if (api.aiMatch) api.aiMatch.mockResolvedValue(mockResponse); // specialized
-        }
+    useSearchParams.mockReturnValue([
+      new URLSearchParams('project_id=42'),
+      vi.fn(),
+    ]);
+    technicalReviewApi.list.mockResolvedValue({
+      data: { items: mockReviews, total: 1 },
+    });
+    projectApi.list.mockResolvedValue({
+      data: { items: mockProjects, total: 1 },
     });
   });
 
-  it('should load data', async () => {
+  it('scopes technical reviews by project context from the URL', async () => {
     const { result } = renderHook(() => useTechnicalReviewList());
 
-    // Wait for loading to finish
-    if (Object.prototype.hasOwnProperty.call(result.current, 'loading')) {
-        await waitFor(() => expect(result.current.loading).toBe(false));
-    } else {
-        await waitFor(() => {});
-    }
+    await waitFor(() => expect(result.current.loading).toBe(false));
 
-    // Basic assertion
-    expect(result.current).toBeDefined();
+    expect(result.current.projectId).toBe('42');
+    expect(technicalReviewApi.list).toHaveBeenCalledWith({
+      page: 1,
+      page_size: 20,
+      project_id: '42',
+    });
+    expect(result.current.reviews).toEqual(mockReviews);
   });
 });

@@ -1,5 +1,6 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useSearchParams } from "react-router-dom";
 import { useTechnicalReviewForm } from "../useTechnicalReviewForm";
 import { projectApi, technicalReviewApi, userApi } from "../../../../services/api";
 
@@ -8,6 +9,7 @@ vi.mock("react-router-dom", async (importOriginal) => {
   return {
     ...actual,
     useNavigate: () => vi.fn(),
+    useSearchParams: vi.fn(),
   };
 });
 
@@ -28,6 +30,7 @@ vi.mock("../../../../services/api", () => ({
 describe("useTechnicalReviewForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
     projectApi.list.mockResolvedValue({ data: { items: [] } });
     userApi.list.mockResolvedValue({ data: { items: [] } });
   });
@@ -42,6 +45,24 @@ describe("useTechnicalReviewForm", () => {
 
     expect(result.current.isNew).toBe(true);
     expect(result.current.loading).toBe(false);
+    expect(technicalReviewApi.get).not.toHaveBeenCalled();
+  });
+
+  it("defaults the new review project from the project context query", async () => {
+    useSearchParams.mockReturnValue([
+      new URLSearchParams("project_id=42"),
+      vi.fn(),
+    ]);
+
+    const { result } = renderHook(() => useTechnicalReviewForm("new"));
+
+    await waitFor(() => {
+      expect(projectApi.list).toHaveBeenCalled();
+      expect(userApi.list).toHaveBeenCalled();
+    });
+
+    expect(result.current.isNew).toBe(true);
+    expect(result.current.formData.project_id).toBe("42");
     expect(technicalReviewApi.get).not.toHaveBeenCalled();
   });
 });

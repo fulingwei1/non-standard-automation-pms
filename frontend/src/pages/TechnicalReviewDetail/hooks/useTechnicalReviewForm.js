@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { technicalReviewApi, projectApi, userApi } from "../../../services/api";
 import { formatDate } from "../../../lib/utils";
 import { DEFAULT_FORM_DATA } from "../constants";
+import { getProjectContextFilters } from "../../../lib/projectContext";
 
 /**
  * Manages all create/edit form state for TechnicalReviewDetail.
@@ -10,6 +11,9 @@ import { DEFAULT_FORM_DATA } from "../constants";
  */
 export function useTechnicalReviewForm(reviewId) {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const projectContextFilters = getProjectContextFilters(searchParams);
+    const contextProjectId = projectContextFilters.project_id || "";
     const isNew = !reviewId || reviewId === "new";
 
     const [loading, setLoading] = useState(!isNew);
@@ -17,7 +21,10 @@ export function useTechnicalReviewForm(reviewId) {
     const [review, setReview] = useState(null);
     const [activeTab, setActiveTab] = useState("basic");
 
-    const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
+    const [formData, setFormData] = useState(() => ({
+        ...DEFAULT_FORM_DATA,
+        project_id: contextProjectId || DEFAULT_FORM_DATA.project_id,
+    }));
 
     const [projects, setProjects] = useState([]);
     const [users, setUsers] = useState([]);
@@ -35,12 +42,15 @@ export function useTechnicalReviewForm(reviewId) {
     useEffect(() => {
         if (isNew) {
             setLoading(false);
+            if (contextProjectId) {
+                setFormData((prev) => ({ ...prev, project_id: contextProjectId }));
+            }
         } else {
             fetchReview();
         }
         fetchProjects();
         fetchUsers();
-    }, [reviewId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [reviewId, contextProjectId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchProjects = async () => {
         try {

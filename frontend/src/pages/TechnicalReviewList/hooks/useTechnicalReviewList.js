@@ -1,7 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { technicalReviewApi, projectApi } from '../../../services/api';
+import { getProjectContextFilters } from '../../../lib/projectContext';
 
 export function useTechnicalReviewList() {
+    const [searchParams] = useSearchParams();
+    const projectContextFilters = useMemo(
+        () => getProjectContextFilters(searchParams),
+        [searchParams]
+    );
+    const contextProjectId = projectContextFilters.project_id || null;
     const [loading, setLoading] = useState(true);
     const [reviews, setReviews] = useState([]);
     const [total, setTotal] = useState(0);
@@ -10,7 +18,7 @@ export function useTechnicalReviewList() {
 
     // 筛选条件
     const [searchKeyword, setSearchKeyword] = useState("");
-    const [projectId, setProjectId] = useState(null);
+    const [projectId, setProjectId] = useState(contextProjectId);
     const [status, setStatus] = useState(null);
     const [reviewType, setReviewType] = useState(null);
 
@@ -61,6 +69,13 @@ export function useTechnicalReviewList() {
         fetchReviews();
         fetchProjectList();
     }, [fetchReviews, fetchProjectList]);
+
+    useEffect(() => {
+        if (contextProjectId) {
+            setProjectId(contextProjectId);
+            setPage(1);
+        }
+    }, [contextProjectId]);
 
     const handleDelete = async () => {
         if (!deleteDialog.review) return;
