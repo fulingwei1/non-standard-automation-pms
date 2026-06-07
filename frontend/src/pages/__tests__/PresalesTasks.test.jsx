@@ -269,6 +269,66 @@ describe('PresalesTasks', () => {
     });
   });
 
+  it('keeps lead context when opened from a sales lead presales center link', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 701,
+            title: '线索售前技术支持',
+            ticket_type: 'TECHNICAL_SUPPORT',
+            status: 'PENDING',
+            urgency: 'NORMAL',
+            customer_name: '华东线索客户',
+            applicant_name: '张销售',
+            description: '线索阶段需要售前判断测试方案可行性',
+            lead_id: 21,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage(
+      {
+        pathname: '/presales/technical-solutions',
+        search: '?tab=reviews&type=support&status=pending&lead_id=21',
+      },
+      { embedded: true },
+    );
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.list).toHaveBeenLastCalledWith({
+        page: 1,
+        page_size: 100,
+        status: 'PENDING',
+        lead_id: '21',
+      });
+    });
+
+    expect(screen.getByText('线索售前技术支持')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /新建任务/ }));
+    fireEvent.change(screen.getByLabelText('任务标题'), {
+      target: { value: '线索现场技术交流' },
+    });
+    fireEvent.change(screen.getByLabelText('任务说明'), {
+      target: { value: '提前澄清节拍和治具边界' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '创建任务' }));
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.create).toHaveBeenCalledWith({
+        title: '线索现场技术交流',
+        ticket_type: 'SOLUTION_DESIGN',
+        urgency: 'NORMAL',
+        description: '提前澄清节拍和治具边界',
+        lead_id: 21,
+      });
+    });
+  });
+
   it('does not show progress update controls for backend REVIEW tickets', async () => {
     presaleApi.tickets.list.mockResolvedValue({
       data: {

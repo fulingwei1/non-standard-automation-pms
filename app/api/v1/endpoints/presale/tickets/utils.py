@@ -116,6 +116,7 @@ def build_ticket_response(ticket: PresaleSupportTicket, opportunity=None) -> Tic
         description=ticket.description,
         customer_id=ticket.customer_id,
         customer_name=ticket.customer_name,
+        lead_id=getattr(ticket, "lead_id", None),
         opportunity_id=ticket.opportunity_id,
         opportunity_code=getattr(opportunity, "opp_code", None),
         opportunity_name=getattr(opportunity, "opp_name", None),

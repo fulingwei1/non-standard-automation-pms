@@ -33,6 +33,7 @@ def read_tickets(
     status: Optional[str] = Query(None, description="状态筛选"),
     ticket_type: Optional[str] = Query(None, description="工单类型筛选"),
     ticket_id: Optional[int] = Query(None, description="工单ID筛选"),
+    lead_id: Optional[int] = Query(None, description="线索ID筛选"),
     opportunity_id: Optional[int] = Query(None, description="商机ID筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     applicant_id: Optional[int] = Query(None, description="申请人ID筛选"),
@@ -60,6 +61,9 @@ def read_tickets(
 
     if ticket_id:
         query = query.filter(PresaleSupportTicket.id == ticket_id)
+
+    if lead_id:
+        query = query.filter(PresaleSupportTicket.lead_id == lead_id)
 
     if opportunity_id:
         query = query.filter(PresaleSupportTicket.opportunity_id == opportunity_id)
@@ -135,6 +139,7 @@ def create_ticket(
         description=ticket_in.description,
         customer_id=ticket_in.customer_id,
         customer_name=ticket_in.customer_name,
+        lead_id=ticket_in.lead_id,
         opportunity_id=ticket_in.opportunity_id,
         project_id=ticket_in.project_id,
         applicant_id=current_user.id,
@@ -210,28 +215,6 @@ def create_ticket(
         opportunity = db.query(Opportunity).filter(Opportunity.id == ticket.opportunity_id).first()
 
     return build_ticket_response(ticket, opportunity)
-
-
-@router.put("/{ticket_id}", response_model=TicketResponse)
-def update_ticket(
-    *,
-    db: Session = Depends(deps.get_db),
-    ticket_id: int,
-    ticket_in: TicketUpdate,
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    更新工单基础信息
-    """
-    ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
-
-    update_data = ticket_in.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(ticket, field, value)
-
-    save_obj(db, ticket)
-
-    return read_ticket(db=db, ticket_id=ticket_id, current_user=current_user)
 
 
 @router.get("/{ticket_id}", response_model=TicketResponse)

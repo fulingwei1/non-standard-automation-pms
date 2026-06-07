@@ -85,6 +85,7 @@ def test_build_ticket_response_exposes_ticket_deliverables():
 
 def test_build_ticket_response_exposes_pm_involvement_context():
     ticket = _ticket_with_progress([])
+    ticket.lead_id = 21
     checked_at = datetime(2026, 6, 7, 10, 30, 0)
     assigned_at = datetime(2026, 6, 7, 10, 45, 0)
     ticket.assessment_required = True
@@ -102,6 +103,7 @@ def test_build_ticket_response_exposes_pm_involvement_context():
 
     response = build_ticket_response(ticket)
 
+    assert response.lead_id == 21
     assert response.assessment_required is True
     assert response.assessment_status == "IN_PROGRESS"
     assert response.assessment_priority == "HIGH"

@@ -63,7 +63,7 @@ describe("LeadDetail presales entry actions", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "售前中心" }));
     expect(navigateMock).toHaveBeenCalledWith(
-      "/presales/technical-solutions?tab=reviews&type=assessment&lead_id=21",
+      "/presales/technical-solutions?tab=reviews&type=support&status=pending&lead_id=21",
     );
 
     await waitFor(() => {

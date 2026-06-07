@@ -44,6 +44,7 @@ const getInitialTaskFilters = (search) => {
   return {
     type: params.get("type") || "all",
     status: params.get("status") || "all",
+    leadId: params.get("lead_id") || "",
     opportunityId: params.get("opportunity_id") || "",
     ticketId: params.get("ticket_id") || "",
     projectId: params.get("project_id") || ""
@@ -128,6 +129,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
   const [selectedType, setSelectedType] = useState(initialFilters.type);
   const [selectedStatus, setSelectedStatus] = useState(initialFilters.status);
   const [sourceFilters, setSourceFilters] = useState({
+    leadId: initialFilters.leadId,
     opportunityId: initialFilters.opportunityId,
     ticketId: initialFilters.ticketId,
     projectId: initialFilters.projectId,
@@ -218,6 +220,10 @@ export default function PresalesTasks({ embedded = false } = {}) {
         params.opportunity_id = sourceFilters.opportunityId;
       }
 
+      if (sourceFilters.leadId) {
+        params.lead_id = sourceFilters.leadId;
+      }
+
       if (sourceFilters.ticketId) {
         params.ticket_id = sourceFilters.ticketId;
       }
@@ -287,6 +293,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
   }, [
     selectedStatus,
     searchTerm,
+    sourceFilters.leadId,
     sourceFilters.opportunityId,
     sourceFilters.ticketId,
     sourceFilters.projectId,
@@ -345,7 +352,11 @@ export default function PresalesTasks({ embedded = false } = {}) {
     });
 
     const contextOpportunityId = parseContextId(sourceFilters.opportunityId);
+    const contextLeadId = parseContextId(sourceFilters.leadId);
     const contextProjectId = parseContextId(sourceFilters.projectId);
+    if (contextLeadId) {
+      payload.lead_id = contextLeadId;
+    }
     if (contextOpportunityId) {
       payload.opportunity_id = contextOpportunityId;
     }
@@ -373,6 +384,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
     const params = new URLSearchParams(location.search);
     const type = params.get("type");
     const status = params.get("status");
+    const leadId = params.get("lead_id") || "";
     const opportunityId = params.get("opportunity_id") || "";
     const ticketId = params.get("ticket_id") || "";
     const projectId = params.get("project_id") || "";
@@ -382,7 +394,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
     if (status) {
       setSelectedStatus(status);
     }
-    setSourceFilters({ opportunityId, ticketId, projectId });
+    setSourceFilters({ leadId, opportunityId, ticketId, projectId });
   }, [location.search]);
 
   // Load tasks when filters change

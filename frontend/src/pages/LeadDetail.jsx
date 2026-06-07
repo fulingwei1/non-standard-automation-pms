@@ -67,7 +67,7 @@ const followUpTypeConfigs = {
   OTHER: { label: "其他", color: "bg-slate-500" }
 };
 const buildLeadPresalesCenterPath = (leadId) =>
-  `/presales/technical-solutions?tab=reviews&type=assessment&lead_id=${leadId}`;
+  `/presales/technical-solutions?tab=reviews&type=support&status=pending&lead_id=${leadId}`;
 
 export default function LeadDetail() {
   const { id } = useParams();

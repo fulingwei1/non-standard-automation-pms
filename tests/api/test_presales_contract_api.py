@@ -641,6 +641,63 @@ class TestPresalesFrontendContractBehavior:
             ).delete(synchronize_session=False)
             db_session.commit()
 
+    def test_ticket_list_filters_by_lead_id_for_early_presales_support(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+        first_lead_id = 91001
+        second_lead_id = 91002
+
+        first = client.post(
+            f"{prefix}/presale/tickets",
+            json={
+                "title": f"线索阶段售前支持-{unique}",
+                "ticket_type": "TECHNICAL_SUPPORT",
+                "urgency": "NORMAL",
+                "customer_name": "线索客户A",
+                "lead_id": first_lead_id,
+            },
+            headers=headers,
+        )
+        assert first.status_code == 201, first.text
+        first_id = first.json()["id"]
+        assert first.json()["lead_id"] == first_lead_id
+
+        second = client.post(
+            f"{prefix}/presale/tickets",
+            json={
+                "title": f"其它线索售前支持-{unique}",
+                "ticket_type": "TECHNICAL_SUPPORT",
+                "urgency": "NORMAL",
+                "customer_name": "线索客户B",
+                "lead_id": second_lead_id,
+            },
+            headers=headers,
+        )
+        assert second.status_code == 201, second.text
+        second_id = second.json()["id"]
+
+        try:
+            by_lead = client.get(
+                f"{prefix}/presale/tickets",
+                params={"lead_id": first_lead_id},
+                headers=headers,
+            )
+            assert by_lead.status_code == 200, by_lead.text
+            lead_items = by_lead.json()["items"]
+            assert [item["id"] for item in lead_items] == [first_id]
+            assert lead_items[0]["lead_id"] == first_lead_id
+        finally:
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id.in_([first_id, second_id])
+            ).delete(synchronize_session=False)
+            db_session.commit()
+
     def test_ticket_list_enriches_sales_opportunity_context_for_presales_tasks(
         self, client: TestClient, db_session: Session, admin_token: str
     ):

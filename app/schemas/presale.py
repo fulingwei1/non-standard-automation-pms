@@ -22,6 +22,7 @@ class TicketCreate(BaseModel):
     description: Optional[str] = Field(None, description="详细描述")
     customer_id: Optional[int] = Field(None, description="客户ID")
     customer_name: Optional[str] = Field(None, description="客户名称")
+    lead_id: Optional[int] = Field(None, description="关联线索ID")
     opportunity_id: Optional[int] = Field(None, description="关联商机ID")
     project_id: Optional[int] = Field(None, description="关联项目ID")
     expected_date: Optional[date] = Field(None, description="期望完成日期")
@@ -94,6 +95,7 @@ class TicketResponse(TimestampSchema):
     description: Optional[str] = None
     customer_id: Optional[int] = None
     customer_name: Optional[str] = None
+    lead_id: Optional[int] = None
     opportunity_id: Optional[int] = None
     opportunity_code: Optional[str] = Field(None, description="关联商机编码")
     opportunity_name: Optional[str] = Field(None, description="关联商机名称")

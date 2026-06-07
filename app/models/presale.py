@@ -108,6 +108,7 @@ class PresaleSupportTicket(Base, TimestampMixin):
     # 关联信息
     customer_id = Column(Integer, comment="客户ID")
     customer_name = Column(String(100), comment="客户名称")
+    lead_id = Column(Integer, comment="关联线索ID")
     opportunity_id = Column(Integer, comment="关联商机ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="关联项目ID")
 
@@ -158,6 +159,7 @@ class PresaleSupportTicket(Base, TimestampMixin):
         Index("idx_presale_ticket_applicant", "applicant_id"),
         Index("idx_presale_ticket_assignee", "assignee_id"),
         Index("idx_presale_ticket_customer", "customer_id"),
+        Index("idx_presale_ticket_lead", "lead_id"),
         {"comment": "售前支持工单表"},
     )
 
