@@ -116,6 +116,46 @@ describe("useAssessmentData", () => {
     );
   });
 
+  it("prefills requirement data from opportunity context even without a ticket", async () => {
+    const pendingAssessment = { id: 703, status: "PENDING", source_type: "OPPORTUNITY" };
+    technicalAssessmentApi.getOpportunityAssessments.mockResolvedValue({
+      data: [pendingAssessment],
+    });
+    presaleWorkbenchApi.loadContext.mockResolvedValue({
+      assessment: {
+        requirementDetail: {
+          id: 302,
+          lead_id: 22,
+          has_interface_doc: true,
+          cycle_time_seconds: 9.5,
+          target_object_type: "PCBA",
+        },
+      },
+    });
+
+    const { result } = renderHook(() =>
+      useAssessmentData("opportunity", "8", "703")
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(presaleWorkbenchApi.loadContext).toHaveBeenCalledWith({
+      sourceType: "opportunity",
+      sourceId: 8,
+    });
+    expect(result.current.requirementData).toEqual(
+      expect.objectContaining({
+        source_type: "opportunity",
+        source_id: 8,
+        requirement_detail_id: 302,
+        lead_id: 22,
+        has_interface_doc: true,
+        cycle_time_seconds: 9.5,
+        target_object_type: "PCBA",
+      }),
+    );
+  });
+
   it("applies a lead assessment and reloads the source assessment list", async () => {
     const pendingAssessment = { id: 21, status: "PENDING", source_type: "LEAD" };
     technicalAssessmentApi.getLeadAssessments

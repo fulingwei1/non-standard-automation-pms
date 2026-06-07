@@ -102,13 +102,17 @@ export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, pr
       }
 
       const numericPresaleTicketId = parseContextId(presaleTicketId);
-      if (numericPresaleTicketId) {
+      if (numericSourceId && presaleWorkbenchApi?.loadContext) {
         try {
-          const context = await presaleWorkbenchApi.loadContext({
+          const contextParams = {
             sourceType,
             sourceId: numericSourceId,
-            presaleTicketId: numericPresaleTicketId,
-          });
+          };
+          if (numericPresaleTicketId) {
+            contextParams.presaleTicketId = numericPresaleTicketId;
+          }
+
+          const context = await presaleWorkbenchApi.loadContext(contextParams);
           contextRequirementData = buildRequirementDataFromDetail(
             context?.assessment?.requirementDetail,
             { sourceType, sourceId: numericSourceId },

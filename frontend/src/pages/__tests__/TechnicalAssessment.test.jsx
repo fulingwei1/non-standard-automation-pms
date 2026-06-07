@@ -2,9 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useParams, useSearchParams } from "react-router-dom";
 import TechnicalAssessment from "../TechnicalAssessment";
-import { technicalAssessmentApi } from "../../services/api";
+import { presaleWorkbenchApi, technicalAssessmentApi } from "../../services/api";
 
 vi.mock("../../services/api", () => ({
+  presaleWorkbenchApi: {
+    loadContext: vi.fn(),
+  },
   technicalAssessmentApi: {
     getLeadAssessments: vi.fn(),
     getOpportunityAssessments: vi.fn(),
@@ -18,6 +21,9 @@ describe("TechnicalAssessment", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(window, "alert").mockImplementation(() => {});
+    presaleWorkbenchApi.loadContext.mockResolvedValue({
+      assessment: { requirementDetail: null },
+    });
     useParams.mockReturnValue({ sourceType: "lead", sourceId: "21" });
     useSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
   });
