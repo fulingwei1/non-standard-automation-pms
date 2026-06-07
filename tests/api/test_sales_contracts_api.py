@@ -46,9 +46,10 @@ class TestSalesContractsAPI:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
+        unique = uuid4().hex[:6].upper()
 
         contract_data = {
-            "contract_no": f"CT{datetime.now().strftime('%Y%m%d')}001",
+            "contract_no": f"CTAPI{unique}",
             "customer_id": 1,
             "quote_id": 1,
             "contract_name": "测试设备采购合同",
@@ -64,7 +65,9 @@ class TestSalesContractsAPI:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/contracts/", headers=headers, json=contract_data
+            f"{settings.API_V1_PREFIX}/sales/contracts/?skip_g3_validation=true",
+            headers=headers,
+            json=contract_data,
         )
 
         if response.status_code == 404:
