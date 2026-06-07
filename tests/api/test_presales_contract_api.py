@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.enums import AssessmentStatusEnum, LeadOutcomeEnum
+from app.models.presale import PresaleSolution
 from app.models.project import Customer, Machine, Project
 from app.models.sales import Opportunity
 from app.models.timesheet import Timesheet
@@ -370,6 +371,88 @@ class TestPresalesFrontendContractBehavior:
         assert stats.status_code == 200, stats.text
         assert "industries" in stats.json()
         assert "test_types" in stats.json()
+
+    def test_solution_list_filters_by_opportunity_and_project(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        project_a = Project(
+            project_code=f"PSFA{unique[:6]}",
+            project_name=f"方案过滤项目A-{unique}",
+            customer_name=f"方案过滤客户A-{unique}",
+            is_active=True,
+        )
+        project_b = Project(
+            project_code=f"PSFB{unique[:6]}",
+            project_name=f"方案过滤项目B-{unique}",
+            customer_name=f"方案过滤客户B-{unique}",
+            is_active=True,
+        )
+        db_session.add_all([project_a, project_b])
+        db_session.flush()
+
+        target_solution = PresaleSolution(
+            solution_no=f"SOL-OPP-{unique}",
+            name=f"目标商机方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=None,
+            project_id=project_a.id,
+            opportunity_id=9001,
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        other_solution = PresaleSolution(
+            solution_no=f"SOL-OTHER-{unique}",
+            name=f"其他项目方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=None,
+            project_id=project_b.id,
+            opportunity_id=9002,
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        db_session.add_all([target_solution, other_solution])
+        db_session.commit()
+
+        try:
+            by_opportunity = client.get(
+                f"{prefix}/presale/proposals/solutions",
+                params={"opportunity_id": 9001},
+                headers=headers,
+            )
+            assert by_opportunity.status_code == 200, by_opportunity.text
+            opportunity_items = by_opportunity.json()["items"]
+            assert [item["id"] for item in opportunity_items] == [target_solution.id]
+            assert opportunity_items[0]["opportunity_id"] == 9001
+
+            by_project = client.get(
+                f"{prefix}/presale/proposals/solutions",
+                params={"project_id": project_b.id},
+                headers=headers,
+            )
+            assert by_project.status_code == 200, by_project.text
+            project_items = by_project.json()["items"]
+            assert [item["id"] for item in project_items] == [other_solution.id]
+            assert project_items[0]["project_id"] == project_b.id
+        finally:
+            db_session.query(PresaleSolution).filter(
+                PresaleSolution.solution_no.in_(
+                    [f"SOL-OPP-{unique}", f"SOL-OTHER-{unique}"]
+                )
+            ).delete(synchronize_session=False)
+            db_session.query(Project).filter(
+                Project.project_code.in_([f"PSFA{unique[:6]}", f"PSFB{unique[:6]}"])
+            ).delete(synchronize_session=False)
+            db_session.commit()
 
     def test_tender_update_contract(self, client: TestClient, admin_token: str):
         if not admin_token:

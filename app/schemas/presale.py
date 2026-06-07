@@ -156,6 +156,7 @@ class SolutionCreate(BaseModel):
     industry: Optional[str] = Field(None, description="所属行业")
     test_type: Optional[str] = Field(None, description="测试类型")
     ticket_id: Optional[int] = Field(None, description="关联工单ID")
+    project_id: Optional[int] = Field(None, description="关联项目ID")
     customer_id: Optional[int] = Field(None, description="客户ID")
     opportunity_id: Optional[int] = Field(None, description="商机ID")
     requirement_summary: Optional[str] = Field(None, description="需求概述")
@@ -178,6 +179,7 @@ class SolutionUpdate(BaseModel):
     suggested_price: Optional[Decimal] = None
     estimated_hours: Optional[int] = None
     estimated_duration: Optional[int] = None
+    project_id: Optional[int] = None
 
 
 class SolutionReviewRequest(BaseModel):
@@ -199,6 +201,7 @@ class SolutionResponse(TimestampSchema):
     industry: Optional[str] = None
     test_type: Optional[str] = None
     ticket_id: Optional[int] = None
+    project_id: Optional[int] = None
     customer_id: Optional[int] = None
     opportunity_id: Optional[int] = None
     requirement_summary: Optional[str] = None

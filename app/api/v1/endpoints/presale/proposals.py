@@ -60,6 +60,7 @@ def build_solution_response(solution: PresaleSolution) -> SolutionResponse:
         industry=solution.industry,
         test_type=solution.test_type,
         ticket_id=solution.ticket_id,
+        project_id=solution.project_id,
         customer_id=solution.customer_id,
         opportunity_id=solution.opportunity_id,
         requirement_summary=solution.requirement_summary,
@@ -91,6 +92,8 @@ def read_solutions(
     solution_type: Optional[str] = Query(None, description="方案类型筛选"),
     industry: Optional[str] = Query(None, description="行业筛选"),
     ticket_id: Optional[int] = Query(None, description="工单ID筛选"),
+    opportunity_id: Optional[int] = Query(None, description="商机ID筛选"),
+    project_id: Optional[int] = Query(None, description="项目ID筛选"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
@@ -115,6 +118,12 @@ def read_solutions(
 
     if ticket_id:
         query = query.filter(PresaleSolution.ticket_id == ticket_id)
+
+    if opportunity_id:
+        query = query.filter(PresaleSolution.opportunity_id == opportunity_id)
+
+    if project_id:
+        query = query.filter(PresaleSolution.project_id == project_id)
 
     total = query.count()
     solutions = apply_pagination(
@@ -143,6 +152,7 @@ def create_solution(
         industry=solution_in.industry,
         test_type=solution_in.test_type,
         ticket_id=solution_in.ticket_id,
+        project_id=solution_in.project_id,
         customer_id=solution_in.customer_id,
         opportunity_id=solution_in.opportunity_id,
         requirement_summary=solution_in.requirement_summary,

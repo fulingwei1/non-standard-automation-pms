@@ -134,7 +134,7 @@ describe('presaleWorkbenchApi', () => {
         total: 0,
       },
     });
-    mock.onGet('/api/v1/presale/solutions').reply((config) => {
+    mock.onGet('/api/v1/presale/proposals/solutions').reply((config) => {
       expect(config.params.opportunity_id).toBe(9);
       return [200, {
         items: [{ id: 31, solution_name: '方案 A' }],
@@ -253,7 +253,7 @@ describe('presaleWorkbenchApi', () => {
       items: [{ id: 1, ticket_no: 'PS-001' }],
       total: 1,
     });
-    mock.onGet('/api/v1/presale/solutions').reply(200, {
+    mock.onGet('/api/v1/presale/proposals/solutions').reply(200, {
       items: [{ id: 2, solution_name: '整线方案 A' }],
       total: 1,
     });
