@@ -63,6 +63,7 @@ def build_solution_response(solution: PresaleSolution) -> SolutionResponse:
         industry=solution.industry,
         test_type=solution.test_type,
         ticket_id=solution.ticket_id,
+        lead_id=solution.ticket.lead_id if solution.ticket else None,
         project_id=solution.project_id,
         customer_id=solution.customer_id,
         opportunity_id=solution.opportunity_id,

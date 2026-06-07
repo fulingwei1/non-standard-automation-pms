@@ -160,6 +160,7 @@ class TestPresalesFrontendContractBehavior:
             ticket_type="SOLUTION",
             urgency="NORMAL",
             customer_name=customer.customer_name,
+            lead_id=930001,
             opportunity_id=None,
             applicant_id=admin_user.id,
             applicant_name=admin_user.real_name or admin_user.username,
@@ -227,6 +228,12 @@ class TestPresalesFrontendContractBehavior:
                 item["solution_no"] == solution.solution_no
                 for item in data["solutions"]["items"]
             )
+            overview_solution = next(
+                item
+                for item in data["solutions"]["items"]
+                if item["solution_no"] == solution.solution_no
+            )
+            assert overview_solution["lead_id"] == ticket.lead_id
             assert any(
                 item["tender_no"] == tender.tender_no
                 for item in data["tenders"]["items"]
@@ -1512,6 +1519,7 @@ class TestPresalesFrontendContractBehavior:
 
             assert [item["id"] for item in items] == [target_solution.id]
             assert items[0]["ticket_id"] == target_ticket.id
+            assert items[0]["lead_id"] == lead_id
         finally:
             db_session.query(PresaleSolution).filter(
                 PresaleSolution.id.in_([target_solution.id, other_solution.id])

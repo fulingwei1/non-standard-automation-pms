@@ -217,6 +217,7 @@ class SolutionResponse(TimestampSchema):
     industry: Optional[str] = None
     test_type: Optional[str] = None
     ticket_id: Optional[int] = None
+    lead_id: Optional[int] = None
     project_id: Optional[int] = None
     customer_id: Optional[int] = None
     opportunity_id: Optional[int] = None

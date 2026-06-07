@@ -86,6 +86,7 @@ function buildTicketContextUrl(ticket) {
   params.set("tab", "reviews");
   params.set("type", "support");
   appendContextParam(params, "ticket_id", getFirstValue(ticket, ["id", "ticket_id", "ticketId"]));
+  appendContextParam(params, "lead_id", getFirstValue(ticket, ["lead_id", "leadId"]));
   appendContextParam(params, "opportunity_id", getFirstValue(ticket, ["opportunity_id", "opportunityId"]));
   appendContextParam(params, "project_id", getFirstValue(ticket, ["project_id", "projectId"]));
   return `/presales/technical-solutions?${params.toString()}`;
@@ -95,6 +96,7 @@ function buildSolutionContextUrl(solution) {
   const solutionId = getFirstValue(solution, ["id", "solution_id", "solutionId"]);
   const params = new URLSearchParams();
   appendContextParam(params, "ticket_id", getFirstValue(solution, ["ticket_id", "ticketId"]));
+  appendContextParam(params, "lead_id", getFirstValue(solution, ["lead_id", "leadId"]));
   appendContextParam(params, "opportunity_id", getFirstValue(solution, ["opportunity_id", "opportunityId"]));
   appendContextParam(params, "project_id", getFirstValue(solution, ["project_id", "projectId"]));
   const query = params.toString();

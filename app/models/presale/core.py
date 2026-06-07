@@ -320,6 +320,7 @@ class PresaleSolution(Base, TimestampMixin):
     author_name = Column(String(50), comment="编制人姓名")
 
     # 关系
+    ticket = relationship("PresaleSupportTicket", foreign_keys=[ticket_id])
     cost_items = relationship("PresaleSolutionCost", back_populates="solution")
     parent_version = relationship("PresaleSolution", remote_side=[id], backref="child_versions")
     template = relationship("TechnicalParameterTemplate", foreign_keys=[template_id])

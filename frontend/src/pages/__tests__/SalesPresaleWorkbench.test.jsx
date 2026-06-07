@@ -74,6 +74,7 @@ describe("SalesPresaleWorkbench", () => {
             ticket_no: "PST-501",
             title: "FCT 线体评估",
             status: "IN_PROGRESS",
+            lead_id: 2026,
             opportunity_id: 2,
             project_id: 42,
           },
@@ -87,6 +88,7 @@ describe("SalesPresaleWorkbench", () => {
             name: "FCT 自动化方案",
             status: "DRAFT",
             ticket_id: 501,
+            lead_id: 2026,
             opportunity_id: 2,
             project_id: 42,
           },
@@ -117,11 +119,11 @@ describe("SalesPresaleWorkbench", () => {
 
     expect(await screen.findByRole("link", { name: /PST-501/ })).toHaveAttribute(
       "href",
-      "/presales/technical-solutions?tab=reviews&type=support&ticket_id=501&opportunity_id=2&project_id=42",
+      "/presales/technical-solutions?tab=reviews&type=support&ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
     );
     expect(screen.getByRole("link", { name: /FCT 自动化方案/ })).toHaveAttribute(
       "href",
-      "/solutions/88?ticket_id=501&opportunity_id=2&project_id=42",
+      "/solutions/88?ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
     );
   });
 });
