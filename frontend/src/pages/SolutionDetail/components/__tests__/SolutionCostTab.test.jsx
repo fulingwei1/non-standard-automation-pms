@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 import { SolutionCostTab } from "../SolutionCostTab";
 
 describe("SolutionCostTab", () => {
@@ -42,5 +43,25 @@ describe("SolutionCostTab", () => {
     expect(screen.getAllByText("¥80,000")).toHaveLength(1);
     expect(screen.getAllByText("¥40,000")).toHaveLength(1);
     expect(screen.getByText("50%")).toBeInTheDocument();
+  });
+
+  it("offers a cost-estimation entry when the solution has no cost estimate", async () => {
+    const onCreateEstimate = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <SolutionCostTab
+        costEstimate={null}
+        solution={{ id: 88, name: "华南电子FCT方案" }}
+        onCreateEstimate={onCreateEstimate}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "去做成本估算" }));
+
+    expect(onCreateEstimate).toHaveBeenCalledWith({
+      id: 88,
+      name: "华南电子FCT方案",
+    });
   });
 });

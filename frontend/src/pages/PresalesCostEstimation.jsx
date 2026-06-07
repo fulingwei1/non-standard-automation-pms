@@ -40,12 +40,34 @@ function extractFirstItem(response) {
   return null;
 }
 
+function extractSolutionDetail(response) {
+  const payload = response?.data ?? response;
+  if (!payload) {
+    return null;
+  }
+  if (
+    typeof payload === "object" &&
+    "data" in payload &&
+    ("code" in payload || "success" in payload)
+  ) {
+    return payload.data || null;
+  }
+  return payload;
+}
+
 function toWan(value) {
   const amount = Number(value);
   if (!Number.isFinite(amount) || amount <= 0) {
     return 0;
   }
   return amount / 10000;
+}
+
+function buildTechnicalSolutionsPath(tab, searchParams) {
+  const nextParams = new URLSearchParams(searchParams);
+  nextParams.set("tab", tab);
+  const query = nextParams.toString();
+  return `/presales/technical-solutions${query ? `?${query}` : ""}`;
 }
 
 export default function PresalesCostEstimation({ embedded = false } = {}) {
@@ -65,10 +87,22 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
   const contextProjectIdNumber = parseContextId(contextProjectId);
 
   const loadLinkedSolution = useCallback(async () => {
-    if (
-      explicitSolutionId ||
-      (!contextTicketIdNumber && !contextOpportunityIdNumber && !contextProjectIdNumber)
-    ) {
+    if (explicitSolutionId) {
+      setSolutionLoading(true);
+      try {
+        const response = await presaleApi.solutions.get(explicitSolutionId);
+        setLinkedSolution(extractSolutionDetail(response));
+      } catch (error) {
+        console.error("加载关联方案失败:", error);
+        setLinkedSolution(null);
+        toast.error(error?.response?.data?.detail || "关联方案加载失败");
+      } finally {
+        setSolutionLoading(false);
+      }
+      return;
+    }
+
+    if (!contextTicketIdNumber && !contextOpportunityIdNumber && !contextProjectIdNumber) {
       setLinkedSolution(null);
       return;
     }
@@ -154,7 +188,7 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
   };
 
   const handleCancel = () => {
-    navigate(embedded ? "/presales/technical-solutions?tab=cost" : "/presales/workbench");
+    navigate(embedded ? buildTechnicalSolutionsPath("cost", searchParams) : "/presales/workbench");
   };
 
   return (
@@ -167,7 +201,7 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
             {
               label: "查看技术方案",
               icon: Lightbulb,
-              to: "/presales/technical-solutions",
+              to: buildTechnicalSolutionsPath("solutions", searchParams),
               variant: "outline",
             },
           ]}

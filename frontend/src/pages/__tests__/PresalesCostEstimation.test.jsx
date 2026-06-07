@@ -8,12 +8,13 @@ import { toast } from "../../components/ui/toast";
 const routeState = vi.hoisted(() => ({
   search: "tab=cost&type=support&opportunity_id=2&ticket_id=501&project_id=42",
 }));
+const navigateSpy = vi.hoisted(() => vi.fn());
 
 vi.mock("react-router-dom", async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    useNavigate: () => vi.fn(),
+    useNavigate: () => navigateSpy,
     useSearchParams: () => [new URLSearchParams(routeState.search), vi.fn()],
   };
 });
@@ -21,6 +22,7 @@ vi.mock("react-router-dom", async (importOriginal) => {
 vi.mock("../../services/api", () => ({
   presaleApi: {
     solutions: {
+      get: vi.fn(),
       list: vi.fn(),
       update: vi.fn(),
     },
@@ -35,7 +37,7 @@ vi.mock("../../components/ui/toast", () => ({
 }));
 
 vi.mock("../../components/presales/CostEstimateForm", () => ({
-  default: ({ bidding, onSave }) => (
+  default: ({ bidding, onSave, onCancel }) => (
     <div>
       <div>当前方案：{bidding.name}</div>
       <button
@@ -51,6 +53,9 @@ vi.mock("../../components/presales/CostEstimateForm", () => ({
         }
       >
         保存成本
+      </button>
+      <button type="button" onClick={onCancel}>
+        取消成本
       </button>
     </div>
   ),
@@ -82,6 +87,13 @@ describe("PresalesCostEstimation", () => {
           },
         ],
         total: 1,
+      },
+    });
+    presaleApi.solutions.get.mockResolvedValue({
+      data: {
+        id: 88,
+        name: "ERP 改造售前技术方案",
+        suggested_price: 1680000,
       },
     });
     presaleApi.solutions.update.mockResolvedValue({ data: { id: 88 } });
@@ -129,5 +141,32 @@ describe("PresalesCostEstimation", () => {
       });
     });
     expect(await screen.findByText("当前方案：ERP 改造售前技术方案")).toBeInTheDocument();
+  });
+
+  it("loads the exact solution when opened with solution_id", async () => {
+    renderPage(
+      "/presales/technical-solutions?tab=cost&solution_id=88&ticket_id=501&opportunity_id=2&project_id=42",
+    );
+
+    await waitFor(() => {
+      expect(presaleApi.solutions.get).toHaveBeenCalledWith(88);
+    });
+    expect(presaleApi.solutions.list).not.toHaveBeenCalled();
+    expect(await screen.findByText("当前方案：ERP 改造售前技术方案")).toBeInTheDocument();
+    expect(screen.getByText("当前预算参考：¥168万")).toBeInTheDocument();
+  });
+
+  it("keeps solution and project context when cancelling embedded estimation", async () => {
+    renderPage(
+      "/presales/technical-solutions?tab=cost&solution_id=88&ticket_id=501&opportunity_id=2&project_id=42",
+    );
+
+    expect(await screen.findByText("当前方案：ERP 改造售前技术方案")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "取消成本" }));
+
+    expect(navigateSpy).toHaveBeenCalledWith(
+      "/presales/technical-solutions?tab=cost&solution_id=88&ticket_id=501&opportunity_id=2&project_id=42",
+    );
   });
 });

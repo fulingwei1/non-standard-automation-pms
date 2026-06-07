@@ -1,5 +1,6 @@
-import { Calculator } from "lucide-react";
+import { ArrowRight, Calculator } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
 import { Progress } from "../../../components/ui/progress";
 
 const toNumber = (value) => {
@@ -88,13 +89,23 @@ const getCostRows = (costEstimate) => {
     return legacyCostRows(costEstimate);
 };
 
-export function SolutionCostTab({ costEstimate }) {
+export function SolutionCostTab({ costEstimate, solution, onCreateEstimate }) {
     if (!costEstimate) {
         return (
             <div className="col-span-full text-center py-16 text-slate-400">
                 <Calculator className="w-12 h-12 mx-auto mb-4 text-slate-600" />
                 <p className="text-lg font-medium">暂无成本估算</p>
                 <p className="text-sm">请先进行成本核算</p>
+                {solution && onCreateEstimate && (
+                    <Button
+                        className="mt-6"
+                        variant="outline"
+                        onClick={() => onCreateEstimate(solution)}
+                    >
+                        去做成本估算
+                        <ArrowRight className="h-4 w-4" />
+                    </Button>
+                )}
             </div>
         );
     }

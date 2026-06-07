@@ -17,6 +17,22 @@ import {
     SolutionHistoryTab,
 } from "./components";
 
+function appendContextParam(params, key, value) {
+    if (value !== undefined && value !== null && value !== "") {
+        params.set(key, String(value));
+    }
+}
+
+function buildCostEstimateUrl(solution) {
+    const params = new URLSearchParams();
+    params.set("tab", "cost");
+    appendContextParam(params, "solution_id", solution?.id);
+    appendContextParam(params, "ticket_id", solution?.ticketId);
+    appendContextParam(params, "opportunity_id", solution?.opportunityId);
+    appendContextParam(params, "project_id", solution?.projectId);
+    return `/presales/technical-solutions?${params.toString()}`;
+}
+
 export default function SolutionDetail() {
     const navigate = useNavigate();
     const {
@@ -87,7 +103,15 @@ export default function SolutionDetail() {
                 {activeTab === "specs" && <SolutionSpecsTab solution={solution} />}
                 {activeTab === "equipment" && <SolutionEquipmentTab solution={solution} />}
                 {activeTab === "deliverables" && <SolutionDeliverablesTab solution={solution} />}
-                {activeTab === "cost" && <SolutionCostTab costEstimate={costEstimate} />}
+                {activeTab === "cost" && (
+                    <SolutionCostTab
+                        costEstimate={costEstimate}
+                        solution={solution}
+                        onCreateEstimate={(targetSolution) =>
+                            navigate(buildCostEstimateUrl(targetSolution))
+                        }
+                    />
+                )}
                 {activeTab === "history" && <SolutionHistoryTab solution={solution} />}
             </motion.div>
         </motion.div>
