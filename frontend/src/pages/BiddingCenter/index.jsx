@@ -13,6 +13,14 @@ import {
 import { PageHeader } from "../../components/layout";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { presaleApi } from "../../services/api";
 import { biddingStages, mapTenderStatus } from "./constants";
@@ -29,6 +37,11 @@ function parseContextId(value) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
+const INITIAL_TENDER_FORM = {
+  tender_name: "",
+  customer_name: "",
+};
+
 export default function BiddingCenter({ embedded = false } = {}) {
   const [searchParams] = useSearchParams();
   const contextTicketId = searchParams.get("ticket_id") || "";
@@ -42,6 +55,10 @@ export default function BiddingCenter({ embedded = false } = {}) {
   const [biddings, setBiddings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [createForm, setCreateForm] = useState(INITIAL_TENDER_FORM);
+  const [createError, setCreateError] = useState("");
+  const [creating, setCreating] = useState(false);
 
   // Load tenders from API
   const loadTenders = useCallback(async () => {
@@ -136,6 +153,58 @@ export default function BiddingCenter({ embedded = false } = {}) {
     loadTenders();
   }, [loadTenders]);
 
+  const updateCreateForm = (field, value) => {
+    setCreateForm((previous) => ({ ...previous, [field]: value }));
+  };
+
+  const handleOpenCreate = () => {
+    setCreateForm(INITIAL_TENDER_FORM);
+    setCreateError("");
+    setShowCreateDialog(true);
+  };
+
+  const handleCreateTender = async (event) => {
+    event?.preventDefault();
+
+    const tenderName = createForm.tender_name.trim();
+    if (!tenderName) {
+      setCreateError("请填写投标项目名称");
+      return;
+    }
+
+    const payload = {
+      tender_name: tenderName,
+    };
+    const customerName = createForm.customer_name.trim();
+    if (customerName) {
+      payload.customer_name = customerName;
+    }
+    if (contextOpportunityIdNumber) {
+      payload.opportunity_id = contextOpportunityIdNumber;
+    }
+    if (contextTicketIdNumber) {
+      payload.ticket_id = contextTicketIdNumber;
+    }
+    if (contextProjectIdNumber) {
+      payload.project_id = contextProjectIdNumber;
+    }
+
+    try {
+      setCreating(true);
+      setCreateError("");
+      await presaleApi.tenders.create(payload);
+      setShowCreateDialog(false);
+      setCreateForm(INITIAL_TENDER_FORM);
+      await loadTenders();
+      alert("投标记录已创建");
+    } catch (err) {
+      console.error("创建投标记录失败:", err);
+      setCreateError(err.response?.data?.detail || err.message || "创建投标记录失败");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   // 筛选投标
   const filteredBiddings = (biddings || []).filter((bidding) => {
     const searchLower = searchTerm.toLowerCase();
@@ -166,6 +235,13 @@ export default function BiddingCenter({ embedded = false } = {}) {
     reduce((acc, b) => acc + b.amount, 0)
   };
 
+  const createTenderButton = (
+    <Button className="flex items-center gap-2" onClick={handleOpenCreate}>
+      <Plus className="w-4 h-4" />
+      新建投标
+    </Button>
+  );
+
   return (
     <motion.div
       variants={staggerContainer}
@@ -180,15 +256,17 @@ export default function BiddingCenter({ embedded = false } = {}) {
           description="管理投标项目、技术标书、竞争分析"
           actions={
             <motion.div variants={fadeIn} className="flex gap-2">
-              <Button className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                新建投标
-              </Button>
+              {createTenderButton}
             </motion.div>
           }
         />
       )}
 
+      {embedded && (
+        <motion.div variants={fadeIn} className="flex justify-end">
+          {createTenderButton}
+        </motion.div>
+      )}
 
       {/* 统计卡片 */}
       <StatsCards stats={stats} />
@@ -243,6 +321,60 @@ export default function BiddingCenter({ embedded = false } = {}) {
         onClose={() => setSelectedBidding(null)} />
 
       }
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-lg">
+          <form onSubmit={handleCreateTender} className="space-y-4">
+            <DialogHeader>
+              <DialogTitle>新建投标</DialogTitle>
+              <DialogDescription>从当前售前上下文创建投标记录</DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-2">
+              <label htmlFor="tender_name" className="text-sm text-slate-300">
+                投标项目名称
+              </label>
+              <Input
+                id="tender_name"
+                value={createForm.tender_name}
+                onChange={(event) => updateCreateForm("tender_name", event.target.value)}
+                placeholder="填写投标项目名称"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="customer_name" className="text-sm text-slate-300">
+                招标单位
+              </label>
+              <Input
+                id="customer_name"
+                value={createForm.customer_name}
+                onChange={(event) => updateCreateForm("customer_name", event.target.value)}
+                placeholder="填写客户或招标单位"
+              />
+            </div>
+
+            {createError && (
+              <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+                {createError}
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCreateDialog(false)}
+                disabled={creating}
+              >
+                取消
+              </Button>
+              <Button type="submit" disabled={creating}>
+                创建投标
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </motion.div>);
 
 }

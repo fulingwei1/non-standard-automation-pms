@@ -9,6 +9,7 @@ vi.mock("../../services/api", () => ({
   presaleApi: {
     tenders: {
       list: vi.fn(),
+      create: vi.fn(),
     },
   },
 }));
@@ -68,6 +69,14 @@ describe("BiddingCenter", () => {
     vi.clearAllMocks();
     useSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
     presaleApi.tenders.list.mockResolvedValue({ data: { items: tenders } });
+    presaleApi.tenders.create.mockResolvedValue({
+      data: {
+        id: 3,
+        tender_no: "BID-2026-003",
+        tender_name: "售前支持投标",
+        result: "PENDING",
+      },
+    });
   });
 
   it("loads tenders into the current kanban view", async () => {
@@ -87,7 +96,7 @@ describe("BiddingCenter", () => {
 
     expect(screen.queryByRole("heading", { name: "投标中心" })).not.toBeInTheDocument();
     expect(await screen.findByText("智能制造系统")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "新建投标" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "新建投标" })).toBeInTheDocument();
   });
 
   it("reloads with keyword and filters visible cards", async () => {
@@ -150,6 +159,37 @@ describe("BiddingCenter", () => {
         }),
       );
     });
+  });
+
+  it("creates a tender from the current sales support context", async () => {
+    vi.spyOn(window, "alert").mockImplementation(() => {});
+    useSearchParams.mockReturnValue([
+      new URLSearchParams("tab=bids&type=support&opportunity_id=2&ticket_id=501&project_id=42"),
+      vi.fn(),
+    ]);
+
+    renderPage({ embedded: true });
+
+    await screen.findByText("智能制造系统");
+    fireEvent.click(screen.getByRole("button", { name: "新建投标" }));
+    fireEvent.change(screen.getByLabelText("投标项目名称"), {
+      target: { value: "售前支持投标" },
+    });
+    fireEvent.change(screen.getByLabelText("招标单位"), {
+      target: { value: "重点客户" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "创建投标" }));
+
+    await waitFor(() => {
+      expect(presaleApi.tenders.create).toHaveBeenCalledWith({
+        tender_name: "售前支持投标",
+        customer_name: "重点客户",
+        opportunity_id: 2,
+        ticket_id: 501,
+        project_id: 42,
+      });
+    });
+    expect(presaleApi.tenders.list).toHaveBeenCalledTimes(2);
   });
 
   it("shows backend load errors", async () => {
