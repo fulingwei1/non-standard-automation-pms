@@ -284,15 +284,20 @@ def review_solution(
     """
     solution = get_or_404(db, PresaleSolution, solution_id, detail="方案不存在")
 
-    solution.review_status = review_request.review_status
+    review_status = (review_request.review_status or "").strip().upper()
+    status_map = {
+        "REVIEW": "REVIEW",
+        "APPROVED": "APPROVED",
+        "REJECTED": "REJECTED",
+    }
+    if review_status not in status_map:
+        raise HTTPException(status_code=400, detail="不支持的方案审核状态")
+
+    solution.review_status = review_status
     solution.review_comment = review_request.review_comment
     solution.reviewer_id = current_user.id
     solution.review_time = datetime.now()
-
-    if review_request.review_status == "APPROVED":
-        solution.status = "APPROVED"
-    elif review_request.review_status == "REJECTED":
-        solution.status = "REJECTED"
+    solution.status = status_map[review_status]
 
     save_obj(db, solution)
 

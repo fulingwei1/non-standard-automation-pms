@@ -576,6 +576,51 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(Customer).filter(Customer.id == customer.id).delete()
             db_session.commit()
 
+    def test_solution_submit_review_moves_out_of_draft(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        created = client.post(
+            f"{prefix}/presale/proposals/solutions",
+            json={
+                "name": f"提交审核方案-{unique}",
+                "solution_type": "CUSTOM",
+                "requirement_summary": "用于验证方案审核状态流",
+            },
+            headers=headers,
+        )
+        assert created.status_code == 201, created.text
+        solution_id = created.json()["id"]
+
+        try:
+            submitted = client.put(
+                f"{prefix}/presale/proposals/solutions/{solution_id}/review",
+                json={"review_status": "REVIEW", "review_comment": "提交审核"},
+                headers=headers,
+            )
+            assert submitted.status_code == 200, submitted.text
+            submitted_payload = submitted.json()
+            assert submitted_payload["review_status"] == "REVIEW"
+            assert submitted_payload["status"] == "REVIEW"
+
+            update_after_submit = client.put(
+                f"{prefix}/presale/proposals/solutions/{solution_id}",
+                json={"requirement_summary": "审核中不应继续按草稿修改"},
+                headers=headers,
+            )
+            assert update_after_submit.status_code == 400, update_after_submit.text
+        finally:
+            db_session.query(PresaleSolution).filter(PresaleSolution.id == solution_id).delete(
+                synchronize_session=False
+            )
+            db_session.commit()
+
     def test_tender_update_contract(self, client: TestClient, admin_token: str):
         if not admin_token:
             pytest.skip("Admin token not available")
