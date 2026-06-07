@@ -213,6 +213,27 @@ export default function PresalesTasks({ embedded = false } = {}) {
     setCreateForm(INITIAL_CREATE_FORM);
   };
 
+  const handleDeliverableCreated = useCallback((deliverable) => {
+    const targetTaskId = selectedTask?.id;
+    if (!targetTaskId) {
+      return;
+    }
+
+    const appendDeliverable = (task) => ({
+      ...task,
+      deliverables: [...(task.deliverables || []), deliverable],
+    });
+
+    setSelectedTask((current) =>
+      current?.id === targetTaskId ? appendDeliverable(current) : current
+    );
+    setTasks((currentTasks) =>
+      currentTasks.map((task) =>
+        task.id === targetTaskId ? appendDeliverable(task) : task
+      )
+    );
+  }, [selectedTask?.id]);
+
   const handleCreateTask = async (event) => {
     event?.preventDefault();
 
@@ -449,9 +470,11 @@ export default function PresalesTasks({ embedded = false } = {}) {
       {/* 任务详情面板 */}
       {selectedTask &&
       <TaskDetailPanel
+        key={selectedTask.id}
         task={selectedTask}
         onClose={() => setSelectedTask(null)}
-        onUpdate={loadTasks} />
+        onUpdate={loadTasks}
+        onDeliverableCreated={handleDeliverableCreated} />
 
       }
 

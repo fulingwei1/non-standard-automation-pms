@@ -83,6 +83,21 @@ def _latest_progress_record(ticket: PresaleSupportTicket):
     )
 
 
+def _build_deliverable_response(deliverable) -> dict:
+    file_path = getattr(deliverable, "file_path", None)
+    return {
+        "id": getattr(deliverable, "id", None),
+        "ticket_id": getattr(deliverable, "ticket_id", None),
+        "deliverable_name": getattr(deliverable, "name", None),
+        "deliverable_type": getattr(deliverable, "file_type", None),
+        "file_path": file_path,
+        "file_url": file_path,
+        "status": getattr(deliverable, "status", None),
+        "created_at": getattr(deliverable, "created_at", None),
+        "updated_at": getattr(deliverable, "updated_at", None),
+    }
+
+
 def build_ticket_response(ticket: PresaleSupportTicket) -> TicketResponse:
     """构建工单响应对象"""
     latest_progress = _latest_progress_record(ticket)
@@ -117,6 +132,10 @@ def build_ticket_response(ticket: PresaleSupportTicket) -> TicketResponse:
         progress_note=progress_note,
         complete_time=ticket.complete_time,
         actual_hours=float(ticket.actual_hours) if ticket.actual_hours else None,
+        deliverables=[
+            _build_deliverable_response(deliverable)
+            for deliverable in (getattr(ticket, "deliverables", None) or [])
+        ],
         satisfaction_score=ticket.satisfaction_score,
         feedback=ticket.feedback,
         created_at=ticket.created_at,

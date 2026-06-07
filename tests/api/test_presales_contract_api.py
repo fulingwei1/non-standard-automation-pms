@@ -176,6 +176,25 @@ class TestPresalesFrontendContractBehavior:
         assert deliverable_payload["file_url"] == "https://files.example.com/solution-v1.pdf"
         assert deliverable_payload["description"] == "方案初稿"
 
+        detail = client.get(
+            f"{prefix}/presale/tickets/{ticket_id}",
+            headers=headers,
+        )
+        assert detail.status_code == 200, detail.text
+        assert detail.json()["deliverables"] == [
+            {
+                "id": deliverable_payload["id"],
+                "ticket_id": ticket_id,
+                "deliverable_name": "初版技术方案",
+                "deliverable_type": "SOLUTION",
+                "file_path": "/files/solution-v1.pdf",
+                "file_url": "/files/solution-v1.pdf",
+                "status": "DRAFT",
+                "created_at": deliverable_payload["created_at"],
+                "updated_at": deliverable_payload["updated_at"],
+            }
+        ]
+
         completed = client.put(
             f"{prefix}/presale/tickets/{ticket_id}/complete",
             json={"actual_hours": 8},

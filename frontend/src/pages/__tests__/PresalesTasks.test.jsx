@@ -11,6 +11,7 @@ vi.mock('../../services/api', () => ({
       create: vi.fn(),
       accept: vi.fn(),
       updateProgress: vi.fn(),
+      createDeliverable: vi.fn(),
       complete: vi.fn(),
     },
   },
@@ -115,6 +116,15 @@ describe('PresalesTasks', () => {
       },
     });
     presaleApi.tickets.accept.mockResolvedValue({ data: { success: true } });
+    presaleApi.tickets.updateProgress.mockResolvedValue({ data: { success: true } });
+    presaleApi.tickets.createDeliverable.mockResolvedValue({
+      data: {
+        id: 70,
+        deliverable_name: '新版技术方案',
+        deliverable_type: 'SOLUTION',
+        file_path: '/files/solution-v2.pdf',
+      },
+    });
   });
 
   afterEach(() => {
@@ -282,5 +292,90 @@ describe('PresalesTasks', () => {
     await waitFor(() => {
       expect(presaleApi.tickets.accept).toHaveBeenCalledWith(11, {});
     });
+  });
+
+  it('renders ticket deliverables returned by the backend in the detail panel', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 51,
+            title: '方案深化交付',
+            ticket_type: 'SOLUTION_DESIGN',
+            status: 'IN_PROGRESS',
+            urgency: 'NORMAL',
+            customer_name: '华南电子',
+            applicant_name: '陈敏',
+            description: '深化测试方案',
+            deliverables: [
+              {
+                id: 7,
+                deliverable_name: '初版技术方案',
+                deliverable_type: 'SOLUTION',
+                file_path: '/files/solution-v1.pdf',
+              },
+            ],
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage();
+
+    await screen.findByText('方案深化交付');
+
+    fireEvent.click(screen.getByText('方案深化交付'));
+
+    expect(screen.getByText('初版技术方案')).toBeInTheDocument();
+  });
+
+  it('submits a deliverable from an in-progress ticket detail panel', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 61,
+            title: '方案输出',
+            ticket_type: 'SOLUTION_DESIGN',
+            status: 'IN_PROGRESS',
+            urgency: 'NORMAL',
+            customer_name: '华南电子',
+            applicant_name: '陈敏',
+            description: '输出技术方案',
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage();
+
+    await screen.findByText('方案输出');
+    fireEvent.click(screen.getByText('方案输出'));
+
+    fireEvent.change(screen.getByLabelText('交付物名称'), {
+      target: { value: '新版技术方案' },
+    });
+    fireEvent.change(screen.getByLabelText('交付物类型'), {
+      target: { value: 'SOLUTION' },
+    });
+    fireEvent.change(screen.getByLabelText('文件路径或链接'), {
+      target: { value: '/files/solution-v2.pdf' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /提交交付物/ }));
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.createDeliverable).toHaveBeenCalledWith(61, {
+        deliverable_name: '新版技术方案',
+        deliverable_type: 'SOLUTION',
+        file_path: '/files/solution-v2.pdf',
+      });
+    });
+    await waitFor(() => {
+      expect(presaleApi.tickets.list).toHaveBeenCalledTimes(2);
+    });
+    expect(await screen.findByText('新版技术方案')).toBeInTheDocument();
   });
 });

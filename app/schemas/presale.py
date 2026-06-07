@@ -109,6 +109,7 @@ class TicketResponse(TimestampSchema):
     progress_note: Optional[str] = Field(None, description="最新进度说明")
     complete_time: Optional[datetime] = None
     actual_hours: Optional[float] = None
+    deliverables: List[Dict[str, Any]] = Field(default_factory=list, description="工单交付物")
     satisfaction_score: Optional[int] = None
     feedback: Optional[str] = None
 

@@ -33,6 +33,7 @@ def _ticket_with_progress(progress_records):
         created_at=datetime(2026, 6, 7, 9, 0, 0),
         updated_at=datetime(2026, 6, 7, 10, 0, 0),
         progress_records=progress_records,
+        deliverables=[],
     )
 
 
@@ -48,3 +49,35 @@ def test_build_ticket_response_exposes_latest_progress_percent():
 
     assert response.progress_percent == 65
     assert response.progress_note == "方案初稿完成"
+
+
+def test_build_ticket_response_exposes_ticket_deliverables():
+    ticket = _ticket_with_progress([])
+    ticket.deliverables = [
+        SimpleNamespace(
+            id=3,
+            ticket_id=42,
+            name="初版技术方案",
+            file_type="SOLUTION",
+            file_path="/files/solution-v1.pdf",
+            status="SUBMITTED",
+            created_at=datetime(2026, 6, 7, 11, 0, 0),
+            updated_at=datetime(2026, 6, 7, 11, 5, 0),
+        )
+    ]
+
+    response = build_ticket_response(ticket)
+
+    assert response.deliverables == [
+        {
+            "id": 3,
+            "ticket_id": 42,
+            "deliverable_name": "初版技术方案",
+            "deliverable_type": "SOLUTION",
+            "file_path": "/files/solution-v1.pdf",
+            "file_url": "/files/solution-v1.pdf",
+            "status": "SUBMITTED",
+            "created_at": datetime(2026, 6, 7, 11, 0, 0),
+            "updated_at": datetime(2026, 6, 7, 11, 5, 0),
+        }
+    ]

@@ -21,11 +21,37 @@ import { cn } from "../../lib/utils";
 import { presaleApi } from "../../services/api";
 import { taskStatuses, getPriorityStyle } from "./constants";
 
-export default function TaskDetailPanel({ task, onClose, onUpdate }) {
+function getDeliverableLabel(deliverable, index) {
+  if (typeof deliverable === "string") {
+    return deliverable;
+  }
+
+  return (
+    deliverable?.deliverable_name ||
+    deliverable?.name ||
+    deliverable?.file_name ||
+    deliverable?.file_path ||
+    deliverable?.file_url ||
+    `交付物 ${index + 1}`
+  );
+}
+
+function getDeliverableKey(deliverable, index) {
+  if (deliverable && typeof deliverable === "object" && deliverable.id) {
+    return deliverable.id;
+  }
+  return `${getDeliverableLabel(deliverable, index)}-${index}`;
+}
+
+export default function TaskDetailPanel({ task, onClose, onUpdate, onDeliverableCreated }) {
   const [progress, setProgress] = useState(task?.progress || 0);
   const [progressNote, setProgressNote] = useState("");
   const [actualHours, setActualHours] = useState(task?.actualHours || 0);
+  const [deliverableName, setDeliverableName] = useState("");
+  const [deliverableType, setDeliverableType] = useState("SOLUTION");
+  const [deliverablePath, setDeliverablePath] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isSubmittingDeliverable, setIsSubmittingDeliverable] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
 
@@ -72,6 +98,43 @@ export default function TaskDetailPanel({ task, onClose, onUpdate }) {
       );
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleSubmitDeliverable = async () => {
+    const name = deliverableName.trim();
+    if (!name) {
+      alert("请输入交付物名称");
+      return;
+    }
+
+    const payload = {
+      deliverable_name: name,
+      deliverable_type: deliverableType,
+    };
+    const path = deliverablePath.trim();
+    if (path) {
+      payload.file_path = path;
+    }
+
+    try {
+      setIsSubmittingDeliverable(true);
+      const response = await presaleApi.tickets.createDeliverable(task.ticketId, payload);
+      const createdDeliverable = response?.formatted ?? response?.data?.data ?? response?.data ?? payload;
+      alert("交付物已提交！");
+      onDeliverableCreated?.(createdDeliverable);
+      setDeliverableName("");
+      setDeliverableType("SOLUTION");
+      setDeliverablePath("");
+      onUpdate?.();
+    } catch (err) {
+      console.error("Failed to submit deliverable:", err);
+      alert(
+        "提交失败：" + (
+        err.response?.data?.detail || err.message || "未知错误")
+      );
+    } finally {
+      setIsSubmittingDeliverable(false);
     }
   };
 
@@ -228,11 +291,13 @@ export default function TaskDetailPanel({ task, onClose, onUpdate }) {
             <div className="space-y-2">
               {(task.deliverables || []).map((item, index) =>
               <div
-                key={index}
+                key={getDeliverableKey(item, index)}
                 className="flex items-center gap-2 bg-surface-50 p-3 rounded-lg">
 
                   <FileText className="w-4 h-4 text-slate-500" />
-                  <span className="text-sm text-white">{item}</span>
+                  <span className="text-sm text-white">
+                    {getDeliverableLabel(item, index)}
+                  </span>
                   {task.status === "completed" &&
                 <CheckCircle className="w-4 h-4 text-emerald-500 ml-auto" />
                 }
@@ -268,6 +333,60 @@ export default function TaskDetailPanel({ task, onClose, onUpdate }) {
 
         {(task.status === "in_progress" || task.status === "reviewing") &&
         <div className="p-4 border-t border-white/5 space-y-3">
+            <div className="space-y-2">
+              <label
+                htmlFor="presale-deliverable-name"
+                className="text-sm text-slate-400"
+              >
+                交付物名称
+              </label>
+              <Input
+                id="presale-deliverable-name"
+                type="text"
+                value={deliverableName}
+                onChange={(e) => setDeliverableName(e.target.value)}
+                className="w-full"
+              />
+              <label
+                htmlFor="presale-deliverable-type"
+                className="text-sm text-slate-400"
+              >
+                交付物类型
+              </label>
+              <select
+                id="presale-deliverable-type"
+                value={deliverableType}
+                onChange={(e) => setDeliverableType(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="SOLUTION">技术方案</option>
+                <option value="QUOTE">报价资料</option>
+                <option value="REPORT">调研报告</option>
+                <option value="OTHER">其他</option>
+              </select>
+              <label
+                htmlFor="presale-deliverable-path"
+                className="text-sm text-slate-400"
+              >
+                文件路径或链接
+              </label>
+              <Input
+                id="presale-deliverable-path"
+                type="text"
+                value={deliverablePath}
+                onChange={(e) => setDeliverablePath(e.target.value)}
+                className="w-full"
+              />
+              <Button
+                onClick={handleSubmitDeliverable}
+                disabled={isSubmittingDeliverable}
+                variant="outline"
+                className="w-full"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                {isSubmittingDeliverable ? "提交中..." : "提交交付物"}
+              </Button>
+            </div>
             <div className="space-y-2">
               <label className="text-sm text-slate-400">更新进度</label>
               <div className="flex items-center gap-3">
