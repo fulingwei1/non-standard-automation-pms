@@ -226,6 +226,39 @@ describe("PresaleProposals", () => {
     );
   });
 
+  it("opens quote creation from an approved solution with sales context", async () => {
+    presaleApi.solutions.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 88,
+            solution_no: "SOL-88",
+            name: "已通过售前技术方案",
+            status: "APPROVED",
+            customer_id: 1,
+            ticket_id: 501,
+            opportunity_id: 2,
+            project_id: 42,
+            estimated_cost: 180000,
+            suggested_price: 280000,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage(
+      "/presales/technical-solutions?tab=solutions&type=support&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+
+    await screen.findByText("已通过售前技术方案");
+    fireEvent.click(screen.getByRole("button", { name: "生成报价" }));
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      "/sales/quotes/create?opportunity_id=2&customer_id=1&solution_id=88&ticket_id=501&project_id=42",
+    );
+  });
+
   it("keeps lead context when opening a linked solution detail", async () => {
     presaleApi.solutions.list.mockResolvedValue({
       data: {

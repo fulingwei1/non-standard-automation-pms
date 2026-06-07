@@ -51,6 +51,7 @@ export function normalizeSolution(solution) {
     testType: solution?.test_type || "-",
     leadId: solution?.lead_id ?? solution?.leadId,
     ticketId: solution?.ticket_id ?? solution?.ticketId,
+    customerId: solution?.customer_id ?? solution?.customerId,
     opportunityId: solution?.opportunity_id ?? solution?.opportunityId,
     projectId: solution?.project_id ?? solution?.projectId,
     requirementSummary: solution?.requirement_summary || "暂无需求摘要",

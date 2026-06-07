@@ -46,6 +46,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
   const [searchParams] = useSearchParams();
   const contextLeadId = searchParams.get("lead_id") || "";
   const contextTicketId = searchParams.get("ticket_id") || "";
+  const contextCustomerId = searchParams.get("customer_id") || "";
   const contextOpportunityId = searchParams.get("opportunity_id") || "";
   const contextProjectId = searchParams.get("project_id") || "";
   const contextLeadIdNumber = useMemo(
@@ -55,6 +56,10 @@ export default function PresaleProposals({ embedded = false } = {}) {
   const contextTicketIdNumber = useMemo(
     () => parseContextId(contextTicketId),
     [contextTicketId],
+  );
+  const contextCustomerIdNumber = useMemo(
+    () => parseContextId(contextCustomerId),
+    [contextCustomerId],
   );
   const contextOpportunityIdNumber = useMemo(
     () => parseContextId(contextOpportunityId),
@@ -269,6 +274,9 @@ export default function PresaleProposals({ embedded = false } = {}) {
       if (contextTicketIdNumber) {
         payload.ticket_id = contextTicketIdNumber;
       }
+      if (contextCustomerIdNumber) {
+        payload.customer_id = contextCustomerIdNumber;
+      }
       if (contextProjectIdNumber) {
         payload.project_id = contextProjectIdNumber;
       }
@@ -330,6 +338,17 @@ export default function PresaleProposals({ embedded = false } = {}) {
     appendContextParam(params, "project_id", solution?.projectId || contextProjectId);
     const query = params.toString();
     return `/solutions/${solution.id}${query ? `?${query}` : ""}`;
+  };
+
+  const buildQuoteCreatePath = (solution) => {
+    const params = new URLSearchParams();
+    appendContextParam(params, "opportunity_id", solution?.opportunityId || contextOpportunityId);
+    appendContextParam(params, "customer_id", solution?.customerId || contextCustomerId);
+    appendContextParam(params, "solution_id", solution?.id);
+    appendContextParam(params, "ticket_id", solution?.ticketId || contextTicketId);
+    appendContextParam(params, "project_id", solution?.projectId || contextProjectId);
+    const query = params.toString();
+    return `/sales/quotes/create${query ? `?${query}` : ""}`;
   };
 
   const actionButtons = (
@@ -398,6 +417,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
               loading={loading}
               solutions={solutions}
               onViewSolution={(solution) => navigate(buildSolutionDetailPath(solution))}
+              onCreateQuote={(solution) => navigate(buildQuoteCreatePath(solution))}
               setSelectedSolutionId={setSelectedSolutionId}
               setActiveTab={setActiveTab}
             />

@@ -37,6 +37,7 @@ export default function SolutionListTab({
   loading,
   solutions,
   onViewSolution,
+  onCreateQuote,
   setSelectedSolutionId,
   setActiveTab,
 }) {
@@ -101,6 +102,7 @@ export default function SolutionListTab({
           {solutions.length > 0 ? (
             solutions.map((solution) => {
               const statusConfig = getStatusConfig(solution.status);
+              const canCreateQuote = solution.status === "APPROVED" && onCreateQuote;
               return (
                 <motion.div
                   key={solution.id}
@@ -154,18 +156,28 @@ export default function SolutionListTab({
                         <span>{solution.testType}</span>
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1"
+                          className="min-w-[96px] flex-1"
                           onClick={() => onViewSolution(solution)}
                         >
                           查看详情
                         </Button>
+                        {canCreateQuote && (
+                          <Button
+                            size="sm"
+                            className="min-w-[96px] flex-1"
+                            onClick={() => onCreateQuote(solution)}
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            生成报价
+                          </Button>
+                        )}
                         <Button
                           size="sm"
-                          className="flex-1"
+                          className="min-w-[96px] flex-1"
                           onClick={() => {
                             setSelectedSolutionId(String(solution.id));
                             setActiveTab("versions");
