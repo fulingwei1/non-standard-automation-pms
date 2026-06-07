@@ -34,6 +34,8 @@ const safeNumber = (value) => {
     return Number.isFinite(number) ? number : 0;
 };
 
+const avatarText = (name) => (name || "").trim().charAt(0);
+
 const parseObject = (value) => {
     if (!value) {
         return null;
@@ -116,6 +118,82 @@ const normalizeVersionHistory = (versions, currentSolutionId) =>
         current: Number(version.id) === Number(currentSolutionId),
     }));
 
+const normalizeReviewStatus = (status) => {
+    const normalized = (status || "").toLowerCase();
+
+    if (["approved", "pass", "passed"].includes(normalized)) {
+        return "approved";
+    }
+
+    if (["review", "pending", "submitted"].includes(normalized)) {
+        return "pending";
+    }
+
+    if (["rejected", "reject"].includes(normalized)) {
+        return "rejected";
+    }
+
+    return normalized || "pending";
+};
+
+const buildReviews = (solutionData) => {
+    const hasReview =
+        solutionData.review_status ||
+        solutionData.review_comment ||
+        solutionData.review_time ||
+        solutionData.reviewer_name ||
+        solutionData.reviewer_id;
+
+    if (!hasReview) {
+        return [];
+    }
+
+    const reviewer =
+        solutionData.reviewer_name ||
+        (solutionData.reviewer_id ? `评审人${solutionData.reviewer_id}` : "待评审");
+
+    return [
+        {
+            id: `${solutionData.id}-review`,
+            reviewer,
+            avatar: avatarText(reviewer),
+            date: solutionData.review_time || "",
+            status: normalizeReviewStatus(solutionData.review_status || solutionData.status),
+            comments: solutionData.review_comment || "",
+        },
+    ];
+};
+
+const addCollaborator = (collaborators, name, role) => {
+    if (!name) {
+        return;
+    }
+
+    const existing = collaborators.find((person) => person.name === name);
+    if (existing) {
+        if (!existing.role.split(" / ").includes(role)) {
+            existing.role = `${existing.role} / ${role}`;
+        }
+        return;
+    }
+
+    collaborators.push({
+        name,
+        role,
+        avatar: avatarText(name),
+    });
+};
+
+const buildCollaborators = (solutionData) => {
+    const collaborators = [];
+
+    addCollaborator(collaborators, solutionData.author_name || solutionData.creator_name, "方案编制");
+    addCollaborator(collaborators, solutionData.sales_person_name, "销售负责人");
+    addCollaborator(collaborators, solutionData.reviewer_name, "方案评审");
+
+    return collaborators;
+};
+
 export function useSolutionDetail() {
     const { id } = useParams();
     const [activeTab, setActiveTab] = useState("overview");
@@ -197,8 +275,8 @@ export function useSolutionDetail() {
                 equipment: solutionData.equipment || {},
                 deliverables: solutionData.deliverables || [],
                 versionHistory: normalizeVersionHistory(versions, solutionData.id),
-                reviews: [],
-                collaborators: []
+                reviews: buildReviews(solutionData),
+                collaborators: buildCollaborators(solutionData)
             };
 
             setSolution(transformedSolution);

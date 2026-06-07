@@ -188,6 +188,49 @@ describe("useSolutionDetail", () => {
     ]);
   });
 
+  it("builds review records and collaborators from backend solution context", async () => {
+    presaleApi.solutions.get.mockResolvedValue({
+      data: {
+        code: 200,
+        data: {
+          id: 88,
+          solution_no: "SOL-20260607-001",
+          name: "华南电子FCT方案",
+          status: "APPROVED",
+          version: "V1.0",
+          author_name: "陈敏",
+          sales_person_name: "宋魁",
+          reviewer_name: "周工",
+          review_status: "APPROVED",
+          review_comment: "技术路线和成本边界确认通过",
+          review_time: "2026-06-07T15:30:00",
+          solution_overview: "采用模块化测试平台",
+        },
+      },
+    });
+    presaleApi.solutions.getCost.mockResolvedValue({ data: { code: 200, data: null } });
+
+    const { result } = renderHook(() => useSolutionDetail());
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.solution.reviews).toEqual([
+      {
+        id: "88-review",
+        reviewer: "周工",
+        avatar: "周",
+        date: "2026-06-07T15:30:00",
+        status: "approved",
+        comments: "技术路线和成本边界确认通过",
+      },
+    ]);
+    expect(result.current.solution.collaborators).toEqual([
+      { name: "陈敏", role: "方案编制", avatar: "陈" },
+      { name: "宋魁", role: "销售负责人", avatar: "宋" },
+      { name: "周工", role: "方案评审", avatar: "周" },
+    ]);
+  });
+
   it("submits a draft solution for review and refreshes detail state", async () => {
     presaleApi.solutions.get
       .mockResolvedValueOnce({
