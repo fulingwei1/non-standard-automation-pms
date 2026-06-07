@@ -562,6 +562,76 @@ class TestQuoteManagement:
         version = data.get("data", data)
         assert version["version_no"] == "V2"
 
+    def test_create_quote_version_inherits_presale_solution_cost_baseline(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """报价新版本来自售前修订方案时，也应继承成本、建议售价和交期。"""
+
+        headers = _auth_headers(admin_token)
+        quote = _create_quote(client, admin_token)
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+        customer = db_session.get(Customer, quote["customer_id"])
+        assert customer is not None
+
+        ticket = PresaleSupportTicket(
+            ticket_no=_unique_code("TICKET-QVER"),
+            title=f"报价版本售前工单-{uuid.uuid4().hex[:4]}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_id=quote["customer_id"],
+            customer_name=customer.customer_name,
+            opportunity_id=quote["opportunity_id"],
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            assessment_status=AssessmentStatusEnum.COMPLETED.value,
+            created_by=admin_user.id,
+        )
+        db_session.add(ticket)
+        db_session.flush()
+
+        solution = PresaleSolution(
+            solution_no=_unique_code("SOL-QVER"),
+            name=f"报价版本修订方案-{uuid.uuid4().hex[:4]}",
+            solution_type="CUSTOM",
+            ticket_id=ticket.id,
+            customer_id=quote["customer_id"],
+            opportunity_id=quote["opportunity_id"],
+            requirement_summary="客户方案修订后重新报价",
+            solution_overview="新版FCT自动化测试平台方案",
+            technical_spec="新增扫码追溯和MES对接",
+            estimated_cost=Decimal("175000"),
+            suggested_price=Decimal("300000"),
+            estimated_duration=60,
+            status="APPROVED",
+            review_status="APPROVED",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        db_session.add(solution)
+        db_session.commit()
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/quotes/{quote['id']}/versions",
+            json={
+                "version_no": "V2",
+                "presale_solution_id": solution.id,
+                "items": [],
+            },
+            headers=headers,
+        )
+
+        assert response.status_code in (200, 201), response.text
+        version_id = response.json()["data"]["id"]
+        db_session.expire_all()
+        version = db_session.get(QuoteVersion, version_id)
+        assert version is not None
+        assert version.cost_total == Decimal("175000")
+        assert version.total_price == Decimal("300000")
+        assert version.gross_margin == Decimal("41.67")
+        assert version.lead_time_days == 60
+
     def test_approve_quote(self, client: TestClient, admin_token: str, quote_id: int = None):
         """测试审批报价"""
 

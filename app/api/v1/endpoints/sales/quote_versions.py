@@ -5,6 +5,8 @@
 """
 
 
+from decimal import Decimal
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
@@ -14,6 +16,12 @@ from app.core import security
 from app.models.sales import Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.sales.presale_quote_context import (
+    build_quote_values_from_presale_solution,
+    build_solution_quote_item,
+    resolve_presale_solution_for_quote,
+    to_decimal,
+)
 from app.utils.db_helpers import get_or_404
 
 
@@ -170,15 +178,26 @@ def create_quote_version(
     # 生成版本号
     existing_count = db.query(QuoteVersion).filter(QuoteVersion.quote_id == quote_id).count()
     version_no = version_data.get("version_no") or f"V{existing_count + 1}"
+    presale_solution = resolve_presale_solution_for_quote(
+        db,
+        quote_data=version_data,
+        version_payload=version_data,
+        opportunity_id=quote.opportunity_id,
+        customer_id=quote.customer_id,
+    )
+    total_price, cost_total, lead_time_days = build_quote_values_from_presale_solution(
+        version_data,
+        presale_solution,
+    )
 
     # 创建新版本
     version = QuoteVersion(
         quote_id=quote_id,
         version_no=version_no,
-        total_price=version_data.get("total_price"),
-        cost_total=version_data.get("cost_total"),
+        total_price=total_price,
+        cost_total=cost_total,
         gross_margin=version_data.get("gross_margin"),
-        lead_time_days=version_data.get("lead_time_days"),
+        lead_time_days=lead_time_days,
         risk_terms=version_data.get("risk_terms"),
         created_by=current_user.id,
     )
@@ -186,19 +205,45 @@ def create_quote_version(
     db.flush()
 
     # 创建明细项
-    for item in version_data.get("items") or []:
+    total_price_calc = Decimal("0")
+    total_cost_calc = Decimal("0")
+    items = version_data.get("items") or []
+    if presale_solution and not items and (total_price > 0 or cost_total > 0):
+        items = [build_solution_quote_item(presale_solution, total_price, cost_total)]
+
+    for item in items:
+        qty = to_decimal(item.get("qty") or 1)
+        unit_price = to_decimal(item.get("unit_price"))
+        item_cost = to_decimal(item.get("cost"))
         db.add(
             QuoteItem(
                 quote_version_id=version.id,
                 item_type=item.get("item_type"),
                 item_name=item.get("item_name"),
-                qty=item.get("qty"),
-                unit_price=item.get("unit_price"),
-                cost=item.get("cost"),
+                specification=item.get("specification"),
+                unit=item.get("unit"),
+                qty=qty,
+                unit_price=unit_price,
+                cost=item_cost,
                 lead_time_days=item.get("lead_time_days"),
                 remark=item.get("remark"),
             )
         )
+        total_price_calc += qty * unit_price
+        total_cost_calc += qty * item_cost
+
+    if not total_price:
+        total_price = total_price_calc
+        version.total_price = total_price
+    if not cost_total:
+        cost_total = total_cost_calc
+        version.cost_total = cost_total
+    if total_price > 0:
+        version.gross_margin = (
+            (total_price - cost_total)
+            / total_price
+            * Decimal("100")
+        ).quantize(Decimal("0.01"))
 
     # 设置为当前版本
     if version_data.get("set_as_current", True):

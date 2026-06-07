@@ -3,7 +3,7 @@
  * Features: 报价表单、成本拆解、版本管理、AI智能定价
  */
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Save, RefreshCw, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import { Button } from "../../components/ui/button";
@@ -17,9 +17,25 @@ import SummaryCards from "./SummaryCards";
 import AdditionalInfoCard from "./AdditionalInfoCard";
 import AiSidebarPanel from "./AiSidebarPanel";
 
+function parsePositiveInt(value) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function getFirstSearchInt(searchParams, keys) {
+  for (const key of keys) {
+    const value = parsePositiveInt(searchParams.get(key));
+    if (value) {
+      return value;
+    }
+  }
+  return null;
+}
+
 export default function QuoteCreateEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isEdit = !!id;
   const [loading, setLoading] = useState(false);
   const [opportunities, setOpportunities] = useState([]);
@@ -29,12 +45,55 @@ export default function QuoteCreateEdit() {
   const [formData, setFormData] = useState({ ...DEFAULT_FORM_DATA });
   const [versionData, setVersionData] = useState({ ...DEFAULT_VERSION_DATA });
   const [items, setItems] = useState([]);
+  const contextOpportunityId = getFirstSearchInt(searchParams, [
+    "opportunity_id",
+    "opportunityId",
+  ]);
+  const contextCustomerId = getFirstSearchInt(searchParams, ["customer_id", "customerId"]);
+  const contextSolutionId = getFirstSearchInt(searchParams, [
+    "solution_id",
+    "solutionId",
+    "presale_solution_id",
+    "presaleSolutionId",
+  ]);
+  const contextTicketId = getFirstSearchInt(searchParams, ["ticket_id", "ticketId"]);
 
   // 获取当前选中的商机对象
   const selectedOpportunity = useMemo(() => {
     if (!formData.opportunity_id) return null;
-    return opportunities.find(opp => opp.id === formData.opportunity_id);
+    return opportunities.find((opp) => Number(opp.id) === Number(formData.opportunity_id));
   }, [formData.opportunity_id, opportunities]);
+
+  useEffect(() => {
+    if (isEdit) {
+      return;
+    }
+
+    setFormData((previous) => {
+      const next = { ...previous };
+      let changed = false;
+
+      [
+        ["opportunity_id", contextOpportunityId],
+        ["customer_id", contextCustomerId],
+        ["solution_id", contextSolutionId],
+        ["presale_ticket_id", contextTicketId],
+      ].forEach(([key, value]) => {
+        if (value && !next[key]) {
+          next[key] = value;
+          changed = true;
+        }
+      });
+
+      return changed ? next : previous;
+    });
+  }, [
+    contextCustomerId,
+    contextOpportunityId,
+    contextSolutionId,
+    contextTicketId,
+    isEdit,
+  ]);
 
   useEffect(() => {
     fetchOpportunities();
@@ -47,7 +106,6 @@ export default function QuoteCreateEdit() {
     try {
       const res = await opportunityApi.list({
         page_size: 1000,
-        stage: "PROPOSING",
       });
       setOpportunities(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
@@ -62,6 +120,7 @@ export default function QuoteCreateEdit() {
       const quote = res.data || res;
       setFormData({
         opportunity_id: quote.opportunity_id,
+        customer_id: quote.customer_id,
         quote_code: quote.quote_code,
         quote_name: quote.quote_name || "",
         valid_days: quote.valid_days || 30,
@@ -191,7 +250,17 @@ export default function QuoteCreateEdit() {
       alert("请选择商机");
       return;
     }
-    if (items?.length === 0) {
+    const customerId =
+      formData.customer_id ||
+      selectedOpportunity?.customer_id ||
+      selectedOpportunity?.customer?.id ||
+      null;
+    if (!customerId) {
+      alert("请选择客户");
+      return;
+    }
+    const hasPresaleSolutionContext = Boolean(formData.solution_id);
+    if (items?.length === 0 && !hasPresaleSolutionContext) {
       alert("请至少添加一条报价明细");
       return;
     }
@@ -199,6 +268,7 @@ export default function QuoteCreateEdit() {
       setLoading(true);
       const quoteData = {
         ...formData,
+        customer_id: customerId,
         version: {
           ...versionData,
           items: (items || []).map((item) => {

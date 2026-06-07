@@ -16,18 +16,21 @@ from decimal import Decimal, InvalidOperation
 from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import desc, or_
 
 logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 
-from app.models.presale import PresaleSolution
 from app.api import deps
 from app.models.sales import Customer, Opportunity, Quote, QuoteItem, QuoteTemplate, QuoteTemplateVersion, QuoteVersion
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 
 # 导入重构后的服务
+from app.services.sales.presale_quote_context import (
+    build_quote_values_from_presale_solution,
+    build_solution_quote_item,
+    resolve_presale_solution_for_quote,
+)
 from app.services.sales.quotes_service import QuotesService
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.utils.db_helpers import get_or_404
@@ -123,66 +126,6 @@ def _parse_date(value, fallback: date) -> date:
 def _generate_quote_code() -> str:
     # quotes.quote_code is limited to 20 chars.
     return f"QFT{datetime.now().strftime('%y%m%d%H%M%S%f')[:17]}"
-
-
-def _resolve_presale_solution_for_quote(
-    db: Session,
-    quote_data: dict,
-    version_payload: dict,
-    opportunity_id: int,
-    customer_id: int,
-) -> Optional[PresaleSolution]:
-    solution_id = (
-        quote_data.get("solution_id")
-        or quote_data.get("presale_solution_id")
-        or version_payload.get("solution_id")
-        or version_payload.get("presale_solution_id")
-    )
-
-    if solution_id:
-        solution = db.query(PresaleSolution).filter(PresaleSolution.id == solution_id).first()
-        if not solution:
-            raise HTTPException(status_code=404, detail="售前方案不存在")
-        if solution.opportunity_id and solution.opportunity_id != opportunity_id:
-            raise HTTPException(status_code=400, detail="售前方案与商机不匹配")
-        if solution.customer_id and solution.customer_id != customer_id:
-            raise HTTPException(status_code=400, detail="售前方案与客户不匹配")
-        return solution
-
-    return (
-        db.query(PresaleSolution)
-        .filter(
-            PresaleSolution.opportunity_id == opportunity_id,
-            or_(
-                PresaleSolution.status == "APPROVED",
-                PresaleSolution.review_status == "APPROVED",
-            ),
-        )
-        .order_by(
-            desc(PresaleSolution.review_time),
-            desc(PresaleSolution.updated_at),
-            desc(PresaleSolution.id),
-        )
-        .first()
-    )
-
-
-def _build_solution_quote_item(
-    solution: PresaleSolution,
-    total_price: Decimal,
-    cost_total: Decimal,
-) -> dict:
-    return {
-        "item_type": "SOLUTION",
-        "item_name": solution.name,
-        "specification": solution.technical_spec,
-        "unit": "套",
-        "qty": 1,
-        "unit_price": total_price,
-        "cost": cost_total,
-        "lead_time_days": solution.estimated_duration,
-        "remark": f"来源售前方案 {solution.solution_no}",
-    }
 
 
 def _get_template_version(
@@ -397,29 +340,17 @@ def create_quote(
     if not version_payload:
         raise HTTPException(status_code=422, detail="version 必填")
 
-    presale_solution = _resolve_presale_solution_for_quote(
+    presale_solution = resolve_presale_solution_for_quote(
         db,
         quote_data=quote_data,
         version_payload=version_payload,
         opportunity_id=opportunity_id,
         customer_id=customer_id,
     )
-    solution_total_price = (
-        _to_decimal(presale_solution.suggested_price) if presale_solution else Decimal("0")
+    total_price, cost_total, lead_time_days = build_quote_values_from_presale_solution(
+        version_payload,
+        presale_solution,
     )
-    solution_cost_total = (
-        _to_decimal(presale_solution.estimated_cost) if presale_solution else Decimal("0")
-    )
-    total_price = _to_decimal(version_payload.get("total_price"))
-    cost_total = _to_decimal(version_payload.get("cost_total"))
-    if presale_solution and not total_price and solution_total_price > 0:
-        total_price = solution_total_price
-    if presale_solution and not cost_total and solution_cost_total > 0:
-        cost_total = solution_cost_total
-
-    lead_time_days = version_payload.get("lead_time_days")
-    if presale_solution and not lead_time_days:
-        lead_time_days = presale_solution.estimated_duration
 
     quote = Quote(
         quote_code=quote_data.get("quote_code") or f"QUOTE-{datetime.now().strftime('%Y%m%d%H%M%S')}",
@@ -448,8 +379,8 @@ def create_quote(
     total_price_calc = Decimal("0")
     total_cost_calc = Decimal("0")
     items = version_payload.get("items") or []
-    if presale_solution and not items and (solution_total_price > 0 or solution_cost_total > 0):
-        items = [_build_solution_quote_item(presale_solution, total_price, cost_total)]
+    if presale_solution and not items and (total_price > 0 or cost_total > 0):
+        items = [build_solution_quote_item(presale_solution, total_price, cost_total)]
 
     for item in items:
         qty = _to_decimal(item.get("qty"))
