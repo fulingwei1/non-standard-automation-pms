@@ -513,14 +513,21 @@ export default function PresalesWorkstation() {
           const ticket = ticketResponse.data?.data || ticketResponse.data;
 
           if (ticket.opportunity_id) {
-            await presaleApi.solutions.create({
+            const projectId = ticket.project_id ?? selectedCostTask.biddingId;
+            const solutionPayload = {
               name: selectedCostTask.title,
               ticket_id: selectedCostTask.ticketId,
               opportunity_id: ticket.opportunity_id,
               customer_id: ticket.customer_id,
               estimated_cost: costData.totalAmount * YUAN_TO_CENTS,
               suggested_price: costData.suggestedPrice * YUAN_TO_CENTS
-            });
+            };
+
+            if (projectId != null && projectId !== "") {
+              solutionPayload.project_id = projectId;
+            }
+
+            await presaleApi.solutions.create(solutionPayload);
           }
         }
       }

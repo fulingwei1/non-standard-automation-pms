@@ -207,7 +207,7 @@ describe("PresalesWorkstation", () => {
     expect(apiMocks.presaleApi.tickets.updateProgress).not.toHaveBeenCalled();
   });
 
-  it("completes the presale ticket when submitting cost estimation", async () => {
+  it("creates the cost baseline with project context when submitting cost estimation", async () => {
     apiMocks.presaleWorkbenchApi.loadOverview.mockResolvedValue({
       tickets: {
         items: [
@@ -222,6 +222,7 @@ describe("PresalesWorkstation", () => {
             applicant_name: "张销售",
             status: "PROCESSING",
             opportunity_id: 41,
+            project_id: 91,
             description: "核算夹治具和电气成本",
           },
         ],
@@ -248,6 +249,7 @@ describe("PresalesWorkstation", () => {
         id: 61,
         customer_id: 7,
         opportunity_id: 41,
+        project_id: 91,
       },
     });
     apiMocks.presaleApi.solutions.create.mockResolvedValue({ data: { id: 71 } });
@@ -271,6 +273,16 @@ describe("PresalesWorkstation", () => {
         completion_note: expect.stringContaining("成本估算已完成"),
       });
     });
+    expect(apiMocks.presaleApi.solutions.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "电池包成本核算",
+        ticket_id: 61,
+        opportunity_id: 41,
+        customer_id: 7,
+        project_id: 91,
+        estimated_cost: 120000,
+      }),
+    );
     expect(apiMocks.presaleApi.tickets.complete.mock.calls[0][1].completion_note)
       .toContain("建议报价");
     expect(apiMocks.presaleApi.tickets.updateProgress).not.toHaveBeenCalled();
