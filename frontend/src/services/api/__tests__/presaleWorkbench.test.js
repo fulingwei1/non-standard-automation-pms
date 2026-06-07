@@ -19,79 +19,69 @@ describe('presaleWorkbenchApi', () => {
     teardownApiTest(mock);
   });
 
-  it('loadContext() - 应该聚合售前评估、模板和漏斗数据', async () => {
-    mock.onGet('/api/v1/sales/leads/1/assessments').reply(200, [
-      { id: 11, status: 'COMPLETED', total_score: 88 },
-    ]);
-    mock.onGet('/api/v1/sales/leads/1/requirement-detail').reply(200, {
-      id: 101,
-      requirement_version: 'REQ-1.0',
-    });
-    mock.onGet('/api/v1/sales/assessment-templates').reply((config) => {
-      expect(config.params.is_active).toBe(true);
+  it('loadContext() - 应该通过售前工作台聚合接口获取上下文', async () => {
+    mock.onGet('/api/v1/presale/workbench/context').reply((config) => {
+      expect(config.params).toMatchObject({
+        source_type: 'lead',
+        source_id: 1,
+        entity_type: 'LEAD',
+        entity_id: 1,
+      });
+
       return [200, {
         code: 200,
         data: {
-          items: [{ id: 1, template_name: '标准评估模板' }],
-          total: 1,
+          source: { type: 'lead', id: 1 },
+          ticket: null,
+          assessment: {
+            items: [{ id: 11, status: 'COMPLETED', total_score: 88 }],
+            total: 1,
+            current: { id: 11, status: 'COMPLETED', total_score: 88 },
+            requirementDetail: { id: 101, requirement_version: 'REQ-1.0' },
+            risks: {
+              items: [{ id: 7, risk_title: '关键部件交期风险' }],
+              total: 1,
+            },
+            versions: {
+              items: [{ id: 8, version_no: 'V1.0' }],
+              total: 1,
+            },
+          },
+          templates: {
+            assessment: {
+              items: [{ id: 1, template_name: '标准评估模板' }],
+              total: 1,
+            },
+            technical: {
+              items: [{ id: 2, name: 'ICT 标准模板' }],
+              total: 1,
+            },
+          },
+          solutions: { items: [], total: 0 },
+          funnel: {
+            entityType: 'LEAD',
+            entityId: 1,
+            gateConfigs: {
+              items: [{ id: 3, gate_type: 'G1' }],
+              total: 1,
+            },
+            stages: {
+              items: [{ id: 4, stage_code: 'NEW', stage_name: '新线索' }],
+              total: 1,
+            },
+            transitionLogs: {
+              items: [{ id: 5, transition_reason: '手动推进' }],
+              total: 1,
+            },
+            dwellAlerts: {
+              items: [{ id: 6, severity: 'WARNING' }],
+              total: 1,
+            },
+            gateStatus: { gate_type: 'G1', is_valid: true },
+          },
+          meta: { failures: [] },
         },
       }];
-    });
-    mock.onGet('/api/v1/presale/technical-parameters/templates').reply(200, {
-      items: [{ id: 2, name: 'ICT 标准模板' }],
-      total: 1,
-      page: 1,
-      page_size: 20,
-      pages: 1,
-    });
-    mock.onGet('/api/v1/sales/funnel/gate-configs').reply(200, {
-      code: 200,
-      data: {
-        items: [{ id: 3, gate_type: 'G1' }],
-        total: 1,
-      },
-    });
-    mock.onGet('/api/v1/sales/funnel/stages').reply((config) => {
-      expect(config.params.entity_type).toBe('LEAD');
-      return [200, {
-        code: 200,
-        data: {
-          items: [{ id: 4, stage_code: 'NEW', stage_name: '新线索' }],
-          total: 1,
-        },
-      }];
-    });
-    mock.onGet('/api/v1/sales/funnel/transition-logs').reply((config) => {
-      expect(config.params.entity_type).toBe('LEAD');
-      expect(config.params.entity_id).toBe(1);
-      return [200, {
-        code: 200,
-        data: {
-          items: [{ id: 5, transition_reason: '手动推进' }],
-          total: 1,
-        },
-      }];
-    });
-    mock.onGet('/api/v1/sales/funnel/dwell-time/alerts').reply(200, {
-      code: 200,
-      data: {
-        items: [{ id: 6, severity: 'WARNING' }],
-        total: 1,
-      },
-    });
-    mock.onGet('/api/v1/sales/assessments/11/risks').reply(200, {
-      code: 200,
-      data: {
-        items: [{ id: 7, risk_title: '关键部件交期风险' }],
-        total: 1,
-      },
-    });
-    mock.onGet('/api/v1/sales/assessments/11/versions').reply(200, {
-      code: 200,
-      data: {
-        items: [{ id: 8, version_no: 'V1.0' }],
-        total: 1,
-      },
     });
 
     const context = await presaleWorkbenchApi.loadContext({
@@ -107,70 +97,66 @@ describe('presaleWorkbenchApi', () => {
     expect(context.funnel.gateConfigs.items[0].gate_type).toBe('G1');
     expect(context.funnel.stages.items[0].stage_code).toBe('NEW');
     expect(context.meta.failures).toEqual([]);
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].url).toBe('/presale/workbench/context');
   });
 
-  it('loadContext() - 应该容忍局部接口失败并保留已成功数据', async () => {
-    mock.onGet('/api/v1/sales/opportunities/9/assessments').reply(200, [
-      { id: 21, status: 'COMPLETED', total_score: 76 },
-    ]);
-    mock.onGet('/api/v1/sales/assessment-templates').reply(200, {
-      code: 200,
-      data: {
-        items: [{ id: 1, template_name: '定制项目模板' }],
-        total: 1,
-      },
-    });
-    mock.onGet('/api/v1/presale/technical-parameters/templates').reply(200, {
-      items: [{ id: 2, name: 'FCT 定制模板' }],
-      total: 1,
-      page: 1,
-      page_size: 20,
-      pages: 1,
-    });
-    mock.onGet('/api/v1/sales/funnel/gate-configs').reply(200, {
-      code: 200,
-      data: {
-        items: [],
-        total: 0,
-      },
-    });
-    mock.onGet('/api/v1/presale/proposals/solutions').reply((config) => {
-      expect(config.params.opportunity_id).toBe(9);
+  it('loadContext() - 应该保留后端聚合接口返回的局部失败信息', async () => {
+    mock.onGet('/api/v1/presale/workbench/context').reply((config) => {
+      expect(config.params).toMatchObject({
+        source_type: 'opportunity',
+        source_id: 9,
+        entity_type: 'OPPORTUNITY',
+        entity_id: 9,
+      });
+
       return [200, {
-        items: [{ id: 31, solution_name: '方案 A' }],
-        total: 1,
+        code: 200,
+        data: {
+          source: { type: 'opportunity', id: 9 },
+          ticket: null,
+          assessment: {
+            items: [{ id: 21, status: 'COMPLETED', total_score: 76 }],
+            total: 1,
+            current: { id: 21, status: 'COMPLETED', total_score: 76 },
+            requirementDetail: null,
+            risks: { items: [], total: 0 },
+            versions: {
+              items: [{ id: 22, version_no: 'V2.0' }],
+              total: 1,
+            },
+          },
+          templates: {
+            assessment: {
+              items: [{ id: 1, template_name: '定制项目模板' }],
+              total: 1,
+            },
+            technical: {
+              items: [{ id: 2, name: 'FCT 定制模板' }],
+              total: 1,
+            },
+          },
+          solutions: {
+            items: [{ id: 31, solution_name: '方案 A' }],
+            total: 1,
+          },
+          funnel: {
+            entityType: 'OPPORTUNITY',
+            entityId: 9,
+            gateConfigs: { items: [], total: 0 },
+            stages: {
+              items: [{ id: 4, stage_code: 'DISCOVERY' }],
+              total: 1,
+            },
+            transitionLogs: { items: [], total: 0 },
+            dwellAlerts: { items: [], total: 0 },
+            gateStatus: { gate_type: 'G2', is_valid: false },
+          },
+          meta: {
+            failures: [{ key: 'risks', message: '风险服务暂不可用' }],
+          },
+        },
       }];
-    });
-    mock.onGet('/api/v1/sales/funnel/stages').reply(200, {
-      code: 200,
-      data: {
-        items: [{ id: 4, stage_code: 'DISCOVERY' }],
-        total: 1,
-      },
-    });
-    mock.onGet('/api/v1/sales/funnel/transition-logs').reply(200, {
-      code: 200,
-      data: {
-        items: [],
-        total: 0,
-      },
-    });
-    mock.onGet('/api/v1/sales/funnel/dwell-time/alerts').reply(200, {
-      code: 200,
-      data: {
-        items: [],
-        total: 0,
-      },
-    });
-    mock.onGet('/api/v1/sales/assessments/21/risks').reply(500, {
-      detail: '风险服务暂不可用',
-    });
-    mock.onGet('/api/v1/sales/assessments/21/versions').reply(200, {
-      code: 200,
-      data: {
-        items: [{ id: 22, version_no: 'V2.0' }],
-        total: 1,
-      },
     });
 
     const context = await presaleWorkbenchApi.loadContext({
@@ -185,6 +171,8 @@ describe('presaleWorkbenchApi', () => {
     expect(context.meta.failures).toEqual([
       { key: 'risks', message: '风险服务暂不可用' },
     ]);
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].url).toBe('/presale/workbench/context');
   });
 
   it('loadAssessmentArtifacts() - 应该按评估拉取结构化风险和版本', async () => {
@@ -249,52 +237,50 @@ describe('presaleWorkbenchApi', () => {
   });
 
   it('loadOverview() - 应该聚合工单、方案、模板和漏斗健康数据', async () => {
-    mock.onGet('/api/v1/presale/tickets').reply(200, {
-      items: [{ id: 1, ticket_no: 'PS-001' }],
-      total: 1,
-    });
-    mock.onGet('/api/v1/presale/proposals/solutions').reply(200, {
-      items: [{ id: 2, solution_name: '整线方案 A' }],
-      total: 1,
-    });
-    mock.onGet('/api/v1/sales/assessment-templates').reply(200, {
+    mock.onGet('/api/v1/presale/workbench/overview').reply(200, {
       code: 200,
       data: {
-        items: [{ id: 3, template_name: '标准评估模板' }],
-        total: 1,
-      },
-    });
-    mock.onGet('/api/v1/presale/technical-parameters/templates').reply(200, {
-      items: [{ id: 4, name: 'FCT 模板' }],
-      total: 1,
-      page: 1,
-      page_size: 20,
-      pages: 1,
-    });
-    mock.onGet('/api/v1/sales/statistics/funnel').reply(200, {
-      code: 200,
-      data: {
-        leads: 12,
-        opportunities: 6,
-        quotes: 3,
-        contracts: 1,
-      },
-    });
-    mock.onGet('/api/v1/sales/funnel/health-dashboard').reply(200, {
-      dashboard_date: '2026-03-13',
-      overall_health: { score: 78, level: 'GOOD' },
-      key_metrics: { target_coverage: 112.5 },
-      alerts: [{ title: 'Pipeline 达标' }],
-    });
-    mock.onGet('/api/v1/sales/funnel/conversion-rates').reply(200, {
-      stages: [{ stage: 'DISCOVERY', count: 6 }],
-      overall_metrics: { total_leads: 6, total_won: 1 },
-    });
-    mock.onGet('/api/v1/sales/funnel/dwell-time/alerts').reply(200, {
-      code: 200,
-      data: {
-        items: [{ id: 5, severity: 'WARNING' }],
-        total: 1,
+        tickets: {
+          items: [{ id: 1, ticket_no: 'PS-001' }],
+          total: 1,
+        },
+        solutions: {
+          items: [{ id: 2, solution_name: '整线方案 A' }],
+          total: 1,
+        },
+        templates: {
+          assessment: {
+            items: [{ id: 3, template_name: '标准评估模板' }],
+            total: 1,
+          },
+          technical: {
+            items: [{ id: 4, name: 'FCT 模板' }],
+            total: 1,
+          },
+        },
+        funnel: {
+          summary: {
+            leads: 12,
+            opportunities: 6,
+            quotes: 3,
+            contracts: 1,
+          },
+          health: {
+            dashboard_date: '2026-03-13',
+            overall_health: { score: 78, level: 'GOOD' },
+            key_metrics: { target_coverage: 112.5 },
+            alerts: [{ title: 'Pipeline 达标' }],
+          },
+          conversion: {
+            stages: [{ stage: 'DISCOVERY', count: 6 }],
+            overall_metrics: { total_leads: 6, total_won: 1 },
+          },
+          dwellAlerts: {
+            items: [{ id: 5, severity: 'WARNING' }],
+            total: 1,
+          },
+        },
+        meta: { failures: [] },
       },
     });
 
@@ -307,5 +293,7 @@ describe('presaleWorkbenchApi', () => {
     expect(overview.funnel.health.overall_health.score).toBe(78);
     expect(overview.funnel.dwellAlerts.total).toBe(1);
     expect(overview.meta.failures).toEqual([]);
+    expect(mock.history.get).toHaveLength(1);
+    expect(mock.history.get[0].url).toBe('/presale/workbench/overview');
   });
 });
