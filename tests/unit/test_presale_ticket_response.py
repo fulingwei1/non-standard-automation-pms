@@ -81,3 +81,35 @@ def test_build_ticket_response_exposes_ticket_deliverables():
             "updated_at": datetime(2026, 6, 7, 11, 5, 0),
         }
     ]
+
+
+def test_build_ticket_response_exposes_pm_involvement_context():
+    ticket = _ticket_with_progress([])
+    checked_at = datetime(2026, 6, 7, 10, 30, 0)
+    assigned_at = datetime(2026, 6, 7, 10, 45, 0)
+    ticket.assessment_required = True
+    ticket.assessment_status = "IN_PROGRESS"
+    ticket.assessment_priority = "HIGH"
+    ticket.assessment_due_date = datetime(2026, 6, 9, 18, 0, 0)
+    ticket.current_assessment_id = 99
+    ticket.pm_involvement_required = True
+    ticket.pm_involvement_risk_level = "高"
+    ticket.pm_involvement_risk_factors = ["金额高", "交期紧"]
+    ticket.pm_involvement_checked_at = checked_at
+    ticket.pm_assigned = True
+    ticket.pm_user_id = 12
+    ticket.pm_assigned_at = assigned_at
+
+    response = build_ticket_response(ticket)
+
+    assert response.assessment_required is True
+    assert response.assessment_status == "IN_PROGRESS"
+    assert response.assessment_priority == "HIGH"
+    assert response.current_assessment_id == 99
+    assert response.pm_involvement_required is True
+    assert response.pm_involvement_risk_level == "高"
+    assert response.pm_involvement_risk_factors == ["金额高", "交期紧"]
+    assert response.pm_involvement_checked_at == checked_at
+    assert response.pm_assigned is True
+    assert response.pm_user_id == 12
+    assert response.pm_assigned_at == assigned_at

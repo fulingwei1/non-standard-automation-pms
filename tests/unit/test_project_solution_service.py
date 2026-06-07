@@ -3,6 +3,7 @@
 项目解决方案服务单元测试
 """
 
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -146,7 +147,14 @@ class TestCreateSolutionTemplateFromIssue:
         from app.models.issue import Issue
         from app.services.project_solution_service import ProjectSolutionService
 
-        issue = Issue(issue_no="ISS001", title="测试问题", solution=None, reporter_id=1)
+        issue = Issue(
+            issue_no="ISS001",
+            title="测试问题",
+            description="测试问题描述",
+            solution=None,
+            reporter_id=1,
+            report_date=datetime(2026, 6, 7, 9, 0, 0),
+        )
         db_session.add(issue)
         db_session.flush()
 
@@ -165,10 +173,12 @@ class TestCreateSolutionTemplateFromIssue:
         issue = Issue(
             issue_no="ISS001",
             title="测试问题",
+            description="测试问题描述",
             solution="解决方案内容",
             issue_type="MECHANICAL",
             category="设计问题",
             reporter_id=1,
+            report_date=datetime(2026, 6, 7, 9, 0, 0),
         )
         db_session.add(issue)
         db_session.flush()
@@ -189,9 +199,11 @@ class TestCreateSolutionTemplateFromIssue:
         issue = Issue(
             issue_no="ISS002",
             title="测试问题2",
+            description="测试问题描述2",
             solution="解决方案内容2",
             issue_type="ELECTRICAL",
             reporter_id=1,
+            report_date=datetime(2026, 6, 7, 9, 0, 0),
         )
         db_session.add(issue)
         db_session.flush()
