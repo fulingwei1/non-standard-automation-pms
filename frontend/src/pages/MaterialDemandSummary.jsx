@@ -3,6 +3,7 @@
  * Features: 多项目物料需求汇总、需求与库存对比、自动生成采购需求
  */
 import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Package,
   Search,
@@ -46,14 +47,23 @@ import {
 "../components/ui/dialog";
 import { cn, formatDate } from "../lib/utils";
 import { materialDemandApi, projectApi } from "../services/api";
+
+const parseProjectId = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
 export default function MaterialDemandSummary() {
+  const [searchParams] = useSearchParams();
+  const projectIdFromQuery = searchParams.get("project_id") || "";
+  const contextProjectId = parseProjectId(projectIdFromQuery);
   const [loading, setLoading] = useState(true);
   const [demands, setDemands] = useState([]);
   const [projects, setProjects] = useState([]);
   const [summary, setSummary] = useState(null);
   // Filters
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [filterProject, setFilterProject] = useState("");
+  const [filterProject, setFilterProject] = useState(projectIdFromQuery);
   const [filterMaterial, _setFilterMaterial] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -64,17 +74,30 @@ export default function MaterialDemandSummary() {
   const [vsStockData, setVsStockData] = useState(null);
   // Form state
   const [generateParams, setGenerateParams] = useState({
-    project_ids: [],
+    project_ids: contextProjectId ? [contextProjectId] : [],
     material_ids: [],
     supplier_id: null
   });
   useEffect(() => {
+    if (!projectIdFromQuery) {
+      return;
+    }
+    setFilterProject(projectIdFromQuery);
+    setGenerateParams((prev) => ({
+      ...prev,
+      project_ids: prev.project_ids?.length ? prev.project_ids : [contextProjectId],
+    }));
+  }, [contextProjectId, projectIdFromQuery]);
+
+  useEffect(() => {
     fetchProjects();
     fetchDemands();
-  }, [filterProject, filterMaterial, startDate, endDate, searchKeyword]);
+  }, [filterProject, filterMaterial, startDate, endDate, searchKeyword, projectIdFromQuery]);
   const fetchProjects = async () => {
     try {
-      const res = await projectApi.list({ page_size: 1000 });
+      const params = { page_size: 1000 };
+      if (projectIdFromQuery) {params.project_id = projectIdFromQuery;}
+      const res = await projectApi.list(params);
       setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
@@ -84,7 +107,7 @@ export default function MaterialDemandSummary() {
     try {
       setLoading(true);
       const params = {};
-      if (filterProject) {params.project_id = filterProject;}
+      if (filterProject && filterProject !== "all") {params.project_id = filterProject;}
       if (filterMaterial) {params.material_id = filterMaterial;}
       if (startDate) {params.start_date = startDate;}
       if (endDate) {params.end_date = endDate;}
@@ -338,7 +361,7 @@ export default function MaterialDemandSummary() {
                   onValueChange={(val) =>
                   setGenerateParams({
                     ...generateParams,
-                    project_ids: val ? [parseInt(val)] : []
+                    project_ids: val && val !== "all" ? [parseInt(val)] : []
                   })
                   }>
 

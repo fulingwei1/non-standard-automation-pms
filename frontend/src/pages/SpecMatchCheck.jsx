@@ -21,16 +21,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
+import { getProjectContextFilters } from "../lib/projectContext";
 import api from "../services/api";
+
+const ALL_FILTER = "all";
+const DEFAULT_CHECK_MATCH_TYPE = "BOM";
+
+const parseProjectId = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
+const getSelectedFilter = (value) =>
+  value && value !== ALL_FILTER ? value : undefined;
 
 export default function SpecMatchCheck() {
   const [searchParams] = useSearchParams();
-  const contextProjectId = searchParams.get("project_id") || "";
+  const contextProjectId = getProjectContextFilters(searchParams).project_id || "";
   const [matchRecords, setMatchRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [projectId, setProjectId] = useState(contextProjectId);
-  const [matchType, setMatchType] = useState("");
-  const [matchStatus, setMatchStatus] = useState("");
+  const [matchType, setMatchType] = useState(ALL_FILTER);
+  const [matchStatus, setMatchStatus] = useState(ALL_FILTER);
   const [checking, setChecking] = useState(false);
 
   useEffect(() => {
@@ -47,9 +59,19 @@ export default function SpecMatchCheck() {
     setLoading(true);
     try {
       const params = { page: 1, page_size: 100 };
-      if (projectId) {params.project_id = parseInt(projectId);}
-      if (matchType && matchType !== "all") {params.match_type = matchType;}
-      if (matchStatus && matchStatus !== "all") {params.match_status = matchStatus;}
+      const parsedProjectId = parseProjectId(projectId);
+      const selectedMatchType = getSelectedFilter(matchType);
+      const selectedMatchStatus = getSelectedFilter(matchStatus);
+
+      if (parsedProjectId) {
+        params.project_id = parsedProjectId;
+      }
+      if (selectedMatchType) {
+        params.match_type = selectedMatchType;
+      }
+      if (selectedMatchStatus) {
+        params.match_status = selectedMatchStatus;
+      }
 
       const response = await api.get("/technical-spec/match/records", {
         params,
@@ -63,7 +85,8 @@ export default function SpecMatchCheck() {
   };
 
   const handleCheck = async () => {
-    if (!projectId) {
+    const parsedProjectId = parseProjectId(projectId);
+    if (!parsedProjectId) {
       alert("请先选择项目");
       return;
     }
@@ -71,8 +94,8 @@ export default function SpecMatchCheck() {
     setChecking(true);
     try {
       await api.post("/technical-spec/match/check", {
-        project_id: parseInt(projectId),
-        match_type: matchType && matchType !== "all" ? matchType : undefined,
+        project_id: parsedProjectId,
+        match_type: getSelectedFilter(matchType) || DEFAULT_CHECK_MATCH_TYPE,
         match_target_id: undefined,
       });
       alert("匹配检查完成");
@@ -125,22 +148,22 @@ export default function SpecMatchCheck() {
                 onChange={(e) => setProjectId(e.target.value)}
                 className="w-32"
               />
-              <Select value={matchType || "unknown"} onValueChange={setMatchType}>
+              <Select value={matchType} onValueChange={setMatchType}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="匹配类型" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部</SelectItem>
+                  <SelectItem value={ALL_FILTER}>全部</SelectItem>
                   <SelectItem value="BOM">BOM</SelectItem>
                   <SelectItem value="PURCHASE_ORDER">采购订单</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={matchStatus || "unknown"} onValueChange={setMatchStatus}>
+              <Select value={matchStatus} onValueChange={setMatchStatus}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="匹配状态" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部</SelectItem>
+                  <SelectItem value={ALL_FILTER}>全部</SelectItem>
                   <SelectItem value="MATCHED">匹配</SelectItem>
                   <SelectItem value="MISMATCHED">不匹配</SelectItem>
                   <SelectItem value="UNKNOWN">未知</SelectItem>

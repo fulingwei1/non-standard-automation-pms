@@ -32,37 +32,43 @@ import {
   SelectTrigger,
   SelectValue } from
 "../components/ui/select";
+import { getProjectContextFilters } from "../lib/projectContext";
 import api from "../services/api";
 
 import { confirmAction } from "@/lib/confirmAction";
+
+const buildDefaultFormData = (projectId = "") => ({
+  project_id: projectId,
+  document_id: "",
+  material_code: "",
+  material_name: "",
+  specification: "",
+  brand: "",
+  model: "",
+  requirement_level: "REQUIRED",
+  remark: ""
+});
+
 export default function TechnicalSpecManagement() {
   const [searchParams] = useSearchParams();
-  const contextProjectId = searchParams.get("project_id") || "";
+  const contextProjectId = getProjectContextFilters(searchParams).project_id || "";
   const [requirements, setRequirements] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [projectId, _setProjectId] = useState(contextProjectId);
+  const [projectId, setProjectId] = useState(contextProjectId);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingRequirement, setEditingRequirement] = useState(null);
 
-  const [formData, setFormData] = useState({
-    project_id: contextProjectId,
-    document_id: "",
-    material_code: "",
-    material_name: "",
-    specification: "",
-    brand: "",
-    model: "",
-    requirement_level: "REQUIRED",
-    remark: ""
-  });
+  const [formData, setFormData] = useState(() =>
+    buildDefaultFormData(contextProjectId)
+  );
 
   useEffect(() => {
     loadRequirements();
   }, [projectId, searchKeyword]);
 
   useEffect(() => {
-    _setProjectId(contextProjectId);
+    setProjectId(contextProjectId);
     if (contextProjectId) {
       setFormData((prev) => ({
         ...prev,
@@ -129,17 +135,7 @@ export default function TechnicalSpecManagement() {
   };
 
   const resetForm = () => {
-    setFormData({
-      project_id: contextProjectId,
-      document_id: "",
-      material_code: "",
-      material_name: "",
-      specification: "",
-      brand: "",
-      model: "",
-      requirement_level: "REQUIRED",
-      remark: ""
-    });
+    setFormData(buildDefaultFormData(contextProjectId));
   };
 
   const openEditDialog = (requirement) => {
@@ -192,7 +188,7 @@ export default function TechnicalSpecManagement() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   placeholder="搜索物料名称、规格..."
-                  value={searchKeyword || "unknown"}
+                  value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   className="pl-10 w-64" />
 

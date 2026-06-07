@@ -3,7 +3,7 @@
  * Features: 外协订单列表、创建、详情、进度跟踪、质检
  */
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -46,6 +46,24 @@ import {
 "../components/ui/dialog";
 import { formatDate } from "../lib/utils";
 import { outsourcingApi, projectApi } from "../services/api";
+
+const parseProjectId = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
+const buildDefaultOrder = (projectId) => ({
+  vendor_id: null,
+  project_id: projectId || null,
+  machine_id: null,
+  order_type: "MACHINING",
+  order_name: "",
+  planned_start_date: "",
+  planned_end_date: "",
+  delivery_address: "",
+  remark: ""
+});
+
 const statusConfigs = {
   DRAFT: { label: "草稿", color: "bg-slate-500" },
   SUBMITTED: { label: "已提交", color: "bg-blue-500" },
@@ -58,36 +76,42 @@ const statusConfigs = {
 };
 export default function OutsourcingOrderList() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const projectIdFromQuery = searchParams.get("project_id") || "";
+  const contextProjectId = parseProjectId(projectIdFromQuery);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
   const [projects, setProjects] = useState([]);
   // Filters
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [filterProject, setFilterProject] = useState("");
+  const [filterProject, setFilterProject] = useState(projectIdFromQuery);
   const [filterStatus, setFilterStatus] = useState("");
   // Dialogs
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   // Form state
-  const [newOrder, setNewOrder] = useState({
-    vendor_id: null,
-    project_id: null,
-    machine_id: null,
-    order_type: "MACHINING",
-    order_name: "",
-    planned_start_date: "",
-    planned_end_date: "",
-    delivery_address: "",
-    remark: ""
-  });
+  const [newOrder, setNewOrder] = useState(() => buildDefaultOrder(contextProjectId));
+  useEffect(() => {
+    if (!projectIdFromQuery) {
+      return;
+    }
+    setFilterProject(projectIdFromQuery);
+    setNewOrder((prev) => ({
+      ...prev,
+      project_id: prev.project_id || contextProjectId,
+    }));
+  }, [contextProjectId, projectIdFromQuery]);
+
   useEffect(() => {
     fetchProjects();
     fetchOrders();
-  }, [filterProject, filterStatus, searchKeyword]);
+  }, [filterProject, filterStatus, searchKeyword, projectIdFromQuery]);
   const fetchProjects = async () => {
     try {
-      const res = await projectApi.list({ page_size: 1000 });
+      const params = { page_size: 1000 };
+      if (projectIdFromQuery) {params.project_id = projectIdFromQuery;}
+      const res = await projectApi.list(params);
       setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
@@ -97,8 +121,8 @@ export default function OutsourcingOrderList() {
     try {
       setLoading(true);
       const params = {};
-      if (filterProject) {params.project_id = filterProject;}
-      if (filterStatus) {params.status = filterStatus;}
+      if (filterProject && filterProject !== "all") {params.project_id = filterProject;}
+      if (filterStatus && filterStatus !== "all") {params.status = filterStatus;}
       if (searchKeyword) {params.keyword = searchKeyword;}
       const res = await outsourcingApi.orders.list(params);
       const orderList = res.data?.items || res.data?.items || res.data || [];
@@ -117,17 +141,7 @@ export default function OutsourcingOrderList() {
     try {
       await outsourcingApi.orders.create(newOrder);
       setShowCreateDialog(false);
-      setNewOrder({
-        vendor_id: null,
-        project_id: null,
-        machine_id: null,
-        order_type: "MACHINING",
-        order_name: "",
-        planned_start_date: "",
-        planned_end_date: "",
-        delivery_address: "",
-        remark: ""
-      });
+      setNewOrder(buildDefaultOrder(contextProjectId));
       fetchOrders();
     } catch (error) {
       console.error("Failed to create order:", error);
@@ -328,7 +342,7 @@ export default function OutsourcingOrderList() {
                     onValueChange={(val) =>
                     setNewOrder({
                       ...newOrder,
-                      project_id: val ? parseInt(val) : null
+                      project_id: val && val !== "none" ? parseInt(val) : null
                     })
                     }>
 
