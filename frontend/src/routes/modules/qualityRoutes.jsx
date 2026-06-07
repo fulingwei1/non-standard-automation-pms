@@ -1,5 +1,5 @@
 import { Route } from "react-router-dom";
-import { QualityProtectedRoute } from "../../components/common/ProtectedRoute";
+import { ProtectedRoute, QualityProtectedRoute } from "../../components/common/ProtectedRoute";
 import { lazyLoad } from "../lazyLoad";
 
 const QualityWorkstation = lazyLoad(() => import("../../pages/quality/QualityWorkstation"));
@@ -70,6 +70,14 @@ export function QualityRoutes() {
           <QualityProtectedRoute>
             <IssueDetail />
           </QualityProtectedRoute>
+        }
+      />
+      <Route
+        path="/issues/:id"
+        element={
+          <ProtectedRoute permissionName="问题详情">
+            <IssueDetail />
+          </ProtectedRoute>
         }
       />
 

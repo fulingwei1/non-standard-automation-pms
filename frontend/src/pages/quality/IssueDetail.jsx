@@ -12,13 +12,17 @@ import { PageHeader } from "../../components/layout";
 import { Button } from "../../components/ui/button";
 import { issueApi } from "../../services/api/issues";
 
+function normalizeCode(value) {
+  return String(value || "").toLowerCase();
+}
+
 function SeverityBadge({ level }) {
   const map = {
     critical: { bg: "bg-red-500/20", text: "text-red-400", label: "严重" },
     major: { bg: "bg-amber-500/20", text: "text-amber-400", label: "主要" },
     minor: { bg: "bg-blue-500/20", text: "text-blue-400", label: "次要" },
   };
-  const cfg = map[level] || { bg: "bg-gray-500/20", text: "text-gray-400", label: level || "未知" };
+  const cfg = map[normalizeCode(level)] || { bg: "bg-gray-500/20", text: "text-gray-400", label: level || "未知" };
   return <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-medium ${cfg.bg} ${cfg.text}`}>{cfg.label}</span>;
 }
 
@@ -29,7 +33,7 @@ function StatusBadge({ status }) {
     resolved: { bg: "bg-emerald-500/20", text: "text-emerald-400", label: "已解决", icon: CheckCircle },
     closed: { bg: "bg-gray-500/20", text: "text-gray-400", label: "已关闭", icon: CheckCircle },
   };
-  const cfg = map[status] || map.open;
+  const cfg = map[normalizeCode(status)] || map.open;
   const Icon = cfg.icon;
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-medium ${cfg.bg} ${cfg.text}`}>
@@ -84,7 +88,7 @@ export default function IssueDetail() {
     <div className="min-h-screen bg-surface-50">
       <PageHeader
         title={`问题详情 #${id}`}
-        subtitle="质量问题详细信息"
+        subtitle="问题详细信息"
         icon={<AlertCircle className="h-6 w-6" />}
         actions={
           <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
@@ -129,7 +133,7 @@ export default function IssueDetail() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <InfoItem icon={Tag} label="分类" value={item.category} />
                 <InfoItem icon={User} label="责任人" value={item.assignee_name || item.responsible} />
-                <InfoItem icon={User} label="创建人" value={item.creator_name || item.reporter} />
+                <InfoItem icon={User} label="创建人" value={item.creator_name || item.reporter_name || item.reporter} />
                 <InfoItem icon={Calendar} label="创建时间" value={item.created_at ? new Date(item.created_at).toLocaleString() : "-"} />
                 <InfoItem icon={Calendar} label="更新时间" value={item.updated_at ? new Date(item.updated_at).toLocaleString() : "-"} />
                 {item.resolved_at && (
