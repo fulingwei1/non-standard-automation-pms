@@ -30,6 +30,7 @@ from app.models.sales import (
     QuoteVersion,
     TechnicalAssessment,
 )
+from app.models.sales.technical_assessment import LeadRequirementDetail
 from app.models.timesheet import Timesheet
 from app.models.user import User
 
@@ -429,6 +430,87 @@ class TestPresalesFrontendContractBehavior:
                 PresaleSupportTicket.id == ticket.id
             ).delete(synchronize_session=False)
             db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
+    def test_presale_workbench_context_reuses_lead_requirement_detail_for_opportunity(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-WBR-{unique}",
+            customer_name=f"需求包复用客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        lead = Lead(
+            lead_code=f"LDWBR{unique[:6]}",
+            source="展会",
+            customer_name=customer.customer_name,
+            industry=customer.industry,
+            demand_summary="FCT 测试线，客户已提供 SOW",
+            owner_id=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPWBR{unique[:6]}",
+            lead=lead,
+            customer=customer,
+            opp_name=f"需求包复用商机-{unique}",
+            stage="QUALIFICATION",
+            probability=70,
+            est_amount=Decimal("520000"),
+            expected_close_date=date.today(),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        requirement_detail = LeadRequirementDetail(
+            lead=lead,
+            target_object_type="FCT治具",
+            application_scenario="整线终测",
+            requirement_maturity=4,
+            has_sow=True,
+            cycle_time_seconds=Decimal("12.5"),
+            requirement_version="REQ-V1",
+        )
+        db_session.add_all([customer, lead, opportunity, requirement_detail])
+        db_session.flush()
+        lead.requirement_detail_id = requirement_detail.id
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{prefix}/presale/workbench/context",
+                params={
+                    "source_type": "opportunity",
+                    "source_id": opportunity.id,
+                },
+                headers=headers,
+            )
+            assert response.status_code == 200, response.text
+            requirement = response.json()["data"]["assessment"]["requirementDetail"]
+
+            assert requirement["lead_id"] == lead.id
+            assert requirement["target_object_type"] == "FCT治具"
+            assert requirement["application_scenario"] == "整线终测"
+            assert requirement["requirement_maturity"] == 4
+            assert requirement["has_sow"] is True
+            assert requirement["cycle_time_seconds"] == 12.5
+            assert requirement["requirement_version"] == "REQ-V1"
+        finally:
+            db_session.query(LeadRequirementDetail).filter(
+                LeadRequirementDetail.id == requirement_detail.id
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
+            db_session.query(Lead).filter(Lead.id == lead.id).delete()
             db_session.query(Customer).filter(Customer.id == customer.id).delete()
             db_session.commit()
 

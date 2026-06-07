@@ -599,10 +599,12 @@ def _normalize_entity_type(entity_type: Optional[str], fallback_source_type: str
     return mapping[normalized]
 
 
-def _ensure_source_exists(db: Session, source_type: str, source_id: int) -> None:
+def _ensure_source_exists(db: Session, source_type: str, source_id: int) -> Any:
     model = Lead if source_type == "lead" else Opportunity
-    if not db.query(model).filter(model.id == source_id).first():
+    source = db.query(model).filter(model.id == source_id).first()
+    if not source:
         raise HTTPException(status_code=404, detail="来源对象不存在")
+    return source
 
 
 @router.get("/overview", response_model=ResponseModel)
@@ -733,7 +735,7 @@ def get_workbench_context(
 ) -> ResponseModel:
     """聚合单个线索/商机售前上下文。"""
     normalized_source_type = _normalize_source_type(source_type)
-    _ensure_source_exists(db, normalized_source_type, source_id)
+    source = _ensure_source_exists(db, normalized_source_type, source_id)
 
     resolved_entity_type = _normalize_entity_type(entity_type, normalized_source_type)
     resolved_entity_id = entity_id or source_id
@@ -803,10 +805,16 @@ def get_workbench_context(
         }
 
     requirement_detail = None
+    requirement_lead_id = None
     if normalized_source_type == "lead":
+        requirement_lead_id = source_id
+    elif normalized_source_type == "opportunity":
+        requirement_lead_id = getattr(source, "lead_id", None) or getattr(ticket, "lead_id", None)
+
+    if requirement_lead_id:
         requirement_detail = (
             db.query(LeadRequirementDetail)
-            .filter(LeadRequirementDetail.lead_id == source_id)
+            .filter(LeadRequirementDetail.lead_id == requirement_lead_id)
             .first()
         )
 
