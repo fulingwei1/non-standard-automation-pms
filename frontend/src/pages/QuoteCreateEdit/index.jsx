@@ -32,6 +32,25 @@ function getFirstSearchInt(searchParams, keys) {
   return null;
 }
 
+function normalizeListPayload(response) {
+  const payload =
+    response?.formatted ??
+    response?.data?.data ??
+    response?.data ??
+    response;
+
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+  if (Array.isArray(payload?.data?.items)) {
+    return payload.data.items;
+  }
+  return [];
+}
+
 export default function QuoteCreateEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -107,7 +126,7 @@ export default function QuoteCreateEdit() {
       const res = await opportunityApi.list({
         page_size: 1000,
       });
-      setOpportunities(res.data?.items || res.data?.items || res.data || []);
+      setOpportunities(normalizeListPayload(res));
     } catch (error) {
       console.error("Failed to fetch opportunities:", error);
     }

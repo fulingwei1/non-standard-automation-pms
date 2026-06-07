@@ -41,14 +41,16 @@ describe("QuoteCreateEdit presale solution context", () => {
     vi.spyOn(window, "alert").mockImplementation(() => {});
     opportunityApi.list.mockResolvedValue({
       data: {
-        items: [
-          {
-            id: 2,
-            customer_id: 1,
-            opp_code: "OP-002",
-            opp_name: "FCT测试线商机",
-          },
-        ],
+        data: {
+          items: [
+            {
+              id: 2,
+              customer_id: 1,
+              opp_code: "OP-002",
+              opp_name: "FCT测试线商机",
+            },
+          ],
+        },
       },
     });
     quoteApi.create.mockResolvedValue({ data: { id: 9 } });

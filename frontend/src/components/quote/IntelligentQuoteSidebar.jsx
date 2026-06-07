@@ -11,12 +11,45 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-
-
-
+import {
+  AlertTriangle,
+  Award,
+  BarChart3,
+  Building2,
+  CheckCircle,
+  History,
+  Lightbulb,
+  Sparkles,
+  Target,
+} from "lucide-react";
 
 import { cn, formatCurrency } from "../../lib/utils";
 import { intelligentQuoteApi } from "../../services/api";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Progress } from "../ui/progress";
+
+function unwrapApiPayload(response) {
+  return (
+    response?.formatted ??
+    response?.data?.data ??
+    response?.data ??
+    response ??
+    {}
+  );
+}
+
+function normalizeHistoricalPricePayload(response) {
+  const payload = unwrapApiPayload(response);
+  return {
+    average_price: Number(payload.average_price || 0),
+    matched_count: Number(payload.matched_count || 0),
+    historical_prices: Array.isArray(payload.historical_prices)
+      ? payload.historical_prices
+      : [],
+  };
+}
 
 /**
  * 智能报价侧边栏
@@ -48,7 +81,7 @@ export default function IntelligentQuoteSidebar({
       // 尝试从商机名称推断产品类型
       const productType = inferProductType(opportunity);
       const res = await intelligentQuoteApi.getHistoricalPrices(productType);
-      setHistoricalData(res);
+      setHistoricalData(normalizeHistoricalPricePayload(res));
     } catch (error) {
       console.error("获取历史价格失败:", error);
       setHistoricalData(null);
