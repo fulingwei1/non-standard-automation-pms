@@ -57,7 +57,12 @@ def read_tickets(
             query = query.filter(PresaleSupportTicket.status == status)
 
     if ticket_type:
-        query = query.filter(PresaleSupportTicket.ticket_type == ticket_type)
+        if "," in ticket_type:
+            ticket_type_values = [item.strip() for item in ticket_type.split(",") if item.strip()]
+            if ticket_type_values:
+                query = query.filter(PresaleSupportTicket.ticket_type.in_(ticket_type_values))
+        else:
+            query = query.filter(PresaleSupportTicket.ticket_type == ticket_type)
 
     if ticket_id:
         query = query.filter(PresaleSupportTicket.id == ticket_id)

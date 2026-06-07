@@ -169,6 +169,7 @@ describe('OpportunityManagement', () => {
       id: 2,
       opp_code: 'OPP-002',
       opp_name: 'ERP 改造项目',
+      lead_id: 2026,
       customer_id: 102,
       customer_name: '科技公司',
       owner_name: '李四',
@@ -295,6 +296,7 @@ describe('OpportunityManagement', () => {
           ticket_type: 'TECHNICAL_SUPPORT',
           customer_id: 102,
           customer_name: '科技公司',
+          lead_id: 2026,
           opportunity_id: 2,
           estimated_amount: 80,
           description: expect.stringContaining('商机编号：OPP-002'),
@@ -305,7 +307,7 @@ describe('OpportunityManagement', () => {
     const payload = presaleApi.tickets.create.mock.calls[0][0];
     expect(payload.description).toContain('预计金额：800000');
     expect(mockNavigate).toHaveBeenCalledWith(
-      '/presales/technical-solutions?tab=reviews&type=support&status=pending&opportunity_id=2&ticket_id=501',
+      '/presales/technical-solutions?tab=reviews&type=support&status=pending&lead_id=2026&opportunity_id=2&ticket_id=501',
     );
   });
 

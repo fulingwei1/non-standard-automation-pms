@@ -111,6 +111,7 @@ const normalizeTicketStatusForUrl = (status, ticketType) => {
 const buildPresalesTicketBoardPath = ({
   ticketType = SUPPORT_TICKET_TYPE,
   status,
+  leadId,
   opportunityId,
   ticketId,
 }) => {
@@ -118,6 +119,9 @@ const buildPresalesTicketBoardPath = ({
   params.set("tab", "reviews");
   params.set("type", ticketType === REVIEW_TICKET_TYPE ? "review" : "support");
   params.set("status", normalizeTicketStatusForUrl(status, ticketType));
+  if (leadId) {
+    params.set("lead_id", String(leadId));
+  }
   if (opportunityId) {
     params.set("opportunity_id", String(opportunityId));
   }
@@ -472,6 +476,7 @@ export default function OpportunityManagement({ embedded = false }) {
           navigate(buildPresalesTicketBoardPath({
             ticketType,
             status: context.ticket.status,
+            leadId: reviewTarget.lead_id || context.ticket.lead_id,
             opportunityId: reviewTarget.id,
             ticketId: context.ticket.id,
           }));
@@ -489,6 +494,7 @@ export default function OpportunityManagement({ embedded = false }) {
           undefined,
         customer_id: reviewTarget.customer_id || undefined,
         customer_name: reviewTarget.customer_name || undefined,
+        lead_id: reviewTarget.lead_id || undefined,
         opportunity_id: reviewTarget.id,
         expected_date: reviewForm.expected_date || undefined
       };
@@ -505,6 +511,7 @@ export default function OpportunityManagement({ embedded = false }) {
       navigate(buildPresalesTicketBoardPath({
         ticketType,
         status: ticketType === REVIEW_TICKET_TYPE ? "REVIEW" : "PENDING",
+        leadId: reviewTarget.lead_id,
         opportunityId: reviewTarget.id,
         ticketId,
       }));

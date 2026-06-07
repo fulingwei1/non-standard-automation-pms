@@ -92,4 +92,22 @@ describe("RequirementSurvey", () => {
       );
     });
   });
+
+  it("keeps lead context when loading surveys from an opportunity converted from lead", async () => {
+    renderPage(
+      "/presales/technical-solutions?tab=surveys&lead_id=2026&opportunity_id=2&ticket_id=501",
+    );
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.list).toHaveBeenCalledWith(
+        expect.objectContaining({
+          page: 1,
+          page_size: 100,
+          lead_id: "2026",
+          opportunity_id: "2",
+          ticket_id: "501",
+        }),
+      );
+    });
+  });
 });

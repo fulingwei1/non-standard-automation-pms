@@ -265,6 +265,89 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(Customer).filter(Customer.id == customer.id).delete()
             db_session.commit()
 
+    def test_ticket_list_accepts_comma_separated_ticket_types_for_requirement_survey(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-SUR-{unique}",
+            customer_name=f"需求调研客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        matching_research = PresaleSupportTicket(
+            ticket_no=f"TICKET-SUR-REQ-{unique}",
+            title=f"需求调研-{unique}",
+            ticket_type="REQUIREMENT_RESEARCH",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PENDING",
+            created_by=admin_user.id,
+        )
+        matching_exchange = PresaleSupportTicket(
+            ticket_no=f"TICKET-SUR-EXC-{unique}",
+            title=f"技术交流-{unique}",
+            ticket_type="TECHNICAL_EXCHANGE",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PENDING",
+            created_by=admin_user.id,
+        )
+        noise_solution = PresaleSupportTicket(
+            ticket_no=f"TICKET-SUR-SOL-{unique}",
+            title=f"方案设计-{unique}",
+            ticket_type="SOLUTION_DESIGN",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PENDING",
+            created_by=admin_user.id,
+        )
+        db_session.add_all([matching_research, matching_exchange, noise_solution])
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{prefix}/presale/tickets",
+                params={
+                    "customer_id": customer.id,
+                    "ticket_type": "REQUIREMENT_RESEARCH,TECHNICAL_EXCHANGE,SITE_VISIT",
+                },
+                headers=headers,
+            )
+            assert response.status_code == 200, response.text
+            payload = response.json()
+            ticket_types = {item["ticket_type"] for item in payload["items"]}
+
+            assert payload["total"] == 2
+            assert ticket_types == {"REQUIREMENT_RESEARCH", "TECHNICAL_EXCHANGE"}
+        finally:
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.customer_id == customer.id
+            ).delete(synchronize_session=False)
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
     def test_presale_workbench_context_returns_opportunity_assessment_ticket_solution_and_g2(
         self, client: TestClient, db_session: Session, admin_token: str
     ):
