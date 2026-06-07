@@ -91,19 +91,32 @@ def init_project_stages(db: Session, project_id: int):
     }
 
     for code, name, order, desc in stages_config:
-        stage = ProjectStage(
-            project_id=project_id,
-            stage_code=code,
-            stage_name=name,
-            stage_order=order,
-            description=desc,
-            status="PENDING",
+        stage = (
+            db.query(ProjectStage)
+            .filter(ProjectStage.project_id == project_id, ProjectStage.stage_code == code)
+            .first()
         )
-        db.add(stage)
-        db.flush()  # 获取 stage.id
+        if not stage:
+            stage = ProjectStage(
+                project_id=project_id,
+                stage_code=code,
+                stage_name=name,
+                stage_order=order,
+                description=desc,
+                status="PENDING",
+            )
+            db.add(stage)
+            db.flush()  # 获取 stage.id
 
         if code in statuses_map:
             for s_code, s_name, s_order, s_desc in statuses_map[code]:
+                existing_status = (
+                    db.query(ProjectStatus)
+                    .filter(ProjectStatus.stage_id == stage.id, ProjectStatus.status_code == s_code)
+                    .first()
+                )
+                if existing_status:
+                    continue
                 status = ProjectStatus(
                     stage_id=stage.id,
                     status_code=s_code,

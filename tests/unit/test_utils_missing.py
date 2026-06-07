@@ -9,6 +9,7 @@ import os
 import time
 from datetime import date, datetime, timedelta
 from unittest.mock import MagicMock, Mock, patch
+from uuid import uuid4
 
 import pytest
 from sqlalchemy.orm import Session
@@ -176,6 +177,39 @@ class TestProjectUtils:
         assert len(s1_statuses) == 2  # ST01, ST02
         assert s1_statuses[0].status_code == "ST01"
         assert s1_statuses[1].status_code == "ST02"
+
+    def test_init_project_stages_is_idempotent(self, db_session: Session):
+        """重复初始化同一项目阶段时不应重复插入阶段和状态"""
+        from app.utils.project_utils import init_project_stages
+
+        suffix = uuid4().hex[:8]
+        project = Project(
+            project_code=f"PJIDEMP{suffix[:5]}",
+            project_name="Idempotent Project",
+            customer_id=1,
+            contract_amount=100000.00,
+        )
+        db_session.add(project)
+        db_session.flush()
+
+        init_project_stages(db_session, project.id)
+        init_project_stages(db_session, project.id)
+
+        stages = (
+            db_session.query(ProjectStage)
+            .filter(ProjectStage.project_id == project.id)
+            .order_by(ProjectStage.stage_order)
+            .all()
+        )
+        statuses = (
+            db_session.query(ProjectStatus)
+            .join(ProjectStage, ProjectStatus.stage_id == ProjectStage.id)
+            .filter(ProjectStage.project_id == project.id)
+            .all()
+        )
+
+        assert len(stages) == 9
+        assert len(statuses) == 30
 
 
 # ============================================================================
