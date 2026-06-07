@@ -186,6 +186,30 @@ class MenuPermission(Base, TimestampMixin):
         UniqueConstraint("tenant_id", "menu_code", name="uk_tenant_menu_code"),
     )
 
+    def to_dict(self):
+        data = {
+            "id": self.id,
+            "code": self.menu_code,
+            "name": self.menu_name,
+            "path": self.menu_path,
+            "icon": self.menu_icon,
+            "type": self.menu_type,
+            "permission": self.perm_code,
+            "sort": self.sort_order,
+        }
+
+        children = [
+            child
+            for child in (self.children or [])
+            if child.is_active and child.is_visible
+        ]
+        if children:
+            data["children"] = [
+                child.to_dict()
+                for child in sorted(children, key=lambda item: item.sort_order or 0)
+            ]
+        return data
+
 
 class RoleMenu(Base):
     """角色菜单关联表"""

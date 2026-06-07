@@ -418,6 +418,7 @@ class TestPermissionServiceBranches:
         menu = MenuPermission(
             menu_code="TEST_MENU",
             menu_name="Test Menu",
+            menu_type="MENU",
             is_active=True,
             is_visible=True,
             parent_id=None,
@@ -428,6 +429,8 @@ class TestPermissionServiceBranches:
 
         menus = PermissionService.get_user_menus(db_session, user.id, user)
         assert len(menus) > 0
+        assert menus[0]["code"] == "TEST_MENU"
+        assert menus[0]["name"] == "Test Menu"
 
     def test_get_user_menus_no_roles(self, db_session: Session):
         """测试无角色用户获取空菜单"""
@@ -457,6 +460,7 @@ class TestPermissionServiceBranches:
         menu = MenuPermission(
             menu_code="USER_MENU",
             menu_name="User Menu",
+            menu_type="MENU",
             is_active=True,
             is_visible=True,
             parent_id=None,
