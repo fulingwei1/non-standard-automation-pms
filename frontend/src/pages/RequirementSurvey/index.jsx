@@ -71,6 +71,10 @@ export default function RequirementSurvey({ embedded = false }) {
   const contextTicketIdNumber = parseContextId(contextTicketId);
   const contextOpportunityIdNumber = parseContextId(contextOpportunityId);
   const contextProjectIdNumber = parseContextId(contextProjectId);
+  const hasBusinessContext =
+    Boolean(contextLeadIdNumber) ||
+    Boolean(contextOpportunityIdNumber) ||
+    Boolean(contextProjectIdNumber);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedMethod, setSelectedMethod] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -113,7 +117,7 @@ export default function RequirementSurvey({ embedded = false }) {
       if (contextOpportunityIdNumber) {
         params.opportunity_id = contextOpportunityId;
       }
-      if (contextTicketIdNumber) {
+      if (contextTicketIdNumber && !hasBusinessContext) {
         params.ticket_id = contextTicketId;
       }
       if (contextProjectIdNumber) {
@@ -176,6 +180,7 @@ export default function RequirementSurvey({ embedded = false }) {
     contextProjectIdNumber,
     contextTicketId,
     contextTicketIdNumber,
+    hasBusinessContext,
     selectedStatus,
     searchTerm,
   ]);

@@ -70,7 +70,7 @@ describe("RequirementSurvey", () => {
     vi.spyOn(window, "alert").mockImplementation(() => {});
   });
 
-  it("scopes requirement surveys by sales support ticket context", async () => {
+  it("scopes requirement surveys by opportunity context without over-narrowing by current ticket", async () => {
     renderPage();
 
     await waitFor(() => {
@@ -79,13 +79,13 @@ describe("RequirementSurvey", () => {
           page: 1,
           page_size: 100,
           opportunity_id: "2",
-          ticket_id: "501",
         }),
       );
     });
+    expect(presaleApi.tickets.list.mock.calls[0][0]).not.toHaveProperty("ticket_id");
   });
 
-  it("keeps project context when loading surveys from project presales entry", async () => {
+  it("keeps project context without over-narrowing surveys by current ticket", async () => {
     renderPage(
       "/presales/technical-solutions?tab=surveys&opportunity_id=2&ticket_id=501&project_id=42",
     );
@@ -96,14 +96,14 @@ describe("RequirementSurvey", () => {
           page: 1,
           page_size: 100,
           opportunity_id: "2",
-          ticket_id: "501",
           project_id: "42",
         }),
       );
     });
+    expect(presaleApi.tickets.list.mock.calls[0][0]).not.toHaveProperty("ticket_id");
   });
 
-  it("keeps lead context when loading surveys from an opportunity converted from lead", async () => {
+  it("keeps lead context without over-narrowing surveys by current ticket", async () => {
     renderPage(
       "/presales/technical-solutions?tab=surveys&lead_id=2026&opportunity_id=2&ticket_id=501",
     );
@@ -115,6 +115,20 @@ describe("RequirementSurvey", () => {
           page_size: 100,
           lead_id: "2026",
           opportunity_id: "2",
+        }),
+      );
+    });
+    expect(presaleApi.tickets.list.mock.calls[0][0]).not.toHaveProperty("ticket_id");
+  });
+
+  it("uses exact ticket scope when ticket is the only available context", async () => {
+    renderPage("/presales/technical-solutions?tab=surveys&ticket_id=501");
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.list).toHaveBeenCalledWith(
+        expect.objectContaining({
+          page: 1,
+          page_size: 100,
           ticket_id: "501",
         }),
       );
