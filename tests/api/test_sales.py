@@ -25,7 +25,7 @@ from app.core.config import settings
 from app.models.enums import AssessmentStatusEnum
 from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer
-from app.models.sales import AssessmentRisk, Opportunity, TechnicalAssessment
+from app.models.sales import AssessmentRisk, Opportunity, ScoringRule, TechnicalAssessment
 from app.models.user import User
 
 
@@ -1053,6 +1053,63 @@ class TestGateValidation:
 
 class TestTechnicalAssessmentClosedLoop:
     """售前技术评估闭环测试"""
+
+    def test_evaluating_assessment_uses_default_rule_when_no_active_rule(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """没有启用评分规则时，接口应使用系统默认规则完成评估。"""
+
+        db_session.query(ScoringRule).update(
+            {ScoringRule.is_active: False},
+            synchronize_session=False,
+        )
+        db_session.commit()
+
+        lead = _create_lead(client, admin_token)
+        headers = _auth_headers(admin_token)
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}/assessments/apply",
+            json={},
+            headers=headers,
+        )
+        assert response.status_code == 201, response.text
+        assessment_id = response.json()["data"]["assessment_id"]
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/assessments/{assessment_id}/evaluate",
+            json={
+                "requirement_data": {
+                    "tech_maturity": "mature",
+                    "process_difficulty": "standard",
+                    "precision_requirement": "normal",
+                    "sample_support": "available",
+                    "budgetStatus": "confirmed",
+                    "price_sensitivity": "low",
+                    "gross_margin_safety": "safe",
+                    "payment_terms": "good",
+                    "resource_occupancy": "available",
+                    "has_similar_case": "yes",
+                    "delivery_feasibility": "feasible",
+                    "delivery_months": 3,
+                    "change_risk": "low",
+                    "customer_nature": "strategic",
+                    "customer_potential": "high",
+                    "relationship_depth": "deep",
+                    "contact_level": "decision_maker",
+                    "hasSOW": True,
+                },
+                "enable_ai": False,
+            },
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+        evaluated_assessment = response.json()
+        assert evaluated_assessment["id"] == assessment_id
+        assert evaluated_assessment["status"] == AssessmentStatusEnum.COMPLETED.value
+        assert evaluated_assessment["total_score"] >= 80
+        dimension_scores = json.loads(evaluated_assessment["dimension_scores"])
+        assert dimension_scores["business"] > 0
 
     def test_evaluating_applied_lead_assessment_updates_same_record(
         self, client: TestClient, admin_token: str

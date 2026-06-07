@@ -609,15 +609,61 @@ class TestGenerateRisks:
 class TestEvaluate:
     """测试执行技术评估"""
 
-    def test_evaluate_no_scoring_rule(self):
-        """测试无评分规则"""
-        db = MagicMock(spec=Session)
-        service = TechnicalAssessmentService(db)
+    def test_evaluate_uses_default_rule_when_no_scoring_rule(
+        self, db_session: Session, test_sales_user
+    ):
+        """没有启用评分规则时，也应使用系统默认规则完成技术评估。"""
+        db_session.query(ScoringRule).update(
+            {ScoringRule.is_active: False},
+            synchronize_session=False,
+        )
+        lead = Lead(
+            lead_code=f"LD-TA-DEFAULT-{uuid4().hex[:8].upper()}",
+            customer_name="默认评分客户",
+            source="展会",
+            industry="电子制造",
+            owner_id=test_sales_user.id,
+            assessment_status=AssessmentStatusEnum.PENDING.value,
+        )
+        db_session.add(lead)
+        db_session.commit()
 
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        service = TechnicalAssessmentService(db_session)
+        assessment = service.evaluate(
+            AssessmentSourceTypeEnum.LEAD.value,
+            lead.id,
+            test_sales_user.id,
+            {
+                "tech_maturity": "mature",
+                "process_difficulty": "standard",
+                "precision_requirement": "normal",
+                "sample_support": "available",
+                "budgetStatus": "confirmed",
+                "price_sensitivity": "low",
+                "gross_margin_safety": "safe",
+                "payment_terms": "good",
+                "resource_occupancy": "available",
+                "has_similar_case": "yes",
+                "delivery_feasibility": "feasible",
+                "delivery_months": 3,
+                "change_risk": "low",
+                "customer_nature": "strategic",
+                "customer_potential": "high",
+                "relationship_depth": "deep",
+                "contact_level": "decision_maker",
+                "hasSOW": True,
+            },
+        )
 
-        with pytest.raises(ValueError, match="未找到启用的评分规则"):
-            service.evaluate("LEAD", 1, 1, {})
+        db_session.expire_all()
+        refreshed_lead = db_session.get(Lead, lead.id)
+        dimension_scores = json.loads(assessment.dimension_scores)
+        assert assessment.status == AssessmentStatusEnum.COMPLETED.value
+        assert assessment.total_score >= 80
+        assert assessment.decision == "RECOMMEND"
+        assert dimension_scores["business"] > 0
+        assert refreshed_lead.assessment_id == assessment.id
+        assert refreshed_lead.assessment_status == AssessmentStatusEnum.COMPLETED.value
 
     def test_evaluate_syncs_presale_ticket_for_same_lead_source(
         self, db_session: Session, test_sales_user

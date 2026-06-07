@@ -31,6 +31,246 @@ from app.models.sales import (
     TechnicalAssessment,
 )
 
+DEFAULT_SCORING_RULE_CONFIG: Dict[str, Any] = {
+    "evaluation_criteria": {
+        "tech_maturity": {
+            "field": "tech_maturity",
+            "aliases": ["techMaturity"],
+            "max_points": 10,
+            "options": [
+                {"value": "mature", "points": 10},
+                {"value": "high", "points": 10},
+                {"value": "medium", "points": 6},
+                {"value": "low", "points": 2},
+                {"value": "成熟", "points": 10},
+                {"value": "一般", "points": 6},
+                {"value": "不成熟", "points": 2},
+            ],
+        },
+        "process_difficulty": {
+            "field": "process_difficulty",
+            "aliases": ["processDifficulty"],
+            "max_points": 10,
+            "options": [
+                {"value": "standard", "points": 10},
+                {"value": "medium", "points": 6},
+                {"value": "high", "points": 3},
+                {"value": "标准", "points": 10},
+                {"value": "中等", "points": 6},
+                {"value": "复杂", "points": 3},
+            ],
+        },
+        "precision_requirement": {
+            "field": "precision_requirement",
+            "aliases": ["precisionRequirement"],
+            "max_points": 10,
+            "options": [
+                {"value": "normal", "points": 10},
+                {"value": "high", "points": 6},
+                {"value": "extreme", "points": 3},
+                {"value": "常规", "points": 10},
+                {"value": "高精度", "points": 6},
+                {"value": "极高精度", "points": 3},
+            ],
+        },
+        "sample_support": {
+            "field": "sample_support",
+            "aliases": ["sampleSupport"],
+            "max_points": 10,
+            "options": [
+                {"value": "available", "points": 10},
+                {"value": "limited", "points": 5},
+                {"value": "none", "points": 0},
+                {"value": "可提供", "points": 10},
+                {"value": "有限", "points": 5},
+                {"value": "无", "points": 0},
+            ],
+        },
+        "budget_status": {
+            "field": "budget_status",
+            "aliases": ["budgetStatus"],
+            "max_points": 10,
+            "options": [
+                {"value": "confirmed", "points": 10},
+                {"value": "rough", "points": 5},
+                {"value": "unknown", "points": 1},
+                {"value": "明确", "points": 10},
+                {"value": "粗略", "points": 5},
+                {"value": "未知", "points": 1},
+            ],
+        },
+        "price_sensitivity": {
+            "field": "price_sensitivity",
+            "aliases": ["priceSensitivity"],
+            "max_points": 10,
+            "options": [
+                {"value": "low", "points": 10},
+                {"value": "medium", "points": 6},
+                {"value": "high", "points": 2},
+                {"value": "低", "points": 10},
+                {"value": "中", "points": 6},
+                {"value": "高", "points": 2},
+            ],
+        },
+        "gross_margin_safety": {
+            "field": "gross_margin_safety",
+            "aliases": ["grossMarginSafety"],
+            "max_points": 10,
+            "options": [
+                {"value": "safe", "points": 10},
+                {"value": "tight", "points": 5},
+                {"value": "risk", "points": 1},
+                {"value": "安全", "points": 10},
+                {"value": "偏紧", "points": 5},
+                {"value": "有风险", "points": 1},
+            ],
+        },
+        "payment_terms": {
+            "field": "payment_terms",
+            "aliases": ["paymentTerms"],
+            "max_points": 10,
+            "options": [
+                {"value": "good", "points": 10},
+                {"value": "normal", "points": 6},
+                {"value": "poor", "points": 2},
+                {"value": "好", "points": 10},
+                {"value": "一般", "points": 6},
+                {"value": "差", "points": 2},
+            ],
+        },
+        "resource_occupancy": {
+            "field": "resource_occupancy",
+            "aliases": ["resourceOccupancy"],
+            "max_points": 10,
+            "options": [
+                {"value": "available", "points": 10},
+                {"value": "tight", "points": 5},
+                {"value": "unavailable", "points": 0},
+                {"value": "可安排", "points": 10},
+                {"value": "紧张", "points": 5},
+                {"value": "不可安排", "points": 0},
+            ],
+        },
+        "has_similar_case": {
+            "field": "has_similar_case",
+            "aliases": ["hasSimilarCase"],
+            "max_points": 10,
+            "options": [
+                {"value": "yes", "points": 10},
+                {"value": True, "points": 10},
+                {"value": "partial", "points": 5},
+                {"value": "no", "points": 0},
+                {"value": False, "points": 0},
+                {"value": "有", "points": 10},
+                {"value": "部分", "points": 5},
+                {"value": "无", "points": 0},
+            ],
+        },
+        "delivery_feasibility": {
+            "field": "delivery_feasibility",
+            "aliases": ["deliveryFeasibility"],
+            "max_points": 10,
+            "options": [
+                {"value": "feasible", "points": 10},
+                {"value": "tight", "points": 5},
+                {"value": "risky", "points": 1},
+                {"value": "可交付", "points": 10},
+                {"value": "偏紧", "points": 5},
+                {"value": "风险高", "points": 1},
+            ],
+        },
+        "delivery_months": {
+            "field": "delivery_months",
+            "aliases": ["deliveryMonths"],
+            "max_points": 10,
+            "options": [
+                {"value": 3, "points": 10},
+                {"value": "3", "points": 10},
+                {"value": 4, "points": 8},
+                {"value": "4", "points": 8},
+                {"value": 6, "points": 6},
+                {"value": "6", "points": 6},
+                {"value": 9, "points": 3},
+                {"value": "9", "points": 3},
+            ],
+        },
+        "change_risk": {
+            "field": "change_risk",
+            "aliases": ["changeRisk"],
+            "max_points": 10,
+            "options": [
+                {"value": "low", "points": 10},
+                {"value": "medium", "points": 6},
+                {"value": "high", "points": 2},
+                {"value": "低", "points": 10},
+                {"value": "中", "points": 6},
+                {"value": "高", "points": 2},
+            ],
+        },
+        "customer_nature": {
+            "field": "customer_nature",
+            "aliases": ["customerNature"],
+            "max_points": 10,
+            "options": [
+                {"value": "strategic", "points": 10},
+                {"value": "key", "points": 8},
+                {"value": "normal", "points": 5},
+                {"value": "战略客户", "points": 10},
+                {"value": "重点客户", "points": 8},
+                {"value": "普通客户", "points": 5},
+            ],
+        },
+        "customer_potential": {
+            "field": "customer_potential",
+            "aliases": ["customerPotential"],
+            "max_points": 10,
+            "options": [
+                {"value": "high", "points": 10},
+                {"value": "medium", "points": 6},
+                {"value": "low", "points": 2},
+                {"value": "高", "points": 10},
+                {"value": "中", "points": 6},
+                {"value": "低", "points": 2},
+            ],
+        },
+        "relationship_depth": {
+            "field": "relationship_depth",
+            "aliases": ["relationshipDepth"],
+            "max_points": 10,
+            "options": [
+                {"value": "deep", "points": 10},
+                {"value": "normal", "points": 6},
+                {"value": "new", "points": 3},
+                {"value": "深", "points": 10},
+                {"value": "一般", "points": 6},
+                {"value": "新接触", "points": 3},
+            ],
+        },
+        "contact_level": {
+            "field": "contact_level",
+            "aliases": ["contactLevel"],
+            "max_points": 10,
+            "options": [
+                {"value": "decision_maker", "points": 10},
+                {"value": "influencer", "points": 6},
+                {"value": "operator", "points": 3},
+                {"value": "决策层", "points": 10},
+                {"value": "影响者", "points": 6},
+                {"value": "执行层", "points": 3},
+            ],
+        },
+    },
+    "scales": {
+        "decision_thresholds": [
+            {"min_score": 80, "decision": "推荐立项"},
+            {"min_score": 60, "decision": "有条件立项"},
+            {"min_score": 40, "decision": "暂缓"},
+            {"min_score": 0, "decision": "不建议立项"},
+        ]
+    },
+    "veto_rules": [],
+}
+
 
 class TechnicalAssessmentService:
     """技术评估服务"""
@@ -60,12 +300,8 @@ class TechnicalAssessmentService:
         Returns:
             TechnicalAssessment: 评估结果对象
         """
-        # 获取评分规则
-        scoring_rule = self._get_active_scoring_rule()
-        if not scoring_rule:
-            raise ValueError("未找到启用的评分规则")
-
-        rules_config = json.loads(scoring_rule.rules_json)
+        # 获取评分规则；未配置时使用系统默认规则，避免新环境评估流程卡死。
+        rules_config = self._get_scoring_rules_config()
 
         # 计算评分
         dimension_scores, total_score = self._calculate_scores(requirement_data, rules_config)
@@ -135,6 +371,13 @@ class TechnicalAssessmentService:
             .order_by(ScoringRule.created_at.desc())
             .first()
         )
+
+    def _get_scoring_rules_config(self) -> Dict[str, Any]:
+        """获取评分规则配置，未启用规则时返回系统默认规则。"""
+        scoring_rule = self._get_active_scoring_rule()
+        if scoring_rule:
+            return json.loads(scoring_rule.rules_json)
+        return DEFAULT_SCORING_RULE_CONFIG
 
     def _calculate_scores(
         self, requirement_data: Dict[str, Any], rules_config: Dict[str, Any]
@@ -219,8 +462,12 @@ class TechnicalAssessmentService:
             max_points += criterion.get("max_points", 10)
 
             # 获取字段值
-            field_value = requirement_data.get(field_name)
-            if not field_value:
+            field_value = self._get_requirement_value(
+                requirement_data,
+                field_name,
+                criterion.get("aliases", []),
+            )
+            if field_value is None:
                 continue
 
             # 查找匹配的选项
@@ -239,6 +486,17 @@ class TechnicalAssessmentService:
             normalized_score = 0
 
         return normalized_score
+
+    def _get_requirement_value(
+        self,
+        requirement_data: Dict[str, Any],
+        field_name: str,
+        aliases: Optional[List[str]] = None,
+    ) -> Any:
+        for key in [field_name, *(aliases or [])]:
+            if key in requirement_data and requirement_data[key] not in (None, ""):
+                return requirement_data[key]
+        return None
 
     def _match_value(
         self, field_value: Any, option: Dict[str, Any], criterion: Dict[str, Any]
