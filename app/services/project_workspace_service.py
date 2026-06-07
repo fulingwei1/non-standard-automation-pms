@@ -786,6 +786,16 @@ def _project_presale_ticket_filters(project: Project) -> List[Any]:
 
 
 def _get_presale_solutions(db: Session, project: Project, limit: int = 10) -> List[PresaleSolution]:
+    project_bound_solutions = (
+        db.query(PresaleSolution)
+        .filter(PresaleSolution.project_id == project.id)
+        .order_by(PresaleSolution.updated_at.desc(), PresaleSolution.id.desc())
+        .limit(limit)
+        .all()
+    )
+    if project_bound_solutions:
+        return project_bound_solutions
+
     ticket_ids = [
         row[0]
         for row in db.query(PresaleSupportTicket.id)
@@ -815,6 +825,16 @@ def _get_presale_tickets(
     presale_solutions: List[PresaleSolution],
     limit: int = 10,
 ) -> List[PresaleSupportTicket]:
+    project_bound_tickets = (
+        db.query(PresaleSupportTicket)
+        .filter(PresaleSupportTicket.project_id == project.id)
+        .order_by(PresaleSupportTicket.updated_at.desc(), PresaleSupportTicket.id.desc())
+        .limit(limit)
+        .all()
+    )
+    if project_bound_tickets:
+        return project_bound_tickets
+
     filters = _project_presale_ticket_filters(project)
 
     solution_ticket_ids = {
