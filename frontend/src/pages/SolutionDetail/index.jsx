@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FileText } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import { Button } from "../../components/ui/button";
@@ -23,6 +23,28 @@ function appendContextParam(params, key, value) {
     }
 }
 
+function getContextParam(params, snakeKey, camelKey) {
+    return params.get(snakeKey) || params.get(camelKey) || "";
+}
+
+function buildFallbackSolutionListUrl(search) {
+    const currentParams = new URLSearchParams(search);
+    const ticketId = getContextParam(currentParams, "ticket_id", "ticketId");
+    const opportunityId = getContextParam(currentParams, "opportunity_id", "opportunityId");
+    const projectId = getContextParam(currentParams, "project_id", "projectId");
+
+    const params = new URLSearchParams();
+    params.set("tab", "solutions");
+    if (ticketId || opportunityId || projectId) {
+        params.set("type", "support");
+    }
+    appendContextParam(params, "ticket_id", ticketId);
+    appendContextParam(params, "opportunity_id", opportunityId);
+    appendContextParam(params, "project_id", projectId);
+
+    return `/presales/technical-solutions?${params.toString()}`;
+}
+
 function buildCostEstimateUrl(solution) {
     const params = new URLSearchParams();
     params.set("tab", "cost");
@@ -35,6 +57,7 @@ function buildCostEstimateUrl(solution) {
 
 export default function SolutionDetail() {
     const navigate = useNavigate();
+    const location = useLocation();
     const {
         activeTab,
         setActiveTab,
@@ -66,7 +89,7 @@ export default function SolutionDetail() {
                 <div className="text-center py-16 text-red-400">
                     <div className="text-lg font-medium">加载失败</div>
                     <div className="text-sm mt-2">{error || "方案不存在"}</div>
-                    <Button className="mt-4" onClick={() => navigate("/presales/technical-solutions?tab=solutions")}>
+                    <Button className="mt-4" onClick={() => navigate(buildFallbackSolutionListUrl(location.search))}>
                         返回方案列表
                     </Button>
                 </div>
