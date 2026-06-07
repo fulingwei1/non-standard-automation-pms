@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useSearchParams } from 'react-router-dom';
 import { useTechnicalReviewList } from '../useTechnicalReviewList';
@@ -99,5 +99,23 @@ describe('useTechnicalReviewList Hook', () => {
       project_id: '42',
     });
     expect(result.current.reviews).toEqual(mockReviews);
+  });
+
+  it('keeps project context when resetting local filters', async () => {
+    const { result } = renderHook(() => useTechnicalReviewList());
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    act(() => {
+      result.current.setSearchKeyword('PDR');
+      result.current.setStatus('IN_PROGRESS');
+      result.current.setReviewType('PDR');
+      result.current.handleReset();
+    });
+
+    await waitFor(() => expect(result.current.projectId).toBe('42'));
+    expect(result.current.searchKeyword).toBe('');
+    expect(result.current.status).toBeNull();
+    expect(result.current.reviewType).toBeNull();
   });
 });

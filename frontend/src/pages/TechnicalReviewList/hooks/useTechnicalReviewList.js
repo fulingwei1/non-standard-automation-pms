@@ -96,7 +96,7 @@ export function useTechnicalReviewList() {
 
     const handleReset = () => {
         setSearchKeyword("");
-        setProjectId(null);
+        setProjectId(contextProjectId);
         setStatus(null);
         setReviewType(null);
         setPage(1);
