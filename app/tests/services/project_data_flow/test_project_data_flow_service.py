@@ -101,14 +101,28 @@ class TestProjectDataFlowService:
 
     def test_transfer_to_after_sales_success(self, service, mock_db_session):
         """测试项目验收后成功转入售后服务"""
-        # Mock 项目
-        project = Mock()
-        project.id = 1
-        project.customer_id = 100
+        from app.models.after_sales import AfterSalesMaintenance
+        from app.models.project import Project
 
-        mock_query = MagicMock()
-        mock_query.filter.return_value.first.return_value = project
-        mock_db_session.query.return_value = mock_query
+        project = SimpleNamespace(
+            id=1,
+            customer_id=100,
+            warranty_start_date=date(2026, 8, 1),
+            actual_end_date=None,
+            planned_end_date=None,
+        )
+
+        def query(model):
+            query_mock = MagicMock()
+            if model is Project:
+                query_mock.filter.return_value.first.return_value = project
+            elif model is AfterSalesMaintenance:
+                query_mock.filter.return_value.all.return_value = []
+            else:
+                raise AssertionError(f"unexpected model queried: {model}")
+            return query_mock
+
+        mock_db_session.query.side_effect = query
 
         # 执行测试
         result = service.transfer_to_after_sales(project_id=1)
@@ -136,6 +150,94 @@ class TestProjectDataFlowService:
         # 验证结果
         assert "error" in result
         assert result["error"] == "项目不存在"
+
+    def test_transfer_to_after_sales_schedules_regular_maintenance_from_warranty_start(
+        self, service, mock_db_session
+    ):
+        """转售后时按质保开始日期生成定期保养计划日期"""
+        from app.models.after_sales import AfterSalesMaintenance
+        from app.models.project import Project
+
+        project = SimpleNamespace(
+            id=42,
+            customer_id=100,
+            warranty_start_date=date(2026, 8, 1),
+            actual_end_date=date(2026, 7, 20),
+            planned_end_date=date(2026, 7, 25),
+        )
+        added = []
+
+        def query(model):
+            query_mock = MagicMock()
+            if model is Project:
+                query_mock.filter.return_value.first.return_value = project
+            elif model is AfterSalesMaintenance:
+                query_mock.filter.return_value.all.return_value = []
+            else:
+                raise AssertionError(f"unexpected model queried: {model}")
+            return query_mock
+
+        mock_db_session.query.side_effect = query
+        mock_db_session.add.side_effect = added.append
+
+        result = service.transfer_to_after_sales(project_id=42)
+
+        assert result["project_id"] == 42
+        assert result["maintenance_created"] == 4
+        assert result["skipped_existing"] == 0
+        assert [item.scheduled_date for item in added] == [
+            date(2026, 9, 1),
+            date(2026, 11, 1),
+            date(2027, 2, 1),
+            date(2027, 8, 1),
+        ]
+        assert all(item.project_id == 42 for item in added)
+        assert all(item.customer_id == 100 for item in added)
+        assert all(item.maintenance_type == "REGULAR" for item in added)
+
+    def test_transfer_to_after_sales_does_not_duplicate_regular_maintenance(
+        self, service, mock_db_session
+    ):
+        """已有定期保养计划时不重复创建"""
+        from app.models.after_sales import AfterSalesMaintenance
+        from app.models.project import Project
+
+        project = SimpleNamespace(
+            id=42,
+            customer_id=100,
+            warranty_start_date=date(2026, 8, 1),
+            actual_end_date=None,
+            planned_end_date=None,
+        )
+        existing = [
+            SimpleNamespace(maintenance_content="交付后 1 个月定期保养"),
+            SimpleNamespace(maintenance_content="交付后 3 个月定期保养"),
+            SimpleNamespace(maintenance_content="交付后 6 个月定期保养"),
+            SimpleNamespace(maintenance_content="交付后 12 个月定期保养（质保期内）"),
+        ]
+
+        def query(model):
+            query_mock = MagicMock()
+            if model is Project:
+                query_mock.filter.return_value.first.return_value = project
+            elif model is AfterSalesMaintenance:
+                query_mock.filter.return_value.all.return_value = existing
+            else:
+                raise AssertionError(f"unexpected model queried: {model}")
+            return query_mock
+
+        mock_db_session.query.side_effect = query
+
+        result = service.transfer_to_after_sales(project_id=42)
+
+        assert result == {
+            "project_id": 42,
+            "maintenance_created": 0,
+            "maintenance_records": [],
+            "skipped_existing": 4,
+        }
+        mock_db_session.add.assert_not_called()
+        mock_db_session.commit.assert_not_called()
 
     def test_create_purchase_requests_from_bom_no_bom(self, service, mock_db_session):
         """测试项目无BOM时返回错误"""

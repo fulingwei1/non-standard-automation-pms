@@ -7,6 +7,7 @@
 """
 
 import logging
+from calendar import monthrange
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
@@ -274,54 +275,46 @@ class ProjectDataFlowService:
         if not project:
             return {"error": "项目不存在"}
         
-        # 创建定期保养计划
+        existing_regular = self.db.query(AfterSalesMaintenance).filter(
+            AfterSalesMaintenance.project_id == project_id,
+            AfterSalesMaintenance.maintenance_type == "REGULAR",
+        ).all()
+        existing_contents = {item.maintenance_content for item in existing_regular}
+
+        maintenance_start = (
+            project.warranty_start_date
+            or project.actual_end_date
+            or project.planned_end_date
+            or date.today()
+        )
+        maintenance_plan = [
+            (1, "1 个月保养", "交付后 1 个月定期保养"),
+            (3, "3 个月保养", "交付后 3 个月定期保养"),
+            (6, "6 个月保养", "交付后 6 个月定期保养"),
+            (12, "12 个月保养", "交付后 12 个月定期保养（质保期内）"),
+        ]
+
         maintenance_records = []
-        
-        # 1 个月保养
-        m1 = AfterSalesMaintenance(
-            project_id=project_id,
-            customer_id=project.customer_id,
-            maintenance_type="REGULAR",
-            maintenance_content="交付后 1 个月定期保养",
-            status="SCHEDULED",
-        )
-        self.db.add(m1)
-        maintenance_records.append("1 个月保养")
-        
-        # 3 个月保养
-        m3 = AfterSalesMaintenance(
-            project_id=project_id,
-            customer_id=project.customer_id,
-            maintenance_type="REGULAR",
-            maintenance_content="交付后 3 个月定期保养",
-            status="SCHEDULED",
-        )
-        self.db.add(m3)
-        maintenance_records.append("3 个月保养")
-        
-        # 6 个月保养
-        m6 = AfterSalesMaintenance(
-            project_id=project_id,
-            customer_id=project.customer_id,
-            maintenance_type="REGULAR",
-            maintenance_content="交付后 6 个月定期保养",
-            status="SCHEDULED",
-        )
-        self.db.add(m6)
-        maintenance_records.append("6 个月保养")
-        
-        # 12 个月保养
-        m12 = AfterSalesMaintenance(
-            project_id=project_id,
-            customer_id=project.customer_id,
-            maintenance_type="REGULAR",
-            maintenance_content="交付后 12 个月定期保养（质保期内）",
-            status="SCHEDULED",
-        )
-        self.db.add(m12)
-        maintenance_records.append("12 个月保养")
-        
-        self.db.commit()
+        skipped_existing = 0
+
+        for months, label, content in maintenance_plan:
+            if content in existing_contents:
+                skipped_existing += 1
+                continue
+
+            maintenance = AfterSalesMaintenance(
+                project_id=project_id,
+                customer_id=project.customer_id,
+                maintenance_type="REGULAR",
+                maintenance_content=content,
+                scheduled_date=_add_months(maintenance_start, months),
+                status="SCHEDULED",
+            )
+            self.db.add(maintenance)
+            maintenance_records.append(label)
+
+        if maintenance_records:
+            self.db.commit()
         
         logger.info(f"项目 {project_id}: 已转入售后，创建 {len(maintenance_records)} 个保养计划")
         
@@ -329,6 +322,7 @@ class ProjectDataFlowService:
             "project_id": project_id,
             "maintenance_created": len(maintenance_records),
             "maintenance_records": maintenance_records,
+            "skipped_existing": skipped_existing,
         }
     
     # ==================== 项目全链路状态 ====================
@@ -360,3 +354,12 @@ def _work_order_type_for_stage(stage: Optional[str]) -> str:
         "S4": "PRODUCTION",
         "S5": "ASSEMBLY",
     }.get(stage or "", "OTHER")
+
+
+def _add_months(value: date, months: int) -> date:
+    """按自然月推算计划日期，自动处理月末天数"""
+    month_index = value.month - 1 + months
+    year = value.year + month_index // 12
+    month = month_index % 12 + 1
+    day = min(value.day, monthrange(year, month)[1])
+    return date(year, month, day)
