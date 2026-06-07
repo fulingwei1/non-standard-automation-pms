@@ -20,13 +20,14 @@ const toEcnPriority = (value) => {
 
 const toEcnCreatePayload = (data = {}) => {
   const projectId = data.project_id || data.affected_projects?.[0];
+  const parsedProjectId = Number(projectId);
   return {
     ecn_title: data.ecn_title || data.title,
     ecn_type: data.ecn_type || data.change_type,
     source_type: data.source_type || "MANUAL",
     source_no: data.source_no || data.ecn_no || undefined,
     source_id: data.source_id || undefined,
-    project_id: Number(projectId),
+    project_id: Number.isFinite(parsedProjectId) && parsedProjectId > 0 ? parsedProjectId : undefined,
     machine_id: data.machine_id || undefined,
     change_reason: data.change_reason || data.description || data.title,
     change_description: data.change_description || data.description || data.title,
@@ -44,6 +45,7 @@ const toEcnListParams = (params = {}) => ({
   ecn_type: params.ecn_type || params.change_type,
   project_id: params.project_id,
   machine_id: params.machine_id,
+  priority: params.priority,
   keyword: params.keyword,
   page: params.page || 1,
   page_size: params.page_size || 20,
