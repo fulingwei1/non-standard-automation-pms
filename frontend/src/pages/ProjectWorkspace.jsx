@@ -93,7 +93,8 @@ export default function ProjectWorkspace() {
     issues: _issues,
     solutions: _solutions,
     documents,
-    handover_context: handoverContext
+    handover_context: handoverContext,
+    downstream_context: downstreamContext
   } = workspaceData;
   const handoverStatus = handoverContext?.handover_status;
   const missingLabels = {
@@ -110,6 +111,14 @@ export default function ProjectWorkspace() {
   const presaleCost =
     handoverContext?.baseline_cost?.presale_estimated_cost ??
     primarySolution?.estimated_cost;
+  const technicalReviews = downstreamContext?.engineering?.technical_reviews || {};
+  const ecns = downstreamContext?.engineering?.ecns || {};
+  const bomContext = downstreamContext?.supply_chain?.bom || {};
+  const kitting = downstreamContext?.supply_chain?.kitting || {};
+  const latestReview = technicalReviews.items?.[0];
+  const latestEcn = ecns.items?.[0];
+  const latestBom = bomContext.items?.[0];
+  const firstShortage = kitting.shortage_details?.[0];
 
   return (
     <div className="p-6 space-y-6">
@@ -262,6 +271,70 @@ export default function ProjectWorkspace() {
                   </p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+          }
+
+          {downstreamContext &&
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                后续模块状态
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+                <div className="rounded-lg border p-4">
+                  <p className="text-sm text-gray-500">工程评审</p>
+                  <p className="mt-1 font-medium">
+                    {latestReview?.review_no || "暂无评审"}
+                  </p>
+                  <p className="mt-2 truncate text-sm text-gray-500">
+                    {latestReview?.review_name || `未完成 ${technicalReviews.open_count || 0} 项`}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <p className="text-sm text-gray-500">ECN</p>
+                  <p className="mt-1 font-medium">
+                    {latestEcn?.ecn_no || "暂无变更"}
+                  </p>
+                  <p className="mt-2 truncate text-sm text-gray-500">
+                    {latestEcn?.ecn_title || `未关闭 ${ecns.open_count || 0} 项`}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <p className="text-sm text-gray-500">BOM</p>
+                  <p className="mt-1 font-medium">
+                    {latestBom?.bom_no || "暂无BOM"}
+                  </p>
+                  <p className="mt-2 truncate text-sm text-gray-500">
+                    {latestBom?.bom_name || `共 ${bomContext.total || 0} 份`}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <p className="text-sm text-gray-500">齐套率</p>
+                  <p className="mt-1 font-medium">
+                    {kitting.kitting_rate != null ? `${kitting.kitting_rate}%` : "未计算"}
+                  </p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    缺料 {kitting.shortage_items || 0} 项
+                  </p>
+                </div>
+              </div>
+
+              {firstShortage &&
+              <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  关键缺料：<strong>{firstShortage.material_code}</strong> {firstShortage.material_name}
+                  ，缺口 {firstShortage.shortage_qty}
+                </span>
+              </div>
+              }
             </CardContent>
           </Card>
           }

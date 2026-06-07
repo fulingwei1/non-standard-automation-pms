@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """项目工作台前后端契约与交接上下文测试。"""
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from uuid import uuid4
 
@@ -11,9 +11,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.ecn import Ecn
+from app.models.material import BomHeader, BomItem, Material
 from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Project
 from app.models.sales import Contract, Opportunity, Quote, QuoteVersion
+from app.models.technical_review import TechnicalReview
 from app.models.user import User
 
 
@@ -41,6 +44,7 @@ class TestProjectWorkspaceFrontendContractRoutes:
         expected_routes = {
             ("GET", f"{prefix}/project-workspace/projects/{{project_id}}/workspace"),
             ("GET", f"{prefix}/project-workspace/projects/{{project_id}}/workspace/context"),
+            ("GET", f"{prefix}/project-workspace/projects/{{project_id}}/downstream-context"),
             ("GET", f"{prefix}/project-workspace/projects/{{project_id}}/bonuses"),
             ("GET", f"{prefix}/project-workspace/projects/{{project_id}}/meetings"),
             (
@@ -210,3 +214,145 @@ class TestProjectWorkspaceHandoverContext:
         assert payload["presale_solutions"][0]["solution_no"] == solution.solution_no
         assert payload["handover_status"]["ready"] is True
         assert payload["handover_status"]["missing"] == []
+
+    def test_project_workspace_downstream_context_includes_engineering_bom_and_kitting(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-PWD-{unique}",
+            customer_name=f"后续上下文客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        project = Project(
+            project_code=f"PRJDS{unique[:6]}",
+            project_name=f"后续上下文项目-{unique}",
+            customer=customer,
+            customer_name=customer.customer_name,
+            project_type="FCT",
+            product_category="测试设备",
+            industry="电子制造",
+            stage="S3",
+            status="ST03",
+            health="H2",
+            pm_id=admin_user.id,
+            pm_name=admin_user.real_name or admin_user.username,
+            created_by=admin_user.id,
+        )
+        db_session.add_all([customer, project])
+        db_session.flush()
+
+        review = TechnicalReview(
+            review_no=f"RV-PWD-{unique}",
+            review_type="PDR",
+            review_name=f"后续上下文技术评审-{unique}",
+            project_id=project.id,
+            project_no=project.project_code,
+            status="completed",
+            scheduled_date=datetime.now(),
+            actual_date=datetime.now(),
+            host_id=admin_user.id,
+            presenter_id=admin_user.id,
+            recorder_id=admin_user.id,
+            conclusion="pass_with_condition",
+            conclusion_summary="允许进入BOM下发，遗留问题跟踪关闭",
+            issue_count_b=1,
+            created_by=admin_user.id,
+        )
+        ecn = Ecn(
+            ecn_no=f"ECN-PWD-{unique}",
+            ecn_title=f"后续上下文ECN-{unique}",
+            ecn_type="DESIGN",
+            project_id=project.id,
+            priority="HIGH",
+            urgency="URGENT",
+            cost_impact=Decimal("2500"),
+            schedule_impact_days=3,
+            status="APPROVED",
+            created_by=admin_user.id,
+        )
+        stocked_material = Material(
+            material_code=f"MAT-PWD-A-{unique}",
+            material_name="已齐套传感器",
+            current_stock=Decimal("5"),
+            created_by=admin_user.id,
+        )
+        shortage_material = Material(
+            material_code=f"MAT-PWD-B-{unique}",
+            material_name="关键缺料气缸",
+            current_stock=Decimal("1"),
+            is_key_material=True,
+            created_by=admin_user.id,
+        )
+        db_session.add_all([review, ecn, stocked_material, shortage_material])
+        db_session.flush()
+
+        bom = BomHeader(
+            bom_no=f"BOM-PWD-{unique}",
+            bom_name=f"后续上下文BOM-{unique}",
+            project_id=project.id,
+            version="V1",
+            is_latest=True,
+            status="APPROVED",
+            total_items=2,
+            created_by=admin_user.id,
+        )
+        db_session.add(bom)
+        db_session.flush()
+        db_session.add_all(
+            [
+                BomItem(
+                    bom_id=bom.id,
+                    item_no=1,
+                    material_id=stocked_material.id,
+                    material_code=stocked_material.material_code,
+                    material_name=stocked_material.material_name,
+                    quantity=Decimal("5"),
+                    received_qty=Decimal("0"),
+                    source_type="PURCHASE",
+                    is_key_item=False,
+                ),
+                BomItem(
+                    bom_id=bom.id,
+                    item_no=2,
+                    material_id=shortage_material.id,
+                    material_code=shortage_material.material_code,
+                    material_name=shortage_material.material_name,
+                    quantity=Decimal("10"),
+                    received_qty=Decimal("1"),
+                    purchased_qty=Decimal("4"),
+                    source_type="PURCHASE",
+                    is_key_item=True,
+                ),
+            ]
+        )
+        db_session.commit()
+
+        response = client.get(
+            f"{prefix}/project-workspace/projects/{project.id}/downstream-context",
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+
+        payload = response.json()
+        assert payload["project"]["id"] == project.id
+        assert payload["engineering"]["technical_reviews"]["total"] == 1
+        assert payload["engineering"]["technical_reviews"]["items"][0]["review_no"] == review.review_no
+        assert payload["engineering"]["ecns"]["items"][0]["ecn_no"] == ecn.ecn_no
+        assert payload["engineering"]["ecns"]["open_count"] == 1
+        assert payload["supply_chain"]["bom"]["total"] == 1
+        assert payload["supply_chain"]["bom"]["items"][0]["bom_no"] == bom.bom_no
+        assert payload["supply_chain"]["kitting"]["kitting_rate"] == 50.0
+        assert payload["supply_chain"]["kitting"]["shortage_items"] == 1
+        assert payload["supply_chain"]["kitting"]["shortage_details"][0]["material_code"] == shortage_material.material_code
+        assert payload["next_actions"][0]["domain"] == "supply_chain"

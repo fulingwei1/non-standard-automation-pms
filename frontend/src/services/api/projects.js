@@ -20,6 +20,8 @@ export const projectWorkspaceApi = {
   getWorkspace: (projectId) => api.get(`/project-workspace/projects/${projectId}/workspace`),
   getContext: (projectId) =>
     api.get(`/project-workspace/projects/${projectId}/workspace/context`),
+  getDownstreamContext: (projectId) =>
+    api.get(`/project-workspace/projects/${projectId}/downstream-context`),
   getBonuses: (projectId) => api.get(`/project-workspace/projects/${projectId}/bonuses`),
   getMeetings: (projectId, params) =>
     api.get(`/project-workspace/projects/${projectId}/meetings`, { params }),

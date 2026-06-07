@@ -432,6 +432,25 @@ describe('Projects API', () => {
       expect(response.status).toBe(200);
     });
 
+    it('getDownstreamContext() - 应该获取工程和供应链后续上下文', async () => {
+      mock.onGet('/api/v1/project-workspace/projects/1/downstream-context').reply(200, {
+        project: { id: 1 },
+        engineering: {
+          technical_reviews: { total: 1 },
+          ecns: { total: 1 },
+        },
+        supply_chain: {
+          bom: { total: 1 },
+          kitting: { kitting_rate: 50, shortage_items: 1 },
+        },
+      });
+
+      const response = await projectWorkspaceApi.getDownstreamContext(1);
+
+      expect(response.status).toBe(200);
+      expect(mock.history.get[0].url).toBe('/project-workspace/projects/1/downstream-context');
+    });
+
     it('linkMeeting() - 应该关联会议', async () => {
       mock.onPost('/api/v1/project-workspace/projects/1/meetings/1/link').reply(200, {
         success: true,

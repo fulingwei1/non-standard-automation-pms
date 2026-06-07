@@ -83,6 +83,55 @@ describe("ProjectWorkspace", () => {
             missing: [],
           },
         },
+        downstream_context: {
+          engineering: {
+            technical_reviews: {
+              total: 1,
+              open_count: 0,
+              items: [
+                {
+                  review_no: "RV-001",
+                  review_name: "PDR设计评审",
+                  conclusion: "pass_with_condition",
+                },
+              ],
+            },
+            ecns: {
+              total: 1,
+              open_count: 1,
+              items: [
+                {
+                  ecn_no: "ECN-001",
+                  ecn_title: "夹具结构变更",
+                  status: "APPROVED",
+                },
+              ],
+            },
+          },
+          supply_chain: {
+            bom: {
+              total: 1,
+              items: [
+                {
+                  bom_no: "BOM-001",
+                  bom_name: "FCT整线BOM",
+                },
+              ],
+            },
+            kitting: {
+              kitting_rate: 50,
+              shortage_items: 1,
+              shortage_details: [
+                {
+                  material_code: "MAT-001",
+                  material_name: "关键气缸",
+                  shortage_qty: 7,
+                  is_key_item: true,
+                },
+              ],
+            },
+          },
+        },
       },
     });
 
@@ -100,5 +149,11 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("QT-001")).toBeInTheDocument();
     expect(screen.getByText("FCT测试方案")).toBeInTheDocument();
     expect(screen.getByText(/[¥￥]360,000.00/)).toBeInTheDocument();
+    expect(screen.getByText("后续模块状态")).toBeInTheDocument();
+    expect(screen.getByText("RV-001")).toBeInTheDocument();
+    expect(screen.getByText("ECN-001")).toBeInTheDocument();
+    expect(screen.getByText("BOM-001")).toBeInTheDocument();
+    expect(screen.getByText("50%")).toBeInTheDocument();
+    expect(screen.getByText(/MAT-001/)).toBeInTheDocument();
   });
 });
