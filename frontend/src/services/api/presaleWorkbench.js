@@ -34,6 +34,19 @@ function normalizeListResponse(response) {
   return normalizeListPayload(unwrapResponse(response));
 }
 
+function normalizeCollaborationPayload(collaboration = {}) {
+  const openItems = normalizeListPayload(collaboration.openItems);
+
+  return {
+    openItems: {
+      ...openItems,
+      blocking_count: collaboration.openItems?.blocking_count ?? 0,
+    },
+    requirementFreezes: normalizeListPayload(collaboration.requirementFreezes),
+    aiClarifications: normalizeListPayload(collaboration.aiClarifications),
+  };
+}
+
 function getErrorMessage(error) {
   const detail = error?.response?.data?.detail;
   if (typeof detail === "string" && detail) {
@@ -386,6 +399,7 @@ export const presaleWorkbenchApi = {
         technical: normalizeListPayload(context.templates?.technical),
       },
       solutions: normalizeListPayload(context.solutions),
+      collaboration: normalizeCollaborationPayload(context.collaboration),
       costing: context.costing || { baseline: null },
       quotes: normalizeListPayload(context.quotes),
       tenders: normalizeListPayload(context.tenders),

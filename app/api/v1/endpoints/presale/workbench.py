@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, func, or_
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
@@ -22,15 +22,19 @@ from app.models.presale import (
     TechnicalParameterTemplate,
 )
 from app.models.sales import (
+    AIClarification,
     AssessmentRisk,
     AssessmentTemplate,
     AssessmentVersion,
     Contract,
     Lead,
+    OpenItem,
     Opportunity,
     Quote,
+    RequirementFreeze,
     TechnicalAssessment,
 )
+from app.models.enums import OpenItemStatusEnum
 from app.models.sales.sales_funnel import (
     FunnelTransitionLog,
     GateTypeEnum,
@@ -269,6 +273,156 @@ def _assessment_payload(assessment: TechnicalAssessment) -> dict[str, Any]:
         else None
     )
     return data
+
+
+def _context_source_scopes(
+    *,
+    source_type: str,
+    source_id: int,
+    source: Any,
+    ticket: Optional[PresaleSupportTicket] = None,
+) -> list[tuple[str, int]]:
+    scopes: list[tuple[str, int]] = [(source_type.upper(), source_id)]
+    lead_id = None
+    opportunity_id = None
+
+    if source_type == "lead":
+        lead_id = source_id
+    elif source_type == "opportunity":
+        opportunity_id = source_id
+        lead_id = getattr(source, "lead_id", None)
+
+    if ticket:
+        lead_id = lead_id or getattr(ticket, "lead_id", None)
+        opportunity_id = opportunity_id or getattr(ticket, "opportunity_id", None)
+
+    if lead_id:
+        scopes.append(("LEAD", lead_id))
+    if opportunity_id:
+        scopes.append(("OPPORTUNITY", opportunity_id))
+
+    seen = set()
+    unique_scopes = []
+    for scope in scopes:
+        if scope not in seen:
+            seen.add(scope)
+            unique_scopes.append(scope)
+    return unique_scopes
+
+
+def _source_scope_filter(model: Any, scopes: list[tuple[str, int]]) -> Any:
+    return or_(
+        *[
+            and_(model.source_type == source_type, model.source_id == source_id)
+            for source_type, source_id in scopes
+        ]
+    )
+
+
+def _open_item_payload(item: OpenItem) -> dict[str, Any]:
+    responsible_person = getattr(item, "responsible_person", None)
+    data = _model_to_dict(item)
+    data["responsible_person_name"] = (
+        getattr(responsible_person, "real_name", None)
+        or getattr(responsible_person, "username", None)
+        if responsible_person
+        else None
+    )
+    return data
+
+
+def _requirement_freeze_payload(freeze: RequirementFreeze) -> dict[str, Any]:
+    frozen_by_user = getattr(freeze, "frozen_by_user", None)
+    data = _model_to_dict(freeze)
+    data["frozen_by_name"] = (
+        getattr(frozen_by_user, "real_name", None)
+        or getattr(frozen_by_user, "username", None)
+        if frozen_by_user
+        else None
+    )
+    return data
+
+
+def _build_collaboration_context(
+    db: Session,
+    *,
+    source_type: str,
+    source_id: int,
+    source: Any,
+    ticket: Optional[PresaleSupportTicket] = None,
+    limit: int = 10,
+) -> dict[str, Any]:
+    scopes = _context_source_scopes(
+        source_type=source_type,
+        source_id=source_id,
+        source=source,
+        ticket=ticket,
+    )
+    if not scopes:
+        return {
+            "openItems": {"items": [], "total": 0, "blocking_count": 0},
+            "requirementFreezes": {"items": [], "total": 0},
+            "aiClarifications": {"items": [], "total": 0},
+        }
+
+    closed_statuses = (
+        OpenItemStatusEnum.CLOSED.value,
+        OpenItemStatusEnum.CANCELLED.value,
+        OpenItemStatusEnum.RESOLVED.value,
+    )
+    open_item_query = (
+        db.query(OpenItem)
+        .options(joinedload(OpenItem.responsible_person))
+        .filter(
+            _source_scope_filter(OpenItem, scopes),
+            or_(OpenItem.status.is_(None), OpenItem.status.notin_(closed_statuses)),
+        )
+    )
+    open_items = (
+        open_item_query.order_by(
+            desc(OpenItem.blocks_quotation),
+            desc(OpenItem.updated_at),
+            desc(OpenItem.id),
+        )
+        .limit(limit)
+        .all()
+    )
+
+    freeze_query = (
+        db.query(RequirementFreeze)
+        .options(joinedload(RequirementFreeze.frozen_by_user))
+        .filter(_source_scope_filter(RequirementFreeze, scopes))
+    )
+    freezes = (
+        freeze_query.order_by(desc(RequirementFreeze.freeze_time), desc(RequirementFreeze.id))
+        .limit(limit)
+        .all()
+    )
+
+    clarification_query = db.query(AIClarification).filter(
+        _source_scope_filter(AIClarification, scopes)
+    )
+    clarifications = (
+        clarification_query.order_by(desc(AIClarification.round), desc(AIClarification.id))
+        .limit(limit)
+        .all()
+    )
+
+    return {
+        "openItems": {
+            "items": [_open_item_payload(item) for item in open_items],
+            "total": open_item_query.count(),
+            "blocking_count": open_item_query.filter(OpenItem.blocks_quotation.is_(True)).count(),
+        },
+        "requirementFreezes": {
+            "items": [_requirement_freeze_payload(freeze) for freeze in freezes],
+            "total": freeze_query.count(),
+        },
+        "aiClarifications": {
+            "items": [_model_to_dict(clarification) for clarification in clarifications],
+            "total": clarification_query.count(),
+        },
+    }
 
 
 def _assessment_template_payload(template: AssessmentTemplate) -> dict[str, Any]:
@@ -907,6 +1061,13 @@ def get_workbench_context(
                 "items": [_tender_payload(tender) for tender in tender_items],
                 "total": tender_total,
             },
+            "collaboration": _build_collaboration_context(
+                db,
+                source_type=normalized_source_type,
+                source_id=source_id,
+                source=source,
+                ticket=ticket,
+            ),
             "funnel": {
                 "entityType": resolved_entity_type,
                 "entityId": resolved_entity_id,

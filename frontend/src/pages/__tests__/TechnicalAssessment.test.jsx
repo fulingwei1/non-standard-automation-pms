@@ -4,6 +4,16 @@ import { useParams, useSearchParams } from "react-router-dom";
 import TechnicalAssessment from "../TechnicalAssessment";
 import { presaleWorkbenchApi, technicalAssessmentApi } from "../../services/api";
 
+vi.mock("react-router-dom", () => ({
+  useParams: vi.fn(),
+  useSearchParams: vi.fn(),
+  Link: ({ to, children, ...props }) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 vi.mock("../../services/api", () => ({
   presaleWorkbenchApi: {
     loadContext: vi.fn(),
@@ -120,5 +130,47 @@ describe("TechnicalAssessment", () => {
         enable_ai: false,
       });
     });
+  });
+
+  it("shows presale collaboration context links from the workbench context", async () => {
+    useParams.mockReturnValue({ sourceType: "opportunity", sourceId: "8" });
+    technicalAssessmentApi.getOpportunityAssessments.mockResolvedValue({
+      data: [
+        {
+          id: 704,
+          source_type: "OPPORTUNITY",
+          source_id: 8,
+          status: "PENDING",
+          total_score: null,
+        },
+      ],
+    });
+    presaleWorkbenchApi.loadContext.mockResolvedValue({
+      assessment: { requirementDetail: null },
+      collaboration: {
+        openItems: { items: [{ id: 1 }], total: 2, blocking_count: 1 },
+        requirementFreezes: { items: [{ id: 2 }], total: 1 },
+        aiClarifications: { items: [{ id: 3 }], total: 1 },
+      },
+    });
+
+    render(<TechnicalAssessment />);
+
+    expect(await screen.findByText("售前协作上下文")).toBeInTheDocument();
+    expect(screen.getByText("2 项未决，1 项阻塞")).toBeInTheDocument();
+    expect(screen.getByText("1 项需求冻结")).toBeInTheDocument();
+    expect(screen.getByText("1 轮AI澄清")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /查看未决事项/ })).toHaveAttribute(
+      "href",
+      "/sales/opportunity/8/open-items",
+    );
+    expect(screen.getByRole("link", { name: /查看需求冻结/ })).toHaveAttribute(
+      "href",
+      "/sales/opportunity/8/requirement-freezes",
+    );
+    expect(screen.getByRole("link", { name: /查看AI澄清/ })).toHaveAttribute(
+      "href",
+      "/sales/opportunity/8/ai-clarifications",
+    );
   });
 });

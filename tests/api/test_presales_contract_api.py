@@ -12,7 +12,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.enums import AssessmentStatusEnum, LeadOutcomeEnum
+from app.models.enums import AssessmentStatusEnum, LeadOutcomeEnum, OpenItemStatusEnum
 from app.models.presale import (
     PresaleSolution,
     PresaleSolutionTemplate,
@@ -23,11 +23,14 @@ from app.models.presale import (
 )
 from app.models.project import Customer, Machine, Project
 from app.models.sales import (
+    AIClarification,
     AssessmentTemplate,
     Lead,
+    OpenItem,
     Opportunity,
     Quote,
     QuoteVersion,
+    RequirementFreeze,
     TechnicalAssessment,
 )
 from app.models.sales.technical_assessment import LeadRequirementDetail
@@ -681,6 +684,130 @@ class TestPresalesFrontendContractBehavior:
         finally:
             db_session.query(LeadRequirementDetail).filter(
                 LeadRequirementDetail.id == requirement_detail.id
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
+            db_session.query(Lead).filter(Lead.id == lead.id).delete()
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
+    def test_presale_workbench_context_includes_collaboration_items_from_lead_and_opportunity(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-WBCI-{unique}",
+            customer_name=f"售前协作客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        lead = Lead(
+            lead_code=f"LDWBCI{unique[:6]}",
+            source="展会",
+            customer_name=customer.customer_name,
+            industry=customer.industry,
+            demand_summary="客户接口、样品和验收标准需要售前澄清",
+            owner_id=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPWBCI{unique[:6]}",
+            lead=lead,
+            customer=customer,
+            opp_name=f"售前协作商机-{unique}",
+            stage="QUALIFICATION",
+            probability=70,
+            est_amount=Decimal("620000"),
+            expected_close_date=date.today(),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add_all([customer, lead, opportunity])
+        db_session.flush()
+
+        lead_open_item = OpenItem(
+            source_type="LEAD",
+            source_id=lead.id,
+            item_code=f"OI-WBCI-L-{unique}",
+            item_type="TECHNICAL",
+            description="客户样品接口图待补充",
+            responsible_party="CUSTOMER",
+            responsible_person_id=admin_user.id,
+            status=OpenItemStatusEnum.PENDING.value,
+            blocks_quotation=True,
+        )
+        closed_open_item = OpenItem(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            item_code=f"OI-WBCI-C-{unique}",
+            item_type="OTHER",
+            description="已关闭事项不进入售前协作上下文",
+            responsible_party="INTERNAL",
+            status=OpenItemStatusEnum.CLOSED.value,
+            blocks_quotation=True,
+            closed_at=datetime.now(),
+        )
+        freeze = RequirementFreeze(
+            source_type="LEAD",
+            source_id=lead.id,
+            freeze_type="SOLUTION",
+            frozen_by=admin_user.id,
+            version_number="REQ-FREEZE-1",
+            requires_ecr=True,
+            description="方案范围已冻结，后续变更走ECR",
+        )
+        clarification = AIClarification(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            round=2,
+            questions='["客户是否提供治具接口图？"]',
+            answers='["本周五前提供"]',
+        )
+        db_session.add_all([lead_open_item, closed_open_item, freeze, clarification])
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{prefix}/presale/workbench/context",
+                params={
+                    "source_type": "opportunity",
+                    "source_id": opportunity.id,
+                },
+                headers=headers,
+            )
+            assert response.status_code == 200, response.text
+            collaboration = response.json()["data"]["collaboration"]
+
+            assert collaboration["openItems"]["total"] == 1
+            assert collaboration["openItems"]["blocking_count"] == 1
+            assert collaboration["openItems"]["items"][0]["item_code"] == lead_open_item.item_code
+            assert collaboration["openItems"]["items"][0]["responsible_person_name"] == (
+                admin_user.real_name or admin_user.username
+            )
+            assert collaboration["requirementFreezes"]["total"] == 1
+            assert collaboration["requirementFreezes"]["items"][0]["version_number"] == "REQ-FREEZE-1"
+            assert collaboration["requirementFreezes"]["items"][0]["frozen_by_name"] == (
+                admin_user.real_name or admin_user.username
+            )
+            assert collaboration["aiClarifications"]["total"] == 1
+            assert collaboration["aiClarifications"]["items"][0]["round"] == 2
+            assert "治具接口图" in collaboration["aiClarifications"]["items"][0]["questions"]
+        finally:
+            db_session.query(AIClarification).filter(AIClarification.id == clarification.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(RequirementFreeze).filter(RequirementFreeze.id == freeze.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(OpenItem).filter(
+                OpenItem.id.in_([lead_open_item.id, closed_open_item.id])
             ).delete(synchronize_session=False)
             db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
             db_session.query(Lead).filter(Lead.id == lead.id).delete()

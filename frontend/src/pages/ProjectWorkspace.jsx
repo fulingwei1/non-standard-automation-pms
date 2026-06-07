@@ -168,6 +168,63 @@ function buildOpenItemsPath(openItems, opportunity, project) {
   return null;
 }
 
+function buildTechnicalAssessmentPath(assessment, ticket, opportunity, project) {
+  const assessmentId = getFirstValue(assessment, ["id", "assessment_id", "assessmentId"]);
+  const opportunityId =
+    getFirstValue(opportunity, ["id", "opportunity_id", "opportunityId"]) ||
+    getFirstValue(ticket, ["opportunity_id", "opportunityId"]) ||
+    getFirstValue(project, ["opportunity_id", "opportunityId"]);
+  const leadId =
+    getFirstValue(ticket, ["lead_id", "leadId"]) ||
+    getFirstValue(opportunity, ["lead_id", "leadId"]) ||
+    getFirstValue(project, ["lead_id", "leadId"]);
+
+  let sourceType = getFirstValue(assessment, ["source_type", "sourceType"]);
+  let sourceId = getFirstValue(assessment, ["source_id", "sourceId"]);
+
+  if (!sourceType || !sourceId) {
+    if (opportunityId) {
+      sourceType = "opportunity";
+      sourceId = opportunityId;
+    } else if (leadId) {
+      sourceType = "lead";
+      sourceId = leadId;
+    }
+  }
+
+  const normalizedSourceType = String(sourceType || "").toLowerCase().includes("opportunity") ?
+    "opportunity" :
+    String(sourceType || "").toLowerCase().includes("lead") ?
+      "lead" :
+      null;
+
+  if (!normalizedSourceType || !sourceId) {
+    return null;
+  }
+
+  const params = new URLSearchParams();
+  appendContextParam(params, "assessment_id", assessmentId);
+  appendContextParam(
+    params,
+    "ticket_id",
+    getFirstValue(assessment, ["presale_ticket_id", "presaleTicketId", "ticket_id", "ticketId"]) ||
+      getFirstValue(ticket, ["id", "ticket_id", "ticketId"]),
+  );
+  if (normalizedSourceType === "opportunity") {
+    appendContextParam(params, "lead_id", leadId);
+  }
+  appendContextParam(
+    params,
+    "project_id",
+    getFirstValue(assessment, ["project_id", "projectId"]) ||
+      getFirstValue(ticket, ["project_id", "projectId"]) ||
+      getFirstValue(project, ["id", "project_id", "projectId"]),
+  );
+
+  const query = params.toString();
+  return `/sales/assessments/${normalizedSourceType}/${sourceId}${query ? `?${query}` : ""}`;
+}
+
 function appendMissingContextParam(params, key, value) {
   if (!params.has(key)) {
     appendContextParam(params, key, value);
@@ -282,6 +339,12 @@ export default function ProjectWorkspace() {
   );
   const openItemsPath = buildOpenItemsPath(
     openItems,
+    handoverContext?.opportunity,
+    project,
+  );
+  const technicalAssessmentPath = buildTechnicalAssessmentPath(
+    currentAssessment,
+    primaryTicket,
     handoverContext?.opportunity,
     project,
   );
@@ -497,11 +560,18 @@ export default function ProjectWorkspace() {
 
                 <div className="rounded-lg border p-4">
                   <p className="text-sm text-gray-500">技术评估</p>
+                  {technicalAssessmentPath ?
+                  <Link className="mt-1 block font-medium text-primary hover:underline" to={technicalAssessmentPath}>
+                    {currentAssessment?.total_score != null ?
+                    `${currentAssessment.total_score} 分` :
+                    "打开技术评估"}
+                  </Link> :
                   <p className="mt-1 font-medium">
                     {currentAssessment?.total_score != null ?
                     `${currentAssessment.total_score} 分` :
                     "未完成"}
                   </p>
+                  }
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Badge variant={currentAssessment?.status === "COMPLETED" ? "default" : "secondary"}>
                       {currentAssessment?.status === "COMPLETED" ? "已完成" : "待评估"}

@@ -131,6 +131,11 @@ describe("useAssessmentData", () => {
           target_object_type: "PCBA",
         },
       },
+      collaboration: {
+        openItems: { items: [{ id: 901 }], total: 1, blocking_count: 1 },
+        requirementFreezes: { items: [{ id: 902 }], total: 1 },
+        aiClarifications: { items: [{ id: 903 }], total: 1 },
+      },
     });
 
     const { result } = renderHook(() =>
@@ -154,6 +159,9 @@ describe("useAssessmentData", () => {
         target_object_type: "PCBA",
       }),
     );
+    expect(result.current.collaboration.openItems.blocking_count).toBe(1);
+    expect(result.current.collaboration.requirementFreezes.total).toBe(1);
+    expect(result.current.collaboration.aiClarifications.total).toBe(1);
   });
 
   it("applies a lead assessment and reloads the source assessment list", async () => {

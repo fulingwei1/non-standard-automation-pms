@@ -104,9 +104,12 @@ describe("ProjectWorkspace", () => {
           technical_assessment: {
             current: {
               id: 701,
+              source_type: "OPPORTUNITY",
+              source_id: 2,
               status: "COMPLETED",
               total_score: 82,
               decision: "RECOMMEND",
+              presale_ticket_id: 91,
             },
             risks: {
               total: 1,
@@ -324,6 +327,10 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("PM未分配")).toBeInTheDocument();
     expect(screen.getByText("技术评估")).toBeInTheDocument();
     expect(screen.getByText("82 分")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /82 分/ })).toHaveAttribute(
+      "href",
+      "/sales/assessments/opportunity/2?assessment_id=701&ticket_id=91&lead_id=2026&project_id=1",
+    );
     expect(screen.getByText("交期压缩风险")).toBeInTheDocument();
     expect(screen.getByText("未闭环事项")).toBeInTheDocument();
     expect(screen.getByText("2 项未闭环，1 项阻塞报价/交接")).toBeInTheDocument();

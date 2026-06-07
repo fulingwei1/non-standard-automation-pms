@@ -24,6 +24,14 @@ function setIfPresent(target, key, value) {
   }
 }
 
+function emptyCollaboration() {
+  return {
+    openItems: { items: [], total: 0, blocking_count: 0 },
+    requirementFreezes: { items: [], total: 0 },
+    aiClarifications: { items: [], total: 0 },
+  };
+}
+
 function buildRequirementDataFromDetail(detail, { sourceType, sourceId } = {}) {
   if (!detail) {
     return {};
@@ -79,6 +87,7 @@ export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, pr
   const [loading, setLoading] = useState(true);
   const [evaluating, setEvaluating] = useState(false);
   const [requirementData, setRequirementData] = useState({});
+  const [collaboration, setCollaboration] = useState(emptyCollaboration());
   const [enableAI, setEnableAI] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const numericSourceId = parseContextId(sourceId);
@@ -88,6 +97,7 @@ export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, pr
       setLoading(true);
       let result = [];
       let contextRequirementData = {};
+      let contextCollaboration = emptyCollaboration();
 
       if (sourceType === "lead") {
         const response = await technicalAssessmentApi.getLeadAssessments(
@@ -117,6 +127,7 @@ export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, pr
             context?.assessment?.requirementDetail,
             { sourceType, sourceId: numericSourceId },
           );
+          contextCollaboration = context?.collaboration || emptyCollaboration();
         } catch (contextError) {
           console.warn("加载售前需求上下文失败:", contextError);
         }
@@ -129,11 +140,13 @@ export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, pr
       setAssessments(result);
       setAssessment(requestedAssessment || result[0] || null);
       setRequirementData(contextRequirementData);
+      setCollaboration(contextCollaboration);
     } catch (error) {
       console.error("加载评估失败:", error);
       setAssessments([]);
       setAssessment(null);
       setRequirementData({});
+      setCollaboration(emptyCollaboration());
     } finally {
       setLoading(false);
     }
@@ -205,6 +218,7 @@ export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, pr
     evaluating,
     requirementData,
     setRequirementData,
+    collaboration,
     enableAI,
     setEnableAI,
     showHistory,

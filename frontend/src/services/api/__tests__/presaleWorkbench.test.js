@@ -58,6 +58,21 @@ describe('presaleWorkbenchApi', () => {
             },
           },
           solutions: { items: [], total: 0 },
+          collaboration: {
+            openItems: {
+              items: [{ id: 71, item_code: 'OI-001', blocks_quotation: true }],
+              total: 1,
+              blocking_count: 1,
+            },
+            requirementFreezes: {
+              items: [{ id: 72, version_number: 'REQ-FREEZE-1' }],
+              total: 1,
+            },
+            aiClarifications: {
+              items: [{ id: 73, round: 2 }],
+              total: 1,
+            },
+          },
           funnel: {
             entityType: 'LEAD',
             entityId: 1,
@@ -94,6 +109,9 @@ describe('presaleWorkbenchApi', () => {
     expect(context.assessment.risks.total).toBe(1);
     expect(context.templates.assessment.items[0].template_name).toBe('标准评估模板');
     expect(context.templates.technical.items[0].name).toBe('ICT 标准模板');
+    expect(context.collaboration.openItems.blocking_count).toBe(1);
+    expect(context.collaboration.requirementFreezes.items[0].version_number).toBe('REQ-FREEZE-1');
+    expect(context.collaboration.aiClarifications.items[0].round).toBe(2);
     expect(context.funnel.gateConfigs.items[0].gate_type).toBe('G1');
     expect(context.funnel.stages.items[0].stage_code).toBe('NEW');
     expect(context.meta.failures).toEqual([]);
