@@ -2,6 +2,7 @@
 """合同签订状态处理器"""
 
 from datetime import datetime
+import re
 from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import and_, or_
@@ -9,17 +10,62 @@ from sqlalchemy.orm import Session
 
 from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Project, ProjectStatusLog
-from app.models.sales import Contract, Opportunity, QuoteVersion
+from app.models.sales import Contract, Opportunity, QuoteItem, QuoteVersion
 from app.utils.project_utils import generate_project_code, init_project_stages
 
 if TYPE_CHECKING:
     from app.services.status_transition_service import StatusTransitionService
 
 
+PRESALE_SOLUTION_REMARK_PATTERN = re.compile(r"来源售前方案\s+(\S+)")
+
+
+def _load_project_contract(db: Session, project: Project) -> Optional[Contract]:
+    if getattr(project, "contract_id", None):
+        contract = db.query(Contract).filter(Contract.id == project.contract_id).first()
+        if contract:
+            return contract
+
+    return db.query(Contract).filter(Contract.project_id == project.id).first()
+
+
+def _load_quote_selected_presale_solutions(db: Session, project: Project) -> list[PresaleSolution]:
+    contract = _load_project_contract(db, project)
+    if not contract or not contract.quote_id:
+        return []
+
+    quote_items = (
+        db.query(QuoteItem)
+        .filter(QuoteItem.quote_version_id == contract.quote_id)
+        .all()
+    )
+    solution_nos = set()
+    for item in quote_items:
+        remark = item.remark or ""
+        match = PRESALE_SOLUTION_REMARK_PATTERN.search(remark)
+        if match:
+            solution_nos.add(match.group(1))
+
+    if not solution_nos:
+        return []
+
+    return (
+        db.query(PresaleSolution)
+        .filter(PresaleSolution.solution_no.in_(solution_nos))
+        .all()
+    )
+
+
 def bind_presale_context_to_project(db: Session, project: Project) -> None:
     """把签约前的售前工单和方案正式绑定到新项目，避免交接数据只靠商机旁路查询。"""
     if not project or not project.id:
         return
+
+    quote_selected_solutions = _load_quote_selected_presale_solutions(db, project)
+    selected_solution_ids = {solution.id for solution in quote_selected_solutions}
+    selected_ticket_ids = {
+        solution.ticket_id for solution in quote_selected_solutions if solution.ticket_id
+    }
 
     ticket_scope_filters = []
     if project.opportunity_id:
@@ -28,7 +74,9 @@ def bind_presale_context_to_project(db: Session, project: Project) -> None:
         ticket_scope_filters.append(PresaleSupportTicket.lead_id == project.lead_id)
 
     ticket_filters = [PresaleSupportTicket.project_id == project.id]
-    if ticket_scope_filters:
+    if selected_ticket_ids:
+        ticket_filters.append(PresaleSupportTicket.id.in_(selected_ticket_ids))
+    elif ticket_scope_filters:
         ticket_filters.append(
             and_(
                 PresaleSupportTicket.project_id.is_(None),
@@ -47,19 +95,22 @@ def bind_presale_context_to_project(db: Session, project: Project) -> None:
             ticket_project_by_id[ticket.id] = project.id
 
     solution_scope_filters = [PresaleSolution.project_id == project.id]
-    unbound_solution_filters = []
-    if project.opportunity_id:
-        unbound_solution_filters.append(PresaleSolution.opportunity_id == project.opportunity_id)
-    if bound_ticket_ids:
-        unbound_solution_filters.append(PresaleSolution.ticket_id.in_(bound_ticket_ids))
+    if selected_solution_ids:
+        solution_scope_filters.append(PresaleSolution.id.in_(selected_solution_ids))
+    else:
+        unbound_solution_filters = []
+        if project.opportunity_id:
+            unbound_solution_filters.append(PresaleSolution.opportunity_id == project.opportunity_id)
+        if bound_ticket_ids:
+            unbound_solution_filters.append(PresaleSolution.ticket_id.in_(bound_ticket_ids))
 
-    if unbound_solution_filters:
-        solution_scope_filters.append(
-            and_(
-                PresaleSolution.project_id.is_(None),
-                or_(*unbound_solution_filters),
+        if unbound_solution_filters:
+            solution_scope_filters.append(
+                and_(
+                    PresaleSolution.project_id.is_(None),
+                    or_(*unbound_solution_filters),
+                )
             )
-        )
 
     solutions = db.query(PresaleSolution).filter(or_(*solution_scope_filters)).all()
     missing_ticket_ids = {
@@ -77,6 +128,8 @@ def bind_presale_context_to_project(db: Session, project: Project) -> None:
 
     for solution in solutions:
         if solution.project_id == project.id:
+            continue
+        if solution.project_id is not None:
             continue
         ticket_project_id = (
             ticket_project_by_id.get(solution.ticket_id) if solution.ticket_id else None
