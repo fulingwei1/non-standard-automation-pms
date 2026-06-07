@@ -29,6 +29,23 @@ import { cn } from "../../lib/utils";
 import { BOARD_STATUS_ORDER, PRIORITY_CONFIG, STATUS_CONFIG } from "./constants";
 import { formatDate } from "./utils";
 
+function getPmRiskBadgeClass(riskLevel) {
+  if (riskLevel === "高" || String(riskLevel || "").toUpperCase() === "HIGH") {
+    return "bg-red-500/20 text-red-300 border border-red-500/40";
+  }
+  return "bg-amber-500/20 text-amber-300 border border-amber-500/40";
+}
+
+function formatRiskLevel(riskLevel) {
+  if (!riskLevel) {
+    return "风险待判";
+  }
+  if (String(riskLevel).includes("风险")) {
+    return riskLevel;
+  }
+  return `${riskLevel}风险`;
+}
+
 export default function TicketTable({
   filteredTickets,
   searchKeyword,
@@ -107,6 +124,7 @@ export default function TicketTable({
               <TableHead>工单</TableHead>
               <TableHead>状态</TableHead>
               <TableHead>优先级管理</TableHead>
+              <TableHead>PM介入</TableHead>
               <TableHead>处理人</TableHead>
               <TableHead>截止时间</TableHead>
               <TableHead className="text-right">流转</TableHead>
@@ -115,7 +133,7 @@ export default function TicketTable({
           <TableBody>
             {filteredTickets.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-slate-400">
+                <TableCell colSpan={7} className="py-10 text-center text-slate-400">
                   当前筛选下暂无工单
                 </TableCell>
               </TableRow>
@@ -124,6 +142,7 @@ export default function TicketTable({
             {filteredTickets.map((ticket) => {
               const statusConfig = STATUS_CONFIG[ticket.status];
               const priorityConfig = PRIORITY_CONFIG[ticket.priority];
+              const riskFactors = ticket.pmInvolvementRiskFactors || [];
               return (
                 <TableRow
                   key={ticket.id}
@@ -164,6 +183,34 @@ export default function TicketTable({
                     <Badge className={cn("mt-2", priorityConfig.badgeClass)}>
                       当前：{priorityConfig.label}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-2 text-xs">
+                      {ticket.pmInvolvementRequired ? (
+                        <>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge className="bg-violet-500/20 text-violet-300 border border-violet-500/40">
+                              需PM介入
+                            </Badge>
+                            <Badge className={getPmRiskBadgeClass(ticket.pmInvolvementRiskLevel)}>
+                              {formatRiskLevel(ticket.pmInvolvementRiskLevel)}
+                            </Badge>
+                          </div>
+                          {riskFactors.length > 0 && (
+                            <p className="max-w-[180px] text-slate-400">
+                              {riskFactors.join("、")}
+                            </p>
+                          )}
+                          <p className={ticket.pmAssigned ? "text-emerald-300" : "text-amber-300"}>
+                            {ticket.pmAssigned ? "PM已分配" : "PM未分配"}
+                          </p>
+                        </>
+                      ) : (
+                        <Badge className="bg-slate-500/20 text-slate-300 border border-slate-500/30">
+                          常规跟进
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1 text-sm">

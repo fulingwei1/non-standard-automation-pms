@@ -81,6 +81,31 @@ export function computeHoursDiff(startDateString, endDateString) {
   return (end.getTime() - start.getTime()) / (1000 * 60 * 60);
 }
 
+function normalizeBoolean(value) {
+  return value === true || value === 1 || value === "1" || value === "true";
+}
+
+function normalizeRiskFactors(value) {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean);
+  }
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(Boolean);
+      }
+    } catch {
+      // Plain comma or Chinese-comma separated text is accepted below.
+    }
+    return value
+      .split(/[、,，]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
 export function toTicketModel(ticket, forcedStatus = null) {
   return {
     id: ticket.id,
@@ -99,5 +124,17 @@ export function toTicketModel(ticket, forcedStatus = null) {
     deadline: ticket.deadline,
     expectedDate: ticket.expected_date,
     description: ticket.description || "暂无工单描述",
+    assessmentRequired: ticket.assessment_required ?? true,
+    assessmentStatus: ticket.assessment_status || null,
+    currentAssessmentId: ticket.current_assessment_id ?? null,
+    pmInvolvementRequired: normalizeBoolean(ticket.pm_involvement_required),
+    pmInvolvementRiskLevel: ticket.pm_involvement_risk_level || null,
+    pmInvolvementRiskFactors: normalizeRiskFactors(ticket.pm_involvement_risk_factors),
+    pmInvolvementCheckedAt: ticket.pm_involvement_checked_at || null,
+    pmAssigned: normalizeBoolean(ticket.pm_assigned),
+    pmUserId: ticket.pm_user_id ?? null,
+    pmAssignedAt: ticket.pm_assigned_at || null,
+    projectId: ticket.project_id ?? null,
+    opportunityId: ticket.opportunity_id ?? null,
   };
 }
