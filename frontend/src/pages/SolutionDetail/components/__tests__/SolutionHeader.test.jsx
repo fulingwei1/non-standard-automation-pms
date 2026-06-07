@@ -30,4 +30,27 @@ describe("SolutionHeader", () => {
 
     expect(onSubmitReview).toHaveBeenCalledTimes(1);
   });
+
+  it("returns to the filtered presales solution context", async () => {
+    const navigate = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <SolutionHeader
+        solution={{
+          ...draftSolution,
+          ticketId: 501,
+          opportunityId: 2,
+          projectId: 42,
+        }}
+        navigate={navigate}
+      />,
+    );
+
+    await user.click(screen.getAllByRole("button")[0]);
+
+    expect(navigate).toHaveBeenCalledWith(
+      "/presales/technical-solutions?tab=solutions&type=support&ticket_id=501&opportunity_id=2&project_id=42",
+    );
+  });
 });

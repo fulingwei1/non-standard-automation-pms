@@ -65,6 +65,42 @@ function getHealthMeta(level) {
   return { label: level || "偏弱", className: "bg-red-500" };
 }
 
+function getFirstValue(item, keys) {
+  for (const key of keys) {
+    const value = item?.[key];
+    if (value !== undefined && value !== null && value !== "") {
+      return value;
+    }
+  }
+  return null;
+}
+
+function appendContextParam(params, key, value) {
+  if (value !== undefined && value !== null && value !== "") {
+    params.set(key, String(value));
+  }
+}
+
+function buildTicketContextUrl(ticket) {
+  const params = new URLSearchParams();
+  params.set("tab", "reviews");
+  params.set("type", "support");
+  appendContextParam(params, "ticket_id", getFirstValue(ticket, ["id", "ticket_id", "ticketId"]));
+  appendContextParam(params, "opportunity_id", getFirstValue(ticket, ["opportunity_id", "opportunityId"]));
+  appendContextParam(params, "project_id", getFirstValue(ticket, ["project_id", "projectId"]));
+  return `/presales/technical-solutions?${params.toString()}`;
+}
+
+function buildSolutionContextUrl(solution) {
+  const solutionId = getFirstValue(solution, ["id", "solution_id", "solutionId"]);
+  const params = new URLSearchParams();
+  appendContextParam(params, "ticket_id", getFirstValue(solution, ["ticket_id", "ticketId"]));
+  appendContextParam(params, "opportunity_id", getFirstValue(solution, ["opportunity_id", "opportunityId"]));
+  appendContextParam(params, "project_id", getFirstValue(solution, ["project_id", "projectId"]));
+  const query = params.toString();
+  return `/solutions/${solutionId}${query ? `?${query}` : ""}`;
+}
+
 const quickLinks = [
   {
     title: "销售漏斗",
@@ -270,7 +306,11 @@ export default function SalesPresaleWorkbench() {
                   </Link>
                 </div>
                 {ticketItems.slice(0, 5).map((ticket) => (
-                  <div key={ticket.id} className="rounded-lg bg-gray-950 px-3 py-3">
+                  <Link
+                    key={ticket.id}
+                    to={buildTicketContextUrl(ticket)}
+                    className="block rounded-lg bg-gray-950 px-3 py-3 transition-colors hover:bg-gray-900"
+                  >
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <div className="font-medium">
@@ -282,7 +322,7 @@ export default function SalesPresaleWorkbench() {
                       </div>
                       <Badge>{ticket.status || "待处理"}</Badge>
                     </div>
-                  </div>
+                  </Link>
                 ))}
                 {ticketItems.length === 0 && (
                   <div className="text-sm text-gray-400">暂无售前工单</div>
@@ -299,7 +339,11 @@ export default function SalesPresaleWorkbench() {
                   </Link>
                 </div>
                 {solutionItems.slice(0, 5).map((solution) => (
-                  <div key={solution.id} className="rounded-lg bg-gray-950 px-3 py-3">
+                  <Link
+                    key={solution.id}
+                    to={buildSolutionContextUrl(solution)}
+                    className="block rounded-lg bg-gray-950 px-3 py-3 transition-colors hover:bg-gray-900"
+                  >
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <div className="font-medium">
@@ -311,7 +355,7 @@ export default function SalesPresaleWorkbench() {
                       </div>
                       <Badge>{solution.status || solution.review_status || "未标记"}</Badge>
                     </div>
-                  </div>
+                  </Link>
                 ))}
                 {solutionItems.length === 0 && (
                   <div className="text-sm text-gray-400">暂无关联方案</div>

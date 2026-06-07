@@ -136,6 +136,8 @@ export function useSolutionDetail() {
                 creator: solutionData.creator_name || solutionData.author_name || "",
                 opportunity: solutionData.opportunity_name || "",
                 opportunityId: solutionData.opportunity_id,
+                ticketId: solutionData.ticket_id,
+                projectId: solutionData.project_id,
                 salesPerson: solutionData.sales_person_name || "",
                 tags: solutionData.tags || [],
                 description:

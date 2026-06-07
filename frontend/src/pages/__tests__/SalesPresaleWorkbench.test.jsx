@@ -64,4 +64,64 @@ describe("SalesPresaleWorkbench", () => {
         .some((link) => link.getAttribute("href") === "/presales/technical-solutions?tab=reviews"),
     ).toBe(true);
   });
+
+  it("links recent tickets and solutions back into their sales support context", async () => {
+    presaleWorkbenchApiMock.loadOverview.mockResolvedValueOnce({
+      tickets: {
+        items: [
+          {
+            id: 501,
+            ticket_no: "PST-501",
+            title: "FCT 线体评估",
+            status: "IN_PROGRESS",
+            opportunity_id: 2,
+            project_id: 42,
+          },
+        ],
+        total: 1,
+      },
+      solutions: {
+        items: [
+          {
+            id: 88,
+            name: "FCT 自动化方案",
+            status: "DRAFT",
+            ticket_id: 501,
+            opportunity_id: 2,
+            project_id: 42,
+          },
+        ],
+        total: 1,
+      },
+      templates: {
+        assessment: { items: [], total: 0 },
+        technical: { items: [], total: 0 },
+      },
+      funnel: {
+        summary: { leads: 0, opportunities: 0, quotes: 0, contracts: 0 },
+        health: {
+          overall_health: { score: 80, level: "GOOD" },
+          key_metrics: { target_coverage: 100 },
+        },
+        dwellAlerts: { items: [], total: 0 },
+        conversion: { stages: [] },
+      },
+      meta: { failures: [] },
+    });
+
+    render(
+      <MemoryRouter>
+        <SalesPresaleWorkbench />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("link", { name: /PST-501/ })).toHaveAttribute(
+      "href",
+      "/presales/technical-solutions?tab=reviews&type=support&ticket_id=501&opportunity_id=2&project_id=42",
+    );
+    expect(screen.getByRole("link", { name: /FCT 自动化方案/ })).toHaveAttribute(
+      "href",
+      "/solutions/88?ticket_id=501&opportunity_id=2&project_id=42",
+    );
+  });
 });

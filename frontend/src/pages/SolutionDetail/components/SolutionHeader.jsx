@@ -7,6 +7,26 @@ import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 import { getStatusStyle } from "../constants";
 
+function appendContextParam(params, key, value) {
+    if (value !== undefined && value !== null && value !== "") {
+        params.set(key, String(value));
+    }
+}
+
+function buildSolutionListUrl(solution) {
+    const params = new URLSearchParams();
+    params.set("tab", "solutions");
+
+    if (solution.ticketId || solution.opportunityId || solution.projectId) {
+        params.set("type", "support");
+    }
+    appendContextParam(params, "ticket_id", solution.ticketId);
+    appendContextParam(params, "opportunity_id", solution.opportunityId);
+    appendContextParam(params, "project_id", solution.projectId);
+
+    return `/presales/technical-solutions?${params.toString()}`;
+}
+
 export function SolutionHeader({ solution, navigate, onSubmitReview, submittingReview = false }) {
     const statusStyle = getStatusStyle(solution.status);
     const canSubmitReview = ["draft", "rejected"].includes(solution.status);
@@ -16,7 +36,7 @@ export function SolutionHeader({ solution, navigate, onSubmitReview, submittingR
             <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate("/presales/technical-solutions?tab=solutions")}
+                onClick={() => navigate(buildSolutionListUrl(solution))}
                 className="text-slate-400 hover:text-white"
             >
                 <ArrowLeft className="w-5 h-5" />
