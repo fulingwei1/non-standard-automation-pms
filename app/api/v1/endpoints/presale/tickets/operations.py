@@ -11,7 +11,9 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.enums import AssessmentStatusEnum
 from app.models.presale import PresaleSupportTicket, PresaleTicketDeliverable, PresaleTicketProgress
+from app.models.sales import Opportunity
 from app.models.user import User
 from app.schemas.presale import (
     DeliverableCreate,
@@ -160,6 +162,16 @@ def complete_ticket(
 
     if resolved_actual_hours is not None:
         ticket.actual_hours = Decimal(str(resolved_actual_hours))
+
+    ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
+    if ticket.opportunity_id:
+        opportunity = db.query(Opportunity).filter(Opportunity.id == ticket.opportunity_id).first()
+        if opportunity:
+            opportunity.assessment_status = AssessmentStatusEnum.COMPLETED.value
+            opportunity.updated_by = current_user.id
+            if ticket.current_assessment_id and not opportunity.assessment_id:
+                opportunity.assessment_id = ticket.current_assessment_id
+            db.add(opportunity)
 
     save_obj(db, ticket)
 

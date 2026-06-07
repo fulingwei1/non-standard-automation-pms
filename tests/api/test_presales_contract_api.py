@@ -11,8 +11,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.enums import LeadOutcomeEnum
-from app.models.project import Project
+from app.models.enums import AssessmentStatusEnum, LeadOutcomeEnum
+from app.models.project import Customer, Project
+from app.models.sales import Opportunity
 from app.models.timesheet import Timesheet
 from app.models.user import User
 
@@ -182,6 +183,75 @@ class TestPresalesFrontendContractBehavior:
         assert completed.status_code == 200, completed.text
         assert completed.json()["status"] == "COMPLETED"
         assert completed.json()["actual_hours"] == pytest.approx(8.0)
+
+    def test_completing_opportunity_ticket_updates_sales_assessment_status(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8]
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-PS-{unique}",
+            customer_name=f"售前闭环客户-{unique}",
+            industry="电子制造",
+            contact_person="王工",
+            contact_phone="021-88888888",
+            created_by=admin_user.id,
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPP{unique[:6].upper()}",
+            customer_id=customer.id,
+            opp_name=f"售前闭环商机-{unique}",
+            stage="QUALIFICATION",
+            probability=60,
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+            assessment_status=AssessmentStatusEnum.PENDING.value,
+            requirement_maturity=2,
+        )
+        db_session.add(opportunity)
+        db_session.commit()
+
+        created = client.post(
+            f"{prefix}/presale/tickets",
+            json={
+                "title": "商机技术方案支持",
+                "ticket_type": "TECHNICAL_EXCHANGE",
+                "urgency": "NORMAL",
+                "description": "完成后应反写商机技术评估状态",
+                "customer_id": customer.id,
+                "customer_name": customer.customer_name,
+                "opportunity_id": opportunity.id,
+            },
+            headers=headers,
+        )
+        assert created.status_code == 201, created.text
+        ticket_id = created.json()["id"]
+
+        completed = client.put(
+            f"{prefix}/presale/tickets/{ticket_id}/complete",
+            json={"actual_hours": 6.5},
+            headers=headers,
+        )
+        assert completed.status_code == 200, completed.text
+        assert completed.json()["status"] == "COMPLETED"
+
+        refreshed = client.get(
+            f"{prefix}/sales/opportunities/{opportunity.id}",
+            headers=headers,
+        )
+        assert refreshed.status_code == 200, refreshed.text
+        assert refreshed.json()["assessment_status"] == AssessmentStatusEnum.COMPLETED.value
 
     def test_template_update_supports_frontend_apply_count_alias(
         self, client: TestClient, admin_token: str
