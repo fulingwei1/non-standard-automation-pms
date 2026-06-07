@@ -1,7 +1,10 @@
 import { Route, Navigate } from "react-router-dom";
 import { FinanceProtectedRoute } from "../../components/common/ProtectedRoute";
 import { lazyLoad } from "../lazyLoad";
-import { PresalesCenterRedirect } from "./presalesRedirects";
+import {
+  PresalesCenterRedirect,
+  PresalesWorkbenchRedirect,
+} from "./presalesRedirects";
 
 // 客户管理
 const CustomerList = lazyLoad(() => import("../../pages/CustomerList"));
@@ -144,8 +147,8 @@ export function SalesRoutes() {
       <Route path="/sales/opportunities" element={<OpportunityManagement />} />
       <Route path="/sales/opportunities/:id" element={<OpportunityDetail />} />
       <Route path="/sales/presales-tasks" element={<PresalesCenterRedirect tab="reviews" />} />
-      <Route path="/sales/presales-workbench" element={<Navigate to="/presales/workbench" replace />} />
-      <Route path="/sales/presale-workbench" element={<Navigate to="/presales/workbench" replace />} />
+      <Route path="/sales/presales-workbench" element={<PresalesWorkbenchRedirect />} />
+      <Route path="/sales/presale-workbench" element={<PresalesWorkbenchRedirect />} />
       <Route
         path="/sales/assessments/:sourceType/:sourceId"
         element={<TechnicalAssessment />}

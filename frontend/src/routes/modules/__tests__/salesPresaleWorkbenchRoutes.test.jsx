@@ -20,6 +20,12 @@ vi.mock("../../../pages/PresalesTasks", () => ({
   default: () => <div>销售侧售前工单旧视图</div>,
 }));
 
+function WorkbenchLocationProbe() {
+  const location = useLocation();
+
+  return <div>售前技术支持工作台 {location.search}</div>;
+}
+
 function LocationProbe() {
   const location = useLocation();
 
@@ -32,7 +38,7 @@ describe("SalesRoutes presales workbench compatibility", () => {
       <MemoryRouter initialEntries={["/sales/presale-workbench"]}>
         <Routes>
           {SalesRoutes()}
-          <Route path="/presales/workbench" element={<div>售前技术支持工作台</div>} />
+          <Route path="/presales/workbench" element={<WorkbenchLocationProbe />} />
         </Routes>
       </MemoryRouter>,
     );
@@ -45,13 +51,37 @@ describe("SalesRoutes presales workbench compatibility", () => {
       <MemoryRouter initialEntries={["/sales/presales-workbench"]}>
         <Routes>
           {SalesRoutes()}
-          <Route path="/presales/workbench" element={<div>售前技术支持工作台</div>} />
+          <Route path="/presales/workbench" element={<WorkbenchLocationProbe />} />
         </Routes>
       </MemoryRouter>,
     );
 
     expect(await screen.findByText("售前技术支持工作台")).toBeInTheDocument();
   });
+
+  it.each(["/sales/presale-workbench", "/sales/presales-workbench"])(
+    "preserves context params when redirecting legacy route %s",
+    async (entry) => {
+      render(
+        <MemoryRouter
+          initialEntries={[
+            `${entry}?leadId=2026&opportunityId=2&ticketId=501&projectId=42`,
+          ]}
+        >
+          <Routes>
+            {SalesRoutes()}
+            <Route path="/presales/workbench" element={<WorkbenchLocationProbe />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+
+      expect(
+        await screen.findByText(
+          "售前技术支持工作台 ?lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+        ),
+      ).toBeInTheDocument();
+    },
+  );
 
   it("redirects sales presales tasks to the unified review tab and preserves filters", async () => {
     window.history.pushState({}, "", "/sales/presales-tasks?type=review&status=reviewing");
@@ -69,6 +99,9 @@ describe("SalesRoutes presales workbench compatibility", () => {
     );
 
     expect(await screen.findByText(/售前技术支持中心/)).toBeInTheDocument();
+    expect(
+      screen.getByText("售前技术支持中心 ?tab=reviews&type=review&status=reviewing"),
+    ).toBeInTheDocument();
     expect(screen.queryByText("销售侧售前工单旧视图")).not.toBeInTheDocument();
   });
 });

@@ -1,6 +1,9 @@
 import { Route, Navigate } from "react-router-dom";
 import { lazyLoad } from "../lazyLoad";
-import { PresalesCenterRedirect } from "./presalesRedirects";
+import {
+  PresalesCenterRedirect,
+  PresalesWorkbenchRedirect,
+} from "./presalesRedirects";
 
 const PresalesWorkstation = lazyLoad(() => import("../../pages/PresalesWorkstation"));
 const PresalesWorkbench = lazyLoad(() => import("../../pages/PresalesWorkbench"));
@@ -18,7 +21,7 @@ export function PresalesRoutes() {
       <Route path="/presales/workbench/sales" element={<SalesPresaleWorkbench />} />
       <Route path="/presales/workbench/execution" element={<PresalesWorkstation />} />
       <Route path="/presales/workbench/manager" element={<PresalesManagerWorkstation />} />
-      <Route path="/presales-workbench" element={<Navigate to="/presales/workbench" replace />} />
+      <Route path="/presales-workbench" element={<PresalesWorkbenchRedirect />} />
       <Route path="/presales-dashboard" element={<PresalesWorkstation />} />
       <Route
         path="/presales-manager-dashboard"

@@ -31,6 +31,25 @@ vi.mock("../../../pages/PresalesManagerWorkstation", () => ({
   default: () => <div>售前经理旧视图</div>,
 }));
 
+vi.mock("../../../pages/PresalesWorkbench", async () => {
+  const { useLocation } = await vi.importActual("react-router-dom");
+
+  return {
+    default: function PresalesWorkbenchRouteProbe() {
+      const location = useLocation();
+
+      return (
+        <div>
+          <span>售前技术支持工作台 {location.search}</span>
+          <span>销售协同</span>
+          <span>售前执行</span>
+          <span>经理调度</span>
+        </div>
+      );
+    },
+  };
+});
+
 vi.mock("../../../hooks/usePermission", () => ({
   usePermission: () => ({
     hasPermission: () => false,
@@ -116,5 +135,23 @@ describe("PresalesRoutes", () => {
     );
 
     expect(await screen.findByText("售前技术支持工作台")).toBeInTheDocument();
+  });
+
+  it("preserves context params when redirecting the legacy presales workbench route", async () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/presales-workbench?leadId=2026&opportunityId=2&ticketId=501&projectId=42",
+        ]}
+      >
+        <Routes>{PresalesRoutes()}</Routes>
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByText(
+        "售前技术支持工作台 ?lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+      ),
+    ).toBeInTheDocument();
   });
 });
