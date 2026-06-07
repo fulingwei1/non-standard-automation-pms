@@ -11,6 +11,7 @@ from .ai_clarifications import (
 from .assessments import (
     FailureCaseCreate,
     FailureCaseResponse,
+    FailureCaseUpdate,
     OpenItemCreate,
     OpenItemResponse,
     ScoringRuleCreate,
@@ -311,6 +312,7 @@ __all__ = [
     "ScoringRuleResponse",
     "FailureCaseCreate",
     "FailureCaseResponse",
+    "FailureCaseUpdate",
     "OpenItemCreate",
     "OpenItemResponse",
     # 团队管理相关

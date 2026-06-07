@@ -92,6 +92,28 @@ class FailureCaseCreate(BaseModel):
     keywords: str = Field(description="关键词(JSON Array)")
 
 
+class FailureCaseUpdate(BaseModel):
+    """更新失败案例"""
+
+    project_name: Optional[str] = Field(default=None, max_length=200, description="项目名称")
+    industry: Optional[str] = Field(default=None, max_length=50, description="行业")
+    product_types: Optional[str] = Field(default=None, description="产品类型(JSON Array)")
+    processes: Optional[str] = Field(default=None, description="工序/测试类型(JSON Array)")
+    takt_time_s: Optional[int] = Field(default=None, description="节拍时间(秒)")
+    annual_volume: Optional[int] = Field(default=None, description="年产量")
+    budget_status: Optional[str] = Field(default=None, description="预算状态")
+    customer_project_status: Optional[str] = Field(default=None, description="客户项目状态")
+    spec_status: Optional[str] = Field(default=None, description="规范状态")
+    price_sensitivity: Optional[str] = Field(default=None, description="价格敏感度")
+    delivery_months: Optional[int] = Field(default=None, description="交付周期(月)")
+    failure_tags: Optional[str] = Field(default=None, description="失败标签(JSON Array)")
+    core_failure_reason: Optional[str] = Field(default=None, description="核心失败原因")
+    early_warning_signals: Optional[str] = Field(default=None, description="预警信号(JSON Array)")
+    final_result: Optional[str] = Field(default=None, description="最终结果")
+    lesson_learned: Optional[str] = Field(default=None, description="教训总结")
+    keywords: Optional[str] = Field(default=None, description="关键词(JSON Array)")
+
+
 class FailureCaseResponse(TimestampSchema):
     """失败案例响应"""
 

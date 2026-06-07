@@ -1258,6 +1258,61 @@ class TestTechnicalAssessmentClosedLoop:
         assert any(item["risk_title"] == "technology维度风险" for item in payload["items"])
         assert any(item["risk_type"] == "technology" for item in payload["items"])
 
+    def test_failure_case_detail_and_update_routes_match_frontend_api(
+        self, client: TestClient, admin_token: str
+    ):
+        """失败案例库详情/编辑接口应与前端 technicalAssessmentApi 声明一致。"""
+        headers = _auth_headers(admin_token)
+        create_payload = {
+            "case_code": _unique_code("FC"),
+            "project_name": "新能源电控测试线失败复盘",
+            "industry": "新能源",
+            "product_types": '["EOL"]',
+            "processes": '["功能测试"]',
+            "takt_time_s": 45,
+            "annual_volume": 120000,
+            "budget_status": "rough",
+            "customer_project_status": "方案阶段",
+            "spec_status": "频繁变更",
+            "price_sensitivity": "high",
+            "delivery_months": 3,
+            "failure_tags": '["需求不清", "成本失控"]',
+            "core_failure_reason": "客户接口边界不清，报价前未冻结SOW",
+            "early_warning_signals": '["样品未提供", "接口协议缺失"]',
+            "final_result": "LOST",
+            "lesson_learned": "报价前必须完成需求冻结和技术风险确认",
+            "keywords": '["EOL", "SOW", "需求冻结"]',
+        }
+
+        create_response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/failure-cases",
+            json=create_payload,
+            headers=headers,
+        )
+        assert create_response.status_code == 201, create_response.text
+        case_id = create_response.json()["id"]
+
+        detail_response = client.get(
+            f"{settings.API_V1_PREFIX}/sales/failure-cases/{case_id}",
+            headers=headers,
+        )
+        assert detail_response.status_code == 200, detail_response.text
+        assert detail_response.json()["case_code"] == create_payload["case_code"]
+
+        update_response = client.put(
+            f"{settings.API_V1_PREFIX}/sales/failure-cases/{case_id}",
+            json={
+                "core_failure_reason": "技术评估未覆盖客户夹具换型边界",
+                "failure_tags": '["技术评估缺口", "换型风险"]',
+            },
+            headers=headers,
+        )
+        assert update_response.status_code == 200, update_response.text
+        updated = update_response.json()
+        assert updated["core_failure_reason"] == "技术评估未覆盖客户夹具换型边界"
+        assert updated["failure_tags"] == '["技术评估缺口", "换型风险"]'
+        assert updated["lesson_learned"] == create_payload["lesson_learned"]
+
 
 class TestPermissionControl:
     """权限控制测试"""

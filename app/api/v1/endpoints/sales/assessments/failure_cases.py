@@ -18,10 +18,22 @@ from app.core import security
 from app.models.sales import FailureCase
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.schemas.sales import FailureCaseCreate, FailureCaseResponse
+from app.schemas.sales import FailureCaseCreate, FailureCaseResponse, FailureCaseUpdate
 from app.utils.db_helpers import save_obj
 
 router = APIRouter()
+
+
+def _build_failure_case_response(db: Session, case: FailureCase) -> FailureCaseResponse:
+    creator_name = None
+    if case.created_by:
+        creator = db.query(User).filter(User.id == case.created_by).first()
+        creator_name = creator.real_name if creator else None
+
+    return FailureCaseResponse(
+        **{c.name: getattr(case, c.name) for c in case.__table__.columns},
+        creator_name=creator_name,
+    )
 
 
 @router.get("/failure-cases/similar", response_model=List[FailureCaseResponse])
@@ -41,21 +53,7 @@ def find_similar_cases(
 
     cases = query.limit(10).all()
 
-    result = []
-    for case in cases:
-        creator_name = None
-        if case.created_by:
-            creator = db.query(User).filter(User.id == case.created_by).first()
-            creator_name = creator.real_name if creator else None
-
-        result.append(
-            FailureCaseResponse(
-                **{c.name: getattr(case, c.name) for c in case.__table__.columns},
-                creator_name=creator_name,
-            )
-        )
-
-    return result
+    return [_build_failure_case_response(db, case) for case in cases]
 
 
 @router.get("/failure-cases", response_model=PaginatedResponse[FailureCaseResponse])
@@ -85,19 +83,7 @@ def list_failure_cases(
         query.order_by(desc(FailureCase.created_at)), pagination.offset, pagination.limit
     ).all()
 
-    result = []
-    for case in cases:
-        creator_name = None
-        if case.created_by:
-            creator = db.query(User).filter(User.id == case.created_by).first()
-            creator_name = creator.real_name if creator else None
-
-        result.append(
-            FailureCaseResponse(
-                **{c.name: getattr(case, c.name) for c in case.__table__.columns},
-                creator_name=creator_name,
-            )
-        )
+    result = [_build_failure_case_response(db, case) for case in cases]
 
     return PaginatedResponse(
         items=result, total=total, page=pagination.page, page_size=pagination.page_size
@@ -141,28 +127,40 @@ def create_failure_case(
 
     save_obj(db, case)
 
-    return FailureCaseResponse(
-        id=case.id,
-        case_code=case.case_code,
-        project_name=case.project_name,
-        industry=case.industry,
-        product_types=case.product_types,
-        processes=case.processes,
-        takt_time_s=case.takt_time_s,
-        annual_volume=case.annual_volume,
-        budget_status=case.budget_status,
-        customer_project_status=case.customer_project_status,
-        spec_status=case.spec_status,
-        price_sensitivity=case.price_sensitivity,
-        delivery_months=case.delivery_months,
-        failure_tags=case.failure_tags,
-        core_failure_reason=case.core_failure_reason,
-        early_warning_signals=case.early_warning_signals,
-        final_result=case.final_result,
-        lesson_learned=case.lesson_learned,
-        keywords=case.keywords,
-        created_by=case.created_by,
-        created_at=case.created_at,
-        updated_at=case.updated_at,
-        creator_name=current_user.real_name,
-    )
+    return _build_failure_case_response(db, case)
+
+
+@router.get("/failure-cases/{case_id}", response_model=FailureCaseResponse)
+def get_failure_case(
+    *,
+    db: Session = Depends(deps.get_db),
+    case_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取失败案例详情"""
+    case = db.query(FailureCase).filter(FailureCase.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=404, detail="失败案例不存在")
+
+    return _build_failure_case_response(db, case)
+
+
+@router.put("/failure-cases/{case_id}", response_model=FailureCaseResponse)
+def update_failure_case(
+    *,
+    db: Session = Depends(deps.get_db),
+    case_id: int,
+    request: FailureCaseUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """更新失败案例"""
+    case = db.query(FailureCase).filter(FailureCase.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=404, detail="失败案例不存在")
+
+    update_data = request.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(case, field, value)
+
+    save_obj(db, case)
+    return _build_failure_case_response(db, case)
