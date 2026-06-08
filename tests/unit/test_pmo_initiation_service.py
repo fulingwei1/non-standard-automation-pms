@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 from app.models.pmo.initiation_phase import PmoProjectInitiation
 from app.models.presale import PresaleSolution
 from app.models.project import Customer, Project
-from app.models.sales import Contract, Opportunity
+from app.models.sales import Contract, Opportunity, QuoteVersion
 from app.models.user import User
 from app.schemas.pmo import (
     InitiationApproveRequest,
@@ -907,6 +907,24 @@ class TestPmoInitiationServiceCreateProject(unittest.TestCase):
         self.assertEqual(added_project.opportunity_id, 9001)
         self.assertEqual(added_project.lead_id, 8001)
         self.assertEqual(mock_solution.project_id, 400)
+
+    @patch("app.services.pmo_initiation.service.resolve_presale_context_for_quote_version")
+    def test_find_solution_falls_back_to_contract_quote_version(self, mock_resolve_context):
+        """合同从报价生成时，PMO立项应能从报价版本反查售前方案。"""
+        mock_initiation = MagicMock(technical_solution_id=None, contract_no="CT-QV-001")
+        mock_quote_version = MagicMock(spec=QuoteVersion, id=701, quote_id=88)
+        mock_contract = MagicMock(spec=Contract, quote_id=701)
+        mock_contract.quote_version = mock_quote_version
+        mock_solution = MagicMock(spec=PresaleSolution, id=55)
+        mock_resolve_context.return_value = ([mock_solution], {501})
+
+        solution = self.service._find_solution_for_initiation(
+            mock_initiation,
+            mock_contract,
+        )
+
+        self.assertEqual(solution, mock_solution)
+        mock_resolve_context.assert_called_once_with(self.db, mock_quote_version)
 
 
 class TestPmoInitiationServiceEdgeCases(unittest.TestCase):

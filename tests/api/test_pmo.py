@@ -14,7 +14,7 @@ from app.models.pmo import PmoProjectPhase
 from app.models.enums import OpenItemStatusEnum
 from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Project
-from app.models.sales import Lead, OpenItem, Opportunity
+from app.models.sales import Contract, Lead, OpenItem, Opportunity, Quote, QuoteVersion
 from app.models.task_center import TaskUnified
 from app.models.user import User
 from app.services.pmo_initiation.service import PmoInitiationService
@@ -367,6 +367,146 @@ class TestInitiations:
         )
         assert created_again == 0
         assert after_count == before_count
+
+    def test_initiation_handover_resolves_presale_solution_from_contract_quote_version(
+        self, client: TestClient, db_session, admin_token: str
+    ):
+        """合同只关联报价版本时，立项交接包仍应反查到售前方案。"""
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-QV-{unique}",
+            customer_name=f"报价版本客户-{unique}",
+            contact_person="赵工",
+            contact_phone="13700137000",
+            created_by=admin_user.id,
+        )
+        lead = Lead(
+            lead_code=f"LEADQV{unique[:6]}",
+            customer_name=customer.customer_name,
+            industry="电子制造",
+            demand_summary="报价版本链路售前需求",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([customer, lead])
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPP-QV-{unique}",
+            customer_id=customer.id,
+            lead_id=lead.id,
+            opp_name=f"报价版本商机-{unique}",
+            stage="PROPOSAL",
+            probability=80,
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add(opportunity)
+        db_session.flush()
+
+        ticket = PresaleSupportTicket(
+            ticket_no=f"PST-QV-{unique}",
+            title=f"报价版本售前支持-{unique}",
+            ticket_type="SOLUTION_DESIGN",
+            urgency="NORMAL",
+            description="销售报价引用售前方案",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            lead_id=lead.id,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            actual_hours=6,
+            created_by=admin_user.id,
+        )
+        db_session.add(ticket)
+        db_session.flush()
+
+        solution = PresaleSolution(
+            solution_no=f"SOL-QV-{unique}",
+            name=f"报价版本售前方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=ticket.id,
+            customer_id=customer.id,
+            opportunity_id=opportunity.id,
+            suggested_price=320000,
+            estimated_cost=210000,
+            estimated_hours=72,
+            status="APPROVED",
+            review_status="APPROVED",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        db_session.add(solution)
+        db_session.flush()
+
+        quote = Quote(
+            quote_code=f"Q-PMOQ{unique[:6]}",
+            opportunity_id=opportunity.id,
+            customer_id=customer.id,
+            status="APPROVED",
+            owner_id=admin_user.id,
+        )
+        db_session.add(quote)
+        db_session.flush()
+
+        quote_version = QuoteVersion(
+            quote_id=quote.id,
+            version_no="V1.0",
+            presale_solution_id=solution.id,
+            presale_ticket_id=ticket.id,
+            total_price=320000,
+            cost_total=210000,
+        )
+        db_session.add(quote_version)
+        db_session.flush()
+        quote.current_version_id = quote_version.id
+
+        contract = Contract(
+            contract_code=f"CT-QV-{unique}",
+            contract_name=f"报价版本合同-{unique}",
+            contract_type="sales",
+            opportunity_id=opportunity.id,
+            quote_id=quote_version.id,
+            customer_id=customer.id,
+            total_amount=320000,
+            status="signed",
+            sales_owner_id=admin_user.id,
+        )
+        db_session.add(contract)
+        db_session.commit()
+
+        created = client.post(
+            f"{prefix}/pmo/initiations",
+            json={
+                "project_name": f"报价版本合同立项-{unique}",
+                "project_type": "NEW",
+                "customer_name": customer.customer_name,
+                "contract_no": contract.contract_code,
+                "contract_amount": "320000",
+                "requirement_summary": "由报价版本合同发起立项",
+            },
+            headers=headers,
+        )
+        _assert_status(created, 201)
+
+        detail = client.get(
+            f"{prefix}/pmo/initiations/{created.json()['id']}",
+            headers=headers,
+        )
+        _assert_status(detail)
+        handover = detail.json()["presale_handover_context"]
+        assert handover["contract"]["contract_code"] == contract.contract_code
+        assert handover["presale_solution"]["id"] == solution.id
+        assert handover["presale_ticket"]["id"] == ticket.id
+        assert handover["baseline_cost"]["presale_estimated_cost"] == 210000.0
+        assert "presale_solution" not in handover["handover_status"]["missing"]
 
     def test_approve_lead_stage_solution_initiation_keeps_lead_handover(
         self, client: TestClient, db_session, admin_token: str

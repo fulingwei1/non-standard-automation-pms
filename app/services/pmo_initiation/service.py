@@ -14,7 +14,7 @@ from app.models.enums import AssessmentSourceTypeEnum, OpenItemStatusEnum
 from app.models.pmo import PmoProjectInitiation
 from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Project
-from app.models.sales import Contract, OpenItem, Opportunity
+from app.models.sales import Contract, OpenItem, Opportunity, QuoteVersion
 from app.models.task_center import (
     TaskPriorityEnum,
     TaskStatusEnum,
@@ -27,6 +27,9 @@ from app.schemas.pmo import (
     InitiationCreate,
     InitiationRejectRequest,
     InitiationUpdate,
+)
+from app.services.sales.presale_quote_context import (
+    resolve_presale_context_for_quote_version,
 )
 from app.utils.domain_codes import pmo as pmo_codes, task_center as task_center_codes
 
@@ -158,7 +161,7 @@ class PmoInitiationService:
         )
 
         contract = self._find_contract_for_initiation(initiation)
-        solution = self._find_solution_for_initiation(initiation)
+        solution = self._find_solution_for_initiation(initiation, contract)
         ticket = self._find_ticket_for_solution(solution)
 
         opportunity = getattr(contract, "opportunity", None) if contract else None
@@ -473,7 +476,7 @@ class PmoInitiationService:
             project_code = f"PJ{today.strftime('%y%m%d')}{initiation.id:04d}"
 
         contract = self._find_contract_for_initiation(initiation)
-        presale_solution = self._find_solution_for_initiation(initiation)
+        presale_solution = self._find_solution_for_initiation(initiation, contract)
         presale_ticket = self._find_ticket_for_solution(presale_solution)
         if contract and contract.project_id:
             existing_project = (
@@ -818,16 +821,46 @@ class PmoInitiationService:
         )
 
     def _find_solution_for_initiation(
-        self, initiation: PmoProjectInitiation
+        self,
+        initiation: PmoProjectInitiation,
+        contract: Optional[Contract] = None,
     ) -> Optional[PresaleSolution]:
-        """按立项申请中的售前技术方案ID回找方案。"""
+        """按立项申请或合同报价版本回找售前技术方案。"""
         solution_id = getattr(initiation, "technical_solution_id", None)
         if not isinstance(solution_id, int) or solution_id <= 0:
-            return None
+            quote_version = self._find_quote_version_for_contract(
+                contract or self._find_contract_for_initiation(initiation)
+            )
+            solutions, _ticket_ids = resolve_presale_context_for_quote_version(
+                self.db,
+                quote_version,
+            )
+            return solutions[0] if solutions else None
 
         return (
             self.db.query(PresaleSolution)
             .filter(PresaleSolution.id == solution_id)
+            .first()
+        )
+
+    def _find_quote_version_for_contract(
+        self, contract: Optional[Contract]
+    ) -> Optional[QuoteVersion]:
+        """从合同关联的报价版本中取得售前方案绑定上下文。"""
+        if not contract:
+            return None
+
+        quote_version = getattr(contract, "quote_version", None)
+        if quote_version is not None:
+            return quote_version
+
+        quote_version_id = getattr(contract, "quote_id", None)
+        if not isinstance(quote_version_id, int) or quote_version_id <= 0:
+            return None
+
+        return (
+            self.db.query(QuoteVersion)
+            .filter(QuoteVersion.id == quote_version_id)
             .first()
         )
 
