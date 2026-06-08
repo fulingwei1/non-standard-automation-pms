@@ -112,16 +112,29 @@ def build_task_info(db: Session, project_id: int, limit: int = 50) -> List[Dict[
     Returns:
         List[Dict[str, Any]]: 任务信息列表
     """
-    tasks = db.query(TaskUnified).filter(TaskUnified.project_id == project_id).limit(limit).all()
+    tasks = (
+        db.query(TaskUnified)
+        .filter(TaskUnified.project_id == project_id)
+        .order_by(desc(TaskUnified.updated_at), desc(TaskUnified.id))
+        .limit(limit)
+        .all()
+    )
 
     return [
         {
             "id": t.id,
             "title": t.title,
             "status": t.status,
+            "task_type": t.task_type,
+            "source_type": t.source_type,
+            "source_id": t.source_id,
+            "source_name": t.source_name,
             "assignee_name": t.assignee_name,
             "plan_end_date": t.plan_end_date.isoformat() if t.plan_end_date else None,
             "progress": float(t.progress or 0),
+            "priority": t.priority,
+            "category": t.category,
+            "tags": t.tags or [],
         }
         for t in tasks
     ]

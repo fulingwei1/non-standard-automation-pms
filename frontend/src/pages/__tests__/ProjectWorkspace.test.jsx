@@ -44,7 +44,22 @@ describe("ProjectWorkspace", () => {
           contract_amount: 580000,
         },
         team: [],
-        tasks: [],
+        tasks: [
+          {
+            id: 501,
+            title: "跟进售前遗留事项：客户样品治具接口图未冻结",
+            status: "PENDING",
+            task_type: "WORKFLOW",
+            source_type: "PRESALE_OPEN_ITEM",
+            source_id: 901,
+            source_name: "OI-001",
+            assignee_name: "王工",
+            progress: 0,
+            priority: "HIGH",
+            category: "PRESALE_HANDOVER",
+            tags: ["售前交接", "未闭环事项", "TECHNICAL"],
+          },
+        ],
         bonus: {},
         meetings: {},
         issues: {},
@@ -401,6 +416,11 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("PDS-001")).toBeInTheDocument();
     expect(screen.getByText("验收")).toBeInTheDocument();
     expect(screen.getByText("ACC-001")).toBeInTheDocument();
+    expect(screen.getByText("最近任务")).toBeInTheDocument();
+    expect(
+      screen.getByText("跟进售前遗留事项：客户样品治具接口图未冻结"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("售前遗留")).toBeInTheDocument();
     expect(screen.getByText("后续动作")).toBeInTheDocument();
     expect(screen.getByText("处理质检不合格项")).toBeInTheDocument();
     expect(screen.getByText("解决交付排产冲突")).toBeInTheDocument();

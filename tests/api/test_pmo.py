@@ -4,17 +4,20 @@ PMO 项目管理部 API 测试
 测试立项管理、风险管理、项目结项、驾驶舱等功能
 """
 
-from datetime import date
+from datetime import date, datetime, timedelta
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
 from app.models.pmo import PmoProjectPhase
+from app.models.enums import OpenItemStatusEnum
 from app.models.presale import PresaleSolution
 from app.models.project import Customer, Project
-from app.models.sales import Opportunity
+from app.models.sales import OpenItem, Opportunity
+from app.models.task_center import TaskUnified
 from app.models.user import User
+from app.services.pmo_initiation.service import PmoInitiationService
 
 
 def _auth_headers(token: str) -> dict:
@@ -264,7 +267,19 @@ class TestInitiations:
             author_id=admin_user.id,
             author_name=admin_user.real_name or admin_user.username,
         )
-        db_session.add(solution)
+        open_item = OpenItem(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            item_code=f"OI-PMO-{unique}",
+            item_type="TECHNICAL",
+            description="客户样品治具接口图未冻结，项目启动后需要继续跟进",
+            responsible_party="CUSTOMER",
+            responsible_person_id=admin_user.id,
+            due_date=datetime.now() + timedelta(days=5),
+            status=OpenItemStatusEnum.PENDING.value,
+            blocks_quotation=True,
+        )
+        db_session.add_all([solution, open_item])
         db_session.commit()
 
         created = client.post(
@@ -302,6 +317,15 @@ class TestInitiations:
             .filter(PresaleSolution.id == solution.id)
             .first()
         )
+        handover_task = (
+            db_session.query(TaskUnified)
+            .filter(
+                TaskUnified.project_id == project_id,
+                TaskUnified.source_type == "PRESALE_OPEN_ITEM",
+                TaskUnified.source_id == open_item.id,
+            )
+            .first()
+        )
 
         assert project is not None
         assert project.customer_id == customer.id
@@ -311,6 +335,38 @@ class TestInitiations:
         assert project.opportunity_id == opportunity.id
         assert float(project.contract_amount) == 160000.0
         assert linked_solution.project_id == project.id
+        assert handover_task is not None
+        assert handover_task.category == "PRESALE_HANDOVER"
+        assert handover_task.assignee_id == admin_user.id
+        assert handover_task.priority == "HIGH"
+        assert handover_task.source_name == open_item.item_code
+        assert "客户样品治具接口图未冻结" in handover_task.title
+
+        before_count = (
+            db_session.query(TaskUnified)
+            .filter(
+                TaskUnified.project_id == project_id,
+                TaskUnified.source_type == "PRESALE_OPEN_ITEM",
+                TaskUnified.source_id == open_item.id,
+            )
+            .count()
+        )
+        created_again = PmoInitiationService(db_session)._sync_presale_open_items_to_project_tasks(
+            project,
+            admin_user.id,
+            admin_user,
+        )
+        after_count = (
+            db_session.query(TaskUnified)
+            .filter(
+                TaskUnified.project_id == project_id,
+                TaskUnified.source_type == "PRESALE_OPEN_ITEM",
+                TaskUnified.source_id == open_item.id,
+            )
+            .count()
+        )
+        assert created_again == 0
+        assert after_count == before_count
 
 
 class TestProjectPhases:

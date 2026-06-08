@@ -72,6 +72,16 @@ const formatTenderResult = (result) => ({
   CANCELLED: "已取消",
 })[String(result || "").toUpperCase()] || result || "未更新";
 
+const getTaskSourceLabel = (task) => {
+  if (
+    task?.category === "PRESALE_HANDOVER" ||
+    task?.source_type === "PRESALE_OPEN_ITEM"
+  ) {
+    return "售前遗留";
+  }
+  return null;
+};
+
 function appendContextParam(params, key, value) {
   if (value !== undefined && value !== null && value !== "") {
     params.set(key, String(value));
@@ -1039,7 +1049,12 @@ export default function ProjectWorkspace() {
                   className="flex items-center justify-between p-3 border rounded-lg">
 
                     <div className="flex-1">
-                      <p className="font-medium">{task.title}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium">{task.title}</p>
+                        {getTaskSourceLabel(task) &&
+                        <Badge variant="outline">{getTaskSourceLabel(task)}</Badge>
+                        }
+                      </div>
                       <p className="text-sm text-gray-500">
                         {task.assignee_name}
                       </p>

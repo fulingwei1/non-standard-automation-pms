@@ -10,10 +10,17 @@ from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.models.enums import AssessmentSourceTypeEnum, OpenItemStatusEnum
 from app.models.pmo import PmoProjectInitiation
 from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Project
-from app.models.sales import Contract, Opportunity
+from app.models.sales import Contract, OpenItem, Opportunity
+from app.models.task_center import (
+    TaskPriorityEnum,
+    TaskStatusEnum,
+    TaskTypeEnum,
+    TaskUnified,
+)
 from app.models.user import User
 from app.schemas.pmo import (
     InitiationApproveRequest,
@@ -21,7 +28,7 @@ from app.schemas.pmo import (
     InitiationRejectRequest,
     InitiationUpdate,
 )
-from app.utils.domain_codes import pmo as pmo_codes
+from app.utils.domain_codes import pmo as pmo_codes, task_center as task_center_codes
 
 
 class PmoInitiationService:
@@ -395,6 +402,11 @@ class PmoInitiationService:
             project = self._create_project_from_initiation(
                 initiation, approve_request.approved_pm_id
             )
+            self._sync_presale_open_items_to_project_tasks(
+                project,
+                approve_request.approved_pm_id,
+                current_user,
+            )
             initiation.project_id = project.id
 
         self.db.add(initiation)
@@ -470,6 +482,11 @@ class PmoInitiationService:
                 self.db.query(Project).filter(Project.id == contract.project_id).first()
             )
             if existing_project:
+                self._backfill_existing_project_sales_context(
+                    existing_project,
+                    contract,
+                    presale_solution,
+                )
                 self._bind_presale_solution_to_project(presale_solution, existing_project.id)
                 self._ensure_payment_plans_for_contract(contract)
                 return existing_project
@@ -583,6 +600,187 @@ class PmoInitiationService:
             self._ensure_payment_plans_for_contract(contract)
 
         return project
+
+    def _backfill_existing_project_sales_context(
+        self,
+        project: Project,
+        contract: Optional[Contract],
+        presale_solution: Optional[PresaleSolution],
+    ) -> None:
+        """复用已有项目时补齐销售/售前来源，保证后续交接同步能追溯。"""
+        if contract:
+            if not getattr(project, "contract_id", None):
+                project.contract_id = getattr(contract, "id", None)
+            if not getattr(project, "contract_no", None):
+                project.contract_no = getattr(contract, "contract_code", None)
+            if not getattr(project, "customer_contract_no", None):
+                project.customer_contract_no = getattr(contract, "customer_contract_no", None)
+            if not getattr(project, "opportunity_id", None):
+                project.opportunity_id = getattr(contract, "opportunity_id", None)
+
+        if presale_solution and not getattr(project, "opportunity_id", None):
+            project.opportunity_id = getattr(presale_solution, "opportunity_id", None)
+
+        if getattr(project, "opportunity_id", None) and not getattr(project, "lead_id", None):
+            opportunity = (
+                self.db.query(Opportunity)
+                .filter(Opportunity.id == project.opportunity_id)
+                .first()
+            )
+            project.lead_id = getattr(opportunity, "lead_id", None) if opportunity else None
+
+        self.db.add(project)
+
+    def _sync_presale_open_items_to_project_tasks(
+        self,
+        project: Optional[Project],
+        pm_id: Optional[int],
+        current_user: Optional[User],
+    ) -> int:
+        """把销售/售前未闭环事项沉淀成项目侧可执行任务。"""
+        if not project or not getattr(project, "id", None):
+            return 0
+
+        source_filters = []
+        opportunity_id = getattr(project, "opportunity_id", None)
+        lead_id = getattr(project, "lead_id", None)
+
+        if opportunity_id:
+            source_filters.append(
+                (
+                    OpenItem.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value,
+                    OpenItem.source_id == opportunity_id,
+                )
+            )
+            if not lead_id:
+                opportunity = (
+                    self.db.query(Opportunity)
+                    .filter(Opportunity.id == opportunity_id)
+                    .first()
+                )
+                lead_id = getattr(opportunity, "lead_id", None) if opportunity else None
+
+        if lead_id:
+            source_filters.append(
+                (
+                    OpenItem.source_type == AssessmentSourceTypeEnum.LEAD.value,
+                    OpenItem.source_id == lead_id,
+                )
+            )
+
+        if not source_filters:
+            return 0
+
+        closed_statuses = (
+            OpenItemStatusEnum.CLOSED.value,
+            OpenItemStatusEnum.CANCELLED.value,
+            OpenItemStatusEnum.RESOLVED.value,
+        )
+        query_filters = [
+            (source_type_filter & source_id_filter)
+            for source_type_filter, source_id_filter in source_filters
+        ]
+        open_items = (
+            self.db.query(OpenItem)
+            .filter(
+                or_(*query_filters),
+                or_(OpenItem.status.is_(None), OpenItem.status.notin_(closed_statuses)),
+            )
+            .order_by(
+                desc(OpenItem.blocks_quotation),
+                OpenItem.due_date.asc(),
+                desc(OpenItem.updated_at),
+                desc(OpenItem.id),
+            )
+            .all()
+        )
+
+        if not open_items:
+            return 0
+
+        pm = self.db.query(User).filter(User.id == pm_id).first() if pm_id else None
+        created_count = 0
+        assigner_id = getattr(current_user, "id", None) or getattr(pm, "id", None)
+        assigner_name = (
+            getattr(current_user, "real_name", None)
+            or getattr(current_user, "username", None)
+            or getattr(pm, "real_name", None)
+            or getattr(pm, "username", None)
+        )
+
+        for item in open_items:
+            existing_task = (
+                self.db.query(TaskUnified)
+                .filter(
+                    TaskUnified.project_id == project.id,
+                    TaskUnified.source_type == "PRESALE_OPEN_ITEM",
+                    TaskUnified.source_id == item.id,
+                    TaskUnified.is_active.is_(True),
+                )
+                .first()
+            )
+            if existing_task:
+                continue
+
+            assignee = getattr(item, "responsible_person", None)
+            if not assignee and getattr(item, "responsible_person_id", None):
+                assignee = (
+                    self.db.query(User)
+                    .filter(User.id == item.responsible_person_id)
+                    .first()
+                )
+            if not assignee:
+                assignee = pm
+            if not assignee:
+                continue
+
+            description = (item.description or "").strip()
+            title_suffix = description[:80] if description else (item.item_type or item.item_code)
+            task = TaskUnified(
+                task_code=task_center_codes.generate_task_code(self.db),
+                title=f"跟进售前遗留事项：{title_suffix}"[:200],
+                description="\n".join(
+                    part
+                    for part in [
+                        f"来源未决事项：{item.item_code}",
+                        f"事项类型：{item.item_type}",
+                        f"责任方：{item.responsible_party}",
+                        f"原始描述：{description}" if description else None,
+                        "该事项阻塞报价/项目交接" if item.blocks_quotation else None,
+                    ]
+                    if part
+                ),
+                task_type=TaskTypeEnum.WORKFLOW.value,
+                source_type="PRESALE_OPEN_ITEM",
+                source_id=item.id,
+                source_name=item.item_code,
+                project_id=project.id,
+                project_code=project.project_code,
+                project_name=project.project_name,
+                assignee_id=assignee.id,
+                assignee_name=assignee.real_name or assignee.username,
+                assigner_id=assigner_id,
+                assigner_name=assigner_name,
+                plan_end_date=item.due_date.date() if item.due_date else None,
+                deadline=item.due_date,
+                status=TaskStatusEnum.PENDING.value,
+                progress=0,
+                priority=(
+                    TaskPriorityEnum.HIGH.value
+                    if item.blocks_quotation
+                    else TaskPriorityEnum.MEDIUM.value
+                ),
+                is_urgent=bool(item.blocks_quotation),
+                tags=["售前交接", "未闭环事项", item.item_type],
+                category="PRESALE_HANDOVER",
+                created_by=assigner_id,
+                updated_by=assigner_id,
+            )
+            self.db.add(task)
+            self.db.flush()
+            created_count += 1
+
+        return created_count
 
     def _find_contract_for_initiation(
         self, initiation: PmoProjectInitiation
