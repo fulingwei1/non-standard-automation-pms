@@ -176,6 +176,51 @@ class TestPresaleTicketsAPI:
         assert ticket.customer_name == customer.customer_name
         assert ticket.lead_id == lead.id
 
+    def test_create_ticket_from_lead_inherits_requirement_context(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """只传线索创建需求调研工单时，应自动继承客户名称和需求摘要。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        unique = uuid4().hex[:8].upper()
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        lead = Lead(
+            lead_code=f"LEADPL{unique[:6]}",
+            source="展会",
+            customer_name=f"线索需求调研客户-{unique}",
+            industry="新能源",
+            demand_summary="客户需要电池包EOL测试线，要求18秒节拍并支持MES追溯。",
+            owner_id=admin_user.id,
+        )
+        db_session.add(lead)
+        db_session.commit()
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/presale/tickets",
+            headers=_auth_headers(admin_token),
+            json={
+                "title": f"线索需求调研-{unique}",
+                "ticket_type": "REQUIREMENT_RESEARCH",
+                "urgency": "NORMAL",
+                "lead_id": lead.id,
+            },
+        )
+
+        assert response.status_code == 201, response.text
+        payload = response.json()
+        assert payload["lead_id"] == lead.id
+        assert payload["customer_name"] == lead.customer_name
+        assert payload["description"] == lead.demand_summary
+
+        ticket = db_session.get(PresaleSupportTicket, payload["id"])
+        assert ticket is not None
+        assert ticket.lead_id == lead.id
+        assert ticket.customer_name == lead.customer_name
+        assert ticket.description == lead.demand_summary
+
     def test_get_ticket_detail(self, client: TestClient, admin_token: str):
         """测试获取工单详情"""
         if not admin_token:

@@ -14,7 +14,7 @@ from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.core.sales_permissions import can_manage_sales_opportunity
 from app.models.presale import PresaleSupportTicket
-from app.models.sales import Opportunity
+from app.models.sales import Lead, Opportunity
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.presale import TicketCreate, TicketResponse, TicketUpdate
@@ -131,6 +131,14 @@ def create_ticket(
             .first()
         )
 
+    lead = None
+    if ticket_in.lead_id:
+        lead = db.query(Lead).filter(Lead.id == ticket_in.lead_id).first()
+        if not lead:
+            raise HTTPException(status_code=404, detail="线索不存在")
+    elif opportunity and opportunity.lead_id:
+        lead = db.query(Lead).filter(Lead.id == opportunity.lead_id).first()
+
     if ticket_in.ticket_type == "SOLUTION_REVIEW":
         if not opportunity:
             raise HTTPException(status_code=400, detail="方案评审必须关联商机")
@@ -141,6 +149,16 @@ def create_ticket(
             raise HTTPException(status_code=403, detail="无权限为该商机申请评审")
 
     ticket_status = "REVIEW" if ticket_in.ticket_type == "SOLUTION_REVIEW" else "PENDING"
+    resolved_customer_name = (
+        ticket_in.customer_name
+        or (
+            opportunity.customer.customer_name
+            if opportunity and getattr(opportunity, "customer", None)
+            else None
+        )
+        or (lead.customer_name if lead else None)
+    )
+    resolved_lead_id = ticket_in.lead_id or (opportunity.lead_id if opportunity else None)
 
     # 创建工单基本信息
     ticket = PresaleSupportTicket(
@@ -148,15 +166,10 @@ def create_ticket(
         title=ticket_in.title,
         ticket_type=ticket_in.ticket_type,
         urgency=ticket_in.urgency,
-        description=ticket_in.description,
+        description=ticket_in.description or (lead.demand_summary if lead else None),
         customer_id=ticket_in.customer_id or (opportunity.customer_id if opportunity else None),
-        customer_name=ticket_in.customer_name
-        or (
-            opportunity.customer.customer_name
-            if opportunity and getattr(opportunity, "customer", None)
-            else None
-        ),
-        lead_id=ticket_in.lead_id or (opportunity.lead_id if opportunity else None),
+        customer_name=resolved_customer_name,
+        lead_id=resolved_lead_id,
         opportunity_id=ticket_in.opportunity_id,
         project_id=ticket_in.project_id,
         applicant_id=current_user.id,
