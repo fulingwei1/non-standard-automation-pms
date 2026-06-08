@@ -91,6 +91,13 @@ describe("ProjectWorkspace", () => {
               ticket_id: 91,
               opportunity_id: 2,
               project_id: 1,
+              template_parameters: {
+                test_station_count: 4,
+                cycle_time: { value: 12, unit: "秒" },
+                uph: { value: 300, unit: "pcs/h", label: "目标UPH" },
+                accuracy: "±0.5%",
+                air_pressure: { value: 0.6, unit: "MPa" },
+              },
               estimated_cost: 355000,
               suggested_price: 580000,
             },
@@ -377,6 +384,14 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("QT-001")).toBeInTheDocument();
     expect(screen.getByText("FCT测试方案")).toBeInTheDocument();
     expect(screen.getByText("PST-091")).toBeInTheDocument();
+    expect(screen.getByText("关键技术参数")).toBeInTheDocument();
+    expect(screen.getByText("测试工位数")).toBeInTheDocument();
+    expect(screen.getByText("4 个")).toBeInTheDocument();
+    expect(screen.getByText("节拍时间")).toBeInTheDocument();
+    expect(screen.getByText("12 秒")).toBeInTheDocument();
+    expect(screen.getByText("目标UPH")).toBeInTheDocument();
+    expect(screen.getByText("300 pcs/h")).toBeInTheDocument();
+    expect(screen.getByText("还有 1 项，打开售前方案查看全部")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /FCT测试方案/ })).toHaveAttribute(
       "href",
       "/solutions/88?ticket_id=91&lead_id=2026&opportunity_id=2&project_id=1",

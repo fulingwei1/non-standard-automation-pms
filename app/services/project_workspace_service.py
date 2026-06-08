@@ -497,6 +497,8 @@ def _build_presale_solution_payload(solution: PresaleSolution) -> Dict[str, Any]
         "opportunity_id": solution.opportunity_id,
         "status": solution.status,
         "review_status": solution.review_status,
+        "template_id": solution.template_id,
+        "template_parameters": solution.template_parameters or {},
         "requirement_summary": solution.requirement_summary,
         "solution_overview": solution.solution_overview,
         "technical_spec": solution.technical_spec,

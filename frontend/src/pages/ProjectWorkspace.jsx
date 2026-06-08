@@ -97,6 +97,29 @@ const formatTenderResult = (result) => ({
   CANCELLED: "已取消",
 })[String(result || "").toUpperCase()] || result || "未更新";
 
+const technicalParameterLabels = {
+  test_station_count: "测试工位数",
+  cycle_time: "节拍时间",
+  accuracy: "测试精度",
+  fixture_qty: "夹具数量",
+  channels: "测试通道",
+  uph: "UPH",
+  daily_output: "日产能",
+  air_pressure: "气源压力",
+  power_supply: "电源要求",
+  communication: "通讯协议",
+};
+
+const technicalParameterUnits = {
+  test_station_count: "个",
+  cycle_time: "秒",
+  fixture_qty: "套",
+  channels: "通道",
+  uph: "pcs/h",
+  daily_output: "pcs",
+  air_pressure: "MPa",
+};
+
 const getTaskSourceLabel = (task) => {
   if (
     task?.category === "PRESALE_HANDOVER" ||
@@ -121,6 +144,64 @@ function getFirstValue(item, keys) {
     }
   }
   return null;
+}
+
+function parsePlainObject(value) {
+  if (!value) {
+    return null;
+  }
+  if (typeof value === "object" && !Array.isArray(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? parsed
+        : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function humanizeParameterKey(key) {
+  return String(key)
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim();
+}
+
+function normalizeTechnicalParameters(parameters) {
+  const source = parsePlainObject(parameters);
+  if (!source) {
+    return [];
+  }
+
+  return Object.entries(source)
+    .map(([key, item]) => {
+      const isObject = item && typeof item === "object" && !Array.isArray(item);
+      const value = isObject
+        ? item.value ?? item.default_value ?? item.default ?? item.amount
+        : item;
+
+      if (value === undefined || value === null || value === "") {
+        return null;
+      }
+
+      return {
+        key,
+        label: isObject
+          ? item.label || technicalParameterLabels[key] || humanizeParameterKey(key)
+          : technicalParameterLabels[key] || humanizeParameterKey(key),
+        value: Array.isArray(value) ? value.join("、") : String(value),
+        unit: isObject
+          ? item.unit || technicalParameterUnits[key] || ""
+          : technicalParameterUnits[key] || "",
+      };
+    })
+    .filter(Boolean);
 }
 
 const PRESALE_TICKET_TASK_TYPE_MAP = {
@@ -426,6 +507,9 @@ export default function ProjectWorkspace() {
   const missingItems = handoverStatus?.missing || [];
   const quoteVersion = handoverContext?.quote?.version || {};
   const primarySolution = handoverContext?.presale_solutions?.[0];
+  const primarySolutionParameters = normalizeTechnicalParameters(
+    primarySolution?.template_parameters,
+  );
   const primaryTicket = handoverContext?.presale_tickets?.[0];
   const primaryTender = handoverContext?.presale_tenders?.[0];
   const initialPlan = handoverContext?.initial_plan || {};
@@ -741,6 +825,32 @@ export default function ProjectWorkspace() {
                   <p className="mt-2 text-sm text-gray-500">
                     {presaleCost != null ? formatCurrency(presaleCost) : "未估算"}
                   </p>
+                  {primarySolutionParameters.length > 0 &&
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs text-gray-500">关键技术参数</p>
+                    <div className="grid grid-cols-1 gap-2">
+                      {primarySolutionParameters.slice(0, 4).map((parameter) =>
+                      <div
+                        key={parameter.key}
+                        className="rounded-md bg-muted/40 px-2 py-1 text-xs">
+
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="truncate">{parameter.label}</span>
+                            <span className="shrink-0 font-medium">
+                              {parameter.value}
+                              {parameter.unit ? ` ${parameter.unit}` : ""}
+                            </span>
+                          </div>
+                      </div>
+                      )}
+                    </div>
+                    {primarySolutionParameters.length > 4 &&
+                    <p className="text-xs text-gray-500">
+                      还有 {primarySolutionParameters.length - 4} 项，打开售前方案查看全部
+                    </p>
+                    }
+                  </div>
+                  }
                 </div>
 
                 <div className="rounded-lg border p-4">

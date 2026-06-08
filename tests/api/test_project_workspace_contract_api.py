@@ -446,6 +446,12 @@ class TestProjectWorkspaceHandoverContext:
             requirement_summary="冻结需求摘要",
             solution_overview="设备方案概要",
             technical_spec="关键技术规格",
+            template_id=17,
+            template_parameters={
+                "test_station_count": 4,
+                "cycle_time": {"value": 12, "unit": "秒"},
+                "uph": {"value": 300, "unit": "pcs/h", "label": "目标UPH"},
+            },
             estimated_cost=Decimal("355000"),
             suggested_price=Decimal("580000"),
             estimated_hours=120,
@@ -509,6 +515,12 @@ class TestProjectWorkspaceHandoverContext:
         assert payload["presale_tickets"][0]["assessment_status"] == AssessmentStatusEnum.COMPLETED.value
         assert payload["presale_tickets"][0]["current_assessment_id"] == assessment.id
         assert payload["presale_solutions"][0]["solution_no"] == solution.solution_no
+        assert payload["presale_solutions"][0]["template_id"] == 17
+        assert payload["presale_solutions"][0]["template_parameters"] == {
+            "test_station_count": 4,
+            "cycle_time": {"value": 12, "unit": "秒"},
+            "uph": {"value": 300, "unit": "pcs/h", "label": "目标UPH"},
+        }
         assert payload["presale_tenders"][0]["tender_no"] == tender.tender_no
         assert payload["presale_tenders"][0]["result"] == "WON"
         assert payload["presale_tenders"][0]["our_bid_amount"] == 580000.0
