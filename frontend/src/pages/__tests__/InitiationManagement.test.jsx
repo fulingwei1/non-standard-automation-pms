@@ -154,4 +154,77 @@ describe("InitiationManagement presale handoff", () => {
     });
     expect(navigateMock).toHaveBeenCalledWith("/pmo/initiations/18");
   });
+
+  it("keeps the handoff solution selected by the presale entry path", async () => {
+    presaleWorkbenchApi.loadContext.mockResolvedValueOnce({
+      source: { type: "opportunity", id: 2 },
+      ticket: {
+        id: 501,
+        title: "售前支持申请",
+        customer_name: "华南电子",
+        estimated_amount: 420000,
+      },
+      solutions: {
+        items: [
+          {
+            id: 88,
+            name: "入口选中的方案",
+            customer_name: "华南电子",
+            suggested_price: 460000,
+            estimated_cost: 320000,
+            requirement_summary: "选中方案的交接范围",
+            estimated_hours: 20,
+          },
+          {
+            id: 99,
+            name: "上下文默认方案",
+            customer_name: "华南电子",
+            suggested_price: 999999,
+            estimated_cost: 888888,
+            requirement_summary: "不应覆盖入口方案",
+            estimated_hours: 120,
+          },
+        ],
+        total: 2,
+      },
+      costing: {
+        baseline: {
+          solution_id: 99,
+          solution_name: "上下文默认方案",
+          suggested_price: 999999,
+          estimated_cost: 888888,
+        },
+      },
+      assessment: {
+        requirementDetail: {
+          requirement_summary: "客户现场约束已澄清",
+        },
+        risks: {
+          items: [],
+          total: 0,
+        },
+      },
+    });
+
+    renderPage(
+      "?handoff=presale&opportunity_id=2&ticket_id=501&solution_id=88&project_name=备用项目&customer_name=备用客户",
+    );
+
+    expect(await screen.findByDisplayValue("入口选中的方案")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("460000")).toBeInTheDocument();
+    expect(screen.queryByDisplayValue("999999")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "创建" }));
+
+    await waitFor(() => {
+      expect(pmoApi.initiations.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          project_name: "入口选中的方案",
+          contract_amount: 460000,
+          technical_solution_id: 88,
+          estimated_hours: 20,
+        }),
+      );
+    });
+  });
 });

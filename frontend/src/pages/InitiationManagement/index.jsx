@@ -78,10 +78,30 @@ function pickPrimarySolution(context, fallbackSolutionId) {
 function buildContextHandoffData(context, fallbackData) {
     const baseline = context?.costing?.baseline || {};
     const solution = pickPrimarySolution(context, fallbackData?.technical_solution_id);
+    const explicitSolutionId = fallbackData?.technical_solution_id;
     const ticket = context?.ticket || {};
     const requirementDetail = context?.assessment?.requirementDetail || {};
     const technicalRisks = context?.assessment?.risks?.items || [];
     const primaryRisk = technicalRisks[0] || {};
+    const contractAmountCandidates = explicitSolutionId
+        ? [
+            solution?.suggested_price,
+            solution?.estimated_cost,
+            ticket?.estimated_amount,
+            ticket?.estimated_value,
+            fallbackData?.contract_amount,
+            baseline.suggested_price,
+            baseline.estimated_cost,
+        ]
+        : [
+            baseline.suggested_price,
+            baseline.estimated_cost,
+            solution?.suggested_price,
+            solution?.estimated_cost,
+            ticket?.estimated_amount,
+            ticket?.estimated_value,
+            fallbackData?.contract_amount,
+        ];
 
     return {
         ...fallbackData,
@@ -98,19 +118,11 @@ function buildContextHandoffData(context, fallbackData) {
             ticket?.customer_name,
             fallbackData?.customer_name,
         ),
-        contract_amount: firstNonEmpty(
-            baseline.suggested_price,
-            baseline.estimated_cost,
-            solution?.suggested_price,
-            solution?.estimated_cost,
-            ticket?.estimated_amount,
-            ticket?.estimated_value,
-            fallbackData?.contract_amount,
-        ),
+        contract_amount: firstNonEmpty(...contractAmountCandidates),
         technical_solution_id: firstNonEmpty(
-            baseline.solution_id,
-            solution?.id,
             fallbackData?.technical_solution_id,
+            solution?.id,
+            baseline.solution_id,
         ),
         requirement_summary: firstNonEmpty(
             requirementDetail.requirement_summary,
