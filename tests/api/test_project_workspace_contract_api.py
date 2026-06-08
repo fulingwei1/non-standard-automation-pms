@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """项目工作台前后端契约与交接上下文测试。"""
 
+import json
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
@@ -390,6 +391,27 @@ class TestProjectWorkspaceHandoverContext:
             total_score=82,
             decision="RECOMMEND",
             risks='[{"dimension":"delivery","level":"MEDIUM","description":"交期压缩风险"}]',
+            item_scores=json.dumps(
+                [
+                    {
+                        "item_code": "tech_maturity",
+                        "item_name": "技术成熟度",
+                        "dimension": "technology",
+                        "score": 10,
+                        "max_score": 10,
+                        "weight": 1,
+                    },
+                    {
+                        "item_code": "delivery_risk",
+                        "item_name": "交付风险",
+                        "dimension": "delivery",
+                        "score": 7,
+                        "max_score": 10,
+                        "weight": 1,
+                    },
+                ],
+                ensure_ascii=False,
+            ),
             presale_ticket_id=ticket.id,
         )
         db_session.add(assessment)
@@ -499,6 +521,8 @@ class TestProjectWorkspaceHandoverContext:
         assert payload["initial_plan"]["milestones"][0]["is_key"] is True
         assert payload["technical_assessment"]["current"]["id"] == assessment.id
         assert payload["technical_assessment"]["current"]["total_score"] == 82
+        assert payload["technical_assessment"]["current"]["item_scores"][0]["item_name"] == "技术成熟度"
+        assert payload["technical_assessment"]["current"]["item_scores"][0]["score"] == 10
         assert payload["technical_assessment"]["risks"]["total"] == 1
         assert (
             payload["technical_assessment"]["risks"]["items"][0]["risk_description"]

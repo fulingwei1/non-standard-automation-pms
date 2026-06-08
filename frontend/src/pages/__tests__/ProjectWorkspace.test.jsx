@@ -139,6 +139,24 @@ describe("ProjectWorkspace", () => {
               total_score: 82,
               decision: "RECOMMEND",
               presale_ticket_id: 91,
+              item_scores: [
+                {
+                  item_code: "tech_maturity",
+                  item_name: "技术成熟度",
+                  dimension: "technology",
+                  score: 10,
+                  max_score: 10,
+                  weight: 1,
+                },
+                {
+                  item_code: "delivery_risk",
+                  item_name: "交付风险",
+                  dimension: "delivery",
+                  score: 7,
+                  max_score: 10,
+                  weight: 1,
+                },
+              ],
             },
             risks: {
               total: 1,
@@ -374,6 +392,10 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText("PM未分配")).toBeInTheDocument();
     expect(screen.getByText("技术评估")).toBeInTheDocument();
     expect(screen.getByText("82 分")).toBeInTheDocument();
+    expect(screen.getByText("评估项得分")).toBeInTheDocument();
+    expect(screen.getByText("技术成熟度")).toBeInTheDocument();
+    expect(screen.getByText("10 / 10")).toBeInTheDocument();
+    expect(screen.getByText("交付风险")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /82 分/ })).toHaveAttribute(
       "href",
       "/sales/assessments/opportunity/2?assessment_id=701&ticket_id=91&lead_id=2026&project_id=1",

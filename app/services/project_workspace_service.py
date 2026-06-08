@@ -32,6 +32,7 @@ from app.models.technical_review import TechnicalReview
 from app.services.bonus.project_bonus_service import ProjectBonusService
 from app.services.project_meeting_service import ProjectMeetingService
 from app.services.project_solution_service import ProjectSolutionService
+from app.utils.json_helpers import safe_json_loads
 
 
 def _num(value: Any) -> Optional[float]:
@@ -574,6 +575,11 @@ def _build_technical_assessment_payload(assessment: TechnicalAssessment) -> Dict
         "template_id": assessment.template_id,
         "version_no": assessment.version_no,
         "is_latest": bool(assessment.is_latest),
+        "item_scores": safe_json_loads(
+            assessment.item_scores,
+            default=[],
+            field_name="technical_assessment.item_scores",
+        ),
         "created_at": assessment.created_at.isoformat() if assessment.created_at else None,
         "updated_at": assessment.updated_at.isoformat() if assessment.updated_at else None,
     }

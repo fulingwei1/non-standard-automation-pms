@@ -56,6 +56,31 @@ const normalizeRiskFactors = (value) => {
   return [];
 };
 
+const normalizeAssessmentItemScores = (value) => {
+  if (Array.isArray(value)) {
+    return value.filter((item) => item && typeof item === "object");
+  }
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((item) => item && typeof item === "object");
+      }
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
+const formatAssessmentScore = (value) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return value ?? "-";
+  }
+  return Number.isInteger(parsed) ? parsed : parsed.toFixed(1);
+};
+
 const formatRiskLevel = (riskLevel) => {
   if (!riskLevel) {
     return "风险待判";
@@ -407,6 +432,7 @@ export default function ProjectWorkspace() {
   const primaryMilestone = initialPlan.milestones?.[0];
   const technicalAssessment = handoverContext?.technical_assessment || {};
   const currentAssessment = technicalAssessment.current;
+  const assessmentItemScores = normalizeAssessmentItemScores(currentAssessment?.item_scores);
   const assessmentRisks = technicalAssessment.risks || {};
   const primaryAssessmentRisk = assessmentRisks.items?.[0];
   const openItems = handoverContext?.open_items || {};
@@ -666,6 +692,37 @@ export default function ProjectWorkspace() {
                     </Badge>
                     <Badge variant="outline">{assessmentRisks.total || 0} 项风险</Badge>
                   </div>
+                  {assessmentItemScores.length > 0 &&
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs text-gray-500">评估项得分</p>
+                    {assessmentItemScores.slice(0, 3).map((item, index) => {
+                      const itemName =
+                        item.item_name ||
+                        item.itemName ||
+                        item.item_code ||
+                        `评估项${index + 1}`;
+                      const maxScore = item.max_score ?? item.maxScore ?? 10;
+                      return (
+                        <div
+                          key={item.item_id ?? item.item_code ?? index}
+                          className="rounded-md bg-muted/40 px-2 py-1 text-xs">
+
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="truncate">{itemName}</span>
+                            <span className="shrink-0 font-medium">
+                              {formatAssessmentScore(item.score)} / {formatAssessmentScore(maxScore)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {assessmentItemScores.length > 3 &&
+                    <p className="text-xs text-gray-500">
+                      还有 {assessmentItemScores.length - 3} 项，打开技术评估查看全部
+                    </p>
+                    }
+                  </div>
+                  }
                   {primaryAssessmentRisk &&
                   <p className="mt-2 truncate text-sm text-gray-500">
                     {primaryAssessmentRisk.risk_title || primaryAssessmentRisk.risk_description}
