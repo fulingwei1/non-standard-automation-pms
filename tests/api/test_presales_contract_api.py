@@ -3208,6 +3208,90 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(Customer).filter(Customer.id == customer.id).delete()
             db_session.commit()
 
+    def test_approved_lead_solution_completes_lead_assessment(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """线索阶段方案评审通过后，也应反写销售线索技术评估闭环。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        lead = Lead(
+            lead_code=f"LD-SOLG2-{unique}",
+            customer_name=f"线索方案评审客户-{unique}",
+            source="展会",
+            industry="电子制造",
+            owner_id=admin_user.id,
+            assessment_status=AssessmentStatusEnum.PENDING.value,
+        )
+        db_session.add(lead)
+        db_session.commit()
+
+        created_solution = client.post(
+            f"{prefix}/presale/proposals/solutions",
+            json={
+                "name": f"线索阶段评审方案-{unique}",
+                "solution_type": "CUSTOM",
+                "lead_id": lead.id,
+                "requirement_summary": "线索阶段客户需求已澄清",
+                "solution_overview": "线索阶段技术路线可行",
+                "estimated_cost": 120000,
+                "suggested_price": 180000,
+            },
+            headers=headers,
+        )
+        assert created_solution.status_code == 201, created_solution.text
+        solution_id = created_solution.json()["id"]
+        ticket_id = created_solution.json()["ticket_id"]
+        assert ticket_id is not None
+
+        try:
+            approved = client.put(
+                f"{prefix}/presale/proposals/solutions/{solution_id}/review",
+                json={"review_status": "APPROVED", "review_comment": "线索方案评审通过"},
+                headers=headers,
+            )
+            assert approved.status_code == 200, approved.text
+            assert approved.json()["status"] == "APPROVED"
+            assert approved.json()["lead_id"] == lead.id
+
+            db_session.expire_all()
+            refreshed_lead = db_session.get(Lead, lead.id)
+            assert refreshed_lead.assessment_status == AssessmentStatusEnum.COMPLETED.value
+            assert refreshed_lead.assessment_id is not None
+
+            assessment = db_session.get(TechnicalAssessment, refreshed_lead.assessment_id)
+            assert assessment is not None
+            assert assessment.source_type == "LEAD"
+            assert assessment.source_id == lead.id
+            assert assessment.status == AssessmentStatusEnum.COMPLETED.value
+            assert assessment.decision == "推荐立项"
+            assert assessment.presale_ticket_id == ticket_id
+
+            refreshed_ticket = db_session.get(PresaleSupportTicket, ticket_id)
+            assert refreshed_ticket.status == "COMPLETED"
+            assert refreshed_ticket.assessment_status == AssessmentStatusEnum.COMPLETED.value
+            assert refreshed_ticket.current_assessment_id == assessment.id
+        finally:
+            db_session.query(PresaleSolution).filter(PresaleSolution.id == solution_id).delete(
+                synchronize_session=False
+            )
+            db_session.query(TechnicalAssessment).filter(
+                TechnicalAssessment.source_type == "LEAD",
+                TechnicalAssessment.source_id == lead.id,
+            ).delete(synchronize_session=False)
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id == ticket_id
+            ).delete(synchronize_session=False)
+            db_session.query(Lead).filter(Lead.id == lead.id).delete()
+            db_session.commit()
+
     def test_approved_solution_does_not_steal_other_ticket_assessment(
         self, client: TestClient, db_session: Session, admin_token: str
     ):

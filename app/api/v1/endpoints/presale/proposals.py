@@ -322,12 +322,12 @@ def resolve_solution_ticket_from_opportunity(
     return ticket
 
 
-def complete_opportunity_assessment_for_solution(
+def complete_sales_assessment_for_solution(
     db: Session,
     solution: PresaleSolution,
     current_user: User,
 ) -> None:
-    """方案评审通过后补齐商机 G2 所需的技术评估闭环。"""
+    """方案评审通过后补齐销售来源对象所需的技术评估闭环。"""
     ticket = None
     if solution.ticket_id:
         ticket = (
@@ -337,29 +337,52 @@ def complete_opportunity_assessment_for_solution(
         )
 
     opportunity_id = solution.opportunity_id or (ticket.opportunity_id if ticket else None)
-    if not opportunity_id:
+    if opportunity_id:
+        opportunity = (
+            db.query(Opportunity)
+            .filter(Opportunity.id == opportunity_id)
+            .first()
+        )
+        if opportunity:
+            assessment = complete_presale_source_assessment(
+                db=db,
+                source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
+                source_id=opportunity.id,
+                current_user=current_user,
+                ticket=ticket,
+                source_assessment_id=opportunity.assessment_id,
+            )
+
+            opportunity.assessment_id = assessment.id
+            opportunity.assessment_status = AssessmentStatusEnum.COMPLETED.value
+            opportunity.updated_by = current_user.id
+
+            if ticket:
+                ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
+                ticket.current_assessment_id = assessment.id
+                ticket.status = "COMPLETED"
+                ticket.complete_time = ticket.complete_time or datetime.now()
+            return
+
+    lead_id = ticket.lead_id if ticket else None
+    if not lead_id:
         return
 
-    opportunity = (
-        db.query(Opportunity)
-        .filter(Opportunity.id == opportunity_id)
-        .first()
-    )
-    if not opportunity:
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
         return
 
     assessment = complete_presale_source_assessment(
         db=db,
-        source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
-        source_id=opportunity.id,
+        source_type=AssessmentSourceTypeEnum.LEAD.value,
+        source_id=lead.id,
         current_user=current_user,
         ticket=ticket,
-        source_assessment_id=opportunity.assessment_id,
+        source_assessment_id=lead.assessment_id,
     )
 
-    opportunity.assessment_id = assessment.id
-    opportunity.assessment_status = AssessmentStatusEnum.COMPLETED.value
-    opportunity.updated_by = current_user.id
+    lead.assessment_id = assessment.id
+    lead.assessment_status = AssessmentStatusEnum.COMPLETED.value
 
     if ticket:
         ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
@@ -651,7 +674,7 @@ def review_solution(
     solution.status = status_map[review_status]
 
     if review_status == "APPROVED":
-        complete_opportunity_assessment_for_solution(db, solution, current_user)
+        complete_sales_assessment_for_solution(db, solution, current_user)
 
     save_obj(db, solution)
 
