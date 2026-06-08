@@ -2,7 +2,6 @@
 """合同签订状态处理器"""
 
 from datetime import datetime
-import re
 from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import and_, or_
@@ -10,14 +9,12 @@ from sqlalchemy.orm import Session
 
 from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Project, ProjectStatusLog
-from app.models.sales import Contract, Opportunity, QuoteItem, QuoteVersion
+from app.models.sales import Contract, Opportunity, QuoteVersion
+from app.services.sales.presale_quote_context import resolve_presale_context_for_quote_version
 from app.utils.project_utils import generate_project_code, init_project_stages
 
 if TYPE_CHECKING:
     from app.services.status_transition_service import StatusTransitionService
-
-
-PRESALE_SOLUTION_REMARK_PATTERN = re.compile(r"来源售前方案\s+(\S+)")
 
 
 def _load_project_contract(db: Session, project: Project) -> Optional[Contract]:
@@ -29,31 +26,18 @@ def _load_project_contract(db: Session, project: Project) -> Optional[Contract]:
     return db.query(Contract).filter(Contract.project_id == project.id).first()
 
 
-def _load_quote_selected_presale_solutions(db: Session, project: Project) -> list[PresaleSolution]:
+def _load_quote_selected_presale_context(
+    db: Session, project: Project
+) -> tuple[list[PresaleSolution], set[int]]:
     contract = _load_project_contract(db, project)
     if not contract or not contract.quote_id:
-        return []
+        return [], set()
 
-    quote_items = (
-        db.query(QuoteItem)
-        .filter(QuoteItem.quote_version_id == contract.quote_id)
-        .all()
-    )
-    solution_nos = set()
-    for item in quote_items:
-        remark = item.remark or ""
-        match = PRESALE_SOLUTION_REMARK_PATTERN.search(remark)
-        if match:
-            solution_nos.add(match.group(1))
+    quote_version = db.query(QuoteVersion).filter(QuoteVersion.id == contract.quote_id).first()
+    if not quote_version:
+        return [], set()
 
-    if not solution_nos:
-        return []
-
-    return (
-        db.query(PresaleSolution)
-        .filter(PresaleSolution.solution_no.in_(solution_nos))
-        .all()
-    )
+    return resolve_presale_context_for_quote_version(db, quote_version)
 
 
 def bind_presale_context_to_project(db: Session, project: Project) -> None:
@@ -61,11 +45,10 @@ def bind_presale_context_to_project(db: Session, project: Project) -> None:
     if not project or not project.id:
         return
 
-    quote_selected_solutions = _load_quote_selected_presale_solutions(db, project)
+    quote_selected_solutions, selected_ticket_ids = _load_quote_selected_presale_context(
+        db, project
+    )
     selected_solution_ids = {solution.id for solution in quote_selected_solutions}
-    selected_ticket_ids = {
-        solution.ticket_id for solution in quote_selected_solutions if solution.ticket_id
-    }
 
     ticket_scope_filters = []
     if project.opportunity_id:

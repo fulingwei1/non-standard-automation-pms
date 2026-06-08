@@ -532,6 +532,8 @@ class TestQuoteManagement:
         assert version.total_price == Decimal("250000")
         assert version.gross_margin == Decimal("40.00")
         assert version.lead_time_days == 45
+        assert version.presale_solution_id == solution.id
+        assert version.presale_ticket_id == ticket.id
 
         detail_response = client.get(f"{prefix}/sales/quotes/{quote['id']}", headers=headers)
         assert detail_response.status_code == 200, detail_response.text
@@ -631,6 +633,8 @@ class TestQuoteManagement:
         assert version.total_price == Decimal("300000")
         assert version.gross_margin == Decimal("41.67")
         assert version.lead_time_days == 60
+        assert version.presale_solution_id == solution.id
+        assert version.presale_ticket_id == ticket.id
 
     def test_approve_quote(self, client: TestClient, admin_token: str, quote_id: int = None):
         """测试审批报价"""

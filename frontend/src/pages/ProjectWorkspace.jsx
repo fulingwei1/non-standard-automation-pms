@@ -270,6 +270,10 @@ function buildContextualActionPath(href, context) {
   return `${url.pathname}${query ? `?${query}` : ""}${url.hash}`;
 }
 
+function unwrapWorkspaceResponse(response) {
+  return response?.formatted ?? response?.data?.data ?? response?.data ?? response ?? null;
+}
+
 export default function ProjectWorkspace() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -286,7 +290,7 @@ export default function ProjectWorkspace() {
     try {
       setLoading(true);
       const response = await projectWorkspaceApi.getWorkspace(id);
-      setWorkspaceData(response.data);
+      setWorkspaceData(unwrapWorkspaceResponse(response));
     } catch (error) {
       console.error("Failed to load workspace data:", error);
     } finally {

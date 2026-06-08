@@ -26,6 +26,7 @@ from app.models.sales import (
     Opportunity,
     OpenItem,
     Quote,
+    QuoteItem,
     QuoteVersion,
     TechnicalAssessment,
 )
@@ -656,6 +657,193 @@ class TestProjectWorkspaceHandoverContext:
                 synchronize_session=False
             )
             db_session.commit()
+
+    def test_project_workspace_context_does_not_fallback_to_same_opportunity_when_quote_selected(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """已建项目有报价选用方案时，交接包不能再按同商机泛带旧方案。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-PWX-{unique}",
+            customer_name=f"项目交接范围客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPPWX{unique[:6]}",
+            customer=customer,
+            opp_name=f"项目交接范围商机-{unique}",
+            project_type="FCT",
+            equipment_type="EOL",
+            stage="WON",
+            probability=95,
+            est_amount=Decimal("720000"),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add_all([customer, opportunity])
+        db_session.flush()
+
+        old_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-PWX-A-{unique}",
+            title=f"旧版售前方案工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            created_by=admin_user.id,
+        )
+        selected_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-PWX-B-{unique}",
+            title=f"报价选用售前方案工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            created_by=admin_user.id,
+        )
+        db_session.add_all([old_ticket, selected_ticket])
+        db_session.flush()
+
+        old_solution = PresaleSolution(
+            solution_no=f"SOL-PWX-A-{unique}",
+            name=f"旧版未选售前方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=old_ticket.id,
+            customer_id=customer.id,
+            opportunity_id=opportunity.id,
+            estimated_cost=Decimal("330000"),
+            suggested_price=Decimal("600000"),
+            status="APPROVED",
+            review_status="APPROVED",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        selected_solution = PresaleSolution(
+            solution_no=f"SOL-PWX-B-{unique}",
+            name=f"报价选用售前方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=selected_ticket.id,
+            customer_id=customer.id,
+            opportunity_id=opportunity.id,
+            estimated_cost=Decimal("450000"),
+            suggested_price=Decimal("720000"),
+            status="APPROVED",
+            review_status="APPROVED",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        db_session.add_all([old_solution, selected_solution])
+        db_session.flush()
+
+        quote = Quote(
+            quote_code=f"QTPWX{unique[:6]}",
+            opportunity=opportunity,
+            customer=customer,
+            status="APPROVED",
+            owner_id=admin_user.id,
+        )
+        db_session.add(quote)
+        db_session.flush()
+        quote_version = QuoteVersion(
+            quote_id=quote.id,
+            version_no="V1",
+            total_price=Decimal("720000"),
+            cost_total=Decimal("450000"),
+            gross_margin=Decimal("37.50"),
+            binding_status="valid",
+            created_by=admin_user.id,
+        )
+        db_session.add(quote_version)
+        db_session.flush()
+        quote.current_version_id = quote_version.id
+        db_session.add(
+            QuoteItem(
+                quote_version_id=quote_version.id,
+                item_type="SOLUTION",
+                item_name=selected_solution.name,
+                qty=Decimal("1"),
+                unit_price=Decimal("720000"),
+                cost=Decimal("450000"),
+                remark=f"来源售前方案 {selected_solution.solution_no}",
+            )
+        )
+
+        contract = Contract(
+            contract_code=f"CTPWX{unique[:6]}",
+            contract_name=f"项目交接范围合同-{unique}",
+            contract_type="sales",
+            customer=customer,
+            opportunity=opportunity,
+            quote_id=quote_version.id,
+            total_amount=Decimal("720000"),
+            signing_date=date.today(),
+            status="signed",
+            sales_owner_id=admin_user.id,
+        )
+        project = Project(
+            project_code=f"PRJPWX{unique[:6]}",
+            project_name=f"项目交接范围项目-{unique}",
+            customer=customer,
+            customer_name=customer.customer_name,
+            opportunity=opportunity,
+            contract=contract,
+            project_type="FCT",
+            product_category="测试设备",
+            industry="电子制造",
+            contract_amount=Decimal("720000"),
+            budget_amount=Decimal("450000"),
+            stage="S1",
+            status="ST01",
+            health="H1",
+            pm_id=admin_user.id,
+            pm_name=admin_user.real_name or admin_user.username,
+            created_by=admin_user.id,
+        )
+        db_session.add_all([contract, project])
+        db_session.flush()
+        assert project.opportunity_id == opportunity.id
+        assert project.contract_id == contract.id
+        contract.project_id = project.id
+        selected_ticket.project_id = project.id
+        selected_solution.project_id = project.id
+        db_session.commit()
+
+        response = client.get(
+            f"{prefix}/project-workspace/projects/{project.id}/workspace/context",
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+
+        payload = response.json()
+        assert [item["id"] for item in payload["presale_solutions"]] == [
+            selected_solution.id
+        ]
+        assert [item["id"] for item in payload["presale_tickets"]] == [
+            selected_ticket.id
+        ]
+        assert payload["baseline_cost"]["presale_estimated_cost"] == 450000.0
+        assert old_solution.id not in [
+            item["id"] for item in payload["presale_solutions"]
+        ]
+        assert old_ticket.id not in [item["id"] for item in payload["presale_tickets"]]
 
     def test_project_workspace_context_includes_project_scoped_presale_solution_without_ticket(
         self, client: TestClient, db_session: Session, admin_token: str

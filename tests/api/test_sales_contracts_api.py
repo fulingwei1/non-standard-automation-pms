@@ -722,6 +722,207 @@ class TestSalesContractsAPI:
             )
             db_session.commit()
 
+    def test_contract_project_keeps_selected_presale_solution_with_manual_quote_items(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """报价手填明细时，也必须保留 solution_id 选中的售前方案上下文。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-QMAN-{unique}",
+            customer_name=f"手填报价明细客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPQMA{unique[:6]}",
+            customer=customer,
+            opp_name=f"手填报价明细商机-{unique}",
+            project_type="FCT",
+            equipment_type="EOL",
+            stage="QUOTATION",
+            probability=80,
+            est_amount=Decimal("680000"),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add_all([customer, opportunity])
+        db_session.flush()
+
+        unselected_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-QMAN-A-{unique}",
+            title=f"未选手填报价工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            assessment_status=AssessmentStatusEnum.COMPLETED.value,
+            created_by=admin_user.id,
+        )
+        selected_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-QMAN-B-{unique}",
+            title=f"选中手填报价工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            assessment_status=AssessmentStatusEnum.COMPLETED.value,
+            created_by=admin_user.id,
+        )
+        db_session.add_all([unselected_ticket, selected_ticket])
+        db_session.flush()
+
+        unselected_solution = PresaleSolution(
+            solution_no=f"SOL-QMAN-A-{unique}",
+            name=f"未选手填报价方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=unselected_ticket.id,
+            customer_id=customer.id,
+            opportunity_id=opportunity.id,
+            estimated_cost=Decimal("360000"),
+            suggested_price=Decimal("620000"),
+            status="APPROVED",
+            review_status="APPROVED",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        selected_solution = PresaleSolution(
+            solution_no=f"SOL-QMAN-B-{unique}",
+            name=f"报价实际选用手填方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=selected_ticket.id,
+            customer_id=customer.id,
+            opportunity_id=opportunity.id,
+            estimated_cost=Decimal("410000"),
+            suggested_price=Decimal("680000"),
+            estimated_duration=55,
+            status="APPROVED",
+            review_status="APPROVED",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        db_session.add_all([unselected_solution, selected_solution])
+        db_session.commit()
+
+        quote_response = client.post(
+            f"{prefix}/sales/quotes",
+            headers=headers,
+            json={
+                "quote_code": f"QQMAN{unique[:6]}",
+                "opportunity_id": opportunity.id,
+                "customer_id": customer.id,
+                "solution_id": selected_solution.id,
+                "valid_until": datetime.now().date().isoformat(),
+                "version": {
+                    "version_no": "V1",
+                    "items": [
+                        {
+                            "item_type": "EQUIPMENT",
+                            "item_name": "FCT测试设备",
+                            "qty": 1,
+                            "unit_price": 680000,
+                            "cost": 410000,
+                            "remark": "销售手填报价明细",
+                        }
+                    ],
+                },
+            },
+        )
+        assert quote_response.status_code == 201, quote_response.text
+        quote_payload = quote_response.json()
+
+        contract = Contract(
+            contract_code=f"CTQMAN{unique[:6]}",
+            contract_name=f"手填报价明细合同-{unique}",
+            contract_type="sales",
+            customer=customer,
+            opportunity=opportunity,
+            quote_id=quote_payload["current_version_id"],
+            total_amount=Decimal("680000"),
+            status="approved",
+            sales_owner_id=admin_user.id,
+        )
+        db_session.add(contract)
+        db_session.commit()
+
+        try:
+            response = client.post(
+                (
+                    f"{prefix}/sales/contracts/{contract.id}/sign"
+                    "?auto_generate_payment_plans=false"
+                ),
+                headers=headers,
+                json={
+                    "sign_date": datetime.now().date().isoformat(),
+                    "signed_by": "张总",
+                    "customer_signed_by": "李经理",
+                    "auto_create_project": True,
+                },
+            )
+            assert response.status_code == 200, response.text
+            project_id = response.json()["data"]["project_id"]
+
+            db_session.expire_all()
+            refreshed_unselected = db_session.get(PresaleSolution, unselected_solution.id)
+            refreshed_selected = db_session.get(PresaleSolution, selected_solution.id)
+            refreshed_unselected_ticket = db_session.get(
+                PresaleSupportTicket, unselected_ticket.id
+            )
+            refreshed_selected_ticket = db_session.get(
+                PresaleSupportTicket, selected_ticket.id
+            )
+
+            assert refreshed_selected.project_id == project_id
+            assert refreshed_selected_ticket.project_id == project_id
+            assert refreshed_unselected.project_id is None
+            assert refreshed_unselected_ticket.project_id is None
+        finally:
+            quote = db_session.get(Quote, quote_payload["id"])
+            if quote:
+                quote.current_version_id = None
+            db_session.flush()
+            db_session.query(Project).filter(Project.contract_id == contract.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(Contract).filter(Contract.id == contract.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(QuoteVersion).filter(
+                QuoteVersion.id == quote_payload["current_version_id"]
+            ).delete(synchronize_session=False)
+            db_session.query(Quote).filter(Quote.id == quote_payload["id"]).delete(
+                synchronize_session=False
+            )
+            db_session.query(PresaleSolution).filter(
+                PresaleSolution.id.in_([unselected_solution.id, selected_solution.id])
+            ).delete(synchronize_session=False)
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id.in_([unselected_ticket.id, selected_ticket.id])
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(Customer).filter(Customer.id == customer.id).delete(
+                synchronize_session=False
+            )
+            db_session.commit()
+
     def test_legacy_create_project_endpoint_preserves_sales_presale_context(
         self, client: TestClient, db_session: Session, admin_token: str
     ):

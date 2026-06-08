@@ -2,6 +2,7 @@
 """售前方案到报价版本的上下文衔接工具。"""
 
 import logging
+import re
 from decimal import Decimal, InvalidOperation
 from typing import Optional
 
@@ -12,6 +13,8 @@ from sqlalchemy.orm import Session
 from app.models.presale import PresaleSolution
 
 logger = logging.getLogger(__name__)
+
+PRESALE_SOLUTION_REMARK_PATTERN = re.compile(r"来源售前方案\s+(\S+)")
 
 
 def to_decimal(value) -> Decimal:
@@ -106,3 +109,59 @@ def build_solution_quote_item(
         "lead_time_days": solution.estimated_duration,
         "remark": f"来源售前方案 {solution.solution_no}",
     }
+
+
+def resolve_presale_context_for_quote_version(
+    db: Session,
+    quote_version,
+) -> tuple[list[PresaleSolution], set[int]]:
+    """返回报价版本明确选用的售前方案和工单。
+
+    新数据优先使用 QuoteVersion.presale_solution_id / presale_ticket_id；
+    老数据再兼容解析 QuoteItem.remark 里的“来源售前方案 xxx”。
+    """
+    if not quote_version:
+        return [], set()
+
+    solution_ids = set()
+    ticket_ids = set()
+    if getattr(quote_version, "presale_solution_id", None):
+        solution_ids.add(quote_version.presale_solution_id)
+    if getattr(quote_version, "presale_ticket_id", None):
+        ticket_ids.add(quote_version.presale_ticket_id)
+
+    if not solution_ids:
+        from app.models.sales import QuoteItem
+
+        quote_items = (
+            db.query(QuoteItem)
+            .filter(QuoteItem.quote_version_id == quote_version.id)
+            .all()
+        )
+        solution_nos = set()
+        for item in quote_items:
+            match = PRESALE_SOLUTION_REMARK_PATTERN.search(item.remark or "")
+            if match:
+                solution_nos.add(match.group(1))
+
+        if solution_nos:
+            solutions = (
+                db.query(PresaleSolution)
+                .filter(PresaleSolution.solution_no.in_(solution_nos))
+                .all()
+            )
+            ticket_ids.update(
+                solution.ticket_id for solution in solutions if solution.ticket_id
+            )
+            return solutions, ticket_ids
+
+    if not solution_ids:
+        return [], ticket_ids
+
+    solutions = (
+        db.query(PresaleSolution)
+        .filter(PresaleSolution.id.in_(solution_ids))
+        .all()
+    )
+    ticket_ids.update(solution.ticket_id for solution in solutions if solution.ticket_id)
+    return solutions, ticket_ids

@@ -371,6 +371,8 @@ def create_quote(
         gross_margin=_to_decimal(version_payload.get("gross_margin")),
         lead_time_days=lead_time_days,
         risk_terms=version_payload.get("risk_terms"),
+        presale_solution_id=presale_solution.id if presale_solution else None,
+        presale_ticket_id=presale_solution.ticket_id if presale_solution else None,
         created_by=current_user.id,
     )
     db.add(version)

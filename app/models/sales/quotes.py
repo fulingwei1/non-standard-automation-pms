@@ -154,6 +154,18 @@ class QuoteVersion(Base, TimestampMixin):
         nullable=True,  # 迁移期间允许为空
         comment="成本估算ID",
     )
+    presale_solution_id = Column(
+        Integer,
+        ForeignKey("presale_solution.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="售前方案ID",
+    )
+    presale_ticket_id = Column(
+        Integer,
+        ForeignKey("presale_support_ticket.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="售前工单ID",
+    )
 
     # 定价信息
     total_price = Column(Numeric(12, 2), comment="报价总价")
@@ -213,10 +225,20 @@ class QuoteVersion(Base, TimestampMixin):
         backref="quote_versions",
         foreign_keys=[cost_estimation_id],
     )
+    presale_solution = relationship(
+        "PresaleSolution",
+        foreign_keys=[presale_solution_id],
+    )
+    presale_ticket = relationship(
+        "PresaleSupportTicket",
+        foreign_keys=[presale_ticket_id],
+    )
 
     __table_args__ = (
         Index("idx_qv_solution_version", "solution_version_id"),
         Index("idx_qv_cost_estimation", "cost_estimation_id"),
+        Index("idx_qv_presale_solution", "presale_solution_id"),
+        Index("idx_qv_presale_ticket", "presale_ticket_id"),
         Index("idx_qv_binding_status", "binding_status"),
     )
 

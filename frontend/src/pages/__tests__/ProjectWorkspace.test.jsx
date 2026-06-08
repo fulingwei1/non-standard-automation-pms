@@ -425,4 +425,52 @@ describe("ProjectWorkspace", () => {
       "/presales/technical-solutions?tab=reviews&type=assessment&ticket_id=94&lead_id=2027&opportunity_id=8&project_id=7",
     );
   });
+
+  it("renders workspace data from formatted unified API responses", async () => {
+    const workspacePayload = {
+      project: {
+        id: 12,
+        project_name: "统一响应项目",
+        project_code: "PRJ-012",
+        progress_pct: 15,
+        health: "H1",
+        contract_amount: 120000,
+      },
+      team: [],
+      tasks: [],
+      bonus: {},
+      meetings: {},
+      issues: {},
+      solutions: {},
+      documents: [],
+      handover_context: {
+        handover_status: {
+          ready: true,
+          missing: [],
+          blockers: [],
+        },
+      },
+      downstream_context: {},
+    };
+
+    projectWorkspaceApi.getWorkspace.mockResolvedValue({
+      data: {
+        success: true,
+        data: workspacePayload,
+      },
+      formatted: workspacePayload,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/projects/12/workspace"]}>
+        <Routes>
+          <Route path="/projects/:id/workspace" element={<ProjectWorkspace />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("统一响应项目")).toBeInTheDocument();
+    expect(screen.getByText("PRJ-012")).toBeInTheDocument();
+    expect(screen.getByText("项目交接包")).toBeInTheDocument();
+  });
 });

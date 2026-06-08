@@ -229,6 +229,31 @@ def _ensure_sqlite_schema(engine):
                 except Exception:
                     logger.debug("quotes.delivery_date 列补丁跳过", exc_info=True)
 
+    if "quote_versions" in tables:
+        columns = {col["name"] for col in inspector.get_columns("quote_versions")}
+        statements = []
+        if "presale_solution_id" not in columns:
+            statements.append("ALTER TABLE quote_versions ADD COLUMN presale_solution_id INTEGER")
+        if "presale_ticket_id" not in columns:
+            statements.append("ALTER TABLE quote_versions ADD COLUMN presale_ticket_id INTEGER")
+
+        with engine.begin() as conn:
+            for ddl in statements:
+                try:
+                    conn.execute(text(ddl))
+                except Exception:
+                    logger.debug("quote_versions 售前上下文字段补丁跳过", exc_info=True)
+            for ddl in (
+                "CREATE INDEX IF NOT EXISTS idx_qv_presale_solution "
+                "ON quote_versions(presale_solution_id)",
+                "CREATE INDEX IF NOT EXISTS idx_qv_presale_ticket "
+                "ON quote_versions(presale_ticket_id)",
+            ):
+                try:
+                    conn.execute(text(ddl))
+                except Exception:
+                    logger.debug("quote_versions 售前上下文索引补丁跳过", exc_info=True)
+
     if "technical_assessments" in tables:
         columns = {col["name"] for col in inspector.get_columns("technical_assessments")}
         statements = []
