@@ -674,6 +674,54 @@ describe('PresalesTasks', () => {
     );
   });
 
+  it('opens requirement, solution, and cost workflows from a task detail with full context', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 95,
+            title: '售前技术闭环执行',
+            ticket_type: 'SOLUTION_DESIGN',
+            status: 'IN_PROGRESS',
+            urgency: 'HIGH',
+            customer_name: '华南电子',
+            applicant_name: '张销售',
+            description: '从需求调研继续生成方案和成本估算',
+            lead_id: 21,
+            opportunity_id: 2,
+            opportunity_name: 'FCT测试线商机',
+            project_id: 42,
+            solution_id: 88,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage(
+      '/presales/technical-solutions?tab=reviews&type=solution&lead_id=21&opportunity_id=2&ticket_id=95&project_id=42&solution_id=88',
+    );
+
+    await screen.findByText('售前技术闭环执行');
+    fireEvent.click(screen.getByText('售前技术闭环执行'));
+
+    const requirementButtons = screen.getAllByRole('button', { name: '需求调研' });
+    fireEvent.click(requirementButtons[requirementButtons.length - 1]);
+    expect(navigateSpy).toHaveBeenLastCalledWith(
+      '/presales/technical-solutions?tab=surveys&ticket_id=95&lead_id=21&opportunity_id=2&project_id=42&solution_id=88',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '方案管理' }));
+    expect(navigateSpy).toHaveBeenLastCalledWith(
+      '/presales/technical-solutions?tab=solutions&ticket_id=95&lead_id=21&opportunity_id=2&project_id=42&solution_id=88',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '成本估算' }));
+    expect(navigateSpy).toHaveBeenLastCalledWith(
+      '/presales/technical-solutions?tab=cost&ticket_id=95&lead_id=21&opportunity_id=2&project_id=42&solution_id=88',
+    );
+  });
+
   it('creates an internal presale task from the task center and refreshes the list', async () => {
     renderPage('/sales/presales-tasks');
 

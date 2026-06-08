@@ -16,6 +16,9 @@ import {
   AlertTriangle,
   Cpu,
   FilePlus2,
+  ClipboardList,
+  Lightbulb,
+  Calculator,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -132,6 +135,27 @@ function buildTechnicalAssessmentPath(task) {
   return `${path}${query ? `?${query}` : ""}`;
 }
 
+function buildPresalesCenterTabPath(task, tab) {
+  const params = new URLSearchParams();
+  params.set("tab", tab);
+  appendContextParam(params, "ticket_id", task.ticketId);
+  appendContextParam(params, "lead_id", task.leadId);
+  appendContextParam(params, "opportunity_id", task.opportunityId);
+  appendContextParam(params, "project_id", task.projectId);
+  appendContextParam(params, "solution_id", task.solutionId);
+  return `/presales/technical-solutions?${params.toString()}`;
+}
+
+function canOpenPresalesWorkflow(task) {
+  return Boolean(
+    task.ticketId ||
+      task.leadId ||
+      task.opportunityId ||
+      task.projectId ||
+      task.solutionId
+  );
+}
+
 export default function TaskDetailPanel({
   task,
   onClose,
@@ -166,6 +190,7 @@ export default function TaskDetailPanel({
   const isCompleted = task.status === "completed";
   const hasRating = task.satisfactionScore != null;
   const technicalAssessmentPath = buildTechnicalAssessmentPath(task);
+  const canOpenLinkedPresalesWorkflow = canOpenPresalesWorkflow(task);
   const hasDeliverableCompletionBlocker = hasUnapprovedRequiredDeliverables(task.deliverables || []);
   const canCreateInitiation = !task.projectId && (
     task.ticketId ||
@@ -458,6 +483,38 @@ export default function TaskDetailPanel({
               <Cpu className="w-4 h-4 mr-2" />
               打开技术评估
             </Button>
+          )}
+
+          {canOpenLinkedPresalesWorkflow && (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="justify-start"
+                onClick={() => navigate(buildPresalesCenterTabPath(task, "surveys"))}
+              >
+                <ClipboardList className="w-4 h-4 mr-2" />
+                需求调研
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="justify-start"
+                onClick={() => navigate(buildPresalesCenterTabPath(task, "solutions"))}
+              >
+                <Lightbulb className="w-4 h-4 mr-2" />
+                方案管理
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="justify-start"
+                onClick={() => navigate(buildPresalesCenterTabPath(task, "cost"))}
+              >
+                <Calculator className="w-4 h-4 mr-2" />
+                成本估算
+              </Button>
+            </div>
           )}
 
           {/* Basic Info */}
