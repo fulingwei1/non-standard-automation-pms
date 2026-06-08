@@ -7,6 +7,8 @@ import {
   GitBranch,
   RefreshCw,
   PlusCircle,
+  DollarSign,
+  TrendingUp,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import {
@@ -20,11 +22,18 @@ import {
   TabsTrigger,
 } from "../../components/ui";
 import { presaleApi, presaleWorkbenchApi } from "../../services/api";
-import { extractItems, normalizeSolution } from "./utils";
+import { extractItems, formatWan, normalizeSolution } from "./utils";
 import SolutionListTab from "./SolutionListTab";
 import SolutionGenerateTab from "./SolutionGenerateTab";
 import SolutionReviewTab from "./SolutionReviewTab";
 import SolutionVersionsTab from "./SolutionVersionsTab";
+
+function createEmptyHandoffContext() {
+  return {
+    costing: { baseline: null },
+    quotes: { items: [], total: 0 },
+  };
+}
 
 function parseContextId(value) {
   if (!value) {
@@ -50,6 +59,146 @@ function extractContextSolutions(context) {
     return payload.items;
   }
   return [];
+}
+
+function normalizeHandoffContext(context) {
+  const rawQuotes = context?.quotes;
+  const quoteItems = Array.isArray(rawQuotes)
+    ? rawQuotes
+    : Array.isArray(rawQuotes?.items)
+      ? rawQuotes.items
+      : [];
+
+  return {
+    costing: {
+      baseline: context?.costing?.baseline || null,
+    },
+    quotes: {
+      items: quoteItems,
+      total: Number(rawQuotes?.total ?? quoteItems.length) || 0,
+    },
+  };
+}
+
+function getQuoteCurrentVersion(quote) {
+  return quote?.current_version || quote?.currentVersion || quote?.version || null;
+}
+
+function getQuoteAmount(quote) {
+  const currentVersion = getQuoteCurrentVersion(quote);
+  return (
+    currentVersion?.total_price ??
+    currentVersion?.totalPrice ??
+    quote?.total_price ??
+    quote?.totalPrice ??
+    null
+  );
+}
+
+function getQuoteMargin(quote) {
+  const currentVersion = getQuoteCurrentVersion(quote);
+  return (
+    currentVersion?.gross_margin ??
+    currentVersion?.grossMargin ??
+    quote?.gross_margin ??
+    quote?.grossMargin ??
+    null
+  );
+}
+
+function formatWanAmount(amount) {
+  if (amount === null || amount === undefined || amount === "") {
+    return "-";
+  }
+
+  const numeric = Number(amount);
+  return Number.isFinite(numeric) ? `${formatWan(numeric)} 万` : "-";
+}
+
+function formatMargin(value) {
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return "-";
+  }
+
+  const percent = Math.abs(numeric) <= 1 ? numeric * 100 : numeric;
+  return `${percent.toFixed(1)}%`;
+}
+
+function PresaleHandoffSummary({ handoffContext }) {
+  const baseline = handoffContext?.costing?.baseline || null;
+  const quoteItems = handoffContext?.quotes?.items || [];
+  const quoteTotal = Number(handoffContext?.quotes?.total ?? quoteItems.length) || 0;
+  const latestQuote = quoteItems[0] || null;
+
+  if (!baseline && quoteTotal <= 0) {
+    return null;
+  }
+
+  const baselineName =
+    baseline?.solution_name ||
+    baseline?.solution_no ||
+    (baseline?.solution_id ? `方案 #${baseline.solution_id}` : "未绑定方案");
+  const quoteCode =
+    latestQuote?.quote_code ||
+    latestQuote?.quoteCode ||
+    (latestQuote?.id ? `报价 #${latestQuote.id}` : "待生成报价");
+  const margin = baseline?.gross_margin_rate ?? getQuoteMargin(latestQuote);
+
+  return (
+    <div className="mt-4 rounded-xl border border-cyan-400/20 bg-cyan-500/5 p-4 shadow-sm">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-slate-100">售前方案闭环状态</p>
+          <p className="mt-1 text-xs text-slate-400">{baselineName}</p>
+        </div>
+        <span className="w-fit rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-200">
+          {quoteTotal > 0 ? `已生成 ${quoteTotal} 张报价` : "待生成报价"}
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="rounded-lg border border-white/10 bg-slate-950/40 p-3">
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <DollarSign className="h-4 w-4 text-cyan-300" />
+            成本基线
+          </div>
+          <p className="mt-2 text-lg font-semibold text-slate-100">
+            {formatWanAmount(baseline?.estimated_cost)}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            建议报价 {formatWanAmount(baseline?.suggested_price)}
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-white/10 bg-slate-950/40 p-3">
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <FileText className="h-4 w-4 text-violet-300" />
+            报价单
+          </div>
+          <p className="mt-2 text-lg font-semibold text-slate-100">{quoteCode}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            报价金额 {formatWanAmount(getQuoteAmount(latestQuote))}
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-white/10 bg-slate-950/40 p-3">
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <TrendingUp className="h-4 w-4 text-emerald-300" />
+            毛利率
+          </div>
+          <p className="mt-2 text-lg font-semibold text-slate-100">
+            {formatMargin(margin)}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">来自成本基线/当前报价版本</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function filterSolutions(solutions, { statusFilter, searchKeyword }) {
@@ -110,6 +259,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [solutions, setSolutions] = useState([]);
+  const [handoffContext, setHandoffContext] = useState(createEmptyHandoffContext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -140,6 +290,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
   const loadSolutions = useCallback(async () => {
     setLoading(true);
     setError("");
+    setHandoffContext(createEmptyHandoffContext());
 
     try {
       const applySolutions = (items) => {
@@ -170,6 +321,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
             contextParams.presaleTicketId = contextTicketIdNumber;
           }
           const context = await presaleWorkbenchApi.loadContext(contextParams);
+          setHandoffContext(normalizeHandoffContext(context));
           const contextSolutions = extractContextSolutions(context);
           if (contextSolutions.length > 0) {
             applySolutions(contextSolutions);
@@ -177,6 +329,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
           }
         } catch (contextError) {
           console.warn("加载售前方案聚合上下文失败:", contextError);
+          setHandoffContext(createEmptyHandoffContext());
         }
       }
 
@@ -201,6 +354,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
       applySolutions(extractItems(response));
     } catch (requestError) {
       console.error("加载方案失败:", requestError);
+      setHandoffContext(createEmptyHandoffContext());
       setError(requestError?.response?.data?.detail || requestError?.message || "方案加载失败");
     } finally {
       setLoading(false);
@@ -446,6 +600,8 @@ export default function PresaleProposals({ embedded = false } = {}) {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+
+        <PresaleHandoffSummary handoffContext={handoffContext} />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6 space-y-6">
           <TabsList className="grid h-auto w-full grid-cols-2 gap-2 lg:w-[760px] lg:grid-cols-4">

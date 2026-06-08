@@ -127,6 +127,63 @@ describe("PresaleProposals", () => {
     expect(screen.getByText("SOL-88 · 未分类行业")).toBeInTheDocument();
   });
 
+  it("shows cost baseline and quote status from presale workbench context", async () => {
+    presaleWorkbenchApi.loadContext.mockResolvedValueOnce({
+      source: { type: "opportunity", id: 2 },
+      solutions: {
+        items: [
+          {
+            id: 88,
+            solution_no: "SOL-88",
+            name: "聚合上下文售前方案",
+            status: "APPROVED",
+            ticket_id: 501,
+            opportunity_id: 2,
+            estimated_cost: 260000,
+            suggested_price: 420000,
+          },
+        ],
+        total: 1,
+      },
+      costing: {
+        baseline: {
+          solution_id: 88,
+          solution_no: "SOL-88",
+          solution_name: "聚合上下文售前方案",
+          estimated_cost: 260000,
+          suggested_price: 420000,
+          gross_margin_rate: 0.380952,
+        },
+      },
+      quotes: {
+        items: [
+          {
+            id: 41,
+            quote_code: "Q-001",
+            status: "DRAFT",
+            current_version: {
+              total_price: 420000,
+              gross_margin: 38.1,
+            },
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage();
+
+    expect(await screen.findByText("售前方案闭环状态")).toBeInTheDocument();
+    expect(screen.getByText("成本基线")).toBeInTheDocument();
+    expect(screen.getByText("报价单")).toBeInTheDocument();
+    expect(screen.getByText("Q-001")).toBeInTheDocument();
+    expect(screen.getByText("已生成 1 张报价")).toBeInTheDocument();
+    expect(screen.getAllByText("聚合上下文售前方案").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/26\.0 万/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/42\.0 万/).length).toBeGreaterThan(0);
+    expect(screen.getByText("38.1%")).toBeInTheDocument();
+  });
+
   it("scopes solution list by sales support ticket context", async () => {
     renderPage();
 
