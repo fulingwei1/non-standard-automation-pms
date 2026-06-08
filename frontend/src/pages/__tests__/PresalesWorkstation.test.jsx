@@ -27,6 +27,11 @@ const apiMocks = vi.hoisted(() => ({
   presaleWorkbenchApi: {
     loadOverview: vi.fn(),
   },
+  technicalAssessmentApi: {
+    applyForLead: vi.fn(),
+    applyForOpportunity: vi.fn(),
+    evaluate: vi.fn(),
+  },
 }));
 
 vi.mock("../../services/api", () => apiMocks);
@@ -143,7 +148,7 @@ describe("PresalesWorkstation", () => {
     expect(apiMocks.opportunityApi.list).not.toHaveBeenCalled();
   });
 
-  it("completes the presale ticket when saving feasibility assessment", async () => {
+  it("saves opportunity feasibility assessment through the formal technical assessment flow", async () => {
     apiMocks.presaleWorkbenchApi.loadOverview.mockResolvedValue({
       tickets: {
         items: [
@@ -177,8 +182,12 @@ describe("PresalesWorkstation", () => {
       },
       meta: { failures: [] },
     });
-    apiMocks.presaleApi.tickets.update.mockResolvedValue({ data: { id: 51 } });
-    apiMocks.presaleApi.tickets.complete.mockResolvedValue({ data: { id: 51 } });
+    apiMocks.technicalAssessmentApi.applyForOpportunity.mockResolvedValue({
+      data: { data: { assessment_id: 901 } },
+    });
+    apiMocks.technicalAssessmentApi.evaluate.mockResolvedValue({
+      data: { id: 901, status: "COMPLETED" },
+    });
     apiMocks.presaleApi.tickets.updateProgress.mockResolvedValue({ data: { id: 51 } });
 
     render(
@@ -198,13 +207,105 @@ describe("PresalesWorkstation", () => {
     fireEvent.click(screen.getByRole("button", { name: /提交评估/ }));
 
     await waitFor(() => {
-      expect(apiMocks.presaleApi.tickets.complete).toHaveBeenCalledWith(51, {
-        completion_note: expect.stringContaining("可行性评估已完成"),
-      });
+      expect(apiMocks.technicalAssessmentApi.evaluate).toHaveBeenCalled();
     });
-    expect(apiMocks.presaleApi.tickets.complete.mock.calls[0][1].completion_note)
-      .toContain("建议进入报价");
+    expect(apiMocks.technicalAssessmentApi.applyForOpportunity).toHaveBeenCalledWith(41, {
+      presale_ticket_id: 51,
+    });
+    expect(apiMocks.technicalAssessmentApi.evaluate).toHaveBeenCalledWith(901, {
+      requirement_data: expect.objectContaining({
+        source_type: "OPPORTUNITY",
+        source_id: 41,
+        presale_ticket_id: 51,
+        task_title: "电池包可行性评估",
+        recommendation: "建议进入报价",
+        risk_analysis: "周期风险可控",
+        technical_notes: "采用标准测试平台",
+      }),
+      enable_ai: false,
+    });
+    expect(apiMocks.presaleApi.tickets.update).not.toHaveBeenCalled();
+    expect(apiMocks.presaleApi.tickets.complete).not.toHaveBeenCalled();
+    expect(apiMocks.technicalAssessmentApi.applyForLead).not.toHaveBeenCalled();
     expect(apiMocks.presaleApi.tickets.updateProgress).not.toHaveBeenCalled();
+  });
+
+  it("saves lead-stage feasibility assessment through the formal technical assessment flow", async () => {
+    apiMocks.presaleWorkbenchApi.loadOverview.mockResolvedValue({
+      tickets: {
+        items: [
+          {
+            id: 52,
+            ticket_no: "PS-052",
+            title: "线索阶段可行性评估",
+            ticket_type: "FEASIBILITY_ASSESSMENT",
+            urgency: "NORMAL",
+            customer_name: "线索客户",
+            applicant_name: "张销售",
+            status: "PROCESSING",
+            lead_id: 2026,
+            description: "客户还未转商机，先判断技术路线",
+          },
+        ],
+        total: 1,
+      },
+      solutions: { items: [], total: 0 },
+      tenders: { items: [], total: 0 },
+      opportunities: { items: [], total: 0 },
+      templates: {
+        assessment: { items: [], total: 0 },
+        technical: { items: [], total: 0 },
+      },
+      funnel: {
+        summary: {},
+        health: {},
+        conversion: {},
+        dwellAlerts: { items: [], total: 0 },
+      },
+      meta: { failures: [] },
+    });
+    apiMocks.technicalAssessmentApi.applyForLead.mockResolvedValue({
+      data: { data: { assessment_id: 902 } },
+    });
+    apiMocks.technicalAssessmentApi.evaluate.mockResolvedValue({
+      data: { id: 902, status: "COMPLETED" },
+    });
+
+    render(
+      <MemoryRouter>
+        <PresalesWorkstation />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(await screen.findByText("线索阶段可行性评估"));
+    fireEvent.click(screen.getAllByText("5 - 优秀")[0]);
+
+    const textboxes = screen.getAllByRole("textbox");
+    fireEvent.change(textboxes[0], { target: { value: "建议继续需求调研" } });
+    fireEvent.change(textboxes[1], { target: { value: "样品风险待确认" } });
+    fireEvent.change(textboxes[2], { target: { value: "先按标准平台预研" } });
+
+    fireEvent.click(screen.getByRole("button", { name: /提交评估/ }));
+
+    await waitFor(() => {
+      expect(apiMocks.technicalAssessmentApi.evaluate).toHaveBeenCalled();
+    });
+    expect(apiMocks.technicalAssessmentApi.applyForLead).toHaveBeenCalledWith(2026, {
+      presale_ticket_id: 52,
+    });
+    expect(apiMocks.technicalAssessmentApi.evaluate).toHaveBeenCalledWith(902, {
+      requirement_data: expect.objectContaining({
+        source_type: "LEAD",
+        source_id: 2026,
+        presale_ticket_id: 52,
+        task_title: "线索阶段可行性评估",
+        recommendation: "建议继续需求调研",
+      }),
+      enable_ai: false,
+    });
+    expect(apiMocks.presaleApi.tickets.update).not.toHaveBeenCalled();
+    expect(apiMocks.presaleApi.tickets.complete).not.toHaveBeenCalled();
+    expect(apiMocks.technicalAssessmentApi.applyForOpportunity).not.toHaveBeenCalled();
   });
 
   it("creates the cost baseline with project context when submitting cost estimation", async () => {

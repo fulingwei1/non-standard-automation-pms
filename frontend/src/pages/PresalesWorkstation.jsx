@@ -18,7 +18,7 @@ import {
 import { PageHeader } from "../components/layout";
 import { Button } from "../components/ui/button";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { presaleApi, presaleWorkbenchApi } from "../services/api";
+import { presaleApi, presaleWorkbenchApi, technicalAssessmentApi } from "../services/api";
 
 import StatsCards from "../components/presales/workstation/StatsCards";
 import TodoTasksCard from "../components/presales/workstation/TodoTasksCard";
@@ -63,6 +63,88 @@ function buildCostSolutionFields(costResult) {
     estimated_cost: toYuanAmount(costResult?.totalAmount),
     suggested_price: toYuanAmount(costResult?.suggestedPrice),
     cost_breakdown: buildCostBreakdown(costResult),
+  };
+}
+
+function getAssessmentApplyId(response) {
+  return (
+    response?.data?.data?.assessment_id ??
+    response?.data?.assessment_id ??
+    response?.data?.data?.id ??
+    response?.data?.id ??
+    response?.assessment_id ??
+    response?.id ??
+    null
+  );
+}
+
+function scoreToValue(score, highValue, mediumValue, lowValue) {
+  const numericScore = Number(score || 0);
+  if (numericScore >= 4) {
+    return highValue;
+  }
+  if (numericScore >= 3) {
+    return mediumValue;
+  }
+  return lowValue;
+}
+
+function averageScores(scores, keys) {
+  const values = keys
+    .map((key) => Number(scores?.[key] || 0))
+    .filter((value) => Number.isFinite(value) && value > 0);
+
+  if (values.length === 0) {
+    return 0;
+  }
+
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function buildFeasibilityRequirementData(task, assessmentData) {
+  const scores = assessmentData?.scores || {};
+  const resourceScore = averageScores(scores, [
+    "resource_human_resource",
+    "resource_material",
+    "resource_time",
+  ]);
+  const marketScore = averageScores(scores, [
+    "market_demand",
+    "market_customer_value",
+    "market_trend",
+  ]);
+
+  return {
+    source_type: task?.opportunityId ? "OPPORTUNITY" : "LEAD",
+    source_id: task?.opportunityId || task?.leadId,
+    presale_ticket_id: task?.ticketId,
+    project_id: task?.projectId,
+    task_title: task?.title,
+    customer_name: task?.customer,
+    raw_scores: scores,
+    overall_score: assessmentData?.overallScore,
+    feasibility: assessmentData?.feasibility,
+    recommendation: assessmentData?.recommendation || "",
+    risk_analysis: assessmentData?.riskAnalysis || "",
+    technical_notes: assessmentData?.technicalNotes || "",
+    assessed_at: assessmentData?.assessedAt,
+    tech_maturity: scoreToValue(scores.technical_tech_maturity, "mature", "medium", "low"),
+    process_difficulty: scoreToValue(scores.technical_complexity, "standard", "medium", "high"),
+    precision_requirement: scoreToValue(scores.technical_risk, "normal", "high", "extreme"),
+    sample_support: scoreToValue(assessmentData?.overallScore / 20, "available", "limited", "none"),
+    budget_status: scoreToValue(scores.financial_profitability, "confirmed", "rough", "unknown"),
+    price_sensitivity: scoreToValue(scores.financial_cost_control, "low", "medium", "high"),
+    gross_margin_safety: scoreToValue(scores.financial_profitability, "safe", "tight", "risk"),
+    payment_terms: scoreToValue(scores.financial_payment_risk, "good", "normal", "poor"),
+    resource_occupancy: scoreToValue(resourceScore, "available", "tight", "unavailable"),
+    has_similar_case: scoreToValue(scores.technical_tech_maturity, "yes", "partial", "no"),
+    delivery_feasibility: scoreToValue(scores.resource_time, "feasible", "tight", "risky"),
+    delivery_months: scoreToValue(scores.resource_time, 3, 4, 6),
+    change_risk: scoreToValue(scores.technical_risk, "low", "medium", "high"),
+    customer_nature: scoreToValue(marketScore, "key", "normal", "normal"),
+    customer_potential: scoreToValue(scores.market_customer_value, "high", "medium", "low"),
+    relationship_depth: scoreToValue(scores.market_demand, "deep", "normal", "new"),
+    contact_level: scoreToValue(scores.market_trend, "decision_maker", "influencer", "operator"),
   };
 }
 
@@ -357,7 +439,9 @@ export default function PresalesWorkstation() {
               : "medium",
           customer: ticket.customer_name || "待确认客户",
           ticketId: ticket.id,
+          leadId: ticket.lead_id,
           opportunityId: ticket.opportunity_id,
+          projectId: ticket.project_id,
           biddingId: ticket.project_id,
           solutionId: relatedSolution?.id || null,
           requestedBy: ticket.applicant_name,
@@ -602,13 +686,46 @@ export default function PresalesWorkstation() {
         const riskAnalysis = assessmentData.riskAnalysis || "未填写";
         const technicalNotes = assessmentData.technicalNotes || "未填写";
 
-        await presaleApi.tickets.update(selectedFeasibilityTask.ticketId, {
-          description: `${selectedFeasibilityTask.description || ""}\n\n可行性评估结果：\n综合评分：${scoreText}分\n可行性：${feasibilityText}\n评估建议：${recommendation}\n风险分析：${riskAnalysis}\n技术说明：${technicalNotes}`
-        });
+        const sourcePayload = {
+          presale_ticket_id: selectedFeasibilityTask.ticketId,
+        };
+        const sourceType = selectedFeasibilityTask.opportunityId
+          ? "opportunity"
+          : selectedFeasibilityTask.leadId
+            ? "lead"
+            : "";
+        const sourceId = selectedFeasibilityTask.opportunityId || selectedFeasibilityTask.leadId;
 
-        await presaleApi.tickets.complete(selectedFeasibilityTask.ticketId, {
-          completion_note: `可行性评估已完成，综合评分：${scoreText}分，可行性：${feasibilityText}。评估建议：${recommendation}`
-        });
+        if (sourceType && sourceId) {
+          const applyResponse =
+            sourceType === "opportunity"
+              ? await technicalAssessmentApi.applyForOpportunity(sourceId, sourcePayload)
+              : await technicalAssessmentApi.applyForLead(sourceId, sourcePayload);
+          const assessmentId = getAssessmentApplyId(applyResponse);
+
+          if (!assessmentId) {
+            throw new Error("技术评估申请未返回评估ID");
+          }
+
+          await technicalAssessmentApi.evaluate(assessmentId, {
+            requirement_data: {
+              ...buildFeasibilityRequirementData(selectedFeasibilityTask, assessmentData),
+              feasibility_result: `综合评分：${scoreText}分；可行性：${feasibilityText}`,
+              recommendation,
+              risk_analysis: riskAnalysis,
+              technical_notes: technicalNotes,
+            },
+            enable_ai: false,
+          });
+        } else {
+          await presaleApi.tickets.update(selectedFeasibilityTask.ticketId, {
+            description: `${selectedFeasibilityTask.description || ""}\n\n可行性评估结果：\n综合评分：${scoreText}分\n可行性：${feasibilityText}\n评估建议：${recommendation}\n风险分析：${riskAnalysis}\n技术说明：${technicalNotes}`
+          });
+
+          await presaleApi.tickets.complete(selectedFeasibilityTask.ticketId, {
+            completion_note: `可行性评估已完成，综合评分：${scoreText}分，可行性：${feasibilityText}。评估建议：${recommendation}`
+          });
+        }
       }
 
       await loadData();
