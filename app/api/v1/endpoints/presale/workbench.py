@@ -912,6 +912,13 @@ def get_workbench_context(
             .order_by(desc(PresaleSupportTicket.created_at), desc(PresaleSupportTicket.id))
             .first()
         )
+    elif normalized_source_type == "lead":
+        ticket = (
+            db.query(PresaleSupportTicket)
+            .filter(PresaleSupportTicket.lead_id == source_id)
+            .order_by(desc(PresaleSupportTicket.created_at), desc(PresaleSupportTicket.id))
+            .first()
+        )
 
     assessments = (
         db.query(TechnicalAssessment)

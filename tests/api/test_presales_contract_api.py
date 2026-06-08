@@ -609,6 +609,122 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(Customer).filter(Customer.id == customer.id).delete()
             db_session.commit()
 
+    def test_presale_workbench_context_auto_resolves_lead_ticket_solution_and_requirement(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """线索进入售前中心时，应自动找到线索售前工单并带出方案与需求包。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-WBL-{unique}",
+            customer_name=f"线索售前上下文客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        lead = Lead(
+            lead_code=f"LDWBL{unique[:6]}",
+            source="展会",
+            customer_name=customer.customer_name,
+            industry=customer.industry,
+            demand_summary="客户要做电池包EOL测试线，已提供初版URS和节拍要求。",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([customer, lead])
+        db_session.flush()
+
+        requirement_detail = LeadRequirementDetail(
+            lead=lead,
+            target_object_type="电池包",
+            application_scenario="EOL终测",
+            requirement_maturity=4,
+            has_sow=True,
+            cycle_time_seconds=Decimal("18.0"),
+            requirement_version="REQ-LEAD-V1",
+        )
+        ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-WBL-{unique}",
+            title=f"线索售前支持-{unique}",
+            ticket_type="REQUIREMENT_RESEARCH",
+            urgency="NORMAL",
+            description="销售从线索发起需求调研",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            lead_id=lead.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PENDING",
+            created_by=admin_user.id,
+        )
+        db_session.add_all([requirement_detail, ticket])
+        db_session.flush()
+
+        solution = PresaleSolution(
+            solution_no=f"SOL-WBL-{unique}",
+            name=f"线索阶段EOL方案-{unique}",
+            solution_type="CUSTOM",
+            industry="新能源",
+            test_type="EOL",
+            ticket_id=ticket.id,
+            customer_id=customer.id,
+            requirement_summary="电池包EOL测试线，18秒节拍",
+            solution_overview="采用双工位并行测试架构",
+            technical_spec="高压绝缘、通讯、功能测试",
+            estimated_cost=Decimal("180000"),
+            suggested_price=Decimal("300000"),
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+            status="APPROVED",
+        )
+        db_session.add(solution)
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{prefix}/presale/workbench/context",
+                params={
+                    "source_type": "lead",
+                    "source_id": lead.id,
+                },
+                headers=headers,
+            )
+            assert response.status_code == 200, response.text
+            data = response.json()["data"]
+
+            assert data["source"] == {"type": "lead", "id": lead.id}
+            assert data["ticket"]["id"] == ticket.id
+            assert data["ticket"]["lead_id"] == lead.id
+            assert data["assessment"]["requirementDetail"]["id"] == requirement_detail.id
+            assert data["assessment"]["requirementDetail"]["target_object_type"] == "电池包"
+            assert data["solutions"]["total"] == 1
+            assert data["solutions"]["items"][0]["id"] == solution.id
+            assert data["solutions"]["items"][0]["lead_id"] == lead.id
+            assert data["costing"]["baseline"]["solution_id"] == solution.id
+            assert data["costing"]["baseline"]["estimated_cost"] == 180000.0
+            assert data["costing"]["baseline"]["suggested_price"] == 300000.0
+            assert data["funnel"]["entityType"] == "LEAD"
+            assert data["funnel"]["entityId"] == lead.id
+        finally:
+            db_session.query(PresaleSolution).filter(PresaleSolution.id == solution.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id == ticket.id
+            ).delete(synchronize_session=False)
+            db_session.query(LeadRequirementDetail).filter(
+                LeadRequirementDetail.id == requirement_detail.id
+            ).delete(synchronize_session=False)
+            db_session.query(Lead).filter(Lead.id == lead.id).delete()
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
     def test_presale_workbench_context_reuses_lead_requirement_detail_for_opportunity(
         self, client: TestClient, db_session: Session, admin_token: str
     ):

@@ -64,6 +64,7 @@
 - `/requirement-survey`、`/presales/solutions`、`/presales/technical-parameters`、`/presales/cost-estimation`、`/bidding`、`/presales/bids`、`/presales/templates`、`/presale-templates`、`/presales-tasks`、`/presales/ticket-board` 已作为兼容入口跳到中心页签。
 - `/sales/presales-tasks`、`/project-presales-tasks` 已作为兼容入口跳到 `tab=reviews`，并保留 `type/status/projectId` 等筛选条件。
 - 全局 `/knowledge-base` 暂不并入售前中心，保留为公司级知识库。
+- 售前工作台聚合上下文已支持线索级自动解析：销售从线索发起售前工单后，不带 `ticket_id` 进入售前中心也能带出对应工单、需求包、方案和成本基线。
 
 下一批建议：
 
