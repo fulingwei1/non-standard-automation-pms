@@ -315,9 +315,18 @@ describe("BiddingCenter", () => {
     fireEvent.click(await screen.findByText("智能制造系统"));
     fireEvent.click(screen.getByRole("button", { name: "申请成本支持" }));
 
-    expect(navigateMock).toHaveBeenCalledWith(
-      "/presales/technical-solutions?tab=cost&type=support&ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
-    );
+    const targetUrl = navigateMock.mock.calls[0][0];
+    const target = new URL(targetUrl, "http://localhost");
+    expect(target.pathname).toBe("/presales/technical-solutions");
+    expect(target.searchParams.get("tab")).toBe("cost");
+    expect(target.searchParams.get("type")).toBe("support");
+    expect(target.searchParams.get("tender_id")).toBe("1");
+    expect(target.searchParams.get("ticket_id")).toBe("501");
+    expect(target.searchParams.get("lead_id")).toBe("2026");
+    expect(target.searchParams.get("opportunity_id")).toBe("2");
+    expect(target.searchParams.get("project_id")).toBe("42");
+    expect(target.searchParams.get("amount")).toBe("500");
+    expect(target.searchParams.get("name")).toBe("智能制造系统");
   });
 
   it("shows backend load errors", async () => {

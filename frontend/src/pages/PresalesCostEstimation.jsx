@@ -101,10 +101,12 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
     searchParams.get("solution_id") || searchParams.get("id"),
   );
   const contextTicketId = searchParams.get("ticket_id") || "";
+  const contextTenderId = searchParams.get("tender_id") || "";
   const contextLeadId = searchParams.get("lead_id") || "";
   const contextOpportunityId = searchParams.get("opportunity_id") || "";
   const contextProjectId = searchParams.get("project_id") || "";
   const contextTicketIdNumber = parseContextId(contextTicketId);
+  const contextTenderIdNumber = parseContextId(contextTenderId);
   const contextLeadIdNumber = parseContextId(contextLeadId);
   const contextOpportunityIdNumber = parseContextId(contextOpportunityId);
   const contextProjectIdNumber = parseContextId(contextProjectId);
@@ -208,6 +210,7 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
 
       return {
         id: explicitSolutionId || linkedSolution?.id || undefined,
+        tenderId: contextTenderIdNumber || undefined,
         ticketId: contextTicketIdNumber || undefined,
         leadId: contextLeadIdNumber || undefined,
         opportunityId: contextOpportunityIdNumber || undefined,
@@ -220,6 +223,7 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
       contextLeadIdNumber,
       contextOpportunityIdNumber,
       contextProjectIdNumber,
+      contextTenderIdNumber,
       contextTicketIdNumber,
       explicitSolutionId,
       linkedSolution,
@@ -250,12 +254,34 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
     return payload;
   };
 
+  const enrichCostDataWithContext = (costData = {}) => {
+    if (!bidding.tenderId) {
+      return costData;
+    }
+
+    return {
+      ...costData,
+      cost_breakdown: {
+        ...(costData.cost_breakdown || {}),
+        presale_context: {
+          tender_id: bidding.tenderId,
+          ticket_id: bidding.ticketId || null,
+          lead_id: bidding.leadId || null,
+          opportunity_id: bidding.opportunityId || null,
+          project_id: bidding.projectId || null,
+        },
+      },
+    };
+  };
+
   const handleSave = async (result) => {
     try {
+      const costData = result?.costData ? enrichCostDataWithContext(result.costData) : null;
+
       if (bidding.id && result?.costData) {
-        await presaleApi.solutions.update(Number(bidding.id), result.costData);
-      } else if (result?.costData) {
-        const response = await presaleApi.solutions.create(buildSolutionPayload(result.costData));
+        await presaleApi.solutions.update(Number(bidding.id), costData);
+      } else if (costData) {
+        const response = await presaleApi.solutions.create(buildSolutionPayload(costData));
         setLinkedSolution(extractSolutionDetail(response));
       }
 

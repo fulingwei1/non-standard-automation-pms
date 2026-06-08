@@ -262,6 +262,54 @@ describe("PresalesCostEstimation", () => {
     expect(toast.success).toHaveBeenCalledWith("成本估算草稿已保存");
   });
 
+  it("creates a cost solution from tender support context and keeps tender trace", async () => {
+    presaleApi.solutions.list.mockResolvedValueOnce({
+      data: {
+        items: [],
+        total: 0,
+      },
+    });
+
+    renderPage(
+      "/presales/technical-solutions?tab=cost&type=support&tender_id=301&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42&amount=500&name=%E6%99%BA%E8%83%BD%E5%88%B6%E9%80%A0%E7%B3%BB%E7%BB%9F",
+    );
+
+    expect(await screen.findByText("当前方案：智能制造系统")).toBeInTheDocument();
+    expect(screen.getByText("当前预算参考：¥500万")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "保存成本" }));
+
+    await waitFor(() => {
+      expect(presaleApi.solutions.create).toHaveBeenCalledWith({
+        name: "智能制造系统",
+        solution_type: "CUSTOM",
+        lead_id: 2026,
+        opportunity_id: 2,
+        ticket_id: 501,
+        project_id: 42,
+        estimated_cost: 120000,
+        suggested_price: 168000,
+        cost_breakdown: {
+          mechanical: 55000,
+          electrical: 32000,
+          software: 18000,
+          standard: 12000,
+          labor: 26000,
+          other: 7000,
+          notes: "含夹具、PLC、电控和调试人工",
+          presale_context: {
+            tender_id: 301,
+            ticket_id: 501,
+            lead_id: 2026,
+            opportunity_id: 2,
+            project_id: 42,
+          },
+        },
+      });
+    });
+    expect(toast.success).toHaveBeenCalledWith("成本估算草稿已保存");
+  });
+
   it("loads linked solution by project context when opened from project presales entry", async () => {
     renderPage("/presales/technical-solutions?tab=cost&project_id=42");
 

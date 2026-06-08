@@ -43,22 +43,33 @@ function appendContextParam(params, key, value) {
   }
 }
 
-function buildCostSupportUrl(bidding, contextType) {
+function buildCostSupportUrl(bidding, contextType, fallbackContext = {}) {
   const params = new URLSearchParams();
   params.set("tab", "cost");
+  const ticketId = bidding?.ticketId || fallbackContext.ticketId;
+  const leadId = bidding?.leadId || fallbackContext.leadId;
+  const opportunityId = bidding?.opportunityId || fallbackContext.opportunityId;
+  const projectId = bidding?.projectId || fallbackContext.projectId;
+  const amount = Number(bidding?.amount);
   if (
     contextType ||
-    bidding?.ticketId ||
-    bidding?.leadId ||
-    bidding?.opportunityId ||
-    bidding?.projectId
+    ticketId ||
+    leadId ||
+    opportunityId ||
+    projectId
   ) {
     params.set("type", contextType || "support");
   }
-  appendContextParam(params, "ticket_id", bidding?.ticketId);
-  appendContextParam(params, "lead_id", bidding?.leadId);
-  appendContextParam(params, "opportunity_id", bidding?.opportunityId);
-  appendContextParam(params, "project_id", bidding?.projectId);
+  appendContextParam(params, "tender_id", bidding?.id);
+  appendContextParam(params, "ticket_id", ticketId);
+  appendContextParam(params, "lead_id", leadId);
+  appendContextParam(params, "opportunity_id", opportunityId);
+  appendContextParam(params, "project_id", projectId);
+  appendContextParam(params, "solution_id", bidding?.solutionId);
+  if (Number.isFinite(amount) && amount > 0) {
+    appendContextParam(params, "amount", amount);
+  }
+  appendContextParam(params, "name", bidding?.name);
 
   return `/presales/technical-solutions?${params.toString()}`;
 }
@@ -104,6 +115,7 @@ function mapTenderToBidding(tender) {
     leadId: tender.lead_id,
     opportunityId: tender.opportunity_id,
     projectId: tender.project_id,
+    solutionId: tender.solution_id,
     code: tender.tender_no || `BID-${tender.id}`,
     name: tender.tender_name || tender.project_name || "",
     customer: tender.customer_name || "",
@@ -296,9 +308,21 @@ export default function BiddingCenter({ embedded = false } = {}) {
 
   const handleRequestCostSupport = useCallback(
     (bidding) => {
-      navigate(buildCostSupportUrl(bidding, contextType));
+      navigate(buildCostSupportUrl(bidding, contextType, {
+        ticketId: contextTicketIdNumber,
+        leadId: contextLeadIdNumber,
+        opportunityId: contextOpportunityIdNumber,
+        projectId: contextProjectIdNumber,
+      }));
     },
-    [contextType, navigate],
+    [
+      contextLeadIdNumber,
+      contextOpportunityIdNumber,
+      contextProjectIdNumber,
+      contextTicketIdNumber,
+      contextType,
+      navigate,
+    ],
   );
 
   // 筛选投标
