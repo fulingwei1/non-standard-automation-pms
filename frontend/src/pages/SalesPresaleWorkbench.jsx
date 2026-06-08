@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Activity,
   AlertTriangle,
@@ -103,6 +103,32 @@ function buildSolutionContextUrl(solution) {
   return `/solutions/${solutionId}${query ? `?${query}` : ""}`;
 }
 
+function mergeCurrentSearch(to, currentSearch) {
+  if (!currentSearch) {
+    return to;
+  }
+
+  const [pathname, rawSearch = ""] = to.split("?");
+  const nextParams = new URLSearchParams(rawSearch);
+  const currentParams = new URLSearchParams(currentSearch);
+
+  currentParams.forEach((value, key) => {
+    if (!nextParams.has(key)) {
+      nextParams.append(key, value);
+    }
+  });
+
+  const nextSearch = nextParams.toString();
+  return nextSearch ? `${pathname}?${nextSearch}` : pathname;
+}
+
+function buildPresaleCenterLink(to, currentSearch) {
+  if (!to.startsWith("/presales/technical-solutions")) {
+    return to;
+  }
+  return mergeCurrentSearch(to, currentSearch);
+}
+
 const quickLinks = [
   {
     title: "销售漏斗",
@@ -131,6 +157,7 @@ const quickLinks = [
 ];
 
 export default function SalesPresaleWorkbench() {
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState(null);
   const [error, setError] = useState(null);
@@ -271,7 +298,7 @@ export default function SalesPresaleWorkbench() {
           {quickLinks.map((item) => {
             const Icon = item.icon;
             return (
-              <Link key={item.to} to={item.to}>
+              <Link key={item.to} to={buildPresaleCenterLink(item.to, location.search)}>
                 <Card className="h-full border-gray-800 bg-gray-900 transition-colors hover:border-gray-700">
                   <CardContent className="flex h-full flex-col justify-between pt-5">
                     <div>
@@ -301,7 +328,12 @@ export default function SalesPresaleWorkbench() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-medium text-gray-300">售前工单</div>
-                  <Link to="/presales/technical-solutions?tab=reviews">
+                  <Link
+                    to={mergeCurrentSearch(
+                      "/presales/technical-solutions?tab=reviews",
+                      location.search,
+                    )}
+                  >
                     <Button variant="outline" size="sm">
                       查看全部
                     </Button>
@@ -334,7 +366,12 @@ export default function SalesPresaleWorkbench() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-medium text-gray-300">关联方案</div>
-                  <Link to="/presales/technical-solutions?tab=solutions">
+                  <Link
+                    to={mergeCurrentSearch(
+                      "/presales/technical-solutions?tab=solutions",
+                      location.search,
+                    )}
+                  >
                     <Button variant="outline" size="sm">
                       查看全部
                     </Button>
@@ -500,7 +537,10 @@ export default function SalesPresaleWorkbench() {
                 维护 ICT、FCT、EOL 等技术参数模板，为评估和成本估算提供标准输入。
               </div>
               <Link
-                to="/presales/technical-solutions?tab=parameters"
+                to={mergeCurrentSearch(
+                  "/presales/technical-solutions?tab=parameters",
+                  location.search,
+                )}
                 className="mt-3 inline-flex items-center gap-2 text-sm text-blue-300"
               >
                 管理技术参数
@@ -516,7 +556,10 @@ export default function SalesPresaleWorkbench() {
                 对接售前方案、成本估算和模板中心，减少线索到方案的断层。
               </div>
               <Link
-                to="/presales/technical-solutions?tab=solutions"
+                to={mergeCurrentSearch(
+                  "/presales/technical-solutions?tab=solutions",
+                  location.search,
+                )}
                 className="mt-3 inline-flex items-center gap-2 text-sm text-blue-300"
               >
                 进入方案中心

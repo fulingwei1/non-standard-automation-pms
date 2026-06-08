@@ -11,6 +11,11 @@ vi.mock("../../services/api", () => ({
   presaleWorkbenchApi: presaleWorkbenchApiMock,
 }));
 
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
+  return actual;
+});
+
 describe("SalesPresaleWorkbench", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -62,6 +67,50 @@ describe("SalesPresaleWorkbench", () => {
       screen
         .getAllByRole("link", { name: /查看全部/ })
         .some((link) => link.getAttribute("href") === "/presales/technical-solutions?tab=reviews"),
+    ).toBe(true);
+  });
+
+  it("preserves upstream sales support context in technical center entrypoints", async () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/presales/workbench/sales?lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+        ]}
+      >
+        <SalesPresaleWorkbench />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("FCT 技术参数模板")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /售前任务/ })).toHaveAttribute(
+      "href",
+      "/presales/technical-solutions?tab=reviews&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+    expect(screen.getByRole("link", { name: /管理技术参数/ })).toHaveAttribute(
+      "href",
+      "/presales/technical-solutions?tab=parameters&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+    expect(screen.getByRole("link", { name: /进入方案中心/ })).toHaveAttribute(
+      "href",
+      "/presales/technical-solutions?tab=solutions&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+    expect(
+      screen
+        .getAllByRole("link", { name: /查看全部/ })
+        .some(
+          (link) =>
+            link.getAttribute("href") ===
+            "/presales/technical-solutions?tab=reviews&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+        ),
+    ).toBe(true);
+    expect(
+      screen
+        .getAllByRole("link", { name: /查看全部/ })
+        .some(
+          (link) =>
+            link.getAttribute("href") ===
+            "/presales/technical-solutions?tab=solutions&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+        ),
     ).toBe(true);
   });
 
