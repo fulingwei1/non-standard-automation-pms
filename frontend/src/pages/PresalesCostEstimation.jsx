@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Calculator, Lightbulb } from "lucide-react";
+import { Calculator, FileText, Lightbulb } from "lucide-react";
 
 import { PageHeader } from "../components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -89,6 +89,24 @@ function buildTechnicalSolutionsPath(tab, searchParams) {
   nextParams.set("tab", tab);
   const query = nextParams.toString();
   return `/presales/technical-solutions${query ? `?${query}` : ""}`;
+}
+
+function buildSalesQuoteCreatePath(context) {
+  const params = new URLSearchParams();
+  [
+    ["opportunity_id", context.opportunityId],
+    ["customer_id", context.customerId],
+    ["solution_id", context.solutionId],
+    ["ticket_id", context.ticketId],
+    ["project_id", context.projectId],
+    ["lead_id", context.leadId],
+  ].forEach(([key, value]) => {
+    if (value) {
+      params.set(key, String(value));
+    }
+  });
+
+  return `/sales/quotes/create${params.toString() ? `?${params.toString()}` : ""}`;
 }
 
 export default function PresalesCostEstimation({ embedded = false } = {}) {
@@ -231,6 +249,53 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
     ],
   );
 
+  const quoteContext = useMemo(() => {
+    const solutionId = explicitSolutionId || parseContextId(linkedSolution?.id);
+    const opportunityId =
+      contextOpportunityIdNumber ||
+      parseContextId(linkedSolution?.opportunity_id);
+    const customerId =
+      parseContextId(searchParams.get("customer_id")) ||
+      parseContextId(linkedSolution?.customer_id);
+    const ticketId =
+      contextTicketIdNumber || parseContextId(linkedSolution?.ticket_id);
+
+    return {
+      solutionId,
+      opportunityId,
+      customerId,
+      ticketId,
+      projectId:
+        contextProjectIdNumber || parseContextId(linkedSolution?.project_id),
+      leadId: contextLeadIdNumber || parseContextId(linkedSolution?.lead_id),
+    };
+  }, [
+    contextLeadIdNumber,
+    contextOpportunityIdNumber,
+    contextProjectIdNumber,
+    contextTicketIdNumber,
+    explicitSolutionId,
+    linkedSolution,
+    searchParams,
+  ]);
+
+  const quoteCreatePath = useMemo(
+    () => buildSalesQuoteCreatePath(quoteContext),
+    [quoteContext],
+  );
+
+  const handleCreateSalesQuote = () => {
+    if (!quoteContext.solutionId) {
+      toast.error("请先保存或选择技术方案后再生成销售报价");
+      return;
+    }
+    if (!quoteContext.opportunityId) {
+      toast.error("缺少商机，无法生成销售报价");
+      return;
+    }
+    navigate(quoteCreatePath);
+  };
+
   const buildSolutionPayload = (costData) => {
     const payload = {
       name: bidding.name,
@@ -326,12 +391,26 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-xl border border-white/5 bg-surface-100/60 px-4 py-3 text-sm text-slate-300">
-            {solutionLoading
-              ? "正在加载关联技术方案..."
-              : bidding.amount > 0
-                ? `当前预算参考：¥${bidding.amount}万`
-                : "可直接填写成本项，系统会自动计算建议报价。"}
+          <div className="rounded-xl border border-white/5 bg-surface-100/60 px-4 py-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-sm text-slate-300">
+                {solutionLoading
+                  ? "正在加载关联技术方案..."
+                  : bidding.amount > 0
+                    ? `当前预算参考：¥${bidding.amount}万`
+                    : "可直接填写成本项，系统会自动计算建议报价。"}
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleCreateSalesQuote}
+                disabled={solutionLoading}
+                className="w-full sm:w-auto"
+              >
+                <FileText className="h-4 w-4" />
+                生成销售报价
+              </Button>
+            </div>
           </div>
 
           <CostEstimateForm

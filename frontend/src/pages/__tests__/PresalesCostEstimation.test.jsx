@@ -336,6 +336,20 @@ describe("PresalesCostEstimation", () => {
     expect(screen.getByText("当前预算参考：¥168万")).toBeInTheDocument();
   });
 
+  it("opens sales quote creation with the selected presale solution context", async () => {
+    renderPage(
+      "/presales/technical-solutions?tab=cost&solution_id=88&ticket_id=501&opportunity_id=2&project_id=42",
+    );
+
+    expect(await screen.findByText("当前方案：ERP 改造售前技术方案")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "生成销售报价" }));
+
+    expect(navigateSpy).toHaveBeenCalledWith(
+      "/sales/quotes/create?opportunity_id=2&solution_id=88&ticket_id=501&project_id=42",
+    );
+  });
+
   it("keeps solution and project context when cancelling embedded estimation", async () => {
     renderPage(
       "/presales/technical-solutions?tab=cost&solution_id=88&ticket_id=501&opportunity_id=2&project_id=42",
