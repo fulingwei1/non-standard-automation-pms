@@ -50,6 +50,7 @@ class TestContractApprovalService(unittest.TestCase):
         contract.customer_id = customer_id
         contract.project_id = project_id
         contract.signed_date = datetime(2024, 1, 15)
+        contract.signing_date = datetime(2024, 1, 15)
         contract.payment_terms_summary = "30天付款"
         contract.acceptance_summary = "验收合格后付款"
 
@@ -136,6 +137,24 @@ class TestContractApprovalService(unittest.TestCase):
         self.assertEqual(call_args["entity_id"], 1)
         self.assertEqual(call_args["initiator_id"], 1)
         self.assertEqual(call_args["urgency"], "URGENT")
+
+    def test_submit_contracts_accepts_lowercase_draft_status(self):
+        """测试兼容新建合同默认的小写 draft 状态"""
+        contract = self._create_mock_contract(status="draft")
+        mock_instance = self._create_mock_instance()
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value.first.return_value = contract
+        self.db.query.return_value = mock_query
+        self.service.engine.submit.return_value = mock_instance
+
+        results, errors = self.service.submit_contracts_for_approval(
+            contract_ids=[1], initiator_id=1
+        )
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(len(errors), 0)
+        self.service.engine.submit.assert_called_once()
 
     def test_submit_contracts_contract_not_found(self):
         """测试合同不存在"""
@@ -278,6 +297,7 @@ class TestContractApprovalService(unittest.TestCase):
         contract = self._create_mock_contract()
         contract.customer = None
         contract.signed_date = None
+        contract.signing_date = None
         contract.contract_amount = None
 
         form_data = self.service._build_contract_form_data(contract)

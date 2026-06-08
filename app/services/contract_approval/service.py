@@ -24,6 +24,11 @@ from app.services.approval_engine import ApprovalEngineService
 logger = logging.getLogger(__name__)
 
 
+def _status_key(status: Any) -> str:
+    """Normalize persisted status values from legacy lowercase and newer uppercase paths."""
+    return str(status or "").upper()
+
+
 class ContractApprovalService:
     """合同审批服务"""
 
@@ -60,7 +65,7 @@ class ContractApprovalService:
                 continue
 
             # 验证状态：只有草稿或被驳回的合同可以提交审批
-            if contract.status not in ["DRAFT", "REJECTED"]:
+            if _status_key(contract.status) not in ["DRAFT", "REJECTED"]:
                 errors.append(
                     {
                         "contract_id": contract_id,

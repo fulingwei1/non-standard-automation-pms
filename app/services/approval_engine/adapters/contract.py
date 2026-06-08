@@ -24,6 +24,29 @@ from .base import ApprovalAdapter
 logger = logging.getLogger(__name__)
 
 
+def _read_model_attr(obj: Any, name: str, default: Any = None) -> Any:
+    """Read real model attributes without creating synthetic MagicMock children."""
+    if obj is None:
+        return default
+    if name in getattr(obj, "__dict__", {}):
+        return getattr(obj, name)
+    if hasattr(type(obj), name):
+        return getattr(obj, name, default)
+    return default
+
+
+def _first_model_attr(obj: Any, *names: str, default: Any = None) -> Any:
+    for name in names:
+        value = _read_model_attr(obj, name, default)
+        if value is not None:
+            return value
+    return default
+
+
+def _status_key(status: Any) -> str:
+    return str(status or "").upper()
+
+
 class ContractApprovalAdapter(ApprovalAdapter):
     """
     合同审批适配器
@@ -54,18 +77,23 @@ class ContractApprovalAdapter(ApprovalAdapter):
         if not contract:
             return {}
 
+        customer = _read_model_attr(contract, "customer")
+        owner = _first_model_attr(contract, "sales_owner", "owner")
+        signing_date = _read_model_attr(contract, "signing_date")
+        contract_amount = _read_model_attr(contract, "contract_amount")
+
         return {
-            "contract_code": contract.contract_code,
-            "customer_contract_no": contract.customer_contract_no,
-            "status": contract.status,
-            "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
-            "customer_id": contract.customer_id,
-            "customer_name": contract.customer.name if contract.customer else None,
-            "project_id": contract.project_id,
-            "signed_date": contract.signing_date.isoformat() if contract.signing_date else None,
-            "owner_id": contract.owner_id,
-            "owner_name": contract.owner.name if contract.owner else None,
-            "payment_terms_summary": contract.payment_terms_summary,
+            "contract_code": _read_model_attr(contract, "contract_code"),
+            "customer_contract_no": _read_model_attr(contract, "customer_contract_no"),
+            "status": _read_model_attr(contract, "status"),
+            "contract_amount": float(contract_amount) if contract_amount else 0,
+            "customer_id": _read_model_attr(contract, "customer_id"),
+            "customer_name": _first_model_attr(customer, "name", "customer_name"),
+            "project_id": _read_model_attr(contract, "project_id"),
+            "signed_date": signing_date.isoformat() if signing_date else None,
+            "owner_id": _first_model_attr(contract, "sales_owner_id", "owner_id"),
+            "owner_name": _first_model_attr(owner, "real_name", "name", "username"),
+            "payment_terms_summary": _read_model_attr(contract, "payment_terms_summary"),
         }
 
     def on_submit(self, entity_id: int, instance: ApprovalInstance) -> None:
@@ -82,7 +110,7 @@ class ContractApprovalAdapter(ApprovalAdapter):
             contract.status = "APPROVED"
             self.db.flush()
 
-    def on_rejected(self, entity_id: int, instance: ApprovalInstance) -> None:
+    def on_rejected(self, entity_id: int, instance: ApprovalInstance, *_args: Any) -> None:
         """审批驳回时的回调"""
         contract = self.get_entity(entity_id)
         if contract:
@@ -95,6 +123,10 @@ class ContractApprovalAdapter(ApprovalAdapter):
         if contract:
             contract.status = "DRAFT"
             self.db.flush()
+
+    def on_cancelled(self, entity_id: int, instance: ApprovalInstance) -> None:
+        """兼容旧调用：取消审批等同撤回到草稿。"""
+        self.on_withdrawn(entity_id, instance)
 
     def get_title(self, entity_id: int) -> str:
         """生成审批标题"""
@@ -126,7 +158,7 @@ class ContractApprovalAdapter(ApprovalAdapter):
         if not contract:
             return False, "合同不存在"
 
-        if contract.status not in ("DRAFT", "REJECTED"):
+        if _status_key(contract.status) not in ("DRAFT", "REJECTED"):
             return False, f"当前状态({contract.status})不允许提交审批"
 
         if not contract.contract_amount or contract.contract_amount <= 0:

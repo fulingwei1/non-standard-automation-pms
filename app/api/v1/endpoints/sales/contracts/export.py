@@ -25,6 +25,50 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
+def _build_contract_pdf_response(
+    *,
+    db: Session,
+    contract_id: int,
+    current_user: User,
+) -> Any:
+    from app.services.pdf_export_service import PDFExportService, create_pdf_response
+
+    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
+
+    if not security.check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该合同")
+
+    deliverables = (
+        db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
+    )
+
+    contract_data = {
+        "contract_code": contract.contract_code,
+        "contract_name": contract.contract_name or "",
+        "customer_name": contract.customer.customer_name if contract.customer else "",
+        "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
+        "signed_date": contract.signing_date,
+        "delivery_deadline": getattr(contract, "delivery_deadline", None),
+        "status": contract.status,
+    }
+
+    deliverable_list = [
+        {
+            "deliverable_name": d.deliverable_name or "",
+            "quantity": float(d.quantity) if d.quantity else 0,
+            "unit": d.unit or "",
+            "remark": d.remark or "",
+        }
+        for d in deliverables
+    ]
+
+    pdf_service = PDFExportService()
+    pdf_data = pdf_service.export_contract_to_pdf(contract_data, deliverable_list)
+
+    filename = f"合同_{contract.contract_code}_{datetime.now().strftime('%Y%m%d')}.pdf"
+    return create_pdf_response(pdf_data, filename)
+
+
 @router.get("/contracts/expiring")
 def get_expiring_contracts(
     *,
@@ -166,7 +210,7 @@ def export_contracts(
             "customer_name": contract.customer.customer_name if contract.customer else "",
             "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
             "signed_date": contract.signing_date,
-            "delivery_deadline": contract.delivery_deadline,
+            "delivery_deadline": getattr(contract, "delivery_deadline", None),
             "status": contract.status,
             "project_code": contract.project.project_code if contract.project else "",
             "owner_name": contract.sales_owner.real_name if contract.sales_owner else "",
@@ -192,40 +236,23 @@ def export_contract_pdf(
     """
     Issue 4.5: 导出合同 PDF
     """
-    from app.services.pdf_export_service import PDFExportService, create_pdf_response
-
-    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
-
-    if not security.check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
-        raise HTTPException(status_code=403, detail="无权访问该合同")
-
-    deliverables = (
-        db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
+    return _build_contract_pdf_response(
+        db=db,
+        contract_id=contract_id,
+        current_user=current_user,
     )
 
-    # 准备数据
-    contract_data = {
-        "contract_code": contract.contract_code,
-        "contract_name": contract.contract_name or "",
-        "customer_name": contract.customer.customer_name if contract.customer else "",
-        "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
-        "signed_date": contract.signing_date,
-        "delivery_deadline": contract.delivery_deadline,
-        "status": contract.status,
-    }
 
-    deliverable_list = [
-        {
-            "deliverable_name": d.deliverable_name or "",
-            "quantity": float(d.quantity) if d.quantity else 0,
-            "unit": d.unit or "",
-            "remark": d.remark or "",
-        }
-        for d in deliverables
-    ]
-
-    pdf_service = PDFExportService()
-    pdf_data = pdf_service.export_contract_to_pdf(contract_data, deliverable_list)
-
-    filename = f"合同_{contract.contract_code}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    return create_pdf_response(pdf_data, filename)
+@router.get("/contracts/{contract_id}/export")
+def export_contract_pdf_legacy_alias(
+    *,
+    db: Session = Depends(deps.get_db),
+    contract_id: int,
+    current_user: User = Depends(security.require_permission("contract:export")),
+) -> Any:
+    """兼容旧前端/测试的单合同导出入口。"""
+    return _build_contract_pdf_response(
+        db=db,
+        contract_id=contract_id,
+        current_user=current_user,
+    )

@@ -336,6 +336,34 @@ def delete_contract(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+@router.post("/contracts/{contract_id}/archive", response_model=ContractResponse)
+def archive_contract(
+    *,
+    db: Session = Depends(deps.get_db),
+    contract_id: int,
+    current_user: User = Depends(security.require_permission("contract:update")),
+) -> Any:
+    """归档合同：将已结束或不再执行的合同收口为完成状态。"""
+    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
+
+    if not security.check_sales_edit_permission(
+        current_user,
+        db,
+        get_entity_creator_id(contract),
+        contract.sales_owner_id,
+    ):
+        raise HTTPException(status_code=403, detail="您没有权限归档此合同")
+
+    contract.status = "COMPLETED"
+    db.commit()
+    db.refresh(contract)
+
+    deliverables = (
+        db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract.id).all()
+    )
+    return ContractResponse(**_build_contract_response_dict(contract, deliverables))
+
+
 class ContractFromQuoteRequest(BaseModel):
     """从报价创建合同请求"""
 

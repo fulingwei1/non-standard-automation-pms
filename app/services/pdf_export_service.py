@@ -8,6 +8,7 @@ NOTE: 共享 PDF 样式/字体已迁移到 report_framework/renderers/pdf_styles
 
 import io
 from typing import Any, Dict, List, Optional
+from urllib.parse import quote
 
 try:
     from reportlab.lib import colors
@@ -430,10 +431,17 @@ def create_pdf_response(
     """
     from fastapi.responses import StreamingResponse
 
+    encoded_filename = quote(filename)
+    fallback_filename = filename.encode("ascii", "ignore").decode("ascii").strip() or "export.pdf"
+
     return StreamingResponse(
         pdf_data,
         media_type=media_type,
-        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"},
+        headers={
+            "Content-Disposition": (
+                f"attachment; filename={fallback_filename}; " f"filename*=UTF-8''{encoded_filename}"
+            )
+        },
     )
 
 

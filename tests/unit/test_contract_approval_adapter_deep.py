@@ -55,9 +55,9 @@ class TestContractApprovalAdapterBusinessLogic:
         mock_contract.customer.name = "测试客户"
         mock_contract.project_id = 1
         mock_contract.signing_date = datetime(2026, 4, 10)
-        mock_contract.owner_id = 1
-        mock_contract.owner = MagicMock()
-        mock_contract.owner.name = "张三"
+        mock_contract.sales_owner_id = 1
+        mock_contract.sales_owner = MagicMock()
+        mock_contract.sales_owner.real_name = "张三"
         mock_contract.payment_terms_summary = "分期付款"
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_contract
@@ -68,6 +68,8 @@ class TestContractApprovalAdapterBusinessLogic:
         assert result["contract_code"] == "CTR-2026-001"
         assert result["contract_amount"] == 500000.0
         assert result["customer_name"] == "测试客户"
+        assert result["owner_id"] == 1
+        assert result["owner_name"] == "张三"
 
     def test_get_entity_data_contract_not_found(self):
         """测试合同不存在时的数据获取"""
@@ -151,7 +153,24 @@ class TestContractApprovalAdapterBusinessLogic:
         adapter.on_cancelled(1, mock_instance)
 
         # 状态应该恢复
-        assert mock_contract.status in ["DRAFT", "PENDING_APPROVAL"]
+        assert mock_contract.status == "DRAFT"
+
+    def test_validate_submit_accepts_lowercase_draft(self):
+        """测试兼容合同基础接口创建出的 draft 状态"""
+        from app.services.approval_engine.adapters.contract import ContractApprovalAdapter
+
+        mock_db = MagicMock()
+        mock_contract = MagicMock()
+        mock_contract.status = "draft"
+        mock_contract.contract_amount = 10000
+
+        mock_db.query.return_value.filter.return_value.first.return_value = mock_contract
+
+        adapter = ContractApprovalAdapter(mock_db)
+        can_submit, error = adapter.validate_submit(1)
+
+        assert can_submit is True
+        assert error == ""
 
 
 class TestContractApprovalAdapterRouting:

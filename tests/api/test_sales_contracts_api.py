@@ -5,7 +5,7 @@
 测试合同的创建、查询、更新、审批、归档等功能
 """
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -17,6 +17,11 @@ from app.core.config import settings
 from app.models.enums import AssessmentStatusEnum
 from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Project
+from app.models.approval import (
+    ApprovalFlowDefinition,
+    ApprovalNodeDefinition,
+    ApprovalTemplate,
+)
 from app.models.sales import (
     Contract,
     ContractDeliverable,
@@ -31,6 +36,172 @@ from app.models.user import User
 
 def _auth_headers(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
+
+
+def _unique_code(prefix: str) -> str:
+    return f"{prefix}-{uuid4().hex[:6].upper()}"
+
+
+def _create_customer(client: TestClient, token: str) -> dict:
+    response = client.post(
+        f"{settings.API_V1_PREFIX}/customers",
+        headers=_auth_headers(token),
+        json={
+            "customer_code": _unique_code("CUST"),
+            "customer_name": f"合同客户-{uuid4().hex[:4]}",
+            "industry": "电子制造",
+            "contact_person": "客户联系人",
+            "contact_phone": "021-88888888",
+        },
+    )
+    assert response.status_code in (200, 201), response.text
+    payload = response.json()
+    return payload.get("data", payload)
+
+
+def _create_opportunity(client: TestClient, token: str) -> dict:
+    customer = _create_customer(client, token)
+    response = client.post(
+        f"{settings.API_V1_PREFIX}/sales/opportunities",
+        headers=_auth_headers(token),
+        json={
+            "customer_id": customer["id"],
+            "opportunity_name": f"合同商机-{uuid4().hex[:4]}",
+            "stage": "QUALIFICATION",
+            "expected_amount": 200000.0,
+            "expected_close_date": (date.today() + timedelta(days=30)).isoformat(),
+            "probability": 80,
+            "budget_range": "100000-300000",
+            "decision_chain": "工程经理->采购->总经理",
+            "delivery_window": "Q4",
+            "acceptance_basis": "企业标准验收",
+        },
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def _create_quote(client: TestClient, token: str) -> dict:
+    opportunity = _create_opportunity(client, token)
+    response = client.post(
+        f"{settings.API_V1_PREFIX}/sales/quotes",
+        headers=_auth_headers(token),
+        json={
+            "quote_code": _unique_code("QUOTE"),
+            "opportunity_id": opportunity["id"],
+            "customer_id": opportunity["customer_id"],
+            "valid_until": (date.today() + timedelta(days=45)).isoformat(),
+            "version": {
+                "version_no": "V1",
+                "total_price": 150000.0,
+                "cost_total": 90000.0,
+                "gross_margin": 40.0,
+                "lead_time_days": 45,
+                "risk_terms": "Standard delivery terms",
+                "items": [
+                    {
+                        "item_type": "SYSTEM",
+                        "item_name": "自动化测试平台",
+                        "qty": 1,
+                        "unit_price": 150000.0,
+                        "cost": 90000.0,
+                        "lead_time_days": 45,
+                    }
+                ],
+            },
+        },
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def _create_contract(client: TestClient, token: str) -> dict:
+    quote = _create_quote(client, token)
+    response = client.post(
+        f"{settings.API_V1_PREFIX}/sales/contracts",
+        headers=_auth_headers(token),
+        json={
+            "contract_code": _unique_code("CTAPI"),
+            "contract_name": f"合同API测试-{uuid4().hex[:4]}",
+            "opportunity_id": quote["opportunity_id"],
+            "customer_id": quote["customer_id"],
+            "quote_version_id": quote.get("current_version_id"),
+            "contract_amount": 150000.0,
+            "signed_date": date.today().isoformat(),
+            "payment_terms_summary": "30-60-10",
+        },
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def _ensure_contract_approval_template(db_session: Session, approver_id: int) -> None:
+    template = (
+        db_session.query(ApprovalTemplate)
+        .filter(ApprovalTemplate.template_code == "SALES_CONTRACT_APPROVAL")
+        .first()
+    )
+    if not template:
+        template = ApprovalTemplate(
+            template_code="SALES_CONTRACT_APPROVAL",
+            template_name="销售合同审批",
+            category="BUSINESS",
+            entity_type="CONTRACT",
+            is_active=True,
+            is_published=True,
+            created_by=approver_id,
+        )
+        db_session.add(template)
+        db_session.flush()
+    else:
+        template.is_active = True
+        template.is_published = True
+
+    flow = (
+        db_session.query(ApprovalFlowDefinition)
+        .filter(
+            ApprovalFlowDefinition.template_id == template.id,
+            ApprovalFlowDefinition.is_default,
+            ApprovalFlowDefinition.is_active,
+        )
+        .first()
+    )
+    if not flow:
+        flow = ApprovalFlowDefinition(
+            template_id=template.id,
+            flow_name="默认销售合同审批",
+            is_default=True,
+            is_active=True,
+            created_by=approver_id,
+        )
+        db_session.add(flow)
+        db_session.flush()
+
+    node = (
+        db_session.query(ApprovalNodeDefinition)
+        .filter(
+            ApprovalNodeDefinition.flow_id == flow.id,
+            ApprovalNodeDefinition.node_code == "CONTRACT_APPROVER",
+        )
+        .first()
+    )
+    if not node:
+        node = ApprovalNodeDefinition(
+            flow_id=flow.id,
+            node_code="CONTRACT_APPROVER",
+            node_name="合同审批",
+            node_order=1,
+            node_type="APPROVAL",
+            approver_type="FIXED_USER",
+            approver_config={"user_ids": [approver_id]},
+            is_active=True,
+        )
+        db_session.add(node)
+    else:
+        node.approver_config = {"user_ids": [approver_id]}
+        node.is_active = True
+
+    db_session.commit()
 
 
 class TestSalesContractsAPI:
@@ -55,35 +226,14 @@ class TestSalesContractsAPI:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        headers = _auth_headers(admin_token)
-        unique = uuid4().hex[:6].upper()
+        contract = _create_contract(client, admin_token)
 
-        contract_data = {
-            "contract_no": f"CTAPI{unique}",
-            "customer_id": 1,
-            "quote_id": 1,
-            "contract_name": "测试设备采购合同",
-            "contract_type": "sales",
-            "sign_date": datetime.now().strftime("%Y-%m-%d"),
-            "start_date": datetime.now().strftime("%Y-%m-%d"),
-            "end_date": (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d"),
-            "total_amount": 500000.0,
-            "payment_terms": "分期付款，按进度支付",
-            "delivery_terms": "3个月内交付",
-            "warranty_period": "12个月",
-            "remarks": "重要合同",
-        }
-
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/contracts/?skip_g3_validation=true",
-            headers=headers,
-            json=contract_data,
-        )
-
-        if response.status_code == 404:
-            pytest.skip("Contracts API not implemented")
-
-        assert response.status_code in [200, 201], response.text
+        assert contract["id"] > 0
+        assert contract["contract_code"].startswith("CTAPI-")
+        assert contract["opportunity_id"]
+        assert contract["customer_id"]
+        assert float(contract["contract_amount"]) == 150000.0
+        assert contract["status"] == "draft"
 
     def test_create_contract_accepts_legacy_quote_payload_and_infers_context(
         self, client: TestClient, db_session: Session, admin_token: str
@@ -1072,88 +1222,111 @@ class TestSalesContractsAPI:
         if not admin_token:
             pytest.skip("Admin token not available")
 
+        contract = _create_contract(client, admin_token)
         headers = _auth_headers(admin_token)
 
-        response = client.get(f"{settings.API_V1_PREFIX}/sales/contracts/1", headers=headers)
-
-        if response.status_code in [404, 422]:
-            pytest.skip("No contract data or API not implemented")
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/sales/contracts/{contract['id']}", headers=headers
+        )
 
         assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["id"] == contract["id"]
+        assert payload["contract_code"] == contract["contract_code"]
 
     def test_update_contract(self, client: TestClient, admin_token: str):
         """测试更新合同"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
+        contract = _create_contract(client, admin_token)
         headers = _auth_headers(admin_token)
 
-        update_data = {"remarks": "更新后的备注", "warranty_period": "24个月"}
+        update_data = {
+            "contract_name": f"更新后的合同-{uuid4().hex[:4]}",
+            "payment_terms_summary": "50-40-10",
+        }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/sales/contracts/1", headers=headers, json=update_data
+            f"{settings.API_V1_PREFIX}/sales/contracts/{contract['id']}",
+            headers=headers,
+            json=update_data,
         )
 
-        if response.status_code in [404, 422]:
-            pytest.skip("Contract API not implemented or no data")
-
         assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["id"] == contract["id"]
+        assert payload["contract_name"] == update_data["contract_name"]
+        assert payload["payment_terms_summary"] == "50-40-10"
 
     def test_delete_contract(self, client: TestClient, admin_token: str):
         """测试删除合同"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
+        contract = _create_contract(client, admin_token)
         headers = _auth_headers(admin_token)
 
-        response = client.delete(f"{settings.API_V1_PREFIX}/sales/contracts/999", headers=headers)
+        response = client.delete(
+            f"{settings.API_V1_PREFIX}/sales/contracts/{contract['id']}", headers=headers
+        )
 
-        if response.status_code == 404:
-            pytest.skip("Contract API not implemented")
+        assert response.status_code == 204, response.text
+        detail_response = client.get(
+            f"{settings.API_V1_PREFIX}/sales/contracts/{contract['id']}", headers=headers
+        )
+        assert detail_response.status_code == 404, detail_response.text
 
-        assert response.status_code in [200, 204, 404], response.text
-
-    def test_contract_approval_submit(self, client: TestClient, admin_token: str):
+    def test_contract_approval_submit(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
         """测试提交合同审批"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+        _ensure_contract_approval_template(db_session, admin_user.id)
+
+        contract = _create_contract(client, admin_token)
         headers = _auth_headers(admin_token)
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/contracts/1/submit", headers=headers
+            f"{settings.API_V1_PREFIX}/sales/contracts/approval/submit",
+            headers=headers,
+            json={"contract_ids": [contract["id"]]},
         )
 
-        if response.status_code == 404:
-            pytest.skip("Contract approval API not implemented")
-
-        assert response.status_code in [200, 404], response.text
+        assert response.status_code == 200, response.text
+        data = response.json()["data"]
+        assert data["errors"] == []
+        assert data["success"][0]["contract_id"] == contract["id"]
+        assert data["success"][0]["instance_id"] > 0
 
     def test_contract_approval_approve(self, client: TestClient, admin_token: str):
-        """测试审批通过合同"""
+        """测试合同审批状态查询使用当前前端路径"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
+        contract = _create_contract(client, admin_token)
         headers = _auth_headers(admin_token)
 
-        approval_data = {"action": "approve", "comments": "审批通过"}
-
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/contracts/1/approve",
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/sales/contracts/approval/status/{contract['id']}",
             headers=headers,
-            json=approval_data,
         )
 
-        if response.status_code == 404:
-            pytest.skip("Contract approval API not implemented")
-
-        assert response.status_code in [200, 404], response.text
+        assert response.status_code == 200, response.text
+        data = response.json()["data"]
+        assert data["contract_id"] == contract["id"]
+        assert data["approval_instance"] is None
 
     def test_contract_signing(self, client: TestClient, admin_token: str):
         """测试合同签署"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
+        contract = _create_contract(client, admin_token)
         headers = _auth_headers(admin_token)
 
         signing_data = {
@@ -1163,29 +1336,37 @@ class TestSalesContractsAPI:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/contracts/1/sign", headers=headers, json=signing_data
+            f"{settings.API_V1_PREFIX}/sales/contracts/{contract['id']}/sign",
+            headers=headers,
+            json=signing_data,
         )
 
-        if response.status_code == 404:
-            pytest.skip("Contract signing API not implemented")
+        assert response.status_code == 200, response.text
+        assert response.json()["data"]["contract_id"] == contract["id"]
 
-        assert response.status_code in [200, 404], response.text
+        detail_response = client.get(
+            f"{settings.API_V1_PREFIX}/sales/contracts/{contract['id']}", headers=headers
+        )
+        assert detail_response.status_code == 200, detail_response.text
+        assert detail_response.json()["status"] == "SIGNED"
 
     def test_contract_archive(self, client: TestClient, admin_token: str):
         """测试合同归档"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
+        contract = _create_contract(client, admin_token)
         headers = _auth_headers(admin_token)
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/contracts/1/archive", headers=headers
+            f"{settings.API_V1_PREFIX}/sales/contracts/{contract['id']}/archive",
+            headers=headers,
         )
 
-        if response.status_code == 404:
-            pytest.skip("Contract archive API not implemented")
-
-        assert response.status_code in [200, 404], response.text
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["id"] == contract["id"]
+        assert payload["status"] == "COMPLETED"
 
     def test_filter_contracts_by_status(self, client: TestClient, admin_token: str):
         """测试按状态过滤合同"""
@@ -1256,14 +1437,16 @@ class TestSalesContractsAPI:
         if not admin_token:
             pytest.skip("Admin token not available")
 
+        contract = _create_contract(client, admin_token)
         headers = _auth_headers(admin_token)
 
-        response = client.get(f"{settings.API_V1_PREFIX}/sales/contracts/1/export", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/sales/contracts/{contract['id']}/export",
+            headers=headers,
+        )
 
-        if response.status_code == 404:
-            pytest.skip("Contract export API not implemented")
-
-        assert response.status_code in [200, 404], response.text
+        assert response.status_code == 200, response.text
+        assert "application/pdf" in response.headers["content-type"]
 
     def test_contract_unauthorized(self, client: TestClient):
         """测试未授权访问合同"""
