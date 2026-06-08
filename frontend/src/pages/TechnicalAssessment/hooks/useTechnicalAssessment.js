@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { technicalAssessmentApi as assessmentApi } from "../../../services/api";
+import { normalizeAssessmentSourceType } from "../../../lib/assessmentSource";
 
 function normalizeAssessments(response) {
   const candidates = [
@@ -40,6 +41,7 @@ export function useTechnicalAssessment(sourceType, sourceId) {
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ status: "", type: "" });
 
+  const normalizedSourceType = normalizeAssessmentSourceType(sourceType);
   const numericSourceId = Number(sourceId);
   const canLoad = Boolean(sourceType && sourceId);
 
@@ -56,9 +58,9 @@ export function useTechnicalAssessment(sourceType, sourceId) {
       setError(null);
 
       let response;
-      if (sourceType === "lead") {
+      if (normalizedSourceType === "lead") {
         response = await assessmentApi.getLeadAssessments(numericSourceId);
-      } else if (sourceType === "opportunity") {
+      } else if (normalizedSourceType === "opportunity") {
         response = await assessmentApi.getOpportunityAssessments(numericSourceId);
       } else {
         throw new Error("不支持的技术评估来源");
@@ -85,7 +87,7 @@ export function useTechnicalAssessment(sourceType, sourceId) {
     } finally {
       setLoading(false);
     }
-  }, [canLoad, filters.status, filters.type, numericSourceId, sourceType]);
+    }, [canLoad, filters.status, filters.type, normalizedSourceType, numericSourceId]);
 
   const createAssessment = useCallback(
     async (data = {}) => {
@@ -94,9 +96,9 @@ export function useTechnicalAssessment(sourceType, sourceId) {
       }
 
       try {
-        if (sourceType === "lead") {
+        if (normalizedSourceType === "lead") {
           await assessmentApi.applyForLead(numericSourceId, data);
-        } else if (sourceType === "opportunity") {
+        } else if (normalizedSourceType === "opportunity") {
           await assessmentApi.applyForOpportunity(numericSourceId, data);
         } else {
           throw new Error("不支持的技术评估来源");
@@ -108,7 +110,7 @@ export function useTechnicalAssessment(sourceType, sourceId) {
         return { success: false, error: err.response?.data?.detail || err.message };
       }
     },
-    [canLoad, loadAssessments, numericSourceId, sourceType]
+    [canLoad, loadAssessments, normalizedSourceType, numericSourceId]
   );
 
   const submitAssessment = useCallback(

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import { useParams } from "react-router-dom";
+import { MemoryRouter, useParams } from "react-router-dom";
 import OpenItemsManagement from "../OpenItemsManagement";
 
 const technicalAssessmentApiMock = vi.hoisted(() => ({
@@ -15,6 +15,13 @@ const technicalAssessmentApiMock = vi.hoisted(() => ({
 vi.mock("../../services/api", () => ({
   technicalAssessmentApi: technicalAssessmentApiMock,
 }));
+
+const renderWithRouter = () =>
+  render(
+    <MemoryRouter>
+      <OpenItemsManagement />
+    </MemoryRouter>
+  );
 
 describe("OpenItemsManagement", () => {
   beforeEach(() => {
@@ -38,7 +45,7 @@ describe("OpenItemsManagement", () => {
   });
 
   it("loads open items through the normalized source API", async () => {
-    render(<OpenItemsManagement />);
+    renderWithRouter();
 
     await waitFor(() => {
       expect(technicalAssessmentApiMock.getOpenItemsForSource).toHaveBeenCalledWith(
@@ -49,5 +56,9 @@ describe("OpenItemsManagement", () => {
 
     expect(await screen.findByText("接口协议待客户确认")).toBeInTheDocument();
     expect(screen.getByText("阻塞报价")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "线索管理" })).toHaveAttribute(
+      "href",
+      "/sales/leads",
+    );
   });
 });

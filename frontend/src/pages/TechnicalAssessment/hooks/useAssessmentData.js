@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { presaleWorkbenchApi, technicalAssessmentApi } from "../../../services/api";
+import { normalizeAssessmentSourceType } from "../../../lib/assessmentSource";
 
 function normalizeAssessments(response) {
   const candidates = [
@@ -338,6 +339,7 @@ export function useAssessmentData(
   const [collaboration, setCollaboration] = useState(emptyCollaboration());
   const [enableAI, setEnableAI] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const normalizedSourceType = normalizeAssessmentSourceType(sourceType);
   const numericSourceId = parseContextId(sourceId);
   const numericPresaleTicketId = parseContextId(presaleTicketId);
   const numericProjectId = parseContextId(projectId);
@@ -349,12 +351,12 @@ export function useAssessmentData(
       let contextRequirementData = {};
       let contextCollaboration = emptyCollaboration();
 
-      if (sourceType === "lead") {
+      if (normalizedSourceType === "lead") {
         const response = await technicalAssessmentApi.getLeadAssessments(
           parseInt(sourceId)
         );
         result = normalizeAssessments(response);
-      } else if (sourceType === "opportunity") {
+      } else if (normalizedSourceType === "opportunity") {
         const response = await technicalAssessmentApi.getOpportunityAssessments(
           parseInt(sourceId)
         );
@@ -364,7 +366,7 @@ export function useAssessmentData(
       if (numericSourceId && presaleWorkbenchApi?.loadContext) {
         try {
           const contextParams = {
-            sourceType,
+            sourceType: normalizedSourceType,
             sourceId: numericSourceId,
           };
           if (numericPresaleTicketId) {
@@ -375,7 +377,7 @@ export function useAssessmentData(
           contextRequirementData = buildRequirementDataFromDetail(
             context?.assessment?.requirementDetail,
             {
-              sourceType,
+              sourceType: normalizedSourceType,
               sourceId: numericSourceId,
               presaleTicketId: numericPresaleTicketId,
               projectId: numericProjectId,
@@ -404,7 +406,7 @@ export function useAssessmentData(
 
   useEffect(() => {
     loadAssessment();
-  }, [sourceType, sourceId, selectedAssessmentId, presaleTicketId, projectId]);
+  }, [normalizedSourceType, sourceId, selectedAssessmentId, presaleTicketId, projectId]);
 
   const handleApplyAssessment = async () => {
     try {
@@ -414,16 +416,18 @@ export function useAssessmentData(
       }
 
       let response;
-      if (sourceType === "lead") {
+      if (normalizedSourceType === "lead") {
         response = await technicalAssessmentApi.applyForLead(
           parseInt(sourceId),
           payload
         );
-      } else {
+      } else if (normalizedSourceType === "opportunity") {
         response = await technicalAssessmentApi.applyForOpportunity(
           parseInt(sourceId),
           payload
         );
+      } else {
+        throw new Error("不支持的技术评估来源");
       }
 
       if (response.data?.data?.assessment_id) {

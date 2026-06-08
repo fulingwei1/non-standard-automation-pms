@@ -185,4 +185,55 @@ describe("TechnicalAssessment", () => {
       "/sales/opportunity/8/ai-clarifications?ticket_id=501&project_id=42",
     );
   });
+
+  it("keeps collaboration entrypoints visible before collaboration records exist", async () => {
+    useParams.mockReturnValue({ sourceType: "leads", sourceId: "21" });
+    useSearchParams.mockReturnValue([
+      new URLSearchParams("ticket_id=501&lead_id=12&project_id=42"),
+      vi.fn(),
+    ]);
+    technicalAssessmentApi.getLeadAssessments.mockResolvedValue({
+      data: [
+        {
+          id: 705,
+          source_type: "LEAD",
+          source_id: 21,
+          status: "PENDING",
+          total_score: null,
+        },
+      ],
+    });
+    presaleWorkbenchApi.loadContext.mockResolvedValue({
+      assessment: { requirementDetail: null },
+      collaboration: {
+        openItems: { items: [], total: 0, blocking_count: 0 },
+        requirementFreezes: { items: [], total: 0 },
+        aiClarifications: { items: [], total: 0 },
+      },
+    });
+
+    render(<TechnicalAssessment />);
+
+    expect(await screen.findByText("售前协作上下文")).toBeInTheDocument();
+    expect(screen.getByText("0 项未决，0 项阻塞")).toBeInTheDocument();
+    expect(screen.getByText("暂无协作记录，可从这里进入创建未决事项、需求冻结或AI澄清。")).toBeInTheDocument();
+    expect(technicalAssessmentApi.getLeadAssessments).toHaveBeenCalledWith(21);
+    expect(presaleWorkbenchApi.loadContext).toHaveBeenCalledWith({
+      sourceType: "lead",
+      sourceId: 21,
+      presaleTicketId: 501,
+    });
+    expect(screen.getByRole("link", { name: /查看未决事项/ })).toHaveAttribute(
+      "href",
+      "/sales/lead/21/open-items?ticket_id=501&lead_id=12&project_id=42",
+    );
+    expect(screen.getByRole("link", { name: /查看需求冻结/ })).toHaveAttribute(
+      "href",
+      "/sales/lead/21/requirement-freezes?ticket_id=501&lead_id=12&project_id=42",
+    );
+    expect(screen.getByRole("link", { name: /查看AI澄清/ })).toHaveAttribute(
+      "href",
+      "/sales/lead/21/ai-clarifications?ticket_id=501&lead_id=12&project_id=42",
+    );
+  });
 });

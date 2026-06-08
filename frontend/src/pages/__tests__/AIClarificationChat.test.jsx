@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import { useParams } from "react-router-dom";
+import { MemoryRouter, useParams } from "react-router-dom";
 import AIClarificationChat from "../AIClarificationChat";
 
 const technicalAssessmentApiMock = vi.hoisted(() => ({
@@ -15,6 +15,13 @@ const technicalAssessmentApiMock = vi.hoisted(() => ({
 vi.mock("../../services/api", () => ({
   technicalAssessmentApi: technicalAssessmentApiMock,
 }));
+
+const renderWithRouter = () =>
+  render(
+    <MemoryRouter>
+      <AIClarificationChat />
+    </MemoryRouter>
+  );
 
 describe("AIClarificationChat", () => {
   beforeEach(() => {
@@ -36,7 +43,7 @@ describe("AIClarificationChat", () => {
   });
 
   it("loads clarifications through the normalized source API", async () => {
-    render(<AIClarificationChat />);
+    renderWithRouter();
 
     await waitFor(() => {
       expect(technicalAssessmentApiMock.getAIClarificationsForSource).toHaveBeenCalledWith(
@@ -46,10 +53,14 @@ describe("AIClarificationChat", () => {
     });
 
     expect(await screen.findByText(/接口协议是否已确定/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "商机管理" })).toHaveAttribute(
+      "href",
+      "/sales/opportunities",
+    );
   });
 
   it("keeps the new-question textarea empty until the user types", async () => {
-    render(<AIClarificationChat />);
+    renderWithRouter();
 
     const textarea = await screen.findByPlaceholderText(/请输入问题/);
 
@@ -83,7 +94,7 @@ describe("AIClarificationChat", () => {
       },
     });
 
-    render(<AIClarificationChat />);
+    renderWithRouter();
 
     expect(await screen.findByText(/第 2 轮澄清/)).toBeInTheDocument();
     expect(screen.getByText("待回复")).toBeInTheDocument();

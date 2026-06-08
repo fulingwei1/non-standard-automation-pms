@@ -4,6 +4,7 @@ import { funnelApi } from "./funnel.js";
 import { presaleApi } from "./presales.js";
 import { presaleSolutionApi } from "./presaleSolution.js";
 import { technicalParameterApi } from "./technicalParameter.js";
+import { normalizeAssessmentSourceType } from "../../lib/assessmentSource.js";
 
 function unwrapResponse(response) {
   return response?.formatted ?? response?.data?.data ?? response?.data ?? null;
@@ -59,12 +60,16 @@ function getErrorMessage(error) {
 }
 
 function normalizeSourceType(sourceType) {
-  return String(sourceType || "").trim().toLowerCase();
+  return normalizeAssessmentSourceType(sourceType);
 }
 
 function normalizeEntityType(entityType) {
   if (!entityType) {
     return null;
+  }
+  const normalizedSourceType = normalizeAssessmentSourceType(entityType);
+  if (normalizedSourceType === "lead" || normalizedSourceType === "opportunity") {
+    return normalizedSourceType.toUpperCase();
   }
   return String(entityType).trim().toUpperCase();
 }

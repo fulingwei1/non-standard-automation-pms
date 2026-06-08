@@ -5,9 +5,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Lock } from
-"lucide-react";
+import { Lock } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -28,15 +26,27 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue } from
-"../components/ui";
+  SelectValue,
+} from "../components/ui";
 import { technicalAssessmentApi } from "../services/api";
+import {
+  getAssessmentSourceListPath,
+  isLeadAssessmentSource,
+} from "../lib/assessmentSource";
 
 const freezeTypeConfig = {
   SOLUTION: "方案冻结",
   INTERFACE: "接口冻结",
   ACCEPTANCE: "验收冻结",
   KEY_SELECTION: "关键选型冻结"
+};
+
+const getResponseItems = (response) => {
+  const payload = response?.formatted ?? response?.data?.data ?? response?.data ?? response;
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  return payload?.items || [];
 };
 
 export default function RequirementFreezeManagement() {
@@ -64,7 +74,7 @@ export default function RequirementFreezeManagement() {
         sourceType,
         parseInt(sourceId)
       );
-      setFreezes(response.data?.items || response.data || []);
+      setFreezes(getResponseItems(response));
     } catch (error) {
       console.error("加载冻结记录失败:", error);
     } finally {
@@ -104,11 +114,10 @@ export default function RequirementFreezeManagement() {
         title="需求冻结管理"
         breadcrumbs={[
         { label: "销售管理", path: "/sales" },
-        {
-          label: sourceType === "lead" ? "线索管理" : "商机管理",
-          path:
-          sourceType === "lead" ? "/sales/leads" : "/sales/opportunities"
-        },
+	        {
+	          label: isLeadAssessmentSource(sourceType) ? "线索管理" : "商机管理",
+	          path: getAssessmentSourceListPath(sourceType)
+	        },
         { label: "需求冻结", path: "" }]
         } />
 

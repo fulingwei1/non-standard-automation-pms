@@ -212,6 +212,48 @@ describe('presaleWorkbenchApi', () => {
     expect(mock.history.get[0].url).toBe('/presale/workbench/context');
   });
 
+  it('loadContext() - 应该兼容线索和商机单复数来源参数', async () => {
+    mock.onGet('/api/v1/presale/workbench/context').reply((config) => {
+      expect(config.params).toMatchObject({
+        source_type: 'opportunity',
+        source_id: 9,
+        entity_type: 'OPPORTUNITY',
+        entity_id: 9,
+        presale_ticket_id: 501,
+      });
+
+      return [200, {
+        code: 200,
+        data: {
+          source: { type: 'opportunity', id: 9 },
+          assessment: { items: [], total: 0, current: null },
+          collaboration: {
+            openItems: { items: [], total: 0, blocking_count: 0 },
+            requirementFreezes: { items: [], total: 0 },
+            aiClarifications: { items: [], total: 0 },
+          },
+          funnel: {
+            entityType: 'OPPORTUNITY',
+            entityId: 9,
+            gateConfigs: { items: [], total: 0 },
+            stages: { items: [], total: 0 },
+            transitionLogs: { items: [], total: 0 },
+            dwellAlerts: { items: [], total: 0 },
+          },
+        },
+      }];
+    });
+
+    const context = await presaleWorkbenchApi.loadContext({
+      sourceType: 'opportunities',
+      sourceId: 9,
+      presaleTicketId: 501,
+    });
+
+    expect(context.source.type).toBe('opportunity');
+    expect(context.collaboration.openItems.total).toBe(0);
+  });
+
   it('loadAssessmentArtifacts() - 应该按评估拉取结构化风险和版本', async () => {
     mock.onGet('/api/v1/sales/assessments/42/risks').reply(200, {
       code: 200,

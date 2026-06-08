@@ -55,6 +55,21 @@ describe("useTechnicalAssessment", () => {
     expect(result.current.error).toBeNull();
   });
 
+  it("normalizes plural source route params before loading assessments", async () => {
+    const leadAssessments = [{ id: 19, status: "PENDING" }];
+    technicalAssessmentApi.getLeadAssessments.mockResolvedValue({
+      data: leadAssessments,
+    });
+
+    const { result } = renderHook(() => useTechnicalAssessment("leads", "12"));
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(technicalAssessmentApi.getLeadAssessments).toHaveBeenCalledWith(12);
+    expect(result.current.assessments).toEqual(leadAssessments);
+    expect(result.current.error).toBeNull();
+  });
+
   it("applies an opportunity assessment and reloads the same source", async () => {
     const appliedAssessment = [{ id: 21, status: "PENDING" }];
     technicalAssessmentApi.getOpportunityAssessments

@@ -5,10 +5,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Plus,
-  CheckCircle2 } from
-"lucide-react";
+import { Plus, CheckCircle2 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -29,9 +26,13 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue } from
-"../components/ui";
+  SelectValue,
+} from "../components/ui";
 import { technicalAssessmentApi } from "../services/api";
+import {
+  getAssessmentSourceListPath,
+  isLeadAssessmentSource,
+} from "../lib/assessmentSource";
 
 import { confirmAction } from "@/lib/confirmAction";
 const itemTypeConfig = {
@@ -51,9 +52,6 @@ const statusConfig = {
   VERIFIED: { label: "已验证", color: "bg-green-500" },
   CLOSED: { label: "已关闭", color: "bg-gray-500" }
 };
-
-const isLeadSource = (sourceType) =>
-  ["lead", "leads"].includes(String(sourceType || "").toLowerCase());
 
 const getResponseItems = (response) => {
   const payload = response?.formatted ?? response?.data?.data ?? response?.data ?? response;
@@ -145,11 +143,10 @@ export default function OpenItemsManagement() {
         title="未决事项管理"
         breadcrumbs={[
         { label: "销售管理", path: "/sales" },
-        {
-          label: isLeadSource(sourceType) ? "线索管理" : "商机管理",
-          path:
-          isLeadSource(sourceType) ? "/sales/leads" : "/sales/opportunities"
-        },
+	        {
+	          label: isLeadAssessmentSource(sourceType) ? "线索管理" : "商机管理",
+	          path: getAssessmentSourceListPath(sourceType)
+	        },
         { label: "未决事项", path: "" }]
         } />
 

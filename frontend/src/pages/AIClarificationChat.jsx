@@ -5,13 +5,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Send,
-  Bot,
-  User,
-  MessageSquare,
-  Loader } from
-"lucide-react";
+import { Send, Bot, User, MessageSquare, Loader } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -20,12 +14,13 @@ import {
   CardTitle,
   Button,
   Textarea,
-  Badge } from
-"../components/ui";
+  Badge,
+} from "../components/ui";
 import { technicalAssessmentApi } from "../services/api";
-
-const isLeadSource = (sourceType) =>
-  ["lead", "leads"].includes(String(sourceType || "").toLowerCase());
+import {
+  getAssessmentSourceListPath,
+  isLeadAssessmentSource,
+} from "../lib/assessmentSource";
 
 const getResponseItems = (response) => {
   const payload = response?.formatted ?? response?.data?.data ?? response?.data ?? response;
@@ -151,11 +146,10 @@ export default function AIClarificationChat() {
         title="AI澄清对话"
         breadcrumbs={[
         { label: "销售管理", path: "/sales" },
-        {
-          label: isLeadSource(sourceType) ? "线索管理" : "商机管理",
-          path:
-          isLeadSource(sourceType) ? "/sales/leads" : "/sales/opportunities"
-        },
+	        {
+	          label: isLeadAssessmentSource(sourceType) ? "线索管理" : "商机管理",
+	          path: getAssessmentSourceListPath(sourceType)
+	        },
         { label: "AI澄清", path: "" }]
         } />
 
