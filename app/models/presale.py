@@ -183,6 +183,7 @@ class PresaleTicketDeliverable(Base, TimestampMixin):
     file_path = Column(String(500), comment="文件路径")
     file_size = Column(Integer, comment="文件大小(bytes)")
     version = Column(String(20), default="V1.0", comment="版本号")
+    is_required = Column(Boolean, default=True, nullable=False, comment="是否关键交付物")
 
     # 状态
     status = Column(String(20), default="DRAFT", comment="状态")

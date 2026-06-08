@@ -66,9 +66,16 @@ function canReviewDeliverable(deliverable) {
   return Boolean(deliverable?.id) && !["APPROVED", "REJECTED"].includes(status);
 }
 
-function hasUnapprovedDeliverables(deliverables = []) {
+function isRequiredDeliverable(deliverable) {
+  return deliverable?.is_required !== false && deliverable?.isRequired !== false;
+}
+
+function hasUnapprovedRequiredDeliverables(deliverables = []) {
   return deliverables.length > 0 &&
-    deliverables.some((item) => getDeliverableStatus(item) !== "APPROVED");
+    deliverables.some((item) => (
+      isRequiredDeliverable(item) &&
+      getDeliverableStatus(item) !== "APPROVED"
+    ));
 }
 
 function appendContextParam(params, key, value) {
@@ -123,6 +130,7 @@ export default function TaskDetailPanel({
   const [deliverableName, setDeliverableName] = useState("");
   const [deliverableType, setDeliverableType] = useState("SOLUTION");
   const [deliverablePath, setDeliverablePath] = useState("");
+  const [deliverableRequired, setDeliverableRequired] = useState(true);
   const [ratingScore, setRatingScore] = useState(task?.satisfactionScore || 5);
   const [ratingFeedback, setRatingFeedback] = useState(task?.feedback || "");
   const [isUpdating, setIsUpdating] = useState(false);
@@ -141,7 +149,7 @@ export default function TaskDetailPanel({
   const isCompleted = task.status === "completed";
   const hasRating = task.satisfactionScore != null;
   const technicalAssessmentPath = buildTechnicalAssessmentPath(task);
-  const hasDeliverableCompletionBlocker = hasUnapprovedDeliverables(task.deliverables || []);
+  const hasDeliverableCompletionBlocker = hasUnapprovedRequiredDeliverables(task.deliverables || []);
 
   // 接单
   const handleAccept = async () => {
@@ -194,6 +202,7 @@ export default function TaskDetailPanel({
     const payload = {
       deliverable_name: name,
       deliverable_type: deliverableType,
+      is_required: deliverableRequired,
     };
     const path = deliverablePath.trim();
     if (path) {
@@ -209,6 +218,7 @@ export default function TaskDetailPanel({
       setDeliverableName("");
       setDeliverableType("SOLUTION");
       setDeliverablePath("");
+      setDeliverableRequired(true);
       onUpdate?.();
     } catch (err) {
       console.error("Failed to submit deliverable:", err);
@@ -264,7 +274,7 @@ export default function TaskDetailPanel({
       return;
     }
     if (hasDeliverableCompletionBlocker) {
-      alert("仍有交付物未通过审核，不能完成工单");
+      alert("仍有关键交付物未通过审核，不能完成工单");
       return;
     }
 
@@ -508,6 +518,15 @@ export default function TaskDetailPanel({
                   <Badge className="ml-auto bg-white/10 text-slate-200">
                     {getDeliverableStatusLabel(item)}
                   </Badge>
+                  <Badge
+                    className={
+                      isRequiredDeliverable(item)
+                        ? "bg-amber-500/15 text-amber-200 border border-amber-500/30"
+                        : "bg-slate-500/15 text-slate-300 border border-slate-500/30"
+                    }
+                  >
+                    {isRequiredDeliverable(item) ? "关键" : "非关键"}
+                  </Badge>
                   {task.status === "completed" &&
                   getDeliverableStatus(item) === "APPROVED" &&
                   <CheckCircle className="w-4 h-4 text-emerald-500" />
@@ -632,6 +651,19 @@ export default function TaskDetailPanel({
                 onChange={(e) => setDeliverablePath(e.target.value)}
                 className="w-full"
               />
+              <label
+                htmlFor="presale-deliverable-required"
+                className="flex items-center gap-2 text-sm text-slate-300"
+              >
+                <input
+                  id="presale-deliverable-required"
+                  type="checkbox"
+                  checked={deliverableRequired}
+                  onChange={(event) => setDeliverableRequired(event.target.checked)}
+                  className="h-4 w-4 rounded border-white/20 bg-white/5"
+                />
+                关键交付物
+              </label>
               <Button
                 onClick={handleSubmitDeliverable}
                 disabled={isSubmittingDeliverable}
@@ -721,7 +753,7 @@ export default function TaskDetailPanel({
               </Button>
               {hasDeliverableCompletionBlocker &&
               <p className="text-xs text-amber-300">
-                仍有交付物未通过审核，不能完成工单
+                仍有关键交付物未通过审核，不能完成工单
               </p>
               }
             </div>

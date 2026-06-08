@@ -130,6 +130,7 @@ describe('PresalesTasks', () => {
         deliverable_name: '初版技术方案',
         deliverable_type: 'SOLUTION',
         file_path: '/files/solution-v1.pdf',
+        is_required: true,
         status: 'APPROVED',
         review_comment: '交付物审核通过',
       },
@@ -140,6 +141,7 @@ describe('PresalesTasks', () => {
         deliverable_name: '新版技术方案',
         deliverable_type: 'SOLUTION',
         file_path: '/files/solution-v2.pdf',
+        is_required: true,
       },
     });
   });
@@ -728,6 +730,7 @@ describe('PresalesTasks', () => {
                 deliverable_name: '初版技术方案',
                 deliverable_type: 'SOLUTION',
                 file_path: '/files/solution-v1.pdf',
+                is_required: true,
                 status: 'DRAFT',
               },
             ],
@@ -825,6 +828,7 @@ describe('PresalesTasks', () => {
         deliverable_name: '报价资料',
         deliverable_type: 'QUOTE',
         file_path: '/files/quote-v1.pdf',
+        is_required: true,
         status: 'REJECTED',
         review_comment: '交付物退回修改',
       },
@@ -865,6 +869,7 @@ describe('PresalesTasks', () => {
                 deliverable_name: '节拍说明',
                 deliverable_type: 'SOLUTION',
                 file_path: '/files/cycle-time.pdf',
+                is_required: true,
                 status: 'REJECTED',
                 review_comment: '缺少关键节拍说明',
               },
@@ -881,11 +886,61 @@ describe('PresalesTasks', () => {
     fireEvent.click(screen.getByText('方案待返工'));
 
     expect(screen.getByText('已退回')).toBeInTheDocument();
-    expect(screen.getByText('仍有交付物未通过审核，不能完成工单')).toBeInTheDocument();
+    expect(screen.getByText('关键')).toBeInTheDocument();
+    expect(screen.getByText('仍有关键交付物未通过审核，不能完成工单')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /完成工单/ })).toBeDisabled();
 
     fireEvent.click(screen.getByRole('button', { name: /完成工单/ }));
     expect(presaleApi.tickets.complete).not.toHaveBeenCalled();
+  });
+
+  it('allows completing a ticket when only optional deliverables are rejected', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 54,
+            title: '参考资料可退回',
+            ticket_type: 'SOLUTION_DESIGN',
+            status: 'IN_PROGRESS',
+            urgency: 'NORMAL',
+            customer_name: '华南电子',
+            applicant_name: '陈敏',
+            description: '非关键附件退回不阻断完成',
+            actual_hours: 4,
+            deliverables: [
+              {
+                id: 10,
+                deliverable_name: '参考附件',
+                deliverable_type: 'OTHER',
+                file_path: '/files/reference.pdf',
+                is_required: false,
+                status: 'REJECTED',
+                review_comment: '仅供参考',
+              },
+            ],
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage();
+
+    await screen.findByText('参考资料可退回');
+    fireEvent.click(screen.getByText('参考资料可退回'));
+
+    expect(screen.getByText('非关键')).toBeInTheDocument();
+    expect(screen.queryByText('仍有关键交付物未通过审核，不能完成工单')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /完成工单/ })).not.toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: /完成工单/ }));
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.complete).toHaveBeenCalledWith(54, {
+        actual_hours: 4,
+      });
+    });
   });
 
   it('submits a deliverable from an in-progress ticket detail panel', async () => {
@@ -928,6 +983,7 @@ describe('PresalesTasks', () => {
       expect(presaleApi.tickets.createDeliverable).toHaveBeenCalledWith(61, {
         deliverable_name: '新版技术方案',
         deliverable_type: 'SOLUTION',
+        is_required: true,
         file_path: '/files/solution-v2.pdf',
       });
     });
@@ -935,6 +991,49 @@ describe('PresalesTasks', () => {
       expect(presaleApi.tickets.list).toHaveBeenCalledTimes(2);
     });
     expect(await screen.findByText('新版技术方案')).toBeInTheDocument();
+  });
+
+  it('submits an optional deliverable when the required checkbox is cleared', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 62,
+            title: '参考附件补充',
+            ticket_type: 'SOLUTION_DESIGN',
+            status: 'IN_PROGRESS',
+            urgency: 'NORMAL',
+            customer_name: '华南电子',
+            applicant_name: '陈敏',
+            description: '补充非关键附件',
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage();
+
+    await screen.findByText('参考附件补充');
+    fireEvent.click(screen.getByText('参考附件补充'));
+
+    fireEvent.change(screen.getByLabelText('交付物名称'), {
+      target: { value: '参考附件' },
+    });
+    fireEvent.change(screen.getByLabelText('交付物类型'), {
+      target: { value: 'OTHER' },
+    });
+    fireEvent.click(screen.getByLabelText('关键交付物'));
+
+    fireEvent.click(screen.getByRole('button', { name: /提交交付物/ }));
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.createDeliverable).toHaveBeenCalledWith(62, {
+        deliverable_name: '参考附件',
+        deliverable_type: 'OTHER',
+        is_required: false,
+      });
+    });
   });
 
   it('submits sales satisfaction rating for a completed ticket', async () => {

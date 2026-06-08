@@ -40,7 +40,8 @@ def _ensure_deliverables_approved(ticket: PresaleSupportTicket) -> None:
     blocking_deliverables = [
         deliverable
         for deliverable in deliverables
-        if str(deliverable.status or "").upper() != APPROVED_DELIVERABLE_STATUS
+        if getattr(deliverable, "is_required", True) is not False
+        and str(deliverable.status or "").upper() != APPROVED_DELIVERABLE_STATUS
     ]
     if not blocking_deliverables:
         return
@@ -51,7 +52,7 @@ def _ensure_deliverables_approved(ticket: PresaleSupportTicket) -> None:
     )
     raise HTTPException(
         status_code=400,
-        detail=f"存在未通过审核的交付物，不能完成工单：{names}",
+        detail=f"存在未通过审核的关键交付物，不能完成工单：{names}",
     )
 
 
@@ -186,6 +187,7 @@ def create_deliverable(
         name=deliverable_in.deliverable_name,
         file_type=deliverable_in.deliverable_type,
         file_path=deliverable_in.file_path or deliverable_in.file_url,
+        is_required=deliverable_in.is_required,
         created_by=current_user.id,
     )
 
@@ -199,6 +201,7 @@ def create_deliverable(
         file_path=deliverable.file_path,
         file_url=deliverable_in.file_url,
         description=deliverable_in.description,
+        is_required=deliverable.is_required,
         status=deliverable.status,
         created_at=deliverable.created_at,
         updated_at=deliverable.updated_at,
@@ -249,6 +252,7 @@ def review_deliverable(
         deliverable_type=deliverable.file_type,
         file_path=deliverable.file_path,
         file_url=deliverable.file_path,
+        is_required=deliverable.is_required,
         status=deliverable.status,
         reviewer_id=deliverable.reviewer_id,
         review_time=deliverable.review_time,

@@ -68,6 +68,7 @@ class DeliverableCreate(BaseModel):
     file_path: Optional[str] = Field(None, description="文件路径")
     file_url: Optional[str] = Field(None, description="文件URL")
     description: Optional[str] = Field(None, description="说明")
+    is_required: bool = Field(True, description="是否关键交付物")
 
 
 class DeliverableReviewRequest(BaseModel):
@@ -155,6 +156,7 @@ class DeliverableResponse(TimestampSchema):
     file_path: Optional[str] = None
     file_url: Optional[str] = None
     description: Optional[str] = None
+    is_required: bool = True
     status: Optional[str] = None
     reviewer_id: Optional[int] = None
     review_time: Optional[datetime] = None

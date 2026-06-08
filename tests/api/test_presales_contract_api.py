@@ -1119,6 +1119,7 @@ class TestPresalesFrontendContractBehavior:
         assert deliverable_payload["file_path"] == "/files/solution-v1.pdf"
         assert deliverable_payload["file_url"] == "https://files.example.com/solution-v1.pdf"
         assert deliverable_payload["description"] == "方案初稿"
+        assert deliverable_payload["is_required"] is True
 
         detail = client.get(
             f"{prefix}/presale/tickets/{ticket_id}",
@@ -1133,6 +1134,7 @@ class TestPresalesFrontendContractBehavior:
                 "deliverable_type": "SOLUTION",
                 "file_path": "/files/solution-v1.pdf",
                 "file_url": "/files/solution-v1.pdf",
+                "is_required": True,
                 "status": "DRAFT",
                 "reviewer_id": None,
                 "review_time": None,
@@ -1169,7 +1171,7 @@ class TestPresalesFrontendContractBehavior:
             headers=headers,
         )
         assert blocked_completion.status_code == 400, blocked_completion.text
-        assert "未通过审核的交付物" in blocked_completion.json()["detail"]
+        assert "未通过审核的关键交付物" in blocked_completion.json()["detail"]
         assert "初版技术方案" in blocked_completion.json()["detail"]
 
         approved_again = client.put(
@@ -1180,6 +1182,29 @@ class TestPresalesFrontendContractBehavior:
         assert approved_again.status_code == 200, approved_again.text
         assert approved_again.json()["status"] == "APPROVED"
         assert approved_again.json()["review_comment"] == "补充节拍说明后通过"
+
+        optional_deliverable = client.post(
+            f"{prefix}/presale/tickets/{ticket_id}/deliverables",
+            json={
+                "deliverable_name": "参考附件",
+                "deliverable_type": "OTHER",
+                "file_path": "/files/reference.pdf",
+                "is_required": False,
+            },
+            headers=headers,
+        )
+        assert optional_deliverable.status_code == 201, optional_deliverable.text
+        optional_payload = optional_deliverable.json()
+        assert optional_payload["is_required"] is False
+
+        rejected_optional = client.put(
+            f"{prefix}/presale/tickets/{ticket_id}/deliverables/{optional_payload['id']}/review",
+            json={"review_status": "REJECTED", "review_comment": "非关键附件退回不阻断"},
+            headers=headers,
+        )
+        assert rejected_optional.status_code == 200, rejected_optional.text
+        assert rejected_optional.json()["status"] == "REJECTED"
+        assert rejected_optional.json()["is_required"] is False
 
         completed = client.put(
             f"{prefix}/presale/tickets/{ticket_id}/complete",
