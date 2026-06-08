@@ -2084,6 +2084,115 @@ class TestPresalesFrontendContractBehavior:
             ).delete(synchronize_session=False)
             db_session.commit()
 
+    def test_solution_list_filters_by_lead_id_through_opportunity_without_ticket(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """兼容历史方案：无工单但有商机时，线索视角仍应看到售前方案。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-SOL-OPP-{unique}",
+            customer_name=f"商机方案客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        lead = Lead(
+            lead_code=f"LD-SOLOPP-{unique}",
+            customer_name=customer.customer_name,
+            source="展会",
+            industry="电子制造",
+            owner_id=admin_user.id,
+        )
+        other_lead = Lead(
+            lead_code=f"LD-SOLOTHER-{unique}",
+            customer_name=f"其他商机方案客户-{unique}",
+            source="展会",
+            industry="电子制造",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([customer, lead, other_lead])
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPP-SOLOPP-{unique[:6]}",
+            customer_id=customer.id,
+            lead_id=lead.id,
+            opp_name=f"线索商机方案-{unique}",
+            stage="QUALIFICATION",
+            probability=60,
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        other_opportunity = Opportunity(
+            opp_code=f"OPP-SOLOTH-{unique[:6]}",
+            customer_id=customer.id,
+            lead_id=other_lead.id,
+            opp_name=f"其他线索商机方案-{unique}",
+            stage="QUALIFICATION",
+            probability=60,
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add_all([opportunity, other_opportunity])
+        db_session.flush()
+
+        target_solution = PresaleSolution(
+            solution_no=f"SOL-OPP-LEAD-{unique}",
+            name=f"无工单商机方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=None,
+            opportunity_id=opportunity.id,
+            customer_id=customer.id,
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        other_solution = PresaleSolution(
+            solution_no=f"SOL-OPP-NOISE-{unique}",
+            name=f"其他无工单商机方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=None,
+            opportunity_id=other_opportunity.id,
+            customer_id=customer.id,
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        db_session.add_all([target_solution, other_solution])
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{prefix}/presale/proposals/solutions",
+                params={"lead_id": lead.id, "keyword": unique},
+                headers=headers,
+            )
+            assert response.status_code == 200, response.text
+            items = response.json()["items"]
+
+            assert [item["id"] for item in items] == [target_solution.id]
+            assert items[0]["ticket_id"] is None
+            assert items[0]["opportunity_id"] == opportunity.id
+            assert items[0]["lead_id"] == lead.id
+        finally:
+            db_session.query(PresaleSolution).filter(
+                PresaleSolution.id.in_([target_solution.id, other_solution.id])
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(
+                Opportunity.id.in_([opportunity.id, other_opportunity.id])
+            ).delete(synchronize_session=False)
+            db_session.query(Lead).filter(
+                Lead.id.in_([lead.id, other_lead.id])
+            ).delete(synchronize_session=False)
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
     def test_solution_created_from_ticket_inherits_project_context(
         self, client: TestClient, db_session: Session, admin_token: str
     ):

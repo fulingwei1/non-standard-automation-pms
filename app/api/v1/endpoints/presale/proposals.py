@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -140,6 +140,7 @@ def resolve_solution_response_context(
     solution: PresaleSolution,
 ) -> dict[str, Any]:
     ticket = solution.ticket
+    lead_id = ticket.lead_id if ticket else None
     customer_id = solution.customer_id or (ticket.customer_id if ticket else None)
     customer_name = ticket.customer_name if ticket else None
     opportunity_id = solution.opportunity_id or (ticket.opportunity_id if ticket else None)
@@ -150,6 +151,7 @@ def resolve_solution_response_context(
     if opportunity_id:
         opportunity = db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
         if opportunity:
+            lead_id = lead_id or opportunity.lead_id
             opportunity_name = opportunity.opp_name
             customer_id = customer_id or opportunity.customer_id
             if opportunity.customer:
@@ -172,6 +174,7 @@ def resolve_solution_response_context(
         reviewer_name = get_user_display_name(reviewer)
 
     return {
+        "lead_id": lead_id,
         "customer_id": customer_id,
         "customer_name": customer_name,
         "opportunity_id": opportunity_id,
@@ -194,7 +197,7 @@ def build_solution_response(db: Session, solution: PresaleSolution) -> SolutionR
         industry=solution.industry,
         test_type=solution.test_type,
         ticket_id=solution.ticket_id,
-        lead_id=solution.ticket.lead_id if solution.ticket else None,
+        lead_id=context["lead_id"],
         project_id=solution.project_id,
         customer_id=context["customer_id"],
         customer_name=context["customer_name"],
@@ -404,7 +407,16 @@ def read_solutions(
             db.query(PresaleSupportTicket.id)
             .filter(PresaleSupportTicket.lead_id == lead_id)
         )
-        query = query.filter(PresaleSolution.ticket_id.in_(lead_ticket_ids))
+        lead_opportunity_ids = (
+            db.query(Opportunity.id)
+            .filter(Opportunity.lead_id == lead_id)
+        )
+        query = query.filter(
+            or_(
+                PresaleSolution.ticket_id.in_(lead_ticket_ids),
+                PresaleSolution.opportunity_id.in_(lead_opportunity_ids),
+            )
+        )
 
     if ticket_id:
         query = query.filter(PresaleSolution.ticket_id == ticket_id)
