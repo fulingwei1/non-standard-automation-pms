@@ -64,6 +64,14 @@ const formatRiskLevel = (riskLevel) => {
   return text.includes("风险") ? text : `${text}风险`;
 };
 
+const formatTenderResult = (result) => ({
+  WON: "已中标",
+  LOST: "未中标",
+  PENDING: "待结果",
+  SUBMITTED: "已投标",
+  CANCELLED: "已取消",
+})[String(result || "").toUpperCase()] || result || "未更新";
+
 function appendContextParam(params, key, value) {
   if (value !== undefined && value !== null && value !== "") {
     params.set(key, String(value));
@@ -165,6 +173,42 @@ function buildPresaleTicketPath(ticket, opportunity, project) {
     params,
     "project_id",
     getFirstValue(ticket, ["project_id", "projectId"]) || project?.id,
+  );
+
+  return `/presales/technical-solutions?${params.toString()}`;
+}
+
+function buildPresaleTenderPath(tender, ticket, opportunity, project) {
+  const params = new URLSearchParams();
+  params.set("tab", "bids");
+  params.set("type", "bidding");
+  appendContextParam(params, "tender_id", getFirstValue(tender, ["id", "tender_id", "tenderId"]));
+  appendContextParam(
+    params,
+    "ticket_id",
+    getFirstValue(tender, ["ticket_id", "ticketId"]) ||
+      getFirstValue(ticket, ["id", "ticket_id", "ticketId"]),
+  );
+  appendContextParam(
+    params,
+    "lead_id",
+    getFirstValue(ticket, ["lead_id", "leadId"]) ||
+      getFirstValue(opportunity, ["lead_id", "leadId"]) ||
+      getFirstValue(project, ["lead_id", "leadId"]),
+  );
+  appendContextParam(
+    params,
+    "opportunity_id",
+    getFirstValue(tender, ["opportunity_id", "opportunityId"]) ||
+      getFirstValue(ticket, ["opportunity_id", "opportunityId"]) ||
+      opportunity?.id,
+  );
+  appendContextParam(
+    params,
+    "project_id",
+    getFirstValue(tender, ["project_id", "projectId"]) ||
+      getFirstValue(ticket, ["project_id", "projectId"]) ||
+      project?.id,
   );
 
   return `/presales/technical-solutions?${params.toString()}`;
@@ -348,6 +392,9 @@ export default function ProjectWorkspace() {
   const quoteVersion = handoverContext?.quote?.version || {};
   const primarySolution = handoverContext?.presale_solutions?.[0];
   const primaryTicket = handoverContext?.presale_tickets?.[0];
+  const primaryTender = handoverContext?.presale_tenders?.[0];
+  const initialPlan = handoverContext?.initial_plan || {};
+  const primaryMilestone = initialPlan.milestones?.[0];
   const technicalAssessment = handoverContext?.technical_assessment || {};
   const currentAssessment = technicalAssessment.current;
   const assessmentRisks = technicalAssessment.risks || {};
@@ -365,6 +412,9 @@ export default function ProjectWorkspace() {
     handoverContext?.opportunity,
     project,
   );
+  const primaryTenderPath = primaryTender ?
+    buildPresaleTenderPath(primaryTender, primaryTicket, handoverContext?.opportunity, project) :
+    null;
   const openItemsPath = buildOpenItemsPath(
     openItems,
     handoverContext?.opportunity,
@@ -701,6 +751,86 @@ export default function ProjectWorkspace() {
                     ` / 截止：${formatDate(primaryOpenItem.due_date)}` :
                     ""}
                   </p>
+                </div>
+                }
+              </div>
+              }
+
+              {(primaryTender || primaryMilestone) &&
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {primaryTender &&
+                <div className="rounded-lg border p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm text-gray-500">投标结果</p>
+                      {primaryTenderPath ?
+                      <Link className="mt-1 block font-medium text-primary hover:underline" to={primaryTenderPath}>
+                        {primaryTender.tender_no || primaryTender.tender_name}
+                      </Link> :
+                      <p className="mt-1 font-medium">
+                        {primaryTender.tender_no || primaryTender.tender_name}
+                      </p>
+                      }
+                    </div>
+                    <Badge variant={String(primaryTender.result).toUpperCase() === "WON" ? "default" : "secondary"}>
+                      {formatTenderResult(primaryTender.result)}
+                    </Badge>
+                  </div>
+                  <p className="mt-2 truncate text-sm text-gray-500">
+                    {primaryTender.tender_name || "-"}
+                  </p>
+                  <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-gray-500">我方报价</p>
+                      <p className="font-medium">
+                        {primaryTender.our_bid_amount != null ?
+                        formatCurrency(primaryTender.our_bid_amount) :
+                        "未填"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">总评分</p>
+                      <p className="font-medium">
+                        {primaryTender.total_score != null ? `${primaryTender.total_score} 分` : "未评分"}
+                      </p>
+                    </div>
+                  </div>
+                  {primaryTender.result_reason &&
+                  <p className="mt-3 text-sm text-gray-500">
+                    {primaryTender.result_reason}
+                  </p>
+                  }
+                </div>
+                }
+
+                {primaryMilestone &&
+                <div className="rounded-lg border p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm text-gray-500">初始里程碑</p>
+                      <p className="mt-1 font-medium">
+                        {primaryMilestone.milestone_name || primaryMilestone.milestone_code}
+                      </p>
+                    </div>
+                    <Badge variant={primaryMilestone.is_key ? "default" : "secondary"}>
+                      {primaryMilestone.is_key ? "关键" : "普通"}
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-sm text-gray-500">
+                    共 {initialPlan.total || 0} 个里程碑，
+                    {initialPlan.key_count || 0} 个关键，
+                    {initialPlan.open_count || 0} 个未完成
+                  </p>
+                  <p className="mt-3 text-sm text-gray-500">
+                    计划：{primaryMilestone.planned_date ? formatDate(primaryMilestone.planned_date) : "未排期"}
+                    {primaryMilestone.stage_code ? ` / 阶段：${primaryMilestone.stage_code}` : ""}
+                    {primaryMilestone.status ? ` / 状态：${primaryMilestone.status}` : ""}
+                  </p>
+                  {primaryMilestone.remark &&
+                  <p className="mt-3 text-sm text-gray-500">
+                    {primaryMilestone.remark}
+                  </p>
+                  }
                 </div>
                 }
               </div>

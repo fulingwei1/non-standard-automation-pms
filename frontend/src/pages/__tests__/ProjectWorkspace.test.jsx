@@ -101,6 +101,20 @@ describe("ProjectWorkspace", () => {
               pm_assigned: false,
             },
           ],
+          presale_tenders: [
+            {
+              id: 301,
+              ticket_id: 91,
+              opportunity_id: 2,
+              project_id: 1,
+              tender_no: "BID-001",
+              tender_name: "FCT整线投标",
+              our_bid_amount: 580000,
+              total_score: 91.5,
+              result: "WON",
+              result_reason: "技术评分领先，交付周期满足客户要求",
+            },
+          ],
           technical_assessment: {
             current: {
               id: 701,
@@ -140,6 +154,24 @@ describe("ProjectWorkspace", () => {
                 due_date: "2026-06-15T00:00:00",
                 status: "PENDING",
                 blocks_quotation: true,
+              },
+            ],
+          },
+          initial_plan: {
+            total: 3,
+            key_count: 2,
+            open_count: 3,
+            milestones: [
+              {
+                id: 401,
+                milestone_code: "MS-001",
+                milestone_name: "项目启动会",
+                milestone_type: "GATE",
+                planned_date: "2026-06-20",
+                status: "PENDING",
+                is_key: true,
+                stage_code: "S1",
+                remark: "确认范围、成本基线和关键交付节奏",
               },
             ],
           },
@@ -341,6 +373,19 @@ describe("ProjectWorkspace", () => {
       "href",
       "/sales/opportunity/2/open-items",
     );
+    expect(screen.getByText("投标结果")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /BID-001/ })).toHaveAttribute(
+      "href",
+      "/presales/technical-solutions?tab=bids&type=bidding&tender_id=301&ticket_id=91&lead_id=2026&opportunity_id=2&project_id=1",
+    );
+    expect(screen.getByText("已中标")).toBeInTheDocument();
+    expect(screen.getAllByText(/[¥￥]580,000.00/).length).toBeGreaterThan(0);
+    expect(screen.getByText("91.5 分")).toBeInTheDocument();
+    expect(screen.getByText("技术评分领先，交付周期满足客户要求")).toBeInTheDocument();
+    expect(screen.getByText("初始里程碑")).toBeInTheDocument();
+    expect(screen.getByText("项目启动会")).toBeInTheDocument();
+    expect(screen.getByText(/共 3 个里程碑/)).toBeInTheDocument();
+    expect(screen.getByText(/计划：2026/)).toBeInTheDocument();
     expect(screen.getByText(/[¥￥]360,000.00/)).toBeInTheDocument();
     expect(screen.getByText("后续模块状态")).toBeInTheDocument();
     expect(screen.getByText("RV-001")).toBeInTheDocument();

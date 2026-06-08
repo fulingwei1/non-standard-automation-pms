@@ -14,9 +14,9 @@ from app.models.acceptance import AcceptanceOrder
 from app.models.ecn import Ecn
 from app.models.issue import Issue
 from app.models.material import BomHeader, BomItem, Material
-from app.models.presale import PresaleSolution, PresaleSupportTicket
+from app.models.presale import PresaleSolution, PresaleSupportTicket, PresaleTenderRecord
 from app.models.production import ProductionPlan, QualityInspection, WorkOrder
-from app.models.project import Project, ProjectDocument, ProjectMember
+from app.models.project import Project, ProjectDocument, ProjectMember, ProjectMilestone
 from app.models.project_delivery import ProjectDeliverySchedule, ProjectDeliveryTask
 from app.models.sales import (
     AssessmentRisk,
@@ -854,6 +854,98 @@ def _get_presale_tickets(
     )
 
 
+def _build_presale_tender_payload(tender: PresaleTenderRecord) -> Dict[str, Any]:
+    return {
+        "id": tender.id,
+        "ticket_id": tender.ticket_id,
+        "opportunity_id": tender.opportunity_id,
+        "project_id": tender.project_id,
+        "tender_no": tender.tender_no,
+        "tender_name": tender.tender_name,
+        "customer_name": tender.customer_name,
+        "publish_date": tender.publish_date.isoformat() if tender.publish_date else None,
+        "deadline": tender.deadline.isoformat() if tender.deadline else None,
+        "bid_opening_date": (
+            tender.bid_opening_date.isoformat() if tender.bid_opening_date else None
+        ),
+        "budget_amount": _num(tender.budget_amount),
+        "our_bid_amount": _num(tender.our_bid_amount),
+        "technical_score": _num(tender.technical_score),
+        "commercial_score": _num(tender.commercial_score),
+        "total_score": _num(tender.total_score),
+        "result": tender.result,
+        "result_reason": tender.result_reason,
+        "technical_requirements": tender.technical_requirements,
+        "qualification_requirements": tender.qualification_requirements,
+    }
+
+
+def _get_presale_tenders(
+    db: Session,
+    project: Project,
+    presale_tickets: List[PresaleSupportTicket],
+    limit: int = 10,
+) -> List[PresaleTenderRecord]:
+    filters = [PresaleTenderRecord.project_id == project.id]
+    if project.opportunity_id:
+        filters.append(PresaleTenderRecord.opportunity_id == project.opportunity_id)
+
+    ticket_ids = {
+        ticket.id for ticket in presale_tickets if getattr(ticket, "id", None)
+    }
+    if ticket_ids:
+        filters.append(PresaleTenderRecord.ticket_id.in_(ticket_ids))
+
+    return (
+        db.query(PresaleTenderRecord)
+        .filter(or_(*filters))
+        .order_by(desc(PresaleTenderRecord.updated_at), desc(PresaleTenderRecord.id))
+        .limit(limit)
+        .all()
+    )
+
+
+def _build_project_milestone_payload(milestone: ProjectMilestone) -> Dict[str, Any]:
+    return {
+        "id": milestone.id,
+        "milestone_code": milestone.milestone_code,
+        "milestone_name": milestone.milestone_name,
+        "milestone_type": milestone.milestone_type,
+        "planned_date": milestone.planned_date.isoformat() if milestone.planned_date else None,
+        "actual_date": milestone.actual_date.isoformat() if milestone.actual_date else None,
+        "status": milestone.status,
+        "is_key": bool(milestone.is_key),
+        "stage_code": milestone.stage_code,
+        "deliverables": milestone.deliverables,
+        "owner_id": milestone.owner_id,
+        "remark": milestone.remark,
+    }
+
+
+def build_initial_plan_handover_context(
+    db: Session,
+    project: Project,
+    limit: int = 10,
+) -> Dict[str, Any]:
+    query = db.query(ProjectMilestone).filter(ProjectMilestone.project_id == project.id)
+    total = query.count()
+    key_count = query.filter(ProjectMilestone.is_key.is_(True)).count()
+    open_statuses = ("PENDING", "IN_PROGRESS", "DELAYED", "BLOCKED")
+    open_count = query.filter(ProjectMilestone.status.in_(open_statuses)).count()
+    milestones = (
+        query.order_by(ProjectMilestone.planned_date.asc(), ProjectMilestone.id.asc())
+        .limit(limit)
+        .all()
+    )
+
+    return {
+        "milestones": [_build_project_milestone_payload(item) for item in milestones],
+        "total": total,
+        "key_count": key_count,
+        "open_count": open_count,
+    }
+
+
 def build_project_handover_context(db: Session, project: Project) -> Dict[str, Any]:
     """
     构建项目工作台上游交接上下文。
@@ -866,6 +958,7 @@ def build_project_handover_context(db: Session, project: Project) -> Dict[str, A
     quote, quote_version = _resolve_quote_context(opportunity, contract)
     presale_solutions = _get_presale_solutions(db, project)
     presale_tickets = _get_presale_tickets(db, project, presale_solutions)
+    presale_tenders = _get_presale_tenders(db, project, presale_tickets)
     technical_assessment = build_technical_assessment_handover_context(
         db,
         opportunity=opportunity,
@@ -877,6 +970,7 @@ def build_project_handover_context(db: Session, project: Project) -> Dict[str, A
         opportunity=opportunity,
         lead_id=project.lead_id,
     )
+    initial_plan = build_initial_plan_handover_context(db, project)
     primary_solution = presale_solutions[0] if presale_solutions else None
 
     quote_cost_total = _num(quote_version.cost_total) if quote_version else None
@@ -932,8 +1026,12 @@ def build_project_handover_context(db: Session, project: Project) -> Dict[str, A
         "presale_solutions": [
             _build_presale_solution_payload(solution) for solution in presale_solutions
         ],
+        "presale_tenders": [
+            _build_presale_tender_payload(tender) for tender in presale_tenders
+        ],
         "technical_assessment": technical_assessment,
         "open_items": open_items,
+        "initial_plan": initial_plan,
         "baseline_cost": baseline_cost,
         "handover_status": {
             "ready": not missing and not blockers,

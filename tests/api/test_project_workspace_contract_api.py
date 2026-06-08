@@ -15,9 +15,9 @@ from app.models.enums import AssessmentStatusEnum, OpenItemStatusEnum
 from app.models.ecn import Ecn
 from app.models.issue import Issue
 from app.models.material import BomHeader, BomItem, Material
-from app.models.presale import PresaleSolution, PresaleSupportTicket
+from app.models.presale import PresaleSolution, PresaleSupportTicket, PresaleTenderRecord
 from app.models.production import ProductionPlan, QualityInspection, WorkOrder
-from app.models.project import Customer, Project
+from app.models.project import Customer, Project, ProjectMilestone
 from app.models.project_delivery import ProjectDeliverySchedule, ProjectDeliveryTask
 from app.models.sales import (
     AssessmentRisk,
@@ -433,7 +433,35 @@ class TestProjectWorkspaceHandoverContext:
             author_id=admin_user.id,
             author_name=admin_user.real_name or admin_user.username,
         )
-        db_session.add(solution)
+        tender = PresaleTenderRecord(
+            ticket_id=ticket.id,
+            opportunity_id=opportunity.id,
+            project_id=project.id,
+            tender_no=f"BID-PW-{unique}",
+            tender_name=f"项目交接投标-{unique}",
+            customer_name=customer.customer_name,
+            deadline=datetime.now() + timedelta(days=5),
+            bid_opening_date=date.today(),
+            budget_amount=Decimal("600000"),
+            our_bid_amount=Decimal("580000"),
+            technical_score=Decimal("92.5"),
+            commercial_score=Decimal("88.0"),
+            total_score=Decimal("91.0"),
+            result="WON",
+            result_reason="技术评分领先，交付周期满足客户要求",
+        )
+        milestone = ProjectMilestone(
+            project_id=project.id,
+            milestone_code=f"MS-PW-{unique}",
+            milestone_name=f"项目启动会-{unique}",
+            milestone_type="GATE",
+            planned_date=date.today() + timedelta(days=3),
+            status="PENDING",
+            is_key=True,
+            stage_code="S1",
+            remark="确认范围、成本基线和关键交付节奏",
+        )
+        db_session.add_all([solution, tender, milestone])
         db_session.commit()
         assert solution.ticket_id == ticket.id
         assert ticket.project_id == project.id
@@ -459,6 +487,16 @@ class TestProjectWorkspaceHandoverContext:
         assert payload["presale_tickets"][0]["assessment_status"] == AssessmentStatusEnum.COMPLETED.value
         assert payload["presale_tickets"][0]["current_assessment_id"] == assessment.id
         assert payload["presale_solutions"][0]["solution_no"] == solution.solution_no
+        assert payload["presale_tenders"][0]["tender_no"] == tender.tender_no
+        assert payload["presale_tenders"][0]["result"] == "WON"
+        assert payload["presale_tenders"][0]["our_bid_amount"] == 580000.0
+        assert payload["presale_tenders"][0]["total_score"] == 91.0
+        assert payload["presale_tenders"][0]["result_reason"] == "技术评分领先，交付周期满足客户要求"
+        assert payload["initial_plan"]["total"] >= 1
+        assert payload["initial_plan"]["key_count"] >= 1
+        assert payload["initial_plan"]["open_count"] >= 1
+        assert payload["initial_plan"]["milestones"][0]["milestone_code"] == milestone.milestone_code
+        assert payload["initial_plan"]["milestones"][0]["is_key"] is True
         assert payload["technical_assessment"]["current"]["id"] == assessment.id
         assert payload["technical_assessment"]["current"]["total_score"] == 82
         assert payload["technical_assessment"]["risks"]["total"] == 1
