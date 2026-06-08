@@ -205,6 +205,9 @@ describe("PresalesCostEstimation", () => {
 
     await waitFor(() => {
       expect(presaleApi.solutions.update).toHaveBeenCalledWith(88, {
+        opportunity_id: 2,
+        ticket_id: 501,
+        project_id: 42,
         estimated_cost: 120000,
         suggested_price: 168000,
         cost_breakdown: {

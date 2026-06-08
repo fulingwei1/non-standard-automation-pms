@@ -434,6 +434,17 @@ def update_solution(
         raise HTTPException(status_code=400, detail="只有草稿或已驳回状态的方案才能修改")
 
     update_data = solution_in.model_dump(exclude_unset=True)
+    ticket = None
+    if update_data.get("ticket_id"):
+        ticket = get_or_404(db, PresaleSupportTicket, update_data["ticket_id"], detail="工单不存在")
+        update_data["ticket_id"] = ticket.id
+        if "customer_id" not in update_data and ticket.customer_id is not None:
+            update_data["customer_id"] = ticket.customer_id
+        if "opportunity_id" not in update_data and ticket.opportunity_id is not None:
+            update_data["opportunity_id"] = ticket.opportunity_id
+        if "project_id" not in update_data and ticket.project_id is not None:
+            update_data["project_id"] = ticket.project_id
+
     for field, value in update_data.items():
         setattr(solution, field, value)
 

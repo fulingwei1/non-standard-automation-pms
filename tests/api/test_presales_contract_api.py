@@ -2714,6 +2714,122 @@ class TestPresalesFrontendContractBehavior:
             )
             db_session.commit()
 
+    def test_solution_update_with_ticket_binds_sales_project_context(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-SUCTX-{unique}",
+            customer_name=f"方案更新上下文客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        lead = Lead(
+            lead_code=f"LEADSUCTX{unique[:5]}",
+            customer_name=customer.customer_name,
+            industry="电子制造",
+            demand_summary="已有方案后补成本估算",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([customer, lead])
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPPSUCTX{unique[:5]}",
+            lead_id=lead.id,
+            customer=customer,
+            opp_name=f"方案更新上下文商机-{unique}",
+            stage="QUALIFICATION",
+            probability=60,
+            est_amount=Decimal("360000"),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        project = Project(
+            project_code=f"SUCTX{unique[:5]}",
+            project_name=f"方案更新上下文项目-{unique}",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            is_active=True,
+        )
+        db_session.add_all([opportunity, project])
+        db_session.flush()
+
+        ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-SUCTX-{unique}",
+            title=f"方案补成本工单-{unique}",
+            ticket_type="QUOTATION",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            lead_id=lead.id,
+            opportunity_id=opportunity.id,
+            project_id=project.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PENDING",
+            created_by=admin_user.id,
+        )
+        solution = PresaleSolution(
+            solution_no=f"SOL-SUCTX-{unique}",
+            name=f"已有待补成本方案-{unique}",
+            solution_type="CUSTOM",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+            status="DRAFT",
+        )
+        db_session.add_all([ticket, solution])
+        db_session.commit()
+
+        try:
+            updated = client.put(
+                f"{prefix}/presale/proposals/solutions/{solution.id}",
+                json={
+                    "ticket_id": ticket.id,
+                    "estimated_cost": 150000,
+                    "suggested_price": 240000,
+                    "cost_breakdown": {"labor": 26000},
+                },
+                headers=headers,
+            )
+            assert updated.status_code == 200, updated.text
+            payload = updated.json()
+            assert payload["ticket_id"] == ticket.id
+            assert payload["lead_id"] == lead.id
+            assert payload["customer_id"] == customer.id
+            assert payload["customer_name"] == customer.customer_name
+            assert payload["opportunity_id"] == opportunity.id
+            assert payload["project_id"] == project.id
+
+            db_session.expire_all()
+            refreshed_solution = db_session.get(PresaleSolution, solution.id)
+            assert refreshed_solution.ticket_id == ticket.id
+            assert refreshed_solution.customer_id == customer.id
+            assert refreshed_solution.opportunity_id == opportunity.id
+            assert refreshed_solution.project_id == project.id
+            assert refreshed_solution.cost_breakdown == {"labor": 26000}
+        finally:
+            db_session.query(PresaleSolution).filter(PresaleSolution.id == solution.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
+            db_session.query(Project).filter(Project.id == project.id).delete()
+            db_session.query(Lead).filter(Lead.id == lead.id).delete()
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
     def test_solution_submit_review_moves_out_of_draft(
         self, client: TestClient, db_session: Session, admin_token: str
     ):

@@ -202,6 +202,10 @@ class SolutionUpdate(BaseModel):
     """更新技术方案"""
 
     name: Optional[str] = None
+    ticket_id: Optional[int] = None
+    customer_id: Optional[int] = None
+    opportunity_id: Optional[int] = None
+    project_id: Optional[int] = None
     requirement_summary: Optional[str] = None
     solution_overview: Optional[str] = None
     technical_spec: Optional[str] = None
@@ -210,7 +214,6 @@ class SolutionUpdate(BaseModel):
     cost_breakdown: Optional[Dict[str, Any]] = None
     estimated_hours: Optional[int] = None
     estimated_duration: Optional[int] = None
-    project_id: Optional[int] = None
 
 
 class SolutionReviewRequest(BaseModel):

@@ -296,6 +296,25 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
     navigate(quoteCreatePath);
   };
 
+  const appendSolutionContext = (payload) => {
+    const nextPayload = { ...payload };
+
+    if (bidding.leadId) {
+      nextPayload.lead_id = bidding.leadId;
+    }
+    if (bidding.opportunityId) {
+      nextPayload.opportunity_id = bidding.opportunityId;
+    }
+    if (bidding.ticketId) {
+      nextPayload.ticket_id = bidding.ticketId;
+    }
+    if (bidding.projectId) {
+      nextPayload.project_id = bidding.projectId;
+    }
+
+    return nextPayload;
+  };
+
   const buildSolutionPayload = (costData) => {
     const payload = {
       name: bidding.name,
@@ -303,21 +322,10 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
       ...costData,
     };
 
-    if (bidding.leadId) {
-      payload.lead_id = bidding.leadId;
-    }
-    if (bidding.opportunityId) {
-      payload.opportunity_id = bidding.opportunityId;
-    }
-    if (bidding.ticketId) {
-      payload.ticket_id = bidding.ticketId;
-    }
-    if (bidding.projectId) {
-      payload.project_id = bidding.projectId;
-    }
-
-    return payload;
+    return appendSolutionContext(payload);
   };
+
+  const buildSolutionUpdatePayload = (costData) => appendSolutionContext({ ...costData });
 
   const enrichCostDataWithContext = (costData = {}) => {
     if (!bidding.tenderId) {
@@ -344,7 +352,7 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
       const costData = result?.costData ? enrichCostDataWithContext(result.costData) : null;
 
       if (bidding.id && result?.costData) {
-        await presaleApi.solutions.update(Number(bidding.id), costData);
+        await presaleApi.solutions.update(Number(bidding.id), buildSolutionUpdatePayload(costData));
       } else if (costData) {
         const response = await presaleApi.solutions.create(buildSolutionPayload(costData));
         setLinkedSolution(extractSolutionDetail(response));
