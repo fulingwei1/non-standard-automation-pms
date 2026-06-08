@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   ClipboardList,
   FileText,
@@ -42,7 +42,28 @@ const processLinks = [
   { label: "技术参数", to: "/presales/technical-solutions?tab=parameters", icon: Settings },
 ];
 
+function mergeCurrentSearch(to, currentSearch) {
+  if (!currentSearch) {
+    return to;
+  }
+
+  const [pathname, rawSearch = ""] = to.split("?");
+  const nextParams = new URLSearchParams(rawSearch);
+  const currentParams = new URLSearchParams(currentSearch);
+
+  currentParams.forEach((value, key) => {
+    if (!nextParams.has(key)) {
+      nextParams.append(key, value);
+    }
+  });
+
+  const nextSearch = nextParams.toString();
+  return nextSearch ? `${pathname}?${nextSearch}` : pathname;
+}
+
 export default function PresalesWorkbench() {
+  const location = useLocation();
+
   return (
     <div className="min-h-screen bg-gray-950 px-4 py-5 text-white sm:px-6 sm:py-6">
       <PageHeader
@@ -72,7 +93,7 @@ export default function PresalesWorkbench() {
                 </CardHeader>
                 <CardContent>
                   <Button asChild className="w-full bg-violet-600 hover:bg-violet-500">
-                    <Link to={entry.to}>进入</Link>
+                    <Link to={mergeCurrentSearch(entry.to, location.search)}>进入</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -95,7 +116,7 @@ export default function PresalesWorkbench() {
                     variant="outline"
                     className="justify-start border-gray-700 bg-gray-950 text-gray-200 hover:bg-gray-800"
                   >
-                    <Link to={item.to}>
+                    <Link to={mergeCurrentSearch(item.to, location.search)}>
                       <Icon className="mr-2 h-4 w-4" />
                       {item.label}
                     </Link>
