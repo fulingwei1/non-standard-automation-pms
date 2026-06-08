@@ -132,6 +132,7 @@ function mapTicketToSurvey(ticket) {
   const method = mapTicketTypeToMethod(ticket.ticket_type);
   const methodConfig =
     (surveyMethods || []).find((m) => m.id === method) || surveyMethods[0];
+  const leadId = ticket.lead_id || ticket.leadId || null;
   return {
     id: ticket.id,
     code: ticket.ticket_no || `SUR-${ticket.id}`,
@@ -149,6 +150,8 @@ function mapTicketToSurvey(ticket) {
     salesPerson: ticket.applicant_name || "",
     opportunity: ticket.opportunity_name || "",
     opportunityId: ticket.opportunity_id,
+    leadId,
+    requirementDetailPath: leadId ? `/sales/leads/${leadId}/requirement` : "",
     summary: ticket.description || ticket.requirement || "",
     productInfo: null,
     testRequirements: [],
@@ -170,6 +173,7 @@ function buildRequirementPackageSurvey(context) {
   }
 
   const ticket = context?.ticket || {};
+  const leadId = detail.lead_id || ticket.lead_id || null;
   const testRequirements = [
     ...parseJsonList(detail.requirement_items),
     ...parseJsonList(detail.technical_spec),
@@ -197,6 +201,8 @@ function buildRequirementPackageSurvey(context) {
     salesPerson: ticket.applicant_name || "",
     opportunity: ticket.opportunity_name || "",
     opportunityId: ticket.opportunity_id,
+    leadId,
+    requirementDetailPath: leadId ? `/sales/leads/${leadId}/requirement` : "",
     summary: buildRequirementSummary(detail, ticket),
     productInfo: detail.target_object_type
       ? {

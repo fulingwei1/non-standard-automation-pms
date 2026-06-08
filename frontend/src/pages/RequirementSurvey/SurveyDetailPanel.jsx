@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   X,
   MapPin,
@@ -56,6 +57,17 @@ export default function SurveyDetailPanel({ survey, onClose }) {
             <X className="w-5 h-5 text-slate-400" />
           </Button>
         </div>
+
+        {survey.requirementDetailPath && (
+          <div className="px-4 py-3 border-b border-white/5">
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link to={survey.requirementDetailPath}>
+                <FileText className="w-4 h-4" />
+                打开需求包
+              </Link>
+            </Button>
+          </div>
+        )}
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">

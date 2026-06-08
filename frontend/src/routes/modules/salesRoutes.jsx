@@ -98,6 +98,7 @@ export function SalesRoutes() {
   return (
     <>
       {/* 销售仪表盘 */}
+      <Route path="/sales" element={<Navigate to="/sales/dashboard" replace />} />
       <Route path="/sales/dashboard" element={<SalesDashboard />} />
 
       {/* 销售漏斗（固定路径，放在最前避免被 /sales/:param 抢匹配） */}

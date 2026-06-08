@@ -33,6 +33,16 @@ function LocationProbe() {
 }
 
 describe("SalesRoutes presales workbench compatibility", () => {
+  it("redirects the sales root breadcrumb target to the sales dashboard", async () => {
+    render(
+      <MemoryRouter initialEntries={["/sales"]}>
+        <Routes>{SalesRoutes()}</Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("销售仪表盘")).toBeInTheDocument();
+  });
+
   it("redirects the sales presale workbench route to the unified presales entry", async () => {
     render(
       <MemoryRouter initialEntries={["/sales/presale-workbench"]}>

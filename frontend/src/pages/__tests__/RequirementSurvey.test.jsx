@@ -181,6 +181,37 @@ describe("RequirementSurvey", () => {
     expect(screen.getByText("客户 SOW / URS")).toBeInTheDocument();
   });
 
+  it("opens the editable lead requirement package from opportunity context", async () => {
+    presaleWorkbenchApi.loadContext.mockResolvedValueOnce({
+      ticket: {
+        id: 501,
+        customer_name: "华南电子",
+        opportunity_name: "电池包 EOL 测试线",
+      },
+      assessment: {
+        requirementDetail: {
+          id: 301,
+          lead_id: 2026,
+          requirement_version: "REQ-LEAD-V1",
+          target_object_type: "电池包",
+        },
+      },
+      collaboration: {
+        openItems: { items: [], total: 0, blocking_count: 0 },
+      },
+    });
+
+    renderPage("/presales/technical-solutions?tab=surveys&opportunity_id=2&ticket_id=501");
+
+    expect(await screen.findByText("REQ-LEAD-V1")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("华南电子"));
+
+    expect(screen.getByRole("link", { name: /打开需求包/ })).toHaveAttribute(
+      "href",
+      "/sales/leads/2026/requirement",
+    );
+  });
+
   it("keeps lead context without over-narrowing surveys by current ticket", async () => {
     renderPage(
       "/presales/technical-solutions?tab=surveys&lead_id=2026&opportunity_id=2&ticket_id=501",
