@@ -1160,6 +1160,15 @@ class TestPresalesFrontendContractBehavior:
         assert progress.content == "方案可行，建议进入报价"
         assert progress.progress_percent == 100
 
+        rated = client.put(
+            f"{prefix}/presale/tickets/{ticket_id}/rating",
+            json={"satisfaction_score": 5, "feedback": "售前交付满足报价需要"},
+            headers=headers,
+        )
+        assert rated.status_code == 200, rated.text
+        assert rated.json()["satisfaction_score"] == 5
+        assert rated.json()["feedback"] == "售前交付满足报价需要"
+
     def test_ticket_list_filters_by_opportunity_and_ticket_id(
         self, client: TestClient, db_session: Session, admin_token: str
     ):

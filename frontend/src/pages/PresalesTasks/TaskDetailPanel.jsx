@@ -98,10 +98,13 @@ export default function TaskDetailPanel({
   const [deliverableName, setDeliverableName] = useState("");
   const [deliverableType, setDeliverableType] = useState("SOLUTION");
   const [deliverablePath, setDeliverablePath] = useState("");
+  const [ratingScore, setRatingScore] = useState(task?.satisfactionScore || 5);
+  const [ratingFeedback, setRatingFeedback] = useState(task?.feedback || "");
   const [isUpdating, setIsUpdating] = useState(false);
   const [isSubmittingDeliverable, setIsSubmittingDeliverable] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
+  const [isRating, setIsRating] = useState(false);
 
   if (!task) {return null;}
 
@@ -109,6 +112,8 @@ export default function TaskDetailPanel({
   const statusConfig = (taskStatuses || []).find((s) => s.id === task.status);
   const canWorkOnTask = task.status === "in_progress" || task.status === "reviewing";
   const canUpdateProgress = task.status === "in_progress";
+  const isCompleted = task.status === "completed";
+  const hasRating = task.satisfactionScore != null;
   const technicalAssessmentPath = buildTechnicalAssessmentPath(task);
 
   // 接单
@@ -217,6 +222,35 @@ export default function TaskDetailPanel({
       );
     } finally {
       setIsCompleting(false);
+    }
+  };
+
+  const handleSubmitRating = async () => {
+    const score = Number(ratingScore);
+    if (!Number.isInteger(score) || score < 1 || score > 5) {
+      alert("请选择 1-5 分满意度");
+      return;
+    }
+
+    try {
+      setIsRating(true);
+      const payload = { satisfaction_score: score };
+      const feedback = ratingFeedback.trim();
+      if (feedback) {
+        payload.feedback = feedback;
+      }
+      await presaleApi.tickets.rate(task.ticketId, payload);
+      alert("评价已提交！");
+      await onUpdate?.();
+      onClose();
+    } catch (err) {
+      console.error("Failed to rate ticket:", err);
+      alert(
+        "评价失败：" + (
+        err.response?.data?.detail || err.message || "未知错误")
+      );
+    } finally {
+      setIsRating(false);
     }
   };
 
@@ -420,6 +454,18 @@ export default function TaskDetailPanel({
               </p>
           </div>
           }
+
+          {isCompleted && hasRating &&
+          <div className="space-y-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4">
+              <h4 className="text-sm font-medium text-emerald-200">
+                销售确认评价
+              </h4>
+              <p className="text-sm text-white">满意度：{task.satisfactionScore}/5</p>
+              {task.feedback &&
+              <p className="text-sm text-slate-300">{task.feedback}</p>
+              }
+          </div>
+          }
         </div>
 
         {/* 操作区域 */}
@@ -563,6 +609,52 @@ export default function TaskDetailPanel({
 
                 <CheckCircle className="w-4 h-4 mr-2" />
                 {isCompleting ? "完成中..." : "完成工单"}
+              </Button>
+            </div>
+        </div>
+        }
+
+        {isCompleted && !hasRating &&
+        <div className="p-4 border-t border-white/5 space-y-3">
+            <div className="space-y-2">
+              <label
+                htmlFor="presale-rating-score"
+                className="text-sm text-slate-400"
+              >
+                销售满意度
+              </label>
+              <select
+                id="presale-rating-score"
+                value={ratingScore}
+                onChange={(e) => setRatingScore(Number(e.target.value))}
+                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+              >
+                <option value={5}>5 分 - 很满意</option>
+                <option value={4}>4 分 - 满意</option>
+                <option value={3}>3 分 - 一般</option>
+                <option value={2}>2 分 - 不满意</option>
+                <option value={1}>1 分 - 很不满意</option>
+              </select>
+              <label
+                htmlFor="presale-rating-feedback"
+                className="text-sm text-slate-400"
+              >
+                评价说明
+              </label>
+              <Textarea
+                id="presale-rating-feedback"
+                value={ratingFeedback}
+                onChange={(e) => setRatingFeedback(e.target.value)}
+                placeholder="填写交付质量、响应速度、报价建议或需要返工的问题..."
+                className="w-full min-h-[88px]"
+              />
+              <Button
+                onClick={handleSubmitRating}
+                disabled={isRating}
+                className="w-full"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {isRating ? "提交中..." : "提交评价"}
               </Button>
             </div>
         </div>

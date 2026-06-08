@@ -274,6 +274,8 @@ export default function PresalesTasks({ embedded = false } = {}) {
           actualHours: ticket.actual_hours || 0,
           assignee: ticket.assignee_name || ticket.owner_name || "未分配",
           deliverables: ticket.deliverables || [],
+          satisfactionScore: ticket.satisfaction_score ?? null,
+          feedback: ticket.feedback || "",
           pmInvolvementRequired,
           pmInvolvementRiskLevel,
           pmInvolvementRiskLabel: formatRiskLevel(pmInvolvementRiskLevel),

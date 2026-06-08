@@ -13,6 +13,7 @@ vi.mock('../../services/api', () => ({
       updateProgress: vi.fn(),
       createDeliverable: vi.fn(),
       complete: vi.fn(),
+      rate: vi.fn(),
     },
   },
 }));
@@ -119,6 +120,8 @@ describe('PresalesTasks', () => {
     });
     presaleApi.tickets.accept.mockResolvedValue({ data: { success: true } });
     presaleApi.tickets.updateProgress.mockResolvedValue({ data: { success: true } });
+    presaleApi.tickets.complete.mockResolvedValue({ data: { success: true } });
+    presaleApi.tickets.rate.mockResolvedValue({ data: { success: true } });
     presaleApi.tickets.createDeliverable.mockResolvedValue({
       data: {
         id: 70,
@@ -777,5 +780,84 @@ describe('PresalesTasks', () => {
       expect(presaleApi.tickets.list).toHaveBeenCalledTimes(2);
     });
     expect(await screen.findByText('新版技术方案')).toBeInTheDocument();
+  });
+
+  it('submits sales satisfaction rating for a completed ticket', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 81,
+            title: '已完成售前支持',
+            ticket_type: 'TECHNICAL_SUPPORT',
+            status: 'COMPLETED',
+            urgency: 'NORMAL',
+            customer_name: '华南电子',
+            applicant_name: '陈敏',
+            description: '技术已完成，等待销售确认',
+            actual_hours: 8,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage();
+
+    await screen.findByText('已完成售前支持');
+    fireEvent.click(screen.getByText('已完成售前支持'));
+
+    expect(screen.getByLabelText('销售满意度')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('销售满意度'), {
+      target: { value: '4' },
+    });
+    fireEvent.change(screen.getByLabelText('评价说明'), {
+      target: { value: '响应及时，方案可用于报价' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /提交评价/ }));
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.rate).toHaveBeenCalledWith(81, {
+        satisfaction_score: 4,
+        feedback: '响应及时，方案可用于报价',
+      });
+    });
+    await waitFor(() => {
+      expect(presaleApi.tickets.list).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('renders existing sales satisfaction rating for a completed ticket', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 82,
+            title: '已评价售前支持',
+            ticket_type: 'TECHNICAL_SUPPORT',
+            status: 'COMPLETED',
+            urgency: 'NORMAL',
+            customer_name: '华南电子',
+            applicant_name: '陈敏',
+            description: '销售已确认',
+            actual_hours: 8,
+            satisfaction_score: 5,
+            feedback: '交付质量符合预期',
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage();
+
+    await screen.findByText('已评价售前支持');
+    fireEvent.click(screen.getByText('已评价售前支持'));
+
+    expect(screen.getByText('销售确认评价')).toBeInTheDocument();
+    expect(screen.getByText('满意度：5/5')).toBeInTheDocument();
+    expect(screen.getByText('交付质量符合预期')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /提交评价/ })).not.toBeInTheDocument();
   });
 });
