@@ -142,6 +142,14 @@ describe("BiddingCenter", () => {
     expect(presaleApi.tenders.list).toHaveBeenCalledWith({ page: 1, page_size: 100 });
   });
 
+  it("keeps the bidding search input empty before the user types", async () => {
+    renderPage({ embedded: true });
+
+    await screen.findByText("智能制造系统");
+
+    expect(screen.getByPlaceholderText("搜索项目名称、客户、编号...")).toHaveValue("");
+  });
+
   it("hides the standalone page header when embedded", async () => {
     renderPage({ embedded: true });
 
@@ -293,7 +301,7 @@ describe("BiddingCenter", () => {
 
   it("opens cost estimation from a bidding card with sales support context", async () => {
     useSearchParams.mockReturnValue([
-      new URLSearchParams("tab=bids&type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42"),
+      new URLSearchParams("tab=bids&type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42&solution_id=88"),
       vi.fn(),
     ]);
     presaleApi.tenders.list.mockResolvedValueOnce({
@@ -325,8 +333,40 @@ describe("BiddingCenter", () => {
     expect(target.searchParams.get("lead_id")).toBe("2026");
     expect(target.searchParams.get("opportunity_id")).toBe("2");
     expect(target.searchParams.get("project_id")).toBe("42");
+    expect(target.searchParams.get("solution_id")).toBe("88");
     expect(target.searchParams.get("amount")).toBe("500");
     expect(target.searchParams.get("name")).toBe("智能制造系统");
+  });
+
+  it("opens the linked technical solution from a bidding detail with presale context", async () => {
+    useSearchParams.mockReturnValue([
+      new URLSearchParams("tab=bids&type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42"),
+      vi.fn(),
+    ]);
+    presaleApi.tenders.list.mockResolvedValueOnce({
+      data: {
+        items: [
+          {
+            ...tenders[0],
+            ticket_id: 501,
+            lead_id: 2026,
+            opportunity_id: 2,
+            project_id: 42,
+            solution_id: 88,
+            solution_name: "FCT售前技术方案",
+          },
+        ],
+      },
+    });
+
+    renderPage({ embedded: true });
+
+    fireEvent.click(await screen.findByText("智能制造系统"));
+    fireEvent.click(screen.getByRole("button", { name: "打开关联方案" }));
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      "/solutions/88?tender_id=1&ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
+    );
   });
 
   it("shows backend load errors", async () => {

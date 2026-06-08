@@ -26,7 +26,12 @@ import { Progress } from "../../components/ui/progress";
 import { cn } from "../../lib/utils";
 import { getStageStyle, getStageName } from "./constants";
 
-export function BiddingDetailPanel({ bidding, onClose, onRequestCostSupport }) {
+export function BiddingDetailPanel({
+  bidding,
+  onClose,
+  onRequestCostSupport,
+  onOpenSolution,
+}) {
   if (!bidding) {return null;}
 
   return (
@@ -138,9 +143,16 @@ export function BiddingDetailPanel({ bidding, onClose, onRequestCostSupport }) {
                     {bidding.solutionName}
                   </span>
                 </div>
-                <Button variant="ghost" size="sm">
+                {bidding.solutionId && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="打开关联方案"
+                  onClick={() => onOpenSolution?.(bidding)}
+                >
                   <Eye className="w-4 h-4" />
                 </Button>
+                )}
               </div>
           </div>
           }

@@ -50,6 +50,7 @@ function buildCostSupportUrl(bidding, contextType, fallbackContext = {}) {
   const leadId = bidding?.leadId || fallbackContext.leadId;
   const opportunityId = bidding?.opportunityId || fallbackContext.opportunityId;
   const projectId = bidding?.projectId || fallbackContext.projectId;
+  const solutionId = bidding?.solutionId || fallbackContext.solutionId;
   const amount = Number(bidding?.amount);
   if (
     contextType ||
@@ -65,13 +66,30 @@ function buildCostSupportUrl(bidding, contextType, fallbackContext = {}) {
   appendContextParam(params, "lead_id", leadId);
   appendContextParam(params, "opportunity_id", opportunityId);
   appendContextParam(params, "project_id", projectId);
-  appendContextParam(params, "solution_id", bidding?.solutionId);
+  appendContextParam(params, "solution_id", solutionId);
   if (Number.isFinite(amount) && amount > 0) {
     appendContextParam(params, "amount", amount);
   }
   appendContextParam(params, "name", bidding?.name);
 
   return `/presales/technical-solutions?${params.toString()}`;
+}
+
+function buildSolutionDetailUrl(bidding, fallbackContext = {}) {
+  const solutionId = bidding?.solutionId || fallbackContext.solutionId;
+  if (!solutionId) {
+    return "";
+  }
+
+  const params = new URLSearchParams();
+  appendContextParam(params, "tender_id", bidding?.id);
+  appendContextParam(params, "ticket_id", bidding?.ticketId || fallbackContext.ticketId);
+  appendContextParam(params, "lead_id", bidding?.leadId || fallbackContext.leadId);
+  appendContextParam(params, "opportunity_id", bidding?.opportunityId || fallbackContext.opportunityId);
+  appendContextParam(params, "project_id", bidding?.projectId || fallbackContext.projectId);
+
+  const query = params.toString();
+  return `/solutions/${solutionId}${query ? `?${query}` : ""}`;
 }
 
 const INITIAL_TENDER_FORM = {
@@ -154,10 +172,12 @@ export default function BiddingCenter({ embedded = false } = {}) {
   const contextTicketId = searchParams.get("ticket_id") || "";
   const contextOpportunityId = searchParams.get("opportunity_id") || "";
   const contextProjectId = searchParams.get("project_id") || "";
+  const contextSolutionId = searchParams.get("solution_id") || "";
   const contextLeadIdNumber = parseContextId(contextLeadId);
   const contextTicketIdNumber = parseContextId(contextTicketId);
   const contextOpportunityIdNumber = parseContextId(contextOpportunityId);
   const contextProjectIdNumber = parseContextId(contextProjectId);
+  const contextSolutionIdNumber = parseContextId(contextSolutionId);
   const contextSourceType = contextOpportunityIdNumber
     ? "opportunity"
     : contextLeadIdNumber
@@ -313,14 +333,39 @@ export default function BiddingCenter({ embedded = false } = {}) {
         leadId: contextLeadIdNumber,
         opportunityId: contextOpportunityIdNumber,
         projectId: contextProjectIdNumber,
+        solutionId: contextSolutionIdNumber,
       }));
     },
     [
       contextLeadIdNumber,
       contextOpportunityIdNumber,
       contextProjectIdNumber,
+      contextSolutionIdNumber,
       contextTicketIdNumber,
       contextType,
+      navigate,
+    ],
+  );
+
+  const handleOpenSolution = useCallback(
+    (bidding) => {
+      const target = buildSolutionDetailUrl(bidding, {
+        ticketId: contextTicketIdNumber,
+        leadId: contextLeadIdNumber,
+        opportunityId: contextOpportunityIdNumber,
+        projectId: contextProjectIdNumber,
+        solutionId: contextSolutionIdNumber,
+      });
+      if (target) {
+        navigate(target);
+      }
+    },
+    [
+      contextLeadIdNumber,
+      contextOpportunityIdNumber,
+      contextProjectIdNumber,
+      contextSolutionIdNumber,
+      contextTicketIdNumber,
       navigate,
     ],
   );
@@ -403,7 +448,7 @@ export default function BiddingCenter({ embedded = false } = {}) {
             <Input
               type="text"
               placeholder="搜索项目名称、客户、编号..."
-              value={searchTerm || "unknown"}
+              value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 w-full" />
 
@@ -438,6 +483,7 @@ export default function BiddingCenter({ embedded = false } = {}) {
       {selectedBidding &&
       <BiddingDetailPanel
         bidding={selectedBidding}
+        onOpenSolution={handleOpenSolution}
         onRequestCostSupport={handleRequestCostSupport}
         onClose={() => setSelectedBidding(null)} />
 
