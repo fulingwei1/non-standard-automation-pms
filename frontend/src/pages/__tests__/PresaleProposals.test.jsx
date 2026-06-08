@@ -462,6 +462,7 @@ describe("PresaleProposals", () => {
             name: "已通过售前技术方案",
             status: "APPROVED",
             customer_id: 1,
+            lead_id: 2026,
             ticket_id: 501,
             opportunity_id: 2,
             project_id: 42,
@@ -474,14 +475,14 @@ describe("PresaleProposals", () => {
     });
 
     renderPage(
-      "/presales/technical-solutions?tab=solutions&type=support&opportunity_id=2&ticket_id=501&project_id=42",
+      "/presales/technical-solutions?tab=solutions&type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
     );
 
     await screen.findByText("已通过售前技术方案");
     fireEvent.click(screen.getByRole("button", { name: "生成报价" }));
 
     expect(navigateMock).toHaveBeenCalledWith(
-      "/sales/quotes/create?opportunity_id=2&customer_id=1&solution_id=88&ticket_id=501&project_id=42",
+      "/sales/quotes/create?opportunity_id=2&customer_id=1&solution_id=88&ticket_id=501&lead_id=2026&project_id=42",
     );
   });
 

@@ -724,6 +724,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
     appendContextParam(params, "customer_id", solution?.customerId || contextCustomerId);
     appendContextParam(params, "solution_id", solution?.id);
     appendContextParam(params, "ticket_id", solution?.ticketId || contextTicketId);
+    appendContextParam(params, "lead_id", solution?.leadId || contextLeadId);
     appendContextParam(params, "project_id", solution?.projectId || contextProjectId);
     const query = params.toString();
     return `/sales/quotes/create${query ? `?${query}` : ""}`;
