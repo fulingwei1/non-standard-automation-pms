@@ -146,6 +146,20 @@ const isReusablePresaleTicket = (ticket, ticketType) => (
   ACTIVE_SUPPORT_STATUSES.has(String(ticket.status || "").toUpperCase())
 );
 
+const getTicketItems = (response) => {
+  const payload = response?.formatted ?? response?.data?.data ?? response?.data ?? response;
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+  return [];
+};
+
+const findReusablePresaleTicket = (tickets, ticketType) =>
+  (tickets || []).find((ticket) => isReusablePresaleTicket(ticket, ticketType)) || null;
+
 const normalizeEstimatedAmountWan = (amount) => {
   if (amount === undefined || amount === null || amount === "") {
     return undefined;
@@ -480,15 +494,32 @@ export default function OpportunityManagement({ embedded = false }) {
           sourceType: "opportunity",
           sourceId: reviewTarget.id,
         });
-        if (isReusablePresaleTicket(context?.ticket, ticketType)) {
+        let reusableTicket = isReusablePresaleTicket(context?.ticket, ticketType)
+          ? context.ticket
+          : null;
+
+        if (!reusableTicket) {
+          const ticketsResponse = await presaleApi.tickets.list({
+            page: 1,
+            page_size: 50,
+            opportunity_id: reviewTarget.id,
+            status: Array.from(ACTIVE_SUPPORT_STATUSES).join(","),
+          });
+          reusableTicket = findReusablePresaleTicket(
+            getTicketItems(ticketsResponse),
+            ticketType,
+          );
+        }
+
+        if (reusableTicket) {
           setShowReviewDialog(false);
           setReviewTarget(null);
           navigate(buildPresalesTicketBoardPath({
             ticketType,
-            status: context.ticket.status,
-            leadId: reviewTarget.lead_id || context.ticket.lead_id,
+            status: reusableTicket.status,
+            leadId: reviewTarget.lead_id || reusableTicket.lead_id,
             opportunityId: reviewTarget.id,
-            ticketId: context.ticket.id,
+            ticketId: reusableTicket.id,
           }));
           return;
         }

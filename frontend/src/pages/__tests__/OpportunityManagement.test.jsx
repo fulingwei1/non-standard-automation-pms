@@ -75,6 +75,7 @@ vi.mock('../../services/api', async (importOriginal) => {
     presaleApi: {
       ...actual.presaleApi,
       tickets: {
+        list: vi.fn(),
         create: vi.fn(),
       },
     },
@@ -207,6 +208,7 @@ describe('OpportunityManagement', () => {
     });
     opportunityApi.get.mockResolvedValue({ data: opportunities[0] });
     opportunityApi.update.mockResolvedValue({ data: { ...opportunities[0], stage: 'WON' } });
+    presaleApi.tickets.list.mockResolvedValue({ data: { items: [], total: 0 } });
     presaleApi.tickets.create.mockResolvedValue({ data: { id: 501 } });
     presaleWorkbenchApi.loadContext.mockResolvedValue({ ticket: null });
   });
@@ -333,6 +335,50 @@ describe('OpportunityManagement', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith(
       '/presales/technical-solutions?tab=reviews&type=support&status=in_progress&opportunity_id=1&ticket_id=777',
+    );
+  });
+
+  it('finds an older active support ticket when the workbench current ticket is another type', async () => {
+    presaleWorkbenchApi.loadContext.mockResolvedValueOnce({
+      ticket: {
+        id: 778,
+        ticket_type: 'FEASIBILITY_ASSESSMENT',
+        status: 'PENDING',
+      },
+    });
+    presaleApi.tickets.list.mockResolvedValueOnce({
+      data: {
+        items: [
+          {
+            id: 779,
+            ticket_type: 'TECHNICAL_SUPPORT',
+            status: 'ACCEPTED',
+            lead_id: 2026,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage();
+
+    await screen.findByText('ERP 改造项目');
+
+    fireEvent.click(screen.getAllByRole('button', { name: /发起支持/ })[1]);
+    fireEvent.click(screen.getByRole('button', { name: '提交支持' }));
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.list).toHaveBeenCalledWith({
+        page: 1,
+        page_size: 50,
+        opportunity_id: 2,
+        status: 'PENDING,ACCEPTED,IN_PROGRESS,PROCESSING',
+      });
+      expect(presaleApi.tickets.create).not.toHaveBeenCalled();
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/presales/technical-solutions?tab=reviews&type=support&status=in_progress&lead_id=2026&opportunity_id=2&ticket_id=779',
     );
   });
 
