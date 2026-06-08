@@ -29,6 +29,7 @@ from app.schemas.common import PaginatedResponse, ResponseModel
 from app.services.sales.presale_quote_context import (
     build_quote_values_from_presale_solution,
     build_solution_quote_item,
+    resolve_presale_ticket_id_for_quote,
     resolve_presale_solution_for_quote,
 )
 from app.services.sales.quotes_service import QuotesService
@@ -351,6 +352,11 @@ def create_quote(
         version_payload,
         presale_solution,
     )
+    presale_ticket_id = resolve_presale_ticket_id_for_quote(
+        quote_data=quote_data,
+        version_payload=version_payload,
+        presale_solution=presale_solution,
+    )
 
     quote = Quote(
         quote_code=quote_data.get("quote_code") or f"QUOTE-{datetime.now().strftime('%Y%m%d%H%M%S')}",
@@ -372,7 +378,7 @@ def create_quote(
         lead_time_days=lead_time_days,
         risk_terms=version_payload.get("risk_terms"),
         presale_solution_id=presale_solution.id if presale_solution else None,
-        presale_ticket_id=presale_solution.ticket_id if presale_solution else None,
+        presale_ticket_id=presale_ticket_id,
         created_by=current_user.id,
     )
     db.add(version)

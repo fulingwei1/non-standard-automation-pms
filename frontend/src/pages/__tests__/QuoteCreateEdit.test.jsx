@@ -60,7 +60,7 @@ describe("QuoteCreateEdit presale solution context", () => {
     render(
       <MemoryRouter
         initialEntries={[
-          "/sales/quotes/create?opportunity_id=2&customer_id=1&solution_id=88&ticket_id=501",
+          "/sales/quotes/create?opportunity_id=2&customer_id=1&lead_id=7&project_id=9&solution_id=88&ticket_id=501",
         ]}
       >
         <QuoteCreateEdit />
@@ -78,7 +78,10 @@ describe("QuoteCreateEdit presale solution context", () => {
         expect.objectContaining({
           opportunity_id: 2,
           customer_id: 1,
+          lead_id: 7,
+          project_id: 9,
           solution_id: 88,
+          presale_ticket_id: 501,
           version: expect.objectContaining({
             items: [],
           }),

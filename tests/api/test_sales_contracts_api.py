@@ -872,6 +872,177 @@ class TestSalesContractsAPI:
             )
             db_session.commit()
 
+    def test_quote_creation_resolves_solution_from_explicit_presale_ticket(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """只传售前工单时，报价应绑定该工单的方案，不能回退到同商机其他方案。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-QTCK-{unique}",
+            customer_name=f"报价工单选择客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPQTCK{unique[:5]}",
+            customer=customer,
+            opp_name=f"报价工单选择商机-{unique}",
+            project_type="FCT",
+            equipment_type="EOL",
+            stage="QUOTATION",
+            probability=80,
+            est_amount=Decimal("520000"),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add_all([customer, opportunity])
+        db_session.flush()
+
+        selected_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-QTCK-A-{unique}",
+            title=f"报价明确工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            assessment_status=AssessmentStatusEnum.COMPLETED.value,
+            created_by=admin_user.id,
+        )
+        fallback_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-QTCK-B-{unique}",
+            title=f"同商机更晚方案工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            assessment_status=AssessmentStatusEnum.COMPLETED.value,
+            created_by=admin_user.id,
+        )
+        db_session.add_all([selected_ticket, fallback_ticket])
+        db_session.flush()
+
+        selected_solution = PresaleSolution(
+            solution_no=f"SOL-QTCK-A-{unique}",
+            name=f"工单明确选用方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=selected_ticket.id,
+            customer_id=customer.id,
+            opportunity_id=opportunity.id,
+            estimated_cost=Decimal("310000"),
+            suggested_price=Decimal("520000"),
+            estimated_duration=42,
+            status="APPROVED",
+            review_status="APPROVED",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        fallback_solution = PresaleSolution(
+            solution_no=f"SOL-QTCK-B-{unique}",
+            name=f"不应被报价自动选中方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=fallback_ticket.id,
+            customer_id=customer.id,
+            opportunity_id=opportunity.id,
+            estimated_cost=Decimal("990000"),
+            suggested_price=Decimal("1280000"),
+            estimated_duration=90,
+            status="APPROVED",
+            review_status="APPROVED",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        db_session.add_all([selected_solution, fallback_solution])
+        db_session.commit()
+
+        quote_payload = None
+        try:
+            quote_response = client.post(
+                f"{prefix}/sales/quotes",
+                headers=headers,
+                json={
+                    "quote_code": f"QQTCK{unique[:6]}",
+                    "opportunity_id": opportunity.id,
+                    "customer_id": customer.id,
+                    "presale_ticket_id": selected_ticket.id,
+                    "valid_until": datetime.now().date().isoformat(),
+                    "version": {"version_no": "V1", "items": []},
+                },
+            )
+            assert quote_response.status_code == 201, quote_response.text
+            quote_payload = quote_response.json()
+
+            db_session.expire_all()
+            quote_version = db_session.get(
+                QuoteVersion, quote_payload["current_version_id"]
+            )
+            assert quote_version is not None
+            assert quote_version.presale_solution_id == selected_solution.id
+            assert quote_version.presale_ticket_id == selected_ticket.id
+            assert quote_version.total_price == Decimal("520000")
+            assert quote_version.cost_total == Decimal("310000")
+
+            version_response = client.post(
+                f"{prefix}/sales/quotes/{quote_payload['id']}/versions",
+                headers=headers,
+                json={
+                    "version_no": "V2",
+                    "presale_ticket_id": selected_ticket.id,
+                    "items": [],
+                },
+            )
+            assert version_response.status_code == 200, version_response.text
+            version_payload = version_response.json()["data"]
+
+            db_session.expire_all()
+            new_version = db_session.get(QuoteVersion, version_payload["id"])
+            assert new_version is not None
+            assert new_version.presale_solution_id == selected_solution.id
+            assert new_version.presale_ticket_id == selected_ticket.id
+            assert new_version.total_price == Decimal("520000")
+            assert new_version.cost_total == Decimal("310000")
+        finally:
+            if quote_payload:
+                quote = db_session.get(Quote, quote_payload["id"])
+                if quote:
+                    quote.current_version_id = None
+                db_session.flush()
+                db_session.query(QuoteVersion).filter(
+                    QuoteVersion.quote_id == quote_payload["id"]
+                ).delete(synchronize_session=False)
+                db_session.query(Quote).filter(Quote.id == quote_payload["id"]).delete(
+                    synchronize_session=False
+                )
+            db_session.query(PresaleSolution).filter(
+                PresaleSolution.id.in_([selected_solution.id, fallback_solution.id])
+            ).delete(synchronize_session=False)
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id.in_([selected_ticket.id, fallback_ticket.id])
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(Customer).filter(Customer.id == customer.id).delete(
+                synchronize_session=False
+            )
+            db_session.commit()
+
     def test_contract_project_keeps_selected_presale_solution_with_manual_quote_items(
         self, client: TestClient, db_session: Session, admin_token: str
     ):

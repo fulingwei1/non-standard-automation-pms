@@ -19,6 +19,7 @@ from app.schemas.common import ResponseModel
 from app.services.sales.presale_quote_context import (
     build_quote_values_from_presale_solution,
     build_solution_quote_item,
+    resolve_presale_ticket_id_for_quote,
     resolve_presale_solution_for_quote,
     to_decimal,
 )
@@ -189,6 +190,11 @@ def create_quote_version(
         version_data,
         presale_solution,
     )
+    presale_ticket_id = resolve_presale_ticket_id_for_quote(
+        quote_data=version_data,
+        version_payload=version_data,
+        presale_solution=presale_solution,
+    )
 
     # 创建新版本
     version = QuoteVersion(
@@ -200,7 +206,7 @@ def create_quote_version(
         lead_time_days=lead_time_days,
         risk_terms=version_data.get("risk_terms"),
         presale_solution_id=presale_solution.id if presale_solution else None,
-        presale_ticket_id=presale_solution.ticket_id if presale_solution else None,
+        presale_ticket_id=presale_ticket_id,
         created_by=current_user.id,
     )
     db.add(version)

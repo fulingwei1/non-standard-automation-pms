@@ -5,6 +5,8 @@
 export const DEFAULT_FORM_DATA = {
   opportunity_id: null,
   customer_id: null,
+  lead_id: null,
+  project_id: null,
   solution_id: null,
   presale_ticket_id: null,
   quote_code: "",

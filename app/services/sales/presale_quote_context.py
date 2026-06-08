@@ -17,6 +17,43 @@ logger = logging.getLogger(__name__)
 PRESALE_SOLUTION_REMARK_PATTERN = re.compile(r"来源售前方案\s+(\S+)")
 
 
+def _to_positive_int(value) -> Optional[int]:
+    if value in (None, ""):
+        return None
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed > 0 else None
+
+
+def get_presale_ticket_id_from_quote_payload(
+    quote_data: dict,
+    version_payload: dict,
+) -> Optional[int]:
+    return (
+        _to_positive_int(quote_data.get("presale_ticket_id"))
+        or _to_positive_int(quote_data.get("ticket_id"))
+        or _to_positive_int(version_payload.get("presale_ticket_id"))
+        or _to_positive_int(version_payload.get("ticket_id"))
+    )
+
+
+def _validate_solution_scope(
+    solution: PresaleSolution,
+    *,
+    opportunity_id: int,
+    customer_id: int,
+    ticket_id: Optional[int] = None,
+) -> None:
+    if solution.opportunity_id and solution.opportunity_id != opportunity_id:
+        raise HTTPException(status_code=400, detail="售前方案与商机不匹配")
+    if solution.customer_id and solution.customer_id != customer_id:
+        raise HTTPException(status_code=400, detail="售前方案与客户不匹配")
+    if ticket_id and solution.ticket_id and solution.ticket_id != ticket_id:
+        raise HTTPException(status_code=400, detail="售前方案与工单不匹配")
+
+
 def to_decimal(value) -> Decimal:
     if value in (None, ""):
         return Decimal("0")
@@ -41,15 +78,44 @@ def resolve_presale_solution_for_quote(
         or version_payload.get("solution_id")
         or version_payload.get("presale_solution_id")
     )
+    ticket_id = get_presale_ticket_id_from_quote_payload(quote_data, version_payload)
 
     if solution_id:
         solution = db.query(PresaleSolution).filter(PresaleSolution.id == solution_id).first()
         if not solution:
             raise HTTPException(status_code=404, detail="售前方案不存在")
-        if solution.opportunity_id and solution.opportunity_id != opportunity_id:
-            raise HTTPException(status_code=400, detail="售前方案与商机不匹配")
-        if solution.customer_id and solution.customer_id != customer_id:
-            raise HTTPException(status_code=400, detail="售前方案与客户不匹配")
+        _validate_solution_scope(
+            solution,
+            opportunity_id=opportunity_id,
+            customer_id=customer_id,
+            ticket_id=ticket_id,
+        )
+        return solution
+
+    if ticket_id:
+        solution = (
+            db.query(PresaleSolution)
+            .filter(
+                PresaleSolution.ticket_id == ticket_id,
+                or_(
+                    PresaleSolution.status == "APPROVED",
+                    PresaleSolution.review_status == "APPROVED",
+                ),
+            )
+            .order_by(
+                desc(PresaleSolution.review_time),
+                desc(PresaleSolution.updated_at),
+                desc(PresaleSolution.id),
+            )
+            .first()
+        )
+        if solution:
+            _validate_solution_scope(
+                solution,
+                opportunity_id=opportunity_id,
+                customer_id=customer_id,
+                ticket_id=ticket_id,
+            )
         return solution
 
     return (
@@ -68,6 +134,24 @@ def resolve_presale_solution_for_quote(
         )
         .first()
     )
+
+
+def resolve_presale_ticket_id_for_quote(
+    *,
+    quote_data: dict,
+    version_payload: dict,
+    presale_solution: Optional[PresaleSolution],
+) -> Optional[int]:
+    ticket_id = get_presale_ticket_id_from_quote_payload(quote_data, version_payload)
+    if ticket_id:
+        if (
+            presale_solution
+            and presale_solution.ticket_id
+            and presale_solution.ticket_id != ticket_id
+        ):
+            raise HTTPException(status_code=400, detail="售前方案与工单不匹配")
+        return ticket_id
+    return presale_solution.ticket_id if presale_solution else None
 
 
 def build_quote_values_from_presale_solution(

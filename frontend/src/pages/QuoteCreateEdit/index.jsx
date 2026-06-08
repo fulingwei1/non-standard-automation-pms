@@ -69,6 +69,8 @@ export default function QuoteCreateEdit() {
     "opportunityId",
   ]);
   const contextCustomerId = getFirstSearchInt(searchParams, ["customer_id", "customerId"]);
+  const contextLeadId = getFirstSearchInt(searchParams, ["lead_id", "leadId"]);
+  const contextProjectId = getFirstSearchInt(searchParams, ["project_id", "projectId"]);
   const contextSolutionId = getFirstSearchInt(searchParams, [
     "solution_id",
     "solutionId",
@@ -95,6 +97,8 @@ export default function QuoteCreateEdit() {
       [
         ["opportunity_id", contextOpportunityId],
         ["customer_id", contextCustomerId],
+        ["lead_id", contextLeadId],
+        ["project_id", contextProjectId],
         ["solution_id", contextSolutionId],
         ["presale_ticket_id", contextTicketId],
       ].forEach(([key, value]) => {
@@ -108,7 +112,9 @@ export default function QuoteCreateEdit() {
     });
   }, [
     contextCustomerId,
+    contextLeadId,
     contextOpportunityId,
+    contextProjectId,
     contextSolutionId,
     contextTicketId,
     isEdit,
@@ -140,6 +146,10 @@ export default function QuoteCreateEdit() {
       setFormData({
         opportunity_id: quote.opportunity_id,
         customer_id: quote.customer_id,
+        lead_id: quote.lead_id || null,
+        project_id: quote.project_id || null,
+        solution_id: quote.solution_id || quote.presale_solution_id || null,
+        presale_ticket_id: quote.presale_ticket_id || null,
         quote_code: quote.quote_code,
         quote_name: quote.quote_name || "",
         valid_days: quote.valid_days || 30,
