@@ -188,6 +188,8 @@ class SolutionCreate(BaseModel):
     project_id: Optional[int] = Field(None, description="关联项目ID")
     customer_id: Optional[int] = Field(None, description="客户ID")
     opportunity_id: Optional[int] = Field(None, description="商机ID")
+    template_id: Optional[int] = Field(None, description="关联技术参数模板ID")
+    template_parameters: Optional[Dict[str, Any]] = Field(None, description="使用的技术参数")
     requirement_summary: Optional[str] = Field(None, description="需求概述")
     solution_overview: Optional[str] = Field(None, description="方案概述")
     technical_spec: Optional[str] = Field(None, description="技术规格")
@@ -206,6 +208,8 @@ class SolutionUpdate(BaseModel):
     customer_id: Optional[int] = None
     opportunity_id: Optional[int] = None
     project_id: Optional[int] = None
+    template_id: Optional[int] = None
+    template_parameters: Optional[Dict[str, Any]] = None
     requirement_summary: Optional[str] = None
     solution_overview: Optional[str] = None
     technical_spec: Optional[str] = None
@@ -243,6 +247,8 @@ class SolutionResponse(TimestampSchema):
     opportunity_name: Optional[str] = None
     sales_person_id: Optional[int] = None
     sales_person_name: Optional[str] = None
+    template_id: Optional[int] = None
+    template_parameters: Optional[Dict[str, Any]] = None
     requirement_summary: Optional[str] = None
     solution_overview: Optional[str] = None
     technical_spec: Optional[str] = None

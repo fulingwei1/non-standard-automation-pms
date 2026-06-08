@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
+import { presaleApi } from "../services/api";
 import { technicalParameterApi } from "../services/api/technicalParameter";
 
 // 行业选项
@@ -156,6 +157,10 @@ export default function TechnicalParameterManagement({ embedded = false } = {}) 
     () => getTechnicalContextFilters(searchParams),
     [searchParamsKey],
   );
+  const contextSolutionId = useMemo(
+    () => parseContextId(searchParams.get("solution_id") || searchParams.get("id")),
+    [searchParamsKey],
+  );
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -181,6 +186,8 @@ export default function TechnicalParameterManagement({ embedded = false } = {}) 
   const [estimateTemplate, setEstimateTemplate] = useState(null);
   const [estimateParams, setEstimateParams] = useState({});
   const [estimateResult, setEstimateResult] = useState(null);
+  const [savingEstimateToSolution, setSavingEstimateToSolution] = useState(false);
+  const [estimateSaveMessage, setEstimateSaveMessage] = useState("");
 
   // 加载模板列表
   useEffect(() => {
@@ -300,6 +307,7 @@ export default function TechnicalParameterManagement({ embedded = false } = {}) 
       }
       setEstimateParams(params);
       setEstimateResult(null);
+      setEstimateSaveMessage("");
       setEstimateModal(true);
     } catch (err) {
       alert("加载模板详情失败: " + err.message);
@@ -315,8 +323,40 @@ export default function TechnicalParameterManagement({ embedded = false } = {}) 
         ...getTechnicalContextPayload(technicalContextFilters),
       });
       setEstimateResult(res.data || res);
+      setEstimateSaveMessage("");
     } catch (err) {
       alert("估算失败: " + err.message);
+    }
+  };
+
+  const saveEstimateToSolution = async () => {
+    if (!contextSolutionId || !estimateTemplate || !estimateResult) {
+      return;
+    }
+
+    const estimatedHours = getLaborHoursTotal(estimateResult.labor_hours);
+    const payload = {
+      template_id: estimateResult.template_id || estimateTemplate.id,
+      template_parameters: estimateResult.parameters_used || estimateParams,
+      estimated_cost: estimateResult.total_cost,
+      cost_breakdown: estimateResult.cost_breakdown || {},
+      ...getTechnicalContextPayload(technicalContextFilters),
+    };
+
+    if (estimatedHours !== null) {
+      payload.estimated_hours = estimatedHours;
+    }
+
+    try {
+      setSavingEstimateToSolution(true);
+      setEstimateSaveMessage("");
+      await presaleApi.solutions.update(contextSolutionId, payload);
+      setEstimateSaveMessage("已写回当前方案");
+    } catch (err) {
+      const message = err?.response?.data?.detail || err.message || "未知错误";
+      alert("写回方案失败: " + message);
+    } finally {
+      setSavingEstimateToSolution(false);
     }
   };
 
@@ -670,6 +710,25 @@ export default function TechnicalParameterManagement({ embedded = false } = {}) 
                       <div className="text-sm text-slate-300">
                         预估 {estimateLaborHoursTotal} 小时
                       </div>
+                    </div>
+                  )}
+
+                  {contextSolutionId && (
+                    <div className="pt-3 border-t border-white/5 space-y-2">
+                      <button
+                        type="button"
+                        onClick={saveEstimateToSolution}
+                        disabled={savingEstimateToSolution}
+                        className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white text-sm rounded-lg flex items-center justify-center gap-2"
+                      >
+                        <FileText className="w-4 h-4" />
+                        {savingEstimateToSolution ? "写回中..." : "写回当前方案"}
+                      </button>
+                      {estimateSaveMessage && (
+                        <div className="text-center text-xs text-emerald-300">
+                          {estimateSaveMessage}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

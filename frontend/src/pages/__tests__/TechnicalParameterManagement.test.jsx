@@ -13,8 +13,18 @@ const technicalParameterApiMock = vi.hoisted(() => ({
   estimateCost: vi.fn(),
 }));
 
+const presaleApiMock = vi.hoisted(() => ({
+  solutions: {
+    update: vi.fn(),
+  },
+}));
+
 vi.mock("../../services/api/technicalParameter", () => ({
   technicalParameterApi: technicalParameterApiMock,
+}));
+
+vi.mock("../../services/api", () => ({
+  presaleApi: presaleApiMock,
 }));
 
 function renderPage(initialEntry = "/presales/technical-solutions?tab=parameters") {
@@ -31,6 +41,7 @@ function renderPage(initialEntry = "/presales/technical-solutions?tab=parameters
 describe("TechnicalParameterManagement", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    presaleApiMock.solutions.update.mockResolvedValue({ data: { id: 88 } });
     technicalParameterApiMock.list.mockResolvedValue({
       data: {
         items: [
@@ -335,6 +346,80 @@ describe("TechnicalParameterManagement", () => {
       lead_id: 2026,
       ticket_id: 501,
     });
+  });
+
+  it("writes a technical cost estimate back to the current solution", async () => {
+    const user = userEvent.setup();
+    technicalParameterApiMock.list.mockResolvedValueOnce({
+      data: {
+        items: [
+          {
+            id: 1,
+            name: "FCT 标准测试模板",
+            code: "FCT-STD-001",
+            industry: "CONSUMER",
+            test_type: "FCT",
+          },
+        ],
+        total: 1,
+        page: 1,
+      },
+    });
+    technicalParameterApiMock.get.mockResolvedValueOnce({
+      data: {
+        id: 1,
+        name: "FCT 标准测试模板",
+        code: "FCT-STD-001",
+        industry: "CONSUMER",
+        test_type: "FCT",
+        parameters: {
+          test_station_count: {
+            label: "测试工位数",
+            default: 4,
+            unit: "个",
+          },
+        },
+      },
+    });
+    technicalParameterApiMock.estimateCost.mockResolvedValueOnce({
+      data: {
+        template_id: 1,
+        total_cost: 82000,
+        cost_breakdown: {
+          MECHANICAL: { ratio: 0.35, amount: 28700 },
+        },
+        labor_hours: { detail: {}, total: 200 },
+        parameters_used: {
+          test_station_count: 4,
+        },
+      },
+    });
+
+    renderPage(
+      "/presales/technical-solutions?tab=parameters&type=support&solution_id=88&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+
+    await screen.findByText("FCT 标准测试模板");
+    await user.click(screen.getByTitle("成本估算"));
+    await screen.findByLabelText("测试工位数 (个)");
+    await user.click(screen.getByRole("button", { name: /计算成本/ }));
+    await user.click(await screen.findByRole("button", { name: "写回当前方案" }));
+
+    expect(presaleApiMock.solutions.update).toHaveBeenCalledWith(88, {
+      template_id: 1,
+      template_parameters: {
+        test_station_count: 4,
+      },
+      estimated_cost: 82000,
+      cost_breakdown: {
+        MECHANICAL: { ratio: 0.35, amount: 28700 },
+      },
+      opportunity_id: 2,
+      ticket_id: 501,
+      project_id: 42,
+      estimated_hours: 200,
+    });
+    expect(await screen.findByText("已写回当前方案")).toBeInTheDocument();
   });
 
   it("keeps upstream context when creating a technical parameter template", async () => {

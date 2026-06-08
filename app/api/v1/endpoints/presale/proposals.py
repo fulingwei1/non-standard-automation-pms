@@ -25,6 +25,7 @@ from app.models.presale import (
     PresaleSupportTicket,
     PresaleSolution,
     PresaleSolutionCost,
+    TechnicalParameterTemplate,
 )
 from app.models.project import Customer
 from app.models.sales import Lead, Opportunity
@@ -128,6 +129,8 @@ def build_solution_response(db: Session, solution: PresaleSolution) -> SolutionR
         opportunity_name=context["opportunity_name"],
         sales_person_id=context["sales_person_id"],
         sales_person_name=context["sales_person_name"],
+        template_id=solution.template_id,
+        template_parameters=solution.template_parameters,
         requirement_summary=solution.requirement_summary,
         solution_overview=solution.solution_overview,
         technical_spec=solution.technical_spec,
@@ -367,6 +370,14 @@ def create_solution(
     elif solution_in.opportunity_id:
         ticket = resolve_solution_ticket_from_opportunity(db, solution_in, current_user)
 
+    if solution_in.template_id:
+        get_or_404(
+            db,
+            TechnicalParameterTemplate,
+            solution_in.template_id,
+            detail="技术参数模板不存在",
+        )
+
     solution = PresaleSolution(
         solution_no=generate_solution_no(db),
         name=solution_in.name,
@@ -383,6 +394,8 @@ def create_solution(
         opportunity_id=solution_in.opportunity_id if solution_in.opportunity_id is not None else (
             ticket.opportunity_id if ticket else None
         ),
+        template_id=solution_in.template_id,
+        template_parameters=solution_in.template_parameters,
         requirement_summary=solution_in.requirement_summary,
         solution_overview=solution_in.solution_overview,
         technical_spec=solution_in.technical_spec,
@@ -434,6 +447,14 @@ def update_solution(
         raise HTTPException(status_code=400, detail="只有草稿或已驳回状态的方案才能修改")
 
     update_data = solution_in.model_dump(exclude_unset=True)
+    if update_data.get("template_id"):
+        get_or_404(
+            db,
+            TechnicalParameterTemplate,
+            update_data["template_id"],
+            detail="技术参数模板不存在",
+        )
+
     ticket = None
     if update_data.get("ticket_id"):
         ticket = get_or_404(db, PresaleSupportTicket, update_data["ticket_id"], detail="工单不存在")

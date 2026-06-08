@@ -2714,6 +2714,84 @@ class TestPresalesFrontendContractBehavior:
             )
             db_session.commit()
 
+    def test_solution_update_preserves_technical_template_parameters(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        template = TechnicalParameterTemplate(
+            name=f"方案参数写回模板-{unique}",
+            code=f"TPL-SOL-WB-{unique}",
+            industry="电子制造",
+            test_type="FCT",
+            parameters={
+                "test_station_count": {
+                    "label": "测试工位数",
+                    "type": "number",
+                    "default": 4,
+                    "unit": "个",
+                }
+            },
+            cost_factors={},
+            typical_labor_hours={"debug_hours": 200},
+            created_by=admin_user.id,
+        )
+        solution = PresaleSolution(
+            solution_no=f"SOL-SOL-WB-{unique}",
+            name=f"待写回技术参数方案-{unique}",
+            solution_type="CUSTOM",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+            status="DRAFT",
+        )
+        db_session.add_all([template, solution])
+        db_session.commit()
+
+        template_parameters = {"test_station_count": 4}
+        cost_breakdown = {"MECHANICAL": {"ratio": 0.35, "amount": 28700}}
+
+        try:
+            updated = client.put(
+                f"{prefix}/presale/proposals/solutions/{solution.id}",
+                json={
+                    "template_id": template.id,
+                    "template_parameters": template_parameters,
+                    "estimated_cost": 82000,
+                    "cost_breakdown": cost_breakdown,
+                    "estimated_hours": 200,
+                },
+                headers=headers,
+            )
+            assert updated.status_code == 200, updated.text
+            payload = updated.json()
+            assert payload["template_id"] == template.id
+            assert payload["template_parameters"] == template_parameters
+            assert payload["estimated_cost"] == 82000.0
+            assert payload["cost_breakdown"] == cost_breakdown
+            assert payload["estimated_hours"] == 200
+
+            db_session.expire_all()
+            refreshed_solution = db_session.get(PresaleSolution, solution.id)
+            assert refreshed_solution.template_id == template.id
+            assert refreshed_solution.template_parameters == template_parameters
+            assert refreshed_solution.cost_breakdown == cost_breakdown
+        finally:
+            db_session.query(PresaleSolution).filter(PresaleSolution.id == solution.id).delete(
+                synchronize_session=False
+            )
+            db_session.query(TechnicalParameterTemplate).filter(
+                TechnicalParameterTemplate.id == template.id
+            ).delete(synchronize_session=False)
+            db_session.commit()
+
     def test_solution_update_with_ticket_binds_sales_project_context(
         self, client: TestClient, db_session: Session, admin_token: str
     ):
