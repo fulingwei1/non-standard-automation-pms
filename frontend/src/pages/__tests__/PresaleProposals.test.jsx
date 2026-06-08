@@ -300,6 +300,41 @@ describe("PresaleProposals", () => {
     );
   });
 
+  it("treats approved review status as quote-ready even when legacy status is stale", async () => {
+    presaleApi.solutions.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 89,
+            solution_no: "SOL-89",
+            name: "历史状态售前技术方案",
+            status: "DRAFT",
+            review_status: "APPROVED",
+            customer_id: 1,
+            ticket_id: 501,
+            opportunity_id: 2,
+            project_id: 42,
+            estimated_cost: 190000,
+            suggested_price: 300000,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage(
+      "/presales/technical-solutions?tab=solutions&type=support&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+
+    await screen.findByText("历史状态售前技术方案");
+    expect(screen.getAllByText("已通过").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "生成报价" }));
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      "/sales/quotes/create?opportunity_id=2&customer_id=1&solution_id=89&ticket_id=501&project_id=42",
+    );
+  });
+
   it("keeps lead context when opening a linked solution detail", async () => {
     presaleApi.solutions.list.mockResolvedValue({
       data: {

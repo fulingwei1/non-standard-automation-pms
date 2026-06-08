@@ -4,15 +4,25 @@ export function normalizeSolutionStatus(status, reviewStatus) {
   const currentStatus = String(status || "").toUpperCase();
   const currentReviewStatus = String(reviewStatus || "").toUpperCase();
 
-  if (currentStatus === "APPROVED" || currentStatus === "DELIVERED" || currentStatus === "WON") {
+  if (
+    currentStatus === "APPROVED" ||
+    currentStatus === "DELIVERED" ||
+    currentStatus === "WON" ||
+    currentReviewStatus === "APPROVED"
+  ) {
     return "APPROVED";
   }
-  if (currentStatus === "REJECTED" || currentStatus === "LOST") {
+  if (
+    currentStatus === "REJECTED" ||
+    currentStatus === "LOST" ||
+    currentReviewStatus === "REJECTED"
+  ) {
     return "REJECTED";
   }
   if (
     currentStatus === "REVIEW" ||
     currentStatus === "REVIEWING" ||
+    currentReviewStatus === "REVIEW" ||
     currentReviewStatus === "PENDING" ||
     currentReviewStatus === "REVIEWING"
   ) {
