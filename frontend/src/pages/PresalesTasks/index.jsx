@@ -47,7 +47,8 @@ const getInitialTaskFilters = (search) => {
     leadId: params.get("lead_id") || "",
     opportunityId: params.get("opportunity_id") || "",
     ticketId: params.get("ticket_id") || "",
-    projectId: params.get("project_id") || ""
+    projectId: params.get("project_id") || "",
+    solutionId: params.get("solution_id") || ""
   };
 };
 
@@ -134,6 +135,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
     opportunityId: initialFilters.opportunityId,
     ticketId: initialFilters.ticketId,
     projectId: initialFilters.projectId,
+    solutionId: initialFilters.solutionId,
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTask, setSelectedTask] = useState(null);
@@ -244,9 +246,16 @@ export default function PresalesTasks({ embedded = false } = {}) {
         const pmAssigned = normalizeBoolean(ticket.pm_assigned);
         const pmInvolvementRiskFactors = normalizeRiskFactors(ticket.pm_involvement_risk_factors);
         const pmInvolvementRiskLevel = ticket.pm_involvement_risk_level || "";
+        const estimatedAmount = ticket.estimated_amount ?? ticket.estimated_value ?? null;
+        const solutionId =
+          ticket.solution_id ??
+          ticket.technical_solution_id ??
+          ticket.presale_solution_id ??
+          parseContextId(sourceFilters.solutionId);
         return {
           id: ticket.id,
           ticketId: ticket.id,
+          solutionId,
           title: ticket.title,
           type,
           typeName: typeInfo.name,
@@ -267,8 +276,9 @@ export default function PresalesTasks({ embedded = false } = {}) {
           projectId: ticket.project_id ?? null,
           assessmentStatus: ticket.assessment_status || "",
           currentAssessmentId: ticket.current_assessment_id ?? null,
-          amount: (ticket.estimated_amount ?? ticket.estimated_value)
-            ? (ticket.estimated_amount ?? ticket.estimated_value) / 10000
+          estimatedAmount,
+          amount: estimatedAmount
+            ? estimatedAmount / 10000
             : 0,
           estimatedHours: ticket.estimated_hours || 0,
           actualHours: ticket.actual_hours || 0,
@@ -303,6 +313,7 @@ export default function PresalesTasks({ embedded = false } = {}) {
     sourceFilters.opportunityId,
     sourceFilters.ticketId,
     sourceFilters.projectId,
+    sourceFilters.solutionId,
   ]);
 
   const updateCreateForm = (field, value) => {
@@ -417,13 +428,14 @@ export default function PresalesTasks({ embedded = false } = {}) {
     const opportunityId = params.get("opportunity_id") || "";
     const ticketId = params.get("ticket_id") || "";
     const projectId = params.get("project_id") || "";
+    const solutionId = params.get("solution_id") || "";
     if (type) {
       setSelectedType(type);
     }
     if (status) {
       setSelectedStatus(status);
     }
-    setSourceFilters({ leadId, opportunityId, ticketId, projectId });
+    setSourceFilters({ leadId, opportunityId, ticketId, projectId, solutionId });
   }, [location.search]);
 
   // Load tasks when filters change

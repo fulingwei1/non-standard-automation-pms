@@ -518,6 +518,52 @@ describe('PresalesTasks', () => {
     );
   });
 
+  it('opens PMO initiation creation with presale handoff context', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 92,
+            title: 'FCT赢单交接',
+            ticket_type: 'TECHNICAL_SUPPORT',
+            status: 'COMPLETED',
+            urgency: 'NORMAL',
+            customer_name: '华南电子',
+            applicant_name: '张销售',
+            description: '交接售前方案、成本边界和验收口径',
+            lead_id: 2026,
+            opportunity_id: 2,
+            opportunity_name: '电源测试线商机',
+            solution_id: 88,
+            estimated_amount: 420000,
+            estimated_hours: 16,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage('/presales/technical-solutions?tab=reviews&type=support&ticket_id=92&opportunity_id=2&solution_id=88');
+
+    await screen.findByText('FCT赢单交接');
+    fireEvent.click(screen.getByText('FCT赢单交接'));
+    fireEvent.click(screen.getByRole('button', { name: /生成项目立项申请/ }));
+
+    expect(navigateSpy).toHaveBeenCalledTimes(1);
+    const target = navigateSpy.mock.calls[0][0];
+    const url = new URL(target, 'http://localhost');
+    expect(url.pathname).toBe('/pmo/initiations');
+    expect(url.searchParams.get('handoff')).toBe('presale');
+    expect(url.searchParams.get('ticket_id')).toBe('92');
+    expect(url.searchParams.get('lead_id')).toBe('2026');
+    expect(url.searchParams.get('opportunity_id')).toBe('2');
+    expect(url.searchParams.get('solution_id')).toBe('88');
+    expect(url.searchParams.get('project_name')).toBe('电源测试线商机');
+    expect(url.searchParams.get('customer_name')).toBe('华南电子');
+    expect(url.searchParams.get('contract_amount')).toBe('420000');
+    expect(url.searchParams.get('estimated_hours')).toBe('16');
+  });
+
   it('opens the linked lead technical assessment from a presale task detail', async () => {
     presaleApi.tickets.list.mockResolvedValue({
       data: {

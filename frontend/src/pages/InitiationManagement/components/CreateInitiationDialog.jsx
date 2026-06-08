@@ -1,22 +1,51 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter, Button, Input } from "../../../components/ui";
+import { useEffect, useMemo, useState } from 'react';
+import {
+    Dialog,
+    DialogBody,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    Button,
+    Input,
+} from "../../../components/ui";
 
-export function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
-    const [formData, setFormData] = useState({
-        project_name: "",
-        project_type: "NEW",
-        project_level: "",
-        customer_name: "",
-        contract_no: "",
-        contract_amount: "",
-        required_start_date: "",
-        required_end_date: "",
-        requirement_summary: "",
-        technical_difficulty: "",
-        estimated_hours: "",
-        resource_requirements: "",
-        risk_assessment: ""
-    });
+const EMPTY_FORM_DATA = {
+    project_name: "",
+    project_type: "NEW",
+    project_level: "",
+    customer_name: "",
+    contract_no: "",
+    contract_amount: "",
+    required_start_date: "",
+    required_end_date: "",
+    requirement_summary: "",
+    technical_difficulty: "",
+    estimated_hours: "",
+    resource_requirements: "",
+    risk_assessment: "",
+    technical_solution_id: ""
+};
+
+function buildFormData(initialData = {}) {
+    return {
+        ...EMPTY_FORM_DATA,
+        ...Object.fromEntries(
+            Object.entries(initialData || {}).filter(([, value]) => value !== undefined && value !== null),
+        ),
+    };
+}
+
+export function CreateInitiationDialog({ open, onOpenChange, onSubmit, initialData }) {
+    const initialFormData = useMemo(() => buildFormData(initialData), [initialData]);
+    const [formData, setFormData] = useState(initialFormData);
+
+    useEffect(() => {
+        if (open) {
+            setFormData(initialFormData);
+        }
+    }, [initialFormData, open]);
 
     const handleSubmit = () => {
         if (!formData.project_name || !formData.customer_name) {
@@ -24,21 +53,7 @@ export function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
             return;
         }
         onSubmit(formData);
-        setFormData({
-            project_name: "",
-            project_type: "NEW",
-            project_level: "",
-            customer_name: "",
-            contract_no: "",
-            contract_amount: "",
-            required_start_date: "",
-            required_end_date: "",
-            requirement_summary: "",
-            technical_difficulty: "",
-            estimated_hours: "",
-            resource_requirements: "",
-            risk_assessment: ""
-        });
+        setFormData(EMPTY_FORM_DATA);
     };
 
     return (
@@ -46,6 +61,9 @@ export function CreateInitiationDialog({ open, onOpenChange, onSubmit }) {
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>新建立项申请</DialogTitle>
+                    <DialogDescription>
+                        确认项目基本信息，提交后进入 PMO 立项审批。
+                    </DialogDescription>
                 </DialogHeader>
                 <DialogBody>
                     <div className="space-y-4">

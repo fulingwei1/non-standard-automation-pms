@@ -68,10 +68,11 @@ export function useInitiationManagement(detailId = null) {
 
     const handleCreate = async (formData) => {
         try {
-            await pmoApi.initiations.create(formData);
+            const response = await pmoApi.initiations.create(formData);
+            const created = response?.data?.data ?? response?.data ?? response;
             setCreateDialogOpen(false);
             fetchData();
-            return true;
+            return created || true;
         } catch (err) {
             console.error("Failed to create initiation:", err);
             alert("创建失败: " + (err.response?.data?.detail || err.message));

@@ -15,6 +15,7 @@ import {
   Briefcase,
   AlertTriangle,
   Cpu,
+  FilePlus2,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -94,6 +95,22 @@ function buildProjectWorkspacePath(task) {
   return `/projects/${task.projectId}/workspace${query ? `?${query}` : ""}`;
 }
 
+function buildPresaleInitiationPath(task) {
+  const params = new URLSearchParams();
+  params.set("handoff", "presale");
+  appendContextParam(params, "ticket_id", task.ticketId);
+  appendContextParam(params, "lead_id", task.leadId);
+  appendContextParam(params, "opportunity_id", task.opportunityId);
+  appendContextParam(params, "project_id", task.projectId);
+  appendContextParam(params, "solution_id", task.solutionId);
+  appendContextParam(params, "project_name", task.opportunity || task.title);
+  appendContextParam(params, "customer_name", task.customer);
+  appendContextParam(params, "contract_amount", task.estimatedAmount);
+  appendContextParam(params, "requirement_summary", task.description);
+  appendContextParam(params, "estimated_hours", task.estimatedHours);
+  return `/pmo/initiations?${params.toString()}`;
+}
+
 function buildTechnicalAssessmentPath(task) {
   let path = "";
   if (task.opportunityId) {
@@ -150,6 +167,12 @@ export default function TaskDetailPanel({
   const hasRating = task.satisfactionScore != null;
   const technicalAssessmentPath = buildTechnicalAssessmentPath(task);
   const hasDeliverableCompletionBlocker = hasUnapprovedRequiredDeliverables(task.deliverables || []);
+  const canCreateInitiation = !task.projectId && (
+    task.ticketId ||
+    task.solutionId ||
+    task.opportunityId ||
+    task.leadId
+  );
 
   // 接单
   const handleAccept = async () => {
@@ -410,6 +433,18 @@ export default function TaskDetailPanel({
             >
               <Briefcase className="w-4 h-4 mr-2" />
               打开项目工作区
+            </Button>
+          )}
+
+          {canCreateInitiation && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => navigate(buildPresaleInitiationPath(task))}
+            >
+              <FilePlus2 className="w-4 h-4 mr-2" />
+              生成项目立项申请
             </Button>
           )}
 
