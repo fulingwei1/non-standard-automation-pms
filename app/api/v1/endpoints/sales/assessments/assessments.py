@@ -15,7 +15,7 @@ from app.api import deps
 from app.core import security
 from app.models.enums import AssessmentSourceTypeEnum, AssessmentStatusEnum
 from app.models.presale import PresaleSupportTicket
-from app.models.sales import Lead, Opportunity, TechnicalAssessment
+from app.models.sales import AssessmentTemplate, Lead, Opportunity, TechnicalAssessment
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import (
@@ -102,6 +102,21 @@ def _get_presale_ticket_for_source(
     return ticket
 
 
+def _validate_assessment_template(
+    db: Session,
+    template_id: Optional[int],
+) -> Optional[AssessmentTemplate]:
+    if not template_id:
+        return None
+
+    template = db.query(AssessmentTemplate).filter(AssessmentTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="评估模板不存在")
+    if not template.is_active:
+        raise HTTPException(status_code=400, detail="评估模板已停用")
+    return template
+
+
 def _bind_presale_ticket(
     ticket: Optional[PresaleSupportTicket],
     assessment: TechnicalAssessment,
@@ -143,6 +158,9 @@ def _assessment_response(
         updated_at=assessment.updated_at,
         evaluator_name=evaluator_name,
         presale_ticket_id=assessment.presale_ticket_id,
+        template_id=assessment.template_id,
+        version_no=assessment.version_no,
+        item_scores=assessment.item_scores,
     )
 
 
@@ -154,6 +172,7 @@ def _get_or_create_open_assessment(
     evaluator_id: int,
     existing_assessment_id: Optional[int] = None,
     presale_ticket_id: Optional[int] = None,
+    template_id: Optional[int] = None,
 ) -> TechnicalAssessment:
     assessment = _find_open_assessment(
         db,
@@ -166,6 +185,8 @@ def _get_or_create_open_assessment(
         assessment.evaluator_id = evaluator_id
         if presale_ticket_id:
             assessment.presale_ticket_id = presale_ticket_id
+        if template_id:
+            assessment.template_id = template_id
         return assessment
 
     assessment = TechnicalAssessment(
@@ -174,6 +195,7 @@ def _get_or_create_open_assessment(
         evaluator_id=evaluator_id,
         status=AssessmentStatusEnum.PENDING.value,
         presale_ticket_id=presale_ticket_id,
+        template_id=template_id,
     )
     db.add(assessment)
     db.flush()
@@ -196,6 +218,7 @@ def apply_lead_assessment(
         source_id=lead_id,
         presale_ticket_id=request.presale_ticket_id,
     )
+    _validate_assessment_template(db, request.template_id)
 
     assessment = _get_or_create_open_assessment(
         db,
@@ -204,6 +227,7 @@ def apply_lead_assessment(
         evaluator_id=request.evaluator_id or current_user.id,
         existing_assessment_id=lead.assessment_id,
         presale_ticket_id=request.presale_ticket_id,
+        template_id=request.template_id,
     )
     _bind_presale_ticket(ticket, assessment)
 
@@ -215,7 +239,11 @@ def apply_lead_assessment(
 
     return ResponseModel(
         message="技术评估申请已提交",
-        data={"assessment_id": assessment.id, "presale_ticket_id": assessment.presale_ticket_id},
+        data={
+            "assessment_id": assessment.id,
+            "presale_ticket_id": assessment.presale_ticket_id,
+            "template_id": assessment.template_id,
+        },
     )
 
 
@@ -237,6 +265,7 @@ def apply_opportunity_assessment(
         source_id=opp_id,
         presale_ticket_id=request.presale_ticket_id,
     )
+    _validate_assessment_template(db, request.template_id)
 
     assessment = _get_or_create_open_assessment(
         db,
@@ -245,6 +274,7 @@ def apply_opportunity_assessment(
         evaluator_id=request.evaluator_id or current_user.id,
         existing_assessment_id=opportunity.assessment_id,
         presale_ticket_id=request.presale_ticket_id,
+        template_id=request.template_id,
     )
     _bind_presale_ticket(ticket, assessment)
 
@@ -256,7 +286,11 @@ def apply_opportunity_assessment(
 
     return ResponseModel(
         message="技术评估申请已提交",
-        data={"assessment_id": assessment.id, "presale_ticket_id": assessment.presale_ticket_id},
+        data={
+            "assessment_id": assessment.id,
+            "presale_ticket_id": assessment.presale_ticket_id,
+            "template_id": assessment.template_id,
+        },
     )
 
 
@@ -277,6 +311,10 @@ async def evaluate_assessment(
 
     if assessment.status != AssessmentStatusEnum.PENDING.value:
         raise HTTPException(status_code=400, detail="评估状态不正确")
+    if request.template_id:
+        _validate_assessment_template(db, request.template_id)
+        assessment.template_id = request.template_id
+        db.flush()
 
     # 可选：AI分析
     ai_analysis = None

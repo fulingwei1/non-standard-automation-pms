@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """技术评估模板、风险版本 API 的真实服务闭环测试。"""
 
+import json
 from uuid import uuid4
 
 import pytest
@@ -9,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.enums import AssessmentSourceTypeEnum, AssessmentStatusEnum
-from app.models.sales import AssessmentItem, TechnicalAssessment
+from app.models.sales import AssessmentItem, Lead, TechnicalAssessment
 from app.models.user import User
 
 
@@ -150,3 +151,125 @@ def test_assessment_version_routes_create_list_and_compare_snapshots(
         "to": 19,
         "change": 3,
     }
+
+
+def test_template_selected_on_apply_drives_assessment_scoring(
+    client: TestClient, db_session: Session, admin_token: str
+):
+    """选定评估模板后，执行评估应按模板项评分并保留明细。"""
+    if not admin_token:
+        pytest.skip("Admin token not available")
+
+    headers = _auth_headers(admin_token)
+    prefix = settings.API_V1_PREFIX
+    unique = uuid4().hex[:8].upper()
+
+    admin_user = db_session.query(User).filter(User.username == "admin").first()
+    assert admin_user is not None
+
+    lead = Lead(
+        lead_code=f"LEAD-{unique}",
+        customer_name=f"模板评分客户-{unique}",
+        industry="电子制造",
+        demand_summary="FCT测试设备",
+        owner_id=admin_user.id,
+    )
+    db_session.add(lead)
+    db_session.commit()
+
+    response = client.post(
+        f"{prefix}/sales/assessment-templates",
+        json={
+            "template_code": f"TPL-SCORE-{unique}",
+            "template_name": f"模板驱动评分-{unique}",
+            "category": "CUSTOM",
+            "dimension_weights": {"TECHNICAL": 70, "COMMERCIAL": 30},
+            "score_thresholds": {
+                "excellent": 90,
+                "good": 70,
+                "fair": 50,
+                "poor": 0,
+            },
+        },
+        headers=headers,
+    )
+    assert response.status_code == 200, response.text
+    template_id = response.json()["data"]["id"]
+
+    response = client.post(
+        f"{prefix}/sales/assessment-templates/{template_id}/items/batch",
+        json={
+            "items": [
+                {
+                    "item_code": "tech_maturity",
+                    "item_name": "技术成熟度",
+                    "dimension": "TECHNICAL",
+                    "weight": 1.0,
+                    "score_criteria": {
+                        "field": "tech_maturity",
+                        "options": [
+                            {"value": "mature", "score": 10},
+                            {"value": "low", "score": 2},
+                        ],
+                    },
+                },
+                {
+                    "item_code": "budget_status",
+                    "item_name": "预算明确度",
+                    "dimension": "COMMERCIAL",
+                    "weight": 1.0,
+                    "score_criteria": {
+                        "field": "budget_status",
+                        "options": [
+                            {"value": "confirmed", "score": 10},
+                            {"value": "rough", "score": 5},
+                        ],
+                    },
+                },
+            ]
+        },
+        headers=headers,
+    )
+    assert response.status_code == 200, response.text
+
+    response = client.post(
+        f"{prefix}/sales/leads/{lead.id}/assessments/apply",
+        json={"template_id": template_id},
+        headers=headers,
+    )
+    assert response.status_code == 201, response.text
+    assessment_id = response.json()["data"]["assessment_id"]
+    assert response.json()["data"]["template_id"] == template_id
+
+    response = client.post(
+        f"{prefix}/sales/assessments/{assessment_id}/evaluate",
+        json={
+            "requirement_data": {
+                "tech_maturity": "mature",
+                "budget_status": "rough",
+                "has_sow": True,
+            },
+            "enable_ai": False,
+        },
+        headers=headers,
+    )
+    assert response.status_code == 200, response.text
+
+    payload = response.json()
+    assert payload["template_id"] == template_id
+    assert payload["total_score"] == 85
+    assert json.loads(payload["dimension_scores"]) == {
+        "technology": 20,
+        "business": 10,
+    }
+
+    item_scores = json.loads(payload["item_scores"])
+    assert {item["item_code"]: item["score"] for item in item_scores} == {
+        "tech_maturity": 10,
+        "budget_status": 5,
+    }
+
+    db_session.expire_all()
+    assessment = db_session.get(TechnicalAssessment, assessment_id)
+    assert assessment.template_id == template_id
+    assert json.loads(assessment.item_scores) == item_scores

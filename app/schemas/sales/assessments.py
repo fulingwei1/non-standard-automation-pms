@@ -16,6 +16,7 @@ class TechnicalAssessmentApplyRequest(BaseModel):
 
     evaluator_id: Optional[int] = Field(default=None, description="指定评估人ID（可选）")
     presale_ticket_id: Optional[int] = Field(default=None, description="关联售前工单ID（可选）")
+    template_id: Optional[int] = Field(default=None, description="评估模板ID（可选）")
 
 
 class TechnicalAssessmentEvaluateRequest(BaseModel):
@@ -23,6 +24,7 @@ class TechnicalAssessmentEvaluateRequest(BaseModel):
 
     requirement_data: Dict[str, Any] = Field(description="需求数据")
     enable_ai: bool = Field(default=False, description="是否启用AI分析")
+    template_id: Optional[int] = Field(default=None, description="评估模板ID（可选）")
 
 
 class TechnicalAssessmentResponse(TimestampSchema):
@@ -45,6 +47,9 @@ class TechnicalAssessmentResponse(TimestampSchema):
     evaluated_at: Optional[datetime] = None
     evaluator_name: Optional[str] = None
     presale_ticket_id: Optional[int] = None
+    template_id: Optional[int] = None
+    version_no: Optional[str] = None
+    item_scores: Optional[str] = None
 
 
 class ScoringRuleCreate(BaseModel):

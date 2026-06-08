@@ -23,6 +23,7 @@ from app.models.enums import (
 )
 from app.models.sales import (
     AssessmentRisk,
+    AssessmentTemplate,
     FailureCase,
     Lead,
     Opportunity,
@@ -30,6 +31,20 @@ from app.models.sales import (
     ScoringRule,
     TechnicalAssessment,
 )
+
+TEMPLATE_DIMENSION_MAP = {
+    "TECHNICAL": "technology",
+    "TECHNOLOGY": "technology",
+    "COMMERCIAL": "business",
+    "BUSINESS": "business",
+    "RESOURCE": "resource",
+    "RESOURCES": "resource",
+    "TIMELINE": "delivery",
+    "DELIVERY": "delivery",
+    "CUSTOMER": "customer",
+    "RELATIONSHIP": "customer",
+    "RISK": "risk",
+}
 
 DEFAULT_SCORING_RULE_CONFIG: Dict[str, Any] = {
     "evaluation_criteria": {
@@ -300,27 +315,6 @@ class TechnicalAssessmentService:
         Returns:
             TechnicalAssessment: 评估结果对象
         """
-        # 获取评分规则；未配置时使用系统默认规则，避免新环境评估流程卡死。
-        rules_config = self._get_scoring_rules_config()
-
-        # 计算评分
-        dimension_scores, total_score = self._calculate_scores(requirement_data, rules_config)
-
-        # 检查一票否决
-        veto_triggered, veto_rules = self._check_veto_rules(requirement_data, rules_config)
-
-        # 匹配相似案例
-        similar_cases = self._match_similar_cases(requirement_data)
-
-        # 生成决策建议
-        decision = self._generate_decision(total_score, rules_config)
-
-        # 生成风险列表
-        risks = self._generate_risks(requirement_data, dimension_scores, rules_config)
-
-        # 生成立项条件
-        conditions = self._generate_conditions(decision, risks, requirement_data)
-
         assessment = None
         if assessment_id is not None:
             assessment = (
@@ -339,6 +333,32 @@ class TechnicalAssessmentService:
             assessment = TechnicalAssessment(source_type=source_type, source_id=source_id)
             self.db.add(assessment)
 
+        template = self._get_template_for_assessment(assessment)
+        item_scores = None
+        if template and template.items:
+            template_result = self._calculate_template_scores(requirement_data, template)
+            rules_config = self._rules_config_from_template(template)
+            dimension_scores = template_result["dimension_scores"]
+            total_score = template_result["total_score"]
+            item_scores = template_result["item_scores"]
+            item_veto_rules = template_result["veto_rules"]
+            veto_triggered, veto_rules = self._check_veto_rules(requirement_data, rules_config)
+            if item_veto_rules:
+                veto_rules.extend(item_veto_rules)
+                veto_triggered = True
+        else:
+            # 获取评分规则；未配置时使用系统默认规则，避免新环境评估流程卡死。
+            rules_config = self._get_scoring_rules_config()
+            dimension_scores, total_score = self._calculate_scores(requirement_data, rules_config)
+            veto_triggered, veto_rules = self._check_veto_rules(requirement_data, rules_config)
+
+        similar_cases = self._match_similar_cases(requirement_data)
+        decision = self._generate_decision(total_score, rules_config)
+        if veto_triggered:
+            decision = AssessmentDecisionEnum.NOT_RECOMMEND.value
+        risks = self._generate_risks(requirement_data, dimension_scores, rules_config)
+        conditions = self._generate_conditions(decision, risks, requirement_data)
+
         assessment.evaluator_id = evaluator_id
         assessment.status = AssessmentStatusEnum.COMPLETED.value
         assessment.total_score = total_score
@@ -352,6 +372,7 @@ class TechnicalAssessmentService:
         )
         assessment.conditions = json.dumps(conditions, ensure_ascii=False) if conditions else None
         assessment.ai_analysis = ai_analysis
+        assessment.item_scores = json.dumps(item_scores, ensure_ascii=False) if item_scores else None
         assessment.evaluated_at = datetime.now()
 
         self.db.flush()
@@ -378,6 +399,224 @@ class TechnicalAssessmentService:
         if scoring_rule:
             return json.loads(scoring_rule.rules_json)
         return DEFAULT_SCORING_RULE_CONFIG
+
+    def _get_template_for_assessment(
+        self,
+        assessment: TechnicalAssessment,
+    ) -> Optional[AssessmentTemplate]:
+        if not assessment.template_id:
+            return None
+
+        return (
+            self.db.query(AssessmentTemplate)
+            .filter(AssessmentTemplate.id == assessment.template_id)
+            .first()
+        )
+
+    def _rules_config_from_template(self, template: AssessmentTemplate) -> Dict[str, Any]:
+        thresholds = template.score_thresholds or {}
+        if isinstance(thresholds, dict) and isinstance(thresholds.get("decision_thresholds"), list):
+            decision_thresholds = thresholds["decision_thresholds"]
+        else:
+            decision_thresholds = [
+                {"min_score": thresholds.get("excellent", 90), "decision": "推荐立项"},
+                {"min_score": thresholds.get("good", 75), "decision": "有条件立项"},
+                {"min_score": thresholds.get("fair", 60), "decision": "暂缓"},
+                {"min_score": thresholds.get("poor", 0), "decision": "不建议立项"},
+            ]
+
+        return {
+            "scales": {"decision_thresholds": decision_thresholds},
+            "veto_rules": template.veto_rules or [],
+        }
+
+    def _calculate_template_scores(
+        self,
+        requirement_data: Dict[str, Any],
+        template: AssessmentTemplate,
+    ) -> Dict[str, Any]:
+        dimension_scores: Dict[str, int] = {}
+        dimension_points: Dict[str, float] = {}
+        dimension_max_points: Dict[str, float] = {}
+        item_scores: List[Dict[str, Any]] = []
+        veto_rules: List[Dict[str, Any]] = []
+
+        items = sorted(
+            template.items,
+            key=lambda item: (str(item.dimension or ""), item.sort_order or 0, item.id or 0),
+        )
+        for item in items:
+            criteria = self._normalize_template_criteria(item.scoring_criteria)
+            field_name = criteria.get("field") or item.item_code
+            field_value = self._get_requirement_value(
+                requirement_data,
+                field_name,
+                criteria.get("aliases", []),
+            )
+            max_score = int(item.max_score or 10)
+            score = self._score_template_item(field_value, criteria, max_score)
+            weight = float(item.weight or 1)
+            dimension = self._normalize_template_dimension(item.dimension)
+
+            dimension_points[dimension] = dimension_points.get(dimension, 0.0) + score * weight
+            dimension_max_points[dimension] = (
+                dimension_max_points.get(dimension, 0.0) + max_score * weight
+            )
+            item_scores.append(
+                {
+                    "item_id": item.id,
+                    "item_code": item.item_code,
+                    "item_name": item.item_name,
+                    "dimension": dimension,
+                    "field": field_name,
+                    "value": field_value,
+                    "score": score,
+                    "max_score": max_score,
+                    "weight": weight,
+                }
+            )
+
+            if item.is_veto_item and item.veto_threshold is not None and score <= item.veto_threshold:
+                veto_rules.append(
+                    {
+                        "rule_name": item.item_name,
+                        "reason": f"{item.item_name}评分 {score} 低于否决阈值 {item.veto_threshold}",
+                        "condition": {
+                            "item_code": item.item_code,
+                            "score": score,
+                            "veto_threshold": item.veto_threshold,
+                        },
+                    }
+                )
+
+        for dimension, points in dimension_points.items():
+            max_points = dimension_max_points.get(dimension, 0)
+            dimension_scores[dimension] = int(round((points / max_points) * 20)) if max_points else 0
+
+        return {
+            "dimension_scores": dimension_scores,
+            "total_score": self._calculate_template_total_score(template, dimension_scores),
+            "item_scores": item_scores,
+            "veto_rules": veto_rules,
+        }
+
+    def _normalize_template_criteria(self, criteria: Any) -> Dict[str, Any]:
+        if criteria is None:
+            return {}
+        if isinstance(criteria, dict):
+            return criteria
+        if isinstance(criteria, list):
+            return {"options": criteria}
+        if isinstance(criteria, str):
+            try:
+                parsed = json.loads(criteria)
+            except json.JSONDecodeError:
+                return {}
+            return self._normalize_template_criteria(parsed)
+        return {}
+
+    def _score_template_item(
+        self,
+        field_value: Any,
+        criteria: Dict[str, Any],
+        max_score: int,
+    ) -> int:
+        if field_value is None:
+            return 0
+
+        for option in criteria.get("options", []):
+            if not isinstance(option, dict):
+                continue
+            option_value = option.get("value")
+            if field_value == option_value or self._match_value(field_value, option, criteria):
+                return self._clamp_score(option.get("score", option.get("points", 0)), max_score)
+
+        for level in criteria.get("levels", []):
+            if self._match_template_level(field_value, level):
+                return self._clamp_score(level.get("score", level.get("points", 0)), max_score)
+
+        return self._clamp_score(criteria.get("default_score", 0), max_score)
+
+    def _match_template_level(self, field_value: Any, level: Any) -> bool:
+        if not isinstance(level, dict):
+            return False
+
+        operator = level.get("operator")
+        expected = level.get("value")
+        if operator and expected is not None:
+            try:
+                numeric_field = float(field_value)
+                numeric_expected = float(expected)
+            except (TypeError, ValueError):
+                numeric_field = None
+                numeric_expected = None
+
+            if operator == "==" and str(field_value) == str(expected):
+                return True
+            if operator == "!=" and str(field_value) != str(expected):
+                return True
+            if numeric_field is None or numeric_expected is None:
+                return False
+            if operator == ">=":
+                return numeric_field >= numeric_expected
+            if operator == ">":
+                return numeric_field > numeric_expected
+            if operator == "<=":
+                return numeric_field <= numeric_expected
+            if operator == "<":
+                return numeric_field < numeric_expected
+
+        minimum = level.get("min")
+        maximum = level.get("max")
+        if minimum is not None or maximum is not None:
+            try:
+                numeric_field = float(field_value)
+            except (TypeError, ValueError):
+                return False
+            if minimum is not None and numeric_field < float(minimum):
+                return False
+            if maximum is not None and numeric_field > float(maximum):
+                return False
+            return True
+
+        return False
+
+    def _clamp_score(self, score: Any, max_score: int) -> int:
+        try:
+            numeric_score = float(score)
+        except (TypeError, ValueError):
+            numeric_score = 0
+        return int(round(max(0, min(numeric_score, max_score))))
+
+    def _normalize_template_dimension(self, dimension: Any) -> str:
+        value = str(dimension or "").strip()
+        return TEMPLATE_DIMENSION_MAP.get(value.upper(), value.lower() or "assessment")
+
+    def _calculate_template_total_score(
+        self,
+        template: AssessmentTemplate,
+        dimension_scores: Dict[str, int],
+    ) -> int:
+        if not dimension_scores:
+            return 0
+
+        raw_weights = template.dimension_weights or {}
+        normalized_weights = {}
+        if isinstance(raw_weights, dict):
+            for key, value in raw_weights.items():
+                try:
+                    normalized_weights[self._normalize_template_dimension(key)] = float(value)
+                except (TypeError, ValueError):
+                    continue
+
+        total_weight = 0.0
+        weighted_score = 0.0
+        for dimension, score in dimension_scores.items():
+            weight = normalized_weights.get(dimension, 1.0)
+            total_weight += weight
+            weighted_score += (score / 20) * 100 * weight
+
+        return int(round(weighted_score / total_weight)) if total_weight else 0
 
     def _calculate_scores(
         self, requirement_data: Dict[str, Any], rules_config: Dict[str, Any]
