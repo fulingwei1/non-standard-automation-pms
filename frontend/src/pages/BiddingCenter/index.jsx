@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from "../../components/ui/dialog";
 import { fadeIn, staggerContainer } from "../../lib/animations";
-import { presaleApi } from "../../services/api";
+import { presaleApi, presaleWorkbenchApi } from "../../services/api";
 import { biddingStages, mapTenderStatus } from "./constants";
 import { StatsCards } from "./StatsCards";
 import { BiddingKanban } from "./BiddingKanban";
@@ -68,6 +68,72 @@ const INITIAL_TENDER_FORM = {
   customer_name: "",
 };
 
+function extractTenderItems(response) {
+  const payload = response?.formatted ?? response?.data?.data ?? response?.data ?? response;
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+  return [];
+}
+
+function extractContextTenders(context) {
+  return extractTenderItems(context?.tenders);
+}
+
+function mapTenderToBidding(tender) {
+  const deadlineValue = tender.submission_deadline || tender.deadline;
+  const deadline = deadlineValue ? new Date(deadlineValue) : null;
+  const budgetAmount = Number(
+    tender.budget ??
+    tender.budget_amount ??
+    tender.our_bid_amount ??
+    tender.bid_amount ??
+    0,
+  );
+  const now = new Date();
+  const daysLeft = deadline ?
+    Math.ceil((deadline - now) / (1000 * 60 * 60 * 24)) :
+    0;
+
+  return {
+    id: tender.id,
+    ticketId: tender.ticket_id,
+    leadId: tender.lead_id,
+    opportunityId: tender.opportunity_id,
+    projectId: tender.project_id,
+    code: tender.tender_no || `BID-${tender.id}`,
+    name: tender.tender_name || tender.project_name || "",
+    customer: tender.customer_name || "",
+    customerId: tender.customer_id,
+    stage: mapTenderStatus(tender.status || tender.result),
+    deadline: deadline ? deadline.toISOString().split("T")[0] : "",
+    daysLeft: daysLeft > 0 ? daysLeft : 0,
+    amount: Number.isFinite(budgetAmount) ? budgetAmount / 10000 : 0,
+    engineer: tender.responsible_name || "",
+    salesPerson: tender.sales_person_name || "",
+    progress: tender.progress || 0,
+    solution: tender.solution_id ? `SOL-${tender.solution_id}` : null,
+    solutionName: tender.solution_name || null,
+    techRequirements:
+    tender.tech_requirements || tender.technical_requirements || tender.description || "",
+    competitors: [],
+    documents: [],
+    timeline: [],
+    notes: tender.notes || "",
+    costSupport: {
+      status: "none",
+      requestedAt: null,
+      requestedBy: null,
+      estimatedCost: null,
+      submittedAt: null,
+      submittedBy: null
+    }
+  };
+}
+
 export default function BiddingCenter({ embedded = false } = {}) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -80,6 +146,12 @@ export default function BiddingCenter({ embedded = false } = {}) {
   const contextTicketIdNumber = parseContextId(contextTicketId);
   const contextOpportunityIdNumber = parseContextId(contextOpportunityId);
   const contextProjectIdNumber = parseContextId(contextProjectId);
+  const contextSourceType = contextOpportunityIdNumber
+    ? "opportunity"
+    : contextLeadIdNumber
+      ? "lead"
+      : "";
+  const contextSourceId = contextOpportunityIdNumber || contextLeadIdNumber;
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBidding, setSelectedBidding] = useState(null);
   const [biddings, setBiddings] = useState([]);
@@ -95,6 +167,26 @@ export default function BiddingCenter({ embedded = false } = {}) {
     try {
       setLoading(true);
       setError(null);
+
+      if (contextSourceType && contextSourceId) {
+        try {
+          const contextParams = {
+            sourceType: contextSourceType,
+            sourceId: contextSourceId,
+          };
+          if (contextTicketIdNumber) {
+            contextParams.presaleTicketId = contextTicketIdNumber;
+          }
+          const context = await presaleWorkbenchApi.loadContext(contextParams);
+          const contextTenders = extractContextTenders(context);
+          if (contextTenders.length > 0) {
+            setBiddings(contextTenders.map(mapTenderToBidding));
+            return;
+          }
+        } catch (contextError) {
+          console.warn("加载售前投标聚合上下文失败:", contextError);
+        }
+      }
 
       const params = {
         page: 1,
@@ -118,53 +210,8 @@ export default function BiddingCenter({ embedded = false } = {}) {
       }
 
       const response = await presaleApi.tenders.list(params);
-      const tendersData = response.data?.items || response.data?.items || response.data || [];
-
-      // Transform tenders
-      const transformedTenders = (tendersData || []).map((tender) => {
-        const deadlineValue = tender.submission_deadline || tender.deadline;
-        const deadline = deadlineValue ? new Date(deadlineValue) : null;
-        const budgetAmount = Number(tender.budget ?? tender.budget_amount ?? 0);
-        const now = new Date();
-        const daysLeft = deadline ?
-        Math.ceil((deadline - now) / (1000 * 60 * 60 * 24)) :
-        0;
-
-        return {
-          id: tender.id,
-          ticketId: tender.ticket_id,
-          leadId: tender.lead_id,
-          opportunityId: tender.opportunity_id,
-          projectId: tender.project_id,
-          code: tender.tender_no || `BID-${tender.id}`,
-          name: tender.tender_name || tender.project_name || "",
-          customer: tender.customer_name || "",
-          customerId: tender.customer_id,
-          stage: mapTenderStatus(tender.status || tender.result),
-          deadline: deadline ? deadline.toISOString().split("T")[0] : "",
-          daysLeft: daysLeft > 0 ? daysLeft : 0,
-          amount: Number.isFinite(budgetAmount) ? budgetAmount / 10000 : 0,
-          engineer: tender.responsible_name || "",
-          salesPerson: tender.sales_person_name || "",
-          progress: tender.progress || 0,
-          solution: tender.solution_id ? `SOL-${tender.solution_id}` : null,
-          solutionName: tender.solution_name || null,
-          techRequirements:
-          tender.tech_requirements || tender.technical_requirements || tender.description || "",
-          competitors: [],
-          documents: [],
-          timeline: [],
-          notes: tender.notes || "",
-          costSupport: {
-            status: "none",
-            requestedAt: null,
-            requestedBy: null,
-            estimatedCost: null,
-            submittedAt: null,
-            submittedBy: null
-          }
-        };
-      });
+      const tendersData = extractTenderItems(response);
+      const transformedTenders = (tendersData || []).map(mapTenderToBidding);
 
       setBiddings(transformedTenders);
     } catch (err) {
@@ -181,6 +228,8 @@ export default function BiddingCenter({ embedded = false } = {}) {
     contextOpportunityIdNumber,
     contextProjectId,
     contextProjectIdNumber,
+    contextSourceId,
+    contextSourceType,
     contextTicketId,
     contextTicketIdNumber,
     searchTerm,

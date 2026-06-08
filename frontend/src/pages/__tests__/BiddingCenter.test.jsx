@@ -3,7 +3,7 @@ import { MemoryRouter, useNavigate, useSearchParams } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import BiddingCenter from "../BiddingCenter";
-import { presaleApi } from "../../services/api";
+import { presaleApi, presaleWorkbenchApi } from "../../services/api";
 
 const navigateMock = vi.hoisted(() => vi.fn());
 
@@ -13,6 +13,9 @@ vi.mock("../../services/api", () => ({
       list: vi.fn(),
       create: vi.fn(),
     },
+  },
+  presaleWorkbenchApi: {
+    loadContext: vi.fn(),
   },
 }));
 
@@ -71,6 +74,10 @@ describe("BiddingCenter", () => {
     vi.clearAllMocks();
     useNavigate.mockReturnValue(navigateMock);
     useSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
+    presaleWorkbenchApi.loadContext.mockResolvedValue({
+      source: { type: "opportunity", id: 2 },
+      tenders: { items: [], total: 0 },
+    });
     presaleApi.tenders.list.mockResolvedValue({ data: { items: tenders } });
     presaleApi.tenders.create.mockResolvedValue({
       data: {
@@ -80,6 +87,47 @@ describe("BiddingCenter", () => {
         result: "PENDING",
       },
     });
+  });
+
+  it("prefers presale workbench context tenders before falling back to tender list", async () => {
+    useSearchParams.mockReturnValue([
+      new URLSearchParams("tab=bids&type=support&opportunity_id=2&ticket_id=501"),
+      vi.fn(),
+    ]);
+    presaleWorkbenchApi.loadContext.mockResolvedValueOnce({
+      source: { type: "opportunity", id: 2 },
+      tenders: {
+        items: [
+          {
+            id: 88,
+            tender_no: "TENDER-001",
+            tender_name: "聚合上下文投标",
+            customer_name: "华南电子",
+            result: "WON",
+            deadline: "2030-05-20T00:00:00Z",
+            our_bid_amount: 420000,
+            ticket_id: 501,
+            opportunity_id: 2,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage({ embedded: true });
+
+    await waitFor(() => {
+      expect(presaleWorkbenchApi.loadContext).toHaveBeenCalledWith({
+        sourceType: "opportunity",
+        sourceId: 2,
+        presaleTicketId: 501,
+      });
+    });
+    expect(presaleApi.tenders.list).not.toHaveBeenCalled();
+    expect(await screen.findByText("聚合上下文投标")).toBeInTheDocument();
+    expect(screen.getByText("华南电子")).toBeInTheDocument();
+    expect(screen.getAllByText("¥42万").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("已中标").length).toBeGreaterThan(0);
   });
 
   it("loads tenders into the current kanban view", async () => {
