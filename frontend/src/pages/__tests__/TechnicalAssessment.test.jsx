@@ -71,6 +71,10 @@ describe("TechnicalAssessment", () => {
     render(<TechnicalAssessment />);
 
     expect(await screen.findByText("评估结果")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "线索管理" })).toHaveAttribute(
+      "href",
+      "/sales/leads",
+    );
     expect(screen.getByText("技术维度")).toBeInTheDocument();
     expect(screen.getByText("18 / 20")).toBeInTheDocument();
     expect(screen.getByText("推荐立项")).toBeInTheDocument();
@@ -161,6 +165,10 @@ describe("TechnicalAssessment", () => {
     render(<TechnicalAssessment />);
 
     expect(await screen.findByText("售前协作上下文")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "商机管理" })).toHaveAttribute(
+      "href",
+      "/sales/opportunities",
+    );
     expect(screen.getByText("2 项未决，1 项阻塞")).toBeInTheDocument();
     expect(screen.getByText("1 项需求冻结")).toBeInTheDocument();
     expect(screen.getByText("1 轮AI澄清")).toBeInTheDocument();

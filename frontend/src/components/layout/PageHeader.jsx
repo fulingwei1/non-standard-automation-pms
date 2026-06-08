@@ -82,9 +82,9 @@ export function PageHeader({
           {(breadcrumbs || []).map((crumb, index) => (
             <div key={index} className="flex items-center gap-1">
               {index > 0 && <ChevronRight className="h-4 w-4 text-slate-600" />}
-              {crumb.href ? (
+              {crumb.href || crumb.to || crumb.path ? (
                 <Link
-                  to={crumb.href}
+                  to={crumb.href || crumb.to || crumb.path}
                   className="text-slate-400 hover:text-white transition-colors"
                 >
                   {crumb.label}

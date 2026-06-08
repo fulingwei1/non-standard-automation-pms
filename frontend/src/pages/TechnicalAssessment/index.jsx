@@ -121,7 +121,7 @@ export default function TechnicalAssessment() {
           { label: "销售管理", path: "/sales" },
           {
             label: sourceType === "lead" ? "线索管理" : "商机管理",
-            path: sourceType === "lead" ? "/leads" : "/opportunities",
+            path: sourceType === "lead" ? "/sales/leads" : "/sales/opportunities",
           },
           { label: "技术评估", path: "" },
         ]}
