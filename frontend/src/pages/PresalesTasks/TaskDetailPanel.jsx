@@ -47,6 +47,25 @@ function getDeliverableKey(deliverable, index) {
   return `${getDeliverableLabel(deliverable, index)}-${index}`;
 }
 
+function getDeliverableStatus(deliverable) {
+  return String(deliverable?.status || "DRAFT").toUpperCase();
+}
+
+function getDeliverableStatusLabel(deliverable) {
+  const status = getDeliverableStatus(deliverable);
+  return {
+    APPROVED: "已通过",
+    REJECTED: "已退回",
+    SUBMITTED: "已提交",
+    DRAFT: "待审核",
+  }[status] || status;
+}
+
+function canReviewDeliverable(deliverable) {
+  const status = getDeliverableStatus(deliverable);
+  return Boolean(deliverable?.id) && !["APPROVED", "REJECTED"].includes(status);
+}
+
 function appendContextParam(params, key, value) {
   if (value !== undefined && value !== null && value !== "") {
     params.set(key, String(value));
@@ -89,6 +108,7 @@ export default function TaskDetailPanel({
   onClose,
   onUpdate,
   onDeliverableCreated,
+  onDeliverableReviewed,
 }) {
   const navigate = useNavigate();
   const [progress, setProgress] = useState(task?.progress || 0);
@@ -105,6 +125,7 @@ export default function TaskDetailPanel({
   const [isCompleting, setIsCompleting] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const [isRating, setIsRating] = useState(false);
+  const [reviewingDeliverableId, setReviewingDeliverableId] = useState(null);
 
   if (!task) {return null;}
 
@@ -191,6 +212,42 @@ export default function TaskDetailPanel({
       );
     } finally {
       setIsSubmittingDeliverable(false);
+    }
+  };
+
+  const handleReviewDeliverable = async (deliverable, reviewStatus) => {
+    if (!deliverable?.id) {
+      alert("交付物缺少ID，无法审核");
+      return;
+    }
+
+    const approved = reviewStatus === "APPROVED";
+    try {
+      setReviewingDeliverableId(`${deliverable.id}:${reviewStatus}`);
+      const response = await presaleApi.tickets.reviewDeliverable(
+        task.ticketId,
+        deliverable.id,
+        {
+          review_status: reviewStatus,
+          review_comment: approved ? "交付物审核通过" : "交付物退回修改",
+        }
+      );
+      const reviewedDeliverable = response?.formatted ?? response?.data?.data ?? response?.data ?? {
+        ...deliverable,
+        status: reviewStatus,
+        review_comment: approved ? "交付物审核通过" : "交付物退回修改",
+      };
+      alert(approved ? "交付物已通过！" : "交付物已退回！");
+      onDeliverableReviewed?.(reviewedDeliverable);
+      await onUpdate?.();
+    } catch (err) {
+      console.error("Failed to review deliverable:", err);
+      alert(
+        "审核失败：" + (
+        err.response?.data?.detail || err.message || "未知错误")
+      );
+    } finally {
+      setReviewingDeliverableId(null);
     }
   };
 
@@ -431,14 +488,51 @@ export default function TaskDetailPanel({
               {(task.deliverables || []).map((item, index) =>
               <div
                 key={getDeliverableKey(item, index)}
-                className="flex items-center gap-2 bg-surface-50 p-3 rounded-lg">
+                className="bg-surface-50 p-3 rounded-lg space-y-2">
 
+                <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-slate-500" />
                   <span className="text-sm text-white">
                     {getDeliverableLabel(item, index)}
                   </span>
+                  <Badge className="ml-auto bg-white/10 text-slate-200">
+                    {getDeliverableStatusLabel(item)}
+                  </Badge>
                   {task.status === "completed" &&
-                <CheckCircle className="w-4 h-4 text-emerald-500 ml-auto" />
+                  getDeliverableStatus(item) === "APPROVED" &&
+                  <CheckCircle className="w-4 h-4 text-emerald-500" />
+                  }
+                </div>
+                {item?.review_comment &&
+                <p className="text-xs text-slate-400">{item.review_comment}</p>
+                }
+                {canReviewDeliverable(item) &&
+                <div className="flex gap-2">
+                    <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={reviewingDeliverableId != null}
+                    onClick={() => handleReviewDeliverable(item, "APPROVED")}
+                    className="flex-1">
+
+                      {reviewingDeliverableId === `${item.id}:APPROVED`
+                        ? "处理中..."
+                        : "通过交付物"}
+                    </Button>
+                    <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={reviewingDeliverableId != null}
+                    onClick={() => handleReviewDeliverable(item, "REJECTED")}
+                    className="flex-1">
+
+                      {reviewingDeliverableId === `${item.id}:REJECTED`
+                        ? "处理中..."
+                        : "退回交付物"}
+                    </Button>
+                </div>
                 }
               </div>
               )}

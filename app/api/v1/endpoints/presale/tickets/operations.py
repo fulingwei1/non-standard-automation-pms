@@ -17,6 +17,7 @@ from app.models.sales import Lead, Opportunity, TechnicalAssessment
 from app.models.user import User
 from app.schemas.presale import (
     DeliverableCreate,
+    DeliverableReviewRequest,
     DeliverableResponse,
     TicketAcceptRequest,
     TicketCompleteRequest,
@@ -176,6 +177,60 @@ def create_deliverable(
         file_path=deliverable.file_path,
         file_url=deliverable_in.file_url,
         description=deliverable_in.description,
+        status=deliverable.status,
+        created_at=deliverable.created_at,
+        updated_at=deliverable.updated_at,
+    )
+
+
+@router.put(
+    "/{ticket_id}/deliverables/{deliverable_id}/review",
+    response_model=DeliverableResponse,
+)
+def review_deliverable(
+    *,
+    db: Session = Depends(deps.get_db),
+    ticket_id: int,
+    deliverable_id: int,
+    review_in: DeliverableReviewRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    审核交付物
+    """
+    deliverable = (
+        db.query(PresaleTicketDeliverable)
+        .filter(
+            PresaleTicketDeliverable.id == deliverable_id,
+            PresaleTicketDeliverable.ticket_id == ticket_id,
+        )
+        .first()
+    )
+    if not deliverable:
+        raise HTTPException(status_code=404, detail="交付物不存在")
+
+    review_status = review_in.review_status.upper()
+    if review_status not in {"APPROVED", "REJECTED"}:
+        raise HTTPException(status_code=400, detail="审核结果仅支持 APPROVED/REJECTED")
+
+    deliverable.status = review_status
+    deliverable.reviewer_id = current_user.id
+    deliverable.review_time = datetime.now()
+    deliverable.review_comment = review_in.review_comment
+
+    save_obj(db, deliverable)
+
+    return DeliverableResponse(
+        id=deliverable.id,
+        ticket_id=deliverable.ticket_id,
+        deliverable_name=deliverable.name,
+        deliverable_type=deliverable.file_type,
+        file_path=deliverable.file_path,
+        file_url=deliverable.file_path,
+        status=deliverable.status,
+        reviewer_id=deliverable.reviewer_id,
+        review_time=deliverable.review_time,
+        review_comment=deliverable.review_comment,
         created_at=deliverable.created_at,
         updated_at=deliverable.updated_at,
     )

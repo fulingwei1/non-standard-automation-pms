@@ -68,6 +68,23 @@ describe('presaleApi', () => {
     expect(response.data.ticket_id).toBe(42);
   });
 
+  it('tickets.reviewDeliverable() - should put review payload to ticket deliverable route', async () => {
+    const payload = {
+      review_status: 'APPROVED',
+      review_comment: '方案资料可用于报价',
+    };
+
+    mock.onPut('/api/v1/presale/tickets/42/deliverables/7/review').reply((config) => {
+      expect(JSON.parse(config.data)).toEqual(payload);
+      return [200, { id: 7, ticket_id: 42, status: 'APPROVED', ...payload }];
+    });
+
+    const response = await presaleApi.tickets.reviewDeliverable(42, 7, payload);
+
+    expect(response.data.id).toBe(7);
+    expect(response.data.status).toBe('APPROVED');
+  });
+
   it('createProjectFromLead() - should post approved lead payload to compatibility route', async () => {
     const payload = {
       lead_id: 'XS260607001',

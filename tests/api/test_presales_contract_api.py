@@ -68,6 +68,7 @@ class TestPresalesFrontendContractRoutes:
             ("PUT", f"{prefix}/presale/tickets/{{ticket_id}}/accept"),
             ("PUT", f"{prefix}/presale/tickets/{{ticket_id}}/progress"),
             ("POST", f"{prefix}/presale/tickets/{{ticket_id}}/deliverables"),
+            ("PUT", f"{prefix}/presale/tickets/{{ticket_id}}/deliverables/{{deliverable_id}}/review"),
             ("PUT", f"{prefix}/presale/tickets/{{ticket_id}}/complete"),
             ("PUT", f"{prefix}/presale/tickets/{{ticket_id}}/rating"),
             ("GET", f"{prefix}/presale/tickets/board"),
@@ -1133,10 +1134,34 @@ class TestPresalesFrontendContractBehavior:
                 "file_path": "/files/solution-v1.pdf",
                 "file_url": "/files/solution-v1.pdf",
                 "status": "DRAFT",
+                "reviewer_id": None,
+                "review_time": None,
+                "review_comment": None,
                 "created_at": deliverable_payload["created_at"],
                 "updated_at": deliverable_payload["updated_at"],
             }
         ]
+
+        approved_deliverable = client.put(
+            f"{prefix}/presale/tickets/{ticket_id}/deliverables/{deliverable_payload['id']}/review",
+            json={"review_status": "APPROVED", "review_comment": "方案资料可用于报价"},
+            headers=headers,
+        )
+        assert approved_deliverable.status_code == 200, approved_deliverable.text
+        approved_payload = approved_deliverable.json()
+        assert approved_payload["status"] == "APPROVED"
+        assert approved_payload["reviewer_id"] is not None
+        assert approved_payload["review_time"] is not None
+        assert approved_payload["review_comment"] == "方案资料可用于报价"
+
+        rejected_deliverable = client.put(
+            f"{prefix}/presale/tickets/{ticket_id}/deliverables/{deliverable_payload['id']}/review",
+            json={"review_status": "REJECTED", "review_comment": "缺少关键节拍说明"},
+            headers=headers,
+        )
+        assert rejected_deliverable.status_code == 200, rejected_deliverable.text
+        assert rejected_deliverable.json()["status"] == "REJECTED"
+        assert rejected_deliverable.json()["review_comment"] == "缺少关键节拍说明"
 
         completed = client.put(
             f"{prefix}/presale/tickets/{ticket_id}/complete",

@@ -334,6 +334,29 @@ export default function PresalesTasks({ embedded = false } = {}) {
     );
   }, [selectedTask?.id]);
 
+  const handleDeliverableReviewed = useCallback((deliverable) => {
+    const targetTaskId = selectedTask?.id;
+    if (!targetTaskId || !deliverable?.id) {
+      return;
+    }
+
+    const replaceDeliverable = (task) => ({
+      ...task,
+      deliverables: (task.deliverables || []).map((item) =>
+        item?.id === deliverable.id ? { ...item, ...deliverable } : item
+      ),
+    });
+
+    setSelectedTask((current) =>
+      current?.id === targetTaskId ? replaceDeliverable(current) : current
+    );
+    setTasks((currentTasks) =>
+      currentTasks.map((task) =>
+        task.id === targetTaskId ? replaceDeliverable(task) : task
+      )
+    );
+  }, [selectedTask?.id]);
+
   const handleCreateTask = async (event) => {
     event?.preventDefault();
 
@@ -601,7 +624,8 @@ export default function PresalesTasks({ embedded = false } = {}) {
         task={selectedTask}
         onClose={() => setSelectedTask(null)}
         onUpdate={loadTasks}
-        onDeliverableCreated={handleDeliverableCreated} />
+        onDeliverableCreated={handleDeliverableCreated}
+        onDeliverableReviewed={handleDeliverableReviewed} />
 
       }
 

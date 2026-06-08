@@ -70,6 +70,13 @@ class DeliverableCreate(BaseModel):
     description: Optional[str] = Field(None, description="说明")
 
 
+class DeliverableReviewRequest(BaseModel):
+    """交付物审核请求"""
+
+    review_status: str = Field(..., description="审核结果：APPROVED/REJECTED")
+    review_comment: Optional[str] = Field(None, description="审核意见")
+
+
 class TicketRatingRequest(BaseModel):
     """工单评价请求"""
 
@@ -148,6 +155,10 @@ class DeliverableResponse(TimestampSchema):
     file_path: Optional[str] = None
     file_url: Optional[str] = None
     description: Optional[str] = None
+    status: Optional[str] = None
+    reviewer_id: Optional[int] = None
+    review_time: Optional[datetime] = None
+    review_comment: Optional[str] = None
 
 
 class TicketBoardResponse(BaseModel):

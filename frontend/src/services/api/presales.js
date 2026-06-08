@@ -34,6 +34,8 @@ export const presaleApi = {
       api.put(`/presale/tickets/${id}/progress`, data),
     createDeliverable: (id, data) =>
       api.post(`/presale/tickets/${id}/deliverables`, data),
+    reviewDeliverable: (ticketId, deliverableId, data) =>
+      api.put(`/presale/tickets/${ticketId}/deliverables/${deliverableId}/review`, data),
     complete: (id, data = {}) =>
       api.put(`/presale/tickets/${id}/complete`, buildTicketCompletePayload(data)),
     rate: (id, data) => api.put(`/presale/tickets/${id}/rating`, data),

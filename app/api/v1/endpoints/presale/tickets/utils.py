@@ -93,6 +93,9 @@ def _build_deliverable_response(deliverable) -> dict:
         "file_path": file_path,
         "file_url": file_path,
         "status": getattr(deliverable, "status", None),
+        "reviewer_id": getattr(deliverable, "reviewer_id", None),
+        "review_time": getattr(deliverable, "review_time", None),
+        "review_comment": getattr(deliverable, "review_comment", None),
         "created_at": getattr(deliverable, "created_at", None),
         "updated_at": getattr(deliverable, "updated_at", None),
     }

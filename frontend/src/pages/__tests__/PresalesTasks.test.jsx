@@ -12,6 +12,7 @@ vi.mock('../../services/api', () => ({
       accept: vi.fn(),
       updateProgress: vi.fn(),
       createDeliverable: vi.fn(),
+      reviewDeliverable: vi.fn(),
       complete: vi.fn(),
       rate: vi.fn(),
     },
@@ -122,6 +123,17 @@ describe('PresalesTasks', () => {
     presaleApi.tickets.updateProgress.mockResolvedValue({ data: { success: true } });
     presaleApi.tickets.complete.mockResolvedValue({ data: { success: true } });
     presaleApi.tickets.rate.mockResolvedValue({ data: { success: true } });
+    presaleApi.tickets.reviewDeliverable.mockResolvedValue({
+      data: {
+        id: 7,
+        ticket_id: 51,
+        deliverable_name: '初版技术方案',
+        deliverable_type: 'SOLUTION',
+        file_path: '/files/solution-v1.pdf',
+        status: 'APPROVED',
+        review_comment: '交付物审核通过',
+      },
+    });
     presaleApi.tickets.createDeliverable.mockResolvedValue({
       data: {
         id: 70,
@@ -716,6 +728,7 @@ describe('PresalesTasks', () => {
                 deliverable_name: '初版技术方案',
                 deliverable_type: 'SOLUTION',
                 file_path: '/files/solution-v1.pdf',
+                status: 'DRAFT',
               },
             ],
           },
@@ -731,6 +744,105 @@ describe('PresalesTasks', () => {
     fireEvent.click(screen.getByText('方案深化交付'));
 
     expect(screen.getByText('初版技术方案')).toBeInTheDocument();
+    expect(screen.getByText('待审核')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /通过交付物/ })).toBeInTheDocument();
+  });
+
+  it('approves a ticket deliverable from the detail panel', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 51,
+            title: '方案深化交付',
+            ticket_type: 'SOLUTION_DESIGN',
+            status: 'IN_PROGRESS',
+            urgency: 'NORMAL',
+            customer_name: '华南电子',
+            applicant_name: '陈敏',
+            description: '深化测试方案',
+            deliverables: [
+              {
+                id: 7,
+                deliverable_name: '初版技术方案',
+                deliverable_type: 'SOLUTION',
+                file_path: '/files/solution-v1.pdf',
+                status: 'DRAFT',
+              },
+            ],
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage();
+
+    await screen.findByText('方案深化交付');
+    fireEvent.click(screen.getByText('方案深化交付'));
+    fireEvent.click(screen.getByRole('button', { name: /通过交付物/ }));
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.reviewDeliverable).toHaveBeenCalledWith(51, 7, {
+        review_status: 'APPROVED',
+        review_comment: '交付物审核通过',
+      });
+    });
+    expect(await screen.findByText('已通过')).toBeInTheDocument();
+  });
+
+  it('rejects a ticket deliverable from the detail panel', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 52,
+            title: '方案退回交付',
+            ticket_type: 'SOLUTION_DESIGN',
+            status: 'IN_PROGRESS',
+            urgency: 'NORMAL',
+            customer_name: '华南电子',
+            applicant_name: '陈敏',
+            description: '深化测试方案',
+            deliverables: [
+              {
+                id: 8,
+                deliverable_name: '报价资料',
+                deliverable_type: 'QUOTE',
+                file_path: '/files/quote-v1.pdf',
+                status: 'SUBMITTED',
+              },
+            ],
+          },
+        ],
+        total: 1,
+      },
+    });
+    presaleApi.tickets.reviewDeliverable.mockResolvedValueOnce({
+      data: {
+        id: 8,
+        ticket_id: 52,
+        deliverable_name: '报价资料',
+        deliverable_type: 'QUOTE',
+        file_path: '/files/quote-v1.pdf',
+        status: 'REJECTED',
+        review_comment: '交付物退回修改',
+      },
+    });
+
+    renderPage();
+
+    await screen.findByText('方案退回交付');
+    fireEvent.click(screen.getByText('方案退回交付'));
+    fireEvent.click(screen.getByRole('button', { name: /退回交付物/ }));
+
+    await waitFor(() => {
+      expect(presaleApi.tickets.reviewDeliverable).toHaveBeenCalledWith(52, 8, {
+        review_status: 'REJECTED',
+        review_comment: '交付物退回修改',
+      });
+    });
+    expect(await screen.findByText('已退回')).toBeInTheDocument();
   });
 
   it('submits a deliverable from an in-progress ticket detail panel', async () => {
