@@ -865,8 +865,10 @@ class TechnicalAssessmentService:
         if not assessment.id:
             return
 
-        conditions = [PresaleSupportTicket.current_assessment_id == assessment.id]
+        completion_conditions = [PresaleSupportTicket.current_assessment_id == assessment.id]
+        conditions = list(completion_conditions)
         if assessment.presale_ticket_id:
+            completion_conditions.append(PresaleSupportTicket.id == assessment.presale_ticket_id)
             conditions.append(PresaleSupportTicket.id == assessment.presale_ticket_id)
         else:
             source_condition = None
@@ -893,10 +895,16 @@ class TechnicalAssessmentService:
 
         completed_at = datetime.now()
         terminal_statuses = {TicketStatusEnum.CANCELLED.value, TicketStatusEnum.CLOSED.value}
+        completion_ticket_ids = {
+            ticket.id
+            for ticket in self.db.query(PresaleSupportTicket.id)
+            .filter(or_(*completion_conditions))
+            .all()
+        }
         for ticket in tickets:
             ticket.assessment_status = AssessmentStatusEnum.COMPLETED.value
             ticket.current_assessment_id = assessment.id
-            if ticket.status not in terminal_statuses:
+            if ticket.id in completion_ticket_ids and ticket.status not in terminal_statuses:
                 ticket.status = TicketStatusEnum.COMPLETED.value
                 ticket.complete_time = ticket.complete_time or completed_at
 
