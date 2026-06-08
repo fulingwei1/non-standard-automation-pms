@@ -316,7 +316,7 @@ def add_assessment_item(
         dimension=request.dimension,
         description=request.description,
         weight=request.weight,
-        score_criteria=request.score_criteria,
+        scoring_criteria=request.score_criteria,
         is_veto_item=request.is_veto_item,
         veto_threshold=request.veto_threshold,
         is_required=request.is_required,
@@ -345,7 +345,11 @@ def batch_add_assessment_items(
     if not template:
         raise HTTPException(status_code=404, detail="模板不存在")
 
-    items_data = [item.model_dump() for item in request.items]
+    items_data = []
+    for item in request.items:
+        item_data = item.model_dump()
+        item_data["scoring_criteria"] = item.score_criteria
+        items_data.append(item_data)
     items = service.batch_add_items(template_id, items_data)
 
     return ResponseModel(
@@ -506,7 +510,7 @@ def list_assessment_versions(
                 {
                     "id": v.id,
                     "version_no": v.version_no,
-                    "change_summary": v.change_summary,
+                    "change_summary": v.version_note,
                     "created_at": v.created_at.isoformat() if v.created_at else None,
                 }
                 for v in versions
@@ -526,7 +530,7 @@ def compare_assessment_versions(
 ) -> Any:
     """对比两个版本"""
     service = AssessmentVersionService(db)
-    diff = service.compare_versions(version_id, compare_to_version_id)
+    diff = service.compare_version_records(version_id, compare_to_version_id)
 
     if not diff:
         raise HTTPException(status_code=404, detail="版本不存在")

@@ -548,6 +548,19 @@ class AssessmentVersionService:
         logger.info(f"创建评估版本: {assessment_id} - {version_no}")
         return version
 
+    def create_version_snapshot(
+        self,
+        assessment_id: int,
+        change_summary: str,
+        created_by: Optional[int] = None,
+    ) -> AssessmentVersion:
+        """创建评估版本快照，供 API 层使用 change_summary 语义。"""
+        return self.create_version(
+            assessment_id=assessment_id,
+            version_note=change_summary,
+            evaluator_id=created_by,
+        )
+
     def _generate_version_no(self, assessment_id: int) -> str:
         """生成版本号"""
         # 查找最后一个版本
@@ -571,9 +584,13 @@ class AssessmentVersionService:
         return (
             self.db.query(AssessmentVersion)
             .filter(AssessmentVersion.assessment_id == assessment_id)
-            .order_by(AssessmentVersion.version_no.desc())
+            .order_by(AssessmentVersion.id.desc())
             .all()
         )
+
+    def get_version_history(self, assessment_id: int) -> List[AssessmentVersion]:
+        """获取评估版本历史，按最新快照优先返回。"""
+        return self.get_versions(assessment_id)
 
     def get_version(
         self, assessment_id: int, version_no: str
@@ -600,16 +617,46 @@ class AssessmentVersionService:
         if not v1 or not v2:
             raise ValueError("版本不存在")
 
+        return self._build_version_comparison(v1, v2)
+
+    def compare_version_records(
+        self, version_id: int, compare_to_version_id: int
+    ) -> Optional[Dict[str, Any]]:
+        """按版本记录 ID 对比两个同一评估下的快照。"""
+        current_version = (
+            self.db.query(AssessmentVersion)
+            .filter(AssessmentVersion.id == version_id)
+            .first()
+        )
+        baseline_version = (
+            self.db.query(AssessmentVersion)
+            .filter(AssessmentVersion.id == compare_to_version_id)
+            .first()
+        )
+
+        if (
+            not current_version
+            or not baseline_version
+            or current_version.assessment_id != baseline_version.assessment_id
+        ):
+            return None
+
+        return self._build_version_comparison(baseline_version, current_version)
+
+    def _build_version_comparison(
+        self, from_version: AssessmentVersion, to_version: AssessmentVersion
+    ) -> Dict[str, Any]:
         return {
-            "version_1": version_no_1,
-            "version_2": version_no_2,
-            "score_change": (v2.total_score or 0) - (v1.total_score or 0),
+            "version_1": from_version.version_no,
+            "version_2": to_version.version_no,
+            "score_change": (to_version.total_score or 0) - (from_version.total_score or 0),
             "decision_change": {
-                "from": v1.decision,
-                "to": v2.decision,
+                "from": from_version.decision,
+                "to": to_version.decision,
             },
             "dimension_score_changes": self._compare_dimension_scores(
-                v1.dimension_scores or {}, v2.dimension_scores or {}
+                from_version.dimension_scores or {},
+                to_version.dimension_scores or {},
             ),
         }
 
