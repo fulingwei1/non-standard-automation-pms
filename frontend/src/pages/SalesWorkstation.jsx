@@ -119,7 +119,17 @@ const buildFollowUpAssessmentPath = (record = {}) => {
   const isLead = record.entity_type === "lead";
   return buildTechnicalAssessmentPath(
     isLead ? "lead" : "opportunity",
-    record.entity_id
+    record.entity_id,
+    {
+      assessmentId: record.assessment_id,
+      presaleTicketId:
+        record.presale_ticket_id ||
+        record.ticket_id ||
+        record.presaleTicketId ||
+        record.ticketId,
+      leadId: record.lead_id || record.leadId,
+      projectId: record.project_id || record.projectId,
+    }
   );
 };
 
