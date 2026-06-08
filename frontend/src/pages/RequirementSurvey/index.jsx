@@ -31,7 +31,7 @@ import {
   DialogTitle,
 } from "../../components/ui/dialog";
 import { fadeIn, staggerContainer } from "../../lib/animations";
-import { presaleApi } from "../../services/api";
+import { presaleApi, presaleWorkbenchApi } from "../../services/api";
 import { surveyMethods, surveyStatuses } from "./constants";
 import { mapTicketTypeToMethod, mapTicketStatus } from "./utils";
 import SurveyCard from "./SurveyCard";
@@ -61,6 +61,179 @@ const surveyTaskTypes = [
   { value: "SITE_VISIT", label: "现场勘察" },
 ];
 
+function getTicketItems(response) {
+  const payload = response?.formatted ?? response?.data?.data ?? response?.data ?? response;
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+  return [];
+}
+
+function parseJsonList(value) {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean);
+  }
+  if (!value || typeof value !== "string") {
+    return [];
+  }
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return parsed.filter(Boolean);
+    }
+    if (parsed && typeof parsed === "object") {
+      return Object.values(parsed).filter(Boolean);
+    }
+  } catch {
+    return value
+      .split(/[、,，\n]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function buildRequirementSummary(detail = {}, ticket = {}) {
+  const parts = [
+    detail.target_object_type ? `被测对象：${detail.target_object_type}` : "",
+    detail.application_scenario ? `应用场景：${detail.application_scenario}` : "",
+    detail.cycle_time_seconds ? `节拍：${detail.cycle_time_seconds}s` : "",
+    detail.workstation_count ? `工位：${detail.workstation_count}` : "",
+    detail.acceptance_basis ? `验收依据：${detail.acceptance_basis}` : "",
+    detail.special_notes ? `备注：${detail.special_notes}` : "",
+  ].filter(Boolean);
+
+  return parts.join("；") || ticket.description || "已沉淀结构化需求包";
+}
+
+function buildDocumentAttachments(detail = {}) {
+  return [
+    detail.has_sow ? { name: "客户 SOW / URS", size: "已提供", type: "document" } : null,
+    detail.has_interface_doc ? { name: "接口协议文档", size: "已提供", type: "document" } : null,
+    detail.has_drawing_doc ? { name: "图纸 / 原理 / IO 清单", size: "已提供", type: "document" } : null,
+  ].filter(Boolean);
+}
+
+function getOpenItemTitle(item = {}) {
+  return (
+    item.item_title ||
+    item.title ||
+    item.description ||
+    item.item_code ||
+    item.code ||
+    ""
+  );
+}
+
+function mapTicketToSurvey(ticket) {
+  const method = mapTicketTypeToMethod(ticket.ticket_type);
+  const methodConfig =
+    (surveyMethods || []).find((m) => m.id === method) || surveyMethods[0];
+  return {
+    id: ticket.id,
+    code: ticket.ticket_no || `SUR-${ticket.id}`,
+    customer: ticket.customer_name || "",
+    customerId: ticket.customer_id,
+    contactPerson: ticket.applicant_name || "",
+    contactPhone: "",
+    method,
+    methodName: methodConfig.name,
+    status: mapTicketStatus(ticket.status),
+    scheduledDate: ticket.expected_date || ticket.apply_time || "",
+    completedDate: ticket.complete_time || null,
+    location: ticket.description || "",
+    engineer: ticket.assignee_name || ticket.owner_name || "",
+    salesPerson: ticket.applicant_name || "",
+    opportunity: ticket.opportunity_name || "",
+    opportunityId: ticket.opportunity_id,
+    summary: ticket.description || ticket.requirement || "",
+    productInfo: null,
+    testRequirements: [],
+    capacityRequirements: null,
+    siteConditions: null,
+    budget: "",
+    timeline: ticket.deadline || "",
+    competitors: [],
+    pendingQuestions: [],
+    attachments: [],
+    comments: 0,
+  };
+}
+
+function buildRequirementPackageSurvey(context) {
+  const detail = context?.assessment?.requirementDetail;
+  if (!detail) {
+    return null;
+  }
+
+  const ticket = context?.ticket || {};
+  const testRequirements = [
+    ...parseJsonList(detail.requirement_items),
+    ...parseJsonList(detail.technical_spec),
+  ].map((item) => String(item));
+  const pendingQuestions = (context?.collaboration?.openItems?.items || [])
+    .map(getOpenItemTitle)
+    .filter(Boolean);
+
+  return {
+    id: `requirement-detail-${detail.id}`,
+    code: detail.requirement_version || `REQ-${detail.id}`,
+    customer:
+      ticket.customer_name ||
+      (detail.target_object_type ? `需求包：${detail.target_object_type}` : "结构化需求包"),
+    customerId: ticket.customer_id,
+    contactPerson: ticket.applicant_name || "",
+    contactPhone: "",
+    method: "onsite",
+    methodName: surveyMethods[0]?.name || "现场调研",
+    status: detail.is_frozen ? "completed" : "in_progress",
+    scheduledDate: detail.updated_at || detail.created_at || ticket.apply_time || "",
+    completedDate: detail.frozen_at || null,
+    location: detail.customer_factory_location || ticket.description || "",
+    engineer: ticket.assignee_name || ticket.owner_name || "",
+    salesPerson: ticket.applicant_name || "",
+    opportunity: ticket.opportunity_name || "",
+    opportunityId: ticket.opportunity_id,
+    summary: buildRequirementSummary(detail, ticket),
+    productInfo: detail.target_object_type
+      ? {
+        name: detail.target_object_type,
+        model: detail.application_scenario || "待确认",
+        size: detail.delivery_mode || "待确认",
+        material: detail.acceptance_method || "待确认",
+      }
+      : null,
+    testRequirements,
+    capacityRequirements:
+      detail.cycle_time_seconds || detail.workstation_count
+        ? {
+          annual: 0,
+          daily: detail.workstation_count || 0,
+          uph: detail.cycle_time_seconds
+            ? Math.round((3600 / Number(detail.cycle_time_seconds)) * (detail.workstation_count || 1))
+            : 0,
+        }
+        : null,
+    siteConditions: detail.customer_factory_location
+      ? {
+        area: detail.customer_factory_location,
+        power: "待确认",
+        airPressure: "待确认",
+        environment: "待确认",
+      }
+      : null,
+    budget: "",
+    timeline: detail.expected_delivery_date || ticket.deadline || "",
+    competitors: [],
+    pendingQuestions,
+    attachments: buildDocumentAttachments(detail),
+    comments: pendingQuestions.length,
+  };
+}
+
 export default function RequirementSurvey({ embedded = false }) {
   const [searchParams] = useSearchParams();
   const contextLeadId = searchParams.get("lead_id") || "";
@@ -71,6 +244,12 @@ export default function RequirementSurvey({ embedded = false }) {
   const contextTicketIdNumber = parseContextId(contextTicketId);
   const contextOpportunityIdNumber = parseContextId(contextOpportunityId);
   const contextProjectIdNumber = parseContextId(contextProjectId);
+  const contextSourceType = contextLeadIdNumber
+    ? "lead"
+    : contextOpportunityIdNumber
+      ? "opportunity"
+      : "";
+  const contextSourceId = contextLeadIdNumber || contextOpportunityIdNumber;
   const hasBusinessContext =
     Boolean(contextLeadIdNumber) ||
     Boolean(contextOpportunityIdNumber) ||
@@ -124,44 +303,31 @@ export default function RequirementSurvey({ embedded = false }) {
         params.project_id = contextProjectId;
       }
 
+      let contextSurvey = null;
+      if (contextSourceType && contextSourceId) {
+        try {
+          const contextParams = {
+            sourceType: contextSourceType,
+            sourceId: contextSourceId,
+          };
+          if (contextTicketIdNumber) {
+            contextParams.presaleTicketId = contextTicketIdNumber;
+          }
+          const context = await presaleWorkbenchApi.loadContext(contextParams);
+          contextSurvey = buildRequirementPackageSurvey(context);
+        } catch (contextError) {
+          console.warn("加载售前需求聚合上下文失败:", contextError);
+        }
+      }
+
       const response = await presaleApi.tickets.list(params);
-      const ticketsData = response.data?.items || response.data?.items || response.data || [];
+      const ticketsData = getTicketItems(response);
 
       // Transform tickets to surveys
-      const transformedSurveys = (ticketsData || []).map((ticket) => {
-        const method = mapTicketTypeToMethod(ticket.ticket_type);
-        const methodConfig =
-          (surveyMethods || []).find((m) => m.id === method) || surveyMethods[0];
-        return {
-          id: ticket.id,
-          code: ticket.ticket_no || `SUR-${ticket.id}`,
-          customer: ticket.customer_name || "",
-          customerId: ticket.customer_id,
-          contactPerson: ticket.applicant_name || "",
-          contactPhone: "",
-          method,
-          methodName: methodConfig.name,
-          status: mapTicketStatus(ticket.status),
-          scheduledDate: ticket.expected_date || ticket.apply_time || "",
-          completedDate: ticket.complete_time || null,
-          location: ticket.description || "",
-          engineer: ticket.assignee_name || ticket.owner_name || "",
-          salesPerson: ticket.applicant_name || "",
-          opportunity: ticket.opportunity_name || "",
-          opportunityId: ticket.opportunity_id,
-          summary: ticket.description || ticket.requirement || "",
-          productInfo: null,
-          testRequirements: [],
-          capacityRequirements: null,
-          siteConditions: null,
-          budget: "",
-          timeline: ticket.deadline || "",
-          competitors: [],
-          pendingQuestions: [],
-          attachments: [],
-          comments: 0,
-        };
-      });
+      const transformedSurveys = [
+        contextSurvey,
+        ...(ticketsData || []).map(mapTicketToSurvey),
+      ].filter(Boolean);
 
       setSurveys(transformedSurveys);
     } catch (err) {
@@ -178,6 +344,8 @@ export default function RequirementSurvey({ embedded = false }) {
     contextOpportunityIdNumber,
     contextProjectId,
     contextProjectIdNumber,
+    contextSourceId,
+    contextSourceType,
     contextTicketId,
     contextTicketIdNumber,
     hasBusinessContext,

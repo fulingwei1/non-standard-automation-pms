@@ -3,7 +3,7 @@ import { MemoryRouter, useSearchParams } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import RequirementSurvey from "../RequirementSurvey";
-import { presaleApi } from "../../services/api";
+import { presaleApi, presaleWorkbenchApi } from "../../services/api";
 
 vi.mock("../../services/api", () => ({
   presaleApi: {
@@ -11,6 +11,9 @@ vi.mock("../../services/api", () => ({
       list: vi.fn(),
       create: vi.fn(),
     },
+  },
+  presaleWorkbenchApi: {
+    loadContext: vi.fn(),
   },
 }));
 
@@ -59,6 +62,13 @@ describe("RequirementSurvey", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     presaleApi.tickets.list.mockResolvedValue({ data: { items: [], total: 0 } });
+    presaleWorkbenchApi.loadContext.mockResolvedValue({
+      ticket: null,
+      assessment: { requirementDetail: null },
+      collaboration: {
+        openItems: { items: [], total: 0, blocking_count: 0 },
+      },
+    });
     presaleApi.tickets.create.mockResolvedValue({
       data: {
         id: 910,
@@ -83,6 +93,11 @@ describe("RequirementSurvey", () => {
       );
     });
     expect(presaleApi.tickets.list.mock.calls[0][0]).not.toHaveProperty("ticket_id");
+    expect(presaleWorkbenchApi.loadContext).toHaveBeenCalledWith({
+      sourceType: "opportunity",
+      sourceId: 2,
+      presaleTicketId: 501,
+    });
   });
 
   it("keeps project context without over-narrowing surveys by current ticket", async () => {
@@ -101,6 +116,69 @@ describe("RequirementSurvey", () => {
       );
     });
     expect(presaleApi.tickets.list.mock.calls[0][0]).not.toHaveProperty("ticket_id");
+    expect(presaleWorkbenchApi.loadContext).toHaveBeenCalledWith({
+      sourceType: "opportunity",
+      sourceId: 2,
+      presaleTicketId: 501,
+    });
+  });
+
+  it("shows structured requirement package from the presale workbench context", async () => {
+    presaleWorkbenchApi.loadContext.mockResolvedValueOnce({
+      ticket: {
+        id: 501,
+        customer_name: "华南电子",
+        applicant_name: "张销售",
+        assignee_name: "李售前",
+        opportunity_name: "电池包 EOL 测试线",
+      },
+      assessment: {
+        requirementDetail: {
+          id: 301,
+          lead_id: 2026,
+          requirement_version: "REQ-LEAD-V1",
+          target_object_type: "电池包",
+          application_scenario: "EOL终测",
+          requirement_maturity: 4,
+          has_sow: true,
+          cycle_time_seconds: 18,
+          workstation_count: 2,
+          acceptance_basis: "客户 URS",
+          requirement_items: "[\"高压绝缘测试\", \"通讯测试\"]",
+          technical_spec: "[\"MES上传\", \"扫码追溯\"]",
+        },
+      },
+      collaboration: {
+        openItems: {
+          items: [{ item_title: "确认上下料方式" }],
+          total: 1,
+          blocking_count: 1,
+        },
+      },
+    });
+
+    renderPage(
+      "/presales/technical-solutions?tab=surveys&lead_id=2026&opportunity_id=2&ticket_id=501",
+    );
+
+    await waitFor(() => {
+      expect(presaleWorkbenchApi.loadContext).toHaveBeenCalledWith({
+        sourceType: "lead",
+        sourceId: 2026,
+        presaleTicketId: 501,
+      });
+    });
+
+    expect(await screen.findByText("REQ-LEAD-V1")).toBeInTheDocument();
+    expect(screen.getByText("华南电子")).toBeInTheDocument();
+    expect(screen.getByText(/被测对象：电池包/)).toBeInTheDocument();
+    expect(screen.getByText("1 个待确认问题")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("华南电子"));
+    expect(screen.getByText("高压绝缘测试")).toBeInTheDocument();
+    expect(screen.getByText("MES上传")).toBeInTheDocument();
+    expect(screen.getByText("确认上下料方式")).toBeInTheDocument();
+    expect(screen.getByText("客户 SOW / URS")).toBeInTheDocument();
   });
 
   it("keeps lead context without over-narrowing surveys by current ticket", async () => {
@@ -119,6 +197,11 @@ describe("RequirementSurvey", () => {
       );
     });
     expect(presaleApi.tickets.list.mock.calls[0][0]).not.toHaveProperty("ticket_id");
+    expect(presaleWorkbenchApi.loadContext).toHaveBeenCalledWith({
+      sourceType: "lead",
+      sourceId: 2026,
+      presaleTicketId: 501,
+    });
   });
 
   it("uses exact ticket scope when ticket is the only available context", async () => {
@@ -133,6 +216,7 @@ describe("RequirementSurvey", () => {
         }),
       );
     });
+    expect(presaleWorkbenchApi.loadContext).not.toHaveBeenCalled();
   });
 
   it("creates a requirement survey ticket from the unified presales context", async () => {
