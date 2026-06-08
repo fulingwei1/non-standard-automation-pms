@@ -1350,8 +1350,26 @@ class TestPresalesFrontendContractBehavior:
         headers = _auth_headers(admin_token)
         prefix = settings.API_V1_PREFIX
         unique = uuid4().hex[:8].upper()
-        first_lead_id = 91001
-        second_lead_id = 91002
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        first_lead = Lead(
+            lead_code=f"LEADPST{unique[:6]}A",
+            customer_name="线索客户A",
+            source="展会",
+            industry="电子制造",
+            owner_id=admin_user.id,
+        )
+        second_lead = Lead(
+            lead_code=f"LEADPST{unique[:6]}B",
+            customer_name="线索客户B",
+            source="展会",
+            industry="电子制造",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([first_lead, second_lead])
+        db_session.commit()
 
         first = client.post(
             f"{prefix}/presale/tickets",
@@ -1360,13 +1378,13 @@ class TestPresalesFrontendContractBehavior:
                 "ticket_type": "TECHNICAL_SUPPORT",
                 "urgency": "NORMAL",
                 "customer_name": "线索客户A",
-                "lead_id": first_lead_id,
+                "lead_id": first_lead.id,
             },
             headers=headers,
         )
         assert first.status_code == 201, first.text
         first_id = first.json()["id"]
-        assert first.json()["lead_id"] == first_lead_id
+        assert first.json()["lead_id"] == first_lead.id
 
         second = client.post(
             f"{prefix}/presale/tickets",
@@ -1375,7 +1393,7 @@ class TestPresalesFrontendContractBehavior:
                 "ticket_type": "TECHNICAL_SUPPORT",
                 "urgency": "NORMAL",
                 "customer_name": "线索客户B",
-                "lead_id": second_lead_id,
+                "lead_id": second_lead.id,
             },
             headers=headers,
         )
@@ -1385,16 +1403,19 @@ class TestPresalesFrontendContractBehavior:
         try:
             by_lead = client.get(
                 f"{prefix}/presale/tickets",
-                params={"lead_id": first_lead_id},
+                params={"lead_id": first_lead.id},
                 headers=headers,
             )
             assert by_lead.status_code == 200, by_lead.text
             lead_items = by_lead.json()["items"]
             assert [item["id"] for item in lead_items] == [first_id]
-            assert lead_items[0]["lead_id"] == first_lead_id
+            assert lead_items[0]["lead_id"] == first_lead.id
         finally:
             db_session.query(PresaleSupportTicket).filter(
                 PresaleSupportTicket.id.in_([first_id, second_id])
+            ).delete(synchronize_session=False)
+            db_session.query(Lead).filter(
+                Lead.id.in_([first_lead.id, second_lead.id])
             ).delete(synchronize_session=False)
             db_session.commit()
 
