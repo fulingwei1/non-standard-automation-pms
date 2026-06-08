@@ -2114,6 +2114,105 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(Customer).filter(Customer.id == customer.id).delete()
             db_session.commit()
 
+    def test_solution_created_from_opportunity_context_binds_current_presale_ticket(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """商机侧直接建方案时，也必须挂到当前售前工单，保证工作台成本闭环可见。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-SOP-{unique}",
+            customer_name=f"商机方案客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPSOP{unique[:6]}",
+            customer=customer,
+            opp_name=f"商机直接方案-{unique}",
+            stage="QUALIFICATION",
+            probability=60,
+            est_amount=Decimal("360000"),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add_all([customer, opportunity])
+        db_session.flush()
+
+        ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-SOP-{unique}",
+            title=f"商机方案支持工单-{unique}",
+            ticket_type="SOLUTION",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PENDING",
+            created_by=admin_user.id,
+        )
+        db_session.add(ticket)
+        db_session.commit()
+
+        created_solution = client.post(
+            f"{prefix}/presale/proposals/solutions",
+            json={
+                "name": f"商机侧直接方案-{unique}",
+                "solution_type": "CUSTOM",
+                "opportunity_id": opportunity.id,
+                "requirement_summary": "商机详情页直接进入售前方案设计",
+                "estimated_cost": 220000,
+                "suggested_price": 360000,
+            },
+            headers=headers,
+        )
+        assert created_solution.status_code == 201, created_solution.text
+        solution = created_solution.json()
+
+        try:
+            assert solution["opportunity_id"] == opportunity.id
+            assert solution["ticket_id"] == ticket.id
+            assert solution["customer_id"] == customer.id
+            assert solution["customer_name"] == customer.customer_name
+
+            context = client.get(
+                f"{prefix}/presale/workbench/context",
+                params={
+                    "source_type": "opportunity",
+                    "source_id": opportunity.id,
+                    "presale_ticket_id": ticket.id,
+                },
+                headers=headers,
+            )
+            assert context.status_code == 200, context.text
+            data = context.json()["data"]
+
+            assert data["ticket"]["id"] == ticket.id
+            assert data["solutions"]["total"] == 1
+            assert data["solutions"]["items"][0]["id"] == solution["id"]
+            assert data["costing"]["baseline"]["solution_id"] == solution["id"]
+            assert data["costing"]["baseline"]["estimated_cost"] == 220000.0
+            assert data["costing"]["baseline"]["suggested_price"] == 360000.0
+        finally:
+            db_session.query(PresaleSolution).filter(
+                PresaleSolution.id == solution["id"]
+            ).delete(synchronize_session=False)
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id == ticket.id
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
     def test_solution_created_from_lead_context_is_visible_in_lead_scope(
         self, client: TestClient, db_session: Session, admin_token: str
     ):

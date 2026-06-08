@@ -190,6 +190,59 @@ def resolve_solution_ticket_from_lead(
     return ticket
 
 
+def resolve_solution_ticket_from_opportunity(
+    db: Session,
+    solution_in: SolutionCreate,
+    current_user: User,
+) -> Optional[PresaleSupportTicket]:
+    if not solution_in.opportunity_id:
+        return None
+
+    ticket = (
+        db.query(PresaleSupportTicket)
+        .filter(PresaleSupportTicket.opportunity_id == solution_in.opportunity_id)
+        .order_by(desc(PresaleSupportTicket.created_at), desc(PresaleSupportTicket.id))
+        .first()
+    )
+    if ticket:
+        return ticket
+
+    opportunity = get_or_404(db, Opportunity, solution_in.opportunity_id, detail="商机不存在")
+    customer_id = (
+        solution_in.customer_id
+        if solution_in.customer_id is not None
+        else opportunity.customer_id
+    )
+    customer_name = None
+    if customer_id == opportunity.customer_id and opportunity.customer:
+        customer_name = opportunity.customer.customer_name
+    elif customer_id:
+        customer = db.query(Customer).filter(Customer.id == customer_id).first()
+        customer_name = customer.customer_name if customer else None
+
+    ticket = PresaleSupportTicket(
+        ticket_no=generate_ticket_no(db),
+        title=f"方案设计 - {solution_in.name}"[:200],
+        ticket_type="SOLUTION_DESIGN",
+        urgency="NORMAL",
+        description=solution_in.requirement_summary,
+        customer_id=customer_id,
+        customer_name=customer_name,
+        lead_id=opportunity.lead_id,
+        opportunity_id=opportunity.id,
+        project_id=solution_in.project_id,
+        applicant_id=current_user.id,
+        applicant_name=current_user.real_name or current_user.username,
+        applicant_dept=current_user.department,
+        apply_time=datetime.now(),
+        status="PENDING",
+        created_by=current_user.id,
+    )
+    db.add(ticket)
+    db.flush()
+    return ticket
+
+
 def complete_opportunity_assessment_for_solution(
     db: Session,
     solution: PresaleSolution,
@@ -311,6 +364,8 @@ def create_solution(
         ticket = get_or_404(db, PresaleSupportTicket, solution_in.ticket_id, detail="工单不存在")
     elif solution_in.lead_id:
         ticket = resolve_solution_ticket_from_lead(db, solution_in, current_user)
+    elif solution_in.opportunity_id:
+        ticket = resolve_solution_ticket_from_opportunity(db, solution_in, current_user)
 
     solution = PresaleSolution(
         solution_no=generate_solution_no(db),
