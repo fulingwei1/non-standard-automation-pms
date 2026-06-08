@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import PresalesCostEstimation from "../PresalesCostEstimation";
-import { presaleApi } from "../../services/api";
+import { presaleApi, presaleWorkbenchApi } from "../../services/api";
 import { toast } from "../../components/ui/toast";
 
 const routeState = vi.hoisted(() => ({
@@ -27,6 +27,9 @@ vi.mock("../../services/api", () => ({
       create: vi.fn(),
       update: vi.fn(),
     },
+  },
+  presaleWorkbenchApi: {
+    loadContext: vi.fn(),
   },
 }));
 
@@ -113,6 +116,51 @@ describe("PresalesCostEstimation", () => {
       },
     });
     presaleApi.solutions.update.mockResolvedValue({ data: { id: 88 } });
+    presaleWorkbenchApi.loadContext.mockResolvedValue({
+      source: { type: "opportunity", id: 2 },
+      solutions: { items: [], total: 0 },
+      costing: { baseline: null },
+    });
+  });
+
+  it("prefers presale workbench costing baseline before falling back to solution list", async () => {
+    presaleWorkbenchApi.loadContext.mockResolvedValueOnce({
+      source: { type: "opportunity", id: 2 },
+      solutions: {
+        items: [
+          {
+            id: 88,
+            name: "ERP 改造售前技术方案",
+            estimated_cost: 1200000,
+            suggested_price: 1680000,
+          },
+        ],
+        total: 1,
+      },
+      costing: {
+        baseline: {
+          source: "solution",
+          solution_id: 88,
+          solution_no: "SOL-001",
+          solution_name: "ERP 改造售前技术方案",
+          estimated_cost: 1200000,
+          suggested_price: 1680000,
+        },
+      },
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(presaleWorkbenchApi.loadContext).toHaveBeenCalledWith({
+        sourceType: "opportunity",
+        sourceId: 2,
+        presaleTicketId: 501,
+      });
+    });
+    expect(presaleApi.solutions.list).not.toHaveBeenCalled();
+    expect(await screen.findByText("当前方案：ERP 改造售前技术方案")).toBeInTheDocument();
+    expect(screen.getByText("当前预算参考：¥168万")).toBeInTheDocument();
   });
 
   it("loads linked solution context from sales support and project ids", async () => {

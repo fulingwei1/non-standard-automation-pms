@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 import { toast } from "../components/ui/toast";
 import CostEstimateForm from "../components/presales/CostEstimateForm";
-import { presaleApi } from "../services/api";
+import { presaleApi, presaleWorkbenchApi } from "../services/api";
 
 function parseAmount(value) {
   const amount = Number(value);
@@ -53,6 +53,27 @@ function extractSolutionDetail(response) {
     return payload.data || null;
   }
   return payload;
+}
+
+function extractContextSolution(context) {
+  const baseline = context?.costing?.baseline;
+  if (!baseline?.solution_id) {
+    return null;
+  }
+
+  const solution = (context?.solutions?.items || []).find(
+    (item) => Number(item?.id) === Number(baseline.solution_id),
+  ) || {};
+
+  return {
+    ...solution,
+    id: baseline.solution_id,
+    name: baseline.solution_name || solution.name || solution.solution_name,
+    solution_no: baseline.solution_no || solution.solution_no,
+    estimated_cost: baseline.estimated_cost ?? solution.estimated_cost,
+    suggested_price: baseline.suggested_price ?? solution.suggested_price,
+    cost_breakdown: baseline.cost_breakdown ?? solution.cost_breakdown,
+  };
 }
 
 function toWan(value) {
@@ -104,14 +125,38 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
       return;
     }
 
-    if (
-      !contextTicketIdNumber &&
-      !contextLeadIdNumber &&
-      !contextOpportunityIdNumber &&
-      !contextProjectIdNumber
-    ) {
+    const sourceType = contextOpportunityIdNumber ? "opportunity" : "lead";
+    const sourceId = contextOpportunityIdNumber || contextLeadIdNumber;
+    const hasLookupContext = Boolean(
+      contextTicketIdNumber ||
+      contextLeadIdNumber ||
+      contextOpportunityIdNumber ||
+      contextProjectIdNumber,
+    );
+
+    if (!hasLookupContext) {
       setLinkedSolution(null);
       return;
+    }
+
+    setSolutionLoading(true);
+
+    if (sourceId) {
+      try {
+        const context = await presaleWorkbenchApi.loadContext({
+          sourceType,
+          sourceId,
+          presaleTicketId: contextTicketIdNumber || undefined,
+        });
+        const contextSolution = extractContextSolution(context);
+        if (contextSolution) {
+          setLinkedSolution(contextSolution);
+          setSolutionLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.error("加载售前聚合上下文失败:", error);
+      }
     }
 
     const params = { page: 1, page_size: 1 };
@@ -128,7 +173,6 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
       params.project_id = contextProjectId;
     }
 
-    setSolutionLoading(true);
     try {
       const response = await presaleApi.solutions.list(params);
       setLinkedSolution(extractFirstItem(response));
