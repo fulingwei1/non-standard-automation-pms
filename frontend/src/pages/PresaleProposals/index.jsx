@@ -19,7 +19,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../components/ui";
-import { presaleApi } from "../../services/api";
+import { presaleApi, presaleWorkbenchApi } from "../../services/api";
 import { extractItems, normalizeSolution } from "./utils";
 import SolutionListTab from "./SolutionListTab";
 import SolutionGenerateTab from "./SolutionGenerateTab";
@@ -39,6 +39,37 @@ function appendContextParam(params, key, value) {
   if (value !== undefined && value !== null && value !== "") {
     params.set(key, String(value));
   }
+}
+
+function extractContextSolutions(context) {
+  const payload = context?.solutions;
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+  return [];
+}
+
+function filterSolutions(solutions, { statusFilter, searchKeyword }) {
+  const keyword = searchKeyword.trim().toLowerCase();
+  return solutions.filter((solution) => {
+    const matchesStatus = statusFilter === "all" || solution.status === statusFilter;
+    if (!matchesStatus) {
+      return false;
+    }
+    if (!keyword) {
+      return true;
+    }
+    return [
+      solution.name,
+      solution.solutionNo,
+      solution.industry,
+      solution.requirementSummary,
+      solution.solutionOverview,
+    ].some((value) => String(value || "").toLowerCase().includes(keyword));
+  });
 }
 
 export default function PresaleProposals({ embedded = false } = {}) {
@@ -69,6 +100,12 @@ export default function PresaleProposals({ embedded = false } = {}) {
     () => parseContextId(contextProjectId),
     [contextProjectId],
   );
+  const contextSourceType = contextOpportunityIdNumber
+    ? "opportunity"
+    : contextLeadIdNumber
+      ? "lead"
+      : "";
+  const contextSourceId = contextOpportunityIdNumber || contextLeadIdNumber;
   const [activeTab, setActiveTab] = useState("list");
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -105,6 +142,44 @@ export default function PresaleProposals({ embedded = false } = {}) {
     setError("");
 
     try {
+      const applySolutions = (items) => {
+        const list = (items || []).map(normalizeSolution);
+        const filteredList = filterSolutions(list, { statusFilter, searchKeyword });
+
+        setSolutions(filteredList);
+
+        if (filteredList.length > 0) {
+          setSelectedSolutionId((previous) => {
+            const stillVisible = filteredList.some(
+              (solution) => String(solution.id) === String(previous),
+            );
+            return stillVisible ? previous : String(filteredList[0].id);
+          });
+        } else {
+          setSelectedSolutionId("");
+        }
+      };
+
+      if (contextSourceType && contextSourceId) {
+        try {
+          const contextParams = {
+            sourceType: contextSourceType,
+            sourceId: contextSourceId,
+          };
+          if (contextTicketIdNumber) {
+            contextParams.presaleTicketId = contextTicketIdNumber;
+          }
+          const context = await presaleWorkbenchApi.loadContext(contextParams);
+          const contextSolutions = extractContextSolutions(context);
+          if (contextSolutions.length > 0) {
+            applySolutions(contextSolutions);
+            return;
+          }
+        } catch (contextError) {
+          console.warn("加载售前方案聚合上下文失败:", contextError);
+        }
+      }
+
       const params = { page: 1, page_size: 100 };
       if (searchKeyword.trim()) {
         params.keyword = searchKeyword.trim();
@@ -123,24 +198,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
       }
 
       const response = await presaleApi.solutions.list(params);
-      const list = extractItems(response).map(normalizeSolution);
-      const filteredList =
-        statusFilter === "all"
-          ? list
-          : list.filter((solution) => solution.status === statusFilter);
-
-      setSolutions(filteredList);
-
-      if (filteredList.length > 0) {
-        setSelectedSolutionId((previous) => {
-          const stillVisible = filteredList.some(
-            (solution) => String(solution.id) === String(previous),
-          );
-          return stillVisible ? previous : String(filteredList[0].id);
-        });
-      } else {
-        setSelectedSolutionId("");
-      }
+      applySolutions(extractItems(response));
     } catch (requestError) {
       console.error("加载方案失败:", requestError);
       setError(requestError?.response?.data?.detail || requestError?.message || "方案加载失败");
@@ -154,6 +212,8 @@ export default function PresaleProposals({ embedded = false } = {}) {
     contextOpportunityIdNumber,
     contextProjectId,
     contextProjectIdNumber,
+    contextSourceId,
+    contextSourceType,
     contextTicketId,
     contextTicketIdNumber,
     searchKeyword,

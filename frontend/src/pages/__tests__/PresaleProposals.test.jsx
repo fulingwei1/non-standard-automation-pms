@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import PresaleProposals from "../PresaleProposals";
-import { presaleApi } from "../../services/api";
+import { presaleApi, presaleWorkbenchApi } from "../../services/api";
 
 const routeState = vi.hoisted(() => ({
   search: "tab=solutions&type=support&opportunity_id=2&ticket_id=501",
@@ -26,6 +26,9 @@ vi.mock("../../services/api", () => ({
       getVersions: vi.fn(),
       review: vi.fn(),
     },
+  },
+  presaleWorkbenchApi: {
+    loadContext: vi.fn(),
   },
 }));
 
@@ -74,6 +77,10 @@ describe("PresaleProposals", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     navigateMock.mockClear();
+    presaleWorkbenchApi.loadContext.mockResolvedValue({
+      source: { type: "opportunity", id: 2 },
+      solutions: { items: [], total: 0 },
+    });
     presaleApi.solutions.list.mockResolvedValue({ data: { items: [], total: 0 } });
     presaleApi.solutions.create.mockResolvedValue({
       data: {
@@ -84,6 +91,40 @@ describe("PresaleProposals", () => {
     });
     presaleApi.solutions.getVersions.mockResolvedValue({ data: { items: [], total: 0 } });
     presaleApi.solutions.review.mockResolvedValue({ data: { id: 900 } });
+  });
+
+  it("prefers presale workbench context solutions before falling back to solution list", async () => {
+    presaleWorkbenchApi.loadContext.mockResolvedValueOnce({
+      source: { type: "opportunity", id: 2 },
+      solutions: {
+        items: [
+          {
+            id: 88,
+            solution_no: "SOL-88",
+            name: "聚合上下文售前方案",
+            status: "APPROVED",
+            ticket_id: 501,
+            opportunity_id: 2,
+            estimated_cost: 180000,
+            suggested_price: 280000,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(presaleWorkbenchApi.loadContext).toHaveBeenCalledWith({
+        sourceType: "opportunity",
+        sourceId: 2,
+        presaleTicketId: 501,
+      });
+    });
+    expect(presaleApi.solutions.list).not.toHaveBeenCalled();
+    expect(await screen.findByText("聚合上下文售前方案")).toBeInTheDocument();
+    expect(screen.getByText("SOL-88 · 未分类行业")).toBeInTheDocument();
   });
 
   it("scopes solution list by sales support ticket context", async () => {
