@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """售前前后端 API 契约对账测试。"""
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -604,6 +604,124 @@ class TestPresalesFrontendContractBehavior:
             ).delete(synchronize_session=False)
             db_session.query(PresaleSupportTicket).filter(
                 PresaleSupportTicket.id == ticket.id
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
+    def test_presale_workbench_context_prioritizes_requested_ticket_assessment(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """同一商机多张售前工单时，工作台当前评估必须跟随当前工单。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-WBT-{unique}",
+            customer_name=f"工单评估隔离客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        opportunity = Opportunity(
+            opp_code=f"OPPWBT{unique[:6]}",
+            customer=customer,
+            opp_name=f"工单评估隔离商机-{unique}",
+            stage="QUALIFICATION",
+            probability=65,
+            est_amount=Decimal("480000"),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add_all([customer, opportunity])
+        db_session.flush()
+
+        other_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-WBT-A-{unique}",
+            title=f"其它售前工单-{unique}",
+            ticket_type="TECHNICAL_SUPPORT",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PROCESSING",
+            created_by=admin_user.id,
+        )
+        requested_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-WBT-B-{unique}",
+            title=f"当前售前工单-{unique}",
+            ticket_type="FEASIBILITY_ASSESSMENT",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PROCESSING",
+            created_by=admin_user.id,
+        )
+        db_session.add_all([other_ticket, requested_ticket])
+        db_session.flush()
+
+        requested_assessment = TechnicalAssessment(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            evaluator_id=admin_user.id,
+            status=AssessmentStatusEnum.PENDING.value,
+            decision="当前工单待评估",
+            evaluated_at=datetime.now() - timedelta(days=1),
+            presale_ticket_id=requested_ticket.id,
+        )
+        other_assessment = TechnicalAssessment(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            evaluator_id=admin_user.id,
+            status=AssessmentStatusEnum.COMPLETED.value,
+            decision="其它工单已通过",
+            evaluated_at=datetime.now(),
+            presale_ticket_id=other_ticket.id,
+        )
+        db_session.add_all([requested_assessment, other_assessment])
+        db_session.flush()
+        requested_ticket.current_assessment_id = requested_assessment.id
+        requested_ticket.assessment_status = requested_assessment.status
+        other_ticket.current_assessment_id = other_assessment.id
+        other_ticket.assessment_status = other_assessment.status
+        opportunity.assessment_id = other_assessment.id
+        opportunity.assessment_status = other_assessment.status
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{prefix}/presale/workbench/context",
+                params={
+                    "source_type": "opportunity",
+                    "source_id": opportunity.id,
+                    "presale_ticket_id": requested_ticket.id,
+                },
+                headers=headers,
+            )
+            assert response.status_code == 200, response.text
+            assessment = response.json()["data"]["assessment"]
+
+            assert assessment["current"]["id"] == requested_assessment.id
+            assert assessment["current"]["presale_ticket_id"] == requested_ticket.id
+            assert assessment["items"][0]["id"] == requested_assessment.id
+            assert assessment["items"][0]["id"] != other_assessment.id
+        finally:
+            db_session.query(TechnicalAssessment).filter(
+                TechnicalAssessment.id.in_([requested_assessment.id, other_assessment.id])
+            ).delete(synchronize_session=False)
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id.in_([requested_ticket.id, other_ticket.id])
             ).delete(synchronize_session=False)
             db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).delete()
             db_session.query(Customer).filter(Customer.id == customer.id).delete()

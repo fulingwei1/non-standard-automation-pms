@@ -275,6 +275,47 @@ def _assessment_payload(assessment: TechnicalAssessment) -> dict[str, Any]:
     return data
 
 
+def _prioritize_ticket_assessment(
+    db: Session,
+    assessments: list[TechnicalAssessment],
+    ticket: Optional[PresaleSupportTicket],
+) -> list[TechnicalAssessment]:
+    """让工作台当前评估跟随当前售前工单，而不是同源对象的最新评估。"""
+    if not ticket:
+        return assessments
+
+    preferred_assessment = None
+    current_assessment_id = getattr(ticket, "current_assessment_id", None)
+    if current_assessment_id:
+        preferred_assessment = next(
+            (item for item in assessments if item.id == current_assessment_id),
+            None,
+        )
+        if preferred_assessment is None:
+            preferred_assessment = (
+                db.query(TechnicalAssessment)
+                .filter(TechnicalAssessment.id == current_assessment_id)
+                .first()
+            )
+
+    if preferred_assessment is None:
+        preferred_assessment = next(
+            (
+                item
+                for item in assessments
+                if getattr(item, "presale_ticket_id", None) == ticket.id
+            ),
+            None,
+        )
+
+    if preferred_assessment is None:
+        return assessments
+
+    return [preferred_assessment] + [
+        item for item in assessments if item.id != preferred_assessment.id
+    ]
+
+
 def _context_source_scopes(
     *,
     source_type: str,
@@ -933,16 +974,7 @@ def get_workbench_context(
         )
         .all()
     )
-    if ticket and ticket.current_assessment_id and not any(
-        item.id == ticket.current_assessment_id for item in assessments
-    ):
-        current_from_ticket = (
-            db.query(TechnicalAssessment)
-            .filter(TechnicalAssessment.id == ticket.current_assessment_id)
-            .first()
-        )
-        if current_from_ticket:
-            assessments.insert(0, current_from_ticket)
+    assessments = _prioritize_ticket_assessment(db, assessments, ticket)
 
     current_assessment = assessments[0] if assessments else None
     risks = {"items": [], "total": 0}
