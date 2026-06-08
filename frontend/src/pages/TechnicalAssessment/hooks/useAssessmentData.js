@@ -40,12 +40,78 @@ function emptyCollaboration() {
   };
 }
 
-function buildRequirementDataFromDetail(detail, { sourceType, sourceId } = {}) {
-  if (!detail) {
-    return {};
+const REQUIREMENT_META_KEYS = new Set([
+  "source_type",
+  "source_id",
+  "project_id",
+  "presale_ticket_id",
+  "requirement_detail_id",
+]);
+
+function hasRequirementInput(requirementData = {}) {
+  return Object.entries(requirementData).some(([key, value]) => {
+    if (REQUIREMENT_META_KEYS.has(key)) {
+      return false;
+    }
+    if (value === undefined || value === null || value === "") {
+      return false;
+    }
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    }
+    return true;
+  });
+}
+
+function isOpenAssessment(assessment) {
+  return ["PENDING", "IN_PROGRESS"].includes(String(assessment?.status || "").toUpperCase());
+}
+
+function getAssessmentTicketId(assessment) {
+  return assessment?.presale_ticket_id ?? assessment?.presaleTicketId ?? null;
+}
+
+function selectCurrentAssessment(assessments, selectedAssessmentId, presaleTicketId) {
+  const requestedAssessment = selectedAssessmentId
+    ? assessments.find((item) => String(item.id) === String(selectedAssessmentId))
+    : null;
+  if (requestedAssessment) {
+    return requestedAssessment;
   }
 
+  if (presaleTicketId) {
+    const ticketAssessment = assessments.find(
+      (item) => String(getAssessmentTicketId(item)) === String(presaleTicketId),
+    );
+    if (ticketAssessment) {
+      return ticketAssessment;
+    }
+
+    const openUnboundAssessment = assessments.find(
+      (item) => !getAssessmentTicketId(item) && isOpenAssessment(item),
+    );
+    if (openUnboundAssessment) {
+      return openUnboundAssessment;
+    }
+  }
+
+  return assessments[0] || null;
+}
+
+function buildRequirementDataFromDetail(
+  detail,
+  { sourceType, sourceId, presaleTicketId, projectId } = {},
+) {
   const data = {};
+  setIfPresent(data, "source_type", sourceType);
+  setIfPresent(data, "source_id", sourceId);
+  setIfPresent(data, "presale_ticket_id", presaleTicketId);
+  setIfPresent(data, "project_id", projectId);
+
+  if (!detail) {
+    return data;
+  }
+
   [
     "customer_factory_location",
     "target_object_type",
@@ -67,8 +133,6 @@ function buildRequirementDataFromDetail(detail, { sourceType, sourceId } = {}) {
     "special_notes",
   ].forEach((key) => setIfPresent(data, key, detail[key]));
 
-  setIfPresent(data, "source_type", sourceType);
-  setIfPresent(data, "source_id", sourceId);
   setIfPresent(data, "requirement_detail_id", detail.id);
   setIfPresent(data, "lead_id", detail.lead_id);
 
@@ -89,7 +153,13 @@ function buildRequirementDataFromDetail(detail, { sourceType, sourceId } = {}) {
 /**
  * Hook for loading and managing assessment data for a specific source
  */
-export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, presaleTicketId) {
+export function useAssessmentData(
+  sourceType,
+  sourceId,
+  selectedAssessmentId,
+  presaleTicketId,
+  projectId,
+) {
   const [assessment, setAssessment] = useState(null);
   const [assessments, setAssessments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -100,6 +170,7 @@ export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, pr
   const [showHistory, setShowHistory] = useState(false);
   const numericSourceId = parseContextId(sourceId);
   const numericPresaleTicketId = parseContextId(presaleTicketId);
+  const numericProjectId = parseContextId(projectId);
 
   const loadAssessment = async () => {
     try {
@@ -133,7 +204,12 @@ export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, pr
           const context = await presaleWorkbenchApi.loadContext(contextParams);
           contextRequirementData = buildRequirementDataFromDetail(
             context?.assessment?.requirementDetail,
-            { sourceType, sourceId: numericSourceId },
+            {
+              sourceType,
+              sourceId: numericSourceId,
+              presaleTicketId: numericPresaleTicketId,
+              projectId: numericProjectId,
+            },
           );
           contextCollaboration = context?.collaboration || emptyCollaboration();
         } catch (contextError) {
@@ -141,12 +217,8 @@ export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, pr
         }
       }
 
-      const requestedAssessment = selectedAssessmentId
-        ? result.find((item) => String(item.id) === String(selectedAssessmentId))
-        : null;
-
       setAssessments(result);
-      setAssessment(requestedAssessment || result[0] || null);
+      setAssessment(selectCurrentAssessment(result, selectedAssessmentId, numericPresaleTicketId));
       setRequirementData(contextRequirementData);
       setCollaboration(contextCollaboration);
     } catch (error) {
@@ -162,7 +234,7 @@ export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, pr
 
   useEffect(() => {
     loadAssessment();
-  }, [sourceType, sourceId, selectedAssessmentId, presaleTicketId]);
+  }, [sourceType, sourceId, selectedAssessmentId, presaleTicketId, projectId]);
 
   const handleApplyAssessment = async () => {
     try {
@@ -195,7 +267,7 @@ export function useAssessmentData(sourceType, sourceId, selectedAssessmentId, pr
   };
 
   const handleEvaluate = async () => {
-    if (!requirementData || Object.keys(requirementData).length === 0) {
+    if (!hasRequirementInput(requirementData)) {
       alert("请先填写需求数据");
       return;
     }

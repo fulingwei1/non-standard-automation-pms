@@ -134,6 +134,10 @@ describe("TechnicalAssessment", () => {
 
   it("shows presale collaboration context links from the workbench context", async () => {
     useParams.mockReturnValue({ sourceType: "opportunity", sourceId: "8" });
+    useSearchParams.mockReturnValue([
+      new URLSearchParams("ticket_id=501&project_id=42"),
+      vi.fn(),
+    ]);
     technicalAssessmentApi.getOpportunityAssessments.mockResolvedValue({
       data: [
         {
@@ -162,15 +166,15 @@ describe("TechnicalAssessment", () => {
     expect(screen.getByText("1 轮AI澄清")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /查看未决事项/ })).toHaveAttribute(
       "href",
-      "/sales/opportunity/8/open-items",
+      "/sales/opportunity/8/open-items?ticket_id=501&project_id=42",
     );
     expect(screen.getByRole("link", { name: /查看需求冻结/ })).toHaveAttribute(
       "href",
-      "/sales/opportunity/8/requirement-freezes",
+      "/sales/opportunity/8/requirement-freezes?ticket_id=501&project_id=42",
     );
     expect(screen.getByRole("link", { name: /查看AI澄清/ })).toHaveAttribute(
       "href",
-      "/sales/opportunity/8/ai-clarifications",
+      "/sales/opportunity/8/ai-clarifications?ticket_id=501&project_id=42",
     );
   });
 });

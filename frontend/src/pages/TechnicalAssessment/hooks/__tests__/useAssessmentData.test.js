@@ -68,6 +68,36 @@ describe("useAssessmentData", () => {
     expect(result.current.assessment).toEqual(ticketAssessment);
   });
 
+  it("prefers the current presale ticket assessment over a newer historical assessment", async () => {
+    const newerCompletedAssessment = {
+      id: 801,
+      status: "COMPLETED",
+      source_type: "OPPORTUNITY",
+      presale_ticket_id: 300,
+    };
+    const currentTicketAssessment = {
+      id: 802,
+      status: "PENDING",
+      source_type: "OPPORTUNITY",
+      presale_ticket_id: 501,
+    };
+    technicalAssessmentApi.getOpportunityAssessments.mockResolvedValue({
+      data: [newerCompletedAssessment, currentTicketAssessment],
+    });
+
+    const { result } = renderHook(() =>
+      useAssessmentData("opportunity", "2", null, "501")
+    );
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.assessments).toEqual([
+      newerCompletedAssessment,
+      currentTicketAssessment,
+    ]);
+    expect(result.current.assessment).toEqual(currentTicketAssessment);
+  });
+
   it("loads assessments from unified API response wrappers", async () => {
     const olderAssessment = { id: 41, status: "COMPLETED", source_type: "LEAD" };
     const ticketAssessment = { id: 802, status: "PENDING", source_type: "LEAD" };
@@ -110,7 +140,7 @@ describe("useAssessmentData", () => {
     });
 
     const { result } = renderHook(() =>
-      useAssessmentData("opportunity", "2", "702", "93")
+      useAssessmentData("opportunity", "2", "702", "93", "42")
     );
 
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -124,6 +154,8 @@ describe("useAssessmentData", () => {
       expect.objectContaining({
         source_type: "opportunity",
         source_id: 2,
+        presale_ticket_id: 93,
+        project_id: 42,
         requirement_detail_id: 301,
         lead_id: 21,
         has_sow: true,
@@ -237,6 +269,51 @@ describe("useAssessmentData", () => {
     expect(technicalAssessmentApi.evaluate).toHaveBeenCalledWith(31, {
       requirement_data: { tech_maturity: "mature" },
       enable_ai: true,
+    });
+    expect(result.current.assessment).toEqual(completedAssessment);
+  });
+
+  it("keeps project and ticket context in the technical evaluation payload", async () => {
+    const pendingAssessment = { id: 33, status: "PENDING", source_type: "OPPORTUNITY" };
+    const completedAssessment = {
+      id: 33,
+      status: "COMPLETED",
+      source_type: "OPPORTUNITY",
+      total_score: 82,
+    };
+    technicalAssessmentApi.getOpportunityAssessments
+      .mockResolvedValueOnce({ data: [pendingAssessment] })
+      .mockResolvedValueOnce({ data: [completedAssessment] });
+    presaleWorkbenchApi.loadContext.mockResolvedValue({
+      assessment: { requirementDetail: null },
+    });
+    technicalAssessmentApi.evaluate.mockResolvedValue({ data: completedAssessment });
+
+    const { result } = renderHook(() =>
+      useAssessmentData("opportunity", "2", null, "501", "42")
+    );
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    act(() => {
+      result.current.setRequirementData((previous) => ({
+        ...previous,
+        tech_maturity: "mature",
+      }));
+    });
+
+    await act(async () => {
+      await result.current.handleEvaluate();
+    });
+
+    expect(technicalAssessmentApi.evaluate).toHaveBeenCalledWith(33, {
+      requirement_data: expect.objectContaining({
+        source_type: "opportunity",
+        source_id: 2,
+        presale_ticket_id: 501,
+        project_id: 42,
+        tech_maturity: "mature",
+      }),
+      enable_ai: false,
     });
     expect(result.current.assessment).toEqual(completedAssessment);
   });

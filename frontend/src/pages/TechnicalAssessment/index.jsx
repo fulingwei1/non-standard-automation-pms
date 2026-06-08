@@ -13,11 +13,21 @@ import { AssessmentResults } from "./components/AssessmentResults";
 import { RequirementDataForm } from "./components/RequirementDataForm";
 import { parseAssessmentList, parseAssessmentObject } from "./utils/assessmentPayload";
 
-function buildSourceToolPath(sourceType, sourceId, tool) {
-  return `/sales/${sourceType}/${sourceId}/${tool}`;
+function appendContextParam(params, key, value) {
+  if (value !== undefined && value !== null && value !== "") {
+    params.set(key, String(value));
+  }
 }
 
-function CollaborationContextCard({ sourceType, sourceId, collaboration }) {
+function buildSourceToolPath(sourceType, sourceId, tool, context = {}) {
+  const params = new URLSearchParams();
+  appendContextParam(params, "ticket_id", context.presaleTicketId);
+  appendContextParam(params, "project_id", context.projectId);
+  const query = params.toString();
+  return `/sales/${sourceType}/${sourceId}/${tool}${query ? `?${query}` : ""}`;
+}
+
+function CollaborationContextCard({ sourceType, sourceId, collaboration, context }) {
   const openItems = collaboration?.openItems || {};
   const requirementFreezes = collaboration?.requirementFreezes || {};
   const aiClarifications = collaboration?.aiClarifications || {};
@@ -44,19 +54,19 @@ function CollaborationContextCard({ sourceType, sourceId, collaboration }) {
         <div className="flex flex-wrap gap-2 text-sm">
           <Link
             className="rounded-lg border border-amber-500/40 px-3 py-2 hover:bg-amber-500/10"
-            to={buildSourceToolPath(sourceType, sourceId, "open-items")}
+            to={buildSourceToolPath(sourceType, sourceId, "open-items", context)}
           >
             查看未决事项
           </Link>
           <Link
             className="rounded-lg border border-amber-500/40 px-3 py-2 hover:bg-amber-500/10"
-            to={buildSourceToolPath(sourceType, sourceId, "requirement-freezes")}
+            to={buildSourceToolPath(sourceType, sourceId, "requirement-freezes", context)}
           >
             查看需求冻结
           </Link>
           <Link
             className="rounded-lg border border-amber-500/40 px-3 py-2 hover:bg-amber-500/10"
-            to={buildSourceToolPath(sourceType, sourceId, "ai-clarifications")}
+            to={buildSourceToolPath(sourceType, sourceId, "ai-clarifications", context)}
           >
             查看AI澄清
           </Link>
@@ -71,6 +81,7 @@ export default function TechnicalAssessment() {
   const [searchParams] = useSearchParams();
   const selectedAssessmentId = searchParams.get("assessment_id") || searchParams.get("assessmentId");
   const presaleTicketId = searchParams.get("ticket_id") || searchParams.get("ticketId");
+  const projectId = searchParams.get("project_id") || searchParams.get("projectId");
 
   const {
     assessment,
@@ -87,7 +98,7 @@ export default function TechnicalAssessment() {
     setShowHistory,
     handleApplyAssessment,
     handleEvaluate,
-  } = useAssessmentData(sourceType, sourceId, selectedAssessmentId, presaleTicketId);
+  } = useAssessmentData(sourceType, sourceId, selectedAssessmentId, presaleTicketId, projectId);
 
   if (loading) {
     return <div className="p-6">加载中...</div>;
@@ -132,6 +143,7 @@ export default function TechnicalAssessment() {
           sourceType={sourceType}
           sourceId={sourceId}
           collaboration={collaboration}
+          context={{ presaleTicketId, projectId }}
         />
 
         {showHistory && assessments.length > 1 && (
