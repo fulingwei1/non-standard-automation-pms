@@ -583,7 +583,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
   }, [solutions]);
 
   const reviewQueue = useMemo(() => {
-    return solutions.filter((solution) => ["DRAFT", "IN_PROGRESS", "REVIEWING"].includes(solution.status));
+    return solutions.filter((solution) => solution.status === "REVIEWING");
   }, [solutions]);
 
   const selectedVersion = useMemo(() => {
@@ -685,7 +685,12 @@ export default function PresaleProposals({ embedded = false } = {}) {
     setReviewActionLoadingId(solutionId);
 
     try {
-      const comment = reviewComments[solutionId] || (reviewStatus === "APPROVED" ? "方案符合交付标准" : "请补充风险控制与成本说明");
+      const defaultCommentMap = {
+        REVIEW: "提交方案评审",
+        APPROVED: "方案符合交付标准",
+        REJECTED: "请补充风险控制与成本说明",
+      };
+      const comment = reviewComments[solutionId] || defaultCommentMap[reviewStatus] || "方案评审状态更新";
       await presaleApi.solutions.review(solutionId, {
         review_status: reviewStatus,
         review_comment: comment,
@@ -795,6 +800,8 @@ export default function PresaleProposals({ embedded = false } = {}) {
               onCreateQuote={(solution) => navigate(buildQuoteCreatePath(solution))}
               setSelectedSolutionId={setSelectedSolutionId}
               setActiveTab={setActiveTab}
+              onSubmitReview={(solution) => handleReviewAction(solution.id, "REVIEW")}
+              reviewActionLoadingId={reviewActionLoadingId}
             />
           </TabsContent>
 

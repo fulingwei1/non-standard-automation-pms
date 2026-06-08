@@ -40,6 +40,8 @@ export default function SolutionListTab({
   onCreateQuote,
   setSelectedSolutionId,
   setActiveTab,
+  onSubmitReview,
+  reviewActionLoadingId,
 }) {
   return (
     <div className="space-y-6">
@@ -103,6 +105,7 @@ export default function SolutionListTab({
             solutions.map((solution) => {
               const statusConfig = getStatusConfig(solution.status);
               const canCreateQuote = solution.status === "APPROVED" && onCreateQuote;
+              const canSubmitReview = ["DRAFT", "REJECTED"].includes(solution.status) && onSubmitReview;
               return (
                 <motion.div
                   key={solution.id}
@@ -173,6 +176,18 @@ export default function SolutionListTab({
                           >
                             <FileText className="h-3.5 w-3.5" />
                             生成报价
+                          </Button>
+                        )}
+                        {canSubmitReview && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="min-w-[96px] flex-1"
+                            disabled={reviewActionLoadingId === solution.id}
+                            onClick={() => onSubmitReview(solution)}
+                          >
+                            <ClipboardCheck className="h-3.5 w-3.5" />
+                            提交评审
                           </Button>
                         )}
                         <Button

@@ -219,6 +219,66 @@ describe("PresaleProposals", () => {
     });
   });
 
+  it("submits a draft solution for review from the solution list", async () => {
+    presaleApi.solutions.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 88,
+            solution_no: "SOL-88",
+            name: "待提交售前技术方案",
+            status: "DRAFT",
+            ticket_id: 501,
+            opportunity_id: 2,
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage();
+
+    await screen.findByText("待提交售前技术方案");
+    fireEvent.click(screen.getByRole("button", { name: "提交评审" }));
+
+    await waitFor(() => {
+      expect(presaleApi.solutions.review).toHaveBeenCalledWith(88, {
+        review_status: "REVIEW",
+        review_comment: "提交方案评审",
+      });
+    });
+  });
+
+  it("keeps draft solutions out of the review approval queue", async () => {
+    presaleApi.solutions.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 88,
+            solution_no: "SOL-88",
+            name: "草稿售前方案",
+            status: "DRAFT",
+          },
+          {
+            id: 89,
+            solution_no: "SOL-89",
+            name: "已提交评审方案",
+            status: "REVIEW",
+          },
+        ],
+        total: 2,
+      },
+    });
+
+    renderPage();
+
+    await screen.findByText("草稿售前方案");
+    fireEvent.click(screen.getByRole("button", { name: /方案评审/ }));
+
+    expect(await screen.findByText("已提交评审方案")).toBeInTheDocument();
+    expect(screen.queryByText("草稿售前方案")).not.toBeInTheDocument();
+  });
+
   it("prefills generated solution from requirement and technical assessment context", async () => {
     presaleWorkbenchApi.loadContext.mockResolvedValueOnce({
       source: { type: "opportunity", id: 2 },
