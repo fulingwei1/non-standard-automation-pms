@@ -12,9 +12,9 @@ from fastapi.testclient import TestClient
 from app.core.config import settings
 from app.models.pmo import PmoProjectPhase
 from app.models.enums import OpenItemStatusEnum
-from app.models.presale import PresaleSolution
+from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Project
-from app.models.sales import OpenItem, Opportunity
+from app.models.sales import Lead, OpenItem, Opportunity
 from app.models.task_center import TaskUnified
 from app.models.user import User
 from app.services.pmo_initiation.service import PmoInitiationService
@@ -367,6 +367,146 @@ class TestInitiations:
         )
         assert created_again == 0
         assert after_count == before_count
+
+    def test_approve_lead_stage_solution_initiation_keeps_lead_handover(
+        self, client: TestClient, db_session, admin_token: str
+    ):
+        """线索阶段售前方案直接立项后，项目侧不能丢失线索和售前遗留事项。"""
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-PMOL-{unique}",
+            customer_name=f"线索阶段客户-{unique}",
+            contact_person="李工",
+            contact_phone="13900139000",
+            created_by=admin_user.id,
+        )
+        lead = Lead(
+            lead_code=f"LEADPMO{unique[:6]}",
+            customer_name=customer.customer_name,
+            industry="电子制造",
+            demand_summary="客户线索阶段已明确EOL终测需求",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([customer, lead])
+        db_session.flush()
+
+        ticket = PresaleSupportTicket(
+            ticket_no=f"PST-PMOL-{unique}",
+            title=f"线索阶段售前技术支持-{unique}",
+            ticket_type="SOLUTION_DESIGN",
+            urgency="NORMAL",
+            description="销售在线索阶段发起方案设计",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            lead_id=lead.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="COMPLETED",
+            actual_hours=8,
+            created_by=admin_user.id,
+        )
+        db_session.add(ticket)
+        db_session.flush()
+
+        solution = PresaleSolution(
+            solution_no=f"SOL-PMOL-{unique}",
+            name=f"线索阶段EOL方案-{unique}",
+            solution_type="CUSTOM",
+            ticket_id=ticket.id,
+            customer_id=customer.id,
+            suggested_price=260000,
+            estimated_cost=180000,
+            estimated_hours=80,
+            status="APPROVED",
+            review_status="APPROVED",
+            author_id=admin_user.id,
+            author_name=admin_user.real_name or admin_user.username,
+        )
+        open_item = OpenItem(
+            source_type="LEAD",
+            source_id=lead.id,
+            item_code=f"OI-PMOL-{unique}",
+            item_type="TECHNICAL",
+            description="线索阶段样品测试夹具图纸未冻结",
+            responsible_party="CUSTOMER",
+            responsible_person_id=admin_user.id,
+            due_date=datetime.now() + timedelta(days=3),
+            status=OpenItemStatusEnum.PENDING.value,
+            blocks_quotation=True,
+        )
+        db_session.add_all([solution, open_item])
+        db_session.commit()
+
+        created = client.post(
+            f"{prefix}/pmo/initiations",
+            json={
+                "project_name": f"线索方案直转项目-{unique}",
+                "project_type": "NEW",
+                "customer_name": customer.customer_name,
+                "technical_solution_id": solution.id,
+                "requirement_summary": "根据线索阶段售前方案直接发起立项",
+            },
+            headers=headers,
+        )
+        _assert_status(created, 201)
+        initiation_id = created.json()["id"]
+
+        submitted = client.put(
+            f"{prefix}/pmo/initiations/{initiation_id}/submit",
+            headers=headers,
+        )
+        _assert_status(submitted)
+
+        approved = client.put(
+            f"{prefix}/pmo/initiations/{initiation_id}/approve",
+            json={"review_result": "同意立项", "approved_pm_id": admin_user.id},
+            headers=headers,
+        )
+        _assert_status(approved)
+        project_id = approved.json()["data"]["project_id"]
+
+        db_session.expire_all()
+        project = db_session.query(Project).filter(Project.id == project_id).first()
+        linked_solution = db_session.get(PresaleSolution, solution.id)
+        linked_ticket = db_session.get(PresaleSupportTicket, ticket.id)
+        handover_task = (
+            db_session.query(TaskUnified)
+            .filter(
+                TaskUnified.project_id == project_id,
+                TaskUnified.source_type == "PRESALE_OPEN_ITEM",
+                TaskUnified.source_id == open_item.id,
+            )
+            .first()
+        )
+
+        assert project is not None
+        assert project.customer_id == customer.id
+        assert project.lead_id == lead.id
+        assert project.opportunity_id is None
+        assert float(project.contract_amount) == 260000.0
+        assert linked_solution.project_id == project.id
+        assert linked_ticket.project_id == project.id
+        assert handover_task is not None
+        assert handover_task.category == "PRESALE_HANDOVER"
+        assert "样品测试夹具图纸未冻结" in handover_task.title
+
+        workspace_context_response = client.get(
+            f"{prefix}/project-workspace/projects/{project_id}/workspace/context",
+            headers=headers,
+        )
+        _assert_status(workspace_context_response)
+        workspace_context = workspace_context_response.json()
+        assert workspace_context["project"]["lead_id"] == lead.id
+        assert workspace_context["presale_tickets"][0]["id"] == ticket.id
+        assert workspace_context["presale_solutions"][0]["id"] == solution.id
+        assert workspace_context["open_items"]["total"] == 1
+        assert workspace_context["open_items"]["items"][0]["id"] == open_item.id
 
 
 class TestProjectPhases:

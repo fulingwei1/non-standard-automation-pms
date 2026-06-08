@@ -159,13 +159,7 @@ class PmoInitiationService:
 
         contract = self._find_contract_for_initiation(initiation)
         solution = self._find_solution_for_initiation(initiation)
-        ticket = None
-        if solution and getattr(solution, "ticket_id", None):
-            ticket = (
-                self.db.query(PresaleSupportTicket)
-                .filter(PresaleSupportTicket.id == solution.ticket_id)
-                .first()
-            )
+        ticket = self._find_ticket_for_solution(solution)
 
         opportunity = getattr(contract, "opportunity", None) if contract else None
         if not opportunity and solution and getattr(solution, "opportunity_id", None):
@@ -174,11 +168,14 @@ class PmoInitiationService:
                 .filter(Opportunity.id == solution.opportunity_id)
                 .first()
             )
+        lead_id = getattr(opportunity, "lead_id", None) if opportunity else None
+        if not lead_id and ticket:
+            lead_id = getattr(ticket, "lead_id", None)
         technical_assessment = build_technical_assessment_handover_context(
             self.db,
             opportunity=opportunity,
             tickets=[ticket] if ticket else [],
-            lead_id=getattr(opportunity, "lead_id", None) if opportunity else None,
+            lead_id=lead_id,
         )
 
         presale_estimated_cost = (
@@ -477,6 +474,7 @@ class PmoInitiationService:
 
         contract = self._find_contract_for_initiation(initiation)
         presale_solution = self._find_solution_for_initiation(initiation)
+        presale_ticket = self._find_ticket_for_solution(presale_solution)
         if contract and contract.project_id:
             existing_project = (
                 self.db.query(Project).filter(Project.id == contract.project_id).first()
@@ -486,6 +484,7 @@ class PmoInitiationService:
                     existing_project,
                     contract,
                     presale_solution,
+                    presale_ticket,
                 )
                 self._bind_presale_solution_to_project(presale_solution, existing_project.id)
                 self._ensure_payment_plans_for_contract(contract)
@@ -503,6 +502,13 @@ class PmoInitiationService:
             customer = (
                 self.db.query(Customer)
                 .filter(Customer.id == presale_solution.customer_id)
+                .first()
+            )
+
+        if not customer and presale_ticket and getattr(presale_ticket, "customer_id", None):
+            customer = (
+                self.db.query(Customer)
+                .filter(Customer.id == presale_ticket.customer_id)
                 .first()
             )
 
@@ -533,6 +539,8 @@ class PmoInitiationService:
         opportunity_id = getattr(contract, "opportunity_id", None) if contract else None
         if not opportunity_id and presale_solution:
             opportunity_id = getattr(presale_solution, "opportunity_id", None)
+        if not opportunity_id and presale_ticket:
+            opportunity_id = getattr(presale_ticket, "opportunity_id", None)
         lead_id = None
         if opportunity_id:
             opportunity = (
@@ -541,6 +549,8 @@ class PmoInitiationService:
                 .first()
             )
             lead_id = getattr(opportunity, "lead_id", None) if opportunity else None
+        if not lead_id and presale_ticket:
+            lead_id = getattr(presale_ticket, "lead_id", None)
 
         # 创建项目
         project = Project(
@@ -606,6 +616,7 @@ class PmoInitiationService:
         project: Project,
         contract: Optional[Contract],
         presale_solution: Optional[PresaleSolution],
+        presale_ticket: Optional[PresaleSupportTicket] = None,
     ) -> None:
         """复用已有项目时补齐销售/售前来源，保证后续交接同步能追溯。"""
         if contract:
@@ -621,6 +632,9 @@ class PmoInitiationService:
         if presale_solution and not getattr(project, "opportunity_id", None):
             project.opportunity_id = getattr(presale_solution, "opportunity_id", None)
 
+        if presale_ticket and not getattr(project, "opportunity_id", None):
+            project.opportunity_id = getattr(presale_ticket, "opportunity_id", None)
+
         if getattr(project, "opportunity_id", None) and not getattr(project, "lead_id", None):
             opportunity = (
                 self.db.query(Opportunity)
@@ -628,6 +642,9 @@ class PmoInitiationService:
                 .first()
             )
             project.lead_id = getattr(opportunity, "lead_id", None) if opportunity else None
+
+        if presale_ticket and not getattr(project, "lead_id", None):
+            project.lead_id = getattr(presale_ticket, "lead_id", None)
 
         self.db.add(project)
 
@@ -811,6 +828,20 @@ class PmoInitiationService:
         return (
             self.db.query(PresaleSolution)
             .filter(PresaleSolution.id == solution_id)
+            .first()
+        )
+
+    def _find_ticket_for_solution(
+        self, presale_solution: Optional[PresaleSolution]
+    ) -> Optional[PresaleSupportTicket]:
+        """按售前方案关联的工单补齐线索/商机上下文。"""
+        ticket_id = getattr(presale_solution, "ticket_id", None)
+        if not ticket_id:
+            return None
+
+        return (
+            self.db.query(PresaleSupportTicket)
+            .filter(PresaleSupportTicket.id == ticket_id)
             .first()
         )
 
