@@ -18,6 +18,61 @@ function normalizeAssessments(response) {
   return [];
 }
 
+function normalizeAssessmentTemplates(response) {
+  const candidates = [
+    response?.formatted,
+    response?.data?.data,
+    response?.data,
+    response,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+    if (Array.isArray(candidate?.items)) return candidate.items;
+  }
+
+  return [];
+}
+
+function getTemplateId(template) {
+  const id = template?.id ?? template?.template_id ?? template?.templateId;
+  return id === undefined || id === null || id === "" ? "" : String(id);
+}
+
+function getAssessmentTemplateId(assessment) {
+  const id = assessment?.template_id ?? assessment?.templateId;
+  return id === undefined || id === null || id === "" ? "" : String(id);
+}
+
+function pickDefaultTemplateId(templates) {
+  if (!templates.length) {
+    return "";
+  }
+  const defaultTemplate = templates.find((template) => template?.is_default || template?.isDefault);
+  return getTemplateId(defaultTemplate || templates[0]);
+}
+
+function resolveSelectedTemplateId(assessment, templates, currentTemplateId) {
+  const assessmentTemplateId = getAssessmentTemplateId(assessment);
+  if (assessmentTemplateId) {
+    return assessmentTemplateId;
+  }
+
+  const currentId = currentTemplateId ? String(currentTemplateId) : "";
+  if (currentId && templates.some((template) => getTemplateId(template) === currentId)) {
+    return currentId;
+  }
+
+  return pickDefaultTemplateId(templates);
+}
+
+function appendTemplateId(payload, selectedTemplateId) {
+  const parsed = Number(selectedTemplateId);
+  if (Number.isInteger(parsed) && parsed > 0) {
+    payload.template_id = parsed;
+  }
+}
+
 function parseContextId(value) {
   if (!value) {
     return null;
@@ -339,6 +394,8 @@ export function useAssessmentData(
   const [collaboration, setCollaboration] = useState(emptyCollaboration());
   const [enableAI, setEnableAI] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [assessmentTemplates, setAssessmentTemplates] = useState([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const normalizedSourceType = normalizeAssessmentSourceType(sourceType);
   const numericSourceId = parseContextId(sourceId);
   const numericPresaleTicketId = parseContextId(presaleTicketId);
@@ -350,6 +407,7 @@ export function useAssessmentData(
       let result = [];
       let contextRequirementData = {};
       let contextCollaboration = emptyCollaboration();
+      let templates = [];
 
       if (normalizedSourceType === "lead") {
         const response = await technicalAssessmentApi.getLeadAssessments(
@@ -361,6 +419,17 @@ export function useAssessmentData(
           parseInt(sourceId)
         );
         result = normalizeAssessments(response);
+      }
+
+      if (presaleWorkbenchApi?.getAssessmentTemplates) {
+        try {
+          const templateResponse = await presaleWorkbenchApi.getAssessmentTemplates({
+            is_active: true,
+          });
+          templates = normalizeAssessmentTemplates(templateResponse);
+        } catch (templateError) {
+          console.warn("加载技术评估模板失败:", templateError);
+        }
       }
 
       if (numericSourceId && presaleWorkbenchApi?.loadContext) {
@@ -389,14 +458,21 @@ export function useAssessmentData(
         }
       }
 
+      const currentAssessment = selectCurrentAssessment(result, selectedAssessmentId, numericPresaleTicketId);
       setAssessments(result);
-      setAssessment(selectCurrentAssessment(result, selectedAssessmentId, numericPresaleTicketId));
+      setAssessment(currentAssessment);
+      setAssessmentTemplates(templates);
+      setSelectedTemplateId((currentTemplateId) =>
+        resolveSelectedTemplateId(currentAssessment, templates, currentTemplateId),
+      );
       setRequirementData(contextRequirementData);
       setCollaboration(contextCollaboration);
     } catch (error) {
       console.error("加载评估失败:", error);
       setAssessments([]);
       setAssessment(null);
+      setAssessmentTemplates([]);
+      setSelectedTemplateId("");
       setRequirementData({});
       setCollaboration(emptyCollaboration());
     } finally {
@@ -414,6 +490,7 @@ export function useAssessmentData(
       if (numericPresaleTicketId) {
         payload.presale_ticket_id = numericPresaleTicketId;
       }
+      appendTemplateId(payload, selectedTemplateId);
 
       let response;
       if (normalizedSourceType === "lead") {
@@ -453,10 +530,12 @@ export function useAssessmentData(
 
     try {
       setEvaluating(true);
-      const response = await technicalAssessmentApi.evaluate(assessment.id, {
+      const payload = {
         requirement_data: requirementData,
         enable_ai: enableAI,
-      });
+      };
+      appendTemplateId(payload, selectedTemplateId);
+      const response = await technicalAssessmentApi.evaluate(assessment.id, payload);
 
       setAssessment(response.data);
       await loadAssessment();
@@ -482,6 +561,9 @@ export function useAssessmentData(
     setEnableAI,
     showHistory,
     setShowHistory,
+    assessmentTemplates,
+    selectedTemplateId,
+    setSelectedTemplateId,
     handleApplyAssessment,
     handleEvaluate,
   };

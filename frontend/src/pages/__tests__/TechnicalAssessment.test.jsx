@@ -17,6 +17,7 @@ vi.mock("react-router-dom", () => ({
 vi.mock("../../services/api", () => ({
   presaleWorkbenchApi: {
     loadContext: vi.fn(),
+    getAssessmentTemplates: vi.fn(),
   },
   technicalAssessmentApi: {
     getLeadAssessments: vi.fn(),
@@ -33,6 +34,9 @@ describe("TechnicalAssessment", () => {
     vi.spyOn(window, "alert").mockImplementation(() => {});
     presaleWorkbenchApi.loadContext.mockResolvedValue({
       assessment: { requirementDetail: null },
+    });
+    presaleWorkbenchApi.getAssessmentTemplates.mockResolvedValue({
+      data: { data: { items: [] } },
     });
     useParams.mockReturnValue({ sourceType: "lead", sourceId: "21" });
     useSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
@@ -79,6 +83,65 @@ describe("TechnicalAssessment", () => {
     expect(screen.getByText("18 / 20")).toBeInTheDocument();
     expect(screen.getByText("推荐立项")).toBeInTheDocument();
     expect(screen.getByText("PM 提前确认排产资源")).toBeInTheDocument();
+  });
+
+  it("shows template item scores for completed template-based assessments", async () => {
+    presaleWorkbenchApi.getAssessmentTemplates.mockResolvedValue({
+      data: {
+        data: {
+          items: [
+            {
+              id: 31,
+              template_name: "非标自动化标准评估模板",
+              version: "V1.0",
+              is_default: true,
+            },
+          ],
+        },
+      },
+    });
+    technicalAssessmentApi.getLeadAssessments.mockResolvedValue({
+      data: [
+        {
+          id: 706,
+          source_type: "LEAD",
+          source_id: 21,
+          status: "COMPLETED",
+          total_score: 85,
+          template_id: 31,
+          dimension_scores: {
+            technology: 20,
+            business: 16,
+            resource: 15,
+            delivery: 17,
+            customer: 17,
+          },
+          item_scores: JSON.stringify([
+            {
+              item_id: 1,
+              item_code: "tech_maturity",
+              item_name: "技术成熟度",
+              dimension: "technology",
+              score: 10,
+              max_score: 10,
+              weight: 1,
+              value: "mature",
+            },
+          ]),
+          decision: "RECOMMEND",
+          risks: [],
+          similar_cases: [],
+          conditions: [],
+        },
+      ],
+    });
+
+    render(<TechnicalAssessment />);
+
+    expect(await screen.findByText("评估项得分")).toBeInTheDocument();
+    expect(screen.getByText("技术成熟度")).toBeInTheDocument();
+    expect(screen.getByText("10 / 10")).toBeInTheDocument();
+    expect(screen.getByText("非标自动化标准评估模板 V1.0")).toBeInTheDocument();
   });
 
   it("submits structured requirement fields without editing raw JSON", async () => {
@@ -132,6 +195,100 @@ describe("TechnicalAssessment", () => {
           has_sow: true,
         }),
         enable_ai: false,
+      });
+    });
+  });
+
+  it("passes the default assessment template when applying a new assessment", async () => {
+    presaleWorkbenchApi.getAssessmentTemplates.mockResolvedValue({
+      data: {
+        data: {
+          items: [
+            { id: 41, template_name: "默认技术评估模板", is_default: true },
+            { id: 42, template_name: "改造项目评估模板", is_default: false },
+          ],
+        },
+      },
+    });
+    technicalAssessmentApi.getLeadAssessments.mockResolvedValue({ data: [] });
+    technicalAssessmentApi.applyForLead.mockResolvedValue({
+      data: { data: { assessment_id: 900 } },
+    });
+
+    render(<TechnicalAssessment />);
+
+    const templateSelect = await screen.findByLabelText("评估模板");
+    expect(templateSelect).toHaveValue("41");
+    fireEvent.click(screen.getByRole("button", { name: "申请技术评估" }));
+
+    await waitFor(() => {
+      expect(technicalAssessmentApi.applyForLead).toHaveBeenCalledWith(21, {
+        template_id: 41,
+      });
+    });
+  });
+
+  it("passes the selected assessment template when evaluating a pending assessment", async () => {
+    presaleWorkbenchApi.getAssessmentTemplates.mockResolvedValue({
+      data: {
+        data: {
+          items: [
+            { id: 51, template_name: "标准设备模板", is_default: true },
+            { id: 52, template_name: "软件项目模板", is_default: false },
+          ],
+        },
+      },
+    });
+    technicalAssessmentApi.getLeadAssessments.mockResolvedValue({
+      data: [
+        {
+          id: 707,
+          source_type: "LEAD",
+          source_id: 21,
+          status: "PENDING",
+          total_score: null,
+        },
+      ],
+    });
+    technicalAssessmentApi.evaluate.mockResolvedValue({
+      data: {
+        id: 707,
+        source_type: "LEAD",
+        source_id: 21,
+        status: "COMPLETED",
+        total_score: 88,
+        template_id: 52,
+        dimension_scores: JSON.stringify({
+          technology: 18,
+          business: 18,
+          resource: 17,
+          delivery: 17,
+          customer: 18,
+        }),
+        risks: "[]",
+        similar_cases: "[]",
+        conditions: "[]",
+        item_scores: "[]",
+      },
+    });
+
+    render(<TechnicalAssessment />);
+
+    const templateSelect = await screen.findByLabelText("评估模板");
+    expect(templateSelect).toHaveValue("51");
+    fireEvent.change(templateSelect, { target: { value: "52" } });
+    fireEvent.change(screen.getByLabelText("技术成熟度"), {
+      target: { value: "mature" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "执行评估" }));
+
+    await waitFor(() => {
+      expect(technicalAssessmentApi.evaluate).toHaveBeenCalledWith(707, {
+        requirement_data: expect.objectContaining({
+          tech_maturity: "mature",
+        }),
+        enable_ai: false,
+        template_id: 52,
       });
     });
   });

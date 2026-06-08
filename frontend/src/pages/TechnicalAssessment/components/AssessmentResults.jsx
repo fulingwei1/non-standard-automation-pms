@@ -19,7 +19,7 @@ import {
   dimensionLabels,
   dimensionNames,
 } from "../utils/pageConstants";
-import { parseAssessmentObject } from "../utils/assessmentPayload";
+import { parseAssessmentList, parseAssessmentObject } from "../utils/assessmentPayload";
 
 export function AssessmentResults({
   assessment,
@@ -90,6 +90,8 @@ export function AssessmentResults({
 function ScoresTab({ assessment, dimensionScores, conditions }) {
   if (!dimensionScores) return null;
 
+  const itemScores = parseAssessmentList(assessment?.item_scores);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-center">
@@ -110,6 +112,8 @@ function ScoresTab({ assessment, dimensionScores, conditions }) {
           </div>
         ))}
       </div>
+
+      {itemScores.length > 0 && <ItemScoresPanel itemScores={itemScores} />}
 
       {assessment.decision && (
         <div className="mt-6 p-4 bg-gray-700 rounded-lg">
@@ -136,6 +140,64 @@ function ScoresTab({ assessment, dimensionScores, conditions }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+const itemDimensionNames = {
+  ...dimensionNames,
+  risk: "风险维度",
+  assessment: "评估维度",
+};
+
+function formatScoreValue(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return value ?? "-";
+  }
+  return Number.isInteger(parsed) ? parsed : parsed.toFixed(1);
+}
+
+function getItemDimensionName(dimension) {
+  const key = String(dimension || "").toLowerCase();
+  return itemDimensionNames[key] || dimension || "评估项";
+}
+
+function ItemScoresPanel({ itemScores }) {
+  return (
+    <div className="space-y-3">
+      <h4 className="text-sm font-semibold">评估项得分</h4>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        {itemScores.map((item, index) => {
+          const score = Number(item.score ?? 0);
+          const maxScore = Number(item.max_score ?? item.maxScore ?? 10);
+          const progressValue = maxScore > 0 ? (score / maxScore) * 100 : 0;
+          const itemName = item.item_name || item.itemName || item.item_code || `评估项${index + 1}`;
+          return (
+            <div
+              key={item.item_id ?? item.item_code ?? index}
+              className="space-y-2 rounded-lg bg-gray-700 p-3"
+            >
+              <div className="flex items-start justify-between gap-3 text-sm">
+                <div>
+                  <div className="font-medium text-slate-100">{itemName}</div>
+                  <div className="mt-1 text-xs text-slate-400">
+                    {getItemDimensionName(item.dimension)}
+                    {item.weight !== undefined ? ` · 权重 ${formatScoreValue(item.weight)}` : ""}
+                  </div>
+                </div>
+                <span className="shrink-0 font-semibold">
+                  {formatScoreValue(item.score)} / {formatScoreValue(maxScore)}
+                </span>
+              </div>
+              <Progress value={Math.max(0, Math.min(progressValue, 100))} className="h-2" />
+              {item.value !== undefined && item.value !== null && item.value !== "" && (
+                <div className="text-xs text-slate-400">取值: {String(item.value)}</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

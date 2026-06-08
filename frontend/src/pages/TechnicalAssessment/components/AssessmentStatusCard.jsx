@@ -10,16 +10,62 @@ import {
 } from "../../../components/ui";
 import { statusConfig } from "../utils/pageConstants";
 
+function getTemplateOptionId(template) {
+  return template?.id ?? template?.template_id ?? template?.templateId ?? "";
+}
+
+function getTemplateOptionName(template) {
+  const name = template?.template_name || template?.templateName || template?.name || "未命名模板";
+  return template?.version ? `${name} (${template.version})` : name;
+}
+
+function TemplateSelector({ templates, selectedTemplateId, onTemplateChange }) {
+  return (
+    <label htmlFor="assessment-template" className="block max-w-md space-y-1">
+      <span className="text-xs text-slate-400">评估模板</span>
+      <select
+        id="assessment-template"
+        aria-label="评估模板"
+        value={selectedTemplateId}
+        onChange={(event) => onTemplateChange?.(event.target.value)}
+        className="h-10 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-white focus:border-blue-500 focus:outline-none"
+      >
+        <option value="">默认评分规则</option>
+        {templates.map((template) => (
+          <option key={getTemplateOptionId(template)} value={getTemplateOptionId(template)}>
+            {getTemplateOptionName(template)}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 export function AssessmentStatusCard({
   assessment,
   assessments,
   showHistory,
   setShowHistory,
   evaluating,
+  assessmentTemplates = [],
+  selectedTemplateId = "",
+  onTemplateChange,
   onExportReport,
   onApplyAssessment,
   onEvaluate,
 }) {
+  const selectedTemplate = assessmentTemplates.find(
+    (template) => String(getTemplateOptionId(template)) === String(selectedTemplateId),
+  );
+  const selectedTemplateName = selectedTemplate
+    ? getTemplateOptionName(selectedTemplate).replace(/\s*\(([^)]+)\)$/, " $1")
+    : selectedTemplateId
+      ? `模板 #${selectedTemplateId}`
+      : "";
+  const canSelectTemplate =
+    assessmentTemplates.length > 0 &&
+    (!assessment || ["PENDING", "IN_PROGRESS"].includes(String(assessment.status || "").toUpperCase()));
+
   return (
     <Card className="bg-gray-800 border-gray-700">
       <CardHeader>
@@ -88,6 +134,21 @@ export function AssessmentStatusCard({
               )}
             </div>
 
+            {canSelectTemplate && (
+              <TemplateSelector
+                templates={assessmentTemplates}
+                selectedTemplateId={selectedTemplateId}
+                onTemplateChange={onTemplateChange}
+              />
+            )}
+
+            {!canSelectTemplate && selectedTemplateName && (
+              <div className="flex items-center gap-2 text-sm text-slate-300">
+                <span className="text-slate-400">评估模板</span>
+                <Badge variant="outline">{selectedTemplateName}</Badge>
+              </div>
+            )}
+
             {assessment.total_score !== null && (
               <div className="flex items-center gap-4">
                 <div className="text-3xl font-bold">
@@ -99,7 +160,16 @@ export function AssessmentStatusCard({
             )}
           </div>
         ) : (
-          <div className="text-gray-400">尚未申请技术评估</div>
+          <div className="space-y-4">
+            {canSelectTemplate && (
+              <TemplateSelector
+                templates={assessmentTemplates}
+                selectedTemplateId={selectedTemplateId}
+                onTemplateChange={onTemplateChange}
+              />
+            )}
+            <div className="text-gray-400">尚未申请技术评估</div>
+          </div>
         )}
       </CardContent>
     </Card>

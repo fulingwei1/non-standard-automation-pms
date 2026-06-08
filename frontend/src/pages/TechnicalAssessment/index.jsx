@@ -113,6 +113,9 @@ export default function TechnicalAssessment() {
     setEnableAI,
     showHistory,
     setShowHistory,
+    assessmentTemplates,
+    selectedTemplateId,
+    setSelectedTemplateId,
     handleApplyAssessment,
     handleEvaluate,
   } = useAssessmentData(
@@ -157,6 +160,9 @@ export default function TechnicalAssessment() {
           showHistory={showHistory}
           setShowHistory={setShowHistory}
           evaluating={evaluating}
+          assessmentTemplates={assessmentTemplates}
+          selectedTemplateId={selectedTemplateId}
+          onTemplateChange={setSelectedTemplateId}
           onExportReport={handleExportReport}
           onApplyAssessment={handleApplyAssessment}
           onEvaluate={handleEvaluate}
