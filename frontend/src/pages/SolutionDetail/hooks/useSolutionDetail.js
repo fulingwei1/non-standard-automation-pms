@@ -136,6 +136,26 @@ const normalizeReviewStatus = (status) => {
     return normalized || "pending";
 };
 
+const normalizeSolutionStatus = (solutionData) => {
+    const status = (solutionData.status || "").toLowerCase();
+    const rawReviewStatus = (solutionData.review_status || "").toLowerCase();
+    const reviewStatus = normalizeReviewStatus(solutionData.review_status);
+
+    if (["published", "archived"].includes(status)) {
+        return status;
+    }
+
+    if (["approved", "rejected"].includes(reviewStatus)) {
+        return reviewStatus;
+    }
+
+    if (["review", "pending", "submitted"].includes(rawReviewStatus)) {
+        return "review";
+    }
+
+    return status || "draft";
+};
+
 const buildReviews = (solutionData) => {
     const hasReview =
         solutionData.review_status ||
@@ -245,11 +265,15 @@ export function useSolutionDetail() {
                 customer: solutionData.customer_name || "",
                 customerId: solutionData.customer_id,
                 version: solutionData.version || "V1.0",
-                status: (solutionData.status || solutionData.review_status)?.toLowerCase() || "draft",
+                status: normalizeSolutionStatus(solutionData),
                 deviceType: solutionData.solution_type?.toLowerCase() || "",
                 deviceTypeName: solutionData.solution_type || "",
                 progress: solutionData.progress || 0,
                 amount: safeNumber(amountSource) / 10000,
+                estimatedAmount: safeNumber(amountSource),
+                estimatedCost: safeNumber(solutionData.estimated_cost),
+                suggestedPrice: safeNumber(solutionData.suggested_price),
+                estimatedHours: safeNumber(solutionData.estimated_hours),
                 deadline: solutionData.deadline || "",
                 createdAt: solutionData.created_at || "",
                 updatedAt: solutionData.updated_at || solutionData.created_at || "",

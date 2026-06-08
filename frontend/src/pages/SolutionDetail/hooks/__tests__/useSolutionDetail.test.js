@@ -90,6 +90,9 @@ describe("useSolutionDetail", () => {
       name: "华南电子FCT方案",
       status: "approved",
       amount: 18,
+      estimatedAmount: 180000,
+      estimatedCost: 120000,
+      suggestedPrice: 180000,
       ticketId: 501,
       leadId: 2026,
       projectId: 42,
@@ -229,6 +232,31 @@ describe("useSolutionDetail", () => {
       { name: "宋魁", role: "销售负责人", avatar: "宋" },
       { name: "周工", role: "方案评审", avatar: "周" },
     ]);
+  });
+
+  it("treats an approved review status as approved even when legacy status is stale", async () => {
+    presaleApi.solutions.get.mockResolvedValue({
+      data: {
+        code: 200,
+        data: {
+          id: 88,
+          solution_no: "SOL-20260607-001",
+          name: "华南电子FCT方案",
+          status: "DRAFT",
+          review_status: "APPROVED",
+          version: "V1.0",
+          author_name: "陈敏",
+          solution_overview: "采用模块化测试平台",
+        },
+      },
+    });
+    presaleApi.solutions.getCost.mockResolvedValue({ data: { code: 200, data: null } });
+
+    const { result } = renderHook(() => useSolutionDetail());
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.solution.status).toBe("approved");
   });
 
   it("submits a draft solution for review and refreshes detail state", async () => {

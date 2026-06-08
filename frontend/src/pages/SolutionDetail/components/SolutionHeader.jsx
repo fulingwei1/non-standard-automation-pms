@@ -1,5 +1,16 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Share2, Download, Edit, MoreHorizontal, Copy, Send, Archive, Trash2 } from "lucide-react";
+import {
+    ArrowLeft,
+    Share2,
+    Download,
+    Edit,
+    MoreHorizontal,
+    Copy,
+    Send,
+    Archive,
+    Trash2,
+    FolderPlus,
+} from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "../../../components/ui/dropdown-menu";
@@ -50,11 +61,13 @@ export function SolutionHeader({
     solution,
     navigate,
     onSubmitReview,
+    onCreateInitiation,
     submittingReview = false,
     contextSearch = "",
 }) {
     const statusStyle = getStatusStyle(solution.status);
     const canSubmitReview = ["draft", "rejected"].includes(solution.status);
+    const canCreateInitiation = ["approved", "published"].includes(solution.status);
 
     return (
         <motion.div variants={fadeIn} className="flex items-center gap-4">
@@ -90,6 +103,15 @@ export function SolutionHeader({
                 <Button className="flex items-center gap-2">
                     <Edit className="w-4 h-4" />
                     编辑
+                </Button>
+                <Button
+                    variant="outline"
+                    className="flex items-center gap-2"
+                    disabled={!canCreateInitiation}
+                    onClick={() => onCreateInitiation?.(solution)}
+                >
+                    <FolderPlus className="w-4 h-4" />
+                    发起立项
                 </Button>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

@@ -188,4 +188,56 @@ describe("SolutionDetail", () => {
       "/presales/technical-solutions?tab=solutions&type=support&ticket_id=501&lead_id=2026&opportunity_id=2&project_id=42",
     );
   });
+
+  it("opens PMO initiation handoff from an approved technical solution", () => {
+    useSolutionDetail.mockReturnValue({
+      activeTab: "overview",
+      setActiveTab: vi.fn(),
+      solution: {
+        id: 88,
+        code: "SOL-20260607-001",
+        name: "华南电子FCT方案",
+        customer: "华南电子",
+        opportunity: "华南电子二期",
+        status: "approved",
+        version: "V1.0",
+        ticketId: 501,
+        leadId: 2026,
+        opportunityId: 2,
+        projectId: 42,
+        suggestedPrice: 280000,
+        requirementSummary: "三工位FCT测试线",
+        estimatedHours: 120,
+      },
+      loading: false,
+      error: null,
+      costEstimate: null,
+      submittingReview: false,
+      reviewError: null,
+      submitForReview: vi.fn(),
+    });
+
+    render(
+      <MemoryRouter>
+        <SolutionDetail />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "发起立项" }));
+
+    const target = new URL(navigateMock.mock.calls.at(-1)[0], "http://localhost");
+    expect(target.pathname).toBe("/pmo/initiations");
+    expect(target.searchParams.get("handoff")).toBe("presale");
+    expect(target.searchParams.get("solution_id")).toBe("88");
+    expect(target.searchParams.get("ticket_id")).toBe("501");
+    expect(target.searchParams.get("lead_id")).toBe("2026");
+    expect(target.searchParams.get("opportunity_id")).toBe("2");
+    expect(target.searchParams.get("project_id")).toBe("42");
+    expect(target.searchParams.get("project_name")).toBe("华南电子FCT方案");
+    expect(target.searchParams.get("opportunity_name")).toBe("华南电子二期");
+    expect(target.searchParams.get("customer_name")).toBe("华南电子");
+    expect(target.searchParams.get("estimated_amount")).toBe("280000");
+    expect(target.searchParams.get("requirement_summary")).toBe("三工位FCT测试线");
+    expect(target.searchParams.get("estimated_hours")).toBe("120");
+  });
 });

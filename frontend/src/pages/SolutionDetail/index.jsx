@@ -79,6 +79,50 @@ function buildCostEstimateUrl(solution, search = "") {
     return `/presales/technical-solutions?${params.toString()}`;
 }
 
+function buildInitiationHandoffUrl(solution, search = "") {
+    const currentParams = new URLSearchParams(search);
+    const params = new URLSearchParams();
+    params.set("handoff", "presale");
+
+    appendContextParam(params, "solution_id", solution?.id);
+    appendContextParam(
+        params,
+        "ticket_id",
+        getContextValue(solution?.ticketId, currentParams, "ticket_id", "ticketId"),
+    );
+    appendContextParam(
+        params,
+        "lead_id",
+        getContextValue(solution?.leadId, currentParams, "lead_id", "leadId"),
+    );
+    appendContextParam(
+        params,
+        "opportunity_id",
+        getContextValue(solution?.opportunityId, currentParams, "opportunity_id", "opportunityId"),
+    );
+    appendContextParam(
+        params,
+        "project_id",
+        getContextValue(solution?.projectId, currentParams, "project_id", "projectId"),
+    );
+    appendContextParam(params, "project_name", solution?.name);
+    appendContextParam(params, "opportunity_name", solution?.opportunity);
+    appendContextParam(params, "customer_name", solution?.customer);
+    appendContextParam(
+        params,
+        "estimated_amount",
+        solution?.suggestedPrice || solution?.estimatedAmount || solution?.estimatedCost,
+    );
+    appendContextParam(
+        params,
+        "requirement_summary",
+        solution?.requirementSummary || solution?.description || solution?.solutionOverview,
+    );
+    appendContextParam(params, "estimated_hours", solution?.estimatedHours);
+
+    return `/pmo/initiations?${params.toString()}`;
+}
+
 export default function SolutionDetail() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -134,6 +178,9 @@ export default function SolutionDetail() {
                 onSubmitReview={submitForReview}
                 submittingReview={submittingReview}
                 contextSearch={location.search}
+                onCreateInitiation={(targetSolution) =>
+                    navigate(buildInitiationHandoffUrl(targetSolution, location.search))
+                }
             />
 
             {reviewError && (
