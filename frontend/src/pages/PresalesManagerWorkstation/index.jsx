@@ -3,6 +3,8 @@
  * 核心功能：团队管理、方案审核、投标支持、团队绩效监控
  */
 import { motion } from "framer-motion";
+import { useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { Users, BarChart3 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import { Button } from "../../components/ui/button";
@@ -15,8 +17,39 @@ import OngoingSolutionsCard from "./components/OngoingSolutionsCard";
 import PendingReviewsCard from "./components/PendingReviewsCard";
 import BiddingProjectsCard from "./components/BiddingProjectsCard";
 import MonthlyTargetCard from "./components/MonthlyTargetCard";
+import { SOLUTION_CENTER_PATH } from "./constants";
+
+const TASK_REVIEW_PATH = "/presales/technical-solutions?tab=reviews";
+const BID_CENTER_PATH = "/presales/technical-solutions?tab=bids";
+
+function mergeCurrentSearch(to, currentSearch) {
+  if (!currentSearch) {
+    return to;
+  }
+
+  const [pathname, rawSearch = ""] = to.split("?");
+  const nextParams = new URLSearchParams(rawSearch);
+  const currentParams = new URLSearchParams(currentSearch);
+
+  currentParams.forEach((value, key) => {
+    if (!nextParams.has(key)) {
+      nextParams.append(key, value);
+    }
+  });
+
+  const nextSearch = nextParams.toString();
+  return nextSearch ? `${pathname}?${nextSearch}` : pathname;
+}
+
+function buildPresaleCenterLink(to, currentSearch) {
+  if (!to.startsWith("/presales/technical-solutions")) {
+    return to;
+  }
+  return mergeCurrentSearch(to, currentSearch);
+}
 
 export default function PresalesManagerWorkstation() {
+  const location = useLocation();
   const {
     loading,
     error,
@@ -26,6 +59,18 @@ export default function PresalesManagerWorkstation() {
     ongoingSolutions,
     biddingProjects,
   } = useDashboardData();
+  const solutionCenterPath = useMemo(
+    () => buildPresaleCenterLink(SOLUTION_CENTER_PATH, location.search),
+    [location.search],
+  );
+  const reviewCenterPath = useMemo(
+    () => buildPresaleCenterLink(TASK_REVIEW_PATH, location.search),
+    [location.search],
+  );
+  const bidCenterPath = useMemo(
+    () => buildPresaleCenterLink(BID_CENTER_PATH, location.search),
+    [location.search],
+  );
 
   if (loading) {
     return (
@@ -79,14 +124,26 @@ export default function PresalesManagerWorkstation() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 左侧 - 团队绩效和进行中方案 */}
         <div className="lg:col-span-2 space-y-6">
-          <TeamPerformanceCard teamPerformance={teamPerformance} />
-          <OngoingSolutionsCard ongoingSolutions={ongoingSolutions} />
+          <TeamPerformanceCard
+            teamPerformance={teamPerformance}
+            detailsPath={reviewCenterPath}
+          />
+          <OngoingSolutionsCard
+            ongoingSolutions={ongoingSolutions}
+            solutionCenterPath={solutionCenterPath}
+          />
         </div>
 
         {/* 右侧 - 待审核方案和投标项目 */}
         <div className="space-y-6">
-          <PendingReviewsCard pendingReviews={pendingReviews} />
-          <BiddingProjectsCard biddingProjects={biddingProjects} />
+          <PendingReviewsCard
+            pendingReviews={pendingReviews}
+            solutionCenterPath={solutionCenterPath}
+          />
+          <BiddingProjectsCard
+            biddingProjects={biddingProjects}
+            allBidsPath={bidCenterPath}
+          />
         </div>
       </div>
 

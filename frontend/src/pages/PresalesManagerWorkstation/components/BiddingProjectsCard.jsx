@@ -14,7 +14,10 @@ import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 import { formatCurrencyCompact as formatCurrency } from "../../../lib/formatters";
 
-export default function BiddingProjectsCard({ biddingProjects }) {
+export default function BiddingProjectsCard({
+  biddingProjects,
+  allBidsPath = "/presales/technical-solutions?tab=bids",
+}) {
   return (
     <motion.div variants={fadeIn}>
       <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
@@ -24,7 +27,7 @@ export default function BiddingProjectsCard({ biddingProjects }) {
               <Target className="h-5 w-5 text-amber-400" />
               投标项目
             </CardTitle>
-            <Link to="/presales/technical-solutions?tab=bids">
+            <Link to={allBidsPath}>
               <Button
                 variant="ghost"
                 size="sm"

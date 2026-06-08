@@ -7,7 +7,10 @@ import { Badge } from "../../ui/badge";
 import { cn } from "../../../lib/utils";
 import { formatAmountWan } from "./utils";
 
-export default function RecentTendersCard({ tenders }) {
+export default function RecentTendersCard({
+  tenders,
+  allTendersPath = "/presales/technical-solutions?tab=bids",
+}) {
   return (
     <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5 shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -15,7 +18,7 @@ export default function RecentTendersCard({ tenders }) {
           <Target className="w-5 h-5 text-amber-400" />
           近期投标
         </CardTitle>
-        <Link to="/presales/technical-solutions?tab=bids">
+        <Link to={allTendersPath}>
           <Button
             variant="ghost"
             size="sm"

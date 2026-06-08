@@ -20,7 +20,10 @@ const RANK_COLORS = [
   "bg-gradient-to-br from-purple-500 to-pink-500",
 ];
 
-export default function TeamPerformanceCard({ teamPerformance }) {
+export default function TeamPerformanceCard({
+  teamPerformance,
+  detailsPath = "/presales/technical-solutions?tab=reviews",
+}) {
   return (
     <motion.div variants={fadeIn}>
       <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
@@ -30,7 +33,7 @@ export default function TeamPerformanceCard({ teamPerformance }) {
               <Users className="h-5 w-5 text-purple-400" />
               团队绩效排行
             </CardTitle>
-            <Link to="/presales/technical-solutions?tab=reviews">
+            <Link to={detailsPath}>
               <Button
                 variant="ghost"
                 size="sm"

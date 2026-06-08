@@ -15,7 +15,10 @@ import { Progress } from "../../ui/progress";
 import { cn } from "../../../lib/utils";
 import { formatAmountWan } from "./utils";
 
-export default function OngoingSolutionsCard({ solutions }) {
+export default function OngoingSolutionsCard({
+  solutions,
+  solutionCenterPath = "/presales/technical-solutions?tab=solutions",
+}) {
   return (
     <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5 shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -23,7 +26,7 @@ export default function OngoingSolutionsCard({ solutions }) {
           <FileText className="w-5 h-5 text-violet-400" />
           进行中方案
         </CardTitle>
-        <Link to="/presales/technical-solutions?tab=solutions">
+        <Link to={solutionCenterPath}>
           <Button
             variant="ghost"
             size="sm"

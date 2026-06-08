@@ -36,6 +36,32 @@ const apiMocks = vi.hoisted(() => ({
 
 vi.mock("../../services/api", () => apiMocks);
 
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
+  return actual;
+});
+
+function createOverview(overrides = {}) {
+  return {
+    tickets: { items: [], total: 0 },
+    solutions: { items: [], total: 0 },
+    tenders: { items: [], total: 0 },
+    opportunities: { items: [], total: 0 },
+    templates: {
+      assessment: { items: [], total: 0 },
+      technical: { items: [], total: 0 },
+    },
+    funnel: {
+      summary: {},
+      health: {},
+      conversion: {},
+      dwellAlerts: { items: [], total: 0 },
+    },
+    meta: { failures: [] },
+    ...overrides,
+  };
+}
+
 describe("PresalesWorkstation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -146,6 +172,54 @@ describe("PresalesWorkstation", () => {
     expect(apiMocks.presaleApi.solutions.list).not.toHaveBeenCalled();
     expect(apiMocks.presaleApi.tenders.list).not.toHaveBeenCalled();
     expect(apiMocks.opportunityApi.list).not.toHaveBeenCalled();
+  });
+
+  it("preserves upstream support context in execution workbench technical links", async () => {
+    apiMocks.presaleWorkbenchApi.loadOverview.mockResolvedValue(createOverview());
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/presales/workbench/execution?lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+        ]}
+      >
+        <PresalesWorkstation />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("link", { name: "新建方案" })).toHaveAttribute(
+      "href",
+      "/presales/technical-solutions?tab=solutions&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+    expect(screen.getByRole("link", { name: "新建调研" })).toHaveAttribute(
+      "href",
+      "/presales/technical-solutions?tab=surveys&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+    expect(screen.getByRole("link", { name: /查看全部/ })).toHaveAttribute(
+      "href",
+      "/presales/technical-solutions?tab=reviews&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+    expect(screen.getByRole("link", { name: /方案中心/ })).toHaveAttribute(
+      "href",
+      "/presales/technical-solutions?tab=solutions&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+    expect(
+      screen
+        .getAllByRole("link", { name: "全部" })
+        .some(
+          (link) =>
+            link.getAttribute("href") ===
+            "/presales/technical-solutions?tab=bids&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+        ),
+    ).toBe(true);
+    expect(screen.getByRole("link", { name: "上传文档" })).toHaveAttribute(
+      "href",
+      "/documents",
+    );
+    expect(screen.getByRole("link", { name: "知识库" })).toHaveAttribute(
+      "href",
+      "/knowledge-base",
+    );
   });
 
   it("saves opportunity feasibility assessment through the formal technical assessment flow", async () => {

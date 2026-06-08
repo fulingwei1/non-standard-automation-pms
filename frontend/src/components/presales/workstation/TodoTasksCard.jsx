@@ -14,7 +14,11 @@ import { Badge } from "../../ui/badge";
 import { cn } from "../../../lib/utils";
 import { getPriorityStyle, getPriorityText } from "./utils";
 
-export default function TodoTasksCard({ tasks, onTaskClick }) {
+export default function TodoTasksCard({
+  tasks,
+  onTaskClick,
+  allTasksPath = "/presales/technical-solutions?tab=reviews",
+}) {
   return (
     <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5 shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -25,7 +29,7 @@ export default function TodoTasksCard({ tasks, onTaskClick }) {
             {tasks?.length}
           </Badge>
         </CardTitle>
-        <Link to="/presales/technical-solutions?tab=reviews">
+        <Link to={allTasksPath}>
           <Button
             variant="ghost"
             size="sm"

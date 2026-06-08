@@ -22,7 +22,10 @@ import { fadeIn } from "../../../lib/animations";
 import { formatCurrencyCompact as formatCurrency } from "../../../lib/formatters";
 import { SOLUTION_CENTER_PATH } from "../constants";
 
-export default function OngoingSolutionsCard({ ongoingSolutions }) {
+export default function OngoingSolutionsCard({
+  ongoingSolutions,
+  solutionCenterPath = SOLUTION_CENTER_PATH,
+}) {
   return (
     <motion.div variants={fadeIn}>
       <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
@@ -32,7 +35,7 @@ export default function OngoingSolutionsCard({ ongoingSolutions }) {
               <FileText className="h-5 w-5 text-violet-400" />
               进行中方案
             </CardTitle>
-            <Link to={SOLUTION_CENTER_PATH}>
+            <Link to={solutionCenterPath}>
               <Button
                 variant="ghost"
                 size="sm"

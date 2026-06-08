@@ -2,7 +2,8 @@
  * 售前技术工程师工作台
  * 核心入口页面，展示技术支持任务、方案进度、投标项目等
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ListTodo,
@@ -32,6 +33,35 @@ import { getTypeColor } from "../components/presales/workstation/utils";
 
 const YUAN_TO_CENTS = 10000;
 const SOLUTION_CENTER_PATH = "/presales/technical-solutions?tab=solutions";
+const TASK_REVIEW_PATH = "/presales/technical-solutions?tab=reviews";
+const SURVEY_CENTER_PATH = "/presales/technical-solutions?tab=surveys";
+const BID_CENTER_PATH = "/presales/technical-solutions?tab=bids";
+
+function mergeCurrentSearch(to, currentSearch) {
+  if (!currentSearch) {
+    return to;
+  }
+
+  const [pathname, rawSearch = ""] = to.split("?");
+  const nextParams = new URLSearchParams(rawSearch);
+  const currentParams = new URLSearchParams(currentSearch);
+
+  currentParams.forEach((value, key) => {
+    if (!nextParams.has(key)) {
+      nextParams.append(key, value);
+    }
+  });
+
+  const nextSearch = nextParams.toString();
+  return nextSearch ? `${pathname}?${nextSearch}` : pathname;
+}
+
+function buildPresaleCenterLink(to, currentSearch) {
+  if (!to.startsWith("/presales/technical-solutions")) {
+    return to;
+  }
+  return mergeCurrentSearch(to, currentSearch);
+}
 
 function toYuanAmount(amount) {
   const parsed = Number(amount);
@@ -201,7 +231,7 @@ const quickActions = [
   {
     name: "新建调研",
     icon: ClipboardList,
-    path: "/presales/technical-solutions?tab=surveys",
+    path: SURVEY_CENTER_PATH,
     color: "from-emerald-500 to-teal-600"
   },
   {
@@ -335,6 +365,7 @@ function mapTenderStatus(result) {
 }
 
 export default function PresalesWorkstation() {
+  const location = useLocation();
   const [_loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState(statsData);
@@ -346,6 +377,26 @@ export default function PresalesWorkstation() {
   const [showCostForm, setShowCostForm] = useState(false);
   const [selectedFeasibilityTask, setSelectedFeasibilityTask] = useState(null);
   const [showFeasibilityForm, setShowFeasibilityForm] = useState(false);
+  const contextualQuickActions = useMemo(
+    () =>
+      quickActions.map((action) => ({
+        ...action,
+        path: buildPresaleCenterLink(action.path, location.search),
+      })),
+    [location.search],
+  );
+  const taskReviewPath = useMemo(
+    () => buildPresaleCenterLink(TASK_REVIEW_PATH, location.search),
+    [location.search],
+  );
+  const solutionCenterPath = useMemo(
+    () => buildPresaleCenterLink(SOLUTION_CENTER_PATH, location.search),
+    [location.search],
+  );
+  const bidCenterPath = useMemo(
+    () => buildPresaleCenterLink(BID_CENTER_PATH, location.search),
+    [location.search],
+  );
 
   const mapTicketType = (backendType) => {
     const typeMap = {
@@ -776,13 +827,20 @@ export default function PresalesWorkstation() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <motion.div variants={fadeIn} className="lg:col-span-2 space-y-6">
-          <TodoTasksCard tasks={todoTasks} onTaskClick={handleCostTaskClick} />
-          <OngoingSolutionsCard solutions={ongoingSolutions} />
+          <TodoTasksCard
+            tasks={todoTasks}
+            onTaskClick={handleCostTaskClick}
+            allTasksPath={taskReviewPath}
+          />
+          <OngoingSolutionsCard
+            solutions={ongoingSolutions}
+            solutionCenterPath={solutionCenterPath}
+          />
         </motion.div>
 
         <motion.div variants={fadeIn} className="space-y-6">
-          <QuickActionsCard actions={quickActions} />
-          <RecentTendersCard tenders={recentTenders} />
+          <QuickActionsCard actions={contextualQuickActions} />
+          <RecentTendersCard tenders={recentTenders} allTendersPath={bidCenterPath} />
           <LinkedOpportunitiesCard opportunities={relatedOpportunities} />
         </motion.div>
       </div>
