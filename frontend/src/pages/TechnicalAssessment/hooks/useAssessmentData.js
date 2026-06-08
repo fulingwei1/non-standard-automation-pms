@@ -32,6 +32,175 @@ function setIfPresent(target, key, value) {
   }
 }
 
+function parseListValue(value) {
+  if (!value) {
+    return [];
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+  if (typeof value === "object") {
+    return Object.values(value).map((item) => String(item).trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parseListValue(parsed);
+    } catch {
+      return value
+        .split(/[\n,，、;；]/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+  }
+  return [String(value).trim()].filter(Boolean);
+}
+
+function joinDetailText(...values) {
+  return values
+    .flatMap((value) => parseListValue(value))
+    .join(" ")
+    .toLowerCase();
+}
+
+function mapRequirementMaturity(value) {
+  const maturity = Number(value);
+  if (!Number.isFinite(maturity)) {
+    return "";
+  }
+  if (maturity >= 4) {
+    return "mature";
+  }
+  if (maturity >= 3) {
+    return "medium";
+  }
+  return "low";
+}
+
+function inferProcessDifficulty(detail) {
+  const taktTime = Number(detail?.cycle_time_seconds);
+  const workstationCount = Number(detail?.workstation_count);
+  const technicalSpecCount = parseListValue(detail?.technical_spec).length;
+
+  if (
+    (Number.isFinite(taktTime) && taktTime > 0 && taktTime <= 8) ||
+    (Number.isFinite(workstationCount) && workstationCount >= 4) ||
+    technicalSpecCount >= 5
+  ) {
+    return "high";
+  }
+  if (
+    (Number.isFinite(taktTime) && taktTime > 0 && taktTime <= 20) ||
+    (Number.isFinite(workstationCount) && workstationCount >= 2) ||
+    technicalSpecCount >= 2
+  ) {
+    return "medium";
+  }
+  return "";
+}
+
+function inferPrecisionRequirement(detail) {
+  const text = joinDetailText(
+    detail?.technical_spec,
+    detail?.key_metrics_spec,
+    detail?.acceptance_basis,
+    detail?.test_scope,
+  );
+  if (!text) {
+    return "";
+  }
+  if (/(0\.0[0-9]|微米|μm|um|极高精度)/i.test(text)) {
+    return "extreme";
+  }
+  if (/(精度|高精度|视觉|mm|毫米|±)/i.test(text)) {
+    return "high";
+  }
+  return "normal";
+}
+
+function inferSampleSupport(detail) {
+  const text = joinDetailText(detail?.sample_availability);
+  if (!text) {
+    return "";
+  }
+  if (/(无|没有|none|unavailable)/i.test(text)) {
+    return "none";
+  }
+  if (/(部分|有限|少量|limited)/i.test(text)) {
+    return "limited";
+  }
+  if (/(可提供|已有|齐全|available|yes)/i.test(text)) {
+    return "available";
+  }
+  return "";
+}
+
+function inferResourceOccupancy(detail) {
+  const text = joinDetailText(
+    detail?.customer_support_resources,
+    detail?.customer_supplied_materials,
+    detail?.power_supply,
+    detail?.air_supply,
+    detail?.environment,
+  );
+  if (!text) {
+    return "";
+  }
+  if (/(无|缺|不可|none|unavailable)/i.test(text)) {
+    return "unavailable";
+  }
+  if (/(部分|有限|待确认|limited|pending)/i.test(text)) {
+    return "tight";
+  }
+  if (/(可提供|齐全|具备|available|ready)/i.test(text)) {
+    return "available";
+  }
+  return "";
+}
+
+function inferDeliveryFeasibility(detail) {
+  const maturity = Number(detail?.requirement_maturity);
+  if (Number.isFinite(maturity)) {
+    if (maturity >= 4 && (detail?.has_sow || detail?.has_interface_doc || detail?.has_drawing_doc)) {
+      return "feasible";
+    }
+    if (maturity >= 3) {
+      return "tight";
+    }
+    return "risky";
+  }
+  return "";
+}
+
+function inferChangeRisk(detail) {
+  const maturity = Number(detail?.requirement_maturity);
+  const riskFactors = parseListValue(detail?.key_risk_factors);
+  if ((Number.isFinite(maturity) && maturity <= 2) || riskFactors.length > 0) {
+    return "high";
+  }
+  if (detail?.is_frozen && Number.isFinite(maturity) && maturity >= 4) {
+    return "low";
+  }
+  if (Number.isFinite(maturity)) {
+    return "medium";
+  }
+  return "";
+}
+
+function addAssessmentScoringDefaults(data, detail) {
+  if (!detail) {
+    return;
+  }
+
+  setIfPresent(data, "tech_maturity", data.tech_maturity || mapRequirementMaturity(detail.requirement_maturity));
+  setIfPresent(data, "process_difficulty", data.process_difficulty || inferProcessDifficulty(detail));
+  setIfPresent(data, "precision_requirement", data.precision_requirement || inferPrecisionRequirement(detail));
+  setIfPresent(data, "sample_support", data.sample_support || inferSampleSupport(detail));
+  setIfPresent(data, "resource_occupancy", data.resource_occupancy || inferResourceOccupancy(detail));
+  setIfPresent(data, "delivery_feasibility", data.delivery_feasibility || inferDeliveryFeasibility(detail));
+  setIfPresent(data, "change_risk", data.change_risk || inferChangeRisk(detail));
+}
+
 function emptyCollaboration() {
   return {
     openItems: { items: [], total: 0, blocking_count: 0 },
@@ -146,6 +315,7 @@ function buildRequirementDataFromDetail(
     data.takt_time_s = detail.cycle_time_seconds;
     data.targetTakt = detail.cycle_time_seconds;
   }
+  addAssessmentScoringDefaults(data, detail);
 
   return data;
 }

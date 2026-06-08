@@ -218,6 +218,73 @@ describe("useAssessmentData", () => {
     expect(result.current.collaboration.aiClarifications.total).toBe(1);
   });
 
+  it("derives scoring fields from presale requirement detail before evaluation", async () => {
+    const pendingAssessment = { id: 704, status: "PENDING", source_type: "OPPORTUNITY" };
+    const completedAssessment = {
+      id: 704,
+      status: "COMPLETED",
+      source_type: "OPPORTUNITY",
+      total_score: 82,
+    };
+    technicalAssessmentApi.getOpportunityAssessments
+      .mockResolvedValueOnce({ data: [pendingAssessment] })
+      .mockResolvedValueOnce({ data: [completedAssessment] });
+    technicalAssessmentApi.evaluate.mockResolvedValue({ data: completedAssessment });
+    presaleWorkbenchApi.loadContext.mockResolvedValue({
+      assessment: {
+        requirementDetail: {
+          id: 303,
+          requirement_maturity: 4,
+          has_sow: true,
+          has_interface_doc: true,
+          has_drawing_doc: true,
+          cycle_time_seconds: 7.5,
+          workstation_count: 4,
+          technical_spec: ["视觉定位精度±0.01mm", "MES追溯", "安全联锁"],
+          sample_availability: ["可提供3套样品"],
+          customer_support_resources: ["客户现场治具接口待确认"],
+          key_risk_factors: ["接口协议仍有变更风险"],
+        },
+      },
+    });
+
+    const { result } = renderHook(() =>
+      useAssessmentData("opportunity", "2", "704", "501", "42")
+    );
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.requirementData).toEqual(
+      expect.objectContaining({
+        tech_maturity: "mature",
+        process_difficulty: "high",
+        precision_requirement: "extreme",
+        sample_support: "available",
+        resource_occupancy: "tight",
+        delivery_feasibility: "feasible",
+        change_risk: "high",
+      }),
+    );
+
+    await act(async () => {
+      await result.current.handleEvaluate();
+    });
+
+    expect(technicalAssessmentApi.evaluate).toHaveBeenCalledWith(704, {
+      requirement_data: expect.objectContaining({
+        presale_ticket_id: 501,
+        project_id: 42,
+        tech_maturity: "mature",
+        process_difficulty: "high",
+        precision_requirement: "extreme",
+        sample_support: "available",
+        resource_occupancy: "tight",
+        delivery_feasibility: "feasible",
+        change_risk: "high",
+      }),
+      enable_ai: false,
+    });
+  });
+
   it("applies a lead assessment with the current presale ticket and reloads the source assessment list", async () => {
     const pendingAssessment = { id: 21, status: "PENDING", source_type: "LEAD" };
     technicalAssessmentApi.getLeadAssessments
