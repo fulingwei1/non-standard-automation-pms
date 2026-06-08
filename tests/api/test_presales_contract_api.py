@@ -29,6 +29,7 @@ from app.models.sales import (
     OpenItem,
     Opportunity,
     Quote,
+    QuoteItem,
     QuoteVersion,
     RequirementFreeze,
     TechnicalAssessment,
@@ -2446,6 +2447,214 @@ class TestPresalesFrontendContractBehavior:
                 ).delete(synchronize_session=False)
             db_session.query(Lead).filter(Lead.id == lead.id).delete()
             db_session.commit()
+
+    def test_cost_estimation_solution_quote_and_pmo_initiation_closed_loop(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """技术参数估算出的成本，应稳定进入方案、报价和PMO立项项目。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-CLP-{unique}",
+            customer_name=f"成本闭环客户-{unique}",
+            industry="电子制造",
+            contact_person="赵工",
+            contact_phone="13900001111",
+            created_by=admin_user.id,
+        )
+        lead = Lead(
+            lead_code=f"LD-CLP-{unique}",
+            customer_name=customer.customer_name,
+            source="展会",
+            industry="电子制造",
+            owner_id=admin_user.id,
+        )
+        db_session.add_all([customer, lead])
+        db_session.flush()
+
+        opportunity = Opportunity(
+            opp_code=f"OPPCLP{unique[:6]}",
+            customer_id=customer.id,
+            lead_id=lead.id,
+            opp_name=f"成本闭环商机-{unique}",
+            stage="QUALIFICATION",
+            probability=70,
+            est_amount=Decimal("175000"),
+            expected_close_date=date.today() + timedelta(days=30),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add(opportunity)
+        db_session.commit()
+
+        created_template = client.post(
+            f"{prefix}/presale/technical-parameters/templates",
+            json={
+                "name": f"FCT成本闭环模板-{unique}",
+                "code": f"TPL-CLP-{unique}",
+                "industry": "电子制造",
+                "test_type": "FCT",
+                "parameters": {
+                    "test_station_count": {"label": "测试工位数", "type": "number"},
+                    "fixture_qty": {"label": "夹具数量", "type": "number"},
+                },
+                "cost_factors": {
+                    "base_cost": 100000,
+                    "factors": {
+                        "test_station_count": {"type": "linear", "coefficient": 10000},
+                        "fixture_qty": {"type": "linear", "coefficient": 5000},
+                    },
+                    "category_ratios": {
+                        "MECHANICAL": 0.4,
+                        "ELECTRICAL": 0.3,
+                        "SOFTWARE": 0.2,
+                        "LABOR": 0.1,
+                    },
+                },
+                "typical_labor_hours": {
+                    "design_hours": 60,
+                    "assembly_hours": 40,
+                    "debug_hours": 20,
+                },
+            },
+            headers=headers,
+        )
+        assert created_template.status_code == 201, created_template.text
+        template_id = created_template.json()["id"]
+
+        estimate = client.post(
+            f"{prefix}/presale/technical-parameters/estimate-cost",
+            json={
+                "template_id": template_id,
+                "lead_id": lead.id,
+                "opportunity_id": opportunity.id,
+                "parameters": {"test_station_count": 2, "fixture_qty": 1},
+            },
+            headers=headers,
+        )
+        assert estimate.status_code == 200, estimate.text
+        estimate_payload = estimate.json()
+        assert estimate_payload["lead_id"] == lead.id
+        assert estimate_payload["opportunity_id"] == opportunity.id
+        assert estimate_payload["total_cost"] == 125000.0
+        assert estimate_payload["labor_hours"]["total"] == 120
+
+        suggested_price = 175000
+        created_solution = client.post(
+            f"{prefix}/presale/proposals/solutions",
+            json={
+                "name": f"成本闭环方案-{unique}",
+                "solution_type": "CUSTOM",
+                "opportunity_id": opportunity.id,
+                "industry": "电子制造",
+                "test_type": "FCT",
+                "requirement_summary": "技术参数估算后生成方案",
+                "solution_overview": "双工位FCT测试平台",
+                "technical_spec": "双工位、扫码、FCT测试、数据追溯",
+                "estimated_cost": estimate_payload["total_cost"],
+                "suggested_price": suggested_price,
+                "cost_breakdown": estimate_payload["cost_breakdown"],
+                "estimated_hours": estimate_payload["labor_hours"]["total"],
+                "estimated_duration": 45,
+            },
+            headers=headers,
+        )
+        assert created_solution.status_code == 201, created_solution.text
+        solution = created_solution.json()
+        solution_id = solution["id"]
+        ticket_id = solution["ticket_id"]
+        assert solution["opportunity_id"] == opportunity.id
+        assert solution["lead_id"] == lead.id
+        assert solution["estimated_cost"] == 125000.0
+        assert solution["suggested_price"] == float(suggested_price)
+        assert solution["cost_breakdown"] == estimate_payload["cost_breakdown"]
+
+        approved_solution = client.put(
+            f"{prefix}/presale/proposals/solutions/{solution_id}/review",
+            json={"review_status": "APPROVED", "review_comment": "成本与方案评审通过"},
+            headers=headers,
+        )
+        assert approved_solution.status_code == 200, approved_solution.text
+
+        created_quote = client.post(
+            f"{prefix}/sales/quotes",
+            json={
+                "quote_code": f"QCLP{unique[:8]}",
+                "opportunity_id": opportunity.id,
+                "customer_id": customer.id,
+                "solution_id": solution_id,
+                "valid_until": (date.today() + timedelta(days=45)).isoformat(),
+                "version": {"version_no": "V1", "items": []},
+            },
+            headers=headers,
+        )
+        assert created_quote.status_code == 201, created_quote.text
+        quote_payload = created_quote.json()
+
+        db_session.expire_all()
+        quote_version = db_session.get(QuoteVersion, quote_payload["current_version_id"])
+        assert quote_version is not None
+        assert quote_version.presale_solution_id == solution_id
+        assert quote_version.presale_ticket_id == ticket_id
+        assert quote_version.cost_total == Decimal("125000")
+        assert quote_version.total_price == Decimal(str(suggested_price))
+        assert quote_version.gross_margin == Decimal("28.57")
+
+        quote_item = (
+            db_session.query(QuoteItem)
+            .filter(QuoteItem.quote_version_id == quote_version.id)
+            .first()
+        )
+        assert quote_item is not None
+        assert quote_item.item_type == "SOLUTION"
+        assert quote_item.cost == Decimal("125000")
+        assert quote_item.unit_price == Decimal(str(suggested_price))
+
+        created_initiation = client.post(
+            f"{prefix}/pmo/initiations",
+            json={
+                "project_name": f"成本闭环项目-{unique}",
+                "project_type": "NEW",
+                "customer_name": customer.customer_name,
+                "technical_solution_id": solution_id,
+                "requirement_summary": "报价后根据售前方案立项",
+            },
+            headers=headers,
+        )
+        assert created_initiation.status_code == 201, created_initiation.text
+        initiation_id = created_initiation.json()["id"]
+
+        submitted = client.put(
+            f"{prefix}/pmo/initiations/{initiation_id}/submit",
+            headers=headers,
+        )
+        assert submitted.status_code == 200, submitted.text
+
+        approved_initiation = client.put(
+            f"{prefix}/pmo/initiations/{initiation_id}/approve",
+            json={"review_result": "同意按售前成本基线立项", "approved_pm_id": admin_user.id},
+            headers=headers,
+        )
+        assert approved_initiation.status_code == 200, approved_initiation.text
+        project_id = approved_initiation.json()["data"]["project_id"]
+
+        db_session.expire_all()
+        project = db_session.get(Project, project_id)
+        linked_solution = db_session.get(PresaleSolution, solution_id)
+        assert project is not None
+        assert project.customer_id == customer.id
+        assert project.lead_id == lead.id
+        assert project.opportunity_id == opportunity.id
+        assert project.contract_amount == Decimal(str(suggested_price))
+        assert linked_solution.project_id == project.id
 
     def test_solution_update_preserves_cost_breakdown(
         self, client: TestClient, db_session: Session, admin_token: str
