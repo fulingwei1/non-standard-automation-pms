@@ -109,6 +109,31 @@ function buildSalesQuoteCreatePath(context) {
   return `/sales/quotes/create${params.toString() ? `?${params.toString()}` : ""}`;
 }
 
+const WORKBENCH_CONTEXT_KEYS = [
+  "type",
+  "status",
+  "lead_id",
+  "opportunity_id",
+  "ticket_id",
+  "project_id",
+  "solution_id",
+  "tender_id",
+  "customer_id",
+];
+
+function buildPresalesWorkbenchPath(searchParams) {
+  const params = new URLSearchParams();
+  WORKBENCH_CONTEXT_KEYS.forEach((key) => {
+    const value = searchParams.get(key);
+    if (value) {
+      params.set(key, value);
+    }
+  });
+
+  const query = params.toString();
+  return `/presales/workbench${query ? `?${query}` : ""}`;
+}
+
 export default function PresalesCostEstimation({ embedded = false } = {}) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -371,7 +396,11 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
   };
 
   const handleCancel = () => {
-    navigate(embedded ? buildTechnicalSolutionsPath("cost", searchParams) : "/presales/workbench");
+    navigate(
+      embedded
+        ? buildTechnicalSolutionsPath("cost", searchParams)
+        : buildPresalesWorkbenchPath(searchParams),
+    );
   };
 
   return (
@@ -429,7 +458,7 @@ export default function PresalesCostEstimation({ embedded = false } = {}) {
 
           {!embedded && (
             <div className="flex justify-end">
-              <Button variant="ghost" onClick={() => navigate("/presales/workbench")}>
+              <Button variant="ghost" onClick={() => navigate(buildPresalesWorkbenchPath(searchParams))}>
                 返回售前工作台
               </Button>
             </div>

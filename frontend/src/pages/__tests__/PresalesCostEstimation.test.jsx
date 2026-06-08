@@ -87,6 +87,17 @@ function renderPage(
   );
 }
 
+function renderStandalonePage(initialEntry) {
+  const url = new URL(initialEntry, "http://localhost");
+  routeState.search = url.search.replace(/^\?/, "");
+
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <PresalesCostEstimation />
+    </MemoryRouter>,
+  );
+}
+
 describe("PresalesCostEstimation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -364,6 +375,20 @@ describe("PresalesCostEstimation", () => {
 
     expect(navigateSpy).toHaveBeenCalledWith(
       "/presales/technical-solutions?tab=cost&solution_id=88&ticket_id=501&opportunity_id=2&project_id=42",
+    );
+  });
+
+  it("preserves business context when returning from standalone estimation to the workbench", async () => {
+    renderStandalonePage(
+      "/presales/cost-estimation?tab=cost&type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42&solution_id=88",
+    );
+
+    expect(await screen.findByText("当前方案：ERP 改造售前技术方案")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "返回售前工作台" }));
+
+    expect(navigateSpy).toHaveBeenCalledWith(
+      "/presales/workbench?type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42&solution_id=88",
     );
   });
 });
