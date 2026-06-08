@@ -80,6 +80,160 @@ function normalizeHandoffContext(context) {
   };
 }
 
+function pickFirstText(...values) {
+  return values.find((value) => value !== undefined && value !== null && String(value).trim()) || "";
+}
+
+function safeParseList(value) {
+  if (!value) {
+    return [];
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => String(item).trim()).filter(Boolean);
+      }
+    } catch {
+      return value
+        .split(/[\n,，;；]/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+  }
+  return [];
+}
+
+function inferTestType(detail = {}) {
+  const text = [
+    detail.test_type,
+    detail.application_scenario,
+    detail.target_object_type,
+    detail.requirement_items,
+    detail.technical_spec,
+  ].join(" ").toUpperCase();
+
+  if (text.includes("EOL")) {
+    return "EOL";
+  }
+  if (text.includes("ICT")) {
+    return "ICT";
+  }
+  if (text.includes("老化") || text.includes("BURN")) {
+    return "BURN_IN";
+  }
+  if (text.includes("视觉") || text.includes("VISION")) {
+    return "VISION";
+  }
+  return "FCT";
+}
+
+function buildGenerationPrefill(context) {
+  const detail = context?.assessment?.requirementDetail || {};
+  const assessment = context?.assessment?.current || null;
+  const ticket = context?.ticket || {};
+  const requirementItems = safeParseList(detail.requirement_items);
+  const technicalSpec = safeParseList(detail.technical_spec);
+  const hasRequirementContext = Boolean(
+    detail.id ||
+      detail.requirement_version ||
+      detail.target_object_type ||
+      detail.application_scenario ||
+      detail.cycle_time_seconds ||
+      detail.workstation_count ||
+      detail.acceptance_basis ||
+      detail.acceptance_method ||
+      requirementItems.length ||
+      technicalSpec.length ||
+      assessment?.id ||
+      ticket.id,
+  );
+
+  if (!hasRequirementContext) {
+    return null;
+  }
+
+  const targetObject = pickFirstText(detail.target_object_type, ticket.product_name, "非标自动化测试对象");
+  const scenario = pickFirstText(detail.application_scenario, ticket.opportunity_name, ticket.title);
+  const acceptance = pickFirstText(detail.acceptance_basis, detail.acceptance_method);
+  const summaryParts = [
+    targetObject ? `被测对象：${targetObject}` : "",
+    scenario ? `应用场景：${scenario}` : "",
+    detail.cycle_time_seconds ? `节拍目标：${detail.cycle_time_seconds}s` : "",
+    detail.workstation_count ? `工位数量：${detail.workstation_count}` : "",
+    acceptance ? `验收口径：${acceptance}` : "",
+    requirementItems.length ? `关键需求：${requirementItems.slice(0, 4).join("、")}` : "",
+    technicalSpec.length ? `技术约束：${technicalSpec.slice(0, 4).join("、")}` : "",
+    assessment?.total_score != null ? `技术评估：${assessment.total_score}分${assessment.decision ? `，${assessment.decision}` : ""}` : "",
+  ].filter(Boolean);
+
+  if (summaryParts.length === 0) {
+    return null;
+  }
+
+  return {
+    name: `${targetObject}${scenario ? `-${scenario}` : ""}售前技术方案`,
+    solutionType: "CUSTOM",
+    industry: pickFirstText(detail.industry, ticket.industry, "新能源"),
+    testType: inferTestType(detail),
+    requirementSummary: summaryParts.join("\n"),
+    contextPayload: {
+      requirement_detail_id: detail.id,
+      requirement_version: detail.requirement_version,
+      presale_ticket_id: ticket.id,
+      technical_assessment_id: assessment?.id,
+      technical_assessment_score: assessment?.total_score,
+      technical_assessment_decision: assessment?.decision,
+      takt_time_s: detail.cycle_time_seconds,
+      workstation_count: detail.workstation_count,
+      acceptance_basis: acceptance,
+    },
+  };
+}
+
+function buildContextTechnicalSpecLines(contextPayload = {}) {
+  const lines = [
+    contextPayload.requirement_version ? `需求版本：${contextPayload.requirement_version}` : "",
+    contextPayload.requirement_detail_id ? `需求明细ID：${contextPayload.requirement_detail_id}` : "",
+    contextPayload.presale_ticket_id ? `售前工单ID：${contextPayload.presale_ticket_id}` : "",
+    contextPayload.technical_assessment_id ? `技术评估ID：${contextPayload.technical_assessment_id}` : "",
+    contextPayload.technical_assessment_score != null
+      ? `技术评估：${contextPayload.technical_assessment_score}分${
+          contextPayload.technical_assessment_decision
+            ? `，${contextPayload.technical_assessment_decision}`
+            : ""
+        }`
+      : "",
+    contextPayload.takt_time_s ? `节拍目标：${contextPayload.takt_time_s}s` : "",
+    contextPayload.workstation_count ? `工位数量：${contextPayload.workstation_count}` : "",
+    contextPayload.acceptance_basis ? `验收口径：${contextPayload.acceptance_basis}` : "",
+  ].filter(Boolean);
+
+  return lines.length > 0 ? ["", "售前上下文追溯：", ...lines] : [];
+}
+
+function mergeGenerationPrefill(previous, prefill) {
+  if (!prefill) {
+    return previous;
+  }
+
+  return {
+    ...previous,
+    name: previous.name || prefill.name || "",
+    solutionType: previous.solutionType || prefill.solutionType || "CUSTOM",
+    industry: previous.industry || prefill.industry || "新能源",
+    testType: previous.testType || prefill.testType || "FCT",
+    requirementSummary: previous.requirementSummary || prefill.requirementSummary || "",
+    contextPayload: {
+      ...(previous.contextPayload || {}),
+      ...(prefill.contextPayload || {}),
+    },
+  };
+}
+
 function getQuoteCurrentVersion(quote) {
   return quote?.current_version || quote?.currentVersion || quote?.version || null;
 }
@@ -276,6 +430,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
     suggestedPrice: "",
     estimatedHours: "",
     estimatedDuration: "",
+    contextPayload: {},
   });
 
   const [reviewActionLoadingId, setReviewActionLoadingId] = useState(null);
@@ -322,6 +477,9 @@ export default function PresaleProposals({ embedded = false } = {}) {
           }
           const context = await presaleWorkbenchApi.loadContext(contextParams);
           setHandoffContext(normalizeHandoffContext(context));
+          setGeneratorForm((previous) =>
+            mergeGenerationPrefill(previous, buildGenerationPrefill(context)),
+          );
           const contextSolutions = extractContextSolutions(context);
           if (contextSolutions.length > 0) {
             applySolutions(contextSolutions);
@@ -468,6 +626,7 @@ export default function PresaleProposals({ embedded = false } = {}) {
         "1) 工站节拍与稼动率监控",
         "2) 测试数据与MES打通",
         "3) 模块化治具与快速换型",
+        ...buildContextTechnicalSpecLines(generatorForm.contextPayload),
       ].join("\n");
 
       const payload = {

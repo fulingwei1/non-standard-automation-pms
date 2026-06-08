@@ -200,6 +200,7 @@ export default function SolutionGenerateTab({
                     ...previous,
                     name: "",
                     requirementSummary: "",
+                    contextPayload: {},
                   }));
                 }}
               >

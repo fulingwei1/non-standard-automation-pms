@@ -219,6 +219,74 @@ describe("PresaleProposals", () => {
     });
   });
 
+  it("prefills generated solution from requirement and technical assessment context", async () => {
+    presaleWorkbenchApi.loadContext.mockResolvedValueOnce({
+      source: { type: "opportunity", id: 2 },
+      ticket: {
+        id: 501,
+        product_name: "电池包",
+        opportunity_name: "EOL终测",
+      },
+      assessment: {
+        current: {
+          id: 701,
+          total_score: 86,
+          decision: "可行",
+        },
+        requirementDetail: {
+          id: 301,
+          requirement_version: "REQ-LEAD-V1",
+          target_object_type: "电池包",
+          application_scenario: "EOL终测",
+          industry: "新能源",
+          cycle_time_seconds: 18,
+          workstation_count: 2,
+          acceptance_basis: "客户 URS",
+          requirement_items: ["电性能测试", "扫码追溯", "安全联锁"],
+          technical_spec: ["MES 对接", "换型治具"],
+        },
+      },
+      solutions: { items: [], total: 0 },
+    });
+
+    renderPage(
+      "/presales/technical-solutions?tab=solutions&type=support&lead_id=2026&opportunity_id=2&ticket_id=501&project_id=42",
+    );
+
+    fireEvent.click(await screen.findByText("方案生成"));
+
+    expect(await screen.findByDisplayValue("电池包-EOL终测售前技术方案")).toBeInTheDocument();
+    const requirementTextarea = screen.getByPlaceholderText(
+      "填写产线痛点、交付目标、关键性能指标，AI会自动生成方案结构",
+    );
+    expect(requirementTextarea.value).toContain("被测对象：电池包");
+    expect(requirementTextarea.value).toContain("节拍目标：18s");
+    expect(requirementTextarea.value).toContain("工位数量：2");
+    expect(requirementTextarea.value).toContain("验收口径：客户 URS");
+    expect(requirementTextarea.value).toContain("技术评估：86分，可行");
+
+    fireEvent.click(screen.getByRole("button", { name: "生成并保存方案" }));
+
+    await waitFor(() => {
+      expect(presaleApi.solutions.create).toHaveBeenCalled();
+    });
+    const payload = presaleApi.solutions.create.mock.calls.at(-1)[0];
+    expect(payload).toEqual(
+      expect.objectContaining({
+        name: "电池包-EOL终测售前技术方案",
+        lead_id: 2026,
+        opportunity_id: 2,
+        ticket_id: 501,
+        project_id: 42,
+      }),
+    );
+    expect(payload).not.toHaveProperty("context_data");
+    expect(payload.requirement_summary).toContain("关键需求：电性能测试、扫码追溯、安全联锁");
+    expect(payload.technical_spec).toContain("需求版本：REQ-LEAD-V1");
+    expect(payload.technical_spec).toContain("技术评估ID：701");
+    expect(payload.technical_spec).toContain("技术评估：86分，可行");
+  });
+
   it("keeps project context when listing and generating solutions from project presales entry", async () => {
     renderPage(
       "/presales/technical-solutions?tab=solutions&type=support&opportunity_id=2&ticket_id=501&project_id=42",
