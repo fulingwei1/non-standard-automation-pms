@@ -8,7 +8,31 @@ const defaultTechSpecs = {
     testItems: [],
     testStandards: [],
     environment: {},
+    technicalParameters: [],
     rawText: "",
+};
+
+const technicalParameterLabels = {
+    test_station_count: "测试工位数",
+    cycle_time: "节拍时间",
+    accuracy: "测试精度",
+    fixture_qty: "夹具数量",
+    channels: "测试通道",
+    uph: "UPH",
+    daily_output: "日产能",
+    air_pressure: "气源压力",
+    power_supply: "电源要求",
+    communication: "通讯协议",
+};
+
+const technicalParameterUnits = {
+    test_station_count: "个",
+    cycle_time: "秒",
+    fixture_qty: "套",
+    channels: "通道",
+    uph: "pcs/h",
+    daily_output: "pcs",
+    air_pressure: "MPa",
 };
 
 const unwrapResponse = (response) => {
@@ -59,6 +83,43 @@ const parseObject = (value) => {
     return null;
 };
 
+const humanizeParameterKey = (key) =>
+    String(key)
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/[_-]+/g, " ")
+        .trim();
+
+const normalizeTechnicalParameters = (parameters) => {
+    const source = parseObject(parameters);
+    if (!source) {
+        return [];
+    }
+
+    return Object.entries(source)
+        .map(([key, item]) => {
+            const isObject = item && typeof item === "object" && !Array.isArray(item);
+            const value = isObject
+                ? item.value ?? item.default_value ?? item.default ?? item.amount
+                : item;
+
+            if (value === undefined || value === null || value === "") {
+                return null;
+            }
+
+            const displayValue = Array.isArray(value) ? value.join("、") : String(value);
+
+            return {
+                key,
+                label: isObject
+                    ? item.label || technicalParameterLabels[key] || humanizeParameterKey(key)
+                    : technicalParameterLabels[key] || humanizeParameterKey(key),
+                value: displayValue,
+                unit: isObject ? item.unit || technicalParameterUnits[key] || "" : technicalParameterUnits[key] || "",
+            };
+        })
+        .filter(Boolean);
+};
+
 const unwrapListResponse = (response) => {
     const data = unwrapResponse(response);
 
@@ -93,6 +154,7 @@ const normalizeTechSpecs = (solutionData) => {
         testItems: source.testItems || source.test_items || [],
         testStandards: source.testStandards || source.test_standards || [],
         environment: source.environment || {},
+        technicalParameters: normalizeTechnicalParameters(solutionData.template_parameters),
         rawText:
             source.rawText ||
             source.raw_text ||

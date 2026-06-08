@@ -2,8 +2,36 @@ import { Badge } from "../../../components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/card";
 
 export function SolutionSpecsTab({ solution }) {
+    const technicalParameters = solution.techSpecs.technicalParameters || [];
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {technicalParameters.length > 0 && (
+                <Card className="lg:col-span-2 bg-surface-100/50 backdrop-blur-lg border border-white/5">
+                    <CardHeader>
+                        <CardTitle className="text-lg">技术参数</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                            {technicalParameters.map((parameter) => (
+                                <div
+                                    key={parameter.key}
+                                    className="rounded-lg bg-surface-50 p-3"
+                                >
+                                    <p className="text-xs text-slate-500 mb-1">
+                                        {parameter.label}
+                                    </p>
+                                    <p className="text-sm font-medium text-white">
+                                        {parameter.value}
+                                        {parameter.unit ? ` ${parameter.unit}` : ""}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             <Card className="bg-surface-100/50 backdrop-blur-lg border border-white/5">
                 <CardHeader>
                     <CardTitle className="text-lg">产品信息</CardTitle>

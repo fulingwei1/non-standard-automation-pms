@@ -40,6 +40,11 @@ describe("useSolutionDetail", () => {
           requirement_summary: "三工位FCT测试线",
           solution_overview: "采用模块化测试平台",
           technical_spec: "PXI + ICT fixture",
+          template_parameters: {
+            test_station_count: 4,
+            cycle_time: 18,
+            accuracy: "0.01",
+          },
           estimated_cost: 120000,
           suggested_price: 180000,
           status: "APPROVED",
@@ -110,6 +115,11 @@ describe("useSolutionDetail", () => {
         testItems: [],
         testStandards: [],
         environment: {},
+        technicalParameters: [
+          { key: "test_station_count", label: "测试工位数", value: "4", unit: "个" },
+          { key: "cycle_time", label: "节拍时间", value: "18", unit: "秒" },
+          { key: "accuracy", label: "测试精度", value: "0.01", unit: "" },
+        ],
         rawText: "PXI + ICT fixture",
       },
     });
