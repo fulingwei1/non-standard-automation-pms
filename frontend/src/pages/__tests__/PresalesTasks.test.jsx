@@ -845,6 +845,49 @@ describe('PresalesTasks', () => {
     expect(await screen.findByText('已退回')).toBeInTheDocument();
   });
 
+  it('blocks completing a ticket while deliverables are not approved', async () => {
+    presaleApi.tickets.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 53,
+            title: '方案待返工',
+            ticket_type: 'SOLUTION_DESIGN',
+            status: 'IN_PROGRESS',
+            urgency: 'NORMAL',
+            customer_name: '华南电子',
+            applicant_name: '陈敏',
+            description: '交付物退回后不能完成',
+            actual_hours: 4,
+            deliverables: [
+              {
+                id: 9,
+                deliverable_name: '节拍说明',
+                deliverable_type: 'SOLUTION',
+                file_path: '/files/cycle-time.pdf',
+                status: 'REJECTED',
+                review_comment: '缺少关键节拍说明',
+              },
+            ],
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    renderPage();
+
+    await screen.findByText('方案待返工');
+    fireEvent.click(screen.getByText('方案待返工'));
+
+    expect(screen.getByText('已退回')).toBeInTheDocument();
+    expect(screen.getByText('仍有交付物未通过审核，不能完成工单')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /完成工单/ })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: /完成工单/ }));
+    expect(presaleApi.tickets.complete).not.toHaveBeenCalled();
+  });
+
   it('submits a deliverable from an in-progress ticket detail panel', async () => {
     presaleApi.tickets.list.mockResolvedValue({
       data: {

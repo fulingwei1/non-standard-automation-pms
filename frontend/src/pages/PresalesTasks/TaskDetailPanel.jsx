@@ -66,6 +66,11 @@ function canReviewDeliverable(deliverable) {
   return Boolean(deliverable?.id) && !["APPROVED", "REJECTED"].includes(status);
 }
 
+function hasUnapprovedDeliverables(deliverables = []) {
+  return deliverables.length > 0 &&
+    deliverables.some((item) => getDeliverableStatus(item) !== "APPROVED");
+}
+
 function appendContextParam(params, key, value) {
   if (value !== undefined && value !== null && value !== "") {
     params.set(key, String(value));
@@ -136,6 +141,7 @@ export default function TaskDetailPanel({
   const isCompleted = task.status === "completed";
   const hasRating = task.satisfactionScore != null;
   const technicalAssessmentPath = buildTechnicalAssessmentPath(task);
+  const hasDeliverableCompletionBlocker = hasUnapprovedDeliverables(task.deliverables || []);
 
   // 接单
   const handleAccept = async () => {
@@ -255,6 +261,10 @@ export default function TaskDetailPanel({
   const handleComplete = async () => {
     if (!actualHours || actualHours <= 0) {
       alert("请输入实际工时");
+      return;
+    }
+    if (hasDeliverableCompletionBlocker) {
+      alert("仍有交付物未通过审核，不能完成工单");
       return;
     }
 
@@ -698,12 +708,22 @@ export default function TaskDetailPanel({
 
               <Button
               onClick={handleComplete}
-              disabled={isCompleting || !actualHours || actualHours <= 0}
+              disabled={
+                isCompleting ||
+                !actualHours ||
+                actualHours <= 0 ||
+                hasDeliverableCompletionBlocker
+              }
               className="w-full">
 
                 <CheckCircle className="w-4 h-4 mr-2" />
                 {isCompleting ? "完成中..." : "完成工单"}
               </Button>
+              {hasDeliverableCompletionBlocker &&
+              <p className="text-xs text-amber-300">
+                仍有交付物未通过审核，不能完成工单
+              </p>
+              }
             </div>
         </div>
         }

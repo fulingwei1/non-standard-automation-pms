@@ -1163,6 +1163,24 @@ class TestPresalesFrontendContractBehavior:
         assert rejected_deliverable.json()["status"] == "REJECTED"
         assert rejected_deliverable.json()["review_comment"] == "缺少关键节拍说明"
 
+        blocked_completion = client.put(
+            f"{prefix}/presale/tickets/{ticket_id}/complete",
+            json={"actual_hours": 8, "completion_note": "方案可行，建议进入报价"},
+            headers=headers,
+        )
+        assert blocked_completion.status_code == 400, blocked_completion.text
+        assert "未通过审核的交付物" in blocked_completion.json()["detail"]
+        assert "初版技术方案" in blocked_completion.json()["detail"]
+
+        approved_again = client.put(
+            f"{prefix}/presale/tickets/{ticket_id}/deliverables/{deliverable_payload['id']}/review",
+            json={"review_status": "APPROVED", "review_comment": "补充节拍说明后通过"},
+            headers=headers,
+        )
+        assert approved_again.status_code == 200, approved_again.text
+        assert approved_again.json()["status"] == "APPROVED"
+        assert approved_again.json()["review_comment"] == "补充节拍说明后通过"
+
         completed = client.put(
             f"{prefix}/presale/tickets/{ticket_id}/complete",
             json={"actual_hours": 8, "completion_note": "方案可行，建议进入报价"},

@@ -32,6 +32,28 @@ from .crud import read_ticket
 
 router = APIRouter()
 
+APPROVED_DELIVERABLE_STATUS = "APPROVED"
+
+
+def _ensure_deliverables_approved(ticket: PresaleSupportTicket) -> None:
+    deliverables = list(ticket.deliverables or [])
+    blocking_deliverables = [
+        deliverable
+        for deliverable in deliverables
+        if str(deliverable.status or "").upper() != APPROVED_DELIVERABLE_STATUS
+    ]
+    if not blocking_deliverables:
+        return
+
+    names = "、".join(
+        deliverable.name or f"交付物{deliverable.id}"
+        for deliverable in blocking_deliverables[:3]
+    )
+    raise HTTPException(
+        status_code=400,
+        detail=f"存在未通过审核的交付物，不能完成工单：{names}",
+    )
+
 
 def _complete_opportunity_assessment_for_ticket(
     *,
@@ -253,6 +275,7 @@ def complete_ticket(
     - PUT /complete {"actual_hours": 8}
     """
     ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
+    _ensure_deliverables_approved(ticket)
 
     ticket.status = "COMPLETED"
     ticket.complete_time = datetime.now()
