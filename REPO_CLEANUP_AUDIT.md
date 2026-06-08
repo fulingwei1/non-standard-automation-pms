@@ -3,6 +3,8 @@
 > 生成日期: 2026-03-25
 > 扫描范围: 全仓库（排除 node_modules、.git、venv）
 
+> 2026-06-08 执行状态: 已清理第一批低风险已跟踪垃圾文件，包括覆盖率 XML、SQLite 历史备份/损坏副本、dummy.db 日志文件、AIStaffMatching 页面备份；并补充 `.gitignore` 防止再次提交。
+
 ---
 
 ## 摘要

@@ -32,6 +32,10 @@ ENV/
 data/*.db
 data/*.db-shm
 data/*.db-wal
+data/*.db.backup*
+data/*.db.corrupted*
+data/*.db.new_*
+data/*.sql
 data/*.sqlite
 data/*.sqlite3
 
@@ -125,6 +129,7 @@ Thumbs.db
 
 # Backup artifacts
 *.bak
+*.bak*
 *.backup
 *.old
 *.orig
@@ -138,6 +143,7 @@ Thumbs.db
 # 覆盖率临时文件
 coverage.json
 coverage.xml
+coverage-*.xml
 coverage_*.json
 PERMISSION_COVERAGE_AUDIT.json
 
