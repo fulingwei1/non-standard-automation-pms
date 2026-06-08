@@ -2765,6 +2765,7 @@ class TestPresalesFrontendContractBehavior:
                     "template_id": template.id,
                     "template_parameters": template_parameters,
                     "estimated_cost": 82000,
+                    "suggested_price": 120000,
                     "cost_breakdown": cost_breakdown,
                     "estimated_hours": 200,
                 },
@@ -2775,8 +2776,33 @@ class TestPresalesFrontendContractBehavior:
             assert payload["template_id"] == template.id
             assert payload["template_parameters"] == template_parameters
             assert payload["estimated_cost"] == 82000.0
+            assert payload["suggested_price"] == 120000.0
             assert payload["cost_breakdown"] == cost_breakdown
             assert payload["estimated_hours"] == 200
+
+            cost_response = client.get(
+                f"{prefix}/presale/proposals/solutions/{solution.id}/cost",
+                headers=headers,
+            )
+            assert cost_response.status_code == 200, cost_response.text
+            cost_payload = cost_response.json()
+            assert cost_payload["total_cost"] == 82000.0
+            assert cost_payload["suggested_price"] == 120000.0
+            assert cost_payload["gross_margin"] == 31.67
+            assert cost_payload["cost_breakdown"] == cost_breakdown
+            assert cost_payload["breakdown"] == [
+                {
+                    "category": "机械部分",
+                    "item_name": "机械部分",
+                    "specification": "",
+                    "unit": "项",
+                    "quantity": 1,
+                    "unit_price": 28700.0,
+                    "amount": 28700.0,
+                    "remark": "占比 35.0%",
+                    "source": "solution_cost_breakdown",
+                }
+            ]
 
             db_session.expire_all()
             refreshed_solution = db_session.get(PresaleSolution, solution.id)

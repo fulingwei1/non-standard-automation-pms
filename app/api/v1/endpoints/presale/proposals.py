@@ -56,6 +56,79 @@ router = APIRouter(prefix="/proposals", tags=["proposals"])
 # ==================== 技术方案管理 ====================
 
 
+COST_BREAKDOWN_CATEGORY_LABELS = {
+    "mechanical": "机械部分",
+    "MECHANICAL": "机械部分",
+    "electrical": "电气部分",
+    "ELECTRICAL": "电气部分",
+    "software": "软件部分",
+    "SOFTWARE": "软件部分",
+    "standard": "标准件/外购件",
+    "outsource": "外协加工",
+    "OUTSOURCE": "外协加工",
+    "labor": "人工成本",
+    "LABOR": "人工成本",
+    "other": "其他费用",
+}
+
+
+def normalize_solution_cost_breakdown(cost_breakdown: Any) -> list[dict[str, Any]]:
+    if not isinstance(cost_breakdown, dict):
+        return []
+
+    rows: list[dict[str, Any]] = []
+    for key, value in cost_breakdown.items():
+        if key in {"notes", "presale_context"}:
+            continue
+
+        amount = None
+        ratio = None
+        remark = None
+        if isinstance(value, dict):
+            amount = value.get("amount")
+            ratio = value.get("ratio")
+            remark = value.get("remark") or value.get("notes")
+        else:
+            amount = value
+
+        try:
+            amount_value = float(amount)
+        except (TypeError, ValueError):
+            continue
+
+        if amount_value <= 0:
+            continue
+
+        label = COST_BREAKDOWN_CATEGORY_LABELS.get(key, str(key))
+        if ratio is not None and not remark:
+            remark = f"占比 {float(ratio) * 100:.1f}%"
+
+        rows.append(
+            {
+                "category": label,
+                "item_name": label,
+                "specification": "",
+                "unit": "项",
+                "quantity": 1,
+                "unit_price": amount_value,
+                "amount": amount_value,
+                "remark": remark,
+                "source": "solution_cost_breakdown",
+            }
+        )
+
+    return rows
+
+
+def calculate_solution_gross_margin(
+    total_cost: float,
+    suggested_price: Optional[float],
+) -> Optional[float]:
+    if not suggested_price or suggested_price <= 0:
+        return None
+    return round(((suggested_price - total_cost) / suggested_price) * 100, 2)
+
+
 def get_user_display_name(user: Optional[User]) -> Optional[str]:
     if not user:
         return None
@@ -514,11 +587,27 @@ def get_solution_cost(
             }
         )
 
-    # 如果没有明细，使用方案中的预估成本
+    if not breakdown:
+        breakdown = normalize_solution_cost_breakdown(solution.cost_breakdown)
+        if solution.estimated_cost:
+            total_cost = float(solution.estimated_cost)
+        else:
+            total_cost = sum(float(item["amount"]) for item in breakdown)
+
+    # 如果没有正式明细或明细合计为空，使用方案中的预估成本作为总成本基线。
     if total_cost == 0 and solution.estimated_cost:
         total_cost = float(solution.estimated_cost)
 
-    return SolutionCostResponse(solution_id=solution_id, total_cost=total_cost, breakdown=breakdown)
+    suggested_price = float(solution.suggested_price) if solution.suggested_price else None
+
+    return SolutionCostResponse(
+        solution_id=solution_id,
+        total_cost=total_cost,
+        suggested_price=suggested_price,
+        gross_margin=calculate_solution_gross_margin(total_cost, suggested_price),
+        cost_breakdown=solution.cost_breakdown,
+        breakdown=breakdown,
+    )
 
 
 @router.put("/solutions/{solution_id}/review", response_model=SolutionResponse)

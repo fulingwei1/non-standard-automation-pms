@@ -272,7 +272,10 @@ class SolutionCostResponse(BaseModel):
 
     solution_id: int
     total_cost: float
-    breakdown: List[Dict[str, Any]] = []
+    suggested_price: Optional[float] = None
+    gross_margin: Optional[float] = None
+    cost_breakdown: Optional[Dict[str, Any]] = None
+    breakdown: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 # ==================== 方案模板 ====================
