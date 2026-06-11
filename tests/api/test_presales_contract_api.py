@@ -562,6 +562,9 @@ class TestPresalesFrontendContractBehavior:
             assert data["assessment"]["current"]["id"] == assessment.id
             assert data["assessment"]["current"]["status"] == AssessmentStatusEnum.COMPLETED.value
             assert data["solutions"]["items"][0]["id"] == solution.id
+            assert data["costing"]["baseline"]["ticket_id"] == ticket.id
+            assert data["costing"]["baseline"]["customer_id"] == customer.id
+            assert data["costing"]["baseline"]["opportunity_id"] == opportunity.id
             assert data["costing"]["baseline"]["estimated_cost"] == 260000.0
             assert data["costing"]["baseline"]["suggested_price"] == 420000.0
             assert data["costing"]["baseline"]["cost_breakdown"] == {
@@ -827,6 +830,9 @@ class TestPresalesFrontendContractBehavior:
             assert data["solutions"]["items"][0]["id"] == solution.id
             assert data["solutions"]["items"][0]["lead_id"] == lead.id
             assert data["costing"]["baseline"]["solution_id"] == solution.id
+            assert data["costing"]["baseline"]["ticket_id"] == ticket.id
+            assert data["costing"]["baseline"]["lead_id"] == lead.id
+            assert data["costing"]["baseline"]["customer_id"] == customer.id
             assert data["costing"]["baseline"]["estimated_cost"] == 180000.0
             assert data["costing"]["baseline"]["suggested_price"] == 300000.0
             assert data["funnel"]["entityType"] == "LEAD"

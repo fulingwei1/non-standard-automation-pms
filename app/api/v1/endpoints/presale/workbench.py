@@ -221,6 +221,7 @@ def _costing_payload(solutions: list[PresaleSolution]) -> dict[str, Any]:
 
     estimated_cost = baseline_solution.estimated_cost
     suggested_price = baseline_solution.suggested_price
+    ticket = getattr(baseline_solution, "ticket", None)
     gross_margin_rate = None
     if estimated_cost is not None and suggested_price:
         gross_margin_rate = float((Decimal(suggested_price) - Decimal(estimated_cost)) / Decimal(suggested_price))
@@ -231,6 +232,11 @@ def _costing_payload(solutions: list[PresaleSolution]) -> dict[str, Any]:
             "solution_id": baseline_solution.id,
             "solution_no": baseline_solution.solution_no,
             "solution_name": baseline_solution.name,
+            "ticket_id": _json_value(baseline_solution.ticket_id),
+            "lead_id": _json_value(getattr(ticket, "lead_id", None)),
+            "customer_id": _json_value(baseline_solution.customer_id),
+            "opportunity_id": _json_value(baseline_solution.opportunity_id),
+            "project_id": _json_value(baseline_solution.project_id),
             "estimated_cost": _json_value(estimated_cost),
             "suggested_price": _json_value(suggested_price),
             "cost_breakdown": _json_value(baseline_solution.cost_breakdown),
