@@ -96,6 +96,21 @@ function buildCostSolutionFields(costResult) {
   };
 }
 
+function appendIfPresent(payload, key, value) {
+  if (value != null && value !== "") {
+    payload[key] = value;
+  }
+}
+
+function buildCostTaskSolutionContext(task) {
+  const payload = {};
+  appendIfPresent(payload, "ticket_id", task?.ticketId);
+  appendIfPresent(payload, "customer_id", task?.customerId);
+  appendIfPresent(payload, "opportunity_id", task?.opportunityId);
+  appendIfPresent(payload, "project_id", task?.projectId ?? task?.biddingId);
+  return payload;
+}
+
 function getAssessmentApplyId(response) {
   return (
     response?.data?.data?.assessment_id ??
@@ -490,6 +505,7 @@ export default function PresalesWorkstation() {
               : "medium",
           customer: ticket.customer_name || "待确认客户",
           ticketId: ticket.id,
+          customerId: ticket.customer_id,
           leadId: ticket.lead_id,
           opportunityId: ticket.opportunity_id,
           projectId: ticket.project_id,
@@ -657,8 +673,10 @@ export default function PresalesWorkstation() {
   const handleCostSave = async (costData) => {
     try {
       const costSolutionFields = buildCostSolutionFields(costData);
+      const costTaskContext = buildCostTaskSolutionContext(selectedCostTask);
       if (selectedCostTask?.solutionId) {
         await presaleApi.solutions.update(selectedCostTask.solutionId, {
+          ...costTaskContext,
           ...costSolutionFields
         });
       } else if (selectedCostTask?.ticketId) {
@@ -671,6 +689,7 @@ export default function PresalesWorkstation() {
 
         if (solutions.length > 0) {
           await presaleApi.solutions.update(solutions[0].id, {
+            ...costTaskContext,
             ...costSolutionFields
           });
         } else {

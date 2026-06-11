@@ -463,6 +463,91 @@ describe("PresalesWorkstation", () => {
     expect(apiMocks.presaleApi.tickets.updateProgress).not.toHaveBeenCalled();
   });
 
+  it("keeps task context when writing cost baseline back to an existing solution", async () => {
+    apiMocks.presaleWorkbenchApi.loadOverview.mockResolvedValue({
+      tickets: {
+        items: [
+          {
+            id: 61,
+            ticket_no: "PS-061",
+            title: "电池包成本核算",
+            ticket_type: "COST_ESTIMATE",
+            urgency: "NORMAL",
+            customer_id: 7,
+            customer_name: "金凯博客户",
+            applicant_name: "张销售",
+            status: "PROCESSING",
+            opportunity_id: 41,
+            project_id: 91,
+            description: "已有方案补充成本基线",
+          },
+        ],
+        total: 1,
+      },
+      solutions: {
+        items: [
+          {
+            id: 71,
+            ticket_id: 61,
+            name: "电池包 FCT 方案",
+            status: "DRAFT",
+            updated_at: "2026-06-01T00:00:00",
+          },
+        ],
+        total: 1,
+      },
+      tenders: { items: [], total: 0 },
+      opportunities: { items: [], total: 0 },
+      templates: {
+        assessment: { items: [], total: 0 },
+        technical: { items: [], total: 0 },
+      },
+      funnel: {
+        summary: {},
+        health: {},
+        conversion: {},
+        dwellAlerts: { items: [], total: 0 },
+      },
+      meta: { failures: [] },
+    });
+    apiMocks.presaleApi.solutions.update.mockResolvedValue({ data: { id: 71 } });
+    apiMocks.presaleApi.tickets.complete.mockResolvedValue({ data: { id: 61 } });
+
+    render(
+      <MemoryRouter>
+        <PresalesWorkstation />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(await screen.findByText("电池包成本核算"));
+    fireEvent.change(screen.getAllByPlaceholderText("0.00")[0], {
+      target: { value: "12" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /提交成本估算/ }));
+
+    await waitFor(() => {
+      expect(apiMocks.presaleApi.solutions.update).toHaveBeenCalledWith(71, {
+        ticket_id: 61,
+        customer_id: 7,
+        opportunity_id: 41,
+        project_id: 91,
+        estimated_cost: 120000,
+        suggested_price: 156000,
+        cost_breakdown: {
+          mechanical: 120000,
+          electrical: 0,
+          software: 0,
+          standard: 0,
+          labor: 0,
+          other: 0,
+          notes: "",
+        },
+      });
+    });
+    expect(apiMocks.presaleApi.solutions.create).not.toHaveBeenCalled();
+    expect(apiMocks.presaleApi.tickets.get).not.toHaveBeenCalled();
+  });
+
   it("creates the cost baseline for a lead-stage cost ticket without opportunity context", async () => {
     apiMocks.presaleWorkbenchApi.loadOverview.mockResolvedValue({
       tickets: {
