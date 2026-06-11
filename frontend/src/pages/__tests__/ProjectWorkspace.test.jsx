@@ -423,7 +423,7 @@ describe("ProjectWorkspace", () => {
     expect(screen.getByText(/责任方：CUSTOMER/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /查看未决事项/ })).toHaveAttribute(
       "href",
-      "/sales/opportunity/2/open-items",
+      "/sales/opportunity/2/open-items?ticket_id=91&lead_id=2026&opportunity_id=2&project_id=1",
     );
     expect(screen.getByText("投标结果")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /BID-001/ })).toHaveAttribute(

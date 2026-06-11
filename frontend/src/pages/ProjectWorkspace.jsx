@@ -330,26 +330,61 @@ function buildPresaleTenderPath(tender, ticket, opportunity, project) {
   return `/presales/technical-solutions?${params.toString()}`;
 }
 
-function buildOpenItemsPath(openItems, opportunity, project) {
+function buildOpenItemsPath(openItems, opportunity, project, ticket) {
   const primaryItem = openItems?.items?.[0];
   const sourceType = getFirstValue(primaryItem, ["source_type", "sourceType"]);
   const sourceId = getFirstValue(primaryItem, ["source_id", "sourceId"]);
+  let basePath = null;
+  let normalizedType = null;
   if (sourceType && sourceId) {
-    const normalizedType =
+    normalizedType =
       String(sourceType).toLowerCase() === "opportunity" ? "opportunity" : "lead";
-    return `/sales/${normalizedType}/${sourceId}/open-items`;
+    basePath = `/sales/${normalizedType}/${sourceId}/open-items`;
   }
 
-  if (opportunity?.id) {
-    return `/sales/opportunity/${opportunity.id}/open-items`;
+  if (!basePath && opportunity?.id) {
+    normalizedType = "opportunity";
+    basePath = `/sales/opportunity/${opportunity.id}/open-items`;
   }
 
   const leadId = getFirstValue(project, ["lead_id", "leadId"]);
-  if (leadId) {
-    return `/sales/lead/${leadId}/open-items`;
+  if (!basePath && leadId) {
+    normalizedType = "lead";
+    basePath = `/sales/lead/${leadId}/open-items`;
   }
 
-  return null;
+  if (!basePath) {
+    return null;
+  }
+
+  const params = new URLSearchParams();
+  appendContextParam(
+    params,
+    "ticket_id",
+    getFirstValue(ticket, ["id", "ticket_id", "ticketId"]),
+  );
+  appendContextParam(
+    params,
+    "lead_id",
+    getFirstValue(ticket, ["lead_id", "leadId"]) ||
+      getFirstValue(opportunity, ["lead_id", "leadId"]) ||
+      (normalizedType === "lead" ? sourceId : leadId),
+  );
+  appendContextParam(
+    params,
+    "opportunity_id",
+    getFirstValue(ticket, ["opportunity_id", "opportunityId"]) ||
+      getFirstValue(opportunity, ["id", "opportunity_id", "opportunityId"]) ||
+      (normalizedType === "opportunity" ? sourceId : null),
+  );
+  appendContextParam(
+    params,
+    "project_id",
+    getFirstValue(project, ["id", "project_id", "projectId"]),
+  );
+
+  const query = params.toString();
+  return `${basePath}${query ? `?${query}` : ""}`;
 }
 
 function buildTechnicalAssessmentPath(assessment, ticket, opportunity, project) {
@@ -539,6 +574,7 @@ export default function ProjectWorkspace() {
     openItems,
     handoverContext?.opportunity,
     project,
+    primaryTicket,
   );
   const technicalAssessmentPath = buildTechnicalAssessmentPath(
     currentAssessment,
