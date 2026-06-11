@@ -732,6 +732,88 @@ class TestPresalesFrontendContractBehavior:
             db_session.query(Customer).filter(Customer.id == customer.id).delete()
             db_session.commit()
 
+    def test_presale_workbench_context_rejects_ticket_from_other_source(
+        self, client: TestClient, db_session: Session, admin_token: str
+    ):
+        """显式工单不属于当前线索/商机时，聚合上下文不能串单。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        prefix = settings.API_V1_PREFIX
+        unique = uuid4().hex[:8].upper()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        assert admin_user is not None
+
+        customer = Customer(
+            customer_code=f"CUST-WBM-{unique}",
+            customer_name=f"工单来源校验客户-{unique}",
+            industry="电子制造",
+            created_by=admin_user.id,
+        )
+        source_opportunity = Opportunity(
+            opp_code=f"OPPWBM-A-{unique[:4]}",
+            customer=customer,
+            opp_name=f"当前商机-{unique}",
+            stage="QUALIFICATION",
+            probability=60,
+            est_amount=Decimal("300000"),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        other_opportunity = Opportunity(
+            opp_code=f"OPPWBM-B-{unique[:4]}",
+            customer=customer,
+            opp_name=f"其它商机-{unique}",
+            stage="QUALIFICATION",
+            probability=50,
+            est_amount=Decimal("260000"),
+            owner_id=admin_user.id,
+            updated_by=admin_user.id,
+        )
+        db_session.add_all([customer, source_opportunity, other_opportunity])
+        db_session.flush()
+
+        other_ticket = PresaleSupportTicket(
+            ticket_no=f"TICKET-WBM-{unique}",
+            title=f"其它商机售前工单-{unique}",
+            ticket_type="TECHNICAL_SUPPORT",
+            urgency="NORMAL",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            opportunity_id=other_opportunity.id,
+            applicant_id=admin_user.id,
+            applicant_name=admin_user.real_name or admin_user.username,
+            status="PROCESSING",
+            created_by=admin_user.id,
+        )
+        db_session.add(other_ticket)
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{prefix}/presale/workbench/context",
+                params={
+                    "source_type": "opportunity",
+                    "source_id": source_opportunity.id,
+                    "presale_ticket_id": other_ticket.id,
+                },
+                headers=headers,
+            )
+
+            assert response.status_code == 400, response.text
+            assert "工单与来源对象不匹配" in response.json()["detail"]
+        finally:
+            db_session.query(PresaleSupportTicket).filter(
+                PresaleSupportTicket.id == other_ticket.id
+            ).delete(synchronize_session=False)
+            db_session.query(Opportunity).filter(
+                Opportunity.id.in_([source_opportunity.id, other_opportunity.id])
+            ).delete(synchronize_session=False)
+            db_session.query(Customer).filter(Customer.id == customer.id).delete()
+            db_session.commit()
+
     def test_presale_workbench_context_auto_resolves_lead_ticket_solution_and_requirement(
         self, client: TestClient, db_session: Session, admin_token: str
     ):

@@ -809,6 +809,29 @@ def _ensure_source_exists(db: Session, source_type: str, source_id: int) -> Any:
     return source
 
 
+def _ticket_matches_source(
+    db: Session,
+    ticket: PresaleSupportTicket,
+    *,
+    source_type: str,
+    source_id: int,
+    source: Any,
+) -> bool:
+    if source_type == "lead":
+        if ticket.lead_id == source_id:
+            return True
+        if ticket.opportunity_id:
+            opportunity = db.query(Opportunity).filter(Opportunity.id == ticket.opportunity_id).first()
+            return bool(opportunity and opportunity.lead_id == source_id)
+        return False
+
+    if ticket.opportunity_id == source_id:
+        return True
+
+    source_lead_id = getattr(source, "lead_id", None)
+    return bool(source_lead_id and ticket.lead_id == source_lead_id)
+
+
 @router.get("/overview", response_model=ResponseModel)
 def get_workbench_overview(
     *,
@@ -952,6 +975,14 @@ def get_workbench_context(
         )
         if not ticket:
             raise HTTPException(status_code=404, detail="售前工单不存在")
+        if not _ticket_matches_source(
+            db,
+            ticket,
+            source_type=normalized_source_type,
+            source_id=source_id,
+            source=source,
+        ):
+            raise HTTPException(status_code=400, detail="售前工单与来源对象不匹配")
     elif normalized_source_type == "opportunity":
         ticket = (
             db.query(PresaleSupportTicket)
