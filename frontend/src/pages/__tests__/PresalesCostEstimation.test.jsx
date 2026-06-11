@@ -137,6 +137,13 @@ describe("PresalesCostEstimation", () => {
   it("prefers presale workbench costing baseline before falling back to solution list", async () => {
     presaleWorkbenchApi.loadContext.mockResolvedValueOnce({
       source: { type: "opportunity", id: 2 },
+      ticket: {
+        id: 501,
+        lead_id: 2026,
+        customer_id: 1001,
+        opportunity_id: 2,
+        project_id: 42,
+      },
       solutions: {
         items: [
           {
@@ -172,6 +179,12 @@ describe("PresalesCostEstimation", () => {
     expect(presaleApi.solutions.list).not.toHaveBeenCalled();
     expect(await screen.findByText("当前方案：ERP 改造售前技术方案")).toBeInTheDocument();
     expect(screen.getByText("当前预算参考：¥168万")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "生成销售报价" }));
+
+    expect(navigateSpy).toHaveBeenCalledWith(
+      "/sales/quotes/create?opportunity_id=2&customer_id=1001&solution_id=88&ticket_id=501&project_id=42&lead_id=2026",
+    );
   });
 
   it("loads linked solution context from sales support and project ids", async () => {

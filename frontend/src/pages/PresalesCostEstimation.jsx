@@ -64,12 +64,28 @@ function extractContextSolution(context) {
   const solution = (context?.solutions?.items || []).find(
     (item) => Number(item?.id) === Number(baseline.solution_id),
   ) || {};
+  const ticket = context?.ticket || {};
+  const sourceType = String(context?.source?.type || "").toLowerCase();
+  const sourceId = parseContextId(context?.source?.id);
 
   return {
     ...solution,
     id: baseline.solution_id,
     name: baseline.solution_name || solution.name || solution.solution_name,
     solution_no: baseline.solution_no || solution.solution_no,
+    lead_id:
+      parseContextId(solution.lead_id) ||
+      parseContextId(ticket.lead_id) ||
+      (sourceType === "lead" ? sourceId : null),
+    customer_id:
+      parseContextId(solution.customer_id) || parseContextId(ticket.customer_id),
+    opportunity_id:
+      parseContextId(solution.opportunity_id) ||
+      parseContextId(ticket.opportunity_id) ||
+      (sourceType === "opportunity" ? sourceId : null),
+    ticket_id: parseContextId(solution.ticket_id) || parseContextId(ticket.id),
+    project_id:
+      parseContextId(solution.project_id) || parseContextId(ticket.project_id),
     estimated_cost: baseline.estimated_cost ?? solution.estimated_cost,
     suggested_price: baseline.suggested_price ?? solution.suggested_price,
     cost_breakdown: baseline.cost_breakdown ?? solution.cost_breakdown,
