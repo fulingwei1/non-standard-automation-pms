@@ -15,7 +15,7 @@ from app.services.inventory.reservation_service import ReservationService
 class OutboundService:
     """出库操作"""
 
-    def __init__(self, db: Session, tenant_id: int):
+    def __init__(self, db: Session, tenant_id: int = 1):
         self.db = db
         self.tenant_id = tenant_id
         self._tx = TransactionService(db, tenant_id)
@@ -34,6 +34,7 @@ class OutboundService:
         reservation_id: Optional[int] = None,
         remark: Optional[str] = None,
         cost_method: str = "FIFO",
+        commit: bool = True,
     ) -> Dict:
         """领料出库"""
         if reservation_id:
@@ -70,7 +71,8 @@ class OutboundService:
             if remaining <= 0:
                 break
 
-        self.db.commit()
+        if commit:
+            self.db.commit()
         return {
             "transactions": transactions,
             "total_quantity": quantity,

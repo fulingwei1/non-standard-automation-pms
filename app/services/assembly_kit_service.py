@@ -21,6 +21,10 @@ from app.models.assembly_kit import (
 from app.models.material import BomHeader, BomItem, Material
 from app.models.project import Machine, Project
 from app.models.purchase import PurchaseOrderItem
+from app.services.purchase.in_transit import (
+    get_purchase_in_transit_qty,
+    purchase_in_transit_filters,
+)
 
 
 class AssemblyKitService:
@@ -231,18 +235,7 @@ class AssemblyKitService:
                 stock_qty = float(item.material.current_stock or 0)
 
             # 在途数量
-            transit_qty = 0
-            if item.material_id:
-                po_items = (
-                    self.db.query(PurchaseOrderItem)
-                    .filter(
-                        PurchaseOrderItem.material_id == item.material_id,
-                        PurchaseOrderItem.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]),
-                    )
-                    .all()
-                )
-                for po_item in po_items:
-                    transit_qty += float(po_item.quantity or 0) - float(po_item.received_qty or 0)
+            transit_qty = float(get_purchase_in_transit_qty(self.db, item.material_id))
 
             available_qty = received_qty + stock_qty + transit_qty
 
@@ -541,9 +534,7 @@ class AssemblyKitService:
                     self.db.query(PurchaseOrderItem, PurchaseOrder)
                     .join(PurchaseOrder)
                     .filter(
-                        PurchaseOrderItem.material_id == item.material_id,
-                        PurchaseOrderItem.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]),
-                        (PurchaseOrderItem.quantity - PurchaseOrderItem.received_qty) > 0,
+                        *purchase_in_transit_filters(item.material_id),
                     )
                     .all()
                 )
@@ -777,10 +768,7 @@ def get_expected_arrival_date(db: Session, material_id: int) -> Optional[date]:
                 PurchaseOrderItem.order_id == PurchaseOrder.id,
             )
             .filter(
-                PurchaseOrderItem.material_id == material_id,
-                PurchaseOrderItem.status.in_(
-                    ["APPROVED", "ORDERED", "PARTIAL_RECEIVED", "approved", "partial_received"]
-                ),
+                *purchase_in_transit_filters(material_id),
                 or_(
                     PurchaseOrderItem.promised_date.isnot(None),
                     PurchaseOrderItem.required_date.isnot(None),

@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.inventory_tracking import MaterialStock, MaterialTransaction
 from app.models.material import Material
 from app.models.project import Project
 from app.models.shortage import MaterialTransfer
@@ -45,6 +46,13 @@ def _create_material(db_session: Session) -> Material:
 def _cleanup_transfers(
     db_session: Session, transfer_ids: List[int], project_ids: List[int], material_ids: List[int]
 ) -> None:
+    if material_ids:
+        db_session.query(MaterialTransaction).filter(
+            MaterialTransaction.material_id.in_(material_ids)
+        ).delete(synchronize_session=False)
+        db_session.query(MaterialStock).filter(MaterialStock.material_id.in_(material_ids)).delete(
+            synchronize_session=False
+        )
     if transfer_ids:
         db_session.query(MaterialTransfer).filter(MaterialTransfer.id.in_(transfer_ids)).delete(
             synchronize_session=False
@@ -124,12 +132,32 @@ def test_transfer_approval_and_execution_flow(
         project_ids.extend([to_project.id, from_project.id])
         material = _create_material(db_session)
         material_ids.append(material.id)
+        from_location = f"项目调出库-{uuid4().hex[:6]}"
+        to_location = f"项目调入库-{uuid4().hex[:6]}"
+        source_stock = MaterialStock(
+            tenant_id=1,
+            material_id=material.id,
+            material_code=material.material_code,
+            material_name=material.material_name,
+            location=from_location,
+            batch_number="",
+            quantity=Decimal("20.0000"),
+            available_quantity=Decimal("20.0000"),
+            reserved_quantity=Decimal("0"),
+            unit=material.unit,
+            unit_price=Decimal("12"),
+            total_value=Decimal("240.00"),
+        )
+        db_session.add(source_stock)
+        db_session.commit()
 
         create_resp = client.post(
             TRANSFERS_BASE,
             json={
                 "from_project_id": from_project.id,
+                "from_location": from_location,
                 "to_project_id": to_project.id,
+                "to_location": to_location,
                 "material_id": material.id,
                 "transfer_qty": "6",
                 "transfer_reason": "紧急支援",
@@ -162,5 +190,47 @@ def test_transfer_approval_and_execution_flow(
         assert Decimal(str(executed["actual_qty"])) == Decimal("6")
         assert executed["executed_at"] is not None
         assert executed["approver_id"] == admin_user.id
+
+        db_session.expire_all()
+        source_stock = (
+            db_session.query(MaterialStock)
+            .filter(MaterialStock.material_id == material.id, MaterialStock.location == from_location)
+            .one()
+        )
+        target_stock = (
+            db_session.query(MaterialStock)
+            .filter(MaterialStock.material_id == material.id, MaterialStock.location == to_location)
+            .one()
+        )
+        assert source_stock.quantity == Decimal("14.0000")
+        assert source_stock.available_quantity == Decimal("14.0000")
+        assert target_stock.quantity == Decimal("6.0000")
+        assert target_stock.available_quantity == Decimal("6.0000")
+        db_session.refresh(material)
+        assert material.current_stock == Decimal("20.0000")
+
+        issue_tx = (
+            db_session.query(MaterialTransaction)
+            .filter(
+                MaterialTransaction.material_id == material.id,
+                MaterialTransaction.transaction_type == "ISSUE",
+                MaterialTransaction.source_location == from_location,
+            )
+            .one_or_none()
+        )
+        transfer_in_tx = (
+            db_session.query(MaterialTransaction)
+            .filter(
+                MaterialTransaction.material_id == material.id,
+                MaterialTransaction.transaction_type == "TRANSFER_IN",
+                MaterialTransaction.source_location == from_location,
+                MaterialTransaction.target_location == to_location,
+            )
+            .one_or_none()
+        )
+        assert issue_tx is not None
+        assert issue_tx.quantity == Decimal("6.0000")
+        assert transfer_in_tx is not None
+        assert transfer_in_tx.quantity == Decimal("6.0000")
     finally:
         _cleanup_transfers(db_session, transfer_ids, project_ids, material_ids)

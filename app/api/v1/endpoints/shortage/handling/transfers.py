@@ -20,19 +20,22 @@ from decimal import Decimal
 from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
+from app.models.inventory_tracking import MaterialStock
 from app.models.material import Material
 from app.models.project import Project
 from app.models.shortage import MaterialTransfer
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.shortage import MaterialTransferCreate, MaterialTransferResponse
+from app.services.inventory.stock_update_service import InsufficientStockError
+from app.services.inventory.transfer_service import TransferService
 from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
@@ -56,6 +59,25 @@ def _generate_transfer_no(db: Session) -> str:
         separator="-",
         seq_length=3,
     )
+
+
+def _inventory_tenant_id(user: User) -> int:
+    return int(getattr(user, "tenant_id", None) or 1)
+
+
+def _location_available_qty(
+    db: Session, material_id: int, location: str, tenant_id: int
+) -> Decimal:
+    available = (
+        db.query(func.coalesce(func.sum(MaterialStock.available_quantity), 0))
+        .filter(
+            MaterialStock.tenant_id == tenant_id,
+            MaterialStock.material_id == material_id,
+            MaterialStock.location == location,
+        )
+        .scalar()
+    )
+    return Decimal(str(available or 0))
 
 
 def _build_transfer_response(transfer: MaterialTransfer, db: Session) -> MaterialTransferResponse:
@@ -165,17 +187,14 @@ def create_transfer(
     # 检查可调拨数量
     available_qty = Decimal("0")
     stock_source = "未知"
-    if transfer_in.from_project_id:
-        try:
-            from app.services.material_transfer_service import material_transfer_service
-
-            stock_info = material_transfer_service.get_project_material_stock(
-                db, transfer_in.from_project_id, transfer_in.material_id
-            )
-            available_qty = stock_info.get("available_qty", Decimal("0"))
-            stock_source = stock_info.get("source", "未知")
-        except Exception:
-            pass  # 库存服务不可用时允许继续
+    if transfer_in.from_location:
+        available_qty = _location_available_qty(
+            db,
+            transfer_in.material_id,
+            transfer_in.from_location,
+            tenant_id=_inventory_tenant_id(current_user),
+        )
+        stock_source = f"库存位置 {transfer_in.from_location}"
 
     # 检查数量是否充足（如果有可用库存）
     if available_qty > 0 and transfer_in.transfer_qty > available_qty:
@@ -270,14 +289,47 @@ def execute_transfer(
     if transfer.status != "APPROVED":
         raise HTTPException(status_code=400, detail="只有已批准的申请才能执行")
 
-    transfer.status = "EXECUTED"
-    transfer.executed_at = datetime.now()
-    transfer.executed_by = current_user.id
-    transfer.actual_qty = actual_qty
-    transfer.execution_note = execution_note
+    if actual_qty <= 0:
+        raise HTTPException(status_code=400, detail="实际调拨数量必须大于0")
+    if actual_qty > transfer.transfer_qty:
+        raise HTTPException(status_code=400, detail="实际调拨数量不能大于申请数量")
+    if not transfer.from_location or not transfer.to_location:
+        raise HTTPException(status_code=400, detail="执行调拨必须指定调出库位和调入库位")
+    if transfer.from_location == transfer.to_location:
+        raise HTTPException(status_code=400, detail="调出库位和调入库位不能相同")
 
-    # Note: 更新库存记录需要与库存管理系统集成
+    transfer_service = TransferService(db, tenant_id=_inventory_tenant_id(current_user))
+    try:
+        transfer_service.transfer_stock(
+            material_id=transfer.material_id,
+            quantity=actual_qty,
+            from_location=transfer.from_location,
+            to_location=transfer.to_location,
+            related_order_id=transfer.id,
+            related_order_type="MATERIAL_TRANSFER",
+            related_order_no=transfer.transfer_no,
+            operator_id=current_user.id,
+            remark=execution_note or transfer.transfer_reason,
+            commit=False,
+        )
 
-    save_obj(db, transfer)
+        transfer.status = "EXECUTED"
+        transfer.executed_at = datetime.now()
+        transfer.executed_by = current_user.id
+        transfer.actual_qty = actual_qty
+        transfer.execution_note = execution_note
+
+        db.commit()
+    except InsufficientStockError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc))
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"调拨执行失败: {exc}")
+
+    db.refresh(transfer)
 
     return _build_transfer_response(transfer, db)

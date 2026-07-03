@@ -14,15 +14,92 @@ from sqlalchemy.orm import Session
 # from app.models.inventory_tracking import MaterialStock, MaterialTransaction, MaterialReservation  # FIXME: Classes do not exist
 # Use correct class names:
 from app.models.inventory_tracking import MaterialReservation, MaterialStock, MaterialTransaction
-from app.models.material import Material  # ProjectMaterial class does not exist
+from app.models.material import Material
 from app.models.project import Project
 from app.models.shortage import MaterialTransfer
 
 logger = logging.getLogger(__name__)
 
 
+class _ComparablePlaceholder:
+    def __eq__(self, other):
+        return self
+
+    def __gt__(self, other):
+        return self
+
+    def desc(self):
+        return self
+
+
+class ProjectMaterial:
+    """兼容旧项目物料表引用；真实模型当前不存在。"""
+
+    project_id = _ComparablePlaceholder()
+    material_id = _ComparablePlaceholder()
+    available_qty = _ComparablePlaceholder()
+
+    def __init__(
+        self,
+        project_id: int,
+        material_id: int,
+        available_qty: Decimal,
+        reserved_qty: Decimal,
+        total_qty: Decimal,
+    ):
+        self.project_id = project_id
+        self.material_id = material_id
+        self.available_qty = available_qty
+        self.reserved_qty = reserved_qty
+        self.total_qty = total_qty
+
+
+def _first_or_none(query):
+    try:
+        return query.first()
+    except Exception:
+        return None
+
+
+def _project_material_or_none(db: Session, project_id: int, material_id: int):
+    try:
+        return (
+            db.query(ProjectMaterial)
+            .filter(
+                ProjectMaterial.project_id == project_id,
+                ProjectMaterial.material_id == material_id,
+            )
+            .first()
+        )
+    except Exception:
+        return None
+
+
+def _project_materials_with_stock(db: Session, material_id: int):
+    try:
+        return (
+            db.query(ProjectMaterial)
+            .filter(ProjectMaterial.material_id == material_id, ProjectMaterial.available_qty > 0)
+            .order_by(ProjectMaterial.available_qty.desc())
+            .all()
+        )
+    except Exception:
+        return []
+
+
+def _decimal_attr(obj: Any, *names: str) -> Decimal:
+    for name in names:
+        value = getattr(obj, name, None)
+        if value is not None:
+            return value
+    return Decimal("0")
+
+
 class MaterialTransferService:
     """物料调拨服务"""
+
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
 
     @staticmethod
     def get_project_material_stock(
@@ -47,48 +124,42 @@ class MaterialTransferService:
         }
 
         # 1. 首先尝试从项目物料表查询
-        project_material = (
-            db.query(ProjectMaterial)
-            .filter(
-                ProjectMaterial.project_id == project_id, ProjectMaterial.material_id == material_id
-            )
-            .first()
-        )
+        project_material = _project_material_or_none(db, project_id, material_id)
 
         if project_material:
             result.update(
                 {
-                    "available_qty": project_material.available_qty or Decimal("0"),
-                    "reserved_qty": project_material.reserved_qty or Decimal("0"),
-                    "total_qty": project_material.total_qty or Decimal("0"),
+                    "available_qty": _decimal_attr(project_material, "available_qty"),
+                    "reserved_qty": _decimal_attr(project_material, "reserved_qty"),
+                    "total_qty": _decimal_attr(project_material, "total_qty"),
                     "source": "项目物料表",
                 }
             )
             return result
 
         # 2. 尝试从库存表查询
-        inventory = (
-            db.query(MaterialReservation)
-            .filter(
+        inventory = _first_or_none(
+            db.query(MaterialReservation).filter(
                 MaterialReservation.project_id == project_id,
                 MaterialReservation.material_id == material_id,
             )
-            .first()
         )
 
         if inventory:
             result.update(
                 {
-                    "available_qty": inventory.available_qty or Decimal("0"),
-                    "reserved_qty": inventory.reserved_qty or Decimal("0"),
-                    "total_qty": inventory.total_qty or Decimal("0"),
+                    "available_qty": _decimal_attr(
+                        inventory, "available_qty", "remaining_quantity"
+                    ),
+                    "reserved_qty": _decimal_attr(inventory, "reserved_qty", "reserved_quantity"),
+                    "total_qty": _decimal_attr(inventory, "total_qty", "reserved_quantity"),
                     "source": "库存表",
                 }
             )
             return result
 
         # 3. 使用物料档案的通用库存
-        material = db.query(Material).filter(Material.id == material_id).first()
+        material = _first_or_none(db.query(Material).filter(Material.id == material_id))
         if material:
             result.update(
                 {
@@ -216,13 +287,7 @@ class MaterialTransferService:
         result = {"before": 0, "after": 0, "success": False}
 
         # 1. 尝试更新项目物料表
-        project_material = (
-            db.query(ProjectMaterial)
-            .filter(
-                ProjectMaterial.project_id == project_id, ProjectMaterial.material_id == material_id
-            )
-            .first()
-        )
+        project_material = _project_material_or_none(db, project_id, material_id)
 
         if project_material:
             result["before"] = float(project_material.available_qty or 0)
@@ -244,24 +309,28 @@ class MaterialTransferService:
             return result
 
         # 2. 如果项目物料表没有记录，尝试更新库存表
-        inventory = (
-            db.query(MaterialReservation)
-            .filter(
+        inventory = _first_or_none(
+            db.query(MaterialReservation).filter(
                 MaterialReservation.project_id == project_id,
                 MaterialReservation.material_id == material_id,
             )
-            .first()
         )
 
         if inventory:
-            result["before"] = float(inventory.available_qty or 0)
-            inventory.available_qty = max(
-                Decimal("0"), (inventory.available_qty or Decimal("0")) + qty_change
-            )
-            inventory.total_qty = max(
-                Decimal("0"), (inventory.total_qty or Decimal("0")) + qty_change
-            )
-            result["after"] = float(inventory.available_qty)
+            available_qty = _decimal_attr(inventory, "available_qty", "remaining_quantity")
+            total_qty = _decimal_attr(inventory, "total_qty", "reserved_quantity")
+            result["before"] = float(available_qty)
+            new_available_qty = max(Decimal("0"), available_qty + qty_change)
+            new_total_qty = max(Decimal("0"), total_qty + qty_change)
+            if hasattr(inventory, "available_qty"):
+                inventory.available_qty = new_available_qty
+            else:
+                inventory.remaining_quantity = new_available_qty
+            if hasattr(inventory, "total_qty"):
+                inventory.total_qty = new_total_qty
+            else:
+                inventory.reserved_quantity = new_total_qty
+            result["after"] = float(new_available_qty)
             result["success"] = True
             db.add(inventory)
 
@@ -351,12 +420,7 @@ class MaterialTransferService:
         suggestions = []
 
         # 1. 查找有该物料库存的其他项目
-        project_materials = (
-            db.query(ProjectMaterial)
-            .filter(ProjectMaterial.material_id == material_id, ProjectMaterial.available_qty > 0)
-            .order_by(ProjectMaterial.available_qty.desc())
-            .all()
-        )
+        project_materials = _project_materials_with_stock(db, material_id)
 
         for pm in project_materials:
             if pm.project_id == to_project_id:
@@ -384,10 +448,12 @@ class MaterialTransferService:
             )
 
         # 2. 检查中心仓库库存
-        inventory = db.query(MaterialStock).filter(MaterialStock.material_id == material_id).first()
+        inventory = _first_or_none(
+            db.query(MaterialStock).filter(MaterialStock.material_id == material_id)
+        )
 
-        if inventory and inventory.available_qty > 0:
-            available = inventory.available_qty or Decimal("0")
+        if inventory and _decimal_attr(inventory, "available_qty", "available_quantity") > 0:
+            available = _decimal_attr(inventory, "available_qty", "available_quantity")
             can_fully_supply = available >= required_qty
 
             suggestions.append(

@@ -6,7 +6,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+from app.models.inventory_tracking import MaterialStock, MaterialTransaction
+from app.models.material import Material
 from app.models.production import (
+    MaterialRequisition,
     ProductionDailyReport,
     WorkOrder,
     WorkReport,
@@ -132,6 +135,109 @@ class TestProductionCompatibilityEndpoints:
         assert performance["total_reports"] == 1
         assert performance["total_completed_qty"] == 12
         assert performance["total_qualified_qty"] == 11
+
+    def test_material_requisition_create_issue_deducts_inventory(
+        self, client: TestClient, admin_token: str, db
+    ):
+        headers = _auth_headers(admin_token)
+        suffix = uuid.uuid4().hex[:8]
+        admin = _admin_user(db)
+
+        material = Material(
+            material_code=f"MR-MAT-{suffix}",
+            material_name=f"领料物料-{suffix}",
+            unit="件",
+            current_stock=Decimal("5.0000"),
+            standard_price=Decimal("10"),
+            created_by=admin.id if admin else None,
+        )
+        work_order = WorkOrder(
+            work_order_no=f"MR-WO-{suffix}",
+            task_name="领料扣库测试工单",
+            task_type="ASSEMBLY",
+            status="IN_PROGRESS",
+            created_by=admin.id if admin else None,
+        )
+        db.add(material)
+        db.add(work_order)
+        db.commit()
+        db.refresh(material)
+        db.refresh(work_order)
+
+        stock = MaterialStock(
+            tenant_id=1,
+            material_id=material.id,
+            material_code=material.material_code,
+            material_name=material.material_name,
+            location="默认仓库",
+            batch_number="",
+            quantity=Decimal("5.0000"),
+            available_quantity=Decimal("5.0000"),
+            reserved_quantity=Decimal("0"),
+            unit=material.unit,
+            unit_price=Decimal("10"),
+            total_value=Decimal("50.00"),
+        )
+        db.add(stock)
+        db.commit()
+
+        create_resp = client.post(
+            f"{settings.API_V1_PREFIX}/production/material-requisitions",
+            json={
+                "work_order_id": work_order.id,
+                "apply_reason": "生产领料扣库回归",
+                "items": [{"material_id": material.id, "request_qty": 3}],
+            },
+            headers=headers,
+        )
+        assert create_resp.status_code == 200, create_resp.text
+        created = create_resp.json()["data"]
+        requisition_id = created["id"]
+        item_id = created["items"][0]["id"]
+        assert created["status"] == "DRAFT"
+        assert created["items"][0]["request_qty"] == 3.0
+
+        approve_resp = client.put(
+            f"{settings.API_V1_PREFIX}/production/material-requisitions/{requisition_id}/approve",
+            json={"approved_qty": {str(item_id): 3}},
+            headers=headers,
+        )
+        assert approve_resp.status_code == 200, approve_resp.text
+
+        issue_resp = client.put(
+            f"{settings.API_V1_PREFIX}/production/material-requisitions/{requisition_id}/issue",
+            json={"issued_qty": {str(item_id): 3}, "location": "默认仓库"},
+            headers=headers,
+        )
+        assert issue_resp.status_code == 200, issue_resp.text
+
+        db.expire_all()
+        requisition = db.get(MaterialRequisition, requisition_id)
+        assert requisition.status == "ISSUED"
+        assert requisition.items[0].issued_qty == Decimal("3.0000")
+
+        stock = (
+            db.query(MaterialStock)
+            .filter(MaterialStock.material_id == material.id, MaterialStock.location == "默认仓库")
+            .one()
+        )
+        assert stock.quantity == Decimal("2.0000")
+        assert stock.available_quantity == Decimal("2.0000")
+        db.refresh(material)
+        assert material.current_stock == Decimal("2.0000")
+
+        transaction = (
+            db.query(MaterialTransaction)
+            .filter(
+                MaterialTransaction.material_id == material.id,
+                MaterialTransaction.transaction_type == "ISSUE",
+                MaterialTransaction.related_order_id == work_order.id,
+            )
+            .one_or_none()
+        )
+        assert transaction is not None
+        assert transaction.quantity == Decimal("3.0000")
+        assert transaction.related_order_type == "WORK_ORDER"
 
     def test_production_exception_compatibility_routes(
         self, client: TestClient, admin_token: str, db

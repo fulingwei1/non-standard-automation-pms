@@ -12,6 +12,10 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.models import Material, ShortageAlertRule
+from app.services.purchase.in_transit import (
+    purchase_in_transit_filters,
+    purchase_order_item_remaining_qty,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,12 +52,14 @@ def calculate_available_qty(
     in_transit_qty = Decimal(0)
     try:
         in_transit = (
-            db.query(func.sum(PurchaseOrderItem.quantity))
+            db.query(func.sum(purchase_order_item_remaining_qty()))
             .join(PurchaseOrder, PurchaseOrderItem.order_id == PurchaseOrder.id)
             .filter(
-                PurchaseOrderItem.material_id == material_id,
-                PurchaseOrder.status.in_(["approved", "partial_received"]),
-                PurchaseOrder.expected_date <= check_date,
+                *purchase_in_transit_filters(material_id),
+                or_(
+                    PurchaseOrder.promised_date <= check_date,
+                    PurchaseOrder.required_date <= check_date,
+                ),
             )
             .scalar()
         )
@@ -101,8 +107,7 @@ def calculate_estimated_ready_date(
                 db.query(PurchaseOrderItem)
                 .join(PurchaseOrder, PurchaseOrderItem.order_id == PurchaseOrder.id)
                 .filter(
-                    PurchaseOrderItem.material_id == material_id,
-                    PurchaseOrder.status.in_(["approved", "partial_received"]),
+                    *purchase_in_transit_filters(material_id),
                     or_(
                         PurchaseOrder.promised_date.isnot(None),
                         PurchaseOrder.required_date.isnot(None),

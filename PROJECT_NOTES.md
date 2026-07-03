@@ -1,5 +1,71 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：功能审计 PROD-14 修复（物料调拨真实库存变动）
+
+- 修复项：`PROD-14`，物料调拨执行端点只把调拨单置为 `EXECUTED`，不扣源库库存、不增目标库库存、不写交易流水；旧 `MaterialTransferService` 还引用不存在的 `ProjectMaterial`，一调用就 `NameError`。
+- 根因：
+  - `shortage/handling/transfers.py` 的 `/execute` 只改 `material_transfers` 状态，注释里仍写着“需要与库存管理系统集成”。
+  - 库存域已有 `TransferService.transfer_stock()`，但调拨执行端点没有接入。
+  - `material_transfer_service.py` 遗留项目物料表模型不存在，测试靠打桩绕过，真实调用不可靠。
+- 改动：
+  - `app/api/v1/endpoints/shortage/handling/transfers.py`：执行调拨时要求调出/调入库位，校验实际数量，调用 `TransferService.transfer_stock(..., commit=False)`；库存失败时 rollback，不再假成功。
+  - `app/services/inventory/transfer_service.py`：补 `tenant_id=1` 默认值、`commit=False` 事务控制和关联单据信息写入。
+  - `app/services/material_transfer_service.py`：补兼容构造器和 `ProjectMaterial` 缺失兼容层，真实环境安全降级，不再 NameError。
+  - `tests/api/test_shortage_transfers.py`：新增调拨执行 API 契约，覆盖源库扣减、目标库增加、物料总库存净额不变、ISSUE/TRANSFER_IN 流水。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/api/test_shortage_transfers.py::test_transfer_approval_and_execution_flow -q` -> failed（执行后目标库位无库存行）。
+  - 绿灯：同命令 -> 1 passed。
+  - 相邻回归：`.venv/bin/python -m pytest tests/api/test_shortage_transfers.py tests/unit/test_transfer_service_coverage.py tests/unit/test_material_transfer_service.py tests/services/test_material_transfer_svc.py tests/unit/test_material_transfer_service_coverage.py tests/unit/test_zero_coverage_batch9_auto.py -q` -> 48 passed, 3 skipped。
+  - 静态检查：`py_compile` passed；`ruff check app/api/v1/endpoints/shortage/handling/transfers.py app/services/inventory/transfer_service.py app/services/material_transfer_service.py tests/api/test_shortage_transfers.py` -> All checks passed；`git diff --check` passed。
+- 已知测试边界：
+  - `tests/unit/test_inventory_management_service.py` 仍有 4 个既有失败：旧测试调用 facade 上不存在的私有 `_calculate_stock_status`；与本次调拨链路无关。
+- 残留：
+  - `PROD-05` 仍待修：齐套算法“在途是否算已齐套/双算/跨项目预留”仍需独立修。
+  - 历史已执行但未动库存的调拨单需要后续数据清洗/补偿，代码不会自动回放旧单据。
+
+## 2026-07-03 继续：功能审计 PROD-12 修复（生产领料扣库存）
+
+- 修复项：`PROD-12`，生产领料兼容接口只有列表/详情/审批/发料，缺创建入口；发料只把领料单状态置为 `ISSUED`，不扣库存、不写库存流水。
+- 根因：
+  - `production/material_requisitions.py` 未提供 `POST /production/material-requisitions`，前端创建领料单没有可用入口。
+  - `/issue` 端点未调用 `OutboundService.issue_material()`，导致 `MaterialStock`、`MaterialTransaction`、`Material.current_stock` 全不变。
+  - `OutboundService.issue_material()` 原先内部直接 `commit()`，不适合被领料单多明细事务复用。
+- 改动：
+  - `app/api/v1/endpoints/production/material_requisitions.py`：新增创建领料单端点，写入主表和明细；审批时补齐批准数量；发料时校验状态/数量并调用出库服务。
+  - `app/services/inventory/outbound_service.py`：补 `tenant_id=1` 默认值，并增加 `commit=False` 选项，支持领料单统一事务提交/回滚。
+  - `tests/api/test_production_compat_endpoints.py`：新增 API 契约，覆盖创建领料单→审批→发料→库存扣减→ISSUE 流水。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/api/test_production_compat_endpoints.py::TestProductionCompatibilityEndpoints::test_material_requisition_create_issue_deducts_inventory -q` -> failed（POST 405 Method Not Allowed）。
+  - 绿灯：同命令 -> 1 passed。
+  - 相邻回归：`.venv/bin/python -m pytest tests/api/test_production_compat_endpoints.py -q` -> 8 passed；`.venv/bin/python -m pytest tests/unit/test_outbound_service_coverage.py -q` -> 1 passed；`.venv/bin/python -m pytest tests/api/test_production.py::TestMaterialRequisition -q` -> 1 passed。
+  - 静态检查：`py_compile` passed；`ruff check app/api/v1/endpoints/production/material_requisitions.py app/services/inventory/outbound_service.py tests/api/test_production_compat_endpoints.py` -> All checks passed；`git diff --check` passed。
+- 已知测试边界：
+  - `tests/test_inventory_management.py` 当前因既有 fixture `test_tenant` 缺失，17 个用例在 setup 阶段报错，不能作为本轮回归包；本次未修改该测试基础设施。
+- 残留：
+  - `PROD-05` 仍待修：齐套算法“在途是否算已齐套/双算/跨项目预留”仍需独立修。
+
+## 2026-07-03 继续：功能审计 PROD-04 修复（采购在途读侧口径）
+
+- 修复项：`PROD-04`，齐套/缺料/物料需求等读侧按 `PurchaseOrderItem.status in (APPROVED, ORDERED, PARTIAL_RECEIVED)` 计算在途，但审批后的 POI 仍是 `PENDING`，导致已审批未收货订单在途恒漏算。
+- 根因：
+  - PO 主状态表示订单是否已审批/收货进度，POI 行状态更多表示行收货进度。
+  - 读侧只看 POI 状态，没有结合 PO 主状态与订单行剩余数量。
+  - 多个模块各写一套状态字典，`CONFIRMED/IN_TRANSIT`、小写 `approved/partial_received`、POI `ORDERED` 混用。
+- 改动：
+  - `app/services/purchase/in_transit.py`：新增共享在途 helper，统一口径为“PO 主状态在 APPROVED/ORDERED/PARTIAL_RECEIVED 等生效状态 + 订单行剩余数量 > 0”。
+  - 接入 `KitRateService`、kit-rate 工具、kit-check、定时齐套快照、物料需求列表/生成、智能缺料扫描、装配齐套基础/增强分析。
+  - `app/api/v1/endpoints/assembly_kit/kit_analysis/utils.py`：同步修掉采购订单不存在的 `expected_date` 读法，改用承诺交期/要求交期。
+  - `tests/api/test_purchase_receipts_workflow_contracts.py`：新增 API 契约，覆盖审批后未收货=全量在途、部分收货=剩余在途、全部收货=0。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/api/test_purchase_receipts_workflow_contracts.py::test_approved_purchase_order_counts_remaining_quantity_as_in_transit -q` -> failed（在途为 0）。
+  - 绿灯：同命令 -> 1 passed。
+  - 相邻回归：`.venv/bin/python -m pytest tests/api/test_purchase_receipts_workflow_contracts.py tests/api/test_purchase_workflow_contracts.py tests/audit_p0/test_p0_06_receipt_no_stock.py tests/audit_p0/test_p0_07_shortage_scan_500.py tests/unit/test_kit_rate_service.py tests/unit/test_kit_rate_service_coverage.py tests/unit/test_smart_alert_engine.py tests/unit/test_smart_alert_engine_coverage.py -q` -> 83 passed, 11 skipped。
+  - 静态检查：`py_compile` passed；`ruff check` 本轮触达 Python/测试文件 -> All checks passed；`git diff --check` passed。
+- 残留：
+  - `PROD-05` 仍待修：齐套算法“在途是否算已齐套/双算/跨项目预留”仍需独立修，不因在途数据能读到而自动正确。
+  - `PROD-14` 已在后续补齐：调拨执行 now 源库扣减、目标库增加并写库存流水；`PROD-12` 已补齐领料扣库。
+  - 存量数据仍需清洗：历史 PO/POI 空状态、历史收货明细金额空值不会自动回填。
+
 ## 2026-07-03 继续：功能审计 PROD-11/22 修复（收货状态与金额流转）
 
 - 修复项：`PROD-11` + `PROD-22`，创建采购收货单后只累加 `PurchaseOrderItem.received_qty`，不刷新 PO/POI 状态，也不计算收货明细金额和订单已收金额。
@@ -17,8 +83,8 @@
   - 相邻回归：`.venv/bin/python -m pytest tests/audit_p0/test_p0_06_receipt_no_stock.py tests/api/test_purchase_workflow_contracts.py tests/api/test_purchase_receipts_workflow_contracts.py tests/unit/test_inbound_service_coverage.py -q` -> 10 passed。
   - 静态检查：`py_compile` passed；`ruff check app/api/v1/endpoints/purchase/receipts.py tests/api/test_purchase_receipts_workflow_contracts.py` -> All checks passed；`git diff --check` passed。
 - 残留：
-  - `PROD-04` 仍待修：读侧在途口径/状态字典还没对齐，需确认哪些服务读 `ORDERED/PARTIAL_RECEIVED/RECEIVED`。
-  - `PROD-12/PROD-14` 仍待修：生产领料扣库、调拨真实库存变动还没打通。
+  - `PROD-04` 已在后续补齐：齐套/缺料/物料需求等读侧统一按 PO 主状态 + 订单行剩余数量计算在途。
+  - `PROD-14` 已在后续补齐：调拨执行 now 源库扣减、目标库增加并写库存流水；`PROD-12` 已补齐领料扣库。
   - 存量数据仍需清洗：已有 PO/POI 空状态、历史收货金额空值不会被本次代码自动回填。
 
 ## 2026-07-03 继续：功能审计 PROD-03 修复（采购收货入库断链）
@@ -40,7 +106,8 @@
   - 静态检查：`py_compile` passed；`ruff check` 本轮触达 Python/测试文件 -> All checks passed；`git diff --check` passed。
 - 残留：
   - `PROD-11/22` 已在后续补齐：收货后 PO/POI 状态、收货明细金额和订单已收金额已回归。
-  - `PROD-04/PROD-12/PROD-14` 仍待修：在途读侧状态字典、生产领料扣库、调拨真实库存变动还没打通。
+  - `PROD-04` 已在后续补齐：在途读侧状态字典/剩余数量口径已回归。
+  - `PROD-14` 已在后续补齐：调拨执行 now 源库扣减、目标库增加并写库存流水；`PROD-12` 已补齐领料扣库。
   - `tests/test_inventory_management.py` 当前因既有 fixture `test_tenant` 缺失无法作为回归包运行，未计入本轮验证。
 
 ## 2026-07-03 继续：功能审计 PROD-02 修复（智能缺料扫描字段错配 500）
@@ -59,7 +126,7 @@
   - 相邻回归：`.venv/bin/python -m pytest tests/unit/test_smart_alert_engine.py tests/unit/test_smart_alert_engine_coverage.py tests/audit_p0/test_p0_07_shortage_scan_500.py -q` -> 50 passed, 11 skipped。
   - 静态检查：`py_compile app/services/shortage/smart_alert_engine.py` passed；`ruff check app/services/shortage/smart_alert_engine.py tests/audit_p0/test_p0_07_shortage_scan_500.py` -> All checks passed；`git diff --check` passed。
 - 残留：
-  - 该修复只解决扫描入口字段错配 500，不证明库存/在途数据已经真实；真数据仍依赖 `PROD-03/PROD-11` 收货入库/状态流转与 `PROD-04` 在途读侧口径。
+  - 该修复只解决扫描入口字段错配 500；库存/在途基础后续已由 `PROD-03/PROD-11/PROD-04` 接上，预警/齐套算法口径仍归 `PROD-05`。
   - 深覆盖相邻包 `tests/unit/test_smart_alert_n2.py` 仍有 2 个既有失败：测试 helper 把 `Decimal("0")` 当默认值覆盖、以及成本影响为 0 时评分期望与现行实现不一致；未并入本次字段修复。
 
 ## 2026-07-03 继续：功能审计 APPR-03 修复（会签/或签驳回汇总与终态防复活）
@@ -1004,3 +1071,16 @@
 - 客服包原裸挂顶层，喷出 /tickets、/records、/communications、/surveys、/survey-templates、/knowledge-base、/knowledge-features、/statistics 八个通用命名空间——api_lazy 备用注册表早就用 prefix="/service"，活动注册表漏了；本轮对齐设计意图。
 - 迁移面：api.py 挂载加前缀；前端 service.js(44处)+customerCommunication.js(6处)；后端 5 个测试文件 22 处。前端 /knowledge-base 的页面路由（浏览器 URL）不受影响。
 - 验证：openapi /service/* 38 条、八个裸命名空间清零；后端 27 测试过；前端 API 测试 17/18 文件过（debug.test.js 为 stash 对照确认的既有失败）；build 通过；实机 /service/tickets/statistics 等 200、旧裸路径 404。
+
+## 2026-07-03 继续：双任务表整合 P1 完成（A路线：task_unified 收编 tasks）
+
+- 设计文档 TASK_UNIFICATION_DESIGN.md（目标模型/字段映射/ID策略/四期计划/回滚方案）。
+- P1 落地：
+  - TaskUnified 模型扩 5 列（project_stage/machine_id/milestone_id/weight/block_reason）+ 迁移 SQL（migrations/20260703_task_unification_p1_sqlite.sql，含 task_id_map 映射表）。
+  - 迁移脚本 scripts/migrate_tasks_to_unified.py（原生 sqlite3，幂等可复跑）：131 行全量迁入（task_type=PROJECT，确定性 new_id=10000+old_id 零区间重叠）；owner 空 10 行按 项目PM→admin 兜底；status TODO→PENDING/DONE→COMPLETED 映射；priority 补 MEDIUM（任务中心按优先级分组，NULL 会 500——实测踩到后回填）。
+  - **5 张引用表 FK 重建**（SQLite 不支持 ALTER FK，DDL 重建把 REFERENCES tasks 改指 task_unified）+ 56 行引用重接 + PRAGMA foreign_key_check 兜底。
+  - 坑：库里既有坏视图 v_bom_ready_rate（引用不存在的 bi.ready_status）会挡 RENAME，需 PRAGMA legacy_alter_table=ON；**真实 DB 是 data/app.db，根目录 app.db 是空壳**。
+- 对账全绿：行数 131=131、每项目一致、状态分布一致、6 列引用完整性全过；幂等复跑 0 新增全跳过。
+- 即刻生效的价值：任务中心总览/我的任务首次出现 PROJECT 类型任务（实测 by_type PROJECT:7）。
+- 现状与下一步：tasks 表保留只读双读校验（写路径仍写 tasks，P2 切换；期间可重跑迁移脚本追平增量）。P2=写路径切换（WBS/模板/售前遗留同步/导入），P3=34 个读消费方+前端断链修复，P4=下线旧表。
+- 回归：tests/api task/progress/task_center 面 43 过；后端启动 0 失败；数据库迁移前备份在 scratchpad（data-app.db.pre-task-unification.bak）。

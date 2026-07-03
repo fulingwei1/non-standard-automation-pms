@@ -12,7 +12,7 @@ from app.services.inventory.stock_update_service import StockUpdateService
 class TransferService:
     """库存转移"""
 
-    def __init__(self, db: Session, tenant_id: int):
+    def __init__(self, db: Session, tenant_id: int = 1):
         self.db = db
         self.tenant_id = tenant_id
         self._tx = TransactionService(db, tenant_id)
@@ -25,8 +25,12 @@ class TransferService:
         from_location: str,
         to_location: str,
         batch_number: Optional[str] = None,
+        related_order_id: Optional[int] = None,
+        related_order_type: Optional[str] = None,
+        related_order_no: Optional[str] = None,
         operator_id: Optional[int] = None,
         remark: Optional[str] = None,
+        commit: bool = True,
     ) -> Dict:
         """库存转移"""
         out_transaction = self._tx.create_transaction(
@@ -35,6 +39,9 @@ class TransferService:
             quantity=quantity,
             source_location=from_location,
             batch_number=batch_number,
+            related_order_id=related_order_id,
+            related_order_type=related_order_type,
+            related_order_no=related_order_no,
             operator_id=operator_id,
             remark=f"转移至 {to_location} - {remark or ''}",
         )
@@ -53,6 +60,9 @@ class TransferService:
             source_location=from_location,
             target_location=to_location,
             batch_number=batch_number,
+            related_order_id=related_order_id,
+            related_order_type=related_order_type,
+            related_order_no=related_order_no,
             operator_id=operator_id,
             remark=f"从 {from_location} 转入 - {remark or ''}",
         )
@@ -64,7 +74,8 @@ class TransferService:
             batch_number=batch_number,
             unit_price=from_stock.unit_price,
         )
-        self.db.commit()
+        if commit:
+            self.db.commit()
         return {
             "out_transaction": out_transaction,
             "in_transaction": in_transaction,

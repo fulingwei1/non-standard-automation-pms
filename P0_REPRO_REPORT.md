@@ -11,11 +11,17 @@
 - 2026-07-03 补充：P0-5/APPR-03 已改为稳定的内存审批引擎动态复现与回归用例，
   覆盖会签汇总失败、或签等待其他审批人、终态 REJECTED 禁止复活。
 - 2026-07-03 补充：P0-7/PROD-02 已修复智能缺料预警扫描字段错配，`test_p0_07`
-  从 HTTP 500 红灯转为回归通过；库存/在途数据真实性仍依赖 PROD-03/04。
+  从 HTTP 500 红灯转为回归通过；库存/在途基础已由 PROD-03/04/11 接上，预警/齐套算法口径仍归 PROD-05。
 - 2026-07-03 补充：P0-6/PROD-03 已接通采购收货质检合格后的入库链路，
   `test_p0_06` 从源码接线红灯转为回归通过；PO/POI 状态流转已由 PROD-11 补齐。
 - 2026-07-03 补充：P0-6/PROD-11/PROD-22 已补齐采购收货创建后的
-  PO/POI `PARTIAL_RECEIVED/RECEIVED` 状态流转、收货明细金额和订单已收金额；在途读侧口径仍归 PROD-04。
+  PO/POI `PARTIAL_RECEIVED/RECEIVED` 状态流转、收货明细金额和订单已收金额。
+- 2026-07-03 补充：P0-6/PROD-04 已统一采购在途读侧口径，
+  审批后未收货计全部在途、部分收货计剩余、全部收货归零；齐套/缺料/物料需求共用该口径。
+- 2026-07-03 补充：P0-6/PROD-12 已补齐生产领料创建入口与发料扣库链路，
+  领料发料会写 `MaterialTransaction(ISSUE)`，并同步扣减 `MaterialStock` 与 `materials.current_stock`。
+- 2026-07-03 补充：P0-6/PROD-14 已接通调拨执行到库存转移服务，
+  调拨执行会扣减源库、增加目标库，写入 `ISSUE` 与 `TRANSFER_IN` 交易流水。
 
 ---
 
@@ -49,7 +55,7 @@
 | 3c | 成本汇总漏乘 qty | API：`GET /quotes/{id}/cost-breakdown`，比对 total_cost 与 Σ(qty×cost) | 返回 6773243.39 = Σ(cost)，应为 Σ(qty×cost)=19040825.62 → 毛利虚高 | **已复现** | `test_p0_03_quote_fund_trio.py::test_cost_breakdown_multiplies_by_quantity` |
 | 4 | 回款无勾稽 | API：对有 ISSUED 发票的合同 `POST 回款`，金额远超发票额 | 回款 9,999,999 记入 474,000 的发票，paid=9,999,999、unpaid=-9,525,999，HTTP 200 | **已复现（部分偏差）** | `test_p0_04_payment_no_reconciliation.py::test_overpayment_beyond_invoice_amount_is_rejected` |
 | 5 | 会签驳回可翻转 APPROVED | 内存审批引擎构造两人 AND_SIGN/OR_SIGN 节点 + 终态实例待办 | 修复前：会签/或签一票拒立即 REJECTED，终态 REJECTED 可被 pending 任务 approve 翻成 APPROVED；修复后 3 用例通过 | **已复现并回归** | `test_p0_05_cosign_reject_flip.py`（3 用例） |
-| 6 | 收货不入库 | 源码接线 + API 契约：`purchase/receipts.py` 是否调 InboundService / 写库存/写收货进度 | 修复前 receipts 全文无库存入库接线且 PO/POI 状态不流转；修复后质检合格量写 MaterialStock、MaterialTransaction 与 material.current_stock，创建收货单写 PO/POI 收货状态、明细金额和订单已收金额 | **已复现并回归** | `test_p0_06_receipt_no_stock.py`（2 用例）+ `test_purchase_receipts_workflow_contracts.py::test_goods_receipt_creates_purchase_in_stock_transaction` + `test_purchase_receipts_workflow_contracts.py::test_goods_receipt_updates_order_item_status_and_amounts` |
+| 6 | 收货不入库/领料不扣库/调拨不动库/在途恒 0 | 源码接线 + API 契约：`purchase/receipts.py` 是否调 InboundService / 写库存/写收货进度/写在途读侧口径；`production/material_requisitions.py` 是否创建领料单并调用 OutboundService 扣库；`shortage/handling/transfers.py` 是否调用 TransferService 扣转库存 | 修复前 receipts 全文无库存入库接线且 PO/POI 状态不流转，读侧在途漏算审批后订单；领料无创建入口且发料只改状态不扣库；调拨执行只改单据状态不动库存。修复后质检合格量写 MaterialStock、MaterialTransaction 与 material.current_stock，创建收货单写 PO/POI 收货状态、明细金额和订单已收金额，共享在途 helper 按剩余数量计算；生产领料发料写 ISSUE 流水并扣减 MaterialStock/material.current_stock；调拨执行源库扣减、目标库增加并写 ISSUE/TRANSFER_IN 流水 | **已复现并回归** | `test_p0_06_receipt_no_stock.py`（2 用例）+ `test_purchase_receipts_workflow_contracts.py::test_goods_receipt_creates_purchase_in_stock_transaction` + `test_purchase_receipts_workflow_contracts.py::test_goods_receipt_updates_order_item_status_and_amounts` + `test_purchase_receipts_workflow_contracts.py::test_approved_purchase_order_counts_remaining_quantity_as_in_transit` + `test_production_compat_endpoints.py::TestProductionCompatibilityEndpoints::test_material_requisition_create_issue_deducts_inventory` + `test_shortage_transfers.py::test_transfer_approval_and_execution_flow` |
 | 7 | 缺料引擎崩溃 | API：`POST /shortage/smart-alerts/scan` | 修复前 HTTP 500，`AttributeError: WorkOrder.is_critical_path`；修复后扫描端点不再 5xx | **已复现并回归** | `test_p0_07_shortage_scan_500.py::test_smart_alert_scan_does_not_500` |
 | 8a | 结项无门禁 | API：对 readiness=False 的项目 `POST closure` | readiness 明确 ready=false（0/8 阶段、缺验收），仍 HTTP 201 建结项，项目 status 不变 | **已复现** | `test_p0_08_closure_gate_and_change_baseline.py::test_closure_blocked_when_not_ready` |
 | 8b | 变更不回基线 | 源码：`approve_change_request` 是否写 Project 基线 | 函数体无 `planned_end_date/budget_amount/execute_linkage` 任何写入 | **已复现** | `test_p0_08_…::test_change_approval_writes_project_baseline` |

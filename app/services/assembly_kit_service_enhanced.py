@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.models.material import Material
 from app.models.purchase import GoodsReceipt, GoodsReceiptItem, PurchaseOrder, PurchaseOrderItem
 from app.services.assembly_kit_service import AssemblyKitService
+from app.services.purchase.in_transit import purchase_in_transit_filters
 
 
 class AssemblyKitServiceEnhanced(AssemblyKitService):
@@ -116,9 +117,7 @@ class AssemblyKitServiceEnhanced(AssemblyKitService):
             self.db.query(PurchaseOrderItem, PurchaseOrder)
             .join(PurchaseOrder)
             .filter(
-                PurchaseOrderItem.material_id == material_id,
-                PurchaseOrderItem.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]),
-                (PurchaseOrderItem.quantity - PurchaseOrderItem.received_qty) > 0,
+                *purchase_in_transit_filters(material_id),
                 PurchaseOrderItem.promised_date != None,
             )
             .order_by(PurchaseOrderItem.promised_date)

@@ -45,10 +45,19 @@ def get_purchase_in_transit_qty(db: Session, material_id: Optional[int]) -> Deci
         return Decimal("0")
 
     remaining_qty = purchase_order_item_remaining_qty()
-    result = (
-        db.query(func.sum(remaining_qty))
-        .join(PurchaseOrder, PurchaseOrder.id == PurchaseOrderItem.order_id)
-        .filter(*purchase_in_transit_filters(material_id))
-        .scalar()
+    po_items = (
+        db.query(PurchaseOrderItem)
+        .filter(
+            PurchaseOrderItem.material_id == material_id,
+            PurchaseOrderItem.order.has(PurchaseOrder.status.in_(PURCHASE_IN_TRANSIT_ORDER_STATUSES)),
+            remaining_qty > 0,
+        )
+        .all()
     )
-    return result or Decimal("0")
+
+    total = Decimal("0")
+    for item in po_items:
+        item_remaining = Decimal(item.quantity or 0) - Decimal(item.received_qty or 0)
+        if item_remaining > Decimal("0"):
+            total += item_remaining
+    return total

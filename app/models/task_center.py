@@ -182,6 +182,13 @@ class TaskUnified(Base, TimestampMixin):
     delay_reported_at = Column(DateTime, comment="延期上报时间")
     delay_reported_by = Column(Integer, ForeignKey("users.id"), comment="延期上报人")
 
+    # 项目执行任务收编字段（2026-07-03 双任务表整合 P1，见 TASK_UNIFICATION_DESIGN.md）
+    project_stage = Column(String(20), comment="项目阶段(S1-S9)，承接原 tasks.stage")
+    machine_id = Column(Integer, comment="机台ID，承接原 tasks.machine_id")
+    milestone_id = Column(Integer, comment="里程碑ID，承接原 tasks.milestone_id")
+    weight = Column(Numeric(5, 2), comment="进度加权，承接原 tasks.weight")
+    block_reason = Column(Text, comment="阻塞原因，承接原 tasks.block_reason")
+
     # 审计字段
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人ID")
     updated_by = Column(Integer, ForeignKey("users.id"), comment="更新人ID")
