@@ -48,11 +48,28 @@ import {
 import { aiSalesApi } from "../../services/api";
 
 // 话术推荐组件
+// 降级/规则内容标注：后端 ai_generated=false 时明示，不让规则模板冒充 AI 输出
+function DegradedNotice({ data }) {
+  if (!data) return null;
+  const note = data.degraded
+    ? data.degraded_reason || "AI 服务不可用，以下为规则模板内容，仅供参考"
+    : data.scoring_method === "rule_scan"
+    ? data.note || "以下为规则批量扫描结果，非 AI 逐项分析"
+    : null;
+  if (!note) return null;
+  return (
+    <div className="rounded border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-500">
+      ⚠️ {note}
+    </div>
+  );
+}
+
 function ScriptRecommendation() {
   const [customerId, _setCustomerId] = useState("1");
   const [scenario, setScenario] = useState("初次接触");
   const [loading, setLoading] = useState(false);
   const [scripts, setScripts] = useState([]);
+  const [meta, setMeta] = useState(null);
 
   const scenarios = [
     "初次接触",
@@ -68,6 +85,7 @@ function ScriptRecommendation() {
     try {
       const res = await aiSalesApi.recommendScripts(customerId, null, scenario);
       setScripts(res.recommended_scripts || []);
+      setMeta(res);
     } catch (error) {
       console.error("获取话术失败:", error);
     } finally {
@@ -100,6 +118,7 @@ function ScriptRecommendation() {
         </Button>
       </div>
 
+      <DegradedNotice data={meta} />
       <div className="grid gap-4">
         {scripts.map((script, idx) => (
           <Card key={idx} className={script.is_recommended ? "border-purple-500" : ""}>
@@ -167,6 +186,7 @@ function ProposalGeneration() {
         </Button>
       </div>
 
+      <DegradedNotice data={proposal} />
       {proposal && (
         <Card>
           <CardHeader>
@@ -232,6 +252,7 @@ function CompetitorAnalysis() {
         </Button>
       </div>
 
+      <DegradedNotice data={analysis} />
       {analysis && (
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
@@ -308,11 +329,13 @@ function ChurnRisk() {
   const [riskList, setRiskList] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const [listMeta, setListMeta] = useState(null);
   const fetchRiskList = async () => {
     setLoading(true);
     try {
       const res = await aiSalesApi.getChurnRiskList();
       setRiskList(res.risk_list || []);
+      setListMeta(res);
     } catch (error) {
       console.error("获取风险列表失败:", error);
     } finally {
@@ -336,6 +359,7 @@ function ChurnRisk() {
         </Button>
       </div>
 
+      <DegradedNotice data={listMeta} />
       <div className="grid gap-4">
         {riskList.map((risk, idx) => (
           <Card

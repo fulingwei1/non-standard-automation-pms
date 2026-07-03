@@ -23,6 +23,22 @@ class SalesAIAssistantService:
         self.ai_client = AIClientService()
         self.ai_model = self.ai_client.default_model
 
+    @staticmethod
+    def _mark_ai(result: Dict[str, Any]) -> Dict[str, Any]:
+        """标注真 AI 输出。"""
+        result["ai_generated"] = True
+        return result
+
+    @staticmethod
+    def _mark_degraded(
+        result: Dict[str, Any], reason: str = "AI 服务不可用，以下为规则模板内容，仅供参考"
+    ) -> Dict[str, Any]:
+        """标注降级内容：罐头/规则结果不得冒充 AI 输出（SALES-16）。"""
+        result["ai_generated"] = False
+        result["degraded"] = True
+        result["degraded_reason"] = reason
+        return result
+
     def recommend_scripts(
         self,
         customer_id: int,
@@ -63,14 +79,14 @@ class SalesAIAssistantService:
         payload = self._generate_json(prompt)
         scripts = self._normalize_scripts(payload)
         if scripts:
-            return {
+            return self._mark_ai({
                 "customer_id": customer_id,
                 "opportunity_id": opportunity_id,
                 "scenario": payload.get("scenario") or target_scenario,
                 "recommended_scripts": scripts,
                 "total_matched": len(scripts),
-            }
-        return fallback
+            })
+        return self._mark_degraded(fallback)
 
     def generate_proposal(self, opportunity_id: int, proposal_type: str) -> Dict[str, Any]:
         """生成方案草稿。"""
@@ -120,8 +136,8 @@ class SalesAIAssistantService:
                 result["reference_projects"] = self._normalize_reference_projects(
                     payload.get("reference_projects")
                 ) or fallback.get("reference_projects", [])
-            return result
-        return fallback
+            return self._mark_ai(result)
+        return self._mark_degraded(fallback)
 
     def analyze_competitor(
         self, competitor_name: str, product_category: Optional[str] = None
@@ -157,7 +173,7 @@ class SalesAIAssistantService:
 
         payload = self._generate_json(prompt)
         if isinstance(payload, dict) and payload.get("competitor_info"):
-            return {
+            return self._mark_ai({
                 "competitor_name": competitor_name,
                 "product_category": product_category,
                 "competitor_info": self._normalize_competitor_info(payload.get("competitor_info")),
@@ -166,8 +182,8 @@ class SalesAIAssistantService:
                 "recommended_strategy": self._ensure_string_list(
                     payload.get("recommended_strategy")
                 ),
-            }
-        return fallback
+            })
+        return self._mark_degraded(fallback)
 
     def get_negotiation_advice(self, opportunity_id: int) -> Dict[str, Any]:
         """谈判建议。"""
@@ -199,7 +215,7 @@ class SalesAIAssistantService:
 
         payload = self._generate_json(prompt)
         if isinstance(payload, dict) and payload.get("recommended_approach"):
-            return {
+            return self._mark_ai({
                 "opportunity_id": opportunity_id,
                 "customer_traits": payload.get("customer_traits") or fallback["customer_traits"],
                 "recommended_approach": str(payload.get("recommended_approach")).strip(),
@@ -212,8 +228,8 @@ class SalesAIAssistantService:
                 "counter_strategies": payload.get("counter_strategies")
                 if isinstance(payload.get("counter_strategies"), dict)
                 else fallback["counter_strategies"],
-            }
-        return fallback
+            })
+        return self._mark_degraded(fallback)
 
     def predict_churn_risk(self, customer_id: int) -> Dict[str, Any]:
         """客户流失风险分析。"""
@@ -252,7 +268,7 @@ class SalesAIAssistantService:
         if isinstance(payload, dict) and payload.get("risk_level"):
             risk_level = str(payload.get("risk_level")).upper()
             risk_score = self._clamp_int(payload.get("risk_score"), default=fallback["risk_score"])
-            return {
+            return self._mark_ai({
                 "customer_id": customer_id,
                 "risk_score": risk_score,
                 "risk_level": risk_level,
@@ -262,16 +278,21 @@ class SalesAIAssistantService:
                     payload.get("recommended_actions")
                 ),
                 "analysis_summary": str(payload.get("analysis_summary") or "").strip() or None,
-            }
-        return fallback
+            })
+        return self._mark_degraded(fallback)
 
     def get_churn_risk_list(self, risk_level: Optional[str] = None) -> Dict[str, Any]:
-        """获取客户流失风险列表。"""
+        """获取客户流失风险列表。
+
+        设计口径：批量扫描用规则打分（20 客户逐个调大模型不现实），
+        必须显式标注 analysis_source=rule；单客户深评走 predict_churn_risk（真 AI）。
+        """
         customers = self.db.query(Customer).order_by(desc(Customer.updated_at)).limit(20).all()
         risks = []
         for customer in customers:
             risk = self._fallback_churn(customer.id, customer, None)
             risk["customer_name"] = customer.customer_name
+            risk["analysis_source"] = "rule"
             risks.append(risk)
         if risk_level:
             risk_level = risk_level.upper()
@@ -284,6 +305,9 @@ class SalesAIAssistantService:
             "high_risk_count": len([item for item in risks if item["risk_level"] == "HIGH"]),
             "medium_risk_count": len([item for item in risks if item["risk_level"] == "MEDIUM"]),
             "risk_list": filtered,
+            "ai_generated": False,
+            "scoring_method": "rule_scan",
+            "note": "清单为规则批量扫描；单客户点开可用 AI 深评（predict_churn_risk）",
         }
 
     def _get_customer(self, customer_id: Optional[int]) -> Optional[Customer]:

@@ -1,5 +1,45 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：功能审计 SALES-16 修复（AI 助手降级标注 + 流失清单口径）
+
+- 修复项：`SALES-16`，AI 销售助手 5 个方法（话术/方案/竞品/谈判/流失）AI 不可用时静默返回罐头文本冒充 AI 输出；流失清单 20 客户全走规则分但无任何标注。
+- 代码面：
+  - `sales_ai_assistant_service` 新增 `_mark_ai`/`_mark_degraded`：真 AI 输出标 `ai_generated=true`；降级统一标 `ai_generated=false + degraded=true + degraded_reason`。
+  - 流失清单定口径：批量扫描用规则（20 客户逐个调 LLM 不现实），显式标 `scoring_method=rule_scan` + 每项 `analysis_source=rule` + note 指引单客户深评走 predict_churn_risk（真 AI）。
+  - 前端 `SalesAI/index.jsx` 新增 `DegradedNotice` 横幅，话术/方案/竞品/流失四张卡片接入——降级内容对用户可见地标黄。
+- 验证：红灯 4 项 → 绿灯 `tests/unit/test_sales_ai_degradation_marking.py` 4 passed；既有 `test_sales_ai_assistant_service.py` 4 passed；`npm run build` 通过。`test_sales_ai_assistant_deep.py` 2 项失败经 HEAD worktree 证实为既有测试债（调用签名过时）。
+- 至此审计"AI mock 降级无标记静默污染真数据"共性根因在 AI 线全部收口（方案入库/纪要解析/BOM 成本/销售助手/流失清单）。
+
+## 2026-07-03 继续：功能审计 AS-06 修复（SLA 历史策略激活 + 定时预警）
+
+- 修复项：`AS-06`，SLA 服务本体有计时逻辑，但历史 `sla_policies.is_active` 全为 `NULL` 时策略匹配/预警查询被裸布尔过滤排除；同时调度配置没有 SLA 扫描任务，超时/预警链路不会自动运行。
+- 改动：
+  - `sla_service` 增加历史兼容过滤：`is_active=True OR is_active IS NULL`，覆盖精确/兜底策略匹配和 warning 查询。
+  - `sync_ticket_to_sla_monitor()` 支持传入 `current_time`，调度扫描和测试能用同一时点更新状态。
+  - 新增 `check_sla_warnings_task`：每小时扫描未关闭服务工单，同步/创建 SLA monitor，筛出 WARNING monitor，生成去重 `AlertRecord`，调用现有通知入口，并标记 response/resolve warning sent。
+  - `scheduler_config/alerting.py` 注册 `check_sla_warnings`，统一导出到 `app.utils.scheduled_tasks`。
+- 验证：
+  - 红灯：`pytest tests/unit/test_sla_as06.py -q` -> 4 failed，命中历史 `NULL is_active` 匹配不到、warning 查不出、调度任务不存在、task callable 缺失。
+  - 绿灯：同命令 -> passed；`tests/unit/test_sla_service_coverage.py tests/unit/test_batch2_sla_service.py tests/unit/test_sla_as06.py` -> passed。
+  - 相邻回归：`tests/unit/test_scheduled_alert_tasks.py tests/unit/test_j3_scheduled_tasks.py::TestSendAlertNotifications tests/unit/test_scheduled_tasks_h2.py::TestAlertTasksExtended::test_send_alert_notifications_no_pending_alerts` -> passed。
+  - 静态检查：`py_compile` passed；`ruff check` passed；`git diff --check` passed；调度元数据解析 `check_sla_warnings -> app.utils.scheduled_tasks.check_sla_warnings_task` 成功。
+- 残留：本项不直接修改生产/本地 `data/app.db` 的历史策略行；代码已兼容 NULL，后续若要数据清洗可单独迁移为 `is_active=1`。AS-23 的售后业务事件通知产生端仍未处理。
+
+## 2026-07-03 继续：功能审计 AS-25 修复（预警订阅接收人与 Webhook 兼容）
+
+- 修复项：`AS-25`，预警订阅默认接收人为空、旧 `notification_utils` resolver 无人时硬塞 user_id=1、Webhook 通道只认 `WECHAT_WEBHOOK_URL`；顺带发现顶层旧入口 `app.services.notification_service` 已不存在，旧通知调用面和测试会直接导入失败。
+- 改动：
+  - `AlertSubscriptionService.get_notification_recipients()` 无订阅/无规则指定用户时，默认取预警处理人、确认人、创建/更新人、项目 PM/项目负责人，不再直接返回空。
+  - `notification_utils.resolve_recipients()` 对齐同一默认收件人口径；无人可通知时返回 `{}`，不再虚构 admin/user_id=1。
+  - 新增兼容入口 `app/services/notification_utils.py` 与 `app/services/notification_service.py`，恢复旧 import path；旧 `NotificationService` facade 内部转 `NotificationRequest` 调统一通知服务。
+  - `WebhookChannelHandler` 支持通用 `WEBHOOK_URL`，并保留 `WECHAT_WEBHOOK_URL` 兼容；`config.py` 增加 `WEBHOOK_URL`。
+- 验证：
+  - 红灯：`pytest tests/unit/test_alert_subscription_service_coverage.py tests/unit/test_notification_utils_as25.py tests/unit/test_webhook_handler_coverage.py -q` -> 4 failed，分别命中默认收件人空、旧工具路径不可导入、Webhook 通用 URL 不生效。
+  - 绿灯：同命令 -> passed；旧通知 facade 全套 `tests/unit/test_notification_service_n3.py` -> passed。
+  - 相邻回归：`tests/unit/test_i6_core_services.py::TestNotificationService tests/unit/test_notification_service_deep.py tests/unit/test_views_and_others_auto.py::TestNotificationService tests/unit/test_notification_utils_service.py tests/unit/test_notification_utils.py tests/unit/test_webhook_handler_coverage.py tests/unit/test_alert_subscription_service_coverage.py tests/unit/test_notification_utils_as25.py` -> passed。
+  - 静态检查：`py_compile` passed；`ruff check` passed；`git diff --check` passed。
+- 残留：本项不解决“哪些业务端点必须产生售后事件通知”的 AS-23；SLA 策略激活/调度已由后续 AS-06 单独处理。
+
 ## 2026-07-03 继续：功能审计 PRE 详#10/#7 修复（mock 方案禁入库 + BOM 真实询价）
 
 - 修复项：审计详#10（generate_solution 不检测 mock，AI 故障时"自动上料机"演示方案以 0.8 置信度入库；BOM 单价写死 10000 元/"推荐供应商A"/交期 30 天）+ 详#7（纪要解析后台任务 mock 也标 SUCCESS）。
