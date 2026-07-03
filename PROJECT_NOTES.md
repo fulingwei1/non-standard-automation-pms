@@ -1,5 +1,57 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：功能审计 AS-03 修复（Redis 通知队列默认同步止血）
+
+- 修复项：`AS-03`，通知队列“有生产者无消费者”：Redis 可用时会把通知标记为 `QUEUED`，但默认没有 worker 进程消费；同时 `scripts/notification_worker.py` 仍导入已不存在的旧模块路径。
+- 止血策略：
+  - `app/core/config.py`：新增 `NOTIFICATION_QUEUE_ENABLED=False`，生产默认不启用异步通知队列。
+  - `app/services/notification/notification_queue.py`：未显式启用队列时，`enqueue_notification()` 返回 `False`，上层自动同步 `dispatch`，避免“配置 Redis 即通知黑洞”；`dequeue_notification()` 同样受开关约束。
+  - `scripts/notification_worker.py`：修正为当前模块路径 `app.services.notification.notification_queue` / `notification_dispatcher`，确保后续显式启用队列时 worker 可导入。
+  - `tests/audit_p0/test_p0_11_notification_fake_success.py`：新增 Redis 存在时默认同步发送、worker 脚本导入当前模块的审计契约。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_11_notification_fake_success.py -q` -> 2 failed，Redis 存在时仍 queued，worker 导入旧路径失败。
+  - 绿灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_11_notification_fake_success.py tests/unit/test_notification_queue_service_standalone.py tests/unit/test_scheduled_base_tasks.py::TestEnqueueOrDispatchNotification -q` -> 17 passed。
+  - 通知整包：`.venv/bin/python -m pytest tests/audit_p0/test_p0_11_notification_fake_success.py app/tests/services/notification/test_email_handler.py app/tests/services/notification/test_sms_handler.py tests/unit/test_notification_channels_email.py tests/unit/test_notification_channels_sms.py tests/unit/test_notification_sender_coverage.py tests/unit/test_notification_queue_service_standalone.py tests/unit/test_scheduled_base_tasks.py::TestEnqueueOrDispatchNotification -q` -> 48 passed。
+  - 静态检查：`py_compile` passed；`ruff check` 本轮通知触达/队列文件 passed；`git diff --check` passed。
+- 残留：`APPR-17` 预警 PENDING 积压、发送后 AlertRecord 状态不流转、历史 841 条积压清理仍未修。
+
+## 2026-07-03 继续：功能审计 AS-02/AS-15 修复（通知触达假成功止血）
+
+- 修复项：`AS-02` + `AS-15`，邮件/短信统一通知通道在没有真实 SMTP/短信网关发送的情况下只写日志就返回 `success=True`；工时提醒邮件发送器还读取旧 `SMTP_*` 配置，与现行 `EMAIL_*` 配置错位。
+- 根因：
+  - `EmailChannelHandler.send()` 找到用户邮箱后直接 logger.info 并返回成功，没有 SMTP 调用。
+  - `SMSChannelHandler.send()` 找到手机号后直接 logger.info 并返回成功，阿里云短信发送函数不在统一通道链路里。
+  - `timesheet/reminder/notification_sender.py` 使用 `SMTP_HOST/SMTP_USER`，但配置层定义的是 `EMAIL_SMTP_SERVER/EMAIL_USERNAME`。
+- 改动：
+  - `app/services/notification/channels/email_handler.py`：补 SMTP 配置校验和真实 `smtplib.SMTP.send_message()`；缺配置、认证配置不完整或 SMTP 异常时返回失败，不再假报送达。
+  - `app/services/notification/channels/sms_handler.py`：补短信网关配置校验，接入阿里云 `SendSms` 调用；缺配置、SDK 缺失或网关异常时返回失败。
+  - `app/services/timesheet/reminder/notification_sender.py`：邮件发送优先读取现行 `EMAIL_*` 配置，同时兼容旧 `SMTP_*`。
+  - 更新通知通道单测，成功路径必须 mock 到真实 SMTP/短信网关调用；新增缺配置失败契约。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_11_notification_fake_success.py -q` -> 2 failed，email/SMS 均 logger.info 后返回 `success=True`。
+  - 红灯：`.venv/bin/python -m pytest tests/unit/test_notification_sender_coverage.py -q` -> failed，有 `EMAIL_SMTP_SERVER` 但 sender 仍报“邮件服务未配置”。
+  - 绿灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_11_notification_fake_success.py app/tests/services/notification/test_email_handler.py app/tests/services/notification/test_sms_handler.py tests/unit/test_notification_channels_email.py tests/unit/test_notification_channels_sms.py tests/unit/test_notification_sender_coverage.py -q` -> 34 passed。
+  - 静态检查：`py_compile` passed；`ruff check` 本轮通知触达文件 passed；`git diff --check` passed。
+- 残留：`AS-03` 已在本轮后续修复；`APPR-17` 预警 PENDING 积压/状态不流转仍未修，继续留在 F3。
+
+## 2026-07-03 继续：功能审计 MISC-01 止血（竞品分析假数据下架）
+
+- 修复项：`MISC-01`，竞品分析菜单页前后端双假：后端 `/sales/competitor/competitor/*` 3 个端点硬编码竞品、客户、金额与赢单率；前端 `/sales/competitor-analysis` 页面本地硬编码，不调 API。
+- 止血策略：
+  - `app/api/v1/endpoints/competitor_analysis.py`：3 个竞品分析端点统一返回 HTTP 501，明确“硬编码演示数据，未接真实数据源”，避免直链继续吐假数据。
+  - `frontend/src/components/layout/sidebarConfig/default.js`：移除“对手分析”菜单项。
+  - `frontend/src/routes/modules/salesRoutes.jsx`：移除 `/sales/competitor-analysis` 路由。
+  - `tests/api/test_competitor_analysis_stopgap_contracts.py`：新增后端契约，锁定 501 且响应中不能包含“竞品 A/宁德时代”等演示数据。
+  - `frontend/src/routes/modules/__tests__/salesCompetitorAnalysisStopgap.test.jsx`：新增前端契约，锁定菜单和销售路由不再暴露假页。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/api/test_competitor_analysis_stopgap_contracts.py -q` -> failed，接口仍 200 返回硬编码“竞品 A”等假数据。
+  - 红灯：`npm test -- --run src/routes/modules/__tests__/salesCompetitorAnalysisStopgap.test.jsx` -> 2 failed，菜单和路由仍暴露。
+  - 绿灯：`.venv/bin/python -m pytest tests/api/test_competitor_analysis_stopgap_contracts.py -q` -> 1 passed。
+  - 绿灯：`npm test -- --run src/routes/modules/__tests__/salesCompetitorAnalysisStopgap.test.jsx` -> 2 passed。
+  - 相邻回归：`npm test -- --run src/routes/modules/__tests__/salesCompetitorAnalysisStopgap.test.jsx src/routes/modules/__tests__/salesPresaleWorkbenchRoutes.test.jsx` -> 8 passed。
+  - 静态检查：`py_compile app/api/v1/endpoints/competitor_analysis.py` passed；`git diff --check` 本轮触达文件 passed。
+- 残留：旧前端组件文件仍保留但已无菜单/销售路由入口；后续若要做真竞品分析，应新建真实数据源与页面，而不是复用硬编码页。
+
 ## 2026-07-03 继续：功能审计 PROD-14 修复（物料调拨真实库存变动）
 
 - 修复项：`PROD-14`，物料调拨执行端点只把调拨单置为 `EXECUTED`，不扣源库库存、不增目标库库存、不写交易流水；旧 `MaterialTransferService` 还引用不存在的 `ProjectMaterial`，一调用就 `NameError`。
@@ -1249,3 +1301,40 @@
 - scripts/migrate_tasks_to_unified.py 支持 P4 后优雅退化：迁移判定"生命周期结束"，--check 自动对账 tasks_deprecated（仍全绿）。
 - 验证：后端重启 0 加载失败；项目任务列表/任务中心总览/项目进度汇总实测 200；任务域回归 **100 passed / 0 failed**。
 - 至此双任务表整合 P1-P4 全部完成：单一事实源 task_unified，旧表仅剩改名后的备份躯壳。
+
+## 2026-07-03 继续：SALES-14 付款审批前端接口断链
+
+- 修复目标：`paymentApprovalApi` 不能再调用后端不存在的 `/sales/payments/approvals`；付款审批 hook 不能把 `unifiedApprovalApi` 当成带 `list/approve/reject` 的付款审批 API 使用。
+- 红测：
+  - `frontend/src/services/api/__tests__/paymentApproval.test.js` 先失败，请求仍打 `/sales/payments/approvals` 并被 axios mock 返回 404。
+  - `frontend/src/pages/PaymentApproval/hooks/__tests__/usePaymentApproval.test.js` 从 skip 恢复后先失败，`paymentApprovalApi.list` 未被调用，暴露生产 hook 仍导入 `unifiedApprovalApi`。
+- 代码面：
+  - `frontend/src/services/api/paymentApproval.js` 改走统一审批真实路由：待办 `/approvals/pending/mine`，已处理 `/approvals/pending/processed`，审批动作 `/approvals/tasks/{id}/approve|reject`。
+  - `tab` 仅用于前端选择端点，不再透传给后端；审批/驳回 payload 对齐 `ApproveRequest`/`RejectRequest` 的 `comment/attachments/eval_data/reject_to` 字段。
+  - `usePaymentApproval.js` 改为直接导入 `paymentApprovalApi`。
+- 验证：
+  - `npm test -- --run src/services/api/__tests__/paymentApproval.test.js src/pages/PaymentApproval/hooks/__tests__/usePaymentApproval.test.js` 先红后绿（4 个用例）。
+  - `npm test -- --run src/services/api/__tests__/approval.test.js src/services/api/__tests__/paymentApproval.test.js src/pages/PaymentApproval/hooks/__tests__/usePaymentApproval.test.js` 通过（38 个用例）。
+  - `rg -n "/sales/payments/approvals|unifiedApprovalApi as paymentApprovalApi|describe\\.skip\\('usePaymentApproval" frontend/src app -S` 无命中。
+  - `npm run build` 通过（保留既有 Vite 动静态混合导入、chunk size 与 Node deprecation warning）。
+  - `git diff --check -- frontend/src/services/api/paymentApproval.js frontend/src/services/api/__tests__/paymentApproval.test.js frontend/src/pages/PaymentApproval/hooks/usePaymentApproval.js frontend/src/pages/PaymentApproval/hooks/__tests__/usePaymentApproval.test.js` 通过。
+
+## 2026-07-03 继续：SALES-15 销售团队统计/排名恒 0 桩
+
+- 修复目标：`SalesTeamService` 的个人目标、最近跟进、客户分布、跟进统计、线索质量、商机统计不能再返回 `{uid: 0/空}`；`/sales/team` 和 `/sales/team/ranking` 要消费真实销售数据。
+- 红测：
+  - `tests/services/test_sales_team_aggregation_contracts.py::test_sales_team_maps_aggregate_real_sales_activity` 先失败：`SalesTeamService(db)` 不支持，原方法无法查库。
+  - `tests/services/test_sales_team_aggregation_contracts.py::test_sales_ranking_uses_real_opportunity_statistics` 先失败：有真实商机时排名 `opportunity_count` 仍为 0。
+- 代码面：
+  - `SalesTeamService` 新增 `db` 实例上下文，保留原静态团队 CRUD。
+  - 补齐 `parse_period_value()` 和目标实际值计算：LEAD_COUNT、OPPORTUNITY_COUNT、CONTRACT_AMOUNT、COLLECTION_AMOUNT。
+  - 6 个桩方法改为真实聚合：客户按 `sales_owner_id`，线索/商机按 `owner_id`，跟进按 `LeadFollowUp.created_by`，并统一日期范围过滤。
+  - `/sales/team` 聚合工具与 `SalesRankingService` 均改为 `SalesTeamService(db)`，避免重新变成无 Session 桩。
+  - 同步修正旧单测夹具和 `test_sales_team_deep.py` 的伪接口测试，让它们覆盖当前真实服务契约。
+- 验证：
+  - `.venv/bin/python -m pytest tests/services/test_sales_team_aggregation_contracts.py -q` 先红后绿（2 个用例）。
+  - `.venv/bin/python -m pytest tests/services/test_sales_ranking_service.py -q` 通过（19 个用例）。
+  - `.venv/bin/python -m pytest tests/unit/test_sales_team_service.py -q` 通过（36 个用例）。
+  - `.venv/bin/python -m pytest tests/services/test_sales_team_aggregation_contracts.py tests/services/test_sales_ranking_service.py tests/unit/test_sales_team_service.py tests/unit/test_sales_team_service_coverage.py tests/unit/test_sales_team_deep.py -q` 通过（62 个用例）。
+  - `.venv/bin/python -m compileall app/services/sales_team_service.py app/services/sales_ranking_service.py app/api/v1/endpoints/sales/team/utils.py tests/services/test_sales_team_aggregation_contracts.py tests/unit/test_sales_team_service.py tests/unit/test_sales_team_deep.py` 通过。
+  - `git diff --check -- app/services/sales_team_service.py app/services/sales_ranking_service.py app/api/v1/endpoints/sales/team/utils.py tests/services/test_sales_team_aggregation_contracts.py tests/unit/test_sales_team_service.py tests/unit/test_sales_team_deep.py` 通过。

@@ -13,9 +13,9 @@
 
 **总量（第二轮：平台/支撑/边缘域）**：120 行（HR 25 / PERM 23 / ADMIN 23 / TEN 8 / RPT 17 / MISC 24）。二轮 P0：ADMIN-01/ADMIN-02/ADMIN-03（备份三层皆虚集群）、ADMIN-18（合同附件任意文件读取 · 安全）、MISC-01（竞品分析菜单展示虚构数据）、HR-10（工程师五维绩效零落库 · 域内最重）共 6 项标 P0。二轮最重三发现：ADMIN-18 任意文件读取（P0 安全）、多租户"现在不能给第二个客户开租户"（TEN-01~07）、约 14% 端点（~427/3104）+137 模块前端零调用是僵尸。二轮跨轮关联/合并见各子表备注：MISC-12→HR-15（同一 performance_contract 裸 sqlite3，MISC-12 重复-合并）、RPT-15→ADMIN-05（同一 admin_stats 占位，ADMIN-05 主）；互引不合并：HR-22↔MISC-23（culture_wall）、HR-23↔MISC-02↔AS-24（resource_conflicts 空表/双轨）、HR-21/RPT-03↔PROJ-11/PROJ-13（时薪多口径）、RPT-09/RPT-10↔AS-13（schema 契约断裂）、MISC-09↔PROJ-11（成本归集）、MISC-03↔APPR-17/AS-25（同为通知/升级链但不同源）。
 
-**P0 动态复现（17 项全局 P0）**：16/17 已动态复现，唯 P0-5（会签驳回翻转 = APPR-03）受限未复现（静态证据充分）；P0-4（SALES-04）金额可负已被 pydantic Field(gt=0) 拦截（守卫 PASS），超额无勾稽仍成立，定级不变、危害描述删"可负"。详见 P0_REPRO_REPORT.md 与主表验证方式列。
+**P0 动态复现（17 项全局 P0）**：17/17 已动态复现；P0-5（会签驳回翻转 = APPR-03）已补稳定内存审批引擎复现并回归；P0-4（SALES-04）金额可负已被 pydantic Field(gt=0) 拦截（守卫 PASS），超额无勾稽仍成立，定级不变、危害描述删"可负"。详见 P0_REPRO_REPORT.md 与主表验证方式列。
 
-**2026-07-03 止血进展**：APPR-07 已修复并回归；PRE-16 已修复 qwen/百炼 live AI 判断；PRE-23 已修复立项关卡异常静默放行；PROJ-06 已修复结项 readiness 强制门禁；PROJ-10 已修复里程碑完成门禁异常吞掉和全局 complete 旁路；AS-19 已修复客服关单 payload/id 与质保工单兜底列表；RPT-16 已验证负荷瓶颈部门名兼容；APPR-04 已完成 stub 标记、调度失败计数、stub-backed 任务默认禁用，业务回填仍待做；PERM-11 已先补组织员工/HR 档案权限小切口；奖金 payment 端点已补 bonus 权限，HR-17 主审批链仍待修。
+**2026-07-03 止血进展**：APPR-01/APPR-02 已修复审批模板 code、全失败 200 掩盖与新库审批种子；APPR-03 已补稳定复现并修复会签/或签驳回汇总与终态防复活；APPR-07 已修复并回归；PRE-16 已修复 qwen/百炼 live AI 判断；PRE-23 已修复立项关卡异常静默放行；PROJ-06 已修复结项 readiness 强制门禁；PROJ-10 已修复里程碑完成门禁异常吞掉和全局 complete 旁路；PROD-02/03/04/11/12/14/22 已完成库存入库、在途、领料扣库、调拨动库与缺料扫描 500 止血回归；MISC-01 已下架竞品分析假数据菜单/路由并让直链接口返回 501；SALES-01/02/03/04 已完成报价资金三连与回款勾稽止血回归；SALES-09/APPR-10/APPR-11/PEER-05 已完成发票资金门禁止血回归；SALES-14 已修复付款审批前端 404 断链；SALES-15 已修复销售团队统计/排名恒 0 桩；AS-02/AS-15 已修复邮件/短信触达假成功与工时提醒 SMTP 配置错位；AS-03 已修复通知队列默认同步止血与 worker 导入断裂，APPR-17 预警积压/状态流转仍待修；AS-19 已修复客服关单 payload/id 与质保工单兜底列表；RPT-16 已验证负荷瓶颈部门名兼容；APPR-04 已完成 stub 标记、调度失败计数、stub-backed 任务默认禁用，业务回填仍待做；PERM-11 已先补组织员工/HR 档案权限小切口；奖金 payment 端点已补 bonus 权限，HR-17 主审批链仍待修。
 
 ---
 
@@ -25,28 +25,28 @@
 
 | ID | 功能/问题 | 等级 | 状态 | 证据位置 | 工作量 | 验证方式 | 备注/关联 |
 |---|---|---|---|---|---|---|---|
-| SALES-01 | 报价状态直改端点绕过审批（任意登录用户可自助批准） | P0 | 待修 | sales/quote_status.py:119-153 | 0.5-1d | ✅已动态复现（test_p0_03） | 全局P0#3；资金急救包 |
-| SALES-02 | 审批通过后仍可改报价明细，版本总额不重算 | P0 | 待修 | sales/quote_items.py:100-221 | 1-2d | ✅已动态复现（test_p0_03） | 全局P0#3；资金急救包 |
-| SALES-03 | 报价成本汇总漏乘数量，毛利率虚高 | P0 | 待修 | sales/quote_costs.py:431 | 0.5d+存量重算0.5d | ✅已动态复现（test_p0_03） | 全局P0#3；资金急救包；数据清洗（存量版本重算） |
-| SALES-04 | 回款登记无勾稽/无权限/错配发票（可超额） | P0 | 待修 | payments/payment_records.py:312-314,425-426 | 2-3d | ✅已动态复现（test_p0_04）；金额可负已被 pydantic Field(gt=0) 拦截(守卫PASS)，超额无勾稽仍成立，定级不变、危害描述删"可负" | 全局P0#4；资金急救包 |
-| SALES-05 | 商机赢/输单可非法跳转（LOST→WON），前端走的正是无守卫 PUT | P1 | 待修 | sales/opportunity_workflow.py:595,688,727 | 1d | 静态已证 | 前端 sales.js:46 |
+| SALES-01 | 报价状态直改端点绕过审批（任意登录用户可自助批准） | P0 | 已验证 | sales/quote_status.py；tests/api/test_sales_quote_status_contracts.py | 0.5-1d | ✅已动态复现并回归（test_p0_03，2026-07-03） | 全局P0#3；资金急救包；状态直改端点不再允许 `PENDING_APPROVAL→APPROVED/REJECTED` |
+| SALES-02 | 审批通过后仍可改报价明细，版本总额不重算 | P0 | 已验证 | sales/quote_items.py；models/sales/quotes.py；tests/api/test_sales_quote_item_contracts.py | 1-2d | ✅已动态复现并回归（test_p0_03，2026-07-03） | 全局P0#3；资金急救包；已审批/已提交/已发送等报价或版本冻结，草稿明细写入后重算版本金额 |
+| SALES-03 | 报价成本汇总漏乘数量，毛利率虚高 | P0 | 已验证 | sales/quote_costs.py；tests/api/test_sales_quote_costs_quantity_contracts.py | 0.5d+存量重算0.5d | ✅已动态复现并回归（test_p0_03，2026-07-03） | 全局P0#3；资金急救包；成本汇总按 `Σ(qty*cost)`，本地有明细版本已重算 |
+| SALES-04 | 回款登记无勾稽/无权限/错配发票（可超额） | P0 | 已验证 | sales/payments/payment_records.py；tests/api/test_sales_payment_record_contracts.py | 2-3d | ✅已动态复现并回归（test_p0_04，2026-07-03） | 全局P0#4；资金急救包；登记/更新拒绝超发票未收/总额，核销要求路径回款与发票一致，权限按合同负责人过滤 |
+| SALES-05 | 商机赢/输单可非法跳转（LOST→WON），前端走的正是无守卫 PUT | P1 | 已验证 | sales/opportunity_crud.py；sales/opportunity_workflow.py；sales/opportunity_batch.py；sales/utils/stage_guard.py；tests/api/test_sales.py | 1d | 静态已证；✅已动态复现并回归（2026-07-03） | 通用 PUT、旧 /stage、旧 PUT /win 现已不能把 LOST 终态翻回 WON；批量阶段更新复用同一阶段守卫；前端 sales.js:46 |
 | SALES-06 | 销售预测线上接口整文件硬编码，真算法服务是死代码 | P1 | 待修 | sales/sales_forecast.py 全文件 | 3-5d | 静态已证 | 全局P0#15；止损包（先下架假接口）；ROADMAP F6 |
 | SALES-07 | 目标预测页前端假数据兜底、AI 预测卡纯常量 | P1 | 待修 | ForecastDashboard.jsx:57-108,281-293 | 1-2d | 静态已证 | 止损包；依赖 SALES-06 |
 | SALES-08 | 销售目标 actual_value 无自动回填，达成率口径未定义 | P1 | 待修 | models/sales/target_v2.py:85 | 2d | 静态已证 | 与 SALES-07 假兜底联动 |
-| SALES-09 | 发票写操作只挂 finance:read + 未签署（草稿）合同可开票 | P1 | 待修 | invoices/basic.py:189-241,296,308,363 | 1d | 静态已证 | 资金急救包；关联 APPR-10/APPR-11 |
-| SALES-10 | 合同审批 F1 复核：模板数据已补，但 200 掩盖失败与种子缺口仍在 | P1 | 待修 | sales/contracts/approval.py:65-95 | 0.5-1d | 静态已证 | 关联 APPR-01（200掩盖）/APPR-02（种子），随救活包一并修 |
+| SALES-09 | 发票写操作只挂 finance:read + 未签署（草稿）合同可开票 | P1 | 已验证 | sales/invoices/basic.py；sales/invoices/operations.py；models/sales/invoices.py；tests/api/test_sales_invoice_gate_contracts.py | 1d | 静态已证；✅已动态回归（2026-07-03） | 资金急救包；写入口改为 finance:create/update/delete，未签署合同禁止开票，金额上限与状态字段门禁已补 |
+| SALES-10 | 合同审批 F1 复核：模板数据已补，但 200 掩盖失败与种子缺口仍在 | P1 | 已验证 | sales/contracts/approval.py；api/v1/endpoints/approval_submit_guard.py；app/utils/init_approval_data.py；tests/api/test_approval_submit_error_contracts.py | 0.5-1d | 静态已证；✅已动态回归（2026-07-03） | 关联 APPR-01/APPR-02；合同审批全失败提交不再 200，新库审批模板种子已补 |
 | SALES-11 | 线索转商机丢字段 + 前端写死 skip_validation 绕 G1 | P1 | 待修 | leads/actions.py:56,69-78；LeadManagement.jsx:320 | 1-2d | 静态已证 | 北极星项 |
 | SALES-12 | 报价转合同前端断链（后端 from-quote 齐备、前端零入口，金额/版本ID手填） | P1 | 待修 | contracts/basic.py:380-；前端 grep from-quote 零命中 | 2d | 静态已证 | 北极星项；附注"报价明细不成交付物"=APPR-18（以 APPR-18 为主） |
 | SALES-13 | 智能报价整页假实现（历史价/竞品/折扣/赢单率全硬编码） | P1 | 待修 | sales/intelligent_quote.py:42-95,204,250,382 | 下架0.5d/做实5d+ | 静态已证 | 止损包；ROADMAP F5 |
-| SALES-14 | 付款审批页前端调不存在接口，必 404 | P1 | 待修 | paymentApproval.js:4-6 | 1d | 静态已证 | — |
-| SALES-15 | 销售团队统计/排名多维度恒 0 桩 | P1 | 待修 | sales_team_service.py:203-230 | 2-3d | 静态已证 | — |
+| SALES-14 | 付款审批页前端调不存在接口，必 404 | P1 | 已验证 | frontend/src/services/api/paymentApproval.js；frontend/src/pages/PaymentApproval/hooks/usePaymentApproval.js；frontend/src/services/api/__tests__/paymentApproval.test.js；frontend/src/pages/PaymentApproval/hooks/__tests__/usePaymentApproval.test.js | 1d | 静态已证；✅已动态复现并回归（2026-07-03） | 付款审批服务改走统一审批 `/approvals/pending/*` 与 `/approvals/tasks/*`，清除 `/sales/payments/approvals` 404 断链 |
+| SALES-15 | 销售团队统计/排名多维度恒 0 桩 | P1 | 已验证 | app/services/sales_team_service.py；app/services/sales_ranking_service.py；app/api/v1/endpoints/sales/team/utils.py；tests/services/test_sales_team_aggregation_contracts.py | 2-3d | 静态已证；✅已动态复现并回归（2026-07-03） | 个人目标、最近跟进、客户分布、跟进统计、线索质量、商机统计均改为真实聚合；/sales/team 与 /sales/team/ranking 消费同一真实 Session 数据 |
 | SALES-16 | AI 销售助手降级罐头文本无标注；流失清单从不调 AI | P2 | 待修 | sales_ai_assistant_service.py:73-266,268 | 1d | 静态已证 | mock 集群（集群2） |
 | SALES-17 | 报价域无税率/含税建模 | P2 | 待修 | quotes.py:430；quote_versions.py:243 | 2-3d | 静态已证 | — |
-| SALES-18 | 报价"当前版本"口径不一致（versions[-1] vs current_version_id） | P2 | 待修 | quote_costs.py:229；quote_quotes_crud.py:92 | 0.5d | 静态已证 | — |
+| SALES-18 | 报价"当前版本"口径不一致（versions[-1] vs current_version_id） | P2 | 已验证 | quote_costs.py；tests/api/test_sales_quote_costs_quantity_contracts.py | 0.5d | 静态已证；✅已动态复现并回归（2026-07-03） | 成本分析当前版本改为优先使用 Quote.current_version_id，与报价详情/统计一致；无 current_version_id 时才显式回退最新创建版本 |
 | SALES-19 | 发票作废无红冲（需先删回款，审计链断） | P2 | 待修 | invoices/operations.py:141-142 | 2d | 静态已证 | 关联 PEER-05 |
-| SALES-20 | 报价数量/单价无 0/负数校验 | P2 | 待修 | quotes.py:410-431；quote_items.py:124-137 | 0.5d | 静态已证 | — |
-| SALES-21 | 商机阶段词表两套不一致（ON_HOLD vs CLOSING） | P2 | 待修 | opportunity_workflow.py:608,754-760 | 0.5d | 静态已证 | 数据清洗专项 |
-| SALES-22 | check_sales_data_permission 同文件重复定义 | P3 | 待修 | core/sales_permissions.py:293,419 | 0.25d | 静态已证 | — |
+| SALES-20 | 报价数量/单价无 0/负数校验 | P2 | 已验证 | sales/utils/quote_item_validation.py；quotes.py；quote_versions.py；quote_items.py；schemas/sales/quotes.py；QuoteItemsTable.jsx；tests/api/test_sales.py；QuoteCreateEdit.test.jsx | 0.5d | 静态已证；✅已动态复现并回归（2026-07-03） | 首版创建、版本创建、明细新增/更新均拒绝数量/单价 0 或负数；本地 data/app.db 发现 8 条历史空明细，价格无法无损推回，未自动改历史数据 |
+| SALES-21 | 商机阶段词表两套不一致（ON_HOLD vs CLOSING） | P2 | 已验证 | sales/utils/stage_guard.py；sales/statistics_core.py；sales/statistics_reports.py；opportunity_batch.py；frontend OpportunityManagement/OpportunityDetail/SalesStatistics；migrations/20260703_sales_opportunity_stage_vocab_sqlite.sql | 0.5d | 静态已证；✅已动态复现并回归（2026-07-03） | 商机阶段写入口、统计桶、前端下拉/展示统一到 OpportunityStageEnum；旧 QUALIFIED/ON_HOLD 等存量值有清洗迁移 |
+| SALES-22 | check_sales_data_permission 同文件重复定义 | P3 | 已验证 | core/sales_permissions.py；tests/unit/test_sales_scope_expansion.py | 0.25d | 静态已证；✅已动态复现并回归（2026-07-03） | 删除后置重复定义与重复导出，保留单一记录级权限入口；FINANCE_ONLY 对普通销售记录恢复拒绝，财务域仍走专用 finance scope |
 
 ### 二、售前域（PRE，24 项）
 
@@ -113,19 +113,19 @@
 | ID | 功能/问题 | 等级 | 状态 | 证据位置 | 工作量 | 验证方式 | 备注/关联 |
 |---|---|---|---|---|---|---|---|
 | PROD-01 | 现场调试 field_commissioning 假实现（签到/进度/问题/完工只回成功不写库） | P0 | 待修 | field_commissioning.py:16-31,36-111 | 6-8d | ✅已动态复现（test_p0_09） | 全局P0#9；**主项**：AS-01 同问题并入本项；孤儿表 field_tasks(8)/field_checkins(3) 数据清洗 |
-| PROD-02 | 智能缺料预警扫描引用不存在字段，扫描端点必 500 | P0 | 待修 | shortage/smart_alert_engine.py:294,300,330 | 1-2d | ✅已动态复现（test_p0_07） | 全局P0#7；F1 扩围；依赖 PROD-03/04 才有真数据；关联 APPR-04（缺料 stub 3 件套） |
-| PROD-03 | 收货→库存断链（inbound_service 全仓零调用，current_stock 只减无增） | P0 | 待修 | purchase/receipts.py 全文无库存写入；inventory/inbound_service.py 零调用 | 2-3d | ✅已动态复现（test_p0_06） | 全局P0#6；F1 扩围（地基第一步） |
-| PROD-04 | 在途量计算全线死数据（读侧状态字典无任何写入点，在途恒 0） | P1 | 待修 | kit_rate_service.py:68 等 10 处读点 | 1.5d | 静态已证 | F1 扩围；与 PROD-11 同修；数据清洗（POI 状态字典对齐） |
+| PROD-02 | 智能缺料预警扫描引用不存在字段，扫描端点必 500 | P0 | 已验证 | services/shortage/smart_alert_engine.py；tests/audit_p0/test_p0_07_shortage_scan_500.py；tests/unit/test_smart_alert_engine.py | 1-2d | ✅已动态复现并回归（test_p0_07，2026-07-03） | 全局P0#7；F1 扩围；扫描字段错配 500 已消除，预警/齐套算法口径仍归 PROD-05 |
+| PROD-03 | 收货→库存断链（inbound_service 全仓零调用，current_stock 只减无增） | P0 | 已验证 | purchase/receipts.py；inventory/inbound_service.py；inventory/stock_update_service.py；tests/api/test_purchase_receipts_workflow_contracts.py；tests/audit_p0/test_p0_06_receipt_no_stock.py | 2-3d | ✅已动态复现并回归（test_p0_06，2026-07-03） | 全局P0#6；F1 扩围；质检合格增量入库，写 MaterialStock/MaterialTransaction 并同步 Material.current_stock |
+| PROD-04 | 在途量计算全线死数据（读侧状态字典无任何写入点，在途恒 0） | P1 | 已验证 | services/purchase/in_transit.py；kit_rate_service.py；tests/api/test_purchase_receipts_workflow_contracts.py | 1.5d | 静态已证；✅已动态回归（2026-07-03） | F1 扩围；采购在途读侧统一为 PO 生效状态 + 订单行剩余数量；PROD-05 齐套算法口径仍待修 |
 | PROD-05 | 齐套率口径错误（在途计入已齐套/双算/无跨项目预留，四套实现互异） | P1 | 待修 | kit_rate_service.py:105-117；kit_check/utils.py:99-105 | 3-4d | 静态已证 | F1 扩围；修 PROD-04 不修本项则齐套率立即虚高 |
 | PROD-06 | BOM 版本管理假实现（bom_no unique 与版本模型矛盾，永远单版本） | P1 | 待修 | models/material.py:143；bom/bom_versions.py:34-39 | 3d | 静态已证 | RELEASED 后冻结无修订出口 |
 | PROD-07 | ECN 审批通过不自动应用到 BOM（sync_to_bom 仅手工端点可调） | P1 | 待修 | ecn/integration/ecn_integration_service.py:32-103；ecn/state_machine.py:209-291 | 2d | 静态已证 | "分析真、执行手工"（集群3） |
 | PROD-08 | 工单不关联/不快照 BOM（无 bom_id 字段，WorkOrderBom 零业务读写） | P1 | 待修 | models/production/work_order.py:21-96 | 4d | ✅已动态复现（test_p0_12） | 全局P0#12（汇总定 P0，域内总表 P1）；**主项**：APPR-05 并入本项 |
 | PROD-09 | ECN 状态机可跳步（SUBMITTED→APPROVED）且通用转换接口无权限 | P1 | 待修 | ecn/state_machine.py:27-63,369-373,542-547 | 1.5d | 静态已证 | 对比专用审批端点有权限（ecn/approval.py:134） |
 | PROD-10 | 采购申请→订单转换绕审批、可重复生成、不回写 ordered_qty | P1 | 待修 | purchase/purchase_service.py:226-264 | 1.5d | 静态已证 | 对比 BOM 路径实现完整 |
-| PROD-11 | 收货后 PO/POI 状态永不流转（PARTIAL_RECEIVED/RECEIVED 无写入点） | P1 | 待修 | purchase/receipts.py:227-238 | 1d | 静态已证 | F1 扩围；PROD-04 在途死数据的直接根因；数据清洗（PO 空状态 60 条、收货单 status 全空） |
-| PROD-12 | 生产领料不扣库存、无创建入口（前端调用必 404；OutboundService 真实现零调用） | P1 | 待修 | production/material_requisitions.py:159-181；inventory/outbound_service.py:25-80 未接 | 3d | 静态已证 | F1 扩围；北极星项（领料全线下）；集群3 |
+| PROD-11 | 收货后 PO/POI 状态永不流转（PARTIAL_RECEIVED/RECEIVED 无写入点） | P1 | 已验证 | purchase/receipts.py；tests/api/test_purchase_receipts_workflow_contracts.py | 1d | 静态已证；✅已动态回归（2026-07-03） | F1 扩围；收货后刷新 PO/POI 到 PARTIAL_RECEIVED/RECEIVED，并累计订单已收金额 |
+| PROD-12 | 生产领料不扣库存、无创建入口（前端调用必 404；OutboundService 真实现零调用） | P1 | 已验证 | production/material_requisitions.py；inventory/outbound_service.py；tests/api/test_production_compat_endpoints.py | 3d | 静态已证；✅已动态回归（2026-07-03） | F1 扩围；新增领料创建入口，审批后发料扣减库存并写 ISSUE 流水 |
 | PROD-13 | 报工审批装饰性（未审批即回写产量，驳回不回滚） | P1 | 待修 | production/work_reports.py:257-280,384-420 | 2d | 静态已证 | Quick-win 闸门包（数量回写移到审批后） |
-| PROD-14 | 物料调拨假实现（ProjectMaterial NameError 被吞、执行不动库存） | P1 | 待修 | material_transfer_service.py:17,51,220,277,355；shortage/handling/transfers.py:169-177,279 | 2d | 静态已证 | F1 扩围 |
+| PROD-14 | 物料调拨假实现（ProjectMaterial NameError 被吞、执行不动库存） | P1 | 已验证 | shortage/handling/transfers.py；inventory/transfer_service.py；material_transfer_service.py；tests/api/test_shortage_transfers.py | 2d | 静态已证；✅已动态回归（2026-07-03） | F1 扩围；调拨执行 now 源库扣减、目标库增加，并写 ISSUE/TRANSFER_IN 流水 |
 | PROD-15 | 现场缺料→紧急采购断链（只建 DRAFT 申请即止，替代/调拨方案 return []） | P1 | 待修 | shortage/handling/reports.py:235-258；urgent_purchase_from_shortage_service.py:184-244 | 3-4d | 静态已证 | 关联 PROD-02/APPR-04 |
 | PROD-16 | 发货单无明细行、无齐套/质检门禁、不联动项目状态 | P1 | 待修 | models/business_support/delivery.py:23-102；delivery_orders/crud.py:142-209,326-388 | 5-7d | 静态已证 | 北极星项（手填总额）；关联 AS-10（发货→设备档案断链） |
 | PROD-17 | AI 智能排程/优化纯模板填充（工期系数/节省天数/复用率全写死） | P1 | 待修 | schedule_generation_service.py:113-119,330；schedule_optimization_service.py:110-163,230-283 | 标注0.5d/做实5-8d | 静态已证 | 止损包 |
@@ -133,7 +133,7 @@
 | PROD-19 | 委外：超交无校验、无收货确认端点、订单不挂工单 | P2 | 待修 | outsourcing/deliveries.py:191-195；models/outsourcing.py:32-33,165-166 | 3-4d | 静态已证 | — |
 | PROD-20 | ECN 影响传导到采购靠手工（受影响记录手建、MODIFY 分支空 pass） | P2 | 待修 | ecn/impacts.py:86,249；integration_service.py:176-178 | 3d | 静态已证 | 关联 PROD-07 |
 | PROD-21 | 车间移动端无离线队列、扫码 iOS 不兼容 | P2 | 待修 | MobileScanStart.jsx:111-134,142 | 4-5d | 静态已证 | 报工闭环本体可用（正面） |
-| PROD-22 | 收货明细金额不计算（amount 恒空，无对账基础） | P2 | 待修 | purchase/receipts.py:228-235 | 0.5d | 静态已证 | 修复并入 PROD-11 |
+| PROD-22 | 收货明细金额不计算（amount 恒空，无对账基础） | P2 | 已验证 | purchase/receipts.py；tests/api/test_purchase_receipts_workflow_contracts.py | 0.5d | 静态已证；✅已动态回归（2026-07-03） | 修复并入 PROD-11；收货明细金额与订单已收金额同步更新 |
 | PROD-23 | 状态机治理双轨（采购两套并行审批改 PO.status；报工内联判断不走状态机） | P2 | 待修 | orders_refactored.py:319-367 vs purchase/workflow.py；work_reports.py:132,227 | 2d | 静态已证 | 集群6 |
 | PROD-24 | 委外成本归集口径偏差（审批即全额入账，不随质检合格量冲减） | P3 | 待修 | outsourcing_workflow_service.py:69-78 | 2d | 静态已证 | — |
 
@@ -142,8 +142,8 @@
 | ID | 功能/问题 | 等级 | 状态 | 证据位置 | 工作量 | 验证方式 | 备注/关联 |
 |---|---|---|---|---|---|---|---|
 | AS-01 | 现场调试签到/进度/完工回执全链路假实现 | P0 | 重复-合并→PROD-01 | field_commissioning.py:43,67,76-111 | — | 静态已证 | 与 PROD-01 同一 field_commissioning 问题，保留 PROD-01 为主项 |
-| AS-02 | 邮件触达全链路不可用（假桩 success=True + 配置键错位双重故障） | P0 | 待修 | notification/channels/email_handler.py:52-55；notification_sender.py:141-146,184-187 | 2d | ✅已动态复现（test_p0_11） | 全局P0#11；F3 扩围；关联 ROADMAP F3 |
-| AS-03 | 通知 Redis 队列有生产者无消费者（配置 Redis 即通知黑洞） | P0 | 待修 | scheduled_tasks/base.py:78-90；notification_queue.py:51 零调用 | 1-2d | ✅已动态复现（test_p0_11） | 全局P0#11；F3 扩围；关联 APPR-17 |
+| AS-02 | 邮件触达全链路不可用（假桩 success=True + 配置键错位双重故障） | P0 | 已验证 | notification/channels/email_handler.py；timesheet/reminder/notification_sender.py；tests/audit_p0/test_p0_11_notification_fake_success.py；tests/unit/test_notification_sender_coverage.py | 2d | ✅已动态复现并回归（test_p0_11 + sender，2026-07-03） | 全局P0#11；统一邮件通道必须真实 SMTP 成功才返回 success；工时提醒改读 EMAIL_* 配置；APPR-17 预警积压另修 |
+| AS-03 | 通知 Redis 队列有生产者无消费者（配置 Redis 即通知黑洞） | P0 | 已验证 | app/core/config.py；notification/notification_queue.py；scripts/notification_worker.py；tests/audit_p0/test_p0_11_notification_fake_success.py；tests/unit/test_notification_queue_service_standalone.py | 1-2d | ✅已动态复现并回归（test_p0_11，2026-07-03） | 全局P0#11；Redis 存在时默认同步 dispatch，只有显式 `NOTIFICATION_QUEUE_ENABLED=true` 才入队；worker 导入路径已修；APPR-17 预警积压另修 |
 | AS-04 | 工程师派工冲突检测空转（依赖表不存在静默返回 0 冲突，assign 零校验） | P0 | 待修 | engineer_scheduling_service.py:41-47,205-368；installation_dispatch/workflow.py:62-78 | 4d | ✅已动态复现（test_p0_14） | 全局P0#14；集群3（算法真接线假） |
 | AS-05 | 服务工单状态机无转移矩阵：未派工可直接关单 | P1 | 待修 | service/tickets/status.py:76-88,121-122 | 1.5d | 静态已证 | 集群1（通用 PUT 击穿状态机）；数据清洗专项（89 条工单 48 条枚举外脏值） |
 | AS-06 | SLA 计时真、超时预警/升级从不运行（零调度 + 策略 is_active 全 NULL） | P1 | 待修 | sla_service.py:36-82,218 零调用 | 2.5d | 静态已证 | F3 扩围 |
@@ -155,7 +155,7 @@
 | AS-12 | 售后→ECN/质量闭环完全缺失；ITR 自我导入占位（925 行死代码） | P1 | 待修 | itr.py:9,20-25；全仓无售后创建 ECN/Issue | 4d | 静态已证 | 关联 PROJ-23 |
 | AS-13 | 客户360 四页签绑定不存在字段恒空；售后工单不入 360 | P1 | 待修 | customer_360_service.py:102-112 vs Customer360.jsx:179-239 | 3d | 静态已证 | — |
 | AS-14 | 维保计划周期调度 pass 桩 + 幽灵表，生成靠手动、验收不联动 | P1 | 修复中 | stub_tasks.py:113-119；scheduler_config/production.py:59-68 | 3d | 静态已证；调度止血已回归（2026-07-03） | 调度项已默认禁用并统一 not_implemented；真实维保计划生成仍待做，随 APPR-04 回填 |
-| AS-15 | 短信渠道假发送（日志即 success），阿里云真实现是死代码 | P1 | 待修 | channels/sms_handler.py:30-31；handlers/sms_handler.py:98-140 零调用 | 1d | 静态已证 | 全局P0#11；F3 扩围；关联 ROADMAP F3；集群3 |
+| AS-15 | 短信渠道假发送（日志即 success），阿里云真实现是死代码 | P1 | 已验证 | notification/channels/sms_handler.py；tests/audit_p0/test_p0_11_notification_fake_success.py；tests/unit/test_notification_channels_sms.py | 1d | 静态已证；✅已动态回归（2026-07-03） | 全局P0#11；短信通道缺网关配置/SDK/网关成功响应时返回失败，不再 logger 即 success；APPR-17 预警积压另修 |
 | AS-16 | Header 铃铛纯装饰（无 onClick、红点无条件渲染、badge 写死 5） | P1 | 待修 | Header.jsx:119-129；sidebarConfig/default.js:17 | 0.5d | 静态已证 | Quick-win 闸门包；通知中心本体是真实现 |
 | AS-17 | 工程师调度前端 4 接口后端不存在必 404；模块请求时现场 DDL 建表 | P1 | 待修 | engineerScheduling.js:7,19,33,38；engineer_scheduling.py:44 | 2d | 静态已证 | 关联 AS-04 |
 | AS-18 | 售后现场服务记录孤立记事本（is_warranty 写死、无流转、不建派工单、表不存在） | P1 | 待修 | after_sales.py:267（表缺失见 AS-09） | 3d | 静态已证 | 建议改生成 InstallationDispatchOrder |
@@ -171,23 +171,23 @@
 
 | ID | 功能/问题 | 等级 | 状态 | 证据位置 | 工作量 | 验证方式 | 备注/关联 |
 |---|---|---|---|---|---|---|---|
-| APPR-01 | 采购/外协/验收/立项 4 条审批链 template_code 与 DB 错位，提交必失败且 HTTP 200 掩盖 | P0 | 待修 | purchase_workflow/service.py:18；outsourcing_workflow_service.py:21；acceptance_approval/service.py:70；projects/approvals/submit_new.py:94 | 1.5d | ✅已动态复现（test_p0_01） | 全局P0#1；审批链救活包；关联 SALES-10（200 掩盖同型） |
-| APPR-02 | 审批模板无任何种子/迁移，新环境全部审批不可用（F1/ECN1 根因） | P0 | 待修 | scripts/init_db.py、migrations/ grep 零命中 | 1d | ✅已动态复现（test_p0_02） | 全局P0#2；审批链救活包；10 模板+13 flow+30 节点+3 路由规则需幂等种子 |
-| APPR-03 | 会签/或签驳回语义破坏：REJECTED 实例可被翻转回 APPROVED | P0 | 待修 | engine/approve.py:105-140；engine/core.py:246-263,185-195 | 2d | ⚠️受限未复现（静态证据充分） | 全局P0#5；审批链救活包；ECN 多部门会签现实可触发 |
+| APPR-01 | 采购/外协/验收/立项 4 条审批链 template_code 与 DB 错位，提交必失败且 HTTP 200 掩盖 | P0 | 已验证 | purchase_workflow/service.py；outsourcing_workflow_service.py；acceptance_approval/service.py；projects/approvals/submit_new.py；api/v1/endpoints/approval_submit_guard.py；tests/audit_p0/test_p0_01_approval_template_mismatch.py | 1.5d | ✅已动态复现并回归（test_p0_01，2026-07-03） | 全局P0#1；审批链救活包；4 条业务链统一到 `TPL_*` 模板 code，全失败提交回滚并返回 400 |
+| APPR-02 | 审批模板无任何种子/迁移，新环境全部审批不可用（F1/ECN1 根因） | P0 | 已验证 | scripts/init_db.py；app/utils/init_approval_data.py；app/utils/init_data.py；tests/audit_p0/test_p0_02_approval_template_no_seed.py | 1d | ✅已动态复现并回归（test_p0_02，2026-07-03） | 全局P0#2；审批链救活包；新库幂等种子 10 模板+13 flow+30 节点+3 路由规则 |
+| APPR-03 | 会签/或签驳回语义破坏：REJECTED 实例可被翻转回 APPROVED | P0 | 已验证 | services/approval_engine/engine/approve.py；services/approval_engine/engine/core.py；tests/audit_p0/test_p0_05_cosign_reject_flip.py | 2d | ✅已动态复现并回归（test_p0_05，2026-07-03） | 全局P0#5；审批链救活包；AND_SIGN 汇总失败保持 REJECTED，OR_SIGN 拒绝后等待其他审批人，终态实例禁止 pending 任务复活 |
 | APPR-04 | 14/56 定时任务 stub 假实现且监控记成功（含缺料预警 3 件套） | P0 | 修复中 | scheduled_tasks/stub_tasks.py:13-28；scheduler.py:107 | 0.5d标记+3-5d回填 | ✅已动态复现（test_p0_10）；✅止血已回归（test_p0_10 + stub/scheduler 单测，2026-07-03） | 全局P0#10；F3 扩围；已完成 stub 标记/not_implemented、失败计数、stub-backed 任务禁用；缺料/维保等真实实现仍待回填 |
 | APPR-05 | BOM→生产工单断链，WorkOrderBom 中间表零业务读写 | P0 | 重复-合并→PROD-08 | models/shortage/requirements.py:25；bom/bom_release.py:105-118 | — | 静态已证 | 与 PROD-08 同一结构性断链（全局P0#12），保留 PROD-08 为主项 |
 | APPR-06 | 售后无设备档案表，机台级溯源断链（machine_no 手填文本） | P0 | 重复-合并→AS-10 | delivery_orders/crud.py:326-390；service/records.py:260 | — | 静态已证 | 与 AS-10 同一结构性缺失（全局P0#13），保留 AS-10 为主项 |
 | APPR-07 | 撤回审批 TypeError：合同/验收/报价/ECN 4 域传错参数名（CONFIRMED），撤回必 500 | P1 | 已验证 | contract_approval/service.py:399；acceptance_approval/service.py:360；quote_approval_service.py:378；ecn/approval/service.py:394 | 0.5d | ✅已动态复现（test_p0_17）；✅已修复并回归（2026-07-03） | 全局P0#17（汇总定 P0，域内总表 P1）；**主项**：PEER-03 并入本项；4 域均改为 initiator_id 并传 comment=reason |
 | APPR-08 | 加签（前/后加签）假实现：加签人永收不到可办任务或原审批人被跳过 | P1 | 待修 | engine/approve.py:347,356-357；executor.py:163-165,329-354 | 2d | 静态已证 | — |
 | APPR-09 | 审批超时机制（REMIND/AUTO_PASS/AUTO_REJECT/ESCALATE）零调度死代码 | P1 | 待修 | executor.py:392-435 全仓零调用 | 2d | 静态已证 | 集群3 |
-| APPR-10 | 发票开票门禁读旧轨空表（查不到即放行）——未审批可开票 | P1 | 待修 | sales/invoices/operations.py:47-58；approval_workflow_service.py:145-148,214-216 | 1d | 静态已证 | 全局P0#16（汇总定 P0）；资金急救包；关联 SALES-09/PEER-05 |
-| APPR-11 | update_invoice 任意改金额/状态：绕 F3 上限、绕审批与状态机 | P1 | 待修 | sales/invoices/basic.py:302-340 | 1d | 静态已证 | 全局P0#16；资金急救包；**主项**：PEER-04 并入本项；集群1 |
+| APPR-10 | 发票开票门禁读旧轨空表（查不到即放行）——未审批可开票 | P1 | 已验证 | sales/invoices/operations.py；services/approval_engine/adapters/invoice.py；tests/api/test_sales_invoice_gate_contracts.py；tests/audit_p0/test_p0_16_invoice_gate.py | 1d | 静态已证；✅已动态回归（2026-07-03） | 全局P0#16（汇总定 P0）；资金急救包；开票前要求发票状态与统一审批实例均为 APPROVED |
+| APPR-11 | update_invoice 任意改金额/状态：绕 F3 上限、绕审批与状态机 | P1 | 已验证 | sales/invoices/basic.py；models/sales/invoices.py；tests/api/test_sales_invoice_gate_contracts.py | 1d | 静态已证；✅已动态回归（2026-07-03） | 全局P0#16；资金急救包；**主项**：PEER-04 并入本项；update 禁止改 status，并重跑合同累计开票上限 |
 | APPR-12 | 合同审批三轨并存，旧轨 /contracts/enhanced/* 可绕统一引擎自审自过 | P1 | 待修 | sales/contracts/enhanced.py:163-230；sales/contract/approval_service.py:45-98,193-201 | 1.5d | 静态已证 | 集群6；F2 前置 |
 | APPR-13 | 合同无中央状态机：15+ 直接赋值点、大小写两套状态值库中混存 | P1 | 待修 | status_service.py:59-104；data_sync_service.py:180；DB：ACTIVE18/SIGNED67/draft12/executing13 | 2-3d | 静态已证 | 集群1/集群5；数据清洗专项；关联 PEER-01/PEER-02（具体绕过点） |
 | APPR-14 | 合同→项目交付日期幽灵字段 delivery_deadline，自动立项项目全部无计划完工日期 | P1 | 待修 | status_handlers/contract_handler.py:229 | 0.5-1d | 静态已证 | 关联 PROJ-03（合同→立项带出） |
 | APPR-15 | 发货款（默认 40%）回款计划无任何触发器，最大回款节点靠人工盯 | P1 | 待修 | payment_plan_service.py:99-103,341-346 | 1-2d | 静态已证 | 资金急救包 |
 | APPR-16 | ECN 超期检查 job 模块路径错误，注册失败被静默吞掉 | P1 | 待修 | scheduler_config/other.py:112；scheduler.py:179-184 | 0.5d | 静态已证 | F3 扩围 |
-| APPR-17 | 预警通知永不流转状态：841 条 PENDING 积压 4 个月饿死；Redis worker import 断裂 | P1 | 待修 | alert_tasks.py:146-152；scripts/notification_worker.py:19-22 | 1-1.5d | 静态已证 | 全局P0#11；F3 扩围；关联 AS-03；数据清洗（841 条积压处置） |
+| APPR-17 | 预警通知永不流转状态：841 条 PENDING 积压 4 个月饿死 | P1 | 待修 | alert_tasks.py:146-152；alert_records 存量 PENDING 积压 | 1-1.5d | 静态已证 | 全局P0#11；F3 扩围；worker 导入断裂已随 AS-03 修复；本项聚焦发送后 AlertRecord 状态流转与 841 条积压处置 |
 | APPR-18 | 报价明细不复制为合同交付物，G4 门禁逼人工重录 | P1 | 待修 | contracts/basic.py:475-488；utils/gate_validation.py:228-244 | 1d | 静态已证 | 北极星项；SALES-12 附注以本项为主 |
 | APPR-19 | 大额审批路由规则挂孤儿模板：≥50 万报价不再经总经理 | P2 | 待修 | router.py:26-61；quote_approval_service.py:79 | 1d | 静态已证 | 附带 _advance_to_next_node 丢 entity_data（engine/core.py:174-180） |
 | APPR-20 | legacy 兼容端点创建的审批实例无节点无任务，永久 PENDING | P2 | 待修 | approvals/legacy_compat.py:27-70,86-112 | 0.5d | 静态已证 | 数据清洗（entity_type 空实例 3 条） |
@@ -202,7 +202,7 @@
 | PEER-02 | 审批中合同可被通用 update 改状态，与 ApprovalInstance 脱钩 | P1 | 待修 | contracts/basic.py:539（不检查 PENDING 实例） | 并入 PEER-01 修复 | 静态已证 | 集群1；关联 APPR-13 |
 | PEER-03 | 合同审批撤回必 500 / 状态永卡 PENDING_APPROVAL（user_id 参数名错） | P1 | 重复-合并→APPR-07 | contract_approval/service.py:399；engine/actions.py:73-77 | — | 静态已证（主会话 CONFIRMED） | 与 APPR-07 同一缺陷，APPR-07 覆盖 4 域为主项 |
 | PEER-04 | 作废发票可经 update_invoice 改回 ISSUED/PAID，金额随意改 | P1 | 重复-合并→APPR-11 | invoices/basic.py:302,334-338 | — | 静态已证 | 与 APPR-11 同一端点同一根因，保留 APPR-11 为主项 |
-| PEER-05 | 作废发票可被 /issue 重新开票（只查审批记录不校验当前 status） | P1 | 待修 | invoices/operations.py:34,62 | 0.5d | 静态已证 | 候选 P0；资金急救包；关联 APPR-10（同文件门禁）/SALES-19 |
+| PEER-05 | 作废发票可被 /issue 重新开票（只查审批记录不校验当前 status） | P1 | 已验证 | sales/invoices/operations.py；tests/api/test_sales_invoice_gate_contracts.py | 0.5d | 静态已证；✅已动态回归（2026-07-03） | 候选 P0；资金急救包；作废/取消等非 APPROVED 当前状态不能重新开票 |
 
 ---
 
@@ -345,7 +345,7 @@
 
 | ID | 功能/问题 | 等级 | 状态 | 证据位置 | 工作量 | 验证方式 | 备注/关联 |
 |---|---|---|---|---|---|---|---|
-| MISC-01 | 竞品分析菜单页展示虚构数据（后端硬编码+前端 0 次 API 调用） | P0 | 待修 | competitor_analysis.py:203；CompetitorAnalysis.jsx | 下架 0.5d | 静态已证 | 用户正看假数据（"竞品A/宁德时代350万"），不下架误导销售决策 |
+| MISC-01 | 竞品分析菜单页展示虚构数据（后端硬编码+前端 0 次 API 调用） | P0 | 已验证 | competitor_analysis.py；salesRoutes.jsx；sidebarConfig/default.js；tests/api/test_competitor_analysis_stopgap_contracts.py；salesCompetitorAnalysisStopgap.test.jsx | 下架 0.5d | 静态已证；✅已下架止血并回归（2026-07-03） | 菜单与 `/sales/competitor-analysis` 路由已移除；后端直链返回 501，不再吐“竞品A/宁德时代”等硬编码假数据 |
 | MISC-02 | 资源总览 PMO 可达页恒空白 | P1 | 待修 | resource_overview.py:7-24；ResourceOverview.jsx:323 | 聚合 3-5d/摘菜单 0.5h | 静态已证 | 与 HR-23、AS-24 同 resource_conflicts 空表/双轨病灶互引 |
 | MISC-03 | 预警超时升级任务坏死（对 Column 取布尔抛 TypeError 被吞） | P1 | 待修 | alert_escalation_task.py:42,117 | 0.5d | 静态已证 | 与 APPR-17/AS-25 的 841 饿死不同源，是升级任务本身崩；调度器永远空转 |
 | MISC-04 | best_practice(P0 优化 4 端点) 僵尸+半成品（从未注册、0 commit、无认证） | P2 | 待修 | best_practice.py:32-34；set_kitting_targets:435 | 下架 0.5d | 静态已证 | 零鉴权写端点；与已挂载 best_practices/ 勿混 |
@@ -370,7 +370,7 @@
 | MISC-23 | culture_wall config 占位+goals 前端 404+空播 | P2 | 待修 | culture_wall_config.py:7-25；admin.js:243；contents 无 PUT/DELETE | 1-2d | 静态已证 | 与 HR-22 同一 culture_wall，HR-22 为主，本项补 config/goals/PUT 细节，互引不合并 |
 | MISC-24 | ai_strategy 84 端点巨型僵尸+前端 5 接口全 404 | P2 | 待修 | /ai-strategy 8 模块 84 端点；aiStrategy.js 5 调用无一匹配 | 下架 0.5d/重写 5d+ | 静态已证 | 全库最大僵尸，典型前后端各写各的 |
 
-**MISC 域小结**：24 个边缘模块以"僵尸/半成品/假实现"为主。P0 唯 MISC-01（用户正看虚构竞品数据）建议立即下架；P1 集群：MISC-02 恒空白、MISC-03 升级任务坏死、MISC-06 上传必 422、MISC-07 133 行真数据不可达+清库默认值、MISC-09 归集无 RBAC、MISC-12 裸 sqlite3+启动 DDL（并入 HR-15）、MISC-14 PM 误判 10/12、MISC-18 商务支持 5 组 404、人事 PII 入库。建议直接下架止血：竞品分析菜单、resource_scheduling、relationship_maturity、change_impact 占位、culture_wall_config 占位、best_practice、endpoints/knowledge、solution_credits、RequirementSurvey、ai_strategy、business_support 五组。
+**MISC 域小结**：24 个边缘模块以"僵尸/半成品/假实现"为主。P0 唯 MISC-01（用户正看虚构竞品数据）已下架止血；P1 集群：MISC-02 恒空白、MISC-03 升级任务坏死、MISC-06 上传必 422、MISC-07 133 行真数据不可达+清库默认值、MISC-09 归集无 RBAC、MISC-12 裸 sqlite3+启动 DDL（并入 HR-15）、MISC-14 PM 误判 10/12、MISC-18 商务支持 5 组 404、人事 PII 入库。建议直接下架止血：resource_scheduling、relationship_maturity、change_impact 占位、culture_wall_config 占位、best_practice、endpoints/knowledge、solution_credits、RequirementSurvey、ai_strategy、business_support 五组。
 
 ## 视图一：17 项全局 P0 → 追踪 ID 映射
 
@@ -386,7 +386,7 @@
 | 8 | 结项无门禁 + 变更审批不回基线 | PROJ-06（已验证：结项 readiness 门禁） + PROJ-20（待修：变更审批回基线） |
 | 9 | 现场调试签到/完工全链假实现 | PROD-01（主）＋ AS-01（重复-合并） |
 | 10 | 14/56 定时任务 stub 且监控全绿 | APPR-04 |
-| 11 | 通知触达假成功（email/SMS 假桩 + Redis 有产无消 + 841 条饿死） | AS-02 + AS-15 + AS-03 + APPR-17 |
+| 11 | 通知触达假成功（email/SMS 假桩 + Redis 有产无消 + 841 条饿死） | AS-02（已验证） + AS-15（已验证） + AS-03（已验证） + APPR-17 |
 | 12 | BOM→生产工单断链 | PROD-08（主）＋ APPR-05（重复-合并） |
 | 13 | 售后无设备档案，工单无设备外键 | AS-10（主）＋ AS-11 ＋ APPR-06（重复-合并） |
 | 14 | 派工冲突检测空转 | AS-04 |
@@ -401,11 +401,11 @@
 | 批次 | 追踪 ID | 合计工作量 |
 |---|---|---|
 | **P0-0 资金正确性急救包**（插队最前） | SALES-03 → SALES-01 → SALES-02 → SALES-04 → APPR-10 → APPR-11（含 PEER-04）→ APPR-15 → PEER-05 → SALES-09 | 约 6-8d |
-| **P0-0' 审批链救活包**（并入/前置 F2） | APPR-01 → APPR-02 → APPR-07（已验证，含 PEER-03）→ APPR-03（SALES-10 随包消除） | 约 4-5d |
+| **P0-0' 审批链救活包**（并入/前置 F2） | APPR-01（已验证）→ APPR-02（已验证）→ APPR-07（已验证，含 PEER-03）→ APPR-03（已验证；SALES-10 已随包消除） | 约 4-5d |
 | **Quick-win 闸门包**（≤1d/项，本周清完） | PROJ-06（已验证：结项 readiness 门禁）、PROJ-10（已验证：里程碑 except 重抛+全局 complete 接状态机）、PRE-16（已验证：_has_live_ai 补 qwen）、PRE-23（已验证：立项关卡异常不再静默）、AS-19（已验证：关单 payload/id + 质保工单兜底）、APPR-07（已验证：撤回参数名）、AS-16（Header 铃铛）、PROD-13（报工回写移审批后） | 约 3d |
 | **假实现止损下架包** | SALES-06（假接口下架）、SALES-07（前端假兜底）、SALES-13（智能报价页）、PROD-17（AI 排程建议）、PRE-15（售前移动端路由）、PRE-20（AI 工作流编排）、PRE-12（方案"PDF 导出"）、PRE-13（export-report 假 URL） | 约 2d |
-| **F1 扩围（库存台账真实化）** | PROD-03 → PROD-11（含 PROD-22）→ PROD-04 → PROD-12 → PROD-14（约 8d 地基）＋ PROD-02、PROD-05（预警/齐套修正，约 5d）；PROD-15 随后接闭环 | 约 13d |
-| **F3 扩围（通知+调度可信化）** | AS-02、AS-15、AS-03、APPR-17、APPR-04（stub 标记/禁用已完成，缺料回填待做）、APPR-16、AS-06、AS-23、AS-25、APPR-22（备份/复活/监控）、PRE-21（AI job 恢复，含 APPR-22①）、PROJ-21（候补） | 约 10-14d |
+| **F1 扩围（库存台账真实化）** | PROD-03（已验证）→ PROD-11（已验证，含 PROD-22）→ PROD-04（已验证）→ PROD-12（已验证）→ PROD-14（已验证）＋ PROD-02（已验证）；PROD-05（齐套修正）与 PROD-15（缺料→紧急采购闭环）仍待修 | 约 13d |
+| **F3 扩围（通知+调度可信化）** | AS-02（已验证）、AS-15（已验证）、AS-03（已验证）、APPR-17、APPR-04（stub 标记/禁用已完成，缺料回填待做）、APPR-16、AS-06、AS-23、AS-25、APPR-22（备份/复活/监控）、PRE-21（AI job 恢复，含 APPR-22①）、PROJ-21（候补） | 约 10-14d |
 | **其他（结构性/体验/收口，按域推进）** | 结构断链：PROD-08、AS-10、AS-11、PROJ-20、PROD-01、AS-04、PROD-06、PROD-07、PROD-16、AS-12；审批收口（F2 相关）：APPR-08、APPR-09、APPR-12、APPR-13（含 PEER-01/02）、APPR-19、APPR-20、APPR-21、PROD-09、PROD-10、SALES-05、AS-05、PROJ-04、PROJ-07；北极星体验：SALES-11、SALES-12、APPR-18、APPR-14、PROJ-03、PRE-04、PRE-10；数据可信：PROJ-11、PROJ-13、PROJ-14、PROJ-15、PROJ-16、PROJ-17/18/19、SALES-08、SALES-15；其余 P2/P3 按域排期 | 余量 |
 
 ## 视图三：数据清洗专项清单（存量脏数据，任何状态机修复前置）
