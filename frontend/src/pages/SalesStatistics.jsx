@@ -130,12 +130,12 @@ export default function SalesStatistics() {
           stage_label:
           {
             DISCOVERY: "发现",
-            QUALIFIED: "已确认",
+            QUALIFICATION: "需求挖掘",
             PROPOSAL: "提案",
             NEGOTIATION: "谈判",
+            CLOSING: "成交促成",
             WON: "已成交",
-            LOST: "已丢失",
-            ON_HOLD: "暂停"
+            LOST: "已丢失"
           }[stage] || stage,
           count: data.count || 0,
           amount: data.total_amount || 0

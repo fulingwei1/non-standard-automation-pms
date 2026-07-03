@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import OpportunityManagement from '../OpportunityManagement';
+import { stageConfig } from '../OpportunityManagement/constants';
 import {
   opportunityApi,
   customerApi,
@@ -140,6 +141,18 @@ function renderPage(props = {}) {
 }
 
 describe('OpportunityManagement', () => {
+  it('uses the backend canonical opportunity stage vocabulary', () => {
+    expect(Object.keys(stageConfig)).toEqual([
+      'DISCOVERY',
+      'QUALIFICATION',
+      'PROPOSAL',
+      'NEGOTIATION',
+      'CLOSING',
+      'WON',
+      'LOST',
+    ]);
+  });
+
   const opportunities = [
     {
       id: 1,

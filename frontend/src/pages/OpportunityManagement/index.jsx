@@ -745,10 +745,10 @@ export default function OpportunityManagement({ embedded = false }) {
             <span className="text-sm font-medium text-white">销售漏斗概览</span>
           </div>
           <div className="flex items-center gap-1">
-            {["DISCOVERY", "QUALIFIED", "PROPOSAL", "REVIEW", "NEGOTIATION", "WON"].map((stage, idx) => {
+            {["DISCOVERY", "QUALIFICATION", "PROPOSAL", "NEGOTIATION", "CLOSING", "WON"].map((stage, idx) => {
               const count = (opportunities || []).filter((o) => o.stage === stage).length;
               const conf = stageConfig[stage] || {};
-              const maxCount = Math.max(1, ...(["DISCOVERY", "QUALIFIED", "PROPOSAL", "REVIEW", "NEGOTIATION", "WON"].map(
+              const maxCount = Math.max(1, ...(["DISCOVERY", "QUALIFICATION", "PROPOSAL", "NEGOTIATION", "CLOSING", "WON"].map(
                 (s) => (opportunities || []).filter((o) => o.stage === s).length
               )));
               return (

@@ -2,9 +2,10 @@
 
 export const OPPORTUNITY_STAGES = {
   DISCOVERY: 'DISCOVERY',
-  QUALIFIED: 'QUALIFIED',
+  QUALIFICATION: 'QUALIFICATION',
   PROPOSAL: 'PROPOSAL',
   NEGOTIATION: 'NEGOTIATION',
+  CLOSING: 'CLOSING',
   WON: 'WON',
   LOST: 'LOST',
 };
@@ -18,8 +19,8 @@ export const OPPORTUNITY_STAGE_CONFIGS = {
     frontendKey: "lead",
     icon: "Lightbulb",
   },
-  [OPPORTUNITY_STAGES.QUALIFIED]: {
-    label: "已合格",
+  [OPPORTUNITY_STAGES.QUALIFICATION]: {
+    label: "需求挖掘",
     color: "bg-blue-500",
     textColor: "text-blue-400",
     probability: 30,
@@ -41,6 +42,14 @@ export const OPPORTUNITY_STAGE_CONFIGS = {
     probability: 75,
     frontendKey: "negotiate",
     icon: "MessageSquare",
+  },
+  [OPPORTUNITY_STAGES.CLOSING]: {
+    label: "成交促成",
+    color: "bg-cyan-500",
+    textColor: "text-cyan-400",
+    probability: 85,
+    frontendKey: "closing",
+    icon: "Target",
   },
   [OPPORTUNITY_STAGES.WON]: {
     label: "签约赢单",
@@ -331,9 +340,10 @@ export const OpportunityUtils = {
     const salesCycle = this.getSalesCycleConfig(opportunity.salesCycle);
     const averageStageDays = {
       [OPPORTUNITY_STAGES.DISCOVERY]: salesCycle.days * 0.2,
-      [OPPORTUNITY_STAGES.QUALIFIED]: salesCycle.days * 0.4,
+      [OPPORTUNITY_STAGES.QUALIFICATION]: salesCycle.days * 0.4,
       [OPPORTUNITY_STAGES.PROPOSAL]: salesCycle.days * 0.6,
       [OPPORTUNITY_STAGES.NEGOTIATION]: salesCycle.days * 0.8,
+      [OPPORTUNITY_STAGES.CLOSING]: salesCycle.days * 0.9,
     };
 
     const remainingDays = averageStageDays[stage.key] || 30;

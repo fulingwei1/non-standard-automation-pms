@@ -42,9 +42,9 @@ import QuickActivityLog from "../components/sales/QuickActivityLog";
 
 const stageConfigs = {
   DISCOVERY: { label: "发现", color: "bg-blue-500", order: 1 },
-  QUALIFYING: { label: "资格评估", color: "bg-amber-500", order: 2 },
-  PROPOSING: { label: "方案设计", color: "bg-purple-500", order: 3 },
-  NEGOTIATING: { label: "商务谈判", color: "bg-orange-500", order: 4 },
+  QUALIFICATION: { label: "需求挖掘", color: "bg-amber-500", order: 2 },
+  PROPOSAL: { label: "方案介绍", color: "bg-purple-500", order: 3 },
+  NEGOTIATION: { label: "价格谈判", color: "bg-orange-500", order: 4 },
   CLOSING: { label: "成交", color: "bg-emerald-500", order: 5 },
   WON: { label: "已成交", color: "bg-green-500", order: 6 },
   LOST: { label: "已丢失", color: "bg-red-500", order: 7 }

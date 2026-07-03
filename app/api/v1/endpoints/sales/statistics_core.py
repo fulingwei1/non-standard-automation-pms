@@ -17,6 +17,7 @@ from sqlalchemy import func as sa_func
 from app.api import deps
 from app.core import security
 from app.core.sales_permissions import filter_sales_data_by_scope
+from app.models.enums import OpportunityStageEnum
 from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -122,7 +123,7 @@ def get_opportunities_by_stage(
     """
     按阶段统计商机（已集成数据权限过滤）
     """
-    stages = ["DISCOVERY", "QUALIFICATION", "PROPOSAL", "NEGOTIATION", "WON", "LOST", "ON_HOLD"]
+    stages = [stage.value for stage in OpportunityStageEnum]
     result = {}
 
     from sqlalchemy import func

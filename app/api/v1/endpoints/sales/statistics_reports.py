@@ -22,6 +22,7 @@ from app.core.sales_permissions import (
     filter_sales_data_by_scope,
     filter_sales_finance_data_by_scope,
 )
+from app.models.enums import OpportunityStageEnum
 from app.models.organization import Department
 from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote, SalesTarget
 from app.models.user import User
@@ -486,10 +487,17 @@ def _personal_performance(
     lost_opps = [o for o in opps if o.stage == "LOST"]
     won_amount = sum(float(o.est_amount or 0) for o in won_opps)
     lost_amount = sum(float(o.est_amount or 0) for o in lost_opps)
+    pipeline_stages = {
+        OpportunityStageEnum.DISCOVERY.value,
+        OpportunityStageEnum.QUALIFICATION.value,
+        OpportunityStageEnum.PROPOSAL.value,
+        OpportunityStageEnum.NEGOTIATION.value,
+        OpportunityStageEnum.CLOSING.value,
+    }
     pipeline_amount = sum(
         float(o.est_amount or 0)
         for o in opps
-        if o.stage not in ("WON", "LOST", "ON_HOLD")
+        if o.stage in pipeline_stages
     )
 
     # 合同

@@ -53,9 +53,9 @@ export default function WinRateAnalysisCard({ opportunity }) {
 
     const stageOrder = {
       DISCOVERY: 1,
-      QUALIFYING: 2,
-      PROPOSING: 3,
-      NEGOTIATING: 4,
+      QUALIFICATION: 2,
+      PROPOSAL: 3,
+      NEGOTIATION: 4,
       CLOSING: 5,
     };
 
