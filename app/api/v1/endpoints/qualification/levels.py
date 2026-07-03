@@ -29,6 +29,20 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
+def _level_response(level: QualificationLevel) -> QualificationLevelResponse:
+    return QualificationLevelResponse(
+        id=level.id,
+        level_code=level.level_code,
+        level_name=level.level_name,
+        level_order=level.level_order,
+        role_type=level.role_type,
+        description=level.description,
+        is_active=True if level.is_active is None else bool(level.is_active),
+        created_at=level.created_at,
+        updated_at=level.updated_at,
+    )
+
+
 @router.post(
     "/levels",
     response_model=ResponseModel[QualificationLevelResponse],
@@ -57,7 +71,7 @@ def create_qualification_level(
     db.commit()
     db.refresh(level)
 
-    return ResponseModel(code=200, message="创建成功", data=level)
+    return ResponseModel(code=200, message="创建成功", data=_level_response(level))
 
 
 @router.get(
@@ -88,7 +102,7 @@ def get_qualification_levels(
     )
 
     return QualificationLevelListResponse(
-        items=levels,
+        items=[_level_response(level) for level in levels],
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
@@ -110,7 +124,7 @@ def get_qualification_level(
     """获取任职资格等级详情"""
     level = get_or_404(db, QualificationLevel, level_id, "等级不存在")
 
-    return ResponseModel(code=200, message="获取成功", data=level)
+    return ResponseModel(code=200, message="获取成功", data=_level_response(level))
 
 
 @router.put(
@@ -135,7 +149,7 @@ def update_qualification_level(
     db.commit()
     db.refresh(level)
 
-    return ResponseModel(code=200, message="更新成功", data=level)
+    return ResponseModel(code=200, message="更新成功", data=_level_response(level))
 
 
 @router.delete("/levels/{level_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)

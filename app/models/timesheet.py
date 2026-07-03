@@ -109,6 +109,43 @@ class Timesheet(Base, TimestampMixin):
     # 关系
     rd_project = relationship("RdProject", foreign_keys=[rd_project_id])
 
+    @property
+    def work_hours(self):
+        """兼容工时 schema 的字段名。"""
+        return self.hours
+
+    @work_hours.setter
+    def work_hours(self, value):
+        self.hours = value
+
+    @property
+    def work_type(self):
+        return self.overtime_type or "NORMAL"
+
+    @work_type.setter
+    def work_type(self, value):
+        self.overtime_type = value
+
+    @property
+    def description(self):
+        return self.work_content
+
+    @description.setter
+    def description(self, value):
+        self.work_content = value
+
+    @property
+    def is_billable(self):
+        return True
+
+    @property
+    def approved_by(self):
+        return self.approver_id
+
+    @property
+    def approved_at(self):
+        return self.approve_time
+
     __table_args__ = (
         Index("idx_ts_user", "user_id"),
         Index("idx_ts_project", "project_id"),

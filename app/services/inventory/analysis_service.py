@@ -36,13 +36,13 @@ class AnalysisService:
         if material_id:
             query = query.filter(MaterialTransaction.material_id == material_id)
 
-        total_issue_value = sum(t.total_amount for t in query.all())
+        total_issue_value = sum((t.total_amount or 0) for t in query.all())
 
         stock_query = self.db.query(MaterialStock).filter(MaterialStock.tenant_id == self.tenant_id)
         if material_id:
             stock_query = stock_query.filter(MaterialStock.material_id == material_id)
 
-        avg_stock_value = sum(s.total_value for s in stock_query.all())
+        avg_stock_value = sum((s.total_value or 0) for s in stock_query.all())
         turnover_rate = float(total_issue_value / avg_stock_value) if avg_stock_value > 0 else 0
 
         return {
@@ -89,8 +89,8 @@ class AnalysisService:
             else:
                 aging_category = "365天以上"
 
-            quantity = float(stock.quantity)
-            total_value = float(stock.total_value)
+            quantity = float(stock.quantity or 0)
+            total_value = float(stock.total_value or 0)
 
             aging_summary[aging_category]["count"] += 1
             aging_summary[aging_category]["total_quantity"] += quantity
@@ -104,7 +104,7 @@ class AnalysisService:
                     "location": stock.location,
                     "batch_number": stock.batch_number,
                     "quantity": quantity,
-                    "unit_price": float(stock.unit_price),
+                    "unit_price": float(stock.unit_price or 0),
                     "total_value": total_value,
                     "last_in_date": stock.last_in_date.isoformat() if stock.last_in_date else None,
                     "days_in_stock": days_in_stock,

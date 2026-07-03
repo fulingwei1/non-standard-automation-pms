@@ -263,19 +263,7 @@ class ProjectFilterService:
             allowed_user_ids = subordinate_ids | {user.id}
             return project.created_by in allowed_user_ids or project.pm_id in allowed_user_ids
         elif data_scope == DataScopeEnum.PROJECT.value:
-            # 检查是否是项目成员
-            from app.models.project import ProjectMember
-
-            member = (
-                db.query(ProjectMember)
-                .filter(
-                    ProjectMember.project_id == project_id,
-                    ProjectMember.user_id == user.id,
-                    ProjectMember.is_active,
-                )
-                .first()
-            )
-            return member is not None
+            return project_id in UserScopeService.get_user_project_ids(db, user.id)
         else:  # OWN
             # 检查是否是创建人或项目经理
             project = db.query(Project).filter(Project.id == project_id).first()

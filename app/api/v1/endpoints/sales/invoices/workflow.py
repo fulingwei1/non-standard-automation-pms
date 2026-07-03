@@ -6,7 +6,7 @@
 import logging
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -16,6 +16,12 @@ from app.models.enums import (
     ApprovalRecordStatusEnum,
     InvoiceStatusEnum,
     WorkflowTypeEnum,
+)
+from app.models.approval import (
+    ApprovalFlowDefinition,
+    ApprovalInstance,
+    ApprovalTask,
+    ApprovalTemplate,
 )
 from app.models.sales import Invoice
 from app.models.user import User
@@ -27,7 +33,7 @@ from app.schemas.sales import (
     ApprovalStartRequest,
     ApprovalStatusResponse,
 )
-from app.services.approval_engine import ApprovalEngineService as ApprovalWorkflowService
+from app.services.approval_engine import ApprovalEngineService
 from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
@@ -35,48 +41,176 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _get_invoice_approval_instance(db: Session, invoice_id: int) -> ApprovalInstance | None:
+    return (
+        db.query(ApprovalInstance)
+        .filter(
+            ApprovalInstance.entity_type == WorkflowTypeEnum.INVOICE.value,
+            ApprovalInstance.entity_id == invoice_id,
+        )
+        .order_by(ApprovalInstance.created_at.desc(), ApprovalInstance.id.desc())
+        .first()
+    )
+
+
+def _get_pending_invoice_approval_instance(
+    db: Session, invoice_id: int
+) -> ApprovalInstance | None:
+    return (
+        db.query(ApprovalInstance)
+        .filter(
+            ApprovalInstance.entity_type == WorkflowTypeEnum.INVOICE.value,
+            ApprovalInstance.entity_id == invoice_id,
+            ApprovalInstance.status == ApprovalRecordStatusEnum.PENDING.value,
+        )
+        .order_by(ApprovalInstance.created_at.desc(), ApprovalInstance.id.desc())
+        .first()
+    )
+
+
+def _get_invoice_template_code(db: Session, workflow_id: int | None) -> str:
+    if workflow_id:
+        flow = (
+            db.query(ApprovalFlowDefinition)
+            .join(ApprovalTemplate, ApprovalTemplate.id == ApprovalFlowDefinition.template_id)
+            .filter(
+                ApprovalFlowDefinition.id == workflow_id,
+                ApprovalFlowDefinition.is_active,
+                ApprovalTemplate.entity_type == WorkflowTypeEnum.INVOICE.value,
+                ApprovalTemplate.is_active,
+            )
+            .first()
+        )
+        if not flow or not flow.template:
+            raise HTTPException(status_code=404, detail="发票审批流程不存在")
+        return flow.template.template_code
+
+    template = (
+        db.query(ApprovalTemplate)
+        .filter(
+            ApprovalTemplate.entity_type == WorkflowTypeEnum.INVOICE.value,
+            ApprovalTemplate.is_active,
+        )
+        .order_by(ApprovalTemplate.is_published.desc(), ApprovalTemplate.id.desc())
+        .first()
+    )
+    if not template:
+        raise HTTPException(status_code=400, detail="未配置发票审批模板")
+    return template.template_code
+
+
+def _invoice_form_data(invoice: Invoice, comment: str | None = None) -> dict[str, Any]:
+    data = {
+        "invoice_id": invoice.id,
+        "invoice_code": invoice.invoice_code,
+        "invoice_type": invoice.invoice_type,
+        "amount": float(invoice.amount or 0),
+        "tax_rate": float(invoice.tax_rate or 0),
+        "tax_amount": float(invoice.tax_amount or 0),
+        "total_amount": float(invoice.total_amount or 0),
+        "contract_id": invoice.contract_id,
+        "contract_code": invoice.contract.contract_code if invoice.contract else None,
+        "project_id": invoice.project_id,
+        "issue_date": invoice.issue_date.isoformat() if invoice.issue_date else None,
+        "due_date": invoice.due_date.isoformat() if invoice.due_date else None,
+        "buyer_name": invoice.buyer_name,
+        "buyer_tax_no": invoice.buyer_tax_no,
+    }
+    if comment:
+        data["comment"] = comment
+    return data
+
+
+def _get_current_invoice_approval_task(
+    db: Session,
+    instance_id: int,
+    user_id: int,
+) -> ApprovalTask:
+    task = (
+        db.query(ApprovalTask)
+        .filter(
+            ApprovalTask.instance_id == instance_id,
+            ApprovalTask.assignee_id == user_id,
+            ApprovalTask.status == ApprovalRecordStatusEnum.PENDING.value,
+        )
+        .order_by(ApprovalTask.task_order, ApprovalTask.id)
+        .first()
+    )
+    if not task:
+        raise HTTPException(status_code=403, detail="当前用户没有待处理的发票审批任务")
+    return task
+
+
+def _task_record_response(task: ApprovalTask) -> ApprovalRecordResponse:
+    step_name = task.node.node_name if task.node else None
+    approved_at = task.completed_at
+    return ApprovalRecordResponse(
+        id=task.id,
+        step_name=step_name,
+        approver_id=task.assignee_id,
+        approver_name=task.assignee_name
+        or (task.assignee.real_name if task.assignee else None),
+        status=task.status,
+        action=task.action,
+        comment=task.comment,
+        approved_at=approved_at,
+    )
+
+
 @router.post("/invoices/{invoice_id}/approval/start", response_model=ResponseModel)
 def start_invoice_approval(
     *,
     db: Session = Depends(deps.get_db),
     invoice_id: int,
-    approval_request: ApprovalStartRequest,
+    approval_request: ApprovalStartRequest | None = None,
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     启动发票审批流程
     """
     invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
+    approval_request = approval_request or ApprovalStartRequest()
 
-    if invoice.status not in {"APPLIED", InvoiceStatusEnum.SUBMITTED.value}:
-        raise HTTPException(
-            status_code=400, detail="只有已提交状态的发票才能启动审批流程"
+    existing = _get_pending_invoice_approval_instance(db, invoice_id)
+    if existing:
+        return ResponseModel(
+            code=200,
+            message="审批流程已启动",
+            data={
+                "approval_instance_id": existing.id,
+                "instance_no": existing.instance_no,
+                "status": existing.status,
+                "current_node_id": existing.current_node_id,
+            },
         )
 
-    # 获取发票金额用于路由
-    routing_params = {"amount": float(invoice.amount or 0)}
-
-    # 启动审批流程
-    workflow_service = ApprovalWorkflowService(db)
+    workflow_service = ApprovalEngineService(db)
     try:
-        record = workflow_service.start_approval(
-            entity_type=WorkflowTypeEnum.INVOICE,
+        template_code = _get_invoice_template_code(db, approval_request.workflow_id)
+        instance = workflow_service.submit(
+            template_code=template_code,
+            entity_type=WorkflowTypeEnum.INVOICE.value,
             entity_id=invoice_id,
+            form_data=_invoice_form_data(invoice, approval_request.comment),
             initiator_id=current_user.id,
-            workflow_id=approval_request.workflow_id,
-            routing_params=routing_params,
-            comment=approval_request.comment,
+            title=None,
+            summary=None,
+            urgency="NORMAL",
+            cc_user_ids=None,
         )
-
-        # 更新发票状态
-        invoice.status = InvoiceStatusEnum.SUBMITTED
-
-        db.commit()
 
         return ResponseModel(
-            code=200, message="审批流程已启动", data={"approval_record_id": record.id}
+            code=200,
+            message="审批流程已启动",
+            data={
+                "approval_instance_id": instance.id,
+                "instance_no": instance.instance_no,
+                "status": instance.status,
+                "current_node_id": instance.current_node_id,
+            },
         )
     except ValueError as e:
+        db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -90,62 +224,48 @@ def get_invoice_approval_status(
     """
     获取发票审批状态
     """
-    workflow_service = ApprovalWorkflowService(db)
-    record = workflow_service.get_approval_record(
-        entity_type=WorkflowTypeEnum.INVOICE, entity_id=invoice_id
-    )
-
-    if not record:
+    instance = _get_invoice_approval_instance(db, invoice_id)
+    if not instance:
         return ApprovalStatusResponse(
-            record=None,
-            current_step_info=None,
-            can_approve=False,
-            can_reject=False,
-            can_delegate=False,
-            can_withdraw=False,
+            entity_id=invoice_id,
+            entity_type=WorkflowTypeEnum.INVOICE.value,
+            workflow_name=None,
+            current_step=None,
+            current_approver=None,
+            status="NOT_STARTED",
+            progress=0,
         )
 
-    current_step_info = workflow_service.get_current_step(record.id)
-
-    can_approve = False
-    can_reject = False
-    can_delegate = False
-    can_withdraw = False
-
-    if record.status == ApprovalRecordStatusEnum.PENDING:
-        if current_step_info:
-            if current_step_info.get("approver_id") == current_user.id:
-                can_approve = True
-                can_reject = True
-                if current_step_info.get("can_delegate"):
-                    can_delegate = True
-
-        if record.initiator_id == current_user.id:
-            can_withdraw = True
-
-    record_dict = {
-        **{c.name: getattr(record, c.name) for c in record.__table__.columns},
-        "workflow_name": record.workflow.workflow_name if record.workflow else None,
-        "initiator_name": record.initiator.real_name if record.initiator else None,
-        "history": [],
-    }
-
-    history_list = workflow_service.get_approval_history(record.id)
-    for h in history_list:
-        history_dict = {
-            **{c.name: getattr(h, c.name) for c in h.__table__.columns},
-            "approver_name": h.approver.real_name if h.approver else None,
-            "delegate_to_name": h.delegate_to.real_name if h.delegate_to else None,
-        }
-        record_dict["history"].append(ApprovalHistoryResponse(**history_dict))
+    current_task = (
+        db.query(ApprovalTask)
+        .filter(
+            ApprovalTask.instance_id == instance.id,
+            ApprovalTask.status == ApprovalRecordStatusEnum.PENDING.value,
+        )
+        .order_by(ApprovalTask.task_order, ApprovalTask.id)
+        .first()
+    )
+    total_tasks = db.query(ApprovalTask).filter(ApprovalTask.instance_id == instance.id).count()
+    completed_tasks = (
+        db.query(ApprovalTask)
+        .filter(ApprovalTask.instance_id == instance.id, ApprovalTask.status == "COMPLETED")
+        .count()
+    )
+    progress = int(completed_tasks / total_tasks * 100) if total_tasks else 0
 
     return ApprovalStatusResponse(
-        record=ApprovalRecordResponse(**record_dict),
-        current_step_info=current_step_info,
-        can_approve=can_approve,
-        can_reject=can_reject,
-        can_delegate=can_delegate,
-        can_withdraw=can_withdraw,
+        entity_id=invoice_id,
+        entity_type=WorkflowTypeEnum.INVOICE.value,
+        workflow_name=instance.flow.flow_name if instance.flow else None,
+        current_step=instance.current_node.node_name if instance.current_node else None,
+        current_approver=(
+            current_task.assignee_name
+            or (current_task.assignee.real_name if current_task and current_task.assignee else None)
+            if current_task
+            else None
+        ),
+        status=instance.status,
+        progress=progress,
     )
 
 
@@ -160,54 +280,60 @@ def invoice_approval_action(
     """
     发票审批操作（通过/驳回/委托/撤回）
     """
-    workflow_service = ApprovalWorkflowService(db)
-    record = workflow_service.get_approval_record(
-        entity_type=WorkflowTypeEnum.INVOICE, entity_id=invoice_id
-    )
+    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
+    instance = _get_invoice_approval_instance(db, invoice_id)
 
-    if not record:
+    if not instance:
         raise HTTPException(status_code=404, detail="审批记录不存在")
 
-    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
+    workflow_service = ApprovalEngineService(db)
 
     try:
         if action_request.action == ApprovalActionEnum.APPROVE:
-            record = workflow_service.approve_step(
-                record_id=record.id, approver_id=current_user.id, comment=action_request.comment
+            task = _get_current_invoice_approval_task(db, instance.id, current_user.id)
+            task = workflow_service.approve(
+                task_id=task.id, approver_id=current_user.id, comment=action_request.comment
             )
 
-            if record.status == ApprovalRecordStatusEnum.APPROVED:
+            if task.instance.status == ApprovalRecordStatusEnum.APPROVED.value:
                 # 审批完成，允许开票
-                invoice.status = InvoiceStatusEnum.APPROVED
+                invoice.status = InvoiceStatusEnum.APPROVED.value
             message = "审批通过"
+            response_status = task.instance.status
 
         elif action_request.action == ApprovalActionEnum.REJECT:
-            record = workflow_service.reject_step(
-                record_id=record.id,
+            task = _get_current_invoice_approval_task(db, instance.id, current_user.id)
+            task = workflow_service.reject(
+                task_id=task.id,
                 approver_id=current_user.id,
                 comment=action_request.comment or "审批驳回",
             )
-            invoice.status = InvoiceStatusEnum.REJECTED
+            invoice.status = InvoiceStatusEnum.REJECTED.value
             message = "审批已驳回"
+            response_status = task.instance.status
 
         elif action_request.action == ApprovalActionEnum.DELEGATE:
             if not action_request.delegate_to_id:
                 raise HTTPException(status_code=400, detail="委托操作需要指定委托给的用户ID")
 
-            record = workflow_service.delegate_step(
-                record_id=record.id,
-                approver_id=current_user.id,
-                delegate_to_id=action_request.delegate_to_id,
+            task = _get_current_invoice_approval_task(db, instance.id, current_user.id)
+            delegated_task = workflow_service.transfer(
+                task_id=task.id,
+                from_user_id=current_user.id,
+                to_user_id=action_request.delegate_to_id,
                 comment=action_request.comment,
             )
             message = "审批已委托"
+            response_status = delegated_task.instance.status
 
         elif action_request.action == ApprovalActionEnum.WITHDRAW:
-            record = workflow_service.withdraw_approval(
-                record_id=record.id, initiator_id=current_user.id, comment=action_request.comment
+            instance = workflow_service.withdraw(
+                instance_id=instance.id,
+                initiator_id=current_user.id,
+                comment=action_request.comment,
             )
-            invoice.status = InvoiceStatusEnum.SUBMITTED
             message = "审批已撤回"
+            response_status = instance.status
 
         else:
             raise HTTPException(
@@ -219,11 +345,34 @@ def invoice_approval_action(
         return ResponseModel(
             code=200,
             message=message,
-            data={"approval_record_id": record.id, "status": record.status},
+            data={"approval_instance_id": instance.id, "status": response_status},
         )
 
     except ValueError as e:
+        db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/invoices/{invoice_id}/approve", response_model=ResponseModel, include_in_schema=False)
+def approve_invoice_legacy(
+    *,
+    db: Session = Depends(deps.get_db),
+    invoice_id: int,
+    approval_request: dict[str, Any] | None = Body(default=None),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """旧版发票审批通过入口，转发到统一审批动作。"""
+    payload = approval_request or {}
+    action_request = ApprovalActionRequest(
+        action=ApprovalActionEnum.APPROVE.value,
+        comment=payload.get("comment") or payload.get("comments"),
+    )
+    return invoice_approval_action(
+        db=db,
+        invoice_id=invoice_id,
+        action_request=action_request,
+        current_user=current_user,
+    )
 
 
 @router.get("/invoices/{invoice_id}/approval-history", response_model=List[ApprovalHistoryResponse])
@@ -236,22 +385,20 @@ def get_invoice_approval_history(
     """
     获取发票审批历史
     """
-    workflow_service = ApprovalWorkflowService(db)
-    record = workflow_service.get_approval_record(
-        entity_type=WorkflowTypeEnum.INVOICE, entity_id=invoice_id
-    )
-
-    if not record:
+    instance = _get_invoice_approval_instance(db, invoice_id)
+    if not instance:
         return []
 
-    history_list = workflow_service.get_approval_history(record.id)
-    result = []
-    for h in history_list:
-        history_dict = {
-            **{c.name: getattr(h, c.name) for c in h.__table__.columns},
-            "approver_name": h.approver.real_name if h.approver else None,
-            "delegate_to_name": h.delegate_to.real_name if h.delegate_to else None,
-        }
-        result.append(ApprovalHistoryResponse(**history_dict))
-
-    return result
+    tasks = (
+        db.query(ApprovalTask)
+        .filter(ApprovalTask.instance_id == instance.id)
+        .order_by(ApprovalTask.task_order, ApprovalTask.id)
+        .all()
+    )
+    return [
+        ApprovalHistoryResponse(
+            entity_id=invoice_id,
+            entity_type=WorkflowTypeEnum.INVOICE.value,
+            records=[_task_record_response(task) for task in tasks],
+        )
+    ]

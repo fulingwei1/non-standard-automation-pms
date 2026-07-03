@@ -17,6 +17,6 @@ router = APIRouter()
 
 # 聚合所有子路由
 router.include_router(cost_templates.router)
-router.include_router(purchase_material_costs.router)
-router.include_router(cost_matching.router)
 router.include_router(cost_reminder.router)
+router.include_router(cost_matching.router)
+router.include_router(purchase_material_costs.router)

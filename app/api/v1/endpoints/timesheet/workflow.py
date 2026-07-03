@@ -11,7 +11,7 @@
 """
 
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, List, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -43,7 +43,7 @@ class TimesheetSubmitRequest(BaseModel):
 class TimesheetApprovalActionRequest(BaseModel):
     """工时审批操作请求"""
 
-    action: str = Field(..., description="操作类型: APPROVE/REJECT")
+    action: Literal["APPROVE", "REJECT"] = Field(..., description="操作类型: APPROVE/REJECT")
     comment: Optional[str] = Field(None, description="审批意见")
 
 
@@ -51,7 +51,7 @@ class TimesheetBatchApprovalRequest(BaseModel):
     """批量审批请求"""
 
     task_ids: List[int] = Field(..., description="要审批的任务ID列表")
-    action: str = Field(..., description="操作类型: APPROVE/REJECT")
+    action: Literal["APPROVE", "REJECT"] = Field(..., description="操作类型: APPROVE/REJECT")
     comment: Optional[str] = Field(None, description="审批意见")
 
 

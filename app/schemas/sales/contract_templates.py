@@ -139,6 +139,10 @@ class ContractTemplateApplyResponse(BaseModel):
     version_id: int = Field(..., description="使用的版本ID")
     applied_sections: Optional[List[str]] = Field(None, description="已应用的条款段落")
     message: Optional[str] = Field(None, description="消息")
+    template: Optional[ContractTemplateResponse] = Field(None, description="模板详情")
+    version: Optional[ContractTemplateVersionResponse] = Field(None, description="版本详情")
+    version_diff: Optional[Any] = Field(None, description="版本差异")
+    approval_history: Optional[List[Any]] = Field(None, description="版本历史")
 
 
 # ==================== 版本比较 ====================

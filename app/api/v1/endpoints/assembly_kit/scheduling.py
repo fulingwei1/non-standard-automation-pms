@@ -107,8 +107,8 @@ async def get_scheduling_suggestions(
         )
 
         data = SchedulingSuggestionResponse.model_validate(s)
-        data.project_no = project.project_no if project else None
-        data.project_name = project.name if project else None
+        data.project_no = project.project_code if project else None
+        data.project_name = project.project_name if project else None
         data.machine_no = machine.machine_no if machine else None
         result.append(data)
 

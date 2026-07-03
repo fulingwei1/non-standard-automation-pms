@@ -172,9 +172,9 @@ sections:
       - label: 已取消
         value: "{{ meeting_stats[0].cancelled_meetings if meeting_stats else 0 }}"
       - label: 会议完成率
-        value: "{{ ((meeting_stats[0].completed_meetings or 0) / (meeting_stats[0].total_meetings or 1) * 100) | round_num(1) }}%"
+        value: "{{ (((meeting_stats[0].completed_meetings if meeting_stats else 0) or 0) / ((meeting_stats[0].total_meetings if meeting_stats else 0) or 1) * 100) | round_num(1) }}%"
       - label: 环比变化
-        value: "{{ (((meeting_stats[0].total_meetings or 0) - (prev_meeting_stats[0].total_meetings or 0)) / (prev_meeting_stats[0].total_meetings or 1) * 100) | round_num(1) }}%"
+        value: "{{ ((((meeting_stats[0].total_meetings if meeting_stats else 0) or 0) - ((prev_meeting_stats[0].total_meetings if prev_meeting_stats else 0) or 0)) / ((prev_meeting_stats[0].total_meetings if prev_meeting_stats else 0) or 1) * 100) | round_num(1) }}%"
 
   - id: level_summary
     title: 按层级统计
@@ -200,7 +200,7 @@ sections:
       - label: 已逾期
         value: "{{ action_item_stats[0].overdue_items if action_item_stats else 0 }}"
       - label: 完成率
-        value: "{{ ((action_item_stats[0].completed_items or 0) / (action_item_stats[0].total_items or 1) * 100) | round_num(1) }}%"
+        value: "{{ (((action_item_stats[0].completed_items if action_item_stats else 0) or 0) / ((action_item_stats[0].total_items if action_item_stats else 0) or 1) * 100) | round_num(1) }}%"
 
   - id: meeting_list
     title: 会议明细

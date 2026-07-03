@@ -16,7 +16,10 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.project import MachineCreate, MachineResponse, MachineUpdate
 from app.services.project import ProjectMachineService
-from app.utils.permission_helpers import check_project_access_or_raise
+from app.utils.permission_helpers import (
+    check_project_access_or_raise,
+    check_project_read_access_or_raise,
+)
 
 router = APIRouter()
 
@@ -42,10 +45,10 @@ def list_project_machines(
     order_by: Optional[str] = Query(None, description="排序字段"),
     order_direction: Optional[str] = Query(None, description="排序方向 asc/desc"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("machine:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取项目机台列表"""
-    check_project_access_or_raise(db, current_user, project_id)
+    check_project_read_access_or_raise(db, current_user, project_id)
 
     params_updates = {}
     if keyword is not None:
@@ -97,10 +100,10 @@ def get_project_machine(
     project_id: int = Path(..., description="项目ID"),
     machine_id: int = Path(..., description="机台ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("machine:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> MachineResponse:
     """获取项目机台详情"""
-    check_project_access_or_raise(db, current_user, project_id)
+    check_project_read_access_or_raise(db, current_user, project_id)
     service = _get_service(db, project_id)
     return service.get(machine_id)
 

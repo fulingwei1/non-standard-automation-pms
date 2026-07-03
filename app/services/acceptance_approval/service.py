@@ -357,7 +357,7 @@ class AcceptanceApprovalService:
         if instance.initiator_id != user_id:
             raise PermissionError("只能撤回自己提交的审批")
 
-        self.engine.withdraw(instance_id=instance.id, user_id=user_id)
+        self.engine.withdraw(instance_id=instance.id, initiator_id=user_id, comment=reason)
 
         return {
             "order_id": order_id,

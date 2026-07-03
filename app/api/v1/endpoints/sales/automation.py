@@ -22,7 +22,7 @@ router = APIRouter()
 
 
 @router.get("/follow-up-reminders", summary="获取跟进提醒")
-def get_follow_up_reminders(
+def get_automation_follow_up_reminders(
     days: int = Query(3, description="X天未联系"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),

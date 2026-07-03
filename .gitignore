@@ -157,3 +157,8 @@ reports/
 
 # SQLite数据库
 *.db
+
+# QA 产物与本地备份（脚本入库，产物不入库）
+.gstack/db-backups/
+.gstack/qa-reports/
+.gstack/tmp/

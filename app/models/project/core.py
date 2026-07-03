@@ -201,7 +201,12 @@ class Project(Base, TimestampMixin):
     # 变更管理关系
     change_requests = relationship("ChangeRequest", back_populates="project", lazy="dynamic")
     # 项目-ECN 联动影响记录
-    change_impacts = relationship("ProjectChangeImpact", foreign_keys="ProjectChangeImpact.project_id", lazy="dynamic")
+    change_impacts = relationship(
+        "ProjectChangeImpact",
+        foreign_keys="ProjectChangeImpact.project_id",
+        back_populates="project",
+        lazy="dynamic",
+    )
     # 成本预测关系
     cost_predictions = relationship("CostPrediction", back_populates="project", lazy="dynamic")
 
@@ -242,6 +247,11 @@ class Project(Base, TimestampMixin):
     def name(self) -> str:
         """兼容旧代码：project.name -> project_name"""
         return self.project_name
+
+    @property
+    def progress(self):
+        """兼容旧绩效服务：project.progress -> progress_pct"""
+        return self.progress_pct
 
     @property
     def customer_info(self) -> dict:

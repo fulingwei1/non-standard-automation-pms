@@ -182,6 +182,17 @@ class MonthCostData(BaseModel):
         from_attributes = True
 
 
+class CostTrendData(BaseModel):
+    """成本趋势数据"""
+
+    month: str = Field(..., description="月份 YYYY-MM")
+    cumulative_cost: float = Field(..., description="累计成本")
+    budget_line: float = Field(..., description="预算线")
+
+    class Config:
+        from_attributes = True
+
+
 class CostBreakdownItem(BaseModel):
     """成本结构项"""
 
@@ -214,7 +225,7 @@ class ProjectCostDashboardSchema(BaseModel):
     monthly_costs: List[MonthCostData] = Field(..., description="月度成本数据")
 
     # 成本趋势（折线图数据）
-    cost_trend: List[Dict[str, float]] = Field(..., description="成本趋势数据")
+    cost_trend: List[CostTrendData] = Field(..., description="成本趋势数据")
 
     # 收入与利润
     received_amount: float = Field(..., description="已收款金额")

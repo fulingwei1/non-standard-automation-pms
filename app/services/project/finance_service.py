@@ -12,6 +12,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.project import Project, ProjectCost
+from app.services.cost.cost_basis import actual_project_cost_filter
 from app.models.user import User
 from app.services.data_scope import DataScopeService
 from app.services.project.core_service import ProjectCoreService
@@ -41,14 +42,20 @@ class ProjectFinanceService:
                 "budget": {"total_budget": 0.0, "variance": 0.0},
             }
 
-        cost_query = self.db.query(ProjectCost).filter(ProjectCost.project_id.in_(project_ids))
+        cost_query = self.db.query(ProjectCost).filter(
+            ProjectCost.project_id.in_(project_ids),
+            actual_project_cost_filter(),
+        )
         if start_date:
             cost_query = cost_query.filter(ProjectCost.cost_date >= start_date)
         if end_date:
             cost_query = cost_query.filter(ProjectCost.cost_date <= end_date)
 
         total_cost = float(
-            cost_query.with_entities(func.coalesce(func.sum(ProjectCost.amount), 0)).scalar() or 0
+            cost_query.with_entities(
+                func.coalesce(func.sum(ProjectCost.amount), 0)
+            ).scalar()
+            or 0
         )
 
         group_attr = getattr(ProjectCost, group_by, None)
@@ -63,7 +70,9 @@ class ProjectFinanceService:
             .group_by(group_attr)
             .all()
         )
-        breakdown = {(label or "未分类"): float(total or 0) for label, total in grouped_rows}
+        breakdown = {
+            (label or "未分类"): float(total or 0) for label, total in grouped_rows
+        }
 
         top_rows = (
             cost_query.with_entities(
@@ -84,8 +93,12 @@ class ProjectFinanceService:
         top_projects = [
             {
                 "project_id": pid,
-                "project_code": project_map.get(pid).project_code if project_map.get(pid) else None,
-                "project_name": project_map.get(pid).project_name if project_map.get(pid) else None,
+                "project_code": project_map.get(pid).project_code
+                if project_map.get(pid)
+                else None,
+                "project_name": project_map.get(pid).project_name
+                if project_map.get(pid)
+                else None,
                 "amount": float(total or 0),
             }
             for pid, total in top_rows

@@ -37,6 +37,222 @@ _SessionLocal = None
 logger = logging.getLogger(__name__)
 
 
+WAREHOUSE_CORE_TABLE_DDLS = (
+    """
+    CREATE TABLE IF NOT EXISTS warehouses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        warehouse_code VARCHAR(50) NOT NULL UNIQUE,
+        warehouse_name VARCHAR(200) NOT NULL,
+        warehouse_type VARCHAR(50) DEFAULT 'NORMAL',
+        address VARCHAR(500),
+        manager VARCHAR(100),
+        contact_phone VARCHAR(50),
+        capacity NUMERIC(12, 2),
+        description TEXT,
+        is_active BOOLEAN DEFAULT 1,
+        created_at DATETIME,
+        updated_at DATETIME
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS warehouse_locations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        warehouse_id INTEGER NOT NULL,
+        location_code VARCHAR(50) NOT NULL,
+        location_name VARCHAR(200),
+        zone VARCHAR(50),
+        aisle VARCHAR(20),
+        shelf VARCHAR(20),
+        level VARCHAR(20),
+        position VARCHAR(20),
+        capacity NUMERIC(12, 2),
+        location_type VARCHAR(50) DEFAULT 'STORAGE',
+        is_active BOOLEAN DEFAULT 1,
+        created_at DATETIME,
+        updated_at DATETIME,
+        FOREIGN KEY(warehouse_id) REFERENCES warehouses(id)
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS inbound_orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_no VARCHAR(50) NOT NULL UNIQUE,
+        order_type VARCHAR(50) DEFAULT 'PURCHASE',
+        warehouse_id INTEGER,
+        source_no VARCHAR(50),
+        supplier_name VARCHAR(200),
+        status VARCHAR(20) DEFAULT 'DRAFT',
+        planned_date DATE,
+        actual_date DATE,
+        operator VARCHAR(100),
+        remark TEXT,
+        total_quantity NUMERIC(12, 2) DEFAULT 0,
+        received_quantity NUMERIC(12, 2) DEFAULT 0,
+        created_by INTEGER,
+        created_at DATETIME,
+        updated_at DATETIME,
+        FOREIGN KEY(warehouse_id) REFERENCES warehouses(id)
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS inbound_order_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER NOT NULL,
+        material_code VARCHAR(50) NOT NULL,
+        material_name VARCHAR(200),
+        specification VARCHAR(500),
+        unit VARCHAR(20) DEFAULT '件',
+        planned_quantity NUMERIC(12, 2) NOT NULL,
+        received_quantity NUMERIC(12, 2) DEFAULT 0,
+        location_id INTEGER,
+        remark TEXT,
+        created_at DATETIME,
+        updated_at DATETIME,
+        FOREIGN KEY(order_id) REFERENCES inbound_orders(id),
+        FOREIGN KEY(location_id) REFERENCES warehouse_locations(id)
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS outbound_orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_no VARCHAR(50) NOT NULL UNIQUE,
+        order_type VARCHAR(50) DEFAULT 'PRODUCTION',
+        warehouse_id INTEGER,
+        target_no VARCHAR(50),
+        department VARCHAR(200),
+        status VARCHAR(20) DEFAULT 'DRAFT',
+        planned_date DATE,
+        actual_date DATE,
+        operator VARCHAR(100),
+        remark TEXT,
+        total_quantity NUMERIC(12, 2) DEFAULT 0,
+        picked_quantity NUMERIC(12, 2) DEFAULT 0,
+        created_by INTEGER,
+        is_urgent BOOLEAN DEFAULT 0,
+        created_at DATETIME,
+        updated_at DATETIME,
+        FOREIGN KEY(warehouse_id) REFERENCES warehouses(id)
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS outbound_order_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER NOT NULL,
+        material_code VARCHAR(50) NOT NULL,
+        material_name VARCHAR(200),
+        specification VARCHAR(500),
+        unit VARCHAR(20) DEFAULT '件',
+        planned_quantity NUMERIC(12, 2) NOT NULL,
+        picked_quantity NUMERIC(12, 2) DEFAULT 0,
+        location_id INTEGER,
+        remark TEXT,
+        created_at DATETIME,
+        updated_at DATETIME,
+        FOREIGN KEY(order_id) REFERENCES outbound_orders(id),
+        FOREIGN KEY(location_id) REFERENCES warehouse_locations(id)
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS inventory (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        warehouse_id INTEGER NOT NULL,
+        location_id INTEGER,
+        material_code VARCHAR(50) NOT NULL,
+        material_name VARCHAR(200),
+        specification VARCHAR(500),
+        unit VARCHAR(20) DEFAULT '件',
+        quantity NUMERIC(12, 2) DEFAULT 0,
+        reserved_quantity NUMERIC(12, 2) DEFAULT 0,
+        available_quantity NUMERIC(12, 2) DEFAULT 0,
+        min_stock NUMERIC(12, 2) DEFAULT 0,
+        max_stock NUMERIC(12, 2) DEFAULT 0,
+        batch_no VARCHAR(100),
+        last_inbound_date DATETIME,
+        last_outbound_date DATETIME,
+        created_at DATETIME,
+        updated_at DATETIME,
+        FOREIGN KEY(warehouse_id) REFERENCES warehouses(id),
+        FOREIGN KEY(location_id) REFERENCES warehouse_locations(id)
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS stock_count_orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        count_no VARCHAR(50) NOT NULL UNIQUE,
+        warehouse_id INTEGER,
+        count_type VARCHAR(50) DEFAULT 'FULL',
+        status VARCHAR(20) DEFAULT 'DRAFT',
+        planned_date DATE,
+        actual_date DATE,
+        operator VARCHAR(100),
+        remark TEXT,
+        total_items INTEGER DEFAULT 0,
+        matched_items INTEGER DEFAULT 0,
+        diff_items INTEGER DEFAULT 0,
+        created_by INTEGER,
+        created_at DATETIME,
+        updated_at DATETIME,
+        FOREIGN KEY(warehouse_id) REFERENCES warehouses(id)
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS stock_count_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER NOT NULL,
+        material_code VARCHAR(50) NOT NULL,
+        material_name VARCHAR(200),
+        location_id INTEGER,
+        system_quantity NUMERIC(12, 2) DEFAULT 0,
+        actual_quantity NUMERIC(12, 2),
+        diff_quantity NUMERIC(12, 2),
+        diff_reason TEXT,
+        created_at DATETIME,
+        updated_at DATETIME,
+        FOREIGN KEY(order_id) REFERENCES stock_count_orders(id),
+        FOREIGN KEY(location_id) REFERENCES warehouse_locations(id)
+    )
+    """,
+)
+
+WAREHOUSE_CORE_INDEX_DDLS = (
+    "CREATE UNIQUE INDEX IF NOT EXISTS ix_warehouse_location_code "
+    "ON warehouse_locations(warehouse_id, location_code)",
+    "CREATE INDEX IF NOT EXISTS ix_inventory_material "
+    "ON inventory(warehouse_id, material_code, batch_no)",
+)
+
+
+def _ensure_sqlite_warehouse_tables(engine, tables: list[str]) -> list[str]:
+    """补建仓储模块在旧 SQLite 库中缺失的核心表。"""
+    required_tables = {
+        "warehouses",
+        "warehouse_locations",
+        "inbound_orders",
+        "inbound_order_items",
+        "outbound_orders",
+        "outbound_order_items",
+        "inventory",
+        "stock_count_orders",
+        "stock_count_items",
+    }
+    if required_tables.issubset(set(tables)):
+        return tables
+
+    with engine.begin() as conn:
+        for ddl in WAREHOUSE_CORE_TABLE_DDLS:
+            try:
+                conn.execute(text(ddl))
+            except Exception:
+                logger.debug("warehouse 核心表补丁跳过", exc_info=True)
+        for ddl in WAREHOUSE_CORE_INDEX_DDLS:
+            try:
+                conn.execute(text(ddl))
+            except Exception:
+                logger.debug("warehouse 核心索引补丁跳过", exc_info=True)
+
+    return inspect(engine).get_table_names()
+
+
 class RuntimePatchedSession(Session):
     """
     自定义 Session，确保 SQLite 关键补丁在运行期也会被应用。
@@ -88,7 +304,42 @@ class RuntimePatchedSession(Session):
                 "Detected legacy SQLite schema missing api_permissions.group_id; applying runtime patch."
             )
             with bind.begin() as conn:
-                conn.execute(text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER"))
+                conn.execute(
+                    text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER")
+                )
+
+        if "role_templates" in tables:
+            role_template_columns = {
+                col["name"] for col in inspector.get_columns("role_templates")
+            }
+            role_template_ddls = []
+            if "version" not in role_template_columns:
+                role_template_ddls.append(
+                    "ALTER TABLE role_templates ADD COLUMN version INTEGER DEFAULT 1"
+                )
+            if "version_note" not in role_template_columns:
+                role_template_ddls.append(
+                    "ALTER TABLE role_templates ADD COLUMN version_note VARCHAR(200)"
+                )
+            if "source_role_id" not in role_template_columns:
+                role_template_ddls.append(
+                    "ALTER TABLE role_templates ADD COLUMN source_role_id INTEGER"
+                )
+            if "source_role_name" not in role_template_columns:
+                role_template_ddls.append(
+                    "ALTER TABLE role_templates ADD COLUMN source_role_name VARCHAR(100)"
+                )
+            if "tenant_id" not in role_template_columns:
+                role_template_ddls.append(
+                    "ALTER TABLE role_templates ADD COLUMN tenant_id INTEGER"
+                )
+            if role_template_ddls:
+                logger.warning(
+                    "Detected legacy SQLite schema missing role_templates version/source/tenant columns; applying runtime patch."
+                )
+                with bind.begin() as conn:
+                    for ddl in role_template_ddls:
+                        conn.execute(text(ddl))
 
         RuntimePatchedSession._sqlite_patches_applied = True
 
@@ -100,6 +351,76 @@ def _ensure_sqlite_schema(engine):
     """
     inspector = inspect(engine)
     tables = inspector.get_table_names()
+    tables = _ensure_sqlite_warehouse_tables(engine, tables)
+    inspector = inspect(engine)
+
+    project_delivery_tables = [
+        "project_delivery_schedules",
+        "project_delivery_tasks",
+        "project_delivery_long_cycle_purchases",
+        "project_delivery_mechanical_designs",
+        "project_delivery_change_logs",
+        "project_delivery_dependencies",
+    ]
+    missing_project_delivery_tables = [
+        table_name for table_name in project_delivery_tables if table_name not in tables
+    ]
+    if missing_project_delivery_tables:
+        try:
+            import importlib
+
+            importlib.import_module("app.models.project_delivery")
+            metadata_tables = [
+                Base.metadata.tables[table_name]
+                for table_name in missing_project_delivery_tables
+                if table_name in Base.metadata.tables
+            ]
+            if metadata_tables:
+                Base.metadata.create_all(bind=engine, tables=metadata_tables)
+                inspector = inspect(engine)
+                tables = inspector.get_table_names()
+        except Exception:
+            logger.debug("project_delivery 表补丁跳过", exc_info=True)
+
+    optional_model_modules = [
+        "app.models.project",
+        "app.models.user",
+        "app.models.ecn.material_impact",
+        "app.models.ecn.cost_record",
+        "app.models.project_template_config",
+        "app.models.project_requirements",
+    ]
+    optional_tables = [
+        "ecn_material_dispositions",
+        "ecn_execution_progress",
+        "ecn_stakeholders",
+        "ecn_cost_records",
+        "project_template_configs",
+        "stage_configs",
+        "node_configs",
+        "project_requirements",
+        "engineer_recommendations",
+    ]
+    missing_optional_tables = [
+        table_name for table_name in optional_tables if table_name not in tables
+    ]
+    if missing_optional_tables:
+        try:
+            import importlib
+
+            for module_name in optional_model_modules:
+                importlib.import_module(module_name)
+            metadata_tables = [
+                Base.metadata.tables[table_name]
+                for table_name in missing_optional_tables
+                if table_name in Base.metadata.tables
+            ]
+            if metadata_tables:
+                Base.metadata.create_all(bind=engine, tables=metadata_tables)
+                inspector = inspect(engine)
+                tables = inspector.get_table_names()
+        except Exception:
+            logger.debug("ECN/模板配置历史表补丁跳过", exc_info=True)
 
     # Many models use TimestampMixin (created_at/updated_at). Historical SQLite
     # databases or hand-written migration scripts may omit these columns for
@@ -118,9 +439,13 @@ def _ensure_sqlite_schema(engine):
 
         statements = []
         if "created_at" not in columns:
-            statements.append(f"ALTER TABLE {table_name} ADD COLUMN created_at DATETIME")
+            statements.append(
+                f"ALTER TABLE {table_name} ADD COLUMN created_at DATETIME"
+            )
         if "updated_at" not in columns:
-            statements.append(f"ALTER TABLE {table_name} ADD COLUMN updated_at DATETIME")
+            statements.append(
+                f"ALTER TABLE {table_name} ADD COLUMN updated_at DATETIME"
+            )
 
         if statements:
             with engine.begin() as conn:
@@ -136,7 +461,11 @@ def _ensure_sqlite_schema(engine):
             columns = [col["name"] for col in inspector.get_columns("project_statuses")]
             if "updated_at" not in columns:
                 with engine.begin() as conn:
-                    conn.execute(text("ALTER TABLE project_statuses ADD COLUMN updated_at DATETIME"))
+                    conn.execute(
+                        text(
+                            "ALTER TABLE project_statuses ADD COLUMN updated_at DATETIME"
+                        )
+                    )
         except Exception:
             # Column already exists or table cannot be altered
             logger.debug("project_statuses 列补丁跳过", exc_info=True)
@@ -145,14 +474,121 @@ def _ensure_sqlite_schema(engine):
         if "is_active" not in columns:
             with engine.begin() as conn:
                 conn.execute(
-                    text("ALTER TABLE task_unified " "ADD COLUMN is_active BOOLEAN DEFAULT 1")
+                    text(
+                        "ALTER TABLE task_unified "
+                        "ADD COLUMN is_active BOOLEAN DEFAULT 1"
+                    )
                 )
+
+    if "project_costs" in tables:
+        try:
+            columns = [col["name"] for col in inspector.get_columns("project_costs")]
+            with engine.begin() as conn:
+                if "cost_basis" not in columns:
+                    conn.execute(
+                        text(
+                            "ALTER TABLE project_costs "
+                            "ADD COLUMN cost_basis VARCHAR(20) DEFAULT 'ACTUAL'"
+                        )
+                    )
+                conn.execute(
+                    text(
+                        """
+                        UPDATE project_costs
+                        SET cost_basis = 'PLAN'
+                        WHERE UPPER(COALESCE(source_type, '')) = 'BOM_COST'
+                           OR UPPER(COALESCE(source_module, '')) = 'BOM'
+                        """
+                    )
+                )
+        except Exception:
+            logger.debug("project_costs 成本口径列补丁跳过", exc_info=True)
 
     if "api_permissions" in tables:
         columns = {col["name"] for col in inspector.get_columns("api_permissions")}
         if "group_id" not in columns:
             with engine.begin() as conn:
-                conn.execute(text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER"))
+                conn.execute(
+                    text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER")
+                )
+
+    if "role_templates" in tables:
+        columns = {col["name"] for col in inspector.get_columns("role_templates")}
+        statements = []
+        if "version" not in columns:
+            statements.append(
+                "ALTER TABLE role_templates ADD COLUMN version INTEGER DEFAULT 1"
+            )
+        if "version_note" not in columns:
+            statements.append(
+                "ALTER TABLE role_templates ADD COLUMN version_note VARCHAR(200)"
+            )
+        if "source_role_id" not in columns:
+            statements.append(
+                "ALTER TABLE role_templates ADD COLUMN source_role_id INTEGER"
+            )
+        if "source_role_name" not in columns:
+            statements.append(
+                "ALTER TABLE role_templates ADD COLUMN source_role_name VARCHAR(100)"
+            )
+        if "tenant_id" not in columns:
+            statements.append("ALTER TABLE role_templates ADD COLUMN tenant_id INTEGER")
+
+        if statements:
+            with engine.begin() as conn:
+                for ddl in statements:
+                    try:
+                        conn.execute(text(ddl))
+                    except Exception:
+                        logger.debug(
+                            "role_templates 版本/租户字段补丁跳过", exc_info=True
+                        )
+
+    if "project_reviews" in tables:
+        columns = {col["name"] for col in inspector.get_columns("project_reviews")}
+        statements = []
+        if "ai_generated_at" not in columns:
+            statements.append(
+                "ALTER TABLE project_reviews ADD COLUMN ai_generated_at DATETIME"
+            )
+        if "ai_summary" not in columns:
+            statements.append("ALTER TABLE project_reviews ADD COLUMN ai_summary TEXT")
+        if "ai_insights" not in columns:
+            statements.append("ALTER TABLE project_reviews ADD COLUMN ai_insights JSON")
+        if "ai_metadata" not in columns:
+            statements.append("ALTER TABLE project_reviews ADD COLUMN ai_metadata JSON")
+        if "quality_score" not in columns:
+            statements.append(
+                "ALTER TABLE project_reviews ADD COLUMN quality_score NUMERIC(5, 2)"
+            )
+
+        if statements:
+            with engine.begin() as conn:
+                for ddl in statements:
+                    try:
+                        conn.execute(text(ddl))
+                    except Exception:
+                        logger.debug("project_reviews AI 字段补丁跳过", exc_info=True)
+
+    if "project_lessons" in tables:
+        columns = {col["name"] for col in inspector.get_columns("project_lessons")}
+        statements = []
+        if "ai_extracted" not in columns:
+            statements.append(
+                "ALTER TABLE project_lessons ADD COLUMN ai_extracted BOOLEAN DEFAULT 0"
+            )
+        if "ai_confidence" not in columns:
+            statements.append(
+                "ALTER TABLE project_lessons ADD COLUMN ai_confidence NUMERIC(5, 4)"
+            )
+
+        if statements:
+            with engine.begin() as conn:
+                for ddl in statements:
+                    try:
+                        conn.execute(text(ddl))
+                    except Exception:
+                        logger.debug("project_lessons AI 字段补丁跳过", exc_info=True)
 
     if "alert_rules" in tables:
         columns = {col["name"] for col in inspector.get_columns("alert_rules")}
@@ -163,7 +599,9 @@ def _ensure_sqlite_schema(engine):
                 "ADD COLUMN enforcement_mode VARCHAR(20) DEFAULT 'WARN'"
             )
         if "is_active" not in columns:
-            statements.append("ALTER TABLE alert_rules ADD COLUMN is_active BOOLEAN DEFAULT 1")
+            statements.append(
+                "ALTER TABLE alert_rules ADD COLUMN is_active BOOLEAN DEFAULT 1"
+            )
 
         if statements:
             with engine.begin() as conn:
@@ -178,7 +616,9 @@ def _ensure_sqlite_schema(engine):
         if "department_id" not in columns:
             with engine.begin() as conn:
                 try:
-                    conn.execute(text("ALTER TABLE users ADD COLUMN department_id INTEGER"))
+                    conn.execute(
+                        text("ALTER TABLE users ADD COLUMN department_id INTEGER")
+                    )
                 except Exception:
                     logger.debug("users.department_id 列补丁跳过", exc_info=True)
 
@@ -186,7 +626,9 @@ def _ensure_sqlite_schema(engine):
         columns = {col["name"] for col in inspector.get_columns("projects")}
         statements = []
         if "kitting_rate" not in columns:
-            statements.append("ALTER TABLE projects ADD COLUMN kitting_rate NUMERIC(5, 1) DEFAULT 0")
+            statements.append(
+                "ALTER TABLE projects ADD COLUMN kitting_rate NUMERIC(5, 1) DEFAULT 0"
+            )
         if "material_status" not in columns:
             statements.append(
                 "ALTER TABLE projects ADD COLUMN material_status VARCHAR(20) DEFAULT '待采购'"
@@ -204,13 +646,131 @@ def _ensure_sqlite_schema(engine):
                     except Exception:
                         logger.debug("projects 物料字段补丁跳过", exc_info=True)
 
+    if "annual_key_works" in tables:
+        columns = {col["name"] for col in inspector.get_columns("annual_key_works")}
+        if "progress_description" not in columns:
+            with engine.begin() as conn:
+                try:
+                    conn.execute(
+                        text(
+                            "ALTER TABLE annual_key_works ADD COLUMN progress_description TEXT"
+                        )
+                    )
+                except Exception:
+                    logger.debug(
+                        "annual_key_works.progress_description 列补丁跳过",
+                        exc_info=True,
+                    )
+
+    if "annual_key_work_project_links" in tables:
+        columns = {
+            col["name"]
+            for col in inspector.get_columns("annual_key_work_project_links")
+        }
+        if "is_active" not in columns:
+            with engine.begin() as conn:
+                try:
+                    conn.execute(
+                        text(
+                            "ALTER TABLE annual_key_work_project_links "
+                            "ADD COLUMN is_active BOOLEAN DEFAULT 1"
+                        )
+                    )
+                except Exception:
+                    logger.debug(
+                        "annual_key_work_project_links.is_active 列补丁跳过",
+                        exc_info=True,
+                    )
+
+    if "bom_items" in tables:
+        columns = {col["name"] for col in inspector.get_columns("bom_items")}
+        statements = []
+        if "parent_item_id" not in columns:
+            statements.append("ALTER TABLE bom_items ADD COLUMN parent_item_id INTEGER")
+        if "material_id" not in columns:
+            statements.append("ALTER TABLE bom_items ADD COLUMN material_id INTEGER")
+        if "specification" not in columns:
+            statements.append(
+                "ALTER TABLE bom_items ADD COLUMN specification VARCHAR(500)"
+            )
+        if "drawing_no" not in columns:
+            statements.append(
+                "ALTER TABLE bom_items ADD COLUMN drawing_no VARCHAR(100)"
+            )
+        if "unit" not in columns:
+            statements.append(
+                "ALTER TABLE bom_items ADD COLUMN unit VARCHAR(20) DEFAULT '件'"
+            )
+        if "unit_price" not in columns:
+            statements.append(
+                "ALTER TABLE bom_items ADD COLUMN unit_price NUMERIC(12, 4) DEFAULT 0"
+            )
+        if "amount" not in columns:
+            statements.append(
+                "ALTER TABLE bom_items ADD COLUMN amount NUMERIC(14, 2) DEFAULT 0"
+            )
+        if "source_type" not in columns:
+            statements.append(
+                "ALTER TABLE bom_items ADD COLUMN source_type VARCHAR(20) DEFAULT 'PURCHASE'"
+            )
+        if "supplier_id" not in columns:
+            statements.append("ALTER TABLE bom_items ADD COLUMN supplier_id INTEGER")
+        if "required_date" not in columns:
+            statements.append("ALTER TABLE bom_items ADD COLUMN required_date DATE")
+        if "purchased_qty" not in columns:
+            statements.append(
+                "ALTER TABLE bom_items ADD COLUMN purchased_qty NUMERIC(10, 4) DEFAULT 0"
+            )
+        if "received_qty" not in columns:
+            statements.append(
+                "ALTER TABLE bom_items ADD COLUMN received_qty NUMERIC(10, 4) DEFAULT 0"
+            )
+        if "kitting_status" not in columns:
+            statements.append(
+                "ALTER TABLE bom_items ADD COLUMN kitting_status VARCHAR(20) DEFAULT 'PENDING'"
+            )
+        if "expected_arrival_date" not in columns:
+            statements.append(
+                "ALTER TABLE bom_items ADD COLUMN expected_arrival_date DATE"
+            )
+        if "actual_arrival_date" not in columns:
+            statements.append(
+                "ALTER TABLE bom_items ADD COLUMN actual_arrival_date DATE"
+            )
+        if "level" not in columns:
+            statements.append(
+                "ALTER TABLE bom_items ADD COLUMN level INTEGER DEFAULT 1"
+            )
+        if "sort_order" not in columns:
+            statements.append(
+                "ALTER TABLE bom_items ADD COLUMN sort_order INTEGER DEFAULT 0"
+            )
+        if "is_key_item" not in columns:
+            statements.append(
+                "ALTER TABLE bom_items ADD COLUMN is_key_item BOOLEAN DEFAULT 0"
+            )
+        if "remark" not in columns:
+            statements.append("ALTER TABLE bom_items ADD COLUMN remark TEXT")
+
+        if statements:
+            with engine.begin() as conn:
+                for ddl in statements:
+                    try:
+                        conn.execute(text(ddl))
+                    except Exception:
+                        logger.debug("bom_items 兼容字段补丁跳过", exc_info=True)
+
     if "stage_templates" in tables:
         columns = {col["name"] for col in inspector.get_columns("stage_templates")}
         statements = []
         if "updated_by" not in columns:
-            statements.append("ALTER TABLE stage_templates ADD COLUMN updated_by INTEGER")
+            statements.append(
+                "ALTER TABLE stage_templates ADD COLUMN updated_by INTEGER"
+            )
         if "change_description" not in columns:
-            statements.append("ALTER TABLE stage_templates ADD COLUMN change_description TEXT")
+            statements.append(
+                "ALTER TABLE stage_templates ADD COLUMN change_description TEXT"
+            )
 
         if statements:
             with engine.begin() as conn:
@@ -225,7 +785,9 @@ def _ensure_sqlite_schema(engine):
         if "delivery_date" not in columns:
             with engine.begin() as conn:
                 try:
-                    conn.execute(text("ALTER TABLE quotes ADD COLUMN delivery_date DATE"))
+                    conn.execute(
+                        text("ALTER TABLE quotes ADD COLUMN delivery_date DATE")
+                    )
                 except Exception:
                     logger.debug("quotes.delivery_date 列补丁跳过", exc_info=True)
 
@@ -233,9 +795,13 @@ def _ensure_sqlite_schema(engine):
         columns = {col["name"] for col in inspector.get_columns("quote_versions")}
         statements = []
         if "presale_solution_id" not in columns:
-            statements.append("ALTER TABLE quote_versions ADD COLUMN presale_solution_id INTEGER")
+            statements.append(
+                "ALTER TABLE quote_versions ADD COLUMN presale_solution_id INTEGER"
+            )
         if "presale_ticket_id" not in columns:
-            statements.append("ALTER TABLE quote_versions ADD COLUMN presale_ticket_id INTEGER")
+            statements.append(
+                "ALTER TABLE quote_versions ADD COLUMN presale_ticket_id INTEGER"
+            )
 
         with engine.begin() as conn:
             for ddl in statements:
@@ -255,12 +821,18 @@ def _ensure_sqlite_schema(engine):
                     logger.debug("quote_versions 售前上下文索引补丁跳过", exc_info=True)
 
     if "technical_assessments" in tables:
-        columns = {col["name"] for col in inspector.get_columns("technical_assessments")}
+        columns = {
+            col["name"] for col in inspector.get_columns("technical_assessments")
+        }
         statements = []
         if "presale_ticket_id" not in columns:
-            statements.append("ALTER TABLE technical_assessments ADD COLUMN presale_ticket_id INTEGER")
+            statements.append(
+                "ALTER TABLE technical_assessments ADD COLUMN presale_ticket_id INTEGER"
+            )
         if "template_id" not in columns:
-            statements.append("ALTER TABLE technical_assessments ADD COLUMN template_id INTEGER")
+            statements.append(
+                "ALTER TABLE technical_assessments ADD COLUMN template_id INTEGER"
+            )
         if "version_no" not in columns:
             statements.append(
                 "ALTER TABLE technical_assessments ADD COLUMN version_no VARCHAR(20) DEFAULT 'V1.0'"
@@ -274,7 +846,9 @@ def _ensure_sqlite_schema(engine):
                 "ALTER TABLE technical_assessments ADD COLUMN previous_version_id INTEGER"
             )
         if "item_scores" not in columns:
-            statements.append("ALTER TABLE technical_assessments ADD COLUMN item_scores TEXT")
+            statements.append(
+                "ALTER TABLE technical_assessments ADD COLUMN item_scores TEXT"
+            )
 
         if statements:
             with engine.begin() as conn:
@@ -296,6 +870,133 @@ def _ensure_sqlite_schema(engine):
                 except Exception:
                     logger.debug("technical_assessments 索引补丁跳过", exc_info=True)
 
+    if "presale_tender_record" in tables:
+        columns = {
+            col["name"] for col in inspector.get_columns("presale_tender_record")
+        }
+        statements = []
+        if "project_id" not in columns:
+            statements.append(
+                "ALTER TABLE presale_tender_record ADD COLUMN project_id INTEGER"
+            )
+
+        with engine.begin() as conn:
+            for ddl in statements:
+                try:
+                    conn.execute(text(ddl))
+                except Exception:
+                    logger.debug(
+                        "presale_tender_record 项目字段补丁跳过", exc_info=True
+                    )
+            try:
+                conn.execute(
+                    text(
+                        "CREATE INDEX IF NOT EXISTS idx_tender_project "
+                        "ON presale_tender_record(project_id)"
+                    )
+                )
+            except Exception:
+                logger.debug("presale_tender_record 项目索引补丁跳过", exc_info=True)
+
+    if "presale_ticket_deliverable" in tables:
+        columns = {
+            col["name"] for col in inspector.get_columns("presale_ticket_deliverable")
+        }
+        if "is_required" not in columns:
+            with engine.begin() as conn:
+                try:
+                    conn.execute(
+                        text(
+                            "ALTER TABLE presale_ticket_deliverable "
+                            "ADD COLUMN is_required BOOLEAN DEFAULT 1"
+                        )
+                    )
+                except Exception:
+                    logger.debug(
+                        "presale_ticket_deliverable 必交标记补丁跳过", exc_info=True
+                    )
+
+    if "presale_expenses" in tables:
+        columns = {col["name"] for col in inspector.get_columns("presale_expenses")}
+        statements = []
+        if "ticket_id" not in columns:
+            statements.append(
+                "ALTER TABLE presale_expenses ADD COLUMN ticket_id INTEGER"
+            )
+        if "approval_status" not in columns:
+            statements.append(
+                "ALTER TABLE presale_expenses "
+                "ADD COLUMN approval_status VARCHAR(20) DEFAULT 'PENDING'"
+            )
+        if "approved_by" not in columns:
+            statements.append(
+                "ALTER TABLE presale_expenses ADD COLUMN approved_by INTEGER"
+            )
+        if "approved_at" not in columns:
+            statements.append(
+                "ALTER TABLE presale_expenses ADD COLUMN approved_at DATETIME"
+            )
+        if "approval_note" not in columns:
+            statements.append(
+                "ALTER TABLE presale_expenses ADD COLUMN approval_note TEXT"
+            )
+
+        with engine.begin() as conn:
+            for ddl in statements:
+                try:
+                    conn.execute(text(ddl))
+                except Exception:
+                    logger.debug("presale_expenses 审批字段补丁跳过", exc_info=True)
+            for ddl in (
+                "CREATE INDEX IF NOT EXISTS idx_presale_expense_ticket "
+                "ON presale_expenses(ticket_id)",
+                "CREATE INDEX IF NOT EXISTS idx_presale_expense_approval_status "
+                "ON presale_expenses(approval_status)",
+            ):
+                try:
+                    conn.execute(text(ddl))
+                except Exception:
+                    logger.debug("presale_expenses 索引补丁跳过", exc_info=True)
+
+    if "ecn" in tables:
+        columns = {col["name"] for col in inspector.get_columns("ecn")}
+        statements = []
+        if "applicant_name" not in columns:
+            statements.append("ALTER TABLE ecn ADD COLUMN applicant_name VARCHAR(50)")
+        if "approval_instance_id" not in columns:
+            statements.append("ALTER TABLE ecn ADD COLUMN approval_instance_id INTEGER")
+        if "approval_status" not in columns:
+            statements.append("ALTER TABLE ecn ADD COLUMN approval_status VARCHAR(20)")
+        if "approval_date" not in columns:
+            statements.append("ALTER TABLE ecn ADD COLUMN approval_date DATETIME")
+        if "final_approver_id" not in columns:
+            statements.append("ALTER TABLE ecn ADD COLUMN final_approver_id INTEGER")
+        if "impact_analysis" not in columns:
+            statements.append("ALTER TABLE ecn ADD COLUMN impact_analysis TEXT")
+
+        if statements:
+            with engine.begin() as conn:
+                for ddl in statements:
+                    try:
+                        conn.execute(text(ddl))
+                    except Exception:
+                        logger.debug("ecn 审批兼容列补丁跳过", exc_info=True)
+
+    if "ecn_approval_matrix" in tables:
+        columns = {col["name"] for col in inspector.get_columns("ecn_approval_matrix")}
+        if "condition_type" in columns:
+            with engine.begin() as conn:
+                try:
+                    conn.execute(
+                        text(
+                            "UPDATE ecn_approval_matrix "
+                            "SET condition_type = 'ALWAYS' "
+                            "WHERE condition_type IS NULL OR condition_type = ''"
+                        )
+                    )
+                except Exception:
+                    logger.debug("ecn_approval_matrix 条件类型回填跳过", exc_info=True)
+
     if "report_template" in tables:
         columns = {col["name"] for col in inspector.get_columns("report_template")}
         if "name" in columns and "template_name" in columns:
@@ -313,7 +1014,9 @@ def _ensure_sqlite_schema(engine):
                     logger.debug("report_template.name 数据回填跳过", exc_info=True)
 
     if "engineer_dimension_config" in tables:
-        columns = {col["name"] for col in inspector.get_columns("engineer_dimension_config")}
+        columns = {
+            col["name"] for col in inspector.get_columns("engineer_dimension_config")
+        }
         statements = []
         if "department_id" not in columns:
             statements.append(
@@ -321,7 +1024,8 @@ def _ensure_sqlite_schema(engine):
             )
         if "is_global" not in columns:
             statements.append(
-                "ALTER TABLE engineer_dimension_config " "ADD COLUMN is_global BOOLEAN DEFAULT 1"
+                "ALTER TABLE engineer_dimension_config "
+                "ADD COLUMN is_global BOOLEAN DEFAULT 1"
             )
         if "approval_status" not in columns:
             statements.append(
@@ -339,13 +1043,17 @@ def _ensure_sqlite_schema(engine):
                     try:
                         conn.execute(text(ddl))
                     except Exception:
-                        logger.debug("engineer_dimension_config 列补丁跳过", exc_info=True)
+                        logger.debug(
+                            "engineer_dimension_config 列补丁跳过", exc_info=True
+                        )
 
 
 class TimestampMixin:
     """时间戳混入类，提供创建时间和更新时间字段"""
 
-    created_at = Column(DateTime, default=datetime.now, nullable=False, comment="创建时间")
+    created_at = Column(
+        DateTime, default=datetime.now, nullable=False, comment="创建时间"
+    )
     updated_at = Column(
         DateTime,
         default=datetime.now,
@@ -513,7 +1221,9 @@ def get_engine(database_url: Optional[str] = None, echo: bool = False):
             cursor.execute("PRAGMA journal_mode=WAL")
             cursor.execute("PRAGMA busy_timeout=5000")
             # 设置临时文件目录为数据库所在目录，避免 macOS 权限问题
-            cursor.execute("PRAGMA temp_store_directory = ''")  # 空字符串表示使用默认位置
+            cursor.execute(
+                "PRAGMA temp_store_directory = ''"
+            )  # 空字符串表示使用默认位置
             cursor.execute("PRAGMA temp_store = MEMORY")  # 使用内存存储临时数据
             cursor.close()
 

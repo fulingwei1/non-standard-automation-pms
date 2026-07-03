@@ -87,7 +87,8 @@ class InstallationDispatchOrderResponse(BaseModel):
     project_name: Optional[str] = None
     project_code: Optional[str] = None
     machine_id: Optional[int] = None
-    machine_no: Optional[str] = None
+    machine_no: Optional[int] = None
+    machine_name: Optional[str] = None
     customer_id: int
     customer_name: Optional[str] = None
     task_type: str

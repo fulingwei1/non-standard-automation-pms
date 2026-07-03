@@ -28,7 +28,10 @@ from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.utils.permission_helpers import check_project_access_or_raise
+from app.utils.permission_helpers import (
+    check_project_access_or_raise,
+    check_project_read_access_or_raise,
+)
 
 ModelType = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -53,6 +56,7 @@ def create_project_crud_router(
     after_update: Optional[Callable] = None,
     before_delete: Optional[Callable] = None,
     after_delete: Optional[Callable] = None,
+    read_with_project_access: bool = False,
 ) -> APIRouter:
     """
     创建项目中心CRUD路由
@@ -74,6 +78,7 @@ def create_project_crud_router(
         after_update: 更新后钩子函数
         before_delete: 删除前钩子函数
         after_delete: 删除后钩子函数
+        read_with_project_access: GET列表/详情是否只要求当前用户可读该项目
 
     Returns:
         APIRouter实例
@@ -93,6 +98,17 @@ def create_project_crud_router(
     if not project_id_attr:
         raise ValueError(f"模型 {model.__name__} 没有字段 {project_id_field}")
 
+    read_dependency = (
+        security.get_current_active_user
+        if read_with_project_access
+        else security.require_permission(f"{permission_prefix}:read")
+    )
+    read_project_checker = (
+        check_project_read_access_or_raise
+        if read_with_project_access
+        else check_project_access_or_raise
+    )
+
     @router.get("/", response_model=PaginatedResponse[response_schema])
     def list_items(
         request: Request,  # FastAPI自动注入，必须放在最前面
@@ -102,12 +118,12 @@ def create_project_crud_router(
         keyword: Optional[str] = Query(None, description="关键词搜索"),
         order_by: Optional[str] = Query(None, description="排序字段"),
         order_direction: Optional[str] = Query("desc", description="排序方向 (asc/desc)"),
-        current_user: User = Depends(security.require_permission(f"{permission_prefix}:read")),
+        current_user: User = Depends(read_dependency),
     ) -> Any:
         """获取项目子资源列表"""
 
         # 检查项目访问权限
-        check_project_access_or_raise(db, current_user, project_id)
+        read_project_checker(db, current_user, project_id)
 
         # 构建基础查询
         query = db.query(model).filter(project_id_attr == project_id)
@@ -202,11 +218,11 @@ def create_project_crud_router(
         project_id: int = Path(..., description="项目ID"),
         item_id: int = Path(..., description="资源ID"),
         db: Session = Depends(deps.get_db),
-        current_user: User = Depends(security.require_permission(f"{permission_prefix}:read")),
+        current_user: User = Depends(read_dependency),
     ) -> Any:
         """获取项目子资源详情"""
         # 检查项目访问权限
-        check_project_access_or_raise(db, current_user, project_id)
+        read_project_checker(db, current_user, project_id)
 
         # 查询对象（必须属于该项目）
         item = db.query(model).filter(model.id == item_id, project_id_attr == project_id).first()

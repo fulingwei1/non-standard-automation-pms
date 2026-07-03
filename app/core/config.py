@@ -13,6 +13,35 @@ from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _preload_env_files() -> None:
+    """将 .env / .env.local 灌入 os.environ（无依赖）。
+
+    修复：AI 等服务用 os.getenv 读取密钥，但项目无 load_dotenv，pydantic 的 env_file
+    只填充 Settings 对象、不进 os.environ，导致这些密钥在运行时读不到（一直走 mock）。
+    setdefault 保证已导出的真实环境变量优先，不被文件值覆盖。
+    """
+    root = Path(__file__).resolve().parents[2]
+    for fname in (".env", ".env.local"):
+        fp = root / fname
+        if not fp.exists():
+            continue
+        try:
+            for line in fp.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, val = line.split("=", 1)
+                key = key.strip()
+                val = val.strip().strip('"').strip("'")
+                if key:
+                    os.environ.setdefault(key, val)
+        except Exception:
+            pass
+
+
+_preload_env_files()
+
+
 class Settings(BaseSettings):
     """应用配置类"""
 
@@ -221,6 +250,16 @@ class Settings(BaseSettings):
     KIMI_TEMPERATURE: float = 0.7  # 温度参数，控制随机性
     KIMI_TIMEOUT: int = 30  # 请求超时时间（秒）
     KIMI_ENABLED: bool = False  # 是否启用Kimi AI功能
+
+    # 阿里百炼 Coding Plan (通义千问) 配置
+    ALIBABA_API_KEY: Optional[str] = None  # 百炼 Coding Plan 专属 API Key
+    ALIBABA_BASE_URL: str = "https://coding.dashscope.aliyuncs.com/v1"  # 专属 Base URL
+    ALIBABA_MODEL: str = "qwen3.7-plus"  # 套餐可用模型（默认推理模型）
+    ALIBABA_FAST_MODEL: str = "qwen3-coder-plus"  # 快模型（结构化任务/超时降级）
+    ALIBABA_TIMEOUT: float = 300.0  # AI 调用统一超时（秒，默认5分钟）
+
+    # 立项关卡：提交立项评审前是否强制要求售前技术评估（True=强制/False=仅提示）
+    PMO_REQUIRE_PRESALE_ASSESSMENT: bool = True
 
     # GLM (智谱AI) 配置
     GLM_API_KEY: Optional[str] = None  # GLM API Key

@@ -3,6 +3,7 @@
 战略管理 API 端点 - 同比分析
 """
 
+import json
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -21,6 +22,65 @@ from app.services import strategy as strategy_service
 router = APIRouter()
 
 
+def _json_list(value):
+    if value in (None, ""):
+        return None
+    if isinstance(value, list):
+        return value
+    try:
+        parsed = json.loads(value)
+    except (TypeError, json.JSONDecodeError):
+        return None
+    return parsed if isinstance(parsed, list) else None
+
+
+def _comparison_response(comparison) -> StrategyComparisonResponse:
+    return StrategyComparisonResponse(
+        id=comparison.id,
+        current_strategy_id=comparison.current_strategy_id,
+        previous_strategy_id=comparison.previous_strategy_id,
+        current_year=comparison.current_year,
+        previous_year=comparison.previous_year,
+        generated_date=comparison.generated_date,
+        generated_by=comparison.generated_by,
+        current_health_score=comparison.current_health_score,
+        previous_health_score=comparison.previous_health_score,
+        health_change=comparison.health_change,
+        current_financial_score=comparison.current_financial_score,
+        previous_financial_score=comparison.previous_financial_score,
+        financial_change=comparison.financial_change,
+        current_customer_score=comparison.current_customer_score,
+        previous_customer_score=comparison.previous_customer_score,
+        customer_change=comparison.customer_change,
+        current_internal_score=comparison.current_internal_score,
+        previous_internal_score=comparison.previous_internal_score,
+        internal_change=comparison.internal_change,
+        current_learning_score=comparison.current_learning_score,
+        previous_learning_score=comparison.previous_learning_score,
+        learning_change=comparison.learning_change,
+        kpi_completion_rate=comparison.kpi_completion_rate,
+        previous_kpi_completion_rate=comparison.previous_kpi_completion_rate,
+        kpi_completion_change=comparison.kpi_completion_change,
+        work_completion_rate=comparison.work_completion_rate,
+        previous_work_completion_rate=comparison.previous_work_completion_rate,
+        work_completion_change=comparison.work_completion_change,
+        summary=comparison.summary,
+        highlights=_json_list(comparison.highlights),
+        improvements=_json_list(comparison.improvements),
+        recommendations=_json_list(comparison.recommendations),
+        is_active=True if comparison.is_active is None else comparison.is_active,
+        generator_name=comparison.generator.display_name if comparison.generator else None,
+        current_strategy_name=(
+            comparison.current_strategy.name if comparison.current_strategy else None
+        ),
+        previous_strategy_name=(
+            comparison.previous_strategy.name if comparison.previous_strategy else None
+        ),
+        created_at=comparison.created_at,
+        updated_at=comparison.updated_at,
+    )
+
+
 @router.post("", response_model=StrategyComparisonResponse, status_code=status.HTTP_201_CREATED)
 def create_comparison(
     data: StrategyComparisonCreate,
@@ -31,19 +91,7 @@ def create_comparison(
     创建战略对比记录
     """
     comparison = strategy_service.create_strategy_comparison(db, data, current_user.id)
-    return StrategyComparisonResponse(
-        id=comparison.id,
-        current_strategy_id=comparison.current_strategy_id,
-        previous_strategy_id=comparison.previous_strategy_id,
-        comparison_type=comparison.comparison_type,
-        base_year=comparison.base_year,
-        compare_year=comparison.compare_year,
-        summary=comparison.summary,
-        created_by=comparison.created_by,
-        is_active=comparison.is_active,
-        created_at=comparison.created_at,
-        updated_at=comparison.updated_at,
-    )
+    return _comparison_response(comparison)
 
 
 @router.get("", response_model=PageResponse[StrategyComparisonResponse])
@@ -59,22 +107,7 @@ def list_comparisons(
         db, current_strategy_id, pagination.offset, pagination.limit
     )
 
-    responses = [
-        StrategyComparisonResponse(
-            id=c.id,
-            current_strategy_id=c.current_strategy_id,
-            previous_strategy_id=c.previous_strategy_id,
-            comparison_type=c.comparison_type,
-            base_year=c.base_year,
-            compare_year=c.compare_year,
-            summary=c.summary,
-            created_by=c.created_by,
-            is_active=c.is_active,
-            created_at=c.created_at,
-            updated_at=c.updated_at,
-        )
-        for c in items
-    ]
+    responses = [_comparison_response(c) for c in items]
 
     return PageResponse(
         items=responses,
@@ -131,19 +164,7 @@ def get_comparison(
     if not comparison:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="对比记录不存在")
 
-    return StrategyComparisonResponse(
-        id=comparison.id,
-        current_strategy_id=comparison.current_strategy_id,
-        previous_strategy_id=comparison.previous_strategy_id,
-        comparison_type=comparison.comparison_type,
-        base_year=comparison.base_year,
-        compare_year=comparison.compare_year,
-        summary=comparison.summary,
-        created_by=comparison.created_by,
-        is_active=comparison.is_active,
-        created_at=comparison.created_at,
-        updated_at=comparison.updated_at,
-    )
+    return StrategyComparisonResponse.model_validate(comparison)
 
 
 @router.delete("/{comparison_id}", status_code=status.HTTP_204_NO_CONTENT)

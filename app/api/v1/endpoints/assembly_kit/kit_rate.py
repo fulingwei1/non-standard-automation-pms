@@ -16,6 +16,22 @@ from app.services.assembly_kit_service import AssemblyKitService
 router = APIRouter()
 
 
+def _empty_time_based_kit_rate(project_id: int, message: str | None = None) -> dict[str, Any]:
+    return {
+        "project_id": project_id,
+        "summary": {
+            "total_shortage_items": 0,
+            "total_urgent_items": 0,
+            "l1_count": 0,
+            "l2_count": 0,
+        },
+        "stages": [],
+        "stage_analysis": [],
+        "alerts": [],
+        "message": message or "暂无已发布 BOM，暂不能计算时间齐套预警",
+    }
+
+
 @router.get("/stages", summary="获取装配阶段定义")
 def get_assembly_stages(
     db: Session = Depends(deps.get_db),
@@ -149,6 +165,8 @@ def calculate_time_based_kit_rate(
     )
 
     if "error" in result:
+        if "BOM" in str(result["error"]):
+            return _empty_time_based_kit_rate(project_id, str(result["error"]))
         raise HTTPException(status_code=404, detail=result["error"])
 
     return result

@@ -5,6 +5,7 @@
 协调多个数据源，获取报告所需的所有数据
 """
 
+from importlib import import_module
 from typing import Any, Dict, Type
 
 from sqlalchemy.orm import Session
@@ -100,6 +101,9 @@ class DataResolver:
             ds_type = DataSourceType(ds_type)
 
         # 获取数据源类
+        if ds_type == DataSourceType.ADAPTER:
+            return self._resolve_adapter(config, params)
+
         ds_class = self.DATA_SOURCE_TYPES.get(ds_type)
         if not ds_class:
             raise DataSourceError(f"Unsupported data source type: {ds_type}")
@@ -112,6 +116,31 @@ class DataResolver:
 
         # 获取数据
         return ds_instance.fetch(merged_params)
+
+    def _resolve_adapter(
+        self,
+        config: DataSourceConfig,
+        params: Dict[str, Any],
+    ) -> Any:
+        """调用报表适配器数据源。"""
+        if not config.adapter:
+            raise DataSourceError("Adapter data source requires adapter name")
+
+        try:
+            adapters_module = import_module("app.services.report_framework.adapters")
+            adapter_class = getattr(adapters_module, config.adapter)
+        except (ImportError, AttributeError) as e:
+            raise DataSourceError(f"Unknown report adapter: {config.adapter}") from e
+
+        adapter = adapter_class(self.db)
+        merged_params = {**config.args, **params}
+
+        if hasattr(adapter, "generate_data"):
+            return adapter.generate_data(merged_params)
+        if hasattr(adapter, "fetch_data"):
+            return adapter.fetch_data(merged_params)
+
+        raise DataSourceError(f"Report adapter has no data method: {config.adapter}")
 
     def _resolve_config_expressions(
         self,

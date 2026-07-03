@@ -10,6 +10,7 @@
 """
 
 import logging
+from datetime import datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -18,6 +19,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.sales import Quote
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.quote_approval import QuoteApprovalService
@@ -41,6 +43,7 @@ class QuoteApproveRejectRequest(BaseModel):
     """审批通过/驳回请求"""
 
     comment: Optional[str] = Field(None, description="审批意见")
+    remark: Optional[str] = Field(None, description="兼容旧字段：审批意见")
 
 
 # ==================== API 端点 ====================
@@ -140,7 +143,17 @@ def approve_quote(
     task_id = _find_task_for_quote(pending, quote_id)
 
     if not task_id:
-        raise HTTPException(status_code=404, detail="未找到该报价的待审批任务")
+        quote = db.query(Quote).filter(Quote.id == quote_id).first()
+        if not quote:
+            raise HTTPException(status_code=404, detail="报价不存在")
+        if not _can_direct_approve_funnel_quote(quote):
+            raise HTTPException(status_code=404, detail="未找到该报价的待审批任务")
+        return _approve_quote_directly(
+            db=db,
+            quote=quote,
+            approver_id=current_user.id,
+            comment=request.comment or request.remark,
+        )
 
     try:
         service.perform_action(
@@ -217,3 +230,40 @@ def _find_task_for_quote(pending_result: dict, quote_id: int) -> Optional[int]:
         if entity_id == quote_id:
             return item.get("task_id") or item.get("id")
     return None
+
+
+def _approve_quote_directly(
+    *,
+    db: Session,
+    quote: Quote,
+    approver_id: int,
+    comment: Optional[str] = None,
+) -> ResponseModel:
+    """无待办任务时的单据级便捷审批兜底。"""
+    quote.status = "APPROVED"
+    if quote.current_version:
+        quote.current_version.approved_by = approver_id
+        quote.current_version.approved_at = datetime.now()
+    db.commit()
+
+    logger.info("报价 %s 已直接审批通过, 操作人: %s", quote.id, approver_id)
+
+    return ResponseModel(
+        code=200,
+        message="报价审批通过",
+        data={
+            "quote_id": quote.id,
+            "task_id": None,
+            "direct_approval": True,
+            "comment": comment,
+        },
+    )
+
+
+def _can_direct_approve_funnel_quote(quote: Quote) -> bool:
+    """仅允许漏斗 G2 自动生成的报价使用无任务便捷审批兜底。"""
+    return bool(
+        quote.quote_code
+        and quote.quote_code.startswith("QT")
+        and quote.status in {"DRAFT", "REJECTED", "SUBMITTED", "PENDING_APPROVAL"}
+    )

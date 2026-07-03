@@ -8,8 +8,7 @@
 
 import logging
 from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
@@ -28,6 +27,7 @@ from app.models.project.team import ProjectMember
 from app.models.project_risk import ProjectRisk, RiskStatusEnum, RiskTypeEnum
 from app.models.purchase import PurchaseOrder
 from app.schemas.auto_risk import AutoRiskItem, AutoRiskScanResult, AutoRiskType
+from app.services.cost.cost_basis import actual_project_cost_filter
 from app.utils.db_helpers import get_or_404, save_obj
 
 logger = logging.getLogger(__name__)
@@ -107,7 +107,9 @@ class AutoRiskService:
                     items = detector(project)
                     detected.extend(items)
                 except Exception:
-                    logger.exception("检测 %s 风险时出错, project_id=%s", cat, project_id)
+                    logger.exception(
+                        "检测 %s 风险时出错, project_id=%s", cat, project_id
+                    )
 
         # 过滤低置信度
         detected = [r for r in detected if r.confidence >= min_confidence]
@@ -321,21 +323,19 @@ class AutoRiskService:
         recent_cost = (
             self.db.query(func.coalesce(func.sum(ProjectCost.amount), 0))
             .filter(
-                and_(
-                    ProjectCost.project_id == project.id,
-                    ProjectCost.cost_date >= d30,
-                )
+                ProjectCost.project_id == project.id,
+                ProjectCost.cost_date >= d30,
+                actual_project_cost_filter(),
             )
             .scalar()
         )
         prev_cost = (
             self.db.query(func.coalesce(func.sum(ProjectCost.amount), 0))
             .filter(
-                and_(
-                    ProjectCost.project_id == project.id,
-                    ProjectCost.cost_date >= d60,
-                    ProjectCost.cost_date < d30,
-                )
+                ProjectCost.project_id == project.id,
+                ProjectCost.cost_date >= d60,
+                ProjectCost.cost_date < d30,
+                actual_project_cost_filter(),
             )
             .scalar()
         )
@@ -487,9 +487,18 @@ class AutoRiskService:
             .all()
         }
         for conflict in unresolved_conflicts:
-            if conflict.plan_a_id in project_plan_ids or conflict.plan_b_id in project_plan_ids:
-                severity_score = {"LOW": 2, "MEDIUM": 3, "HIGH": 4}.get(conflict.severity, 2)
-                days_unresolved = (self.today - conflict.overlap_start).days if conflict.overlap_start <= self.today else 0
+            if (
+                conflict.plan_a_id in project_plan_ids
+                or conflict.plan_b_id in project_plan_ids
+            ):
+                severity_score = {"LOW": 2, "MEDIUM": 3, "HIGH": 4}.get(
+                    conflict.severity, 2
+                )
+                days_unresolved = (
+                    (self.today - conflict.overlap_start).days
+                    if conflict.overlap_start <= self.today
+                    else 0
+                )
                 confidence = min(0.6 + days_unresolved * 0.02, 0.95)
                 risks.append(
                     AutoRiskItem(
@@ -654,12 +663,28 @@ class AutoRiskService:
             .all()
         )
         if len(recent_acceptance) >= 2:
-            recent_items = [a for a in recent_acceptance if a.created_at >= datetime.combine(d30, datetime.min.time())]
-            prev_items = [a for a in recent_acceptance if a.created_at < datetime.combine(d30, datetime.min.time())]
+            recent_items = [
+                a
+                for a in recent_acceptance
+                if a.created_at >= datetime.combine(d30, datetime.min.time())
+            ]
+            prev_items = [
+                a
+                for a in recent_acceptance
+                if a.created_at < datetime.combine(d30, datetime.min.time())
+            ]
 
             if recent_items and prev_items:
-                recent_pass = sum(1 for a in recent_items if a.status == "PASSED") / len(recent_items) * 100
-                prev_pass = sum(1 for a in prev_items if a.status == "PASSED") / len(prev_items) * 100
+                recent_pass = (
+                    sum(1 for a in recent_items if a.status == "PASSED")
+                    / len(recent_items)
+                    * 100
+                )
+                prev_pass = (
+                    sum(1 for a in prev_items if a.status == "PASSED")
+                    / len(prev_items)
+                    * 100
+                )
 
                 if prev_pass > 0 and recent_pass < prev_pass * 0.8:
                     drop = prev_pass - recent_pass
@@ -698,7 +723,9 @@ class AutoRiskService:
             .filter(
                 and_(
                     ProjectRisk.project_id == project_id,
-                    ProjectRisk.status.notin_([RiskStatusEnum.CLOSED, RiskStatusEnum.MITIGATED]),
+                    ProjectRisk.status.notin_(
+                        [RiskStatusEnum.CLOSED, RiskStatusEnum.MITIGATED]
+                    ),
                     ProjectRisk.description.like("%[系统识别]%"),
                 )
             )

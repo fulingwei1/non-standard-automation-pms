@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .common import PaginatedResponse, TimestampSchema
 
@@ -148,6 +148,26 @@ class TaskCommentResponse(BaseModel):
     mentioned_users: Optional[List[int]] = None
     created_at: datetime
     replies: Optional[List["TaskCommentResponse"]] = None
+
+    @field_validator("content", mode="before")
+    @classmethod
+    def _default_content(cls, value):
+        return "" if value is None else value
+
+    @field_validator("comment_type", mode="before")
+    @classmethod
+    def _default_comment_type(cls, value):
+        return "COMMENT" if value in (None, "") else value
+
+    @field_validator("commenter_id", mode="before")
+    @classmethod
+    def _default_commenter_id(cls, value):
+        return 0 if value is None else value
+
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def _default_created_at(cls, value):
+        return datetime.now() if value is None else value
 
 
 # ==================== 批量操作 ====================

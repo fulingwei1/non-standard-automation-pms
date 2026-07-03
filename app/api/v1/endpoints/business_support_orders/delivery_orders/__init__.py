@@ -11,5 +11,5 @@ from . import crud, statistics
 router = APIRouter()
 
 # 聚合所有子模块的路由
-router.include_router(crud.router)
 router.include_router(statistics.router)
+router.include_router(crud.router)

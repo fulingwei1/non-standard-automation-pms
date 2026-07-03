@@ -277,6 +277,7 @@ def get_department_users(
 
     user_responses = []
     for u in users:
+        user_roles = u.roles.all() if hasattr(u.roles, "all") else list(u.roles or [])
         user_dict = {
             "id": u.id,
             "username": u.username,
@@ -293,8 +294,12 @@ def get_department_users(
             "last_login_at": u.last_login_at,
             "created_at": u.created_at,
             "updated_at": u.updated_at,
-            "roles": [ur.role.role_name for ur in u.user_roles] if u.user_roles else [],
-            "role_ids": [ur.role_id for ur in u.user_roles] if u.user_roles else [],
+            "roles": [
+                getattr(ur.role, "role_name", None) or getattr(ur.role, "role_code", "")
+                for ur in user_roles
+                if getattr(ur, "role", None)
+            ],
+            "role_ids": [ur.role_id for ur in user_roles],
             "permissions": [],
         }
         user_responses.append(UserResponse(**user_dict))

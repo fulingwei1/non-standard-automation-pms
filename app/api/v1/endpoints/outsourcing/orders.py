@@ -52,6 +52,14 @@ generate_delivery_no = outsourcing_codes.generate_delivery_no
 generate_inspection_no = outsourcing_codes.generate_inspection_no
 
 
+def _vendor_name_or_default(vendor: Optional[Vendor]) -> str:
+    return vendor.supplier_name if vendor and vendor.supplier_name else "未指定"
+
+
+def _status_or_default(value: Optional[str], default: str) -> str:
+    return value or default
+
+
 # NOTE: keep flat routes (no extra prefix) to preserve the original API paths.
 # 共 6 个路由
 
@@ -109,14 +117,14 @@ def read_outsourcing_orders(
             OutsourcingOrderListResponse(
                 id=order.id,
                 order_no=order.order_no,
-                vendor_name=vendor.supplier_name if vendor else None,
+                vendor_name=_vendor_name_or_default(vendor),
                 project_name=project.project_name if project else None,
                 order_type=order.order_type,
                 order_title=order.order_title,
                 amount_with_tax=order.amount_with_tax or Decimal("0"),
                 required_date=order.required_date,
-                status=order.status,
-                payment_status=order.payment_status,
+                status=_status_or_default(order.status, "DRAFT"),
+                payment_status=_status_or_default(order.payment_status, "UNPAID"),
                 created_at=order.created_at,
             )
         )
@@ -183,7 +191,7 @@ def read_outsourcing_order(
         id=order.id,
         order_no=order.order_no,
         vendor_id=order.vendor_id,
-        vendor_name=vendor.supplier_name if vendor else None,
+        vendor_name=_vendor_name_or_default(vendor),
         project_id=order.project_id,
         project_name=project.project_name if project else None,
         machine_id=order.machine_id,
@@ -197,8 +205,8 @@ def read_outsourcing_order(
         required_date=order.required_date,
         estimated_date=order.estimated_date,
         actual_date=order.actual_date,
-        status=order.status,
-        payment_status=order.payment_status,
+        status=_status_or_default(order.status, "DRAFT"),
+        payment_status=_status_or_default(order.payment_status, "UNPAID"),
         paid_amount=order.paid_amount or Decimal("0"),
         items=items_data,
         created_at=order.created_at,

@@ -3,7 +3,6 @@
 资源投入与浪费分析端点
 """
 
-from datetime import date
 from decimal import Decimal
 from typing import Any
 
@@ -20,7 +19,7 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.presales import ResourceInvestmentSummary, ResourceWasteAnalysis
 
-from .utils import convert_lead_code_to_project_code
+from .utils import convert_lead_code_to_project_code, parse_presale_period
 
 router = APIRouter()
 
@@ -114,18 +113,10 @@ async def get_resource_waste_analysis(
 ) -> Any:
     """获取资源浪费分析报告"""
 
-    if len(period) == 7:  # YYYY-MM
-        year = int(period[:4])
-        month = int(period[5:7])
-        start_date = date(year, month, 1)
-        if month == 12:
-            end_date = date(year + 1, 1, 1)
-        else:
-            end_date = date(year, month + 1, 1)
-    else:  # YYYY
-        year = int(period)
-        start_date = date(year, 1, 1)
-        end_date = date(year + 1, 1, 1)
+    try:
+        start_date, end_date = parse_presale_period(period)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
     projects = (
         db.query(Project)

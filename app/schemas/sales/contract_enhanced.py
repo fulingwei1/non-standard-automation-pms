@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ..common import TimestampSchema
 
@@ -211,6 +211,16 @@ class ContractResponse(ContractBase, TimestampSchema):
     attachments: List[ContractAttachmentResponse] = Field(
         default_factory=list, description="附件列表"
     )
+
+    @field_validator("received_amount", mode="before")
+    @classmethod
+    def _normalize_received_amount(cls, value):
+        return Decimal("0") if value is None else value
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_status(cls, value):
+        return "draft" if value is None else value
 
 
 class ContractListResponse(BaseModel):

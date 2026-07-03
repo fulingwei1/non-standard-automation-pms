@@ -46,6 +46,42 @@ def check_project_access_or_raise(
     return project
 
 
+def check_project_read_access_or_raise(
+    db: Session, user: User, project_id: int, error_message: Optional[str] = None
+) -> Project:
+    """
+    检查项目读取权限。
+
+    读取场景允许通用数据范围内的项目，也允许 active 项目成员读取。
+    写入/删除场景仍应使用 check_project_access_or_raise。
+    """
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="项目不存在")
+
+    if DataScopeService.check_project_access(db, user, project_id):
+        return project
+
+    from app.models.project import ProjectMember
+
+    is_active_member = (
+        db.query(ProjectMember.id)
+        .filter(
+            ProjectMember.project_id == project_id,
+            ProjectMember.user_id == user.id,
+            ProjectMember.is_active == True,
+        )
+        .first()
+        is not None
+    )
+    if is_active_member:
+        return project
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN, detail=error_message or "您没有权限访问该项目"
+    )
+
+
 def filter_projects_by_scope(db: Session, query, user: User, project_ids: Optional[list] = None):
     """
     根据用户数据权限范围过滤项目查询

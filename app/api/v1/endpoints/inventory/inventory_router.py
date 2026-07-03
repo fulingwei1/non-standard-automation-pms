@@ -8,7 +8,7 @@ from decimal import Decimal
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
@@ -43,6 +43,28 @@ class MaterialStockResponse(BaseModel):
     total_value: float
     status: str
     last_update: Optional[datetime]
+
+    @field_validator(
+        "quantity",
+        "available_quantity",
+        "reserved_quantity",
+        "unit_price",
+        "total_value",
+        mode="before",
+    )
+    @classmethod
+    def _default_number(cls, value):
+        return 0 if value is None else value
+
+    @field_validator("unit", mode="before")
+    @classmethod
+    def _default_unit(cls, value):
+        return "件" if value in (None, "") else value
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_status(cls, value):
+        return "NORMAL" if value in (None, "") else value
 
     class Config:
         from_attributes = True
@@ -167,6 +189,32 @@ class StockCountTaskResponse(BaseModel):
     matched_items: int
     diff_items: int
     total_diff_value: float
+
+    @field_validator("count_type", mode="before")
+    @classmethod
+    def _default_count_type(cls, value):
+        return "FULL" if value in (None, "") else value
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_status(cls, value):
+        return "PENDING" if value in (None, "") else value
+
+    @field_validator(
+        "total_items",
+        "counted_items",
+        "matched_items",
+        "diff_items",
+        mode="before",
+    )
+    @classmethod
+    def _default_count(cls, value):
+        return 0 if value is None else value
+
+    @field_validator("total_diff_value", mode="before")
+    @classmethod
+    def _default_total_diff_value(cls, value):
+        return 0 if value is None else value
 
     class Config:
         from_attributes = True

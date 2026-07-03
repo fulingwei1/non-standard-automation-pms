@@ -101,6 +101,7 @@ def get_project_budget_status(
 @router.post("/budget-monitor", response_model=ResponseModel)
 def batch_budget_monitor(
     *,
+    project_id: int,
     db: Session = Depends(deps.get_db),
     request: BudgetMonitorRequest,
     current_user: User = Depends(security.require_permission("cost:read")),
@@ -131,6 +132,7 @@ def batch_budget_monitor(
 @router.post("/budget-check-all", response_model=ResponseModel)
 def check_all_projects_budget_alert(
     *,
+    project_id: int,
     db: Session = Depends(deps.get_db),
     request: BudgetMonitorRequest,
     current_user: User = Depends(security.require_permission("cost:write")),

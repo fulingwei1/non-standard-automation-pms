@@ -32,7 +32,7 @@ def get_hr_profiles(
     keyword: Optional[str] = Query(None, description="搜索关键词（姓名/工号/部门）"),
     dept_level1: Optional[str] = Query(None, description="一级部门筛选"),
     employment_status: Optional[str] = Query(None, description="在职状态筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """获取人事档案列表（分页）"""
 
@@ -99,7 +99,7 @@ def get_hr_profiles(
 def get_hr_profile(
     emp_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """获取指定员工的人事档案详情"""
     employee = db.query(Employee).filter(Employee.id == emp_id).first()
@@ -113,7 +113,7 @@ def update_hr_profile(
     emp_id: int,
     profile_in: EmployeeHrProfileUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:update")),
 ) -> Any:
     """更新员工人事档案"""
     employee = db.query(Employee).filter(Employee.id == emp_id).first()
@@ -138,7 +138,7 @@ def update_hr_profile(
 async def import_hr_profiles(
     file: UploadFile = File(..., description="人事档案Excel文件"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:create")),
 ) -> Dict[str, Any]:
     """
     批量导入人事档案数据
@@ -186,7 +186,7 @@ async def import_hr_profiles(
 @router.get("/hr-profiles/statistics/overview")
 def get_hr_statistics(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """获取人事统计概览"""
     total = db.query(Employee).filter(Employee.is_active).count()

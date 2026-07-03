@@ -56,11 +56,7 @@ def _get_advantage_products_for_lead(db: Session, lead: Lead) -> List[dict]:
     if not lead.selected_advantage_products:
         return []
 
-    product_ids = safe_json_loads(
-        lead.selected_advantage_products,
-        default=[],
-        field_name="selected_advantage_products",
-    )
+    product_ids = _parse_selected_advantage_product_ids(lead.selected_advantage_products)
 
     if not product_ids:
         return []
@@ -75,6 +71,29 @@ def _get_advantage_products_for_lead(db: Session, lead: Lead) -> List[dict]:
         }
         for p in products
     ]
+
+
+def _parse_selected_advantage_product_ids(raw_value: Any) -> List[int]:
+    """Return only numeric advantage product ids from legacy JSON payloads."""
+    if raw_value is None:
+        return []
+    values = raw_value
+    if isinstance(raw_value, str):
+        values = safe_json_loads(
+            raw_value,
+            default=[],
+            field_name="selected_advantage_products",
+        )
+    if not isinstance(values, list):
+        return []
+
+    product_ids = []
+    for value in values:
+        try:
+            product_ids.append(int(value))
+        except (TypeError, ValueError):
+            continue
+    return product_ids
 
 
 def _get_latest_opportunity_summary(db: Session, lead_id: int) -> dict:
@@ -116,6 +135,9 @@ def read_leads(
             **_get_latest_opportunity_summary(db, lead.id),
             "advantage_products": _get_advantage_products_for_lead(db, lead),
         }
+        lead_dict["selected_advantage_products"] = _parse_selected_advantage_product_ids(
+            lead.selected_advantage_products
+        )
 
         # 跟进摘要（只查最近 1 条，避免 N+1）
         latest_fu = (
@@ -215,6 +237,9 @@ def create_lead(
         "owner_name": lead.owner.real_name if lead.owner else None,
         **_get_latest_opportunity_summary(db, lead.id),
     }
+    lead_dict["selected_advantage_products"] = _parse_selected_advantage_product_ids(
+        lead.selected_advantage_products
+    )
 
     # 获取优势产品详情（使用 safe_json_loads 避免解析异常）
     lead_dict["advantage_products"] = _get_advantage_products_for_lead(db, lead)
@@ -239,6 +264,9 @@ def read_lead(
         "owner_name": lead.owner.real_name if lead.owner else None,
         **_get_latest_opportunity_summary(db, lead.id),
     }
+    lead_dict["selected_advantage_products"] = _parse_selected_advantage_product_ids(
+        lead.selected_advantage_products
+    )
 
     # 获取优势产品详情（使用 safe_json_loads 避免解析异常）
     lead_dict["advantage_products"] = _get_advantage_products_for_lead(db, lead)
@@ -270,6 +298,11 @@ def update_lead(
         raise HTTPException(status_code=403, detail="您没有权限编辑此线索")
 
     update_data = lead_in.model_dump(exclude_unset=True)
+    if "selected_advantage_products" in update_data:
+        selected_products = update_data["selected_advantage_products"]
+        update_data["selected_advantage_products"] = (
+            json.dumps(selected_products) if selected_products else None
+        )
     for field, value in update_data.items():
         setattr(lead, field, value)
 
@@ -281,6 +314,9 @@ def update_lead(
         "owner_name": lead.owner.real_name if lead.owner else None,
         **_get_latest_opportunity_summary(db, lead.id),
     }
+    lead_dict["selected_advantage_products"] = _parse_selected_advantage_product_ids(
+        lead.selected_advantage_products
+    )
     return LeadResponse(**lead_dict)
 
 

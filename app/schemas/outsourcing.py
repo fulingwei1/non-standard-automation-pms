@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .common import BaseSchema, TimestampSchema
 
@@ -139,6 +139,39 @@ class OutsourcingOrderItemResponse(BaseSchema):
     rejected_quantity: Decimal = 0
     status: str = "PENDING"
 
+    @field_validator("material_code", "material_name", mode="before")
+    @classmethod
+    def _default_item_text(cls, value):
+        return "" if value in (None, "") else value
+
+    @field_validator("unit", mode="before")
+    @classmethod
+    def _default_unit(cls, value):
+        return "件" if value in (None, "") else value
+
+    @field_validator(
+        "quantity",
+        "unit_price",
+        "amount",
+        "delivered_quantity",
+        "qualified_quantity",
+        "rejected_quantity",
+        mode="before",
+    )
+    @classmethod
+    def _default_decimal(cls, value):
+        return Decimal("0") if value is None else value
+
+    @field_validator("material_provided", mode="before")
+    @classmethod
+    def _default_bool(cls, value):
+        return False if value is None else value
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_status(cls, value):
+        return "PENDING" if value in (None, "") else value
+
 
 class OutsourcingOrderResponse(TimestampSchema):
     """外协订单响应"""
@@ -164,6 +197,26 @@ class OutsourcingOrderResponse(TimestampSchema):
     payment_status: str = "UNPAID"
     paid_amount: Decimal = 0
     items: List[OutsourcingOrderItemResponse] = []
+
+    @field_validator("vendor_name", "order_type", "order_title", mode="before")
+    @classmethod
+    def _default_order_text(cls, value):
+        return "" if value in (None, "") else value
+
+    @field_validator("total_amount", "tax_rate", "tax_amount", "amount_with_tax", "paid_amount", mode="before")
+    @classmethod
+    def _default_order_decimal(cls, value):
+        return Decimal("0") if value is None else value
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_order_status(cls, value):
+        return "DRAFT" if value in (None, "") else value
+
+    @field_validator("payment_status", mode="before")
+    @classmethod
+    def _default_payment_status(cls, value):
+        return "UNPAID" if value in (None, "") else value
 
 
 class OutsourcingOrderListResponse(BaseSchema):
@@ -219,6 +272,26 @@ class OutsourcingDeliveryResponse(TimestampSchema):
     status: str = "PENDING"
     received_at: Optional[datetime] = None
 
+    @field_validator("order_no", mode="before")
+    @classmethod
+    def _default_order_no(cls, value):
+        return "未知订单" if value in (None, "") else value
+
+    @field_validator("vendor_name", mode="before")
+    @classmethod
+    def _default_vendor_name(cls, value):
+        return "未知外协商" if value in (None, "") else value
+
+    @field_validator("delivery_type", mode="before")
+    @classmethod
+    def _default_delivery_type(cls, value):
+        return "NORMAL" if value in (None, "") else value
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_delivery_status(cls, value):
+        return "PENDING" if value in (None, "") else value
+
 
 # ==================== 外协质检 ====================
 
@@ -257,6 +330,11 @@ class OutsourcingInspectionResponse(TimestampSchema):
     inspect_result: Optional[str] = None
     pass_rate: Decimal = 0
     disposition: Optional[str] = None
+
+    @field_validator("inspect_type", mode="before")
+    @classmethod
+    def _default_inspect_type(cls, value):
+        return "INCOMING" if value in (None, "") else value
 
 
 # ==================== 外协进度 ====================
@@ -343,3 +421,8 @@ class OutsourcingPaymentResponse(TimestampSchema):
     approved_by_name: Optional[str] = None
     approved_at: Optional[datetime] = None
     remark: Optional[str] = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_payment_status(cls, value):
+        return "DRAFT" if value in (None, "") else value

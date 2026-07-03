@@ -6,7 +6,7 @@ AI需求理解Schema定义
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, validator
 
 # ========== 基础Schema ==========
 
@@ -134,6 +134,21 @@ class RequirementAnalysisResponse(BaseModel):
     refinement_count: int
     created_at: datetime
     updated_at: Optional[datetime]
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def default_status(cls, value):
+        return value or "draft"
+
+    @field_validator("is_refined", mode="before")
+    @classmethod
+    def default_is_refined(cls, value):
+        return False if value is None else value
+
+    @field_validator("refinement_count", mode="before")
+    @classmethod
+    def default_refinement_count(cls, value):
+        return 0 if value is None else value
 
     class Config:
         from_attributes = True

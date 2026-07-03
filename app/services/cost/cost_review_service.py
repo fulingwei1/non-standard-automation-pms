@@ -14,6 +14,7 @@ from app.models.budget import ProjectBudget
 from app.models.ecn import Ecn
 from app.models.project import Project, ProjectCost
 from app.models.project_review import ProjectReview
+from app.services.cost.cost_basis import actual_project_cost_filter
 
 
 class CostReviewService:
@@ -21,7 +22,10 @@ class CostReviewService:
 
     @staticmethod
     def generate_cost_review_report(
-        db: Session, project_id: int, reviewer_id: int, review_date: Optional[date] = None
+        db: Session,
+        project_id: int,
+        reviewer_id: int,
+        review_date: Optional[date] = None,
     ) -> ProjectReview:
         """
         自动生成项目成本复盘报告
@@ -47,7 +51,8 @@ class CostReviewService:
         existing = (
             db.query(ProjectReview)
             .filter(
-                ProjectReview.project_id == project_id, ProjectReview.review_type == "POST_MORTEM"
+                ProjectReview.project_id == project_id,
+                ProjectReview.review_type == "POST_MORTEM",
             )
             .first()
         )
@@ -68,7 +73,9 @@ class CostReviewService:
 
         if project.actual_start_date:
             if project.actual_end_date:
-                actual_duration = (project.actual_end_date - project.actual_start_date).days
+                actual_duration = (
+                    project.actual_end_date - project.actual_start_date
+                ).days
             else:
                 actual_duration = (date.today() - project.actual_start_date).days
 
@@ -76,17 +83,27 @@ class CostReviewService:
             schedule_variance = actual_duration - plan_duration
 
         # 获取预算和实际成本（取最新已审批的有效预算版本）
-        budget = db.query(ProjectBudget).filter(ProjectBudget.project_id == project_id).first()
+        budget = (
+            db.query(ProjectBudget)
+            .filter(ProjectBudget.project_id == project_id)
+            .first()
+        )
 
         budget_amount = (
-            Decimal(str(budget.total_amount)) if budget else (project.budget_amount or Decimal("0"))
+            Decimal(str(budget.total_amount))
+            if budget
+            else (project.budget_amount or Decimal("0"))
         )
 
         # 计算实际成本
-        costs = db.query(ProjectCost).filter(ProjectCost.project_id == project_id).all()
+        costs = (
+            db.query(ProjectCost)
+            .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
+            .all()
+        )
         actual_cost = sum([c.amount or Decimal("0") for c in costs])
 
-        if project.actual_cost:
+        if actual_cost <= 0 and project.actual_cost:
             actual_cost = Decimal(str(project.actual_cost))
 
         cost_variance = actual_cost - budget_amount
@@ -94,7 +111,9 @@ class CostReviewService:
         # 统计变更次数（使用安全的整数转换，防止查询异常）
         try:
             ecn_count = int(
-                db.query(Ecn).filter(Ecn.project_id == project_id, Ecn.status == "APPROVED").count()
+                db.query(Ecn)
+                .filter(Ecn.project_id == project_id, Ecn.status == "APPROVED")
+                .count()
             )
         except (TypeError, ValueError):
             ecn_count = 0
@@ -117,7 +136,12 @@ class CostReviewService:
 
         # 生成成本分析总结
         cost_summary = CostReviewService._generate_cost_summary(
-            budget_amount, actual_cost, cost_variance, cost_by_type, cost_by_category, ecn_count
+            budget_amount,
+            actual_cost,
+            cost_variance,
+            cost_by_type,
+            cost_by_category,
+            ecn_count,
         )
 
         # 获取复盘负责人信息
@@ -219,12 +243,16 @@ class CostReviewService:
         # 成本构成
         if cost_by_type:
             summary_parts.append("\n成本构成：")
-            for cost_type, amount in sorted(cost_by_type.items(), key=lambda x: x[1], reverse=True):
+            for cost_type, amount in sorted(
+                cost_by_type.items(), key=lambda x: x[1], reverse=True
+            ):
                 pct = (amount / actual_cost * 100) if actual_cost > 0 else 0
                 summary_parts.append(f"  - {cost_type}：{amount:.2f}元（{pct:.1f}%）")
 
         # 变更影响
         if ecn_count > 0:
-            summary_parts.append(f"\n项目共发生{ecn_count}次工程变更，变更成本已单独核算。")
+            summary_parts.append(
+                f"\n项目共发生{ecn_count}次工程变更，变更成本已单独核算。"
+            )
 
         return "\n".join(summary_parts)

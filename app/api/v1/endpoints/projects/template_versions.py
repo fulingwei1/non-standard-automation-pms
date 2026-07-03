@@ -60,7 +60,7 @@ def get_template_versions(
                 "id": version.id,
                 "template_id": version.template_id,
                 "version_no": version.version_no,
-                "description": version.description,
+                "description": getattr(version, "release_notes", None) or "",
                 "is_published": version.status == "published",
                 "published_at": version.published_at.isoformat() if version.published_at else None,
                 "created_at": version.created_at.isoformat() if version.created_at else None,

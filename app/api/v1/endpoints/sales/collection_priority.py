@@ -102,7 +102,7 @@ def get_collection_priority_list(
 @router.get("/priority/summary", response_model=ResponseModel)
 def get_collection_priority_summary(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("contract:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     获取催款优先级汇总

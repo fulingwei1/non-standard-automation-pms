@@ -27,4 +27,5 @@ router = create_project_crud_router(
     default_order_by="created_at",
     default_order_direction="desc",
     custom_filters={"cost_type": filter_by_cost_type},  # 支持 ?cost_type=LABOR 筛选
+    read_with_project_access=True,
 )

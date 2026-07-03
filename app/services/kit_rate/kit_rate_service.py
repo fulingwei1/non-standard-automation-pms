@@ -101,7 +101,9 @@ class KitRateService:
 
         for item in bom_items:
             material = item.material
-            available_qty = (material.current_stock or 0) + (item.received_qty or 0)
+            # KR-500: BOM 项可能未关联物料(material_id 为空)，防御 NoneType
+            stock = (material.current_stock or 0) if material else 0
+            available_qty = stock + (item.received_qty or 0)
             in_transit_qty = self._get_in_transit_qty(item.material_id)
             total_available = available_qty + in_transit_qty
 

@@ -9,7 +9,7 @@ from datetime import date
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -19,11 +19,25 @@ from app.core import security
 from app.models.project import Project, ProjectCost
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.schemas.project.project_cost import ProjectCostCreate, ProjectCostResponse, ProjectCostUpdate
+from app.schemas.project.project_cost import (
+    ProjectCostCreate,
+    ProjectCostResponse,
+    ProjectCostUpdate,
+)
+from app.services.cost.cost_basis import COST_BASIS_ACTUAL, actual_project_cost_filter
 from app.services.cost.cost_service import CostService
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+
+def _sum_actual_project_cost(db: Session, project_id: int) -> float:
+    total = (
+        db.query(func.coalesce(func.sum(ProjectCost.amount), 0))
+        .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
+        .scalar()
+    )
+    return float(total or 0)
 
 
 def _get_project_or_404(db: Session, project_id: int) -> Project:
@@ -78,11 +92,15 @@ def list_costs(
 
     total = query.count()
     costs = apply_pagination(
-        query.order_by(desc(ProjectCost.created_at)), pagination.offset, pagination.limit
+        query.order_by(desc(ProjectCost.created_at)),
+        pagination.offset,
+        pagination.limit,
     ).all()
 
     items = [
-        ProjectCostResponse(**{c.name: getattr(cost, c.name) for c in cost.__table__.columns})
+        ProjectCostResponse(
+            **{c.name: getattr(cost, c.name) for c in cost.__table__.columns}
+        )
         for cost in costs
     ]
 
@@ -116,6 +134,7 @@ def create_cost(
         machine_id=cost_in.machine_id,
         cost_type=cost_in.cost_type,
         cost_category=cost_in.cost_category,
+        cost_basis=cost_in.cost_basis or COST_BASIS_ACTUAL,
         source_module=cost_in.source_module,
         source_type=cost_in.source_type,
         source_id=cost_in.source_id,
@@ -130,7 +149,9 @@ def create_cost(
     db.commit()
     db.refresh(cost)
 
-    return ProjectCostResponse(**{c.name: getattr(cost, c.name) for c in cost.__table__.columns})
+    return ProjectCostResponse(
+        **{c.name: getattr(cost, c.name) for c in cost.__table__.columns}
+    )
 
 
 @router.get("/{cost_id}", response_model=ProjectCostResponse)
@@ -142,7 +163,9 @@ def get_cost(
 ) -> Any:
     """获取成本详情"""
     cost = get_or_404(db, ProjectCost, cost_id, "成本记录不存在")
-    return ProjectCostResponse(**{c.name: getattr(cost, c.name) for c in cost.__table__.columns})
+    return ProjectCostResponse(
+        **{c.name: getattr(cost, c.name) for c in cost.__table__.columns}
+    )
 
 
 @router.put("/{cost_id}", response_model=ProjectCostResponse)
@@ -165,7 +188,9 @@ def update_cost(
     db.commit()
     db.refresh(cost)
 
-    return ProjectCostResponse(**{c.name: getattr(cost, c.name) for c in cost.__table__.columns})
+    return ProjectCostResponse(
+        **{c.name: getattr(cost, c.name) for c in cost.__table__.columns}
+    )
 
 
 @router.delete("/{cost_id}", status_code=200)
@@ -195,7 +220,11 @@ def get_project_cost_summary(
     """获取项目成本汇总"""
     _get_project_or_404(db, project_id)
     service = CostService(db)
-    summary = service.get_summary(project_id) if hasattr(service, 'get_summary') else service.get_cost_breakdown(project_id)
+    summary = (
+        service.get_summary(project_id)
+        if hasattr(service, "get_summary")
+        else service.get_cost_breakdown(project_id)
+    )
     return ResponseModel(data={"project_id": project_id, "summary": summary})
 
 
@@ -244,7 +273,9 @@ def get_cost_trends(
 ) -> Any:
     """成本趋势分析"""
     if group_by not in ["day", "month", "week"]:
-        raise HTTPException(status_code=422, detail="无效的分组方式，支持：day/week/month")
+        raise HTTPException(
+            status_code=422, detail="无效的分组方式，支持：day/week/month"
+        )
 
     # 简化实现：返回空趋势数据
     return ResponseModel(
@@ -255,7 +286,7 @@ def get_cost_trends(
             "start_date": start_date.isoformat() if start_date else None,
             "end_date": end_date.isoformat() if end_date else None,
             "trends": [],
-        }
+        },
     )
 
 
@@ -272,13 +303,15 @@ def get_budget_execution(
     """预算执行分析"""
     project = _get_project_or_404(db, project_id)
     budget_amount = float(project.budget_amount or 0)
-    actual_cost = float(project.actual_cost or 0)
+    actual_cost = _sum_actual_project_cost(db, project_id) or float(
+        project.actual_cost or 0
+    )
 
     if budget_amount == 0:
         return ResponseModel(
             code=400,
             message="项目没有设置预算",
-            data={"project_id": project_id, "error": "no_budget"}
+            data={"project_id": project_id, "error": "no_budget"},
         )
 
     execution_rate = (actual_cost / budget_amount * 100) if budget_amount > 0 else 0
@@ -294,14 +327,16 @@ def get_budget_execution(
             "execution_rate": round(execution_rate, 2),
             "variance": round(variance, 2),
             "is_over_budget": actual_cost > budget_amount,
-        }
+        },
     )
 
 
 # ==================== 人工成本计算 ====================
 
 
-@router.post("/labor/projects/{project_id}/calculate-labor-cost", response_model=ResponseModel)
+@router.post(
+    "/labor/projects/{project_id}/calculate-labor-cost", response_model=ResponseModel
+)
 def calculate_labor_cost(
     *,
     db: Session = Depends(deps.get_db),
@@ -314,7 +349,7 @@ def calculate_labor_cost(
     return ResponseModel(
         code=200,
         message="计算完成",
-        data={"project_id": project_id, "labor_cost": 0, "hours": 0}
+        data={"project_id": project_id, "labor_cost": 0, "hours": 0},
     )
 
 
@@ -330,26 +365,28 @@ def allocate_cost(
     current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """成本分摊"""
-    cost = get_or_404(db, ProjectCost, cost_id, "成本记录不存在")
+    get_or_404(db, ProjectCost, cost_id, "成本记录不存在")
 
     rule_id = allocation_request.get("rule_id")
     allocation_targets = allocation_request.get("allocation_targets")
 
     if not rule_id and not allocation_targets:
-        raise HTTPException(status_code=422, detail="必须提供 rule_id 或 allocation_targets")
+        raise HTTPException(
+            status_code=422, detail="必须提供 rule_id 或 allocation_targets"
+        )
 
     # 简化实现：返回成功响应
     return ResponseModel(
-        code=200,
-        message="分摊成功",
-        data={"cost_id": cost_id, "allocated": True}
+        code=200, message="分摊成功", data={"cost_id": cost_id, "allocated": True}
     )
 
 
 # ==================== 成本预警 ====================
 
 
-@router.post("/alert/projects/{project_id}/check-budget-alert", response_model=ResponseModel)
+@router.post(
+    "/alert/projects/{project_id}/check-budget-alert", response_model=ResponseModel
+)
 def check_budget_alert(
     *,
     db: Session = Depends(deps.get_db),
@@ -379,7 +416,7 @@ def check_budget_alert(
             "alert_level": alert_level,
             "budget_amount": budget_amount,
             "actual_cost": actual_cost,
-        }
+        },
     )
 
 
@@ -396,14 +433,16 @@ def check_all_projects_budget_alert(
         budget_amount = float(project.budget_amount or 0)
         actual_cost = float(project.actual_cost or 0)
         if budget_amount > 0 and actual_cost > budget_amount:
-            alerts.append({
-                "project_id": project.id,
-                "project_code": project.project_code,
-                "alert_level": "over_budget",
-            })
+            alerts.append(
+                {
+                    "project_id": project.id,
+                    "project_code": project.project_code,
+                    "alert_level": "over_budget",
+                }
+            )
 
     return ResponseModel(
         code=200,
         message="检查完成",
-        data={"total_checked": len(projects), "alerts": alerts}
+        data={"total_checked": len(projects), "alerts": alerts},
     )

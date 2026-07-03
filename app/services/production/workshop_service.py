@@ -11,7 +11,13 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.common.date_range import get_month_range
-from app.models.production import ProductionDailyReport, WorkOrder, Workshop
+from app.models.production import (
+    ProductionDailyReport,
+    WorkOrder,
+    Worker,
+    Workshop,
+    Workstation,
+)
 from app.models.user import User
 from app.schemas.production import WorkshopResponse
 from app.utils.db_helpers import get_or_404, save_obj
@@ -127,7 +133,11 @@ class WorkshopService:
 
         # 基础产能信息
         capacity_hours = float(workshop.capacity_hours) if workshop.capacity_hours else 0.0
-        worker_count = workshop.worker_count or 0
+        worker_count = (
+            self.db.query(Worker)
+            .filter(Worker.workshop_id == workshop_id, Worker.is_active.is_(True))
+            .count()
+        )
 
         # 如果没有指定日期范围，使用当前月
         today = date.today()
@@ -203,4 +213,77 @@ class WorkshopService:
             "pending_count": pending_count,
             "in_progress_count": in_progress_count,
             "completed_count": completed_count,
+        }
+
+    def get_task_board(self, workshop_id: int) -> dict:
+        """
+        车间任务看板
+
+        返回车间的工位、工单和工人信息，供看板展示。
+        """
+        workshop = get_or_404(self.db, Workshop, workshop_id, detail="车间不存在")
+
+        workstations = (
+            self.db.query(Workstation)
+            .filter(Workstation.workshop_id == workshop_id)
+            .all()
+        )
+        work_orders = (
+            self.db.query(WorkOrder)
+            .filter(WorkOrder.workshop_id == workshop_id)
+            .all()
+        )
+        workers = (
+            self.db.query(Worker)
+            .filter(Worker.workshop_id == workshop_id, Worker.is_active.is_(True))
+            .all()
+        )
+        worker_by_id = {worker.id: worker for worker in workers}
+        order_by_id = {order.id: order for order in work_orders}
+
+        return {
+            "workshop_id": workshop.id,
+            "workshop_name": workshop.workshop_name,
+            "workstations": [
+                {
+                    "id": ws.id,
+                    "workstation_code": ws.workstation_code,
+                    "workstation_name": ws.workstation_name,
+                    "status": ws.status,
+                    "current_worker_id": ws.current_worker_id,
+                    "current_worker_name": (
+                        worker_by_id[ws.current_worker_id].worker_name
+                        if ws.current_worker_id in worker_by_id
+                        else None
+                    ),
+                    "current_work_order_id": ws.current_work_order_id,
+                    "current_work_order_no": (
+                        order_by_id[ws.current_work_order_id].work_order_no
+                        if ws.current_work_order_id in order_by_id
+                        else None
+                    ),
+                }
+                for ws in workstations
+            ],
+            "work_orders": [
+                {
+                    "id": wo.id,
+                    "work_order_no": wo.work_order_no,
+                    "task_name": wo.task_name,
+                    "status": wo.status,
+                    "priority": wo.priority,
+                    "plan_qty": wo.plan_qty,
+                    "completed_qty": wo.completed_qty,
+                }
+                for wo in work_orders
+            ],
+            "workers": [
+                {
+                    "id": w.id,
+                    "worker_no": w.worker_no,
+                    "worker_name": w.worker_name,
+                    "status": w.status,
+                }
+                for w in workers
+            ],
         }

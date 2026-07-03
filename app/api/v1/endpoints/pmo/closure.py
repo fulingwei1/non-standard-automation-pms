@@ -174,7 +174,7 @@ def create_closure(
     )
 
 
-@router.get("/pmo/projects/{project_id}/closure", response_model=ClosureResponse)
+@router.get("/pmo/projects/{project_id}/closure", response_model=Optional[ClosureResponse])
 def read_closure(
     *,
     db: Session = Depends(deps.get_db),
@@ -186,7 +186,7 @@ def read_closure(
     """
     closure = db.query(PmoProjectClosure).filter(PmoProjectClosure.project_id == project_id).first()
     if not closure:
-        raise HTTPException(status_code=404, detail="结项记录不存在")
+        return None
 
     return ClosureResponse(
         id=closure.id,

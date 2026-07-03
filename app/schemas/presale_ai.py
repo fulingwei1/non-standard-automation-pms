@@ -6,7 +6,7 @@ Team 10: 售前AI系统集成与前端UI
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class AIUsageStatsBase(BaseModel):
@@ -18,6 +18,11 @@ class AIUsageStatsBase(BaseModel):
     success_count: int = 0
     avg_response_time: Optional[int] = None
     date: date
+
+    @field_validator("usage_count", "success_count", mode="before")
+    @classmethod
+    def _default_count(cls, value):
+        return 0 if value is None else value
 
 
 class AIUsageStatsCreate(AIUsageStatsBase):
@@ -75,6 +80,8 @@ class AIFeedbackResponse(AIFeedbackBase):
 class AIConfigBase(BaseModel):
     """AI配置基础schema"""
 
+    model_config = ConfigDict(protected_namespaces=())
+
     ai_function: str
     enabled: bool = True
     model_name: Optional[str] = None
@@ -83,15 +90,37 @@ class AIConfigBase(BaseModel):
     timeout_seconds: int = Field(default=30, ge=1, le=300)
     config_json: Optional[Dict[str, Any]] = None
 
+    @field_validator("enabled", mode="before")
+    @classmethod
+    def _default_enabled(cls, value):
+        return True if value is None else value
+
+    @field_validator("temperature", mode="before")
+    @classmethod
+    def _default_temperature(cls, value):
+        return 0.7 if value is None else value
+
+    @field_validator("max_tokens", mode="before")
+    @classmethod
+    def _default_max_tokens(cls, value):
+        return 2000 if value is None else value
+
+    @field_validator("timeout_seconds", mode="before")
+    @classmethod
+    def _default_timeout_seconds(cls, value):
+        return 30 if value is None else value
+
 
 class AIConfigCreate(AIConfigBase):
     """创建AI配置"""
 
-    pass
+    model_config = ConfigDict(protected_namespaces=())
 
 
 class AIConfigUpdate(BaseModel):
     """更新AI配置"""
+
+    model_config = ConfigDict(protected_namespaces=())
 
     enabled: Optional[bool] = None
     model_name: Optional[str] = None
@@ -108,8 +137,7 @@ class AIConfigResponse(AIConfigBase):
     created_at: datetime
     updated_at: Optional[datetime]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
 
 
 class AIWorkflowLogBase(BaseModel):

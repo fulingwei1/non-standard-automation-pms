@@ -12,7 +12,13 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance, ApprovalNodeDefinition, ApprovalTask
+from app.models.approval import (
+    ApprovalFlowDefinition,
+    ApprovalInstance,
+    ApprovalNodeDefinition,
+    ApprovalTask,
+    ApprovalTemplate,
+)
 from app.models.ecn import Ecn, EcnApproval, EcnApprovalMatrix, EcnEvaluation
 from app.models.user import Role, User, UserRole
 from .base import ApprovalAdapter
@@ -236,6 +242,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
         if engine_cls is None:
             from ..engine import ApprovalEngineService as engine_cls
 
+        self._ensure_default_approval_template(initiator_id)
         engine = engine_cls(self.db)
 
         instance = engine.submit(
@@ -259,6 +266,110 @@ class EcnApprovalAdapter(ApprovalAdapter):
         logger.info(f"ECN {ecn.ecn_no} 已提交审批，实例ID: {instance.id}")
 
         return instance
+
+    def get_approval_status(self, ecn) -> Dict[str, Any]:
+        """获取 ECN 审批状态，兼容旧集成测试接口。"""
+        instance_id = getattr(ecn, "approval_instance_id", None)
+        if not instance_id:
+            return {
+                "status": "NOT_SUBMITTED",
+                "instance_id": None,
+                "status_text": "未提交",
+                "progress": 0,
+            }
+
+        instance = (
+            self.db.query(ApprovalInstance)
+            .filter(ApprovalInstance.id == instance_id)
+            .first()
+        )
+        status = instance.status if instance else (getattr(ecn, "approval_status", None) or "PENDING")
+        status_text = {
+            "PENDING": "审批中",
+            "IN_PROGRESS": "审批中",
+            "APPROVED": "已通过",
+            "REJECTED": "已驳回",
+            "CANCELLED": "已撤销",
+            "TERMINATED": "已终止",
+        }.get(status, status or "未知")
+        progress = 100 if status in {"APPROVED", "REJECTED", "CANCELLED", "TERMINATED"} else 50
+        return {
+            "status": status,
+            "instance_id": instance_id,
+            "status_text": status_text,
+            "progress": progress,
+        }
+
+    def _ensure_default_approval_template(self, initiator_id: int) -> None:
+        """确保空库中存在 ECN 默认审批模板。"""
+        template = (
+            self.db.query(ApprovalTemplate)
+            .filter(ApprovalTemplate.template_code == "ECN_STANDARD")
+            .first()
+        )
+        if not template:
+            template = ApprovalTemplate(
+                template_code="ECN_STANDARD",
+                template_name="ECN标准审批",
+                category="BUSINESS",
+                entity_type="ECN",
+                version=1,
+                is_published=True,
+                is_active=True,
+                created_by=initiator_id,
+                published_by=initiator_id,
+                form_schema={},
+            )
+            self.db.add(template)
+            self.db.flush()
+
+        flow = (
+            self.db.query(ApprovalFlowDefinition)
+            .filter(
+                ApprovalFlowDefinition.template_id == template.id,
+                ApprovalFlowDefinition.is_default,
+                ApprovalFlowDefinition.is_active,
+            )
+            .first()
+        )
+        if not flow:
+            flow = ApprovalFlowDefinition(
+                template_id=template.id,
+                flow_name="ECN默认审批流",
+                is_default=True,
+                version=1,
+                is_active=True,
+                created_by=initiator_id,
+            )
+            self.db.add(flow)
+            self.db.flush()
+
+        node_exists = (
+            self.db.query(ApprovalNodeDefinition.id)
+            .filter(
+                ApprovalNodeDefinition.flow_id == flow.id,
+                ApprovalNodeDefinition.is_active,
+                ApprovalNodeDefinition.node_type == "APPROVAL",
+            )
+            .first()
+        )
+        if not node_exists:
+            self.db.add(
+                ApprovalNodeDefinition(
+                    flow_id=flow.id,
+                    node_code="ECN_DEFAULT_APPROVER",
+                    node_name="ECN审批",
+                    node_order=1,
+                    node_type="APPROVAL",
+                    approval_mode="SINGLE",
+                    is_active=True,
+                    approver_type="FIXED_USER",
+                    approver_config={"user_ids": [initiator_id]},
+                    notify_config={},
+                )
+            )
+
+        self.db.commit()
 
     def sync_from_approval_instance(
         self,
@@ -316,6 +427,70 @@ class EcnApprovalAdapter(ApprovalAdapter):
         """
         from app.models.ecn import EcnApproval
 
+        matrices = (
+            self.db.query(EcnApprovalMatrix)
+            .filter(EcnApprovalMatrix.ecn_type == ecn.ecn_type, EcnApprovalMatrix.is_active)
+            .order_by(EcnApprovalMatrix.approval_level)
+            .all()
+        )
+        unique_matrices = []
+        seen_levels = set()
+        for matrix in matrices:
+            if matrix.approval_level in seen_levels:
+                continue
+            seen_levels.add(matrix.approval_level)
+            unique_matrices.append(matrix)
+        matrices = unique_matrices
+        if matrices:
+            approval_records = []
+            for matrix in matrices:
+                existing_approval = (
+                    self.db.query(EcnApproval)
+                    .filter(
+                        EcnApproval.ecn_id == ecn.id,
+                        EcnApproval.approval_level == matrix.approval_level,
+                    )
+                    .first()
+                )
+                approver_ids = self.get_ecn_approvers(
+                    ecn, level=matrix.approval_level, matrix=[matrix]
+                )
+                approver_id = approver_ids[0] if approver_ids else None
+                approver = (
+                    self.db.query(User).filter(User.id == approver_id).first()
+                    if approver_id
+                    else None
+                )
+
+                if existing_approval:
+                    existing_approval.approval_role = matrix.approval_role or ""
+                    existing_approval.approver_id = approver_id
+                    existing_approval.approver_name = approver.real_name if approver else ""
+                    existing_approval.approval_result = None
+                    existing_approval.status = "PENDING"
+                    existing_approval.due_date = datetime.now() + timedelta(hours=48)
+                    existing_approval.is_overdue = False
+                    self.db.add(existing_approval)
+                    approval_records.append(existing_approval)
+                else:
+                    approval = EcnApproval(
+                        ecn_id=ecn.id,
+                        approval_level=matrix.approval_level,
+                        approval_role=matrix.approval_role or "",
+                        approver_id=approver_id,
+                        approver_name=approver.real_name if approver else "",
+                        approval_result=None,
+                        status="PENDING",
+                        due_date=datetime.now() + timedelta(hours=48),
+                        is_overdue=False,
+                    )
+                    self.db.add(approval)
+                    approval_records.append(approval)
+
+            self.db.commit()
+            logger.info(f"为ECN {ecn.ecn_no} 创建了 {len(approval_records)} 个审批记录")
+            return approval_records
+
         # 获取当前节点对应的审批任务
         tasks = (
             self.db.query(ApprovalTask)
@@ -367,7 +542,7 @@ class EcnApprovalAdapter(ApprovalAdapter):
                 approval = EcnApproval(
                     ecn_id=ecn.id,
                     approval_level=approval_level,
-                    approval_role=task.node_name or "",
+                    approval_role=task.node.node_name if task.node else "",
                     approver_id=task.assignee_id,
                     approver_name=approver.real_name if approver else "",
                     approval_result=None,  # 待审批

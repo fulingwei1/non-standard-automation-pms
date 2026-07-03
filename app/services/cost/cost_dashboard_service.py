@@ -14,6 +14,7 @@ from app.common.date_range import get_month_range
 from app.common.date_range import month_start as get_month_start
 from app.models.project import Project, ProjectCost, ProjectPaymentPlan
 from app.models.project.financial import FinancialProjectCost
+from app.services.cost.cost_basis import actual_project_cost_filter
 
 
 class CostDashboardService:
@@ -52,7 +53,9 @@ class CostDashboardService:
         total_contract_amount = float(budget_cost_stats.total_contract_amount or 0)
 
         # 预算执行率
-        budget_execution_rate = (total_actual_cost / total_budget * 100) if total_budget > 0 else 0
+        budget_execution_rate = (
+            (total_actual_cost / total_budget * 100) if total_budget > 0 else 0
+        )
 
         # 统计超支项目
         cost_overrun_count = (
@@ -101,7 +104,11 @@ class CostDashboardService:
         # 本月成本（从ProjectCost和FinancialProjectCost聚合）
         month_cost_project = (
             self.db.query(func.sum(ProjectCost.amount).label("total"))
-            .filter(and_(ProjectCost.cost_date >= month_start, ProjectCost.cost_date <= month_end))
+            .filter(
+                ProjectCost.cost_date >= month_start,
+                ProjectCost.cost_date <= month_end,
+                actual_project_cost_filter(),
+            )
             .first()
         )
 
@@ -124,7 +131,9 @@ class CostDashboardService:
         month_budget = total_budget / 12 if total_budget > 0 else 0
 
         month_variance = month_actual_cost - month_budget
-        month_variance_pct = (month_variance / month_budget * 100) if month_budget > 0 else 0
+        month_variance_pct = (
+            (month_variance / month_budget * 100) if month_budget > 0 else 0
+        )
 
         return {
             "total_projects": total_projects,
@@ -165,10 +174,14 @@ class CostDashboardService:
             contract_amount = float(project.contract_amount or 0)
 
             cost_variance = actual_cost - budget_amount
-            cost_variance_pct = (cost_variance / budget_amount * 100) if budget_amount > 0 else 0
+            cost_variance_pct = (
+                (cost_variance / budget_amount * 100) if budget_amount > 0 else 0
+            )
 
             profit = contract_amount - actual_cost
-            profit_margin = (profit / contract_amount * 100) if contract_amount > 0 else 0
+            profit_margin = (
+                (profit / contract_amount * 100) if contract_amount > 0 else 0
+            )
 
             project_list.append(
                 {
@@ -191,9 +204,9 @@ class CostDashboardService:
             )
 
         # TOP 成本最高的项目
-        top_cost_projects = sorted(project_list, key=lambda x: x["actual_cost"], reverse=True)[
-            :limit
-        ]
+        top_cost_projects = sorted(
+            project_list, key=lambda x: x["actual_cost"], reverse=True
+        )[:limit]
 
         # TOP 超支最严重的项目
         top_overrun_projects = sorted(
@@ -208,9 +221,9 @@ class CostDashboardService:
         )[:limit]
 
         # TOP 利润率最低的项目
-        bottom_profit_margin_projects = sorted(project_list, key=lambda x: x["profit_margin"])[
-            :limit
-        ]
+        bottom_profit_margin_projects = sorted(
+            project_list, key=lambda x: x["profit_margin"]
+        )[:limit]
 
         return {
             "top_cost_projects": top_cost_projects,
@@ -277,7 +290,9 @@ class CostDashboardService:
             month_cost = (
                 self.db.query(func.sum(ProjectCost.amount).label("total"))
                 .filter(
-                    and_(ProjectCost.project_id == project.id, ProjectCost.cost_date >= month_start)
+                    ProjectCost.project_id == project.id,
+                    ProjectCost.cost_date >= month_start,
+                    actual_project_cost_filter(),
                 )
                 .first()
             )
@@ -289,9 +304,7 @@ class CostDashboardService:
                 # 本月成本是平均月成本的2倍以上
                 alert_type = "abnormal"
                 alert_level = "high"
-                message = (
-                    f"本月成本异常增长，为平均月成本的 {month_cost_value / avg_monthly_cost:.1f} 倍"
-                )
+                message = f"本月成本异常增长，为平均月成本的 {month_cost_value / avg_monthly_cost:.1f} 倍"
 
             # 添加预警
             if alert_type:
@@ -354,8 +367,10 @@ class CostDashboardService:
 
         # 成本结构（按cost_type分类）
         cost_breakdown_data = (
-            self.db.query(ProjectCost.cost_type, func.sum(ProjectCost.amount).label("amount"))
-            .filter(ProjectCost.project_id == project_id)
+            self.db.query(
+                ProjectCost.cost_type, func.sum(ProjectCost.amount).label("amount")
+            )
+            .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
             .group_by(ProjectCost.cost_type)
             .all()
         )
@@ -407,11 +422,10 @@ class CostDashboardService:
             month_cost_project = (
                 self.db.query(func.sum(ProjectCost.amount).label("total"))
                 .filter(
-                    and_(
-                        ProjectCost.project_id == project_id,
-                        ProjectCost.cost_date >= month_start,
-                        ProjectCost.cost_date <= month_end,
-                    )
+                    ProjectCost.project_id == project_id,
+                    ProjectCost.cost_date >= month_start,
+                    ProjectCost.cost_date <= month_end,
+                    actual_project_cost_filter(),
                 )
                 .first()
             )
@@ -435,7 +449,9 @@ class CostDashboardService:
             # 月度预算（简化：总预算 / 12）
             month_budget = budget_amount / 12 if budget_amount > 0 else 0
             month_variance = month_actual - month_budget
-            month_variance_pct = (month_variance / month_budget * 100) if month_budget > 0 else 0
+            month_variance_pct = (
+                (month_variance / month_budget * 100) if month_budget > 0 else 0
+            )
 
             monthly_costs.append(
                 {
@@ -484,7 +500,9 @@ class CostDashboardService:
 
         # 毛利润和利润率
         gross_profit = contract_amount - actual_cost
-        profit_margin = (gross_profit / contract_amount * 100) if contract_amount > 0 else 0
+        profit_margin = (
+            (gross_profit / contract_amount * 100) if contract_amount > 0 else 0
+        )
 
         return {
             "project_id": project_id,

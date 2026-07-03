@@ -12,7 +12,7 @@
 """
 
 import logging
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
@@ -55,15 +55,27 @@ router = APIRouter(prefix="/assembly-kit/dashboard", tags=["dashboard"])
 # ==================== 看板 ====================
 
 
+def _decimal_or_zero(value):
+    if value is None:
+        return Decimal(0)
+    return Decimal(str(value))
+
+
 def _calculate_dashboard_stats(recent_analyses):
     """计算看板基础统计"""
     total = len(recent_analyses)
     can_start = sum(1 for r in recent_analyses if r.can_start)
-    not_ready = sum(1 for r in recent_analyses if r.blocking_kit_rate < 50)
+    not_ready = sum(1 for r in recent_analyses if _decimal_or_zero(r.blocking_kit_rate) < 50)
     partial = total - can_start - not_ready
-    avg_kit = sum(r.overall_kit_rate for r in recent_analyses) / total if total > 0 else Decimal(0)
+    avg_kit = (
+        sum(_decimal_or_zero(r.overall_kit_rate) for r in recent_analyses) / total
+        if total > 0
+        else Decimal(0)
+    )
     avg_blocking = (
-        sum(r.blocking_kit_rate for r in recent_analyses) / total if total > 0 else Decimal(0)
+        sum(_decimal_or_zero(r.blocking_kit_rate) for r in recent_analyses) / total
+        if total > 0
+        else Decimal(0)
     )
     return {
         "total": total,
@@ -86,7 +98,7 @@ def _calculate_stage_stats(db, stages, recent_analyses, total_projects):
                 can_start += 1
             else:
                 blocked += 1
-            total_rate += Decimal(rate_info.get("kit_rate", 0))
+            total_rate += _decimal_or_zero(rate_info.get("kit_rate", 0))
 
         stage_stats.append(
             AssemblyDashboardStageStats(
@@ -115,14 +127,14 @@ def _build_recent_analyses_list(db, recent_analyses, Project, BomHeader, Machine
         recent_list.append(
             MaterialReadinessResponse(
                 id=r.id,
-                readiness_no=r.readiness_no,
-                project_id=r.project_id,
+                readiness_no=r.readiness_no or f"READINESS-{r.id}",
+                project_id=r.project_id or 0,
                 machine_id=r.machine_id,
-                bom_id=r.bom_id,
+                bom_id=r.bom_id or 0,
                 check_date=r.planned_start_date or date.today(),
-                overall_kit_rate=r.overall_kit_rate,
-                blocking_kit_rate=r.blocking_kit_rate,
-                can_start=r.can_start,
+                overall_kit_rate=_decimal_or_zero(r.overall_kit_rate),
+                blocking_kit_rate=_decimal_or_zero(r.blocking_kit_rate),
+                can_start=bool(r.can_start),
                 first_blocked_stage=r.first_blocked_stage,
                 estimated_ready_date=r.estimated_ready_date,
                 stage_kit_rates=[],
@@ -130,9 +142,9 @@ def _build_recent_analyses_list(db, recent_analyses, Project, BomHeader, Machine
                 project_name=project.project_name if project else None,
                 machine_no=machine.machine_code if machine else None,
                 bom_no=bom.bom_no if bom else None,
-                analysis_time=r.analysis_time,
+                analysis_time=r.analysis_time or datetime.now(),
                 analyzed_by=r.analyzed_by,
-                created_at=r.created_at,
+                created_at=r.created_at or datetime.now(),
             )
         )
     return recent_list

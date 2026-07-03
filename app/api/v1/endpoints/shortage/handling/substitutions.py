@@ -228,7 +228,7 @@ def tech_approve_substitution(
     substitution_id: int,
     approved: bool = Body(..., description="是否批准"),
     approval_note: Optional[str] = Body(None, description="审批意见"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage:manage")),
 ) -> Any:
     """技术审批"""
     sub = get_or_404(db, MaterialSubstitution, substitution_id, "替代申请不存在")
@@ -257,7 +257,7 @@ def prod_approve_substitution(
     substitution_id: int,
     approved: bool = Body(..., description="是否批准"),
     approval_note: Optional[str] = Body(None, description="审批意见"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage:manage")),
 ) -> Any:
     """生产审批"""
     sub = get_or_404(db, MaterialSubstitution, substitution_id, "替代申请不存在")

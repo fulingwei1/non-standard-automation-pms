@@ -153,9 +153,9 @@ def get_conversion_by_person(
     
     # 按负责人统计合同
     contract_stats = dict(
-        db.query(Contract.owner_id, func.count(Contract.id))
+        db.query(Contract.sales_owner_id, func.count(Contract.id))
         .filter(Contract.created_at >= start, Contract.created_at <= end)
-        .group_by(Contract.owner_id)
+        .group_by(Contract.sales_owner_id)
         .all()
     )
     

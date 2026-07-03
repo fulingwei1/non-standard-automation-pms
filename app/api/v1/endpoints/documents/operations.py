@@ -30,6 +30,16 @@ DOCUMENT_UPLOAD_DIR = Path(settings.UPLOAD_DIR) / "documents"
 DOCUMENT_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def _build_document_response(document: ProjectDocument) -> ProjectDocumentResponse:
+    data = {column.name: getattr(document, column.name) for column in document.__table__.columns}
+    data["version"] = data.get("version") or "1.0"
+    data["doc_type"] = data.get("doc_type") or "UNKNOWN"
+    data["doc_name"] = data.get("doc_name") or "未命名文档"
+    data["file_path"] = data.get("file_path") or ""
+    data["file_name"] = data.get("file_name") or data["doc_name"]
+    return ProjectDocumentResponse.model_validate(data)
+
+
 @router.put("/{doc_id}", response_model=ProjectDocumentResponse)
 def update_document(
     *,
@@ -123,7 +133,7 @@ def get_document_versions(
         query = query.filter(ProjectDocument.machine_id == document.machine_id)
 
     versions = query.order_by(desc(ProjectDocument.created_at)).all()
-    return versions
+    return [_build_document_response(version) for version in versions]
 
 
 @router.delete("/{doc_id}", status_code=200)

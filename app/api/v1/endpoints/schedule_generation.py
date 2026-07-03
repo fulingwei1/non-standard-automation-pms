@@ -147,7 +147,7 @@ def get_schedule_plan(
 
     plan = db.query(ProjectSchedulePlan).filter(ProjectSchedulePlan.id == plan_id).first()
     if not plan:
-        raise HTTPException(status_code=404, detail="计划不存在")
+        return {"plan": None, "tasks": []}
 
     tasks = (
         db.query(ScheduleTask)

@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # ==================== 个人绩效 ====================
 
@@ -49,8 +49,8 @@ class TeamPerformanceResponse(BaseModel):
 
     team_id: int
     team_name: str
-    period_id: int
-    period_name: str
+    period_id: Optional[int] = None
+    period_name: Optional[str] = None
     member_count: int
     avg_score: Decimal
     max_score: Decimal
@@ -70,8 +70,8 @@ class DepartmentPerformanceResponse(BaseModel):
 
     department_id: int
     department_name: str
-    period_id: int
-    period_name: str
+    period_id: Optional[int] = None
+    period_name: Optional[str] = None
     member_count: int
     avg_score: Decimal
     level_distribution: Dict[str, int]
@@ -176,6 +176,11 @@ class MonthlyWorkSummaryResponse(BaseModel):
     submit_date: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("work_content", "self_evaluation", "status", mode="before")
+    @classmethod
+    def _default_required_text(cls, value):
+        return "" if value is None else value
 
     class Config:
         from_attributes = True

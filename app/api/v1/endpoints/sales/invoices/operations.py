@@ -8,7 +8,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -127,6 +127,29 @@ def receive_payment(
     )
 
 
+def _void_invoice_logic(db: Session, invoice_id: int, reason: Optional[str]) -> ResponseModel:
+    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
+
+    # 只有已开票或已审批的发票才能作废
+    if invoice.status not in [
+        InvoiceStatusEnum.ISSUED.value,
+        InvoiceStatusEnum.APPROVED.value,
+    ]:
+        raise HTTPException(status_code=400, detail="只有已开票或已审批的发票才能作废")
+
+    # 如果已收款，不能作废
+    if invoice.paid_amount and invoice.paid_amount > 0:
+        raise HTTPException(status_code=400, detail="已收款的发票不能作废，请先处理收款")
+
+    invoice.status = InvoiceStatusEnum.CANCELLED.value
+    if reason:
+        invoice.remark = (invoice.remark or "") + f"\n作废原因: {reason}"
+
+    db.commit()
+
+    return ResponseModel(code=200, message="发票已作废")
+
+
 @router.put("/invoices/{invoice_id}/void", response_model=ResponseModel)
 def void_invoice(
     *,
@@ -138,22 +161,18 @@ def void_invoice(
     """
     作废发票
     """
-    from app.models.enums import InvoiceStatusEnum
+    return _void_invoice_logic(db, invoice_id, reason)
 
-    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 
-    # 只有已开票或已审批的发票才能作废
-    if invoice.status not in [InvoiceStatusEnum.ISSUED, InvoiceStatusEnum.APPROVED]:
-        raise HTTPException(status_code=400, detail="只有已开票或已审批的发票才能作废")
-
-    # 如果已收款，不能作废
-    if invoice.paid_amount and invoice.paid_amount > 0:
-        raise HTTPException(status_code=400, detail="已收款的发票不能作废，请先处理收款")
-
-    invoice.status = InvoiceStatusEnum.VOIDED
-    if reason:
-        invoice.remark = (invoice.remark or "") + f"\n作废原因: {reason}"
-
-    db.commit()
-
-    return ResponseModel(code=200, message="发票已作废")
+@router.post("/invoices/{invoice_id}/cancel", response_model=ResponseModel, include_in_schema=False)
+def cancel_invoice_legacy(
+    *,
+    db: Session = Depends(deps.get_db),
+    invoice_id: int,
+    cancel_request: dict[str, Any] | None = Body(default=None),
+    current_user: User = Depends(security.require_permission("finance:read")),
+) -> Any:
+    """旧版发票作废入口，兼容 POST /invoices/{id}/cancel。"""
+    payload = cancel_request or {}
+    reason = payload.get("reason") or payload.get("cancel_reason")
+    return _void_invoice_logic(db, invoice_id, reason)

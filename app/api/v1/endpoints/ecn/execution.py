@@ -31,7 +31,7 @@ def start_ecn_execution(
     db: Session = Depends(deps.get_db),
     ecn_id: int,
     execution_in: EcnStartExecution,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("ecn:execute")),
 ) -> Any:
     """
     开始执行ECN
@@ -69,7 +69,7 @@ def verify_ecn(
     db: Session = Depends(deps.get_db),
     ecn_id: int,
     verify_in: EcnVerify,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("ecn:execute")),
 ) -> Any:
     """
     验证ECN执行结果
@@ -120,7 +120,7 @@ def close_ecn(
     db: Session = Depends(deps.get_db),
     ecn_id: int,
     close_in: EcnClose,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("ecn:execute")),
 ) -> Any:
     """
     关闭ECN

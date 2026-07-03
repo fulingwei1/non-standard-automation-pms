@@ -38,52 +38,59 @@ def get_routine_management_cycle(db: Session, strategy_id: int) -> RoutineManage
         RoutineManagementCycleResponse: 例行管理周期
     """
     # 华为 BEM 标准例行管理周期
-    cycles = [
+    monthly_events = [
         RoutineManagementCycleItem(
-            cycle_type="DAILY",
-            cycle_name="日例会",
+            event_type="DAILY",
+            event_type_name="日例会",
             frequency="DAILY",
-            description="每日站会，快速同步进展和问题",
-            typical_duration=15,
+            typical_timing="每日",
             participants=["项目经理", "团队成员"],
+            key_activities=["同步进展", "识别阻塞"],
         ),
         RoutineManagementCycleItem(
-            cycle_type="WEEKLY",
-            cycle_name="周例会",
+            event_type="WEEKLY",
+            event_type_name="周例会",
             frequency="WEEKLY",
-            description="每周回顾 KPI 进展，协调资源",
-            typical_duration=60,
+            typical_timing="每周",
             participants=["部门负责人", "KPI 责任人"],
+            key_activities=["回顾 KPI 进展", "协调资源"],
         ),
         RoutineManagementCycleItem(
-            cycle_type="MONTHLY",
-            cycle_name="月度经营分析会",
+            event_type="MONTHLY_REVIEW",
+            event_type_name="月度经营分析会",
             frequency="MONTHLY",
-            description="月度经营数据分析，识别风险和机会",
-            typical_duration=120,
+            typical_timing="每月第一周",
             participants=["高管", "部门负责人"],
+            key_activities=["经营数据分析", "识别风险和机会"],
         ),
+    ]
+    quarterly_events = [
         RoutineManagementCycleItem(
-            cycle_type="QUARTERLY",
-            cycle_name="季度战略审视会",
+            event_type="QUARTERLY_REVIEW",
+            event_type_name="季度战略审视会",
             frequency="QUARTERLY",
-            description="季度战略执行回顾，调整策略",
-            typical_duration=240,
+            typical_timing="每季度末",
             participants=["CEO", "高管团队", "部门负责人"],
+            key_activities=["战略执行回顾", "策略调整"],
         ),
+    ]
+    annual_events = [
         RoutineManagementCycleItem(
-            cycle_type="YEARLY",
-            cycle_name="年度战略规划会",
+            event_type="ANNUAL_PLANNING",
+            event_type_name="年度战略规划会",
             frequency="YEARLY",
-            description="年度战略制定与分解",
-            typical_duration=480,
+            typical_timing="每年第四季度",
             participants=["董事会", "CEO", "高管团队"],
+            key_activities=["年度战略制定", "战略目标分解"],
         ),
     ]
 
     return RoutineManagementCycleResponse(
         strategy_id=strategy_id,
-        cycles=cycles,
+        year=date.today().year,
+        annual_events=annual_events,
+        quarterly_events=quarterly_events,
+        monthly_events=monthly_events,
     )
 
 

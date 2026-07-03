@@ -22,8 +22,28 @@ from app.schemas.qualification import (
     EmployeeQualificationResponse,
 )
 from app.services.qualification_service import QualificationService
+from .levels import _level_response
 
 router = APIRouter()
+
+
+def _qualification_response(
+    qualification: EmployeeQualification,
+) -> EmployeeQualificationResponse:
+    return EmployeeQualificationResponse(
+        id=qualification.id,
+        employee_id=qualification.employee_id,
+        position_type=qualification.position_type or "ENGINEER",
+        current_level_id=qualification.current_level_id,
+        certified_date=qualification.certified_date,
+        certifier_id=qualification.certifier_id,
+        status=qualification.status or "PENDING",
+        assessment_details=qualification.assessment_details or {},
+        valid_until=qualification.valid_until,
+        created_at=qualification.created_at,
+        updated_at=qualification.updated_at,
+        level=_level_response(qualification.level) if qualification.level else None,
+    )
 
 
 @router.post(
@@ -72,7 +92,7 @@ def get_employee_qualification(
     if not qualification:
         raise HTTPException(status_code=404, detail="员工任职资格不存在")
 
-    return ResponseModel(code=200, message="获取成功", data=qualification)
+    return ResponseModel(code=200, message="获取成功", data=_qualification_response(qualification))
 
 
 @router.get(
@@ -109,7 +129,7 @@ def get_employee_qualifications(
     )
 
     return EmployeeQualificationListResponse(
-        items=qualifications,
+        items=[_qualification_response(qualification) for qualification in qualifications],
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,

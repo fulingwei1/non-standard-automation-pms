@@ -97,6 +97,22 @@ class ProjectDataFlowService:
         
         if not bom_headers:
             return {"error": "项目无 BOM 数据"}
+
+        bom_header_ids = [bom.id for bom in bom_headers]
+        existing_request = self.db.query(PurchaseRequest).filter(
+            PurchaseRequest.project_id == project_id,
+            PurchaseRequest.source_type == "BOM",
+            PurchaseRequest.source_id.in_(bom_header_ids),
+        ).first()
+        if existing_request:
+            return {
+                "project_id": project_id,
+                "request_no": existing_request.request_no,
+                "request_id": existing_request.id,
+                "total_materials": 0,
+                "items_with_net_demand": 0,
+                "skipped_existing": True,
+            }
         
         # 合并所有 BOM 的物料需求
         material_needs = {}

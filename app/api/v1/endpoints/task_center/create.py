@@ -104,4 +104,4 @@ def create_personal_task(
         current_user.real_name or current_user.username,
     )
 
-    return get_task_detail(task.id, db, current_user)
+    return get_task_detail(db=db, task_id=task.id, current_user=current_user)

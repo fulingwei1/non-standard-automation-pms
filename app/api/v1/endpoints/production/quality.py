@@ -60,7 +60,7 @@ def create_quality_inspection(
     """
     try:
         inspection = QualityService.create_inspection(
-            db=db, inspection_data=inspection_data, current_user_id=current_user["id"]
+            db=db, inspection_data=inspection_data, current_user_id=current_user.id
         )
         return inspection
     except Exception as e:
@@ -156,7 +156,7 @@ def create_defect_analysis(
     """
     try:
         analysis = QualityService.create_defect_analysis(
-            db=db, analysis_data=analysis_data, current_user_id=current_user["id"]
+            db=db, analysis_data=analysis_data, current_user_id=current_user.id
         )
         return analysis
     except Exception as e:
@@ -216,7 +216,7 @@ def create_quality_alert_rule(
     - TREND: 趋势预警
     """
     service = ProductionQualityService(db)
-    return service.create_alert_rule(rule_data, current_user_id=current_user["id"])
+    return service.create_alert_rule(rule_data, current_user_id=current_user.id)
 
 
 @router.get("/alert-rules", response_model=list[QualityAlertRuleResponse], summary="质量预警规则列表")
@@ -284,7 +284,7 @@ def create_rework_order(
     """
     try:
         rework_order = QualityService.create_rework_order(
-            db=db, rework_data=rework_data.model_dump(), current_user_id=current_user["id"]
+            db=db, rework_data=rework_data.model_dump(), current_user_id=current_user.id
         )
         return rework_order
     except Exception as e:

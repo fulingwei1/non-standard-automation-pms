@@ -177,6 +177,38 @@ class HandlingPlanResponse(BaseModel):
     class Config:
         from_attributes = True
 
+    @field_validator(
+        "ai_score",
+        "feasibility_score",
+        "cost_score",
+        "time_score",
+        "risk_score",
+        mode="before",
+    )
+    @classmethod
+    def _default_score(cls, value):
+        return Decimal("0") if value is None else value
+
+    @field_validator("is_recommended", mode="before")
+    @classmethod
+    def _default_recommended(cls, value):
+        return False if value is None else value
+
+    @field_validator("recommendation_rank", mode="before")
+    @classmethod
+    def _default_rank(cls, value):
+        return 999 if value is None else value
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_status(cls, value):
+        return "PENDING" if value in (None, "") else value
+
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def _default_created_at(cls, value):
+        return datetime.now() if value is None else value
+
 
 class HandlingPlanListResponse(BaseModel):
     """处理方案列表响应"""

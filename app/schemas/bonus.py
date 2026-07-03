@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.common import PageParams, PaginatedResponse
 
@@ -33,6 +33,16 @@ class BonusRuleBase(BaseModel):
     priority: int = Field(0, description="优先级")
     require_approval: bool = Field(True, description="是否需要审批")
     approval_workflow: Optional[Dict[str, Any]] = Field(None, description="审批流程(JSON)")
+
+    @field_validator("is_active", "require_approval", mode="before")
+    @classmethod
+    def _default_true(cls, value):
+        return True if value is None else value
+
+    @field_validator("priority", mode="before")
+    @classmethod
+    def _default_priority(cls, value):
+        return 0 if value is None else value
 
 
 class BonusRuleCreate(BonusRuleBase):
@@ -175,6 +185,16 @@ class TeamBonusAllocationBase(BaseModel):
     total_bonus_amount: Decimal = Field(..., description="团队总奖金")
     allocation_method: str = Field(..., description="分配方式")
     allocation_detail: List[Dict[str, Any]] = Field(..., description="分配明细")
+
+    @field_validator("allocation_method", mode="before")
+    @classmethod
+    def _default_allocation_method(cls, value):
+        return "EQUAL" if value in (None, "") else value
+
+    @field_validator("allocation_detail", mode="before")
+    @classmethod
+    def _default_allocation_detail(cls, value):
+        return [] if value is None else value
 
 
 class TeamBonusAllocationCreate(TeamBonusAllocationBase):
@@ -339,6 +359,16 @@ class BonusAllocationSheetResponse(BaseModel):
     uploaded_by: int
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("total_rows", "valid_rows", "invalid_rows", "distribution_count", mode="before")
+    @classmethod
+    def _default_count(cls, value):
+        return 0 if value is None else value
+
+    @field_validator("finance_confirmed", "hr_confirmed", "manager_confirmed", mode="before")
+    @classmethod
+    def _default_confirmation(cls, value):
+        return False if value is None else value
 
     class Config:
         from_attributes = True

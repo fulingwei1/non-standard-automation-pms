@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.common.pagination import get_pagination_params
 from app.common.query_filters import apply_pagination, build_keyword_conditions
-from app.models.sales import Contract, Quote
+from app.models.sales import Contract, Quote, QuoteVersion
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import QuoteCreate
@@ -41,7 +41,7 @@ class QuotesService:
             joinedload(Quote.customer),
             joinedload(Quote.owner),
             joinedload(Quote.opportunity),
-            joinedload(Quote.current_version),
+            joinedload(Quote.current_version).joinedload(QuoteVersion.presale_ticket),
             joinedload(Quote.versions),
         )
 
@@ -90,6 +90,7 @@ class QuotesService:
                     .order_by(desc(Contract.id))
                     .scalar()
                 )
+            presale_ticket = current_version.presale_ticket if current_version else None
             version_payload = None
             if current_version:
                 version_payload = {
@@ -100,6 +101,9 @@ class QuotesService:
                     "gross_margin": float(current_version.gross_margin or 0),
                     "lead_time_days": current_version.lead_time_days,
                     "delivery_date": current_version.delivery_date,
+                    "solution_id": current_version.presale_solution_id,
+                    "presale_solution_id": current_version.presale_solution_id,
+                    "presale_ticket_id": current_version.presale_ticket_id,
                 }
 
             title = (
@@ -112,7 +116,16 @@ class QuotesService:
                 "quote_code": quote.quote_code,
                 "quote_no": f"QT-{quote.id:06d}",
                 "opportunity_id": quote.opportunity_id,
+                "lead_id": (
+                    quote.opportunity.lead_id
+                    if quote.opportunity and quote.opportunity.lead_id
+                    else (presale_ticket.lead_id if presale_ticket else None)
+                ),
+                "project_id": presale_ticket.project_id if presale_ticket else None,
                 "customer_id": quote.customer_id,
+                "solution_id": current_version.presale_solution_id if current_version else None,
+                "presale_solution_id": current_version.presale_solution_id if current_version else None,
+                "presale_ticket_id": current_version.presale_ticket_id if current_version else None,
                 "contract_id": contract_id,
                 "status": quote.status,
                 "valid_until": quote.valid_until,

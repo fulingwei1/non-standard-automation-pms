@@ -143,7 +143,7 @@ def create_rhythm_config(
     )
 
 
-@router.get("/{config_id}", response_model=RhythmConfigResponse)
+@router.get("/{config_id:int}", response_model=RhythmConfigResponse)
 def read_rhythm_config(
     config_id: int,
     db: Session = Depends(deps.get_db),
@@ -172,7 +172,7 @@ def read_rhythm_config(
     )
 
 
-@router.put("/{config_id}", response_model=RhythmConfigResponse)
+@router.put("/{config_id:int}", response_model=RhythmConfigResponse)
 def update_rhythm_config(
     config_id: int,
     config_data: RhythmConfigUpdate,

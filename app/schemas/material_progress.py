@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 
 class KeyMaterialItem(BaseModel):
     """关键物料"""
-    material_id: int
+    material_id: Optional[int] = None
     material_code: str
     material_name: str
     specification: Optional[str] = None

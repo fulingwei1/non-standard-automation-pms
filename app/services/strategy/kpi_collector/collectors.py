@@ -2,6 +2,7 @@
 """
 KPI数据采集器 - 模块采集器
 """
+
 from decimal import Decimal
 from typing import Dict, Optional
 
@@ -61,7 +62,9 @@ def collect_project_metrics(
         on_time = sum(
             1
             for p in completed
-            if p.actual_end_date and p.planned_end_date and p.actual_end_date <= p.planned_end_date
+            if p.actual_end_date
+            and p.planned_end_date
+            and p.actual_end_date <= p.planned_end_date
         )
         return Decimal(str(on_time / len(completed) * 100))
 
@@ -109,6 +112,7 @@ def collect_finance_metrics(
 
     from app.models.project.financial import ProjectCost, ProjectPaymentPlan
     from app.models.sales.contracts import Contract
+    from app.services.cost.cost_basis import actual_project_cost_filter
 
     filters = filters or {}
 
@@ -126,7 +130,9 @@ def collect_finance_metrics(
         # 已收款金额（从收款计划中统计）
         query = db.query(func.sum(ProjectPaymentPlan.actual_amount))
         if "year" in filters:
-            query = query.filter(func.year(ProjectPaymentPlan.actual_date) == filters["year"])
+            query = query.filter(
+                func.year(ProjectPaymentPlan.actual_date) == filters["year"]
+            )
         if "project_id" in filters:
             query = query.filter(ProjectPaymentPlan.project_id == filters["project_id"])
         result = query.scalar()
@@ -134,7 +140,9 @@ def collect_finance_metrics(
 
     elif metric == "PROJECT_COST_TOTAL":
         # 项目成本总计
-        query = db.query(func.sum(ProjectCost.amount))
+        query = db.query(func.sum(ProjectCost.amount)).filter(
+            actual_project_cost_filter()
+        )
         if "year" in filters:
             query = query.filter(func.year(ProjectCost.cost_date) == filters["year"])
         if "project_id" in filters:
@@ -156,7 +164,7 @@ def collect_finance_metrics(
             return Decimal(0)
         total_cost = (
             db.query(func.sum(ProjectCost.amount))
-            .filter(ProjectCost.project_id == project_id)
+            .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
             .scalar()
             or 0
         )
@@ -168,7 +176,9 @@ def collect_finance_metrics(
         # 逾期应收款金额
         today = date.today()
         query = db.query(
-            func.sum(ProjectPaymentPlan.planned_amount - ProjectPaymentPlan.actual_amount)
+            func.sum(
+                ProjectPaymentPlan.planned_amount - ProjectPaymentPlan.actual_amount
+            )
         ).filter(
             ProjectPaymentPlan.planned_date < today,
             ProjectPaymentPlan.status.in_(["PENDING", "PARTIAL"]),
@@ -288,7 +298,9 @@ def collect_hr_metrics(
 
     elif metric == "EMPLOYEE_ACTIVE_COUNT":
         # 在职员工数
-        query = db.query(func.count(Employee.id)).filter(Employee.employment_status == "active")
+        query = db.query(func.count(Employee.id)).filter(
+            Employee.employment_status == "active"
+        )
         if "department_id" in filters:
             query = query.join(User, User.employee_id == Employee.id).filter(
                 User.department_id == filters["department_id"]
@@ -298,7 +310,9 @@ def collect_hr_metrics(
 
     elif metric == "EMPLOYEE_RESIGNED_COUNT":
         # 离职员工数
-        query = db.query(func.count(Employee.id)).filter(Employee.employment_status == "resigned")
+        query = db.query(func.count(Employee.id)).filter(
+            Employee.employment_status == "resigned"
+        )
         if "year" in filters:
             query = query.join(
                 EmployeeHrProfile, EmployeeHrProfile.employee_id == Employee.id
@@ -310,9 +324,9 @@ def collect_hr_metrics(
         # 离职率 = 离职人数 / 总员工数 * 100
         total_query = db.query(func.count(Employee.id))
         if "department_id" in filters:
-            total_query = total_query.join(User, User.employee_id == Employee.id).filter(
-                User.department_id == filters["department_id"]
-            )
+            total_query = total_query.join(
+                User, User.employee_id == Employee.id
+            ).filter(User.department_id == filters["department_id"])
         total = total_query.scalar() or 0
         if total == 0:
             return Decimal(0)
@@ -332,7 +346,8 @@ def collect_hr_metrics(
     elif metric == "EMPLOYEE_PROBATION_COUNT":
         # 试用期员工数
         query = db.query(func.count(Employee.id)).filter(
-            Employee.employment_type == "probation", Employee.employment_status == "active"
+            Employee.employment_type == "probation",
+            Employee.employment_status == "active",
         )
         result = query.scalar()
         return Decimal(result or 0)
@@ -350,7 +365,8 @@ def collect_hr_metrics(
         probation_resigned = (
             db.query(func.count(Employee.id))
             .filter(
-                Employee.employment_type == "probation", Employee.employment_status == "resigned"
+                Employee.employment_type == "probation",
+                Employee.employment_status == "resigned",
             )
             .scalar()
             or 0

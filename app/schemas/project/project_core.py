@@ -8,7 +8,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ..common import BaseSchema, TimestampSchema
 from .machine import MachineResponse
@@ -153,6 +153,71 @@ class ProjectResponse(TimestampSchema):
     class Config:
         from_attributes = True
 
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_nulls(cls, value):
+        if isinstance(value, dict):
+            data = dict(value)
+        elif hasattr(value, "id"):
+            data = {
+                "id": getattr(value, "id", None),
+                "project_code": getattr(value, "project_code", None),
+                "project_name": getattr(value, "project_name", None),
+                "short_name": getattr(value, "short_name", None),
+                "customer_id": getattr(value, "customer_id", None),
+                "customer_name": getattr(value, "customer_name", None),
+                "project_type": getattr(value, "project_type", None),
+                "project_category": getattr(value, "project_category", None),
+                "industry": getattr(value, "industry", None),
+                "stage": getattr(value, "stage", None),
+                "status": getattr(value, "status", None),
+                "health": getattr(value, "health", None),
+                "progress_pct": getattr(value, "progress_pct", None),
+                "contract_date": getattr(value, "contract_date", None),
+                "planned_start_date": getattr(value, "planned_start_date", None),
+                "planned_end_date": getattr(value, "planned_end_date", None),
+                "contract_amount": getattr(value, "contract_amount", None),
+                "budget_amount": getattr(value, "budget_amount", None),
+                "actual_cost": getattr(value, "actual_cost", None),
+                "pm_id": getattr(value, "pm_id", None),
+                "pm_name": getattr(value, "pm_name", None),
+                "is_active": getattr(value, "is_active", None),
+                "stage_template_id": getattr(value, "stage_template_id", None),
+                "lead_id": getattr(value, "lead_id", None),
+                "opportunity_id": getattr(value, "opportunity_id", None),
+                "contract_id": getattr(value, "contract_id", None),
+                "contract_no": getattr(value, "contract_no", None),
+                "customer_contract_no": getattr(value, "customer_contract_no", None),
+                "erp_synced": getattr(value, "erp_synced", None),
+                "erp_sync_time": getattr(value, "erp_sync_time", None),
+                "erp_order_no": getattr(value, "erp_order_no", None),
+                "erp_sync_status": getattr(value, "erp_sync_status", None),
+                "invoice_issued": getattr(value, "invoice_issued", None),
+                "final_payment_completed": getattr(value, "final_payment_completed", None),
+                "final_payment_date": getattr(value, "final_payment_date", None),
+                "warranty_period_months": getattr(value, "warranty_period_months", None),
+                "warranty_start_date": getattr(value, "warranty_start_date", None),
+                "warranty_end_date": getattr(value, "warranty_end_date", None),
+                "implementation_address": getattr(value, "implementation_address", None),
+                "test_encryption": getattr(value, "test_encryption", None),
+                "initiation_id": getattr(value, "initiation_id", None),
+                "created_at": getattr(value, "created_at", None),
+                "updated_at": getattr(value, "updated_at", None),
+            }
+        else:
+            return value
+
+        data["stage"] = data.get("stage") or "S1"
+        data["health"] = data.get("health") or "H1"
+        for field in ("progress_pct", "contract_amount", "budget_amount", "actual_cost"):
+            if data.get(field) is None:
+                data[field] = ZERO_DECIMAL
+        for field in ("is_active", "erp_synced", "invoice_issued", "final_payment_completed"):
+            if data.get(field) is None:
+                data[field] = field == "is_active"
+        data["erp_sync_status"] = data.get("erp_sync_status") or "PENDING"
+        return data
+
 
 class ProjectListResponse(BaseSchema):
     """项目列表响应"""
@@ -231,6 +296,40 @@ class ProjectMemberResponse(BaseSchema):
     end_date: Optional[date] = None
     is_active: bool = True
     remark: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_nulls(cls, value):
+        if isinstance(value, dict):
+            data = dict(value)
+        elif hasattr(value, "id"):
+            user = getattr(value, "user", None)
+            data = {
+                "id": getattr(value, "id", None),
+                "project_id": getattr(value, "project_id", None),
+                "user_id": getattr(value, "user_id", None),
+                "username": getattr(value, "username", None)
+                or getattr(user, "username", None)
+                or f"user_{getattr(value, 'user_id', '')}",
+                "real_name": getattr(value, "real_name", None)
+                or getattr(user, "real_name", None),
+                "role_code": getattr(value, "role_code", None),
+                "allocation_pct": getattr(value, "allocation_pct", None),
+                "start_date": getattr(value, "start_date", None),
+                "end_date": getattr(value, "end_date", None),
+                "is_active": getattr(value, "is_active", None),
+                "remark": getattr(value, "remark", None),
+            }
+        else:
+            return value
+
+        if data.get("allocation_pct") is None:
+            data["allocation_pct"] = HUNDRED_DECIMAL
+        if data.get("is_active") is None:
+            data["is_active"] = True
+        if data.get("username") is None:
+            data["username"] = f"user_{data.get('user_id', '')}"
+        return data
 
 
 # 项目文档 Schema

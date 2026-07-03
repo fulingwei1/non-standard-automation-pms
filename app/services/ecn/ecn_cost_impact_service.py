@@ -40,6 +40,12 @@ DIRECT_COST_TYPES = {"SCRAP", "REWORK", "NEW_PURCHASE"}
 INDIRECT_COST_TYPES = {"CLAIM", "DELAY", "ADMIN"}
 
 
+def _ensure_cost_tables(db: Session) -> None:
+    bind = db.get_bind()
+    for model in (EcnCostRecord, EcnAffectedMaterial, ProjectChangeImpact):
+        model.__table__.create(bind=bind, checkfirst=True)
+
+
 # ═══════════════════════════════════════════════════════════════
 #  1. 成本影响分析
 # ═══════════════════════════════════════════════════════════════
@@ -60,6 +66,7 @@ def cost_impact_analysis(
     ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
     if not ecn:
         raise ValueError(f"ECN {ecn_id} 不存在")
+    _ensure_cost_tables(db)
 
     # 1) 从成本记录表按类型汇总
     type_summary = (
@@ -169,6 +176,7 @@ def get_cost_tracking(
     ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
     if not ecn:
         raise ValueError(f"ECN {ecn_id} 不存在")
+    _ensure_cost_tables(db)
 
     records = (
         db.query(EcnCostRecord).filter(EcnCostRecord.ecn_id == ecn_id).all()
@@ -299,6 +307,7 @@ def create_cost_record(
     ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
     if not ecn:
         raise ValueError(f"ECN {ecn_id} 不存在")
+    _ensure_cost_tables(db)
 
     if cost_type not in COST_TYPE_LABELS:
         raise ValueError(f"无效的成本类型: {cost_type}")
@@ -347,6 +356,7 @@ def list_cost_records(
     approval_status: Optional[str] = None,
 ) -> List[EcnCostRecord]:
     """查询ECN的成本记录列表"""
+    _ensure_cost_tables(db)
     q = db.query(EcnCostRecord).filter(EcnCostRecord.ecn_id == ecn_id)
     if cost_type:
         q = q.filter(EcnCostRecord.cost_type == cost_type)
@@ -363,6 +373,7 @@ def approve_cost_record(
     note: Optional[str] = None,
 ) -> EcnCostRecord:
     """审批成本记录"""
+    _ensure_cost_tables(db)
     record = db.query(EcnCostRecord).filter(EcnCostRecord.id == record_id).first()
     if not record:
         raise ValueError(f"成本记录 {record_id} 不存在")
@@ -390,6 +401,7 @@ def get_project_ecn_cost_summary(
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise ValueError(f"项目 {project_id} 不存在")
+    _ensure_cost_tables(db)
 
     # 查出该项目关联的所有ECN
     ecns = db.query(Ecn).filter(Ecn.project_id == project_id).all()
@@ -491,6 +503,7 @@ def check_cost_alerts(
     ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
     if not ecn:
         raise ValueError(f"ECN {ecn_id} 不存在")
+    _ensure_cost_tables(db)
 
     records = db.query(EcnCostRecord).filter(EcnCostRecord.ecn_id == ecn_id).all()
 

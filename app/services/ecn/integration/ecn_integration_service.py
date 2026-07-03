@@ -11,7 +11,7 @@ from typing import Any, Dict, List
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from app.models.ecn import Ecn, EcnAffectedMaterial, EcnAffectedOrder, EcnTask
+from app.models.ecn import Ecn, EcnAffectedMaterial, EcnAffectedOrder, EcnBomChange, EcnTask
 from app.models.material import BomItem
 from app.models.project import Project
 from app.models.purchase import PurchaseOrder
@@ -59,18 +59,43 @@ class EcnIntegrationService:
                 bom_item = self.db.query(BomItem).filter(BomItem.id == am.bom_item_id).first()
                 if bom_item:
                     # 根据变更类型更新BOM
-                    if am.change_type == "UPDATE":
+                    # EBC-1: 列名是 quantity（原误用 bom_item.qty 导致数量变更静默丢失）
+                    old_parts = []
+                    new_parts = []
+                    if am.change_type in ("UPDATE", "REPLACE"):
                         if am.new_quantity:
-                            bom_item.qty = float(am.new_quantity)
+                            old_parts.append(f"数量:{bom_item.quantity}")
+                            new_parts.append(f"数量:{float(am.new_quantity)}")
+                            bom_item.quantity = float(am.new_quantity)
                         if am.new_specification:
+                            old_parts.append(f"规格:{bom_item.specification}")
+                            new_parts.append(f"规格:{am.new_specification}")
                             bom_item.specification = am.new_specification
-                    elif am.change_type == "REPLACE" and am.material_id:
-                        bom_item.material_id = am.material_id
+                        # REPLACE 额外支持换料号
+                        if am.change_type == "REPLACE" and am.material_id:
+                            old_parts.append(f"料号ID:{bom_item.material_id}")
+                            new_parts.append(f"料号ID:{am.material_id}")
+                            bom_item.material_id = am.material_id
 
+                    now = datetime.now()
                     am.status = "PROCESSED"
-                    am.processed_at = datetime.now()
+                    am.processed_at = now
                     self.db.add(bom_item)
                     self.db.add(am)
+                    # 审计留痕：记录到 ecn_bom_changes
+                    self.db.add(
+                        EcnBomChange(
+                            ecn_id=ecn_id,
+                            bom_id=bom_item.bom_id,
+                            project_id=ecn.project_id,
+                            material_code=am.material_code,
+                            change_action=am.change_type,
+                            old_value="; ".join(old_parts) or (am.old_specification or ""),
+                            new_value="; ".join(new_parts) or (am.new_specification or ""),
+                            cost_impact=am.cost_impact or Decimal("0"),
+                            applied_at=now,
+                        )
+                    )
                     updated_count += 1
 
         self.db.commit()

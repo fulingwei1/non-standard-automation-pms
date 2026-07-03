@@ -3,9 +3,12 @@
 审批模板管理 API
 """
 
+import json
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import String, cast
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -40,6 +43,68 @@ from app.utils.db_helpers import get_or_404, save_obj
 router = APIRouter()
 
 
+def _safe_json_object(value):
+    if value in (None, ""):
+        return None
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+        except (TypeError, ValueError):
+            return None
+        return parsed if isinstance(parsed, dict) else None
+    return None
+
+
+def _template_row_query(db: Session):
+    return db.query(
+        ApprovalTemplate.id.label("id"),
+        ApprovalTemplate.template_code.label("template_code"),
+        ApprovalTemplate.template_name.label("template_name"),
+        ApprovalTemplate.category.label("category"),
+        ApprovalTemplate.description.label("description"),
+        ApprovalTemplate.icon.label("icon"),
+        ApprovalTemplate.entity_type.label("entity_type"),
+        cast(ApprovalTemplate.form_schema, String).label("form_schema_raw"),
+        cast(ApprovalTemplate.visible_scope, String).label("visible_scope_raw"),
+        ApprovalTemplate.version.label("version"),
+        ApprovalTemplate.is_published.label("is_published"),
+        ApprovalTemplate.is_active.label("is_active"),
+        ApprovalTemplate.created_at.label("created_at"),
+        ApprovalTemplate.updated_at.label("updated_at"),
+    )
+
+
+def _apply_template_filters(query, category, is_active, keyword):
+    if category:
+        query = query.filter(ApprovalTemplate.category == category)
+    if is_active is not None:
+        query = query.filter(ApprovalTemplate.is_active == is_active)
+    return apply_keyword_filter(
+        query, ApprovalTemplate, keyword, ["template_name", "template_code"]
+    )
+
+
+def _template_response_from_row(row) -> ApprovalTemplateResponse:
+    return ApprovalTemplateResponse(
+        id=row.id,
+        template_code=row.template_code,
+        template_name=row.template_name,
+        category=row.category,
+        description=row.description,
+        icon=row.icon,
+        entity_type=row.entity_type,
+        form_schema=_safe_json_object(row.form_schema_raw),
+        visible_scope=_safe_json_object(row.visible_scope_raw),
+        version=row.version,
+        is_published=row.is_published,
+        is_active=row.is_active,
+        created_at=row.created_at or row.updated_at or datetime.now(),
+        updated_at=row.updated_at,
+    )
+
+
 # ==================== 模板 CRUD ====================
 
 
@@ -53,26 +118,23 @@ def list_templates(
     current_user: User = Depends(security.require_permission("approval:template:view")),
 ):
     """获取审批模板列表"""
-    query = db.query(ApprovalTemplate)
-
-    if category:
-        query = query.filter(ApprovalTemplate.category == category)
-    if is_active is not None:
-        query = query.filter(ApprovalTemplate.is_active == is_active)
-    query = apply_keyword_filter(
-        query, ApprovalTemplate, keyword, ["template_name", "template_code"]
+    count_query = _apply_template_filters(
+        db.query(ApprovalTemplate.id), category, is_active, keyword
+    )
+    rows_query = _apply_template_filters(
+        _template_row_query(db), category, is_active, keyword
     )
 
-    total = query.count()
+    total = count_query.count()
     items = apply_pagination(
-        query.order_by(ApprovalTemplate.id.desc()), pagination.offset, pagination.limit
+        rows_query.order_by(ApprovalTemplate.id.desc()), pagination.offset, pagination.limit
     ).all()
 
     return ApprovalTemplateListResponse(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        items=[ApprovalTemplateResponse.model_validate(t) for t in items],
+        items=[_template_response_from_row(row) for row in items],
     )
 
 
@@ -83,8 +145,10 @@ def get_template(
     current_user: User = Depends(security.require_permission("approval:template:view")),
 ):
     """获取审批模板详情"""
-    template = get_or_404(db, ApprovalTemplate, template_id, "模板不存在")
-    return ApprovalTemplateResponse.model_validate(template)
+    row = _template_row_query(db).filter(ApprovalTemplate.id == template_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="模板不存在")
+    return _template_response_from_row(row)
 
 
 @router.post("", response_model=ApprovalTemplateResponse)

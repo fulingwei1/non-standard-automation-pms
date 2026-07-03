@@ -217,7 +217,7 @@ check_get_200 "roles/my/nav-groups（导航菜单）" "${API_V1}/roles/my/nav-gr
 check_get_200 "users（用户列表）" "${API_V1}/users/?page=1&page_size=2"
 check_get_200 "projects（项目列表）" "${API_V1}/projects/?page=1&page_size=1"
 check_get_200 "alerts（预警列表）" "${API_V1}/alerts?page=1&page_size=1"
-check_get_200 "shortage-alerts（缺料预警列表）" "${API_V1}/shortage-alerts/?page=1&page_size=1"
+check_get_200 "shortage/detection/alerts（缺料预警列表）" "${API_V1}/shortage/detection/alerts?page=1&page_size=1"
 
 echo ""
 echo -e "${GREEN}========================================${NC}"

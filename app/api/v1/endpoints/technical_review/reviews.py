@@ -35,6 +35,10 @@ from .utils import generate_review_no
 router = APIRouter()
 
 
+def _count_or_zero(value: Optional[int]) -> int:
+    return int(value or 0)
+
+
 def _build_review_response(review: TechnicalReview) -> TechnicalReviewResponse:
     """构建评审响应"""
     return TechnicalReviewResponse(
@@ -57,10 +61,10 @@ def _build_review_response(review: TechnicalReview) -> TechnicalReviewResponse:
         conclusion_summary=review.conclusion_summary,
         condition_deadline=review.condition_deadline,
         next_review_date=review.next_review_date,
-        issue_count_a=review.issue_count_a,
-        issue_count_b=review.issue_count_b,
-        issue_count_c=review.issue_count_c,
-        issue_count_d=review.issue_count_d,
+        issue_count_a=_count_or_zero(review.issue_count_a),
+        issue_count_b=_count_or_zero(review.issue_count_b),
+        issue_count_c=_count_or_zero(review.issue_count_c),
+        issue_count_d=_count_or_zero(review.issue_count_d),
         created_by=review.created_by,
         created_at=review.created_at,
         updated_at=review.updated_at,
@@ -191,10 +195,10 @@ def read_technical_review(
         conclusion_summary=review.conclusion_summary,
         condition_deadline=review.condition_deadline,
         next_review_date=review.next_review_date,
-        issue_count_a=review.issue_count_a,
-        issue_count_b=review.issue_count_b,
-        issue_count_c=review.issue_count_c,
-        issue_count_d=review.issue_count_d,
+        issue_count_a=_count_or_zero(review.issue_count_a),
+        issue_count_b=_count_or_zero(review.issue_count_b),
+        issue_count_c=_count_or_zero(review.issue_count_c),
+        issue_count_d=_count_or_zero(review.issue_count_d),
         created_by=review.created_by,
         created_at=review.created_at,
         updated_at=review.updated_at,

@@ -27,6 +27,7 @@ router = APIRouter()
 
 @router.post("/nodes/{node_instance_id}/start", response_model=ProjectNodeInstanceResponse)
 def start_node(
+    project_id: int,
     node_instance_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_user),
@@ -43,6 +44,7 @@ def start_node(
 
 @router.post("/nodes/{node_instance_id}/complete", response_model=ProjectNodeInstanceResponse)
 def complete_node(
+    project_id: int,
     node_instance_id: int,
     complete_in: ProjectNodeInstanceComplete,
     db: Session = Depends(deps.get_db),
@@ -66,6 +68,7 @@ def complete_node(
 
 @router.post("/nodes/{node_instance_id}/skip", response_model=ProjectNodeInstanceResponse)
 def skip_node(
+    project_id: int,
     node_instance_id: int,
     reason: Optional[str] = Query(None, description="跳过原因"),
     db: Session = Depends(deps.get_db),
@@ -83,6 +86,7 @@ def skip_node(
 
 @router.put("/nodes/{node_instance_id}", response_model=ProjectNodeInstanceResponse)
 def update_node_instance(
+    project_id: int,
     node_instance_id: int,
     update_in: ProjectNodeInstanceUpdate,
     db: Session = Depends(deps.get_db),
@@ -105,6 +109,7 @@ def update_node_instance(
 
 @router.put("/nodes/{node_instance_id}/planned-date", response_model=ProjectNodeInstanceResponse)
 def update_node_planned_date(
+    project_id: int,
     node_instance_id: int,
     planned_date: date = Query(..., description="计划完成日期"),
     db: Session = Depends(deps.get_db),

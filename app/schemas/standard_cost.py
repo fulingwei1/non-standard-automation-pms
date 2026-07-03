@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.common import TimestampSchema
 
@@ -71,6 +71,21 @@ class StandardCostResponse(TimestampSchema):
     updated_by: Optional[int] = None
     description: Optional[str] = None
     notes: Optional[str] = None
+
+    @field_validator("currency", mode="before")
+    @classmethod
+    def _default_currency(cls, value):
+        return "CNY" if value in (None, "") else value
+
+    @field_validator("version", mode="before")
+    @classmethod
+    def _default_version(cls, value):
+        return 1 if value is None else value
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _default_is_active(cls, value):
+        return True if value is None else value
 
     class Config:
         from_attributes = True

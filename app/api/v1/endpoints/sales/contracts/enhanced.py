@@ -3,9 +3,11 @@
 合同管理增强 API - 完整的CRUD与审批流程
 """
 
+from pathlib import Path
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -27,7 +29,7 @@ from app.schemas.sales.contract_enhanced import (
     ContractUpdate,
 )
 from app.core.sales_permissions import check_sales_data_permission, filter_sales_data_by_scope
-from app.models.sales import Contract
+from app.models.sales import Contract, ContractAttachment
 from app.services.sales.contract_enhanced import ContractEnhancedService
 
 router = APIRouter()
@@ -335,8 +337,17 @@ def download_attachment(
     current_user: User = Depends(security.require_permission("contract:view")),
 ):
     """下载附件"""
-    # TODO: 实现文件下载逻辑
-    raise HTTPException(status_code=501, detail="下载功能待实现")
+    attachment = db.query(ContractAttachment).filter(ContractAttachment.id == attachment_id).first()
+    if not attachment:
+        raise HTTPException(status_code=404, detail="附件不存在")
+    file_path = Path(attachment.file_path).expanduser()
+    if not file_path.is_file():
+        raise HTTPException(status_code=404, detail="附件文件不存在")
+    return FileResponse(
+        path=file_path,
+        filename=attachment.file_name,
+        media_type=attachment.file_type or "application/octet-stream",
+    )
 
 
 # ========== 合同状态流转 ==========

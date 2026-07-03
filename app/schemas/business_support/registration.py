@@ -6,7 +6,7 @@
 from datetime import date, datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ...schemas.common import TimestampSchema
 
@@ -64,6 +64,11 @@ class CustomerSupplierRegistrationResponse(TimestampSchema):
     external_sync_status: Optional[str] = None
     last_sync_at: Optional[datetime] = None
     remark: Optional[str] = None
+
+    @field_validator("registration_status", mode="before")
+    @classmethod
+    def _default_registration_status(cls, value):
+        return "PENDING" if value in (None, "") else value
 
 
 class SupplierRegistrationReviewRequest(BaseModel):

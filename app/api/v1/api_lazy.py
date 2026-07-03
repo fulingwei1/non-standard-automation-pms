@@ -51,9 +51,23 @@ def create_api_router() -> APIRouter:
     api_router.include_router(projects_router, prefix="/projects", tags=["projects"])
 
     # ==================== 生产管理 ====================
+    from app.api.v1.endpoints.production import exceptions as production_exceptions
     from app.api.v1.endpoints.production import router as production_router
+    from app.api.v1.endpoints.production import workers as production_workers
+    from app.api.v1.endpoints import production_daily_reports
 
     api_router.include_router(production_router, prefix="/production", tags=["production"])
+    api_router.include_router(production_workers.router, prefix="/workers", tags=["production-workers"])
+    api_router.include_router(
+        production_exceptions.router,
+        prefix="/production-exceptions",
+        tags=["production-exceptions"],
+    )
+    api_router.include_router(
+        production_daily_reports.router,
+        prefix="/production-daily-reports",
+        tags=["production-daily-reports"],
+    )
 
     # ==================== 销售管理 ====================
     from app.api.v1.endpoints.sales import router as sales_router
@@ -179,6 +193,7 @@ def create_api_router() -> APIRouter:
         technical_spec.router, prefix="/technical-spec", tags=["technical-spec"]
     )
     api_router.include_router(acceptance.router, prefix="/acceptance", tags=["acceptance"])
+    api_router.include_router(acceptance.router, tags=["acceptance-legacy"])
     api_router.include_router(admin_stats.router, prefix="/admin-stats", tags=["admin-stats"])
     api_router.include_router(
         advantage_products.router, prefix="/advantage-products", tags=["advantage-products"]

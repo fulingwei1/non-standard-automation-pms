@@ -167,7 +167,9 @@ class ReportExcelService:
         # 自动调整列宽
         for col in ws.columns:
             max_length = 0
-            column = col[0].column_letter
+            # 合并单元格(MergedCell)没有 column_letter 属性，统一用列索引换算，
+            # 避免存在合并单元格时导出报错。
+            column = get_column_letter(col[0].column)
             for cell in col:
                 if cell.value:
                     max_length = max(max_length, len(str(cell.value)))
@@ -230,7 +232,9 @@ class ReportExcelService:
         # 自动调整列宽
         for col in ws.columns:
             max_length = 0
-            column = col[0].column_letter
+            # 合并单元格(MergedCell)没有 column_letter 属性，统一用列索引换算，
+            # 避免存在合并单元格时导出报错。
+            column = get_column_letter(col[0].column)
             for cell in col:
                 if cell.value:
                     max_length = max(max_length, len(str(cell.value)))

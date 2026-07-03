@@ -8,7 +8,7 @@ from decimal import Decimal
 from typing import Dict, List, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, text
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_pagination
@@ -241,18 +241,33 @@ class ProjectChangeRequestsService:
 
         return change_request
 
-    def get_approval_records(self, change_id: int) -> List[ChangeApprovalRecord]:
+    def get_approval_records(self, change_id: int) -> List[dict]:
         """获取审批记录"""
         get_or_404(self.db, ChangeRequest, change_id, detail="变更请求不存在")
 
-        records = (
-            self.db.query(ChangeApprovalRecord)
-            .filter(ChangeApprovalRecord.change_request_id == change_id)
-            .order_by(desc(ChangeApprovalRecord.approval_date))
-            .all()
-        )
+        rows = self.db.execute(
+            text(
+                """
+                SELECT
+                    id,
+                    change_request_id,
+                    approver_id,
+                    approver_name,
+                    approver_role,
+                    approval_date,
+                    decision,
+                    comments,
+                    attachments,
+                    created_at
+                FROM change_approval_records
+                WHERE change_request_id = :change_id
+                ORDER BY approval_date DESC
+                """
+            ),
+            {"change_id": change_id},
+        ).mappings()
 
-        return records
+        return [dict(row) for row in rows]
 
     def update_change_status(
         self,

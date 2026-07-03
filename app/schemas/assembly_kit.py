@@ -9,7 +9,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ========== 装配阶段 ==========
@@ -102,6 +102,26 @@ class CategoryStageMappingBase(BaseModel):
     can_postpone: bool = Field(default=False, description="是否可后补")
     priority: int = Field(default=50, ge=0, le=100, description="优先级")
 
+    @field_validator("category_id", mode="before")
+    @classmethod
+    def _default_category_id(cls, value):
+        return 0 if value is None else value
+
+    @field_validator("is_blocking", mode="before")
+    @classmethod
+    def _default_is_blocking(cls, value):
+        return True if value is None else value
+
+    @field_validator("can_postpone", mode="before")
+    @classmethod
+    def _default_can_postpone(cls, value):
+        return False if value is None else value
+
+    @field_validator("priority", mode="before")
+    @classmethod
+    def _default_priority(cls, value):
+        return 50 if value is None else value
+
 
 class CategoryStageMappingCreate(CategoryStageMappingBase):
     """创建物料分类映射"""
@@ -145,6 +165,26 @@ class BomItemAssemblyAttrsBase(BaseModel):
     substitute_material_id: Optional[int] = Field(None, description="替代物料ID")
     stage_order: int = Field(default=0, ge=0, description="阶段内排序")
     remark: Optional[str] = Field(None, description="备注")
+
+    @field_validator("importance_level", mode="before")
+    @classmethod
+    def _default_importance_level(cls, value):
+        return "NORMAL" if value in (None, "") else value
+
+    @field_validator("is_blocking", mode="before")
+    @classmethod
+    def _default_is_blocking(cls, value):
+        return True if value is None else value
+
+    @field_validator("can_postpone", "has_substitute", mode="before")
+    @classmethod
+    def _default_false_flags(cls, value):
+        return False if value is None else value
+
+    @field_validator("stage_order", mode="before")
+    @classmethod
+    def _default_stage_order(cls, value):
+        return 0 if value is None else value
 
 
 class BomItemAssemblyAttrsCreate(BomItemAssemblyAttrsBase):
@@ -233,6 +273,21 @@ class MaterialReadinessBase(BaseModel):
     first_blocked_stage: Optional[str] = Field(None, description="首个阻塞阶段")
     estimated_ready_date: Optional[date] = Field(None, description="预计齐套日期")
 
+    @field_validator("bom_id", mode="before")
+    @classmethod
+    def _default_bom_id(cls, value):
+        return 0 if value is None else value
+
+    @field_validator("overall_kit_rate", "blocking_kit_rate", mode="before")
+    @classmethod
+    def _default_rate(cls, value):
+        return Decimal("0") if value is None else value
+
+    @field_validator("can_start", mode="before")
+    @classmethod
+    def _default_can_start(cls, value):
+        return False if value is None else value
+
 
 class MaterialReadinessCreate(BaseModel):
     """创建齐套分析请求"""
@@ -288,6 +343,40 @@ class ShortageDetailBase(BaseModel):
     shortage_rate: Decimal = Field(default=Decimal("0"), description="缺料比例(%)")
     expected_arrival_date: Optional[date] = Field(None, description="预计到货日期")
     alert_level: str = Field(default="L4", max_length=10, description="预警级别")
+
+    @field_validator("material_id", mode="before")
+    @classmethod
+    def _default_material_id(cls, value):
+        return 0 if value is None else value
+
+    @field_validator("material_code", "material_name", "assembly_stage", mode="before")
+    @classmethod
+    def _default_required_text(cls, value):
+        return "" if value is None else value
+
+    @field_validator("is_blocking", mode="before")
+    @classmethod
+    def _default_shortage_is_blocking(cls, value):
+        return True if value is None else value
+
+    @field_validator(
+        "required_qty",
+        "stock_qty",
+        "allocated_qty",
+        "in_transit_qty",
+        "available_qty",
+        "shortage_qty",
+        "shortage_rate",
+        mode="before",
+    )
+    @classmethod
+    def _default_decimal(cls, value):
+        return Decimal("0") if value is None else value
+
+    @field_validator("alert_level", mode="before")
+    @classmethod
+    def _default_alert_level(cls, value):
+        return "L4" if value in (None, "") else value
 
 
 class ShortageDetailResponse(ShortageDetailBase):
@@ -393,11 +482,21 @@ class SchedulingSuggestionBase(BaseModel):
     machine_id: Optional[int] = Field(None, description="机台ID")
     readiness_id: Optional[int] = Field(None, description="齐套分析ID")
     suggestion_type: str = Field(..., max_length=20, description="建议类型")
-    priority_score: Decimal = Field(..., description="优先级得分")
-    current_kit_rate: Decimal = Field(..., description="当前齐套率(%)")
-    blocking_kit_rate: Decimal = Field(..., description="阻塞齐套率(%)")
+    priority_score: Decimal = Field(default=Decimal("0"), description="优先级得分")
+    current_kit_rate: Decimal = Field(default=Decimal("0"), description="当前齐套率(%)")
+    blocking_kit_rate: Decimal = Field(default=Decimal("0"), description="阻塞齐套率(%)")
     suggested_start_date: date = Field(..., description="建议开工日期")
     reason: Optional[str] = Field(None, description="建议原因")
+
+    @field_validator("suggested_start_date", mode="before")
+    @classmethod
+    def _default_suggested_start_date(cls, value):
+        return date.today() if value is None else value
+
+    @field_validator("priority_score", "current_kit_rate", "blocking_kit_rate", mode="before")
+    @classmethod
+    def _default_rate(cls, value):
+        return Decimal("0") if value is None else value
 
 
 class SchedulingSuggestionCreate(BaseModel):
@@ -419,6 +518,11 @@ class SchedulingSuggestionResponse(SchedulingSuggestionBase):
     accepted_at: Optional[datetime] = None
     reject_reason: Optional[str] = None
     created_at: datetime
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_status(cls, value):
+        return "PENDING" if value in (None, "") else value
 
     class Config:
         from_attributes = True

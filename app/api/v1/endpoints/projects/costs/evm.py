@@ -268,12 +268,13 @@ async def create_evm_snapshot(
 
 
 @router.get("/evm/metrics", response_model=dict)
-@require_permission("cost:read")
 async def calculate_evm_metrics(
+    project_id: int,
     pv: Decimal = Query(..., ge=0, description="计划价值"),
     ev: Decimal = Query(..., ge=0, description="挣得价值"),
     ac: Decimal = Query(..., ge=0, description="实际成本"),
     bac: Decimal = Query(..., gt=0, description="完工预算"),
+    current_user: User = Depends(require_permission("cost:read")),
 ):
     """
     EVM公式计算器（独立计算，不保存数据库）

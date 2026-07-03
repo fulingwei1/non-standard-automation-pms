@@ -36,6 +36,7 @@ from app.schemas.service import (
     ServiceRecordCreate,
     ServiceRecordPhoto,
     ServiceRecordResponse,
+    ServiceRecordUpdate,
 )
 from app.utils.permission_helpers import check_project_access_or_raise
 
@@ -100,6 +101,21 @@ def _serialize_service_record(item: ServiceRecord) -> dict[str, Any]:
         "created_at": item.created_at,
         "updated_at": item.updated_at,
     }
+
+
+def _hydrate_service_record_names(db: Session, item: ServiceRecord) -> None:
+    if item.project_id:
+        project = db.query(Project).filter(Project.id == item.project_id).first()
+        if project:
+            item.project_name = project.project_name
+    if item.customer_id:
+        customer = db.query(Customer).filter(Customer.id == item.customer_id).first()
+        if customer:
+            item.customer_name = customer.customer_name
+    if item.service_engineer_id:
+        engineer = db.query(User).filter(User.id == item.service_engineer_id).first()
+        if engineer:
+            item.service_engineer_name = engineer.real_name or engineer.username
 
 
 @router.get("/statistics", response_model=dict, status_code=status.HTTP_200_OK)
@@ -195,20 +211,7 @@ def read_service_records(
     # 获取项目名称和客户名称
     serialized_items = []
     for item in items:
-        if item.project_id:
-            project = db.query(Project).filter(Project.id == item.project_id).first()
-            if project:
-                item.project_name = project.project_name
-        if item.customer_id:
-            customer = db.query(Customer).filter(Customer.id == item.customer_id).first()
-            if customer:
-                item.customer_name = customer.customer_name
-        if item.service_engineer_id:
-            from app.models.user import User
-
-            engineer = db.query(User).filter(User.id == item.service_engineer_id).first()
-            if engineer:
-                item.service_engineer_name = engineer.real_name or engineer.username
+        _hydrate_service_record_names(db, item)
         serialized_items.append(_serialize_service_record(item))
 
     return {
@@ -279,16 +282,58 @@ def create_service_record(
     db.commit()
     db.refresh(record)
 
-    # 获取项目名称和客户名称
-    if record.project_id:
-        project = db.query(Project).filter(Project.id == record.project_id).first()
-        if project:
-            record.project_name = project.project_name
-    if record.customer_id:
-        customer = db.query(Customer).filter(Customer.id == record.customer_id).first()
-        if customer:
-            record.customer_name = customer.customer_name
+    _hydrate_service_record_names(db, record)
 
+    return _serialize_service_record(record)
+
+
+@router.get(
+    "/{record_id:int}", response_model=ServiceRecordResponse, status_code=status.HTTP_200_OK
+)
+def read_service_record(
+    *,
+    db: Session = Depends(deps.get_db),
+    record_id: int,
+    current_user: User = Depends(security.require_permission("service:read")),
+) -> Any:
+    """
+    获取服务记录详情
+    """
+    record = ensure_service_record_access_or_raise(db, current_user, record_id)
+    _hydrate_service_record_names(db, record)
+    return _serialize_service_record(record)
+
+
+@router.put(
+    "/{record_id:int}", response_model=ServiceRecordResponse, status_code=status.HTTP_200_OK
+)
+def update_service_record(
+    *,
+    db: Session = Depends(deps.get_db),
+    record_id: int,
+    record_in: ServiceRecordUpdate,
+    current_user: User = Depends(security.require_permission("service:update")),
+) -> Any:
+    """
+    更新服务记录
+    """
+    record = ensure_service_record_access_or_raise(db, current_user, record_id)
+
+    update_data = record_in.model_dump(exclude_unset=True)
+    if "photos" in update_data:
+        update_data["photos"] = _normalize_record_photos(update_data["photos"])
+    if "status" in update_data and update_data["status"] is not None:
+        status_value = normalize_service_record_status(update_data["status"])
+        update_data["status"] = getattr(status_value, "value", status_value)
+
+    for field, value in update_data.items():
+        setattr(record, field, value)
+
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+
+    _hydrate_service_record_names(db, record)
     return _serialize_service_record(record)
 
 

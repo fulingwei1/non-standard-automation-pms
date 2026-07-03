@@ -13,7 +13,7 @@ SHORTAGE_TASKS = [
         "owner": "Supply Chain",
         "category": "Shortage",
         "description": "每天 7 点生成缺料预警并更新 AlertRecord。",
-        "enabled": True,
+        "enabled": False,
         "dependencies_tables": [
             "bom_items",
             "materials",
@@ -36,7 +36,7 @@ SHORTAGE_TASKS = [
         "owner": "Supply Chain",
         "category": "Shortage",
         "description": "每天 7:30 检查紧急级别的缺料预警，自动创建采购申请。",
-        "enabled": True,
+        "enabled": False,
         "dependencies_tables": [
             "mat_shortage_alert",
             "materials",
@@ -58,7 +58,7 @@ SHORTAGE_TASKS = [
         "owner": "Supply Chain",
         "category": "Shortage",
         "description": "每天 6 点计算物料齐套情况。",
-        "enabled": True,
+        "enabled": False,
         "dependencies_tables": ["bom_items", "materials", "purchase_orders", "goods_receipts"],
         "risk_level": "HIGH",
         "sla": {
@@ -75,7 +75,7 @@ SHORTAGE_TASKS = [
         "owner": "Supply Chain",
         "category": "Shortage",
         "description": "每小时同步所有活跃项目齐套率，更新健康度，识别显著变化。",
-        "enabled": True,
+        "enabled": False,
         "dependencies_tables": [
             "projects",
             "bom_headers",
@@ -99,7 +99,7 @@ SHORTAGE_TASKS = [
         "owner": "Supply Chain",
         "category": "Shortage",
         "description": "5:15 生成缺料日报供前端查询。",
-        "enabled": True,
+        "enabled": False,
         "dependencies_tables": ["bom_items", "materials", "purchase_orders", "goods_receipts"],
         "risk_level": "MEDIUM",
         "sla": {

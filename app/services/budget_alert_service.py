@@ -23,6 +23,7 @@ from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
 from app.models.outsourcing import OutsourcingOrder
 from app.models.project import Project, ProjectCost
 from app.models.project.financial import FinancialProjectCost
+from app.services.cost.cost_basis import actual_project_cost_filter
 from app.models.purchase import PurchaseOrder
 from app.schemas.budget_alert import (
     BudgetAlertConfig,
@@ -93,9 +94,13 @@ class BudgetAlertService:
         # 执行率
         actual_rate = (actual_cost / budget_amount * 100) if budget_amount > 0 else 0
         committed_rate = (
-            ((actual_cost + committed_cost) / budget_amount * 100) if budget_amount > 0 else 0
+            ((actual_cost + committed_cost) / budget_amount * 100)
+            if budget_amount > 0
+            else 0
         )
-        forecast_rate = (total_forecast / budget_amount * 100) if budget_amount > 0 else 0
+        forecast_rate = (
+            (total_forecast / budget_amount * 100) if budget_amount > 0 else 0
+        )
 
         execution_rates = ExecutionRates(
             actual_rate=Decimal(str(round(actual_rate, 2))),
@@ -109,7 +114,9 @@ class BudgetAlertService:
         )
 
         # 预测偏差
-        forecast_variance = round((total_forecast - budget_amount) / budget_amount * 100, 2)
+        forecast_variance = round(
+            (total_forecast - budget_amount) / budget_amount * 100, 2
+        )
 
         # 趋势预测（可选）
         trend_prediction = None
@@ -248,7 +255,9 @@ class BudgetAlertService:
             triggered_at=datetime.now(),
             trigger_value=str(round(float(status.execution_rate), 2)),
             threshold_value=str(
-                self._threshold_for_level(status.alert_level, config or BudgetAlertConfig())
+                self._threshold_for_level(
+                    status.alert_level, config or BudgetAlertConfig()
+                )
             ),
         )
         self.db.add(alert_record)
@@ -275,14 +284,16 @@ class BudgetAlertService:
             .order_by(ProjectBudget.version.desc())
             .first()
         )
-        return float(budget.total_amount) if budget else float(project.budget_amount or 0)
+        return (
+            float(budget.total_amount) if budget else float(project.budget_amount or 0)
+        )
 
     def _get_actual_cost(self, project_id: int, project: Project) -> float:
         """已发生成本 = ProjectCost + FinancialProjectCost"""
         # 业务成本
         biz_total = (
             self.db.query(func.coalesce(func.sum(ProjectCost.amount), 0))
-            .filter(ProjectCost.project_id == project_id)
+            .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
             .scalar()
         )
         # 财务成本
@@ -292,8 +303,8 @@ class BudgetAlertService:
             .scalar()
         )
         total = float(biz_total) + float(fin_total)
-        # 如果项目上有冗余字段且更大，以其为准
-        if project.actual_cost and float(project.actual_cost) > total:
+        # 如果没有明细成本，回退项目冗余字段；有明细时以 ACTUAL 明细为准。
+        if total <= 0 and project.actual_cost:
             return float(project.actual_cost)
         return total
 
@@ -403,22 +414,28 @@ class BudgetAlertService:
         # 建议措施
         actions: List[str] = []
         if max_level >= 3:
-            actions.extend([
-                "立即暂停非必要支出",
-                "召开预算超支专题会议",
-                "评估是否需要追加预算或缩减范围",
-            ])
+            actions.extend(
+                [
+                    "立即暂停非必要支出",
+                    "召开预算超支专题会议",
+                    "评估是否需要追加预算或缩减范围",
+                ]
+            )
         elif max_level >= 2:
-            actions.extend([
-                "审查即将发生的大额支出",
-                "与项目经理确认剩余工作量",
-                "启动成本优化措施",
-            ])
+            actions.extend(
+                [
+                    "审查即将发生的大额支出",
+                    "与项目经理确认剩余工作量",
+                    "启动成本优化措施",
+                ]
+            )
         elif max_level >= 1:
-            actions.extend([
-                "关注后续成本发生节奏",
-                "检查是否有可延后的支出",
-            ])
+            actions.extend(
+                [
+                    "关注后续成本发生节奏",
+                    "检查是否有可延后的支出",
+                ]
+            )
 
         return BudgetAlertInfo(
             alert_level=level_names[max_level],
@@ -438,7 +455,11 @@ class BudgetAlertService:
                 func.to_char(ProjectCost.cost_date, "YYYY-MM").label("month"),
                 func.sum(ProjectCost.amount).label("amount"),
             )
-            .filter(ProjectCost.project_id == project_id, ProjectCost.cost_date.isnot(None))
+            .filter(
+                ProjectCost.project_id == project_id,
+                ProjectCost.cost_date.isnot(None),
+                actual_project_cost_filter(),
+            )
             .group_by(func.to_char(ProjectCost.cost_date, "YYYY-MM"))
             .all()
         )
@@ -446,12 +467,18 @@ class BudgetAlertService:
         # 财务成本按月
         fin_monthly = (
             self.db.query(
-                func.coalesce(FinancialProjectCost.cost_month, func.to_char(FinancialProjectCost.cost_date, "YYYY-MM")).label("month"),
+                func.coalesce(
+                    FinancialProjectCost.cost_month,
+                    func.to_char(FinancialProjectCost.cost_date, "YYYY-MM"),
+                ).label("month"),
                 func.sum(FinancialProjectCost.amount).label("amount"),
             )
             .filter(FinancialProjectCost.project_id == project_id)
             .group_by(
-                func.coalesce(FinancialProjectCost.cost_month, func.to_char(FinancialProjectCost.cost_date, "YYYY-MM"))
+                func.coalesce(
+                    FinancialProjectCost.cost_month,
+                    func.to_char(FinancialProjectCost.cost_date, "YYYY-MM"),
+                )
             )
             .all()
         )
@@ -475,7 +502,9 @@ class BudgetAlertService:
         for m in sorted_months:
             amt = Decimal(str(round(monthly[m], 2)))
             cumulative += amt
-            points.append(CostTrendPoint(month=m, actual_cost=amt, cumulative_cost=cumulative))
+            points.append(
+                CostTrendPoint(month=m, actual_cost=amt, cumulative_cost=cumulative)
+            )
 
         return points
 
@@ -554,7 +583,9 @@ class BudgetAlertService:
             monthly_burn_rate=Decimal(str(round(burn_rate, 2))),
             estimated_completion_cost=Decimal(str(round(estimated_completion, 2))),
             months_to_budget_exhaust=(
-                Decimal(str(months_to_exhaust)) if months_to_exhaust is not None else None
+                Decimal(str(months_to_exhaust))
+                if months_to_exhaust is not None
+                else None
             ),
             historical_deviation_pct=(
                 Decimal(str(round(historical_deviation, 2)))
@@ -695,7 +726,9 @@ class BudgetAlertService:
         3. 动作中心待办
         """
         try:
-            from app.services.notification.notification_dispatcher import NotificationDispatcher
+            from app.services.notification.notification_dispatcher import (
+                NotificationDispatcher,
+            )
 
             dispatcher = NotificationDispatcher(self.db)
 
@@ -710,7 +743,11 @@ class BudgetAlertService:
             if project.dept_id:
                 from app.models.department import Department
 
-                dept = self.db.query(Department).filter(Department.id == project.dept_id).first()
+                dept = (
+                    self.db.query(Department)
+                    .filter(Department.id == project.dept_id)
+                    .first()
+                )
                 if dept and hasattr(dept, "manager_id") and dept.manager_id:
                     if dept.manager_id not in recipient_ids:
                         recipient_ids.append(dept.manager_id)

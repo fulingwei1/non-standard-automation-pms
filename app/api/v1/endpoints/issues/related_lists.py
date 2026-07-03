@@ -5,6 +5,7 @@
 包含：项目问题列表、机台问题列表、任务问题列表、验收单问题列表
 """
 
+import json
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -23,6 +24,20 @@ from app.schemas.issue import IssueListResponse, IssueResponse
 from app.services.data_scope import DataScopeService
 
 router = APIRouter()
+
+
+def _json_list(value: Any) -> list:
+    if value in (None, ""):
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+        except (TypeError, ValueError):
+            return []
+        return parsed if isinstance(parsed, list) else []
+    return []
 
 
 def _build_issue_list_response(
@@ -64,8 +79,8 @@ def _build_issue_list_response(
                 impact_scope=issue.impact_scope,
                 impact_level=issue.impact_level,
                 is_blocking=issue.is_blocking,
-                attachments=issue.attachments or [],
-                tags=issue.tags or [],
+                attachments=_json_list(issue.attachments),
+                tags=_json_list(issue.tags),
                 follow_up_count=issue.follow_up_count,
                 last_follow_up_at=issue.last_follow_up_at,
                 created_at=issue.created_at,

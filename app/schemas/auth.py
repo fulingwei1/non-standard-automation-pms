@@ -4,7 +4,7 @@
 """
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -121,6 +121,17 @@ class UserResponse(TimestampSchema):
     permissions: List[str] = Field(default_factory=list)
 
 
+class UserOptionResponse(BaseModel):
+    """人员下拉选项响应（不包含联系方式、角色和权限等管理字段）"""
+
+    id: int
+    username: str
+    name: str
+    real_name: Optional[str] = None
+    department: Optional[str] = None
+    position: Optional[str] = None
+
+
 class PermissionResponse(TimestampSchema):
     """权限响应"""
 
@@ -145,7 +156,9 @@ class BatchRoleAssign(BaseModel):
 
     user_ids: List[int] = Field(..., description="用户ID列表", min_length=1)
     role_ids: List[int] = Field(default_factory=list, description="角色ID列表")
-    mode: str = Field(default="replace", description="操作模式: replace=替换, remove=移除指定角色")
+    mode: Literal["replace", "remove"] = Field(
+        default="replace", description="操作模式: replace=替换, remove=移除指定角色"
+    )
 
 
 # ============================================================

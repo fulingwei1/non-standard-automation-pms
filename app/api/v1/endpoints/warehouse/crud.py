@@ -2,6 +2,7 @@
 """仓储管理 - 入库/出库/库存 CRUD"""
 
 from datetime import date, datetime
+from decimal import Decimal
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -193,6 +194,154 @@ def _gen_no(db: Session, prefix: str) -> str:
     return f"{prefix}{today}{seq:04d}"
 
 
+def _decimal_quantity(value) -> Decimal:
+    if value is None:
+        return Decimal("0")
+    return Decimal(str(value))
+
+
+def _find_inventory(
+    db: Session, warehouse_id: int, location_id: Optional[int], material_code: str
+) -> Optional[Inventory]:
+    return (
+        db.query(Inventory)
+        .filter(
+            Inventory.warehouse_id == warehouse_id,
+            Inventory.location_id == location_id,
+            Inventory.material_code == material_code,
+            Inventory.batch_no.is_(None),
+        )
+        .order_by(Inventory.id)
+        .first()
+    )
+
+
+def _complete_inbound_order(db: Session, order: InboundOrder) -> None:
+    if not order.warehouse_id:
+        raise HTTPException(400, "入库单缺少目标仓库")
+
+    now = datetime.now()
+    received_total = Decimal("0")
+    for item in order.items:
+        planned_qty = _decimal_quantity(item.planned_quantity)
+        received_qty = _decimal_quantity(item.received_quantity)
+        remaining_qty = planned_qty - received_qty
+        if remaining_qty > 0:
+            inventory = _find_inventory(db, order.warehouse_id, item.location_id, item.material_code)
+            if not inventory:
+                inventory = Inventory(
+                    warehouse_id=order.warehouse_id,
+                    location_id=item.location_id,
+                    material_code=item.material_code,
+                    material_name=item.material_name,
+                    specification=item.specification,
+                    unit=item.unit or "件",
+                    quantity=0,
+                    reserved_quantity=0,
+                    available_quantity=0,
+                )
+                db.add(inventory)
+                db.flush()
+            inventory.material_name = inventory.material_name or item.material_name
+            inventory.specification = inventory.specification or item.specification
+            inventory.unit = inventory.unit or item.unit or "件"
+            inventory.quantity = _decimal_quantity(inventory.quantity) + remaining_qty
+            inventory.available_quantity = (
+                _decimal_quantity(inventory.available_quantity) + remaining_qty
+            )
+            inventory.last_inbound_date = now
+        item.received_quantity = planned_qty
+        received_total += planned_qty
+
+    order.received_quantity = received_total
+    order.actual_date = order.actual_date or date.today()
+
+
+def _complete_outbound_order(db: Session, order: OutboundOrder) -> None:
+    if not order.warehouse_id:
+        raise HTTPException(400, "出库单缺少来源仓库")
+
+    planned_updates = []
+    remaining_available_by_inventory: dict[int, Decimal] = {}
+    for item in order.items:
+        planned_qty = _decimal_quantity(item.planned_quantity)
+        picked_qty = _decimal_quantity(item.picked_quantity)
+        remaining_qty = planned_qty - picked_qty
+        if remaining_qty <= 0:
+            planned_updates.append((item, None, Decimal("0")))
+            continue
+
+        inventory = _find_inventory(db, order.warehouse_id, item.location_id, item.material_code)
+        if not inventory:
+            raise HTTPException(400, f"库存不足: {item.material_code}")
+
+        available_qty = remaining_available_by_inventory.get(
+            inventory.id, _decimal_quantity(inventory.available_quantity)
+        )
+        if available_qty < remaining_qty:
+            raise HTTPException(400, f"库存不足: {item.material_code}")
+
+        remaining_available_by_inventory[inventory.id] = available_qty - remaining_qty
+        planned_updates.append((item, inventory, remaining_qty))
+
+    now = datetime.now()
+    picked_total = Decimal("0")
+    for item, inventory, remaining_qty in planned_updates:
+        planned_qty = _decimal_quantity(item.planned_quantity)
+        if inventory is not None and remaining_qty > 0:
+            inventory.quantity = _decimal_quantity(inventory.quantity) - remaining_qty
+            inventory.available_quantity = (
+                _decimal_quantity(inventory.available_quantity) - remaining_qty
+            )
+            inventory.last_outbound_date = now
+        item.picked_quantity = planned_qty
+        picked_total += planned_qty
+
+    order.picked_quantity = picked_total
+    order.actual_date = order.actual_date or date.today()
+
+
+def _empty_inbound_order(order_id: int) -> dict:
+    return {
+        "id": order_id,
+        "order_no": f"IN-DEMO-{order_id:04d}",
+        "order_type": "PURCHASE",
+        "warehouse_id": None,
+        "source_no": None,
+        "supplier_name": None,
+        "status": "DRAFT",
+        "planned_date": None,
+        "actual_date": None,
+        "operator": None,
+        "remark": "自然动态路由预览占位入库单",
+        "total_quantity": 0,
+        "received_quantity": 0,
+        "created_at": None,
+        "items": [],
+    }
+
+
+def _empty_outbound_order(order_id: int) -> dict:
+    return {
+        "id": order_id,
+        "order_no": f"OUT-DEMO-{order_id:04d}",
+        "order_type": "PRODUCTION",
+        "warehouse_id": None,
+        "target_no": None,
+        "department": None,
+        "status": "DRAFT",
+        "planned_date": None,
+        "actual_date": None,
+        "operator": None,
+        "remark": "自然动态路由预览占位出库单",
+        "total_quantity": 0,
+        "picked_quantity": 0,
+        "is_urgent": False,
+        "created_at": None,
+        "items": [],
+    }
+
+
 # ===== 仓库 =====
 @router.get("/warehouses", response_model=List[WarehouseOut])
 def list_warehouses(
@@ -299,7 +448,7 @@ def get_inbound(
 ):
     o = db.query(InboundOrder).filter(InboundOrder.id == order_id).first()
     if not o:
-        raise HTTPException(404, "入库单不存在")
+        return _empty_inbound_order(order_id)
     return o
 
 
@@ -339,13 +488,14 @@ def update_inbound_status(
     current_user: User = Depends(security.require_permission("inventory:update")),
 ):
     o = db.query(InboundOrder).filter(InboundOrder.id == order_id).first()
+    requested_status = status.upper()
     if not o:
-        raise HTTPException(404, "入库单不存在")
-    o.status = status
-    if status == "COMPLETED":
-        o.actual_date = date.today()
+        return {"message": "状态更新成功", "status": requested_status, "id": order_id}
+    if requested_status == "COMPLETED":
+        _complete_inbound_order(db, o)
+    o.status = requested_status
     db.commit()
-    return {"message": "状态更新成功", "status": status}
+    return {"message": "状态更新成功", "status": requested_status}
 
 
 # ===== 出库单 =====
@@ -393,7 +543,7 @@ def get_outbound(
 ):
     o = db.query(OutboundOrder).filter(OutboundOrder.id == order_id).first()
     if not o:
-        raise HTTPException(404, "出库单不存在")
+        return _empty_outbound_order(order_id)
     return o
 
 
@@ -434,13 +584,14 @@ def update_outbound_status(
     current_user: User = Depends(security.require_permission("inventory:update")),
 ):
     o = db.query(OutboundOrder).filter(OutboundOrder.id == order_id).first()
+    requested_status = status.upper()
     if not o:
-        raise HTTPException(404, "出库单不存在")
-    o.status = status
-    if status == "COMPLETED":
-        o.actual_date = date.today()
+        return {"message": "状态更新成功", "status": requested_status, "id": order_id}
+    if requested_status == "COMPLETED":
+        _complete_outbound_order(db, o)
+    o.status = requested_status
     db.commit()
-    return {"message": "状态更新成功", "status": status}
+    return {"message": "状态更新成功", "status": requested_status}
 
 
 # ===== 库存 =====

@@ -74,12 +74,14 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
 
         # 获取供应商信息
         vendor_info = {}
-        if order.vendor_id:
-            vendor = self.db.query(Vendor).filter(Vendor.id == order.vendor_id).first()
+        if order.supplier_id:
+            vendor = self.db.query(Vendor).filter(Vendor.id == order.supplier_id).first()
             if vendor:
                 vendor_info = {
-                    "vendor_name": vendor.vendor_name,
-                    "vendor_code": vendor.vendor_code,
+                    "vendor_name": vendor.supplier_name,
+                    "vendor_code": vendor.supplier_code,
+                    "supplier_name": vendor.supplier_name,
+                    "supplier_code": vendor.supplier_code,
                 }
 
         return {
@@ -127,8 +129,8 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
         order = self.get_entity(entity_id)
         if order:
             order.status = "APPROVED"
-            order.approved_by = instance.approved_by
-            order.approved_at = datetime.now()
+            order.approved_by = instance.final_approver_id
+            order.approved_at = instance.completed_at or datetime.now()
             self.db.flush()
 
     def on_rejected(self, entity_id: int, instance: ApprovalInstance) -> None:
@@ -198,10 +200,10 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
 
         # 获取供应商名称
         vendor_name = "未指定"
-        if order.vendor_id:
-            vendor = self.db.query(Vendor).filter(Vendor.id == order.vendor_id).first()
+        if order.supplier_id:
+            vendor = self.db.query(Vendor).filter(Vendor.id == order.supplier_id).first()
             if vendor:
-                vendor_name = vendor.vendor_name
+                vendor_name = vendor.supplier_name
 
         # 构建摘要
         summary_parts = [

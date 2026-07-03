@@ -9,8 +9,7 @@ from datetime import datetime
 from typing import Any, Dict
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.material import BomHeader, BomItem, Material
 from app.models.project import Project
@@ -22,8 +21,8 @@ class BOMService:
     """BOM服务类 - 实施BOM审核通过后自动创建采购订单功能"""
 
     @staticmethod
-    async def approve_bom_and_create_purchase_orders(
-        db: AsyncSession, bom_id: int, approved_by: int
+    def approve_bom_and_create_purchase_orders(
+        db: Session, bom_id: int, approved_by: int
     ) -> Dict[str, Any]:
         """
         BOM审核通过，自动创建采购订单
@@ -47,30 +46,23 @@ class BOMService:
             ValueError: 如果BOM不存在或状态不正确
         """
 
-        # 1. 查询BOM
-        result = await db.execute(
-            select(BomHeader, Project).options(selectinload(Project)).where(BomHeader.id == bom_id)
-        )
-        bom_data = result.first()
-
-        if not bom_data:
+        # 1. 查询BOM及其项目
+        bom = db.query(BomHeader).filter(BomHeader.id == bom_id).first()
+        if not bom:
             raise ValueError(f"BOM不存在: {bom_id}")
-
-        bom = bom_data[0]
-        project = bom_data[1]
+        project = db.query(Project).filter(Project.id == bom.project_id).first()
 
         # 2. 检查BOM状态
         if bom.status != "APPROVED":
             raise ValueError(f"BOM状态不是已审核: {bom.status}")
 
         # 3. 查询BOM明细
-        items_result = await db.execute(
-            select(BomItem, Material)
-            .options(selectinload(Material))
-            .where(BomItem.bom_id == bom_id)
+        items = (
+            db.query(BomItem)
+            .filter(BomItem.bom_id == bom_id)
             .order_by(BomItem.id)
+            .all()
         )
-        items = items_result.scalars().all()
 
         if not items:
             return {
@@ -82,6 +74,9 @@ class BOMService:
         # 4. 按供应商分组物料
         supplier_groups = defaultdict(list)
         for item in items:
+            # 无关联物料主数据的明细跳过（避免 NoneType 崩溃）
+            if not item.material:
+                continue
             # 获取物料供应商（优先使用primary_supplier_id）
             supplier_id = item.material.primary_supplier_id or item.material.default_supplier_id
 
@@ -96,7 +91,7 @@ class BOMService:
                 continue
 
             # 查询供应商信息
-            vendor_result = await db.execute(select(Vendor).where(Vendor.id == supplier_id))
+            vendor_result = db.execute(select(Vendor).where(Vendor.id == supplier_id))
             vendor = vendor_result.scalar_one_or_none()
 
             if not vendor:
@@ -127,7 +122,7 @@ class BOMService:
             )
 
             db.add(purchase_order)
-            await db.flush()
+            db.flush()
             created_orders.append(purchase_order.id)
 
             # 添加采购订单明细
@@ -148,7 +143,7 @@ class BOMService:
         bom.approved_by = approved_by
         bom.approved_at = datetime.now()
 
-        await db.commit()
+        db.commit()
 
         return {
             "success": True,

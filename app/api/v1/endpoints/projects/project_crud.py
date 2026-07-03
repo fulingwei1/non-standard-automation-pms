@@ -36,7 +36,7 @@ def read_my_projects(
     pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     is_active: Optional[bool] = Query(True, description="是否启用"),
-    current_user: User = Depends(security.require_permission("project:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     获取我参与的项目列表（基于项目成员关系）
@@ -56,13 +56,33 @@ def read_my_projects(
         return PaginatedResponse(items=[], total=0, page=pagination.page, page_size=pagination.page_size, pages=0)
     
     service = ProjectCrudService(db)
-    items, total = service.list_projects(
-        offset=pagination.offset,
-        limit=pagination.limit,
+    projects, total = service.get_projects_with_pagination(
+        pagination=pagination,
         keyword=keyword,
         is_active=is_active,
-        project_ids=project_ids,  # 只返回参与的项目
+        project_ids=project_ids,
     )
+    service.populate_redundant_fields(projects)
+
+    items = [
+        ProjectListResponse(
+            id=p.id,
+            project_code=p.project_code,
+            project_name=p.project_name,
+            customer_name=p.customer_name,
+            stage=p.stage,
+            health=p.health,
+            progress_pct=p.progress_pct,
+            budget_amount=p.budget_amount,
+            pm_name=p.pm_name,
+            pm_id=p.pm_id,
+            sales_id=p.salesperson_id,
+            te_id=getattr(p, "te_id", None),
+            contract_id=p.contract_id,
+            opportunity_id=p.opportunity_id,
+        )
+        for p in projects
+    ]
     
     return PaginatedResponse(
         items=items,
@@ -238,7 +258,7 @@ def create_project(
     return project
 
 
-@router.get("/{project_id}", response_model=ProjectDetailResponse)
+@router.get("/{project_id:int}", response_model=ProjectDetailResponse)
 def read_project(
     *,
     db: Session = Depends(deps.get_db),
@@ -249,8 +269,9 @@ def read_project(
     """
     Get project by ID.
     """
-    from app.utils.permission_helpers import check_project_access_or_raise
-    check_project_access_or_raise(db, current_user, project_id, "您没有权限查看该项目")
+    from app.utils.permission_helpers import check_project_read_access_or_raise
+
+    check_project_read_access_or_raise(db, current_user, project_id, "您没有权限查看该项目")
 
     service = ProjectCrudService(db)
     
@@ -297,7 +318,7 @@ def read_project(
     return project_detail
 
 
-@router.put("/{project_id}", response_model=ProjectResponse)
+@router.put("/{project_id:int}", response_model=ProjectResponse)
 def update_project(
     *,
     db: Session = Depends(deps.get_db),
@@ -321,7 +342,7 @@ def update_project(
     return updated_project
 
 
-@router.delete("/{project_id}", response_model=ResponseModel)
+@router.delete("/{project_id:int}", response_model=ResponseModel)
 def delete_project(
     *,
     db: Session = Depends(deps.get_db),

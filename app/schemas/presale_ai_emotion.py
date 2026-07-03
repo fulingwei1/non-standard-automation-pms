@@ -41,6 +41,40 @@ class EmotionAnalysisResponse(BaseModel):
     class Config:
         from_attributes = True
 
+    @field_validator("sentiment", mode="before")
+    @classmethod
+    def _default_sentiment(cls, value):
+        if hasattr(value, "value"):
+            value = value.value
+        return "neutral" if value in (None, "") else value
+
+    @field_validator("purchase_intent_score", mode="before")
+    @classmethod
+    def _default_score(cls, value):
+        return 0 if value is None else value
+
+    @field_validator("churn_risk", mode="before")
+    @classmethod
+    def _default_churn_risk(cls, value):
+        if hasattr(value, "value"):
+            value = value.value
+        return "low" if value in (None, "") else value
+
+    @field_validator("emotion_factors", mode="before")
+    @classmethod
+    def _default_factors(cls, value):
+        return {} if value is None else value
+
+    @field_validator("analysis_result", mode="before")
+    @classmethod
+    def _default_analysis_result(cls, value):
+        return "" if value is None else value
+
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def _default_created_at(cls, value):
+        return datetime.now() if value is None else value
+
 
 # ==================== 流失预警相关 ====================
 
@@ -90,6 +124,26 @@ class FollowUpRecommendationResponse(BaseModel):
     status: str
     created_at: datetime
 
+    @field_validator("recommended_time", mode="before")
+    @classmethod
+    def _default_recommended_time(cls, value):
+        return datetime.now() if value is None else value
+
+    @field_validator("priority", mode="before")
+    @classmethod
+    def _default_priority(cls, value):
+        return "medium" if value in (None, "") else value
+
+    @field_validator("follow_up_content", "reason", mode="before")
+    @classmethod
+    def _default_text(cls, value):
+        return "" if value is None else value
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_status(cls, value):
+        return "pending" if value in (None, "") else value
+
     class Config:
         from_attributes = True
 
@@ -123,6 +177,16 @@ class EmotionTrendResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+    @field_validator("trend_data", "key_turning_points", mode="before")
+    @classmethod
+    def _default_list(cls, value):
+        return [] if value is None else value
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def _default_timestamp(cls, value):
+        return datetime.now() if value is None else value
 
 
 # ==================== 批量分析相关 ====================

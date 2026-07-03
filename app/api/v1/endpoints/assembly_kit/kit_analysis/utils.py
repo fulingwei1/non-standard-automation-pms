@@ -49,7 +49,7 @@ def calculate_available_qty(
     try:
         in_transit = (
             db.query(func.sum(PurchaseOrderItem.quantity))
-            .join(PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id)
+            .join(PurchaseOrder, PurchaseOrderItem.order_id == PurchaseOrder.id)
             .filter(
                 PurchaseOrderItem.material_id == material_id,
                 PurchaseOrder.status.in_(["approved", "partial_received"]),
@@ -99,7 +99,7 @@ def calculate_estimated_ready_date(
         try:
             po_items = (
                 db.query(PurchaseOrderItem)
-                .join(PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id)
+                .join(PurchaseOrder, PurchaseOrderItem.order_id == PurchaseOrder.id)
                 .filter(
                     PurchaseOrderItem.material_id == material_id,
                     PurchaseOrder.status.in_(["approved", "partial_received"]),

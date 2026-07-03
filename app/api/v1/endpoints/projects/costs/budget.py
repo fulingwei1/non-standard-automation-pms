@@ -19,6 +19,7 @@ from app.core import security
 from app.models.project import Project, ProjectCost
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.cost.cost_basis import actual_project_cost_filter
 
 router = APIRouter()
 
@@ -60,7 +61,7 @@ def _get_project_or_404(db: Session, project_id: int) -> Project:
 def _sum_project_cost(db: Session, project_id: int) -> float:
     total = (
         db.query(func.coalesce(func.sum(ProjectCost.amount), 0))
-        .filter(ProjectCost.project_id == project_id)
+        .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
         .scalar()
     )
     return float(total or 0)
@@ -173,7 +174,7 @@ def get_project_cost_breakdown_legacy(
             ProjectCost.cost_category,
             func.coalesce(func.sum(ProjectCost.amount), 0).label("total_amount"),
         )
-        .filter(ProjectCost.project_id == project_id)
+        .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
         .group_by(ProjectCost.cost_category)
         .all()
     )
@@ -238,7 +239,9 @@ def list_project_cost_entries_legacy(
         query = query.filter(ProjectCost.cost_category == category)
 
     items = []
-    for item in query.order_by(ProjectCost.cost_date.desc(), ProjectCost.id.desc()).all():
+    for item in query.order_by(
+        ProjectCost.cost_date.desc(), ProjectCost.id.desc()
+    ).all():
         items.append(
             {
                 "id": item.id,
@@ -316,7 +319,7 @@ def get_project_cost_analysis_charts_legacy(
             ProjectCost.cost_category,
             func.coalesce(func.sum(ProjectCost.amount), 0).label("total_amount"),
         )
-        .filter(ProjectCost.project_id == project_id)
+        .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
         .group_by(ProjectCost.cost_category)
         .all()
     )

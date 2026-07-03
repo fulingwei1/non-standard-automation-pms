@@ -17,11 +17,8 @@ except ImportError:
             try:
                 from .settings.tenants import router
             except ImportError:
-                # Create a simple router as fallback
                 from fastapi import APIRouter
+
                 router = APIRouter()
-                @router.get('/')
-                def read_root():
-                    return {'message': 'tenants module placeholder'}
 
 __all__ = ['router']

@@ -23,7 +23,7 @@ router = APIRouter()
 def get_notification_settings(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("notification:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     获取通知设置（用户偏好）
@@ -67,7 +67,7 @@ def update_notification_settings(
     *,
     db: Session = Depends(deps.get_db),
     settings_in: NotificationSettingsUpdate,
-    current_user: User = Depends(security.require_permission("notification:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     更新通知设置

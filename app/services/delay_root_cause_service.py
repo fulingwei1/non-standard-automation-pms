@@ -33,7 +33,11 @@ class DelayRootCauseService:
     ) -> Dict[str, Any]:
         """延期根因分析"""
         # 查询延期任务
-        query = self.db.query(Task).filter((Task.actual_end > Task.plan_end))
+        query = self.db.query(Task).filter(
+            Task.actual_end.isnot(None),
+            Task.plan_end.isnot(None),
+            Task.actual_end > Task.plan_end,
+        )
 
         if project_id:
             query = query.filter(Task.project_id == project_id)
@@ -48,7 +52,7 @@ class DelayRootCauseService:
         reason_stats = defaultdict(lambda: {"count": 0, "total_delay_days": 0, "tasks": []})
 
         for task in delayed_tasks:
-            reason = task.delay_reason or "UNKNOWN"
+            reason = task.block_reason or ("任务阻塞" if task.status == "BLOCKED" else "未填写原因")
             delay_days = self._calculate_delay_days(task)
 
             reason_stats[reason]["count"] += 1
@@ -59,6 +63,7 @@ class DelayRootCauseService:
                     "task_name": task.task_name,
                     "delay_days": delay_days,
                     "project_id": task.project_id,
+                    "assignee_name": task.owner.real_name if task.owner else "未分配",
                 }
             )
 

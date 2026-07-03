@@ -30,7 +30,7 @@ def get_my_pending_tasks(
     urgency: Optional[str] = None,
     template_id: Optional[int] = None,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("approval:view")),
+    current_user: User = Depends(security.get_current_active_user),
 ):
     """
     获取待我审批的任务
@@ -87,7 +87,7 @@ def get_my_initiated(
     status: Optional[str] = None,
     template_id: Optional[int] = None,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("approval:view")),
+    current_user: User = Depends(security.get_current_active_user),
 ):
     """
     获取我发起的审批
@@ -127,7 +127,7 @@ def get_my_cc(
     pagination: PaginationParams = Depends(get_pagination_query),
     is_read: Optional[bool] = None,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("approval:view")),
+    current_user: User = Depends(security.get_current_active_user),
 ):
     """
     获取抄送我的
@@ -171,7 +171,7 @@ def get_my_cc(
 def mark_cc_as_read(
     cc_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("approval:view")),
+    current_user: User = Depends(security.get_current_active_user),
 ):
     """标记抄送为已读"""
     from app.services.approval_engine import ApprovalEngineService
@@ -194,7 +194,7 @@ def get_my_processed(
     action: Optional[str] = None,
     template_id: Optional[int] = None,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("approval:view")),
+    current_user: User = Depends(security.get_current_active_user),
 ):
     """
     获取我已处理的审批
@@ -246,7 +246,7 @@ def get_my_processed(
 @router.get("/counts")
 def get_pending_counts(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("approval:view")),
+    current_user: User = Depends(security.get_current_active_user),
 ):
     """
     获取待办数量统计

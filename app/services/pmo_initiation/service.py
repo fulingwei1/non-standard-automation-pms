@@ -355,6 +355,32 @@ class PmoInitiationService:
         if initiation.status != "DRAFT":
             raise ValueError("只有草稿状态的申请才能提交")
 
+        # 售前技术支持关卡：缺少售前技术评估不允许提交立项评审
+        # （非标自动化项目常因技术需求不清晰而失败，立项前必须由售前技术支持部完成初评）
+        from app.core.config import settings
+
+        if getattr(settings, "PMO_REQUIRE_PRESALE_ASSESSMENT", True):
+            try:
+                handover = self.build_presale_handover_context(initiation)
+                missing = handover.get("handover_status", {}).get("missing", [])
+                current_assessment = (
+                    handover.get("technical_assessment") or {}
+                ).get("current") or {}
+            except Exception:
+                missing = []
+                current_assessment = {}
+            if "technical_assessment" in missing:
+                raise ValueError(
+                    "缺少售前技术评估，无法提交立项。请先向售前技术支持部申请技术支持并完成技术初评后再提交立项。"
+                )
+            # 仅有评估申请（PENDING/IN_PROGRESS）不算完成初评，必须评估执行完毕才能提交
+            assessment_status = current_assessment.get("status")
+            if assessment_status and assessment_status != "COMPLETED":
+                raise ValueError(
+                    f"售前技术评估尚未完成（当前状态：{assessment_status}），"
+                    "请等售前技术支持部完成技术初评后再提交立项。"
+                )
+
         initiation.status = "SUBMITTED"
         self.db.add(initiation)
         self.db.commit()

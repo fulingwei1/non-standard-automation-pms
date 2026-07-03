@@ -15,7 +15,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.issue import Issue
@@ -26,6 +26,7 @@ from app.models.project_risk import ProjectRisk, RiskStatusEnum
 from app.models.report_center import ReportGeneration, ReportTemplate
 from app.models.timesheet import Timesheet
 from app.models.user import User
+from app.services.cost.cost_basis import actual_project_cost_filter
 
 logger = logging.getLogger(__name__)
 
@@ -294,7 +295,9 @@ class WeeklyReportService:
                 "priority": getattr(i, "priority", ""),
                 "status": getattr(i, "status", ""),
                 "assignee_id": getattr(i, "assignee_id", None),
-                "due_date": i.due_date.isoformat() if getattr(i, "due_date", None) else None,
+                "due_date": i.due_date.isoformat()
+                if getattr(i, "due_date", None)
+                else None,
             }
             for i in issues
         ]
@@ -406,7 +409,9 @@ class WeeklyReportService:
                     ProjectCost.cost_type,
                     func.sum(ProjectCost.amount).label("total"),
                 )
-                .filter(ProjectCost.project_id == project_id)
+                .filter(
+                    ProjectCost.project_id == project_id, actual_project_cost_filter()
+                )
                 .group_by(ProjectCost.cost_type)
                 .all()
             )

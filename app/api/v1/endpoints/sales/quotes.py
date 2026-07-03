@@ -339,7 +339,19 @@ def create_quote(
 
     version_payload = quote_data.get("version") or {}
     if not version_payload:
-        raise HTTPException(status_code=422, detail="version 必填")
+        legacy_total = (
+            quote_data.get("final_amount")
+            or quote_data.get("total_amount")
+            or quote_data.get("total_price")
+            or 0
+        )
+        version_payload = {
+            "version_no": "V1",
+            "total_price": legacy_total,
+            "cost_total": quote_data.get("cost_total") or 0,
+            "gross_margin": quote_data.get("gross_margin") or quote_data.get("margin_rate") or 0,
+            "items": quote_data.get("items") or [],
+        }
 
     presale_solution = resolve_presale_solution_for_quote(
         db,
@@ -359,7 +371,11 @@ def create_quote(
     )
 
     quote = Quote(
-        quote_code=quote_data.get("quote_code") or f"QUOTE-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+        quote_code=(
+            quote_data.get("quote_code")
+            or quote_data.get("quote_no")
+            or f"QUOTE-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        )[:20],
         opportunity_id=opportunity_id,
         customer_id=customer_id,
         valid_until=date.fromisoformat(quote_data["valid_until"]) if quote_data.get("valid_until") else None,
@@ -438,9 +454,23 @@ def create_quote(
         "quote_code": quote.quote_code,
         "opportunity_id": quote.opportunity_id,
         "customer_id": quote.customer_id,
+        "solution_id": version.presale_solution_id,
+        "presale_solution_id": version.presale_solution_id,
+        "presale_ticket_id": version.presale_ticket_id,
         "valid_until": quote.valid_until.isoformat() if quote.valid_until else None,
         "status": quote.status,
         "current_version_id": quote.current_version_id,
+        "current_version": {
+            "id": version.id,
+            "version_no": version.version_no,
+            "total_price": float(version.total_price or 0),
+            "cost_total": float(version.cost_total or 0),
+            "gross_margin": float(version.gross_margin or 0),
+            "lead_time_days": version.lead_time_days,
+            "presale_solution_id": version.presale_solution_id,
+            "solution_id": version.presale_solution_id,
+            "presale_ticket_id": version.presale_ticket_id,
+        },
     }
 
 
@@ -521,25 +551,9 @@ def get_quote_statistics(
     )
 
 
-@router.post("/quotes/{quote_id}/approve", response_model=ResponseModel, status_code=status.HTTP_200_OK)
-def approve_quote(
-    quote_id: int,
-    payload: dict = Body(...),
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
-):
-    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
-
-    # Minimal approval flow: mark current version approved when requested.
-    approved = bool(payload.get("approved", True))
-    remark = payload.get("remark")
-    if quote.current_version_id:
-        version = db.query(QuoteVersion).filter(QuoteVersion.id == quote.current_version_id).first()
-        if version and approved:
-            version.approved_by = current_user.id
-            version.approved_at = datetime.now()
-    quote.status = "APPROVED" if approved else "REJECTED"
-    db.commit()
-    return ResponseModel(code=200, message="报价审批完成", data={"status": quote.status, "remark": remark})
+# NOTE: POST /quotes/{quote_id}/approve 由 quote_per_id_approval.py 统一实现，
+# 那里带有 require_permission("quote:approve") 权限校验与审批任务联动。
+# 此处曾有一个无权限校验的“极简审批”实现，因 router 注册顺序在前会遮蔽正式实现，
+# 导致任意登录用户都能绕过权限改状态，已移除。请勿在本文件重新添加该路由。
 
 # 其他接口可按需补全...

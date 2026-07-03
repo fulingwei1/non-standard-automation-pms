@@ -12,7 +12,9 @@ from . import (
     accountability,
     assessment_templates,
     assessments,
+    collection_priority,
     contacts,
+    contract_milestones,
     contracts,
     conversion_analysis,
     cost_management,
@@ -24,6 +26,7 @@ from . import (
     delay_analysis,
     disputes,
     expenses,
+    follow_up_reminders,
     funnel,
     health,
     information_gap,
@@ -31,6 +34,7 @@ from . import (
     leads,
     loss_analysis,
     opportunities,
+    opportunity_health,
     payments,
     priority,
     quote_approval,
@@ -67,15 +71,19 @@ router.include_router(contacts.router, tags=["sales-contacts"])
 router.include_router(customer_tags.router, tags=["sales-customer-tags"])
 router.include_router(priority.router, tags=["sales-priority"])
 router.include_router(leads.router, tags=["sales-leads"])
+router.include_router(opportunity_health.router, tags=["sales-opportunity-health"])
 router.include_router(opportunities.router, tags=["sales-opportunities"])
 router.include_router(quotes.router, tags=["sales-quotes"])
 router.include_router(quote_approval.router, tags=["sales-quote-approval"])
+router.include_router(contract_milestones.router, prefix="/contracts", tags=["sales-contract-milestones"])
 router.include_router(contracts.router, tags=["sales-contracts"])
 router.include_router(invoices.router, tags=["sales-invoices"])
 router.include_router(payments.router, tags=["sales-payments"])
 router.include_router(statistics.router, tags=["sales-statistics"])
 router.include_router(loss_analysis.router, tags=["sales-loss-analysis"])
 router.include_router(expenses.router, tags=["sales-expenses"])
+router.include_router(follow_up_reminders.router, prefix="/follow-up", tags=["sales-follow-up"])
+router.include_router(collection_priority.router, prefix="/collection", tags=["sales-collection"])
 router.include_router(assessments.router, tags=["sales-assessments"])
 router.include_router(assessment_templates.router, tags=["sales-assessment-templates"])
 router.include_router(disputes.router, tags=["sales-disputes"])

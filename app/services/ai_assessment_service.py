@@ -14,10 +14,11 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-# 通义千问API配置
+# 通义千问API配置（默认走阿里百炼 Coding Plan 专属端点，可用 ALIBABA_BASE_URL 覆盖）
 ALIBABA_API_KEY = os.getenv("ALIBABA_API_KEY", "")
-ALIBABA_MODEL = os.getenv("ALIBABA_MODEL", "qwen-plus")
-BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+ALIBABA_MODEL = os.getenv("ALIBABA_MODEL", "qwen3.7-plus")
+_ALIBABA_BASE = os.getenv("ALIBABA_BASE_URL", "https://coding.dashscope.aliyuncs.com/v1").rstrip("/")
+BASE_URL = f"{_ALIBABA_BASE}/chat/completions"
 
 
 class AIAssessmentService:
@@ -147,7 +148,8 @@ class AIAssessmentService:
             "temperature": 0.7,
         }
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        _timeout = float(os.getenv("ALIBABA_TIMEOUT", "60"))
+        async with httpx.AsyncClient(timeout=_timeout) as client:
             response = await client.post(BASE_URL, headers=headers, json=payload)
             response.raise_for_status()
             data = response.json()

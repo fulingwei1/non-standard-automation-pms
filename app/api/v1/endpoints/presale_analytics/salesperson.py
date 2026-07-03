@@ -7,7 +7,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -21,6 +21,8 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.presales import SalespersonPerformance, SalespersonRanking
 from app.utils.db_helpers import get_or_404
+
+from .utils import parse_presale_period
 
 router = APIRouter()
 
@@ -42,14 +44,10 @@ async def get_salesperson_performance(
     query = db.query(Project).filter(Project.salesperson_id == salesperson_id)
 
     if period:
-        if len(period) == 7:  # YYYY-MM
-            year, month = int(period[:4]), int(period[5:7])
-            start_date = date(year, month, 1)
-            end_date = date(year, month + 1, 1) if month < 12 else date(year + 1, 1, 1)
-        else:  # YYYY
-            year = int(period)
-            start_date = date(year, 1, 1)
-            end_date = date(year + 1, 1, 1)
+        try:
+            start_date, end_date = parse_presale_period(period)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e))
         query = query.filter(Project.created_at >= start_date, Project.created_at < end_date)
 
     projects = query.all()
@@ -150,6 +148,11 @@ async def get_salesperson_ranking(
     """获取销售人员排行榜"""
     from app.models.user import Role, UserRole
 
+    try:
+        start_date, end_date = parse_presale_period(period)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
     # 获取所有属于销售类角色的用户
     salesp_query = db.query(User).join(UserRole).join(Role)
     salesp_query = apply_keyword_filter(salesp_query, Role, "sales", "role_code")
@@ -158,15 +161,6 @@ async def get_salesperson_ranking(
     performances = []
     for sp in salespeople:
         query = db.query(Project).filter(Project.salesperson_id == sp.id)
-
-        if len(period) == 7:
-            year, month = int(period[:4]), int(period[5:7])
-            start_date = date(year, month, 1)
-            end_date = date(year, month + 1, 1) if month < 12 else date(year + 1, 1, 1)
-        else:
-            year = int(period)
-            start_date = date(year, 1, 1)
-            end_date = date(year + 1, 1, 1)
 
         query = query.filter(Project.created_at >= start_date, Project.created_at < end_date)
         projects = query.all()
@@ -187,7 +181,7 @@ async def get_salesperson_ranking(
         performances.append(
             SalespersonPerformance(
                 salesperson_id=sp.id,
-                salesperson_name=sp.name or sp.username,
+                salesperson_name=sp.display_name,
                 total_leads=total,
                 won_leads=won,
                 lost_leads=lost,

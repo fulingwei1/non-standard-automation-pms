@@ -37,11 +37,10 @@ def create_strategy_comparison(
     comparison = StrategyComparison(
         current_strategy_id=data.current_strategy_id,
         previous_strategy_id=data.previous_strategy_id,
-        comparison_type=data.comparison_type,
-        base_year=data.base_year,
-        compare_year=data.compare_year,
-        summary=data.summary,
-        created_by=created_by,
+        current_year=data.current_year,
+        previous_year=data.previous_year or data.current_year - 1,
+        generated_date=date.today(),
+        generated_by=created_by,
     )
     db.add(comparison)
     db.commit()
@@ -85,7 +84,7 @@ def list_strategy_comparisons(
     query = db.query(StrategyComparison).filter(StrategyComparison.is_active)
 
     if current_strategy_id:
-        query = query.filter(StrategyComparison.current_strategy_id == base_strategy_id)
+        query = query.filter(StrategyComparison.current_strategy_id == current_strategy_id)
 
     total = query.count()
     items = apply_pagination(

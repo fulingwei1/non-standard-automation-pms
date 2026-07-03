@@ -32,6 +32,17 @@ class PaymentRecordCreate(BaseModel):
     remarks: Optional[str] = Field(default=None, description="备注")
 
 
+class PaymentRecordUpdate(BaseModel):
+    """更新付款记录请求"""
+
+    payment_date: Optional[date] = Field(default=None, description="付款日期")
+    amount: Optional[Decimal] = Field(default=None, ge=0, description="已收款金额")
+    payment_status: Optional[str] = Field(default=None, description="收款状态")
+    payment_method: Optional[str] = Field(default=None, description="付款方式")
+    transaction_no: Optional[str] = Field(default=None, description="交易号")
+    remarks: Optional[str] = Field(default=None, description="备注")
+
+
 router = APIRouter()
 
 
@@ -396,6 +407,86 @@ def get_payment_detail(
             "overdue_days": overdue_days,
             "remark": invoice.remark,
         },
+    )
+
+
+@router.put("/payments/records/{payment_id}", response_model=ResponseModel)
+def update_payment_record(
+    *,
+    db: Session = Depends(deps.get_db),
+    payment_id: int,
+    record_data: PaymentRecordUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """更新回款记录（当前以发票收款字段承载）。"""
+    invoice = get_or_404(db, Invoice, payment_id, detail="发票不存在")
+
+    update_data = record_data.model_dump(exclude_unset=True)
+    if "amount" in update_data and update_data["amount"] is not None:
+        invoice.paid_amount = update_data["amount"]
+        total = invoice.total_amount or invoice.amount or Decimal("0")
+        if not update_data.get("payment_status"):
+            if invoice.paid_amount >= total:
+                invoice.payment_status = "PAID"
+            elif invoice.paid_amount > Decimal("0"):
+                invoice.payment_status = "PARTIAL"
+            else:
+                invoice.payment_status = "PENDING"
+
+    if update_data.get("payment_date"):
+        invoice.paid_date = update_data["payment_date"]
+    if update_data.get("payment_status"):
+        invoice.payment_status = update_data["payment_status"]
+
+    note_parts = []
+    if update_data.get("payment_method"):
+        note_parts.append(f"方式：{update_data['payment_method']}")
+    if update_data.get("transaction_no"):
+        note_parts.append(f"交易号：{update_data['transaction_no']}")
+    if update_data.get("remarks"):
+        note_parts.append(f"备注：{update_data['remarks']}")
+    if note_parts:
+        invoice.remark = (invoice.remark or "") + "\n回款记录更新：" + "，".join(note_parts)
+
+    db.commit()
+    db.refresh(invoice)
+
+    total = invoice.total_amount or invoice.amount or Decimal("0")
+    paid = invoice.paid_amount or Decimal("0")
+    return ResponseModel(
+        code=200,
+        message="回款记录更新成功",
+        data={
+            "id": invoice.id,
+            "invoice_id": invoice.id,
+            "paid_amount": float(paid),
+            "payment_status": invoice.payment_status,
+            "unpaid_amount": float(total - paid),
+            "paid_date": invoice.paid_date,
+        },
+    )
+
+
+@router.delete("/payments/records/{payment_id}", response_model=ResponseModel)
+def delete_payment_record(
+    *,
+    db: Session = Depends(deps.get_db),
+    payment_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """删除回款记录（清空发票上的收款信息，不删除发票）。"""
+    invoice = get_or_404(db, Invoice, payment_id, detail="发票不存在")
+
+    invoice.paid_amount = Decimal("0")
+    invoice.paid_date = None
+    invoice.payment_status = "PENDING"
+    invoice.remark = (invoice.remark or "") + "\n回款记录已删除"
+    db.commit()
+
+    return ResponseModel(
+        code=200,
+        message="回款记录删除成功",
+        data={"id": payment_id, "invoice_id": invoice.id},
     )
 
 

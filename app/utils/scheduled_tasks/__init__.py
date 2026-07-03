@@ -89,6 +89,12 @@ from .risk_tasks import (
     create_daily_risk_snapshots,
 )
 
+# ==================== AI 日报/周报推送 ====================
+from .ai_report_tasks import (
+    push_daily_reports,
+    push_weekly_reports,
+)
+
 # ==================== 销售任务 ====================
 from .sales_tasks import (
     check_opportunity_stage_timeout,
@@ -402,4 +408,7 @@ __all__ = [
     "calculate_all_project_risks",
     "create_daily_risk_snapshots",
     "check_high_risk_projects",
+    # AI 日报/周报
+    "push_daily_reports",
+    "push_weekly_reports",
 ]

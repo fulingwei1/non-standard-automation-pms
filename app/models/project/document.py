@@ -25,7 +25,7 @@ class ProjectDocument(Base, TimestampMixin):
     __tablename__ = "project_documents"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True, comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
     rd_project_id = Column(Integer, ForeignKey("rd_project.id"), comment="研发项目ID")
     doc_type = Column(String(50), nullable=False, comment="文档类型")

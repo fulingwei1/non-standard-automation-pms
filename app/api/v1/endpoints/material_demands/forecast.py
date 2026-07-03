@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.material import Material
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem
+from app.models.purchase import GoodsReceipt, GoodsReceiptItem, PurchaseOrder, PurchaseOrderItem
 from app.models.user import User
 from app.utils.db_helpers import get_or_404
 
@@ -38,9 +38,11 @@ def get_material_lead_time_forecast(
     # 查询历史采购订单的到货时间
     cutoff_date = datetime.now() - timedelta(days=days)
 
-    po_items = (
-        db.query(PurchaseOrderItem)
-        .join(PurchaseOrder, PurchaseOrderItem.purchase_order_id == PurchaseOrder.id)
+    po_rows = (
+        db.query(PurchaseOrderItem, PurchaseOrder, GoodsReceipt)
+        .join(PurchaseOrder, PurchaseOrderItem.order_id == PurchaseOrder.id)
+        .outerjoin(GoodsReceiptItem, GoodsReceiptItem.order_item_id == PurchaseOrderItem.id)
+        .outerjoin(GoodsReceipt, GoodsReceipt.id == GoodsReceiptItem.receipt_id)
         .filter(PurchaseOrderItem.material_id == material_id)
         .filter(PurchaseOrder.status.in_(["APPROVED", "ORDERED", "RECEIVED", "CLOSED"]))
         .filter(PurchaseOrder.created_at >= cutoff_date)
@@ -49,14 +51,14 @@ def get_material_lead_time_forecast(
 
     # 计算平均交期
     lead_times = []
-    for po_item in po_items:
-        if po_item.received_at and po_item.purchase_order:
-            order_date = po_item.purchase_order.created_at.date()
-            receive_date = (
-                po_item.received_at.date()
-                if isinstance(po_item.received_at, datetime)
-                else po_item.received_at
+    for _po_item, purchase_order, receipt in po_rows:
+        if receipt and receipt.receipt_date and purchase_order.created_at:
+            order_date = (
+                purchase_order.created_at.date()
+                if isinstance(purchase_order.created_at, datetime)
+                else purchase_order.created_at
             )
+            receive_date = receipt.receipt_date
             lead_time = (receive_date - order_date).days
             if lead_time > 0:
                 lead_times.append(lead_time)

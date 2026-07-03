@@ -10,17 +10,17 @@
 5. 低利润项目根因分析
 """
 
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from sqlalchemy import case, func, and_, or_, desc
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.models.budget import ProjectBudget, ProjectBudgetItem
 from app.models.project.core import Project
-from app.models.project.financial import ProjectCost, FinancialProjectCost
+from app.models.project.financial import FinancialProjectCost, ProjectCost
 from app.models.sales.contracts import Contract
-from app.models.sales.quotes import Quote, QuoteVersion, QuoteItem
+from app.models.sales.quotes import QuoteItem
+from app.services.cost.cost_basis import actual_project_cost_filter
 
 
 # 默认目标毛利率（%）
@@ -141,9 +141,7 @@ class ProfitAnalysisService:
 
         if similar_projects:
             # 计算同类项目平均成本占比
-            avg_cost_ratio = self._get_avg_cost_ratio(
-                [p.id for p in similar_projects]
-            )
+            avg_cost_ratio = self._get_avg_cost_ratio([p.id for p in similar_projects])
             contract_amount = float(project.contract_amount or 0)
 
             for cost_type, amount in cost_by_type.items():
@@ -164,7 +162,9 @@ class ProfitAnalysisService:
                             "avg_ratio": round(avg_ratio, 2),
                             "potential_saving": round(max(potential_saving, 0), 2),
                             "suggestion": f"{cost_type}成本占比({current_ratio:.1f}%)高于历史平均({avg_ratio:.1f}%)，建议审查",
-                            "priority": "high" if current_ratio > avg_ratio * 1.5 else "medium",
+                            "priority": "high"
+                            if current_ratio > avg_ratio * 1.5
+                            else "medium",
                         }
                     )
 
@@ -183,7 +183,7 @@ class ProfitAnalysisService:
                         "current_amount": round(actual_cost, 2),
                         "expected_amount": round(expected_cost, 2),
                         "overspend": round(actual_cost - expected_cost, 2),
-                        "suggestion": f"项目进度{progress:.0f}%，但已消耗预算{actual_cost/budget_amount*100:.0f}%，成本消耗过快",
+                        "suggestion": f"项目进度{progress:.0f}%，但已消耗预算{actual_cost / budget_amount * 100:.0f}%，成本消耗过快",
                         "priority": "high",
                     }
                 )
@@ -199,7 +199,7 @@ class ProfitAnalysisService:
                     "current_amount": round(labor_cost, 2),
                     "budget_amount": round(labor_budget, 2),
                     "usage_rate": round(labor_cost / labor_budget * 100, 2),
-                    "suggestion": f"人工成本已使用预算的{labor_cost/labor_budget*100:.0f}%，注意控制工时",
+                    "suggestion": f"人工成本已使用预算的{labor_cost / labor_budget * 100:.0f}%，注意控制工时",
                     "priority": "high" if labor_cost > labor_budget else "medium",
                 }
             )
@@ -228,9 +228,7 @@ class ProfitAnalysisService:
 
         # 获取关联报价版本
         contract = (
-            self.db.query(Contract)
-            .filter(Contract.project_id == project_id)
-            .first()
+            self.db.query(Contract).filter(Contract.project_id == project_id).first()
         )
 
         quote_items: List[Dict[str, Any]] = []
@@ -409,7 +407,7 @@ class ProfitAnalysisService:
                     root_causes.append(
                         {
                             "cause": "预算超支",
-                            "detail": f"实际成本超预算{(cost-budget)/budget*100:.0f}%",
+                            "detail": f"实际成本超预算{(cost - budget) / budget * 100:.0f}%",
                         }
                     )
 
@@ -425,7 +423,7 @@ class ProfitAnalysisService:
                     root_causes.append(
                         {
                             "cause": "成本倒挂",
-                            "detail": f"实际成本超合同金额{cost-contract:.0f}元",
+                            "detail": f"实际成本超合同金额{cost - contract:.0f}元",
                         }
                     )
 
@@ -465,8 +463,14 @@ class ProfitAnalysisService:
 
         # 改进建议
         improvements = [
-            {"area": "报价管控", "action": "建立报价成本审核机制，确保预留足够利润空间"},
-            {"area": "采购优化", "action": "建立供应商价格对比库，优选性价比高的供应商"},
+            {
+                "area": "报价管控",
+                "action": "建立报价成本审核机制，确保预留足够利润空间",
+            },
+            {
+                "area": "采购优化",
+                "action": "建立供应商价格对比库，优选性价比高的供应商",
+            },
             {"area": "工时管控", "action": "严格执行工时预算，超出需审批"},
             {"area": "变更管理", "action": "建立变更成本评估流程，及时调整合同金额"},
             {"area": "过程监控", "action": "设置毛利率预警线，按月跟踪成本消耗"},
@@ -531,7 +535,7 @@ class ProfitAnalysisService:
         # project_costs 表
         r1 = (
             self.db.query(func.sum(ProjectCost.amount))
-            .filter(ProjectCost.project_id == project_id)
+            .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
             .scalar()
         )
         # financial_project_costs 表
@@ -548,7 +552,7 @@ class ProfitAnalysisService:
             self.db.query(
                 ProjectCost.cost_type, func.sum(ProjectCost.amount).label("total")
             )
-            .filter(ProjectCost.project_id == project_id)
+            .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
             .group_by(ProjectCost.cost_type)
             .all()
         )
@@ -586,9 +590,7 @@ class ProfitAnalysisService:
                 ratio = amount / contract * 100 if contract > 0 else 0
                 ratios.setdefault(ct, []).append(ratio)
 
-        return {
-            ct: sum(vals) / len(vals) for ct, vals in ratios.items() if vals
-        }
+        return {ct: sum(vals) / len(vals) for ct, vals in ratios.items() if vals}
 
     def _get_budget_by_category(self, project_id: int, category: str) -> float:
         """获取项目特定类别的预算金额"""
@@ -697,7 +699,9 @@ class ProfitAnalysisService:
 
         if use_forecast:
             budget_amount = float(project.budget_amount or 0)
-            remaining_cost = max(budget_amount - actual_cost, 0) if budget_amount > 0 else 0
+            remaining_cost = (
+                max(budget_amount - actual_cost, 0) if budget_amount > 0 else 0
+            )
             total_cost = actual_cost + remaining_cost
         else:
             total_cost = actual_cost
@@ -738,13 +742,12 @@ class ProfitAnalysisService:
                 "project_id": project_id,
                 "total_cost": round(total_cost, 2),
                 "allocated_costs": [
-                    {"category": k, "amount": round(v, 2)} for k, v in cost_by_type.items()
+                    {"category": k, "amount": round(v, 2)}
+                    for k, v in cost_by_type.items()
                 ],
                 "unallocated": 0.0,
             }
 
-        # 计算分配金额
-        allocated_total = sum(cost_allocation.values())
         allocated_costs = []
         unallocated = total_cost
 
@@ -756,10 +759,12 @@ class ProfitAnalysisService:
                 # 固定金额
                 allocated_amount = ratio_or_amount
 
-            allocated_costs.append({
-                "category": category,
-                "amount": round(allocated_amount, 2),
-            })
+            allocated_costs.append(
+                {
+                    "category": category,
+                    "amount": round(allocated_amount, 2),
+                }
+            )
             unallocated -= allocated_amount
 
         return {

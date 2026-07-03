@@ -3,7 +3,7 @@
 人员需求 API端点
 """
 
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -19,6 +19,45 @@ from app.schemas import staff_matching as schemas
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+
+def _as_json_list(value: Any) -> list:
+    return value if isinstance(value, list) else []
+
+
+def _project_name(project: Optional[Project]) -> Optional[str]:
+    if not project:
+        return None
+    return getattr(project, "project_name", None) or getattr(project, "name", None)
+
+
+def _build_staffing_need_response(
+    need: MesProjectStaffingNeed, requester: Optional[User] = None
+) -> dict:
+    requester = requester or need.requester
+    return {
+        "id": need.id,
+        "project_id": need.project_id,
+        "role_code": need.role_code or "UNKNOWN",
+        "role_name": need.role_name,
+        "headcount": need.headcount or 1,
+        "required_skills": _as_json_list(need.required_skills),
+        "preferred_skills": _as_json_list(need.preferred_skills),
+        "required_domains": _as_json_list(need.required_domains),
+        "required_attitudes": _as_json_list(need.required_attitudes),
+        "min_level": need.min_level,
+        "priority": need.priority or "P3",
+        "start_date": need.start_date,
+        "end_date": need.end_date,
+        "allocation_pct": need.allocation_pct if need.allocation_pct is not None else 100,
+        "status": need.status or "OPEN",
+        "requester_id": need.requester_id,
+        "filled_count": need.filled_count or 0,
+        "remark": need.remark,
+        "created_at": need.created_at,
+        "project_name": _project_name(need.project),
+        "requester_name": requester.real_name if requester else None,
+    }
 
 
 @router.get("/", response_model=List[schemas.StaffingNeedResponse])
@@ -48,31 +87,7 @@ def list_staffing_needs(
 
     result = []
     for need in needs:
-        result.append(
-            {
-                "id": need.id,
-                "project_id": need.project_id,
-                "role_code": need.role_code,
-                "role_name": need.role_name,
-                "headcount": need.headcount,
-                "required_skills": need.required_skills,
-                "preferred_skills": need.preferred_skills,
-                "required_domains": need.required_domains,
-                "required_attitudes": need.required_attitudes,
-                "min_level": need.min_level,
-                "priority": need.priority,
-                "start_date": need.start_date,
-                "end_date": need.end_date,
-                "allocation_pct": need.allocation_pct,
-                "status": need.status,
-                "requester_id": need.requester_id,
-                "filled_count": need.filled_count,
-                "remark": need.remark,
-                "created_at": need.created_at,
-                "project_name": need.project.name if need.project else None,
-                "requester_name": need.requester.real_name if need.requester else None,
-            }
-        )
+        result.append(_build_staffing_need_response(need))
 
     return result
 
@@ -86,29 +101,7 @@ def get_staffing_need(
     """获取人员需求详情"""
     need = get_or_404(db, MesProjectStaffingNeed, need_id, "人员需求不存在")
 
-    return {
-        "id": need.id,
-        "project_id": need.project_id,
-        "role_code": need.role_code,
-        "role_name": need.role_name,
-        "headcount": need.headcount,
-        "required_skills": need.required_skills,
-        "preferred_skills": need.preferred_skills,
-        "required_domains": need.required_domains,
-        "required_attitudes": need.required_attitudes,
-        "min_level": need.min_level,
-        "priority": need.priority,
-        "start_date": need.start_date,
-        "end_date": need.end_date,
-        "allocation_pct": need.allocation_pct,
-        "status": need.status,
-        "requester_id": need.requester_id,
-        "filled_count": need.filled_count,
-        "remark": need.remark,
-        "created_at": need.created_at,
-        "project_name": need.project.name if need.project else None,
-        "requester_name": need.requester.real_name if need.requester else None,
-    }
+    return _build_staffing_need_response(need)
 
 
 @router.post("/", response_model=schemas.StaffingNeedResponse, status_code=status.HTTP_201_CREATED)
@@ -162,29 +155,7 @@ def create_staffing_need(
     db.commit()
     db.refresh(need)
 
-    return {
-        "id": need.id,
-        "project_id": need.project_id,
-        "role_code": need.role_code,
-        "role_name": need.role_name,
-        "headcount": need.headcount,
-        "required_skills": need.required_skills,
-        "preferred_skills": need.preferred_skills,
-        "required_domains": need.required_domains,
-        "required_attitudes": need.required_attitudes,
-        "min_level": need.min_level,
-        "priority": need.priority,
-        "start_date": need.start_date,
-        "end_date": need.end_date,
-        "allocation_pct": need.allocation_pct,
-        "status": need.status,
-        "requester_id": need.requester_id,
-        "filled_count": need.filled_count,
-        "remark": need.remark,
-        "created_at": need.created_at,
-        "project_name": project.name,
-        "requester_name": current_user.real_name,
-    }
+    return _build_staffing_need_response(need, requester=current_user)
 
 
 @router.put("/{need_id}", response_model=schemas.StaffingNeedResponse)
@@ -227,29 +198,7 @@ def update_staffing_need(
     db.commit()
     db.refresh(need)
 
-    return {
-        "id": need.id,
-        "project_id": need.project_id,
-        "role_code": need.role_code,
-        "role_name": need.role_name,
-        "headcount": need.headcount,
-        "required_skills": need.required_skills,
-        "preferred_skills": need.preferred_skills,
-        "required_domains": need.required_domains,
-        "required_attitudes": need.required_attitudes,
-        "min_level": need.min_level,
-        "priority": need.priority,
-        "start_date": need.start_date,
-        "end_date": need.end_date,
-        "allocation_pct": need.allocation_pct,
-        "status": need.status,
-        "requester_id": need.requester_id,
-        "filled_count": need.filled_count,
-        "remark": need.remark,
-        "created_at": need.created_at,
-        "project_name": need.project.name if need.project else None,
-        "requester_name": need.requester.real_name if need.requester else None,
-    }
+    return _build_staffing_need_response(need)
 
 
 @router.delete("/{need_id}")

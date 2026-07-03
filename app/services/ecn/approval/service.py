@@ -153,7 +153,10 @@ class EcnApprovalService:
         Returns:
             (任务列表, 总数)
         """
-        tasks = self.engine.get_pending_tasks(user_id=user_id, entity_type="ECN")
+        tasks_result = self.engine.get_pending_tasks(
+            user_id=user_id, entity_type="ECN", page=1, page_size=100000
+        )
+        tasks = tasks_result.get("items", []) if isinstance(tasks_result, dict) else tasks_result
 
         # 筛选
         filtered_tasks = []
@@ -388,7 +391,7 @@ class EcnApprovalService:
         if instance.initiator_id != user_id:
             raise ValueError("只能撤回自己提交的审批")
 
-        self.engine.withdraw(instance_id=instance.id, user_id=user_id)
+        self.engine.withdraw(instance_id=instance.id, initiator_id=user_id, comment=reason)
 
         # 更新ECN状态
         ecn.status = "DRAFT"

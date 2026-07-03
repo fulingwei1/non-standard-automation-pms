@@ -34,7 +34,7 @@ def get_health_score_summary(db: Session, strategy_id: int) -> HealthScoreRespon
     Returns:
         HealthScoreResponse: 健康度汇总
     """
-    from .health_calculator import (
+    from app.services.strategy.health_calculator import (
         calculate_strategy_health,
         get_dimension_health_details,
         get_health_level,

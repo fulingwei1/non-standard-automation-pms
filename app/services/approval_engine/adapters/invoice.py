@@ -127,7 +127,7 @@ class InvoiceApprovalAdapter(ApprovalAdapter):
         if not invoice:
             return False, "发票不存在"
 
-        if invoice.status not in ("DRAFT", "REJECTED"):
+        if invoice.status not in ("DRAFT", "REJECTED", "APPLIED", "SUBMITTED"):
             return False, f"当前状态({invoice.status})不允许提交审批"
 
         if not invoice.amount or invoice.amount <= 0:

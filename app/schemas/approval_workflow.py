@@ -6,7 +6,7 @@
 各端点可直接导入使用，无需重复定义。
 """
 
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -23,7 +23,7 @@ class ApprovalActionRequest(BaseModel):
     """审批操作请求"""
 
     task_id: int = Field(..., description="审批任务ID")
-    action: str = Field(..., description="操作类型: approve/reject")
+    action: Literal["approve", "reject"] = Field(..., description="操作类型: approve/reject")
     comment: Optional[str] = Field(None, description="审批意见")
 
 
@@ -31,7 +31,7 @@ class BatchApprovalRequest(BaseModel):
     """批量审批请求"""
 
     task_ids: List[int] = Field(..., description="审批任务ID列表")
-    action: str = Field(..., description="操作类型: approve/reject")
+    action: Literal["approve", "reject"] = Field(..., description="操作类型: approve/reject")
     comment: Optional[str] = Field(None, description="审批意见")
 
 

@@ -183,15 +183,11 @@ class PerformanceTrendService:
         Returns:
             部门趋势数据
         """
-        # 获取部门所有工程师
-        from app.models.organization import Employee
+        # 获取部门所有工程师（User 直接挂载 department_id，Employee 无该字段）
         from app.models.user import User
 
-        employees = self.db.query(Employee).filter(Employee.department_id == department_id).all()
-
-        employee_ids = [e.id for e in employees]
         user_ids = [
-            u.id for u in self.db.query(User).filter(User.employee_id.in_(employee_ids)).all()
+            u.id for u in self.db.query(User).filter(User.department_id == department_id).all()
         ]
 
         if not user_ids:

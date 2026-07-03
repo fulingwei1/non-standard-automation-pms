@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.common import TimestampSchema
 
@@ -108,6 +108,31 @@ class ProjectBudgetResponse(TimestampSchema):
     approver_name: Optional[str] = None
     items: List[ProjectBudgetItemResponse] = []
 
+    @field_validator("budget_name", mode="before")
+    @classmethod
+    def _default_budget_name(cls, value):
+        return "未命名预算" if value in (None, "") else value
+
+    @field_validator("budget_type", mode="before")
+    @classmethod
+    def _default_budget_type(cls, value):
+        return "INITIAL" if value in (None, "") else value
+
+    @field_validator("version", mode="before")
+    @classmethod
+    def _default_version(cls, value):
+        return "1" if value in (None, "") else str(value)
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_status(cls, value):
+        return "DRAFT" if value in (None, "") else value
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _default_is_active(cls, value):
+        return True if value is None else value
+
     class Config:
         from_attributes = True
 
@@ -169,6 +194,11 @@ class ProjectCostAllocationRuleResponse(TimestampSchema):
     expiry_date: Optional[date] = None
     remark: Optional[str] = None
     created_by: Optional[int] = None
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _default_is_active(cls, value):
+        return True if value is None else value
 
     class Config:
         from_attributes = True

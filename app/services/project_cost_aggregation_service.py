@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.models.project import Project, ProjectCost
 from app.models.project.financial import FinancialProjectCost
 from app.schemas.project import ProjectCostBreakdown, ProjectCostSummary
+from app.services.cost.cost_basis import actual_project_cost_filter
 
 
 class ProjectCostAggregationService:
@@ -76,7 +77,9 @@ class ProjectCostAggregationService:
             variance_pct = (variance / budget * 100) if budget > 0 else Decimal("0")
 
             # 计算使用率
-            budget_used_pct = (actual_cost / budget * 100) if budget > 0 else Decimal("0")
+            budget_used_pct = (
+                (actual_cost / budget * 100) if budget > 0 else Decimal("0")
+            )
 
             # 判断是否超支
             overrun = actual_cost > budget and budget > 0
@@ -98,7 +101,9 @@ class ProjectCostAggregationService:
 
         return result
 
-    def _get_cost_breakdown_batch(self, project_ids: List[int]) -> Dict[int, ProjectCostBreakdown]:
+    def _get_cost_breakdown_batch(
+        self, project_ids: List[int]
+    ) -> Dict[int, ProjectCostBreakdown]:
         """
         批量获取成本明细（按类型分类）
 
@@ -115,7 +120,9 @@ class ProjectCostAggregationService:
                 ProjectCost.cost_type,
                 func.sum(ProjectCost.amount).label("amount"),
             )
-            .filter(ProjectCost.project_id.in_(project_ids))
+            .filter(
+                ProjectCost.project_id.in_(project_ids), actual_project_cost_filter()
+            )
             .group_by(ProjectCost.project_id, ProjectCost.cost_type)
             .all()
         )

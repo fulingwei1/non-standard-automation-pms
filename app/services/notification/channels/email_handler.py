@@ -17,9 +17,21 @@ from app.services.channel_handlers.base import (
     NotificationRequest,
     NotificationResult,
 )
-from app.services.notification.handlers.email_handler import EmailNotificationHandler
 
 __all__ = ["EmailChannelHandler", "EmailNotificationHandler"]
+
+
+def __getattr__(name):
+    # 延迟导入以打破循环依赖：
+    # handlers.email_handler -> unified_adapter -> channels(__init__) -> channels.email_handler
+    # -> handlers.email_handler。仅在真正访问 EmailNotificationHandler 时再导入。
+    if name == "EmailNotificationHandler":
+        from app.services.notification.handlers.email_handler import (
+            EmailNotificationHandler,
+        )
+
+        return EmailNotificationHandler
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 class EmailChannelHandler(ChannelHandler):

@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .common import BaseSchema, TimestampSchema
 
@@ -185,6 +185,26 @@ class CheckItemResultResponse(BaseSchema):
     checked_by: Optional[int] = None
     checked_at: Optional[datetime] = None
 
+    @field_validator("category_code", "category_name", "item_code", "item_name", mode="before")
+    @classmethod
+    def _default_text(cls, value):
+        return "" if value is None else value
+
+    @field_validator("is_required", mode="before")
+    @classmethod
+    def _default_required(cls, value):
+        return True if value is None else value
+
+    @field_validator("is_key_item", mode="before")
+    @classmethod
+    def _default_key_item(cls, value):
+        return False if value is None else value
+
+    @field_validator("result_status", mode="before")
+    @classmethod
+    def _default_result_status(cls, value):
+        return "PENDING" if value in (None, "") else value
+
 
 # ==================== 验收问题 ====================
 
@@ -245,6 +265,26 @@ class AcceptanceIssueResponse(TimestampSchema):
     verified_result: Optional[str] = None
     is_blocking: bool = False
     attachments: Optional[List[Any]] = None
+
+    @field_validator("issue_no", "issue_type", "severity", "title", "description", mode="before")
+    @classmethod
+    def _default_text(cls, value):
+        return "" if value is None else value
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_status(cls, value):
+        return "OPEN" if value in (None, "") else value
+
+    @field_validator("is_blocking", mode="before")
+    @classmethod
+    def _default_blocking(cls, value):
+        return False if value is None else value
+
+    @field_validator("attachments", mode="before")
+    @classmethod
+    def _default_attachments(cls, value):
+        return [] if value is None else value
 
 
 class AcceptanceIssueAssign(BaseModel):
@@ -325,6 +365,16 @@ class AcceptanceSignatureResponse(BaseSchema):
     signed_at: datetime
     ip_address: Optional[str] = None
 
+    @field_validator("signer_type", "signer_name", mode="before")
+    @classmethod
+    def _default_text(cls, value):
+        return "" if value is None else value
+
+    @field_validator("signed_at", mode="before")
+    @classmethod
+    def _default_signed_at(cls, value):
+        return datetime.now() if value is None else value
+
 
 # ==================== 验收报告 ====================
 
@@ -349,6 +399,22 @@ class AcceptanceReportResponse(TimestampSchema):
     file_path: Optional[str] = None
     file_size: Optional[int] = None
     file_hash: Optional[str] = None
+    include_signatures: bool = True
     generated_at: Optional[datetime] = None
     generated_by: Optional[int] = None
     generated_by_name: Optional[str] = None
+
+    @field_validator("include_signatures", mode="before")
+    @classmethod
+    def _default_include_signatures(cls, value):
+        return True if value is None else value
+
+    @field_validator("version", mode="before")
+    @classmethod
+    def _default_version(cls, value):
+        return 1 if value is None else value
+
+    @field_validator("report_no", "report_type", mode="before")
+    @classmethod
+    def _default_report_text(cls, value):
+        return "" if value is None else value

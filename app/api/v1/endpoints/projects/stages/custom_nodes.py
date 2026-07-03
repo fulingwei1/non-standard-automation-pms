@@ -28,6 +28,7 @@ router = APIRouter()
     status_code=status.HTTP_201_CREATED,
 )
 def add_custom_node(
+    project_id: int,
     stage_instance_id: int,
     node_in: AddCustomNodeRequest,
     db: Session = Depends(deps.get_db),

@@ -3,11 +3,12 @@
 战略管理 Schema - 仪表板与同比分析
 """
 
+import json
 from datetime import date
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ..common import TimestampSchema
 
@@ -237,6 +238,21 @@ class StrategyComparisonResponse(TimestampSchema):
     generator_name: Optional[str] = None
     current_strategy_name: Optional[str] = None
     previous_strategy_name: Optional[str] = None
+
+    @field_validator("highlights", "improvements", "recommendations", mode="before")
+    @classmethod
+    def _json_text_to_list(cls, value):
+        if value in (None, ""):
+            return []
+        if isinstance(value, list):
+            return value
+        if isinstance(value, str):
+            try:
+                parsed = json.loads(value)
+            except (TypeError, ValueError):
+                return []
+            return parsed if isinstance(parsed, list) else []
+        return []
 
 
 class DimensionComparisonDetail(BaseModel):

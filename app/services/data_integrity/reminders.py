@@ -18,6 +18,18 @@ from app.models.work_log import WorkLog
 logger = logging.getLogger(__name__)
 
 
+def _user_display_name(user) -> str:
+    """Return a stable display name for legacy User rows."""
+    if not user:
+        return "Unknown"
+    return (
+        getattr(user, "display_name", None)
+        or getattr(user, "real_name", None)
+        or getattr(user, "username", None)
+        or "Unknown"
+    )
+
+
 class RemindersMixin:
     """缺失数据提醒功能混入类"""
 
@@ -84,11 +96,12 @@ class RemindersMixin:
         )
 
         for engineer in engineers_without_collab:
+            engineer_name = _user_display_name(engineer.user)
             reminders.append(
                 {
                     "type": "collaboration_rating_missing",
                     "priority": "medium",
-                    "message": f"工程师 {engineer.user.name if engineer.user else 'Unknown'} 缺少跨部门协作评价",
+                    "message": f"工程师 {engineer_name} 缺少跨部门协作评价",
                     "engineer_id": engineer.user_id,
                     "suggestion": "系统将自动抽取合作人员进行评价",
                 }
@@ -110,11 +123,12 @@ class RemindersMixin:
         )
 
         for engineer in engineers_without_logs:
+            engineer_name = _user_display_name(engineer.user)
             reminders.append(
                 {
                     "type": "work_log_missing",
                     "priority": "low",
-                    "message": f"工程师 {engineer.user.name if engineer.user else 'Unknown'} 缺少工作日志",
+                    "message": f"工程师 {engineer_name} 缺少工作日志",
                     "engineer_id": engineer.user_id,
                     "suggestion": "建议工程师填写工作日志，以便提取自我评价数据",
                 }

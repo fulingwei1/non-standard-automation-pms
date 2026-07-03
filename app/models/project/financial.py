@@ -26,11 +26,15 @@ class ProjectMilestone(Base, TimestampMixin):
     __tablename__ = "project_milestones"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True, comment="项目ID")
+    project_id = Column(
+        Integer, ForeignKey("projects.id"), nullable=True, comment="项目ID"
+    )
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID（可选）")
     milestone_code = Column(String(50), nullable=True, comment="里程碑编码")
     milestone_name = Column(String(200), nullable=True, comment="里程碑名称")
-    milestone_type = Column(String(20), default="CUSTOM", comment="GATE/DELIVERY/PAYMENT/CUSTOM")
+    milestone_type = Column(
+        String(20), default="CUSTOM", comment="GATE/DELIVERY/PAYMENT/CUSTOM"
+    )
 
     # 时间
     planned_date = Column(Date, nullable=True, comment="计划日期")
@@ -67,13 +71,17 @@ class ProjectPaymentPlan(Base, TimestampMixin):
     __tablename__ = "project_payment_plans"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
+    project_id = Column(
+        Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
+    )
     contract_id = Column(Integer, ForeignKey("contracts.id"), comment="合同ID")
 
     payment_no = Column(Integer, nullable=False, comment="期次")
     payment_name = Column(String(100), nullable=False, comment="款项名称")
     payment_type = Column(
-        String(20), nullable=False, comment="款项类型：ADVANCE/DELIVERY/ACCEPTANCE/WARRANTY"
+        String(20),
+        nullable=False,
+        comment="款项类型：ADVANCE/DELIVERY/ACCEPTANCE/WARRANTY",
     )
 
     # 金额
@@ -86,13 +94,17 @@ class ProjectPaymentPlan(Base, TimestampMixin):
     actual_date = Column(Date, comment="实际收款日期")
 
     # 触发条件
-    milestone_id = Column(Integer, ForeignKey("project_milestones.id"), comment="关联里程碑ID")
+    milestone_id = Column(
+        Integer, ForeignKey("project_milestones.id"), comment="关联里程碑ID"
+    )
     trigger_milestone = Column(String(50), comment="触发里程碑名称")
     trigger_condition = Column(Text, comment="触发条件描述")
 
     # 状态
     status = Column(
-        String(20), default="PENDING", comment="状态：PENDING/INVOICED/PARTIAL/COMPLETED"
+        String(20),
+        default="PENDING",
+        comment="状态：PENDING/INVOICED/PARTIAL/COMPLETED",
     )
 
     # 发票信息
@@ -141,10 +153,18 @@ class ProjectCost(Base, TimestampMixin):
     __tablename__ = "project_costs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
+    project_id = Column(
+        Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
+    )
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
     cost_type = Column(String(50), nullable=True, comment="成本类型")
     cost_category = Column(String(50), nullable=True, comment="成本分类")
+    cost_basis = Column(
+        String(20),
+        default="ACTUAL",
+        server_default="ACTUAL",
+        comment="成本口径：PLAN=计划/估算成本，ACTUAL=实际发生成本",
+    )
 
     # 来源追溯
     source_module = Column(String(50), comment="来源模块 (purchase/outsourcing/bom)")
@@ -169,6 +189,7 @@ class ProjectCost(Base, TimestampMixin):
     __table_args__ = (
         Index("idx_project_costs_project", "project_id"),
         Index("idx_project_costs_type", "cost_type"),
+        Index("idx_project_costs_basis", "cost_basis"),
         Index("idx_project_costs_date", "cost_date"),
         Index("idx_project_costs_source", "source_type", "source_id"),
     )
@@ -199,7 +220,9 @@ class FinancialProjectCost(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
 
     # 项目关联
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
+    project_id = Column(
+        Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
+    )
     project_code = Column(String(50), comment="项目编号（冗余字段，便于查询）")
     project_name = Column(String(200), comment="项目名称（冗余字段，便于查询）")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
@@ -236,7 +259,9 @@ class FinancialProjectCost(Base, TimestampMixin):
 
     # 来源信息
     source_type = Column(
-        String(50), default="FINANCIAL_UPLOAD", comment="来源类型：FINANCIAL_UPLOAD（财务上传）"
+        String(50),
+        default="FINANCIAL_UPLOAD",
+        comment="来源类型：FINANCIAL_UPLOAD（财务上传）",
     )
     source_no = Column(String(100), comment="来源单号（如报销单号、发票号等）")
     invoice_no = Column(String(100), comment="发票号")

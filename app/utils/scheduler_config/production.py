@@ -64,7 +64,7 @@ PRODUCTION_TASKS = [
         "owner": "Manufacturing",
         "category": "Equipment",
         "description": "8:30 提醒设备保养计划。",
-        "enabled": True,
+        "enabled": False,
         "dependencies_tables": ["machines", "equipment_maintenance_plans"],
         "risk_level": "LOW",
         "sla": {

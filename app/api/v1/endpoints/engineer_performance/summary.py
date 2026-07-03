@@ -22,6 +22,19 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter(prefix="/summary", tags=["绩效总览"])
 
 
+def _empty_company_summary() -> dict:
+    return {
+        "period_id": None,
+        "period_name": "暂无考核周期",
+        "total_engineers": 0,
+        "avg_score": 0,
+        "max_score": 0,
+        "min_score": 0,
+        "level_distribution": {},
+        "by_job_type": {},
+    }
+
+
 @router.get("/company", summary="公司整体概况")
 async def get_company_summary(
     period_id: Optional[int] = Query(None, description="考核周期ID，不传则使用当前周期"),
@@ -36,7 +49,7 @@ async def get_company_summary(
     if not period_id:
         period = db.query(PerformancePeriod).filter(PerformancePeriod.is_active).first()
         if not period:
-            raise HTTPException(status_code=404, detail="未找到当前考核周期")
+            return ResponseModel(code=200, message="success", data=_empty_company_summary())
         period_id = period.id
     else:
         period = get_or_404(db, PerformancePeriod, period_id, "考核周期不存在")

@@ -41,6 +41,11 @@ class WinRatePredictionService:
             return await value
         return value
 
+    async def _execute(self, statement: Any) -> Any:
+        """兼容同步 Session 与 AsyncSession 的 execute 返回。"""
+
+        return await self._resolve_result_value(self.db.execute(statement))
+
     async def predict_win_rate(
         self, presale_ticket_id: int, ticket_data: Dict[str, Any], created_by: int
     ) -> PresaleAIWinRate:
@@ -106,7 +111,7 @@ class WinRatePredictionService:
     async def get_prediction(self, prediction_id: int) -> Optional[PresaleAIWinRate]:
         """获取预测结果"""
 
-        result = await self.db.execute(
+        result = await self._execute(
             select(PresaleAIWinRate).where(PresaleAIWinRate.id == prediction_id)
         )
         return await self._resolve_result_value(result.scalar_one_or_none())
@@ -114,7 +119,7 @@ class WinRatePredictionService:
     async def get_predictions_by_ticket(self, presale_ticket_id: int) -> List[PresaleAIWinRate]:
         """获取工单的所有预测记录"""
 
-        result = await self.db.execute(
+        result = await self._execute(
             select(PresaleAIWinRate)
             .where(PresaleAIWinRate.presale_ticket_id == presale_ticket_id)
             .order_by(PresaleAIWinRate.predicted_at.desc())
@@ -125,7 +130,7 @@ class WinRatePredictionService:
     async def get_influencing_factors(self, ticket_id: int) -> List[Dict[str, Any]]:
         """获取影响因素分析"""
 
-        result = await self.db.execute(
+        result = await self._execute(
             select(PresaleAIWinRate)
             .where(PresaleAIWinRate.presale_ticket_id == ticket_id)
             .order_by(PresaleAIWinRate.predicted_at.desc())
@@ -146,7 +151,7 @@ class WinRatePredictionService:
     async def get_competitor_analysis(self, ticket_id: int) -> Optional[Dict[str, Any]]:
         """获取竞品分析"""
 
-        result = await self.db.execute(
+        result = await self._execute(
             select(PresaleAIWinRate)
             .where(PresaleAIWinRate.presale_ticket_id == ticket_id)
             .order_by(PresaleAIWinRate.predicted_at.desc())
@@ -162,7 +167,7 @@ class WinRatePredictionService:
     async def get_improvement_suggestions(self, ticket_id: int) -> Optional[Dict[str, Any]]:
         """获取改进建议"""
 
-        result = await self.db.execute(
+        result = await self._execute(
             select(PresaleAIWinRate)
             .where(PresaleAIWinRate.presale_ticket_id == ticket_id)
             .order_by(PresaleAIWinRate.predicted_at.desc())
@@ -198,7 +203,7 @@ class WinRatePredictionService:
         """
         try:
             # 获取最新的历史记录
-            result = await self.db.execute(
+            result = await self._execute(
                 select(PresaleWinRateHistory)
                 .where(PresaleWinRateHistory.presale_ticket_id == ticket_id)
                 .order_by(PresaleWinRateHistory.created_at.desc())
@@ -250,7 +255,7 @@ class WinRatePredictionService:
         """获取模型准确度统计"""
 
         # 1. 总体准确率
-        result = await self.db.execute(
+        result = await self._execute(
             select(
                 func.count(PresaleWinRateHistory.id).label("total"),
                 func.sum(PresaleWinRateHistory.is_correct_prediction).label("correct"),
@@ -264,7 +269,7 @@ class WinRatePredictionService:
         accuracy = (correct / total * 100) if total > 0 else 0.0
 
         # 2. 平均预测误差
-        result = await self.db.execute(
+        result = await self._execute(
             select(func.avg(PresaleWinRateHistory.prediction_error)).where(
                 PresaleWinRateHistory.actual_result != WinRateResultEnum.PENDING
             )
@@ -273,7 +278,7 @@ class WinRatePredictionService:
         avg_error = result.scalar() or 0.0
 
         # 3. 按结果分组统计
-        result = await self.db.execute(
+        result = await self._execute(
             select(
                 PresaleWinRateHistory.actual_result,
                 func.count(PresaleWinRateHistory.id).label("count"),
@@ -306,7 +311,7 @@ class WinRatePredictionService:
 
         # 这里可以根据相似度算法获取历史数据
         # 简化实现：获取最近10条已完成的预测记录
-        result = await self.db.execute(
+        result = await self._execute(
             select(PresaleWinRateHistory)
             .where(PresaleWinRateHistory.actual_result != WinRateResultEnum.PENDING)
             .order_by(PresaleWinRateHistory.created_at.desc())

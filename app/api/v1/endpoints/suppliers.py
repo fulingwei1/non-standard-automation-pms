@@ -27,6 +27,7 @@ from app.core.schemas.response import (
 from app.models.material import Material, MaterialSupplier
 from app.models.user import User
 from app.schemas.material import (
+    MaterialResponse,
     SupplierCreate,
     SupplierResponse,
     SupplierUpdate,
@@ -205,5 +206,8 @@ def get_supplier_materials(
     ).all()
 
     return paginated_response(
-        items=materials, total=total, page=pagination.page, page_size=pagination.page_size
+        items=[MaterialResponse.model_validate(material) for material in materials],
+        total=total,
+        page=pagination.page,
+        page_size=pagination.page_size,
     )

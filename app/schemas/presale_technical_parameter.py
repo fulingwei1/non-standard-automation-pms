@@ -95,8 +95,8 @@ class TechnicalParameterTemplateResponse(TimestampSchema):
     parameters: Dict[str, Any] = Field(default_factory=dict)
     cost_factors: Dict[str, Any] = Field(default_factory=dict)
     typical_labor_hours: Dict[str, int] = Field(default_factory=dict)
-    reference_docs: List[str] = Field(default_factory=list)
-    sample_images: List[str] = Field(default_factory=list)
+    reference_docs: List[Any] = Field(default_factory=list)
+    sample_images: List[Any] = Field(default_factory=list)
     use_count: int = 0
     is_active: bool = True
     created_by: Optional[int] = None

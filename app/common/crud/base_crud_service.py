@@ -212,6 +212,10 @@ class BaseCRUDService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Res
         use_soft_delete = soft_delete
         if use_soft_delete is None:
             use_soft_delete = bool(self.soft_delete_field)
+        # 若模型本身不具备软删除字段（deleted_at），则降级为硬删除，
+        # 避免通用 CRUD 路由对无 deleted_at 的资源执行删除时报 500。
+        if use_soft_delete and not hasattr(self.model, self.soft_delete_field or "deleted_at"):
+            use_soft_delete = False
         deleted = self.repository.delete(object_id, soft_delete=use_soft_delete)
         if deleted:
             # 记录审计日志

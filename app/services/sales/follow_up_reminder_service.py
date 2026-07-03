@@ -679,7 +679,17 @@ class FollowUpReminderService:
         reminders = self.get_reminders_for_user(user_id, limit=200)
 
         summary = {
+            "total_count": len(reminders),
             "total": len(reminders),
+            "overdue_count": 0,
+            "high_priority_count": 0,
+            "by_urgency": {
+                "overdue": {"count": 0},
+                "urgent": {"count": 0},
+                "warning": {"count": 0},
+                "upcoming": {"count": 0},
+                "normal": {"count": 0},
+            },
             "by_priority": {
                 "urgent": 0,
                 "high": 0,
@@ -688,6 +698,7 @@ class FollowUpReminderService:
             },
             "by_type": {
                 "overdue_action": 0,
+                "upcoming_action": 0,
                 "no_follow_up": 0,
                 "quote_expiring": 0,
                 "high_value_idle": 0,
@@ -696,8 +707,27 @@ class FollowUpReminderService:
         }
 
         for r in reminders:
+            summary["by_priority"].setdefault(r.priority.value, 0)
             summary["by_priority"][r.priority.value] += 1
+            summary["by_type"].setdefault(r.type.value, 0)
             summary["by_type"][r.type.value] += 1
+
+            if r.priority in {ReminderPriority.URGENT, ReminderPriority.HIGH}:
+                summary["high_priority_count"] += 1
+
+            if r.days_overdue > 0:
+                urgency_key = "overdue"
+                summary["overdue_count"] += 1
+            elif r.days_overdue < 0:
+                urgency_key = "upcoming"
+            elif r.priority == ReminderPriority.URGENT:
+                urgency_key = "urgent"
+            elif r.priority in {ReminderPriority.HIGH, ReminderPriority.MEDIUM}:
+                urgency_key = "warning"
+            else:
+                urgency_key = "normal"
+
+            summary["by_urgency"][urgency_key]["count"] += 1
 
             if r.priority == ReminderPriority.URGENT:
                 summary["urgent_items"].append({

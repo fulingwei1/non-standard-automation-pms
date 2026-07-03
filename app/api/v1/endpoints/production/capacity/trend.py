@@ -18,6 +18,21 @@ from app.models.production import (
 router = APIRouter()
 
 
+def _period_expression(db: Session, date_column, granularity: str):
+    dialect = db.get_bind().dialect.name if db.get_bind() is not None else ""
+    if granularity == "week":
+        return (
+            func.strftime("%Y-W%W", date_column)
+            if dialect == "sqlite"
+            else func.date_format(date_column, "%Y-%u")
+        )
+    return (
+        func.strftime("%Y-%m", date_column)
+        if dialect == "sqlite"
+        else func.date_format(date_column, "%Y-%m")
+    )
+
+
 @router.get("/trend")
 async def get_capacity_trend(
     type: str = Query("oee", description="类型: oee/efficiency"),
@@ -83,15 +98,16 @@ async def get_capacity_trend(
 
         elif granularity == "week":
             # 按周
+            period_expr = _period_expression(db, EquipmentOEERecord.record_date, "week")
             results = (
                 db.query(
-                    func.date_format(EquipmentOEERecord.record_date, "%Y-%u").label("week"),
+                    period_expr.label("week"),
                     func.avg(EquipmentOEERecord.oee).label("avg_oee"),
                     func.sum(EquipmentOEERecord.actual_output).label("total_output"),
                 )
                 .filter(and_(*filters))
-                .group_by(func.date_format(EquipmentOEERecord.record_date, "%Y-%u"))
-                .order_by(func.date_format(EquipmentOEERecord.record_date, "%Y-%u"))
+                .group_by(period_expr)
+                .order_by(period_expr)
                 .all()
             )
 
@@ -106,15 +122,16 @@ async def get_capacity_trend(
 
         else:  # month
             # 按月
+            period_expr = _period_expression(db, EquipmentOEERecord.record_date, "month")
             results = (
                 db.query(
-                    func.date_format(EquipmentOEERecord.record_date, "%Y-%m").label("month"),
+                    period_expr.label("month"),
                     func.avg(EquipmentOEERecord.oee).label("avg_oee"),
                     func.sum(EquipmentOEERecord.actual_output).label("total_output"),
                 )
                 .filter(and_(*filters))
-                .group_by(func.date_format(EquipmentOEERecord.record_date, "%Y-%m"))
-                .order_by(func.date_format(EquipmentOEERecord.record_date, "%Y-%m"))
+                .group_by(period_expr)
+                .order_by(period_expr)
                 .all()
             )
 
@@ -164,18 +181,16 @@ async def get_capacity_trend(
             ]
         else:
             # 按周或月
-            date_format = "%Y-%u" if granularity == "week" else "%Y-%m"
+            period_expr = _period_expression(db, WorkerEfficiencyRecord.record_date, granularity)
             results = (
                 db.query(
-                    func.date_format(WorkerEfficiencyRecord.record_date, date_format).label(
-                        "period"
-                    ),
+                    period_expr.label("period"),
                     func.avg(WorkerEfficiencyRecord.efficiency).label("avg_efficiency"),
                     func.sum(WorkerEfficiencyRecord.completed_qty).label("total_completed"),
                 )
                 .filter(and_(*filters))
-                .group_by(func.date_format(WorkerEfficiencyRecord.record_date, date_format))
-                .order_by(func.date_format(WorkerEfficiencyRecord.record_date, date_format))
+                .group_by(period_expr)
+                .order_by(period_expr)
                 .all()
             )
 

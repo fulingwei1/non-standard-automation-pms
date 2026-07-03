@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ...schemas.common import TimestampSchema
 
@@ -87,6 +87,11 @@ class InvoiceRequestResponse(TimestampSchema):
     invoice_code: Optional[str] = None
     receipt_status: Optional[str] = None
     receipt_updated_at: Optional[datetime] = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_status(cls, value):
+        return "PENDING" if value in (None, "") else value
 
 
 class InvoiceRequestApproveRequest(BaseModel):

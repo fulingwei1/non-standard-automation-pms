@@ -119,10 +119,14 @@ def get_linked_projects(db: Session, work_id: int) -> List[ProjectLinkItem]:
         if project:
             result.append(
                 ProjectLinkItem(
+                    id=link.id,
                     project_id=project.id,
-                    project_code=project.code,
-                    project_name=project.name,
-                    contribution_weight=link.contribution_weight,
+                    project_code=project.project_code,
+                    project_name=project.project_name,
+                    link_type=link.link_type or "SUPPORT",
+                    contribution_weight=float(link.contribution_weight or 100),
+                    project_status=project.status,
+                    project_progress=float(project.progress or 0),
                 )
             )
 

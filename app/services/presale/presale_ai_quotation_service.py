@@ -9,7 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import desc
+from sqlalchemy import desc, text
 from sqlalchemy.orm import Session
 
 from app.models.presale_ai_quotation import (
@@ -35,8 +35,11 @@ class AIQuotationGeneratorService:
 
     def __init__(self, db: Session):
         self.db = db
-        self.ai_model = "gpt-4"  # 默认使用GPT-4，可配置为Kimi
         self.ai_client = AIClientService()
+        # 报价项为结构化JSON且需连出3档，优先用更快的 coder 模型，避免重推理模型串行超时
+        self.ai_model = (
+            "qwen3-coder-plus" if getattr(self.ai_client, "qwen_api_key", "") else "gpt-4"
+        )
 
     def generate_quotation_number(self) -> str:
         """生成报价单编号"""
@@ -78,8 +81,11 @@ class AIQuotationGeneratorService:
                 total=total, quotation_type=request.quotation_type
             )
 
-        # 序列化报价项
-        items_data = [item.dict() for item in request.items]
+        # 序列化报价项（JSON 列不支持 Decimal，需转为 float）
+        items_data = [
+            {k: (float(v) if isinstance(v, Decimal) else v) for k, v in item.dict().items()}
+            for item in request.items
+        ]
 
         # 创建报价单
         quotation = PresaleAIQuotation(
@@ -239,6 +245,61 @@ class AIQuotationGeneratorService:
             self.db.query(PresaleAIQuotation).filter(PresaleAIQuotation.id == quotation_id).first()
         )
 
+    def get_quotation_response(self, quotation_id: int) -> Optional[Dict[str, Any]]:
+        """获取报价单响应数据，兼容历史非法枚举值。"""
+        try:
+            quotation = self.get_quotation(quotation_id)
+            if quotation:
+                return quotation
+            return None
+        except LookupError:
+            row = (
+                self.db.execute(
+                    text(
+                        """
+                        SELECT
+                            id,
+                            presale_ticket_id,
+                            customer_id,
+                            quotation_number,
+                            quotation_type,
+                            items,
+                            subtotal,
+                            tax,
+                            discount,
+                            total,
+                            payment_terms,
+                            validity_days,
+                            status,
+                            pdf_url,
+                            version,
+                            created_by,
+                            created_at,
+                            updated_at,
+                            ai_model,
+                            generation_time,
+                            notes
+                        FROM presale_ai_quotation
+                        WHERE id = :quotation_id
+                        """
+                    ),
+                    {"quotation_id": quotation_id},
+                )
+                .mappings()
+                .first()
+            )
+            if not row:
+                return None
+            payload = dict(row)
+            payload["quotation_type"] = self._normalize_quotation_type(
+                payload.get("quotation_type")
+            )
+            payload["status"] = self._normalize_quotation_status(payload.get("status"))
+            payload["items"] = self._json_or_default(payload.get("items"), [])
+            payload["validity_days"] = payload.get("validity_days") or 30
+            payload["version"] = payload.get("version") or 1
+            return payload
+
     def get_quotation_history(self, ticket_id: int) -> List[PresaleAIQuotation]:
         """获取报价单历史（按版本号降序）"""
         return (
@@ -256,6 +317,35 @@ class AIQuotationGeneratorService:
             .order_by(desc(QuotationVersion.version))
             .all()
         )
+
+    @staticmethod
+    def _json_or_default(value: Any, default: Any) -> Any:
+        if value in (None, ""):
+            return default
+        if isinstance(value, str):
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                return default
+        return value
+
+    @staticmethod
+    def _normalize_quotation_type(value: Any) -> str:
+        if hasattr(value, "value"):
+            value = value.value
+        value = str(value or "").lower()
+        if value in {"basic", "standard", "premium"}:
+            return value
+        return "standard"
+
+    @staticmethod
+    def _normalize_quotation_status(value: Any) -> str:
+        if hasattr(value, "value"):
+            value = value.value
+        value = str(value or "").lower()
+        if value in {"draft", "pending_approval", "approved", "sent", "accepted", "rejected"}:
+            return value
+        return "draft"
 
     def approve_quotation(
         self, quotation_id: int, approver_id: int, status: str, comments: Optional[str] = None
@@ -479,7 +569,12 @@ class AIQuotationGeneratorService:
             self.ai_client.openai_client
             and str(self.ai_client.openai_api_key).startswith(("sk-", "sk-proj-"))
         )
-        return bool(openai_ready or self.ai_client.zhipu_client or self.ai_client.kimi_api_key)
+        return bool(
+            openai_ready
+            or self.ai_client.zhipu_client
+            or self.ai_client.kimi_api_key
+            or getattr(self.ai_client, "qwen_api_key", "")  # 阿里百炼 Coding Plan
+        )
 
     def _generate_ai_content(
         self, prompt: str, temperature: float = 0.25, max_tokens: int = 1800

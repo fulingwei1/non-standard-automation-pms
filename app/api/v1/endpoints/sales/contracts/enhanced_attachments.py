@@ -4,13 +4,16 @@
 从 enhanced.py 拆分
 """
 
+from pathlib import Path
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.models.user import User
+from app.models.sales.contracts import ContractAttachment
 from app.schemas.sales.contract_enhanced import (
     ContractAttachmentCreate,
     ContractAttachmentResponse,
@@ -68,5 +71,14 @@ def download_attachment(
     current_user: User = Depends(get_current_user),
 ):
     """下载附件"""
-    # TODO: 实现文件下载逻辑
-    raise HTTPException(status_code=501, detail="下载功能待实现")
+    attachment = db.query(ContractAttachment).filter(ContractAttachment.id == attachment_id).first()
+    if not attachment:
+        raise HTTPException(status_code=404, detail="附件不存在")
+    file_path = Path(attachment.file_path).expanduser()
+    if not file_path.is_file():
+        raise HTTPException(status_code=404, detail="附件文件不存在")
+    return FileResponse(
+        path=file_path,
+        filename=attachment.file_name,
+        media_type=attachment.file_type or "application/octet-stream",
+    )

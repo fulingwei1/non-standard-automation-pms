@@ -86,6 +86,28 @@ class RoleManagementService:
             return True
         return or_(ApiPermission.tenant_id == tenant_id, ApiPermission.tenant_id.is_(None))
 
+    def _template_read_scope_filter(
+        self,
+        tenant_id: Optional[int],
+        include_all_tenants: bool = True,
+    ):
+        if include_all_tenants:
+            return None
+        if tenant_id is None:
+            return RoleTemplate.tenant_id.is_(None)
+        return or_(RoleTemplate.tenant_id == tenant_id, RoleTemplate.tenant_id.is_(None))
+
+    def _template_write_scope_filter(
+        self,
+        tenant_id: Optional[int],
+        include_all_tenants: bool = True,
+    ):
+        if include_all_tenants:
+            return None
+        if tenant_id is None:
+            return RoleTemplate.tenant_id.is_(None)
+        return RoleTemplate.tenant_id == tenant_id
+
     def get_role_by_id(self, role_id: int, tenant_id: Optional[int] = None) -> Role:
         """
         根据ID获取角色
@@ -215,30 +237,38 @@ class RoleManagementService:
             for p in permissions
         ]
 
-    def get_role_templates(self) -> List[Dict[str, Any]]:
+    def get_role_templates(
+        self,
+        tenant_id: Optional[int] = None,
+        include_all_tenants: bool = True,
+    ) -> List[Dict[str, Any]]:
         """
         获取角色模板列表
 
         Returns:
             角色模板列表
         """
-        templates = (
-            self.db.query(RoleTemplate)
-            .filter(RoleTemplate.is_active)
-            .order_by(RoleTemplate.template_name)
-            .all()
-        )
+        query = self.db.query(RoleTemplate).filter(RoleTemplate.is_active)
+        scope = self._template_read_scope_filter(tenant_id, include_all_tenants)
+        if scope is not None:
+            query = query.filter(scope)
+        templates = query.order_by(RoleTemplate.template_name).all()
 
         return [
             {
                 "id": t.id,
+                "tenant_id": t.tenant_id,
                 "role_code": t.template_code,
                 "template_code": t.template_code,
                 "role_name": t.template_name,
                 "template_name": t.template_name,
                 "description": t.description,
+                "role_type": t.role_type,
+                "scope_type": t.scope_type,
                 "data_scope": t.data_scope,
-                "permission_codes": t.permission_snapshot,
+                "level": t.level,
+                "permission_codes": self._template_permission_codes(t.permission_snapshot),
+                "is_active": bool(t.is_active),
                 "version": t.version or 1,
                 "version_note": t.version_note,
                 "source_role_id": t.source_role_id,
@@ -702,30 +732,45 @@ class RoleManagementService:
     # 角色模板管理
     # ============================================================
 
-    def get_template_by_id(self, template_id: int) -> RoleTemplate:
+    def get_template_by_id(
+        self,
+        template_id: int,
+        tenant_id: Optional[int] = None,
+        include_all_tenants: bool = True,
+        writable: bool = False,
+    ) -> RoleTemplate:
         """根据ID获取模板"""
-        template = (
-            self.db.query(RoleTemplate)
-            .filter(RoleTemplate.id == template_id)
-            .first()
+        query = self.db.query(RoleTemplate).filter(RoleTemplate.id == template_id)
+        scope = (
+            self._template_write_scope_filter(tenant_id, include_all_tenants)
+            if writable
+            else self._template_read_scope_filter(tenant_id, include_all_tenants)
         )
+        if scope is not None:
+            query = query.filter(scope)
+        template = query.first()
         if not template:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="模板不存在"
             )
         return template
 
-    def get_template_detail(self, template_id: int) -> Dict[str, Any]:
+    def get_template_detail(
+        self,
+        template_id: int,
+        tenant_id: Optional[int] = None,
+        include_all_tenants: bool = True,
+    ) -> Dict[str, Any]:
         """获取模板详情"""
-        t = self.get_template_by_id(template_id)
-        permission_codes = []
-        if t.permission_snapshot:
-            try:
-                permission_codes = json.loads(t.permission_snapshot)
-            except (json.JSONDecodeError, TypeError):
-                permission_codes = []
+        t = self.get_template_by_id(
+            template_id,
+            tenant_id=tenant_id,
+            include_all_tenants=include_all_tenants,
+        )
+        permission_codes = self._template_permission_codes(t.permission_snapshot)
         return {
             "id": t.id,
+            "tenant_id": t.tenant_id,
             "template_code": t.template_code,
             "template_name": t.template_name,
             "role_type": t.role_type,
@@ -755,6 +800,7 @@ class RoleManagementService:
         permission_codes: Optional[List[str]] = None,
         source_role_id: Optional[int] = None,
         source_role_name: Optional[str] = None,
+        tenant_id: Optional[int] = None,
     ) -> Dict[str, Any]:
         """创建角色模板"""
         existing = (
@@ -769,6 +815,7 @@ class RoleManagementService:
             )
 
         template = RoleTemplate(
+            tenant_id=tenant_id,
             template_code=template_code,
             template_name=template_name,
             description=description,
@@ -797,9 +844,16 @@ class RoleManagementService:
         permission_codes: Optional[List[str]] = None,
         is_active: Optional[bool] = None,
         version_note: Optional[str] = None,
+        tenant_id: Optional[int] = None,
+        include_all_tenants: bool = True,
     ) -> Dict[str, Any]:
         """更新角色模板，内容变更时自动递增版本号"""
-        template = self.get_template_by_id(template_id)
+        template = self.get_template_by_id(
+            template_id,
+            tenant_id=tenant_id,
+            include_all_tenants=include_all_tenants,
+            writable=True,
+        )
 
         # 跟踪是否有实质内容变更（不含 is_active 开关）
         content_changed = False
@@ -830,11 +884,25 @@ class RoleManagementService:
 
         self.db.commit()
         self.db.refresh(template)
-        return self.get_template_detail(template.id)
+        return self.get_template_detail(
+            template.id,
+            tenant_id=tenant_id,
+            include_all_tenants=include_all_tenants,
+        )
 
-    def delete_template(self, template_id: int) -> None:
+    def delete_template(
+        self,
+        template_id: int,
+        tenant_id: Optional[int] = None,
+        include_all_tenants: bool = True,
+    ) -> None:
         """删除角色模板"""
-        template = self.get_template_by_id(template_id)
+        template = self.get_template_by_id(
+            template_id,
+            tenant_id=tenant_id,
+            include_all_tenants=include_all_tenants,
+            writable=True,
+        )
         self.db.delete(template)
         self.db.commit()
 
@@ -845,9 +913,21 @@ class RoleManagementService:
         template_name: str,
         description: Optional[str] = None,
         tenant_id: Optional[int] = None,
+        include_all_tenants: bool = True,
     ) -> Dict[str, Any]:
         """将现有角色另存为模板（含当前权限快照）"""
-        role = self.get_role_by_id(role_id, tenant_id=tenant_id)
+        if include_all_tenants:
+            role = self.get_role_by_id(role_id)
+        elif tenant_id is None:
+            role = (
+                self.db.query(Role)
+                .filter(Role.id == role_id, Role.tenant_id.is_(None))
+                .first()
+            )
+            if not role:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="角色不存在")
+        else:
+            role = self.get_role_by_id(role_id, tenant_id=tenant_id)
 
         # 获取角色当前权限编码
         perm_rows = (
@@ -866,6 +946,7 @@ class RoleManagementService:
             permission_codes=permission_codes,
             source_role_id=role.id,
             source_role_name=role.role_name,
+            tenant_id=None if include_all_tenants else tenant_id,
         )
 
     def create_role_from_template(
@@ -875,9 +956,14 @@ class RoleManagementService:
         role_name: str,
         tenant_id: Optional[int] = None,
         description: Optional[str] = None,
+        include_all_tenants: bool = True,
     ) -> Role:
         """从模板创建角色（复制模板的权限配置到新角色）"""
-        template = self.get_template_by_id(template_id)
+        template = self.get_template_by_id(
+            template_id,
+            tenant_id=tenant_id,
+            include_all_tenants=include_all_tenants,
+        )
 
         # 安全检查
         if role_code in RESERVED_ROLE_CODES or role_code.upper() in RESERVED_ROLE_CODES:
@@ -915,19 +1001,18 @@ class RoleManagementService:
         self.db.flush()  # 获取role.id
 
         # 从模板快照恢复权限
-        permission_codes = []
-        if template.permission_snapshot:
-            try:
-                permission_codes = json.loads(template.permission_snapshot)
-            except (json.JSONDecodeError, TypeError):
-                pass
+        permission_codes = self._template_permission_codes(template.permission_snapshot)
 
         if permission_codes:
-            perms = (
-                self.db.query(ApiPermission)
-                .filter(ApiPermission.perm_code.in_(permission_codes))
-                .all()
+            perm_query = self.db.query(ApiPermission).filter(
+                ApiPermission.perm_code.in_(permission_codes)
             )
+            if not include_all_tenants:
+                if tenant_id is None:
+                    perm_query = perm_query.filter(ApiPermission.tenant_id.is_(None))
+                else:
+                    perm_query = perm_query.filter(self._permission_scope_filter(tenant_id))
+            perms = perm_query.all()
             for perm in perms:
                 self.db.add(RoleApiPermission(role_id=role.id, permission_id=perm.id))
 
@@ -965,6 +1050,20 @@ class RoleManagementService:
             "sort_order": role.sort_order,
             "tenant_id": role.tenant_id,
         }
+
+    def _template_permission_codes(self, permission_snapshot: Any) -> List[str]:
+        """解析模板权限快照，始终向前端返回权限编码列表。"""
+        if not permission_snapshot:
+            return []
+        if isinstance(permission_snapshot, list):
+            return [str(code) for code in permission_snapshot if code]
+        try:
+            parsed = json.loads(permission_snapshot)
+        except (json.JSONDecodeError, TypeError):
+            return []
+        if not isinstance(parsed, list):
+            return []
+        return [str(code) for code in parsed if code]
 
     def _would_create_cycle(self, role_id: int, new_parent_id: int) -> bool:
         """检查设置新父角色是否会形成循环引用"""

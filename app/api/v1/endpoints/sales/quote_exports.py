@@ -7,6 +7,7 @@
 import io
 from datetime import datetime
 from typing import Optional
+from urllib.parse import quote as url_quote
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -20,6 +21,11 @@ from app.schemas.common import ResponseModel
 from app.services.import_export_engine import ExcelExportEngine
 
 router = APIRouter()
+
+
+def _attachment_header(filename: str) -> str:
+    encoded = url_quote(filename.encode("utf-8"))
+    return f"attachment; filename*=UTF-8''{encoded}"
 
 
 @router.get("/quotes/{quote_id}/export/excel")
@@ -117,7 +123,7 @@ def export_quote_to_excel(
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"},
+        headers={"Content-Disposition": _attachment_header(filename)},
     )
 
 
@@ -255,7 +261,7 @@ def export_quote_to_pdf(
         return StreamingResponse(
             output,
             media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"},
+            headers={"Content-Disposition": _attachment_header(filename)},
         )
 
     except ImportError:

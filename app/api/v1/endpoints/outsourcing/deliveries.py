@@ -136,11 +136,11 @@ def create_outsourcing_delivery(
     if order.status not in ["APPROVED", "IN_PROGRESS"]:
         raise HTTPException(status_code=400, detail="只能为已审批或进行中的订单创建交付记录")
 
-        vendor = (
-            db.query(Vendor)
-            .filter(Vendor.id == order.vendor_id, Vendor.vendor_type == "OUTSOURCING")
-            .first()
-        )
+    vendor = (
+        db.query(Vendor)
+        .filter(Vendor.id == order.vendor_id)
+        .first()
+    )
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
 

@@ -49,7 +49,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -256,6 +256,47 @@ def list_alerts(
         page=pagination.page,
         page_size=pagination.page_size,
         pages=pagination.pages_for_total(total),
+    )
+
+
+@router.get("/alerts/summary", response_model=ResponseModel)
+def get_alerts_summary(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取缺料预警摘要统计"""
+    rows = (
+        db.query(MaterialShortage.status, func.count(MaterialShortage.id))
+        .group_by(MaterialShortage.status)
+        .all()
+    )
+    counts = {(status or "OPEN").upper(): count for status, count in rows}
+    total_count = sum(counts.values())
+    pending_count = counts.get("OPEN", 0) + counts.get("PENDING", 0)
+    processing_count = (
+        counts.get("ACKNOWLEDGED", 0)
+        + counts.get("PROCESSING", 0)
+        + counts.get("IN_PROGRESS", 0)
+    )
+    resolved_count = counts.get("RESOLVED", 0) + counts.get("CLOSED", 0)
+
+    critical_count = (
+        db.query(func.count(MaterialShortage.id))
+        .filter(MaterialShortage.alert_level.in_(["CRITICAL", "HIGH", "L4", "L3"]))
+        .scalar()
+        or 0
+    )
+
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={
+            "pending_count": pending_count,
+            "processing_count": processing_count,
+            "resolved_count": resolved_count,
+            "total_count": total_count,
+            "critical_count": critical_count,
+        },
     )
 
 

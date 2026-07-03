@@ -5,7 +5,7 @@
 目标覆盖率: 70%+
 测试用例数: 4个
 """
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import Mock, MagicMock, patch
 
@@ -318,10 +318,17 @@ class TestPurchaseService:
         mock_item = Mock()
         mock_item.id = 1
         mock_item.material_id = 1
+        mock_item.bom_item_id = 11
+        mock_item.material_code = "MAT-001"
+        mock_item.material_name = "伺服电机"
+        mock_item.specification = "750W"
+        mock_item.unit = "台"
         mock_item.quantity = 10
         mock_item.unit_price = Decimal("100.00")
         mock_item.amount = Decimal("1000.00")
+        mock_item.required_date = date(2026, 7, 10)
         sample_purchase_request.items = [mock_item]
+        added = []
 
         mock_query = Mock()
         mock_filtered = Mock()
@@ -329,12 +336,25 @@ class TestPurchaseService:
         mock_filtered.first = Mock(return_value=sample_purchase_request)
         mock_db.query.return_value = mock_query
         mock_db.flush = Mock()
+        mock_db.add.side_effect = added.append
 
         result = purchase_service.generate_orders_from_request(request_id=1, supplier_id=10)
 
         assert result is True
         assert sample_purchase_request.status == "ORDER_GENERATED"
-        assert mock_db.add.call_count >= 1
+        assert mock_db.add.call_count == 2
+
+        order_item = next(item for item in added if isinstance(item, PurchaseOrderItem))
+        assert order_item.item_no == 1
+        assert order_item.bom_item_id == 11
+        assert order_item.material_code == "MAT-001"
+        assert order_item.material_name == "伺服电机"
+        assert order_item.specification == "750W"
+        assert order_item.unit == "台"
+        assert order_item.quantity == 10
+        assert order_item.unit_price == Decimal("100.00")
+        assert order_item.amount == Decimal("1000.00")
+        assert order_item.required_date == date(2026, 7, 10)
 
     def test_generate_orders_from_request_not_found(self, purchase_service, mock_db):
         """测试从不存在采购申请生成订单"""

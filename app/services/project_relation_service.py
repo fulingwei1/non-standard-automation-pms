@@ -19,6 +19,33 @@ class ProjectRelationService:
     
     def __init__(self, db: Session):
         self.db = db
+
+    @staticmethod
+    def _serialize_project(project: Project) -> Dict[str, Any]:
+        """项目总览中只返回可 JSON 序列化的核心项目信息。"""
+        return {
+            "id": project.id,
+            "project_code": project.project_code,
+            "project_name": project.project_name,
+            "short_name": project.short_name,
+            "customer_name": project.customer_name,
+            "stage": project.stage,
+            "status": project.status,
+            "health": project.health,
+            "progress_pct": float(project.progress_pct or 0),
+            "contract_amount": float(project.contract_amount or 0),
+            "budget_amount": float(project.budget_amount or 0),
+            "actual_cost": float(project.actual_cost or 0),
+            "pm_id": project.pm_id,
+            "pm_name": project.pm_name,
+            "planned_start_date": (
+                project.planned_start_date.isoformat() if project.planned_start_date else None
+            ),
+            "planned_end_date": (
+                project.planned_end_date.isoformat() if project.planned_end_date else None
+            ),
+            "is_active": True if project.is_active is None else project.is_active,
+        }
     
     def get_project_overview(self, project_id: int) -> Dict[str, Any]:
         """获取项目总览（包含各模块数据）"""
@@ -27,7 +54,7 @@ class ProjectRelationService:
             return {}
         
         return {
-            "project": project,
+            "project": self._serialize_project(project),
             "production": self.get_production_status(project_id),
             "procurement": self.get_procurement_status(project_id),
             "delivery": self.get_delivery_status(project_id),

@@ -8,6 +8,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -19,6 +20,7 @@ from app.core.schemas.response import (
     success_response,
     paginated_response,
 )
+from app.models.project.customer import Customer
 from app.models.user import User
 from app.schemas.project.customer import (
     CustomerCreate,
@@ -69,7 +71,7 @@ def list_customers(
     keyword: Optional[str] = Query(None, description="关键词搜索（客户名称/编码）"),
     industry: Optional[str] = Query(None, description="行业筛选"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
-    current_user: User = Depends(security.require_permission("customer:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> PaginatedResponse[CustomerResponse]:
     """
     获取客户列表（支持分页、搜索、筛选）
@@ -78,19 +80,40 @@ def list_customers(
     - **industry**: 行业筛选
     - **is_active**: 是否启用
     """
-    service = CustomerService(db)
-    result = service.list_customers(
+    query = db.query(Customer)
+    query = security.filter_sales_data_by_scope(
+        query, current_user, db, Customer, "sales_owner_id"
+    )
+
+    if keyword:
+        query = query.filter(
+            or_(
+                Customer.customer_name.contains(keyword),
+                Customer.customer_code.contains(keyword),
+                Customer.short_name.contains(keyword),
+            )
+        )
+
+    if industry:
+        query = query.filter(Customer.industry == industry)
+
+    if is_active is not None:
+        query = query.filter(Customer.status == ("ACTIVE" if is_active else "INACTIVE"))
+
+    total = query.count()
+    customers = (
+        query.order_by(desc(Customer.created_at))
+        .offset(pagination.offset)
+        .limit(pagination.limit)
+        .all()
+    )
+    items = [CustomerResponse.model_validate(customer) for customer in customers]
+
+    return paginated_response(
+        items=items,
+        total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        keyword=keyword,
-        industry=industry,
-        status="ACTIVE" if is_active is True else None,
-    )
-    return paginated_response(
-        items=result["items"],
-        total=result["total"],
-        page=result["page"],
-        page_size=result["page_size"]
     )
 
 

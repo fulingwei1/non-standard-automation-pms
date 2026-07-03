@@ -113,6 +113,8 @@ def serialize_order_item(item: PurchaseOrderItem) -> Dict[str, Any]:
         "unit_price": float(item.unit_price or 0),
         "amount": float(item.amount or 0),
         "tax_rate": float(item.tax_rate or 0),
+        "tax_amount": float(item.tax_amount or 0),
+        "amount_with_tax": float(item.amount_with_tax or 0),
         "required_date": item.required_date.isoformat() if item.required_date else None,
         "status": item.status,
     }
@@ -130,6 +132,8 @@ def serialize_purchase_order(
         "order_type": order.order_type,
         "order_title": order.order_title,
         "total_amount": float(order.total_amount or 0),
+        "tax_amount": float(order.tax_amount or 0),
+        "amount_with_tax": float(order.amount_with_tax or 0),
         "status": order.status,
         "required_date": order.required_date.isoformat() if order.required_date else None,
         "created_at": order.created_at.isoformat() if order.created_at else None,

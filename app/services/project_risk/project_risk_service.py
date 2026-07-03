@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import HTTPException
-from sqlalchemy import and_, desc
+from sqlalchemy import and_, desc, inspect
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
@@ -28,6 +28,41 @@ class ProjectRiskService:
             db: 数据库会话
         """
         self.db = db
+
+    def _risk_table_exists(self) -> bool:
+        """Return whether the optional risk table exists in the current database."""
+        return inspect(self.db.get_bind()).has_table(ProjectRisk.__tablename__)
+
+    @staticmethod
+    def _empty_risk_matrix() -> Dict[str, Any]:
+        matrix = [
+            {"probability": prob, "impact": imp, "count": 0, "risks": []}
+            for prob in range(1, 6)
+            for imp in range(1, 6)
+        ]
+        return {
+            "matrix": matrix,
+            "summary": {
+                "total_risks": 0,
+                "critical_count": 0,
+                "high_count": 0,
+                "medium_count": 0,
+                "low_count": 0,
+            },
+        }
+
+    @staticmethod
+    def _empty_risk_summary() -> Dict[str, Any]:
+        return {
+            "total_risks": 0,
+            "by_type": {risk_type.value: 0 for risk_type in RiskTypeEnum},
+            "by_level": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0},
+            "by_status": {status.value: 0 for status in RiskStatusEnum},
+            "occurred_count": 0,
+            "closed_count": 0,
+            "high_priority_count": 0,
+            "avg_risk_score": 0,
+        }
 
     def generate_risk_code(self, project_id: int) -> str:
         """
@@ -141,6 +176,8 @@ class ProjectRiskService:
         """
         # 检查项目是否存在
         get_or_404(self.db, Project, project_id, detail="项目不存在")
+        if not self._risk_table_exists():
+            return [], 0
 
         # 构建查询
         query = self.db.query(ProjectRisk).filter(ProjectRisk.project_id == project_id)
@@ -184,6 +221,9 @@ class ProjectRiskService:
         Raises:
             HTTPException: 风险不存在时抛出404
         """
+        if not self._risk_table_exists():
+            raise HTTPException(status_code=404, detail="风险不存在")
+
         risk = (
             self.db.query(ProjectRisk)
             .filter(and_(ProjectRisk.id == risk_id, ProjectRisk.project_id == project_id))
@@ -287,6 +327,8 @@ class ProjectRiskService:
         """
         # 检查项目是否存在
         get_or_404(self.db, Project, project_id, detail="项目不存在")
+        if not self._risk_table_exists():
+            return self._empty_risk_matrix()
 
         # 获取所有未关闭的风险
         risks = (
@@ -362,6 +404,8 @@ class ProjectRiskService:
         """
         # 检查项目是否存在
         get_or_404(self.db, Project, project_id, detail="项目不存在")
+        if not self._risk_table_exists():
+            return self._empty_risk_summary()
 
         # 获取所有风险
         risks = self.db.query(ProjectRisk).filter(ProjectRisk.project_id == project_id).all()

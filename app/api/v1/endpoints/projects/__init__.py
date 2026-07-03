@@ -32,6 +32,7 @@ from . import (
     ext_relations,
     ext_resources,
     ext_reviews,
+    financial_costs,
     overview,
     payment_plans,
     risk_analytics,
@@ -96,6 +97,9 @@ router.include_router(sync.router, tags=["projects-sync"])
 
 # 最佳实践路由（放在 core 之前，避免与/{project_id}冲突）
 router.include_router(ext_best_practices.router, tags=["projects-best-practices"])
+
+# 财务历史项目成本（静态路径，必须在 /{project_id} 系列之前）
+router.include_router(financial_costs.router, tags=["projects-financial-costs"])
 
 # 核心CRUD路由
 router.include_router(core.router, tags=["projects-core"])

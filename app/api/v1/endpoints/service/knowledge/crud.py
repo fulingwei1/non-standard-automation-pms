@@ -2,6 +2,8 @@
 """
 知识库管理 - CRUD操作
 """
+import logging
+from pathlib import Path
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Body, Depends, Query, status
@@ -12,6 +14,7 @@ from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
+from app.core.config import settings
 from app.models.service import KnowledgeBase
 from app.models.service.enums import KnowledgeBaseStatusEnum, normalize_knowledge_base_status
 from app.models.user import User
@@ -27,6 +30,28 @@ from ..access import ensure_author_or_superuser
 from ..number_utils import generate_article_no
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+
+def _delete_uploaded_file_if_safe(relative_path: Optional[str]) -> None:
+    if not relative_path:
+        return
+
+    upload_root = Path(settings.UPLOAD_DIR).resolve()
+    file_path = (upload_root / relative_path).resolve()
+    try:
+        file_path.relative_to(upload_root)
+    except ValueError:
+        logger.warning("跳过知识库附件删除，路径不在上传目录内: %s", relative_path)
+        return
+
+    if not file_path.exists():
+        return
+
+    try:
+        file_path.unlink()
+    except Exception as exc:  # pragma: no cover - filesystem edge case
+        logger.warning("删除知识库附件失败: %s", exc)
 
 
 @router.get(
@@ -167,9 +192,11 @@ def delete_knowledge_base(
     """
     article = get_or_404(db, KnowledgeBase, article_id, "文章不存在")
     ensure_author_or_superuser(current_user, article.author_id)
+    file_path = article.file_path
 
     db.delete(article)
     db.commit()
+    _delete_uploaded_file_if_safe(file_path)
 
     return {"message": "文章已删除"}
 

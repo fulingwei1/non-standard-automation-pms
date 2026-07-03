@@ -263,8 +263,8 @@ def get_tender_analysis(
         industry = "其他"  # 默认值，实际应从关联表获取
         if tender.opportunity_id:
             opp = db.query(Opportunity).filter(Opportunity.id == tender.opportunity_id).first()
-            if opp and opp.industry:
-                industry = opp.industry
+            if opp:
+                industry = getattr(opp, "industry", None) or opp.project_type or "其他"
 
         if industry not in industry_stats:
             industry_stats[industry] = {"total": 0, "won": 0, "lost": 0, "pending": 0}

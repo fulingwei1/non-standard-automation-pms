@@ -72,9 +72,9 @@ def read_acceptance_templates(
                 template_name=template.template_name,
                 acceptance_type=template.acceptance_type,
                 equipment_type=template.equipment_type,
-                version=template.version,
-                is_system=template.is_system,
-                is_active=template.is_active,
+                version=template.version or "1.0",
+                is_system=bool(template.is_system) if template.is_system is not None else False,
+                is_active=bool(template.is_active) if template.is_active is not None else True,
                 created_at=template.created_at,
                 updated_at=template.updated_at,
             )

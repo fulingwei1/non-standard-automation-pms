@@ -240,7 +240,7 @@ def handle_shortage_report(
     solution_type: str = Body(..., description="解决方案类型：PURCHASE/SUBSTITUTE/TRANSFER/OTHER"),
     solution_note: Optional[str] = Body(None, description="解决方案说明"),
     handler_id: Optional[int] = Body(None, description="处理人ID（默认当前用户）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage:manage")),
 ) -> Any:
     """处理上报"""
     report = get_or_404(db, ShortageReport, report_id, "缺料上报不存在")
@@ -263,7 +263,7 @@ def resolve_shortage_report(
     *,
     db: Session = Depends(deps.get_db),
     report_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("shortage:manage")),
 ) -> Any:
     """解决上报"""
     report = get_or_404(db, ShortageReport, report_id, "缺料上报不存在")

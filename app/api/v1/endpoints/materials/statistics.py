@@ -249,7 +249,7 @@ def search_materials(
         # 计算在途数量
         in_transit_qty = (
             db.query(func.sum(PurchaseOrderItem.quantity - PurchaseOrderItem.received_qty))
-            .join(PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id)
+            .join(PurchaseOrder, PurchaseOrderItem.order_id == PurchaseOrder.id)
             .filter(
                 PurchaseOrderItem.material_id == material.id,
                 PurchaseOrder.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]),

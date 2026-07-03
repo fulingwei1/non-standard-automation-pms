@@ -16,14 +16,15 @@ import logging
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.approval import ApprovalActionLog, ApprovalInstance, ApprovalTask
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.approval_engine.engine.__init__ import ApprovalEngineService
 from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
@@ -52,21 +53,25 @@ def get_project_approval_status(
     获取项目审批状态（使用统一审批系统）
 
     重构说明：
-    - 使用 ApprovalEngineService.get_approval_record() 获取审批记录
-    - 通过引擎的查询能力获取审批任务和日志
+    - 使用统一审批系统现有模型获取审批实例
+    - 查询审批任务和操作日志
     - 保持与原有响应格式的兼容性
     """
     get_or_404(db, Project, project_id, detail="项目不存在")
 
     try:
-        # 使用统一审批引擎获取审批记录
-        approval_service = ApprovalEngineService(db)
-
-        # 获取最新审批记录
-        instance = approval_service.get_approval_record(
-            template_code="PROJECT_TEMPLATE",
-            entity_type=ENTITY_TYPE_PROJECT,
-            entity_id=project_id,
+        instance = (
+            db.query(ApprovalInstance)
+            .filter(
+                ApprovalInstance.entity_type == ENTITY_TYPE_PROJECT,
+                ApprovalInstance.entity_id == project_id,
+            )
+            .order_by(
+                desc(ApprovalInstance.submitted_at),
+                desc(ApprovalInstance.created_at),
+                desc(ApprovalInstance.id),
+            )
+            .first()
         )
 
         if not instance:
@@ -90,15 +95,28 @@ def get_project_approval_status(
                 },
             )
 
-        # 获取审批任务（通过引擎的查询能力）
-        tasks = approval_service.get_pending_tasks(instance.id)
+        tasks = (
+            db.query(ApprovalTask)
+            .filter(ApprovalTask.instance_id == instance.id, ApprovalTask.status == "PENDING")
+            .order_by(ApprovalTask.task_order, ApprovalTask.id)
+            .all()
+        )
 
-        # 获取审批日志
-        logs = approval_service.get_approval_logs(instance.id)
+        logs = (
+            db.query(ApprovalActionLog)
+            .filter(ApprovalActionLog.instance_id == instance.id)
+            .order_by(ApprovalActionLog.action_at, ApprovalActionLog.id)
+            .all()
+        )
 
         # 构建响应数据（保持与原格式兼容）
         progress = 0
-        total_nodes = instance.total_nodes if instance.total_nodes else 0
+        total_nodes = getattr(instance, "total_nodes", None) or (
+            db.query(ApprovalTask.node_id)
+            .filter(ApprovalTask.instance_id == instance.id)
+            .distinct()
+            .count()
+        )
 
         if instance.current_node_order and total_nodes > 0:
             progress = int((instance.current_node_order / total_nodes) * 100)
@@ -109,10 +127,9 @@ def get_project_approval_status(
 
         if tasks:
             current_task = tasks[0]
-            if hasattr(current_task, "node_name"):
-                current_step_name = current_task.node_name
-            if hasattr(current_task, "assignee_name"):
-                current_approver_name = current_task.assignee_name
+            if current_task.node:
+                current_step_name = current_task.node.node_name
+            current_approver_name = current_task.assignee_name
 
         # 判断用户权限
         can_approve = False

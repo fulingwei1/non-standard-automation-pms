@@ -33,34 +33,37 @@ class ApprovalEngineCore:
         self.delegate_service = ApprovalDelegateService(db)
 
     def _generate_instance_no(self, template_code: str) -> str:
-        """生成审批单号（使用 SELECT FOR UPDATE 防止竞态条件）"""
-        from sqlalchemy import func
-
+        """生成审批单号（兼容同日前缀的旧随机编号）。"""
         now = datetime.now()
         prefix = f"AP{now.strftime('%y%m%d')}"
 
-        # 使用 SELECT FOR UPDATE 加锁查询当日最大序号，避免并发生成重复单号
-        max_instance_query = self.db.query(func.max(ApprovalInstance.instance_no))
-        max_instance_query = apply_like_filter(
-            max_instance_query,
+        query = self.db.query(ApprovalInstance.instance_no)
+        query = apply_like_filter(
+            query,
             ApprovalInstance,
             f"{prefix}%",
             "instance_no",
             use_ilike=False,
         )
-        max_instance = max_instance_query.with_for_update().scalar()
+        existing_numbers = [row[0] for row in query.with_for_update().all()]
 
-        if max_instance:
-            # 从已有最大单号提取序号并递增
-            try:
-                current_seq = int(max_instance[len(prefix) :])
-                next_seq = current_seq + 1
-            except (ValueError, IndexError):
-                next_seq = 1
-        else:
-            next_seq = 1
+        max_seq = 0
+        existing_set = set()
+        for instance_no in existing_numbers:
+            if not instance_no:
+                continue
+            existing_set.add(instance_no)
+            suffix = instance_no[len(prefix) :]
+            if suffix.isdigit():
+                max_seq = max(max_seq, int(suffix))
 
-        return f"{prefix}{next_seq:04d}"
+        next_seq = max_seq + 1
+        candidate = f"{prefix}{next_seq:04d}"
+        while candidate in existing_set:
+            next_seq += 1
+            candidate = f"{prefix}{next_seq:04d}"
+
+        return candidate
 
     def _get_first_node(self, flow_id: int) -> Optional[ApprovalNodeDefinition]:
         """获取流程的第一个节点"""
@@ -107,12 +110,19 @@ class ApprovalEngineCore:
             self._advance_to_next_node(instance, None)
             return
 
-        # 应用代理人
+        # 固定用户节点是显式点名审批人，发起时不做全局代理静默替换。
+        should_apply_delegate = (
+            getattr(node, "can_delegate", True) and node.approver_type != "FIXED_USER"
+        )
         processed_approver_ids = []
         for approver_id in approver_ids:
-            delegate_config = self.delegate_service.get_active_delegate(
-                user_id=approver_id,
-                template_id=instance.template_id,
+            delegate_config = (
+                self.delegate_service.get_active_delegate(
+                    user_id=approver_id,
+                    template_id=instance.template_id,
+                )
+                if should_apply_delegate
+                else None
             )
             if delegate_config:
                 processed_approver_ids.append(delegate_config.delegate_id)
@@ -176,6 +186,8 @@ class ApprovalEngineCore:
             # 没有下一节点，审批完成
             instance.status = "APPROVED"
             instance.completed_at = datetime.now()
+            if current_task:
+                instance.final_approver_id = current_task.assignee_id
 
             # 调用适配器的通过回调
             self._call_adapter_callback(instance, "on_approved")

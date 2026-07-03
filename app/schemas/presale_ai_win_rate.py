@@ -6,7 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class InfluencingFactor(BaseModel):
@@ -84,8 +84,32 @@ class WinRatePredictionResponse(BaseModel):
     predicted_at: datetime = Field(..., description="预测时间")
     created_by: Optional[int] = Field(None, description="创建人ID")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
+
+    @field_validator("win_rate_score", mode="before")
+    @classmethod
+    def _default_score(cls, value):
+        return Decimal("0") if value is None else value
+
+    @field_validator("confidence_interval", mode="before")
+    @classmethod
+    def _default_confidence_interval(cls, value):
+        return "0-0%" if value in (None, "") else value
+
+    @field_validator("influencing_factors", mode="before")
+    @classmethod
+    def _default_factors(cls, value):
+        return [] if value is None else value
+
+    @field_validator("competitor_analysis", "improvement_suggestions", mode="before")
+    @classmethod
+    def _default_mapping(cls, value):
+        return {} if value is None else value
+
+    @field_validator("predicted_at", mode="before")
+    @classmethod
+    def _default_predicted_at(cls, value):
+        return datetime.now() if value is None else value
 
 
 class UpdateActualResultRequest(BaseModel):

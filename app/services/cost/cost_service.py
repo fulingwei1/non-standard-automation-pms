@@ -11,6 +11,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.project import Project, ProjectCost
+from app.services.cost.cost_basis import actual_project_cost_filter
 
 
 class CostService:
@@ -26,22 +27,28 @@ class CostService:
         """获取项目成本汇总与分布"""
         total_cost_result = (
             self.db.query(func.sum(ProjectCost.amount).label("total"))
-            .filter(ProjectCost.project_id == project_id)
+            .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
             .first()
         )
         total_cost = float(total_cost_result.total or 0)
 
         cost_by_type_result = (
-            self.db.query(ProjectCost.cost_type, func.sum(ProjectCost.amount).label("amount"))
-            .filter(ProjectCost.project_id == project_id)
+            self.db.query(
+                ProjectCost.cost_type, func.sum(ProjectCost.amount).label("amount")
+            )
+            .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
             .group_by(ProjectCost.cost_type)
             .all()
         )
-        cost_by_type = {ct or "其他": float(amount or 0) for ct, amount in cost_by_type_result}
+        cost_by_type = {
+            ct or "其他": float(amount or 0) for ct, amount in cost_by_type_result
+        }
 
         cost_by_category_result = (
-            self.db.query(ProjectCost.cost_category, func.sum(ProjectCost.amount).label("amount"))
-            .filter(ProjectCost.project_id == project_id)
+            self.db.query(
+                ProjectCost.cost_category, func.sum(ProjectCost.amount).label("amount")
+            )
+            .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
             .group_by(ProjectCost.cost_category)
             .all()
         )
@@ -56,10 +63,14 @@ class CostService:
         }
 
     @staticmethod
-    def calculate_variance(budget_amount: float, actual_cost: float) -> Dict[str, float]:
+    def calculate_variance(
+        budget_amount: float, actual_cost: float
+    ) -> Dict[str, float]:
         """计算预算偏差与偏差率"""
         budget_variance = actual_cost - budget_amount if budget_amount > 0 else 0
-        budget_variance_pct = (budget_variance / budget_amount * 100) if budget_amount > 0 else 0
+        budget_variance_pct = (
+            (budget_variance / budget_amount * 100) if budget_amount > 0 else 0
+        )
         return {
             "budget_variance": budget_variance,
             "budget_variance_pct": budget_variance_pct,
@@ -100,7 +111,8 @@ class CostService:
             "contract_variance": round(contract_variance, 2),
             "contract_variance_pct": round(contract_variance_pct, 2),
             "cost_by_type": [
-                {"type": k, "amount": round(v, 2)} for k, v in breakdown["cost_by_type"].items()
+                {"type": k, "amount": round(v, 2)}
+                for k, v in breakdown["cost_by_type"].items()
             ],
             "cost_by_category": [
                 {"category": k, "amount": round(v, 2)}
@@ -158,7 +170,9 @@ class CostService:
         actual_cost = float(project.actual_cost or 0)
 
         gross_profit = contract_amount - actual_cost
-        profit_margin = (gross_profit / contract_amount * 100) if contract_amount > 0 else 0
+        profit_margin = (
+            (gross_profit / contract_amount * 100) if contract_amount > 0 else 0
+        )
 
         breakdown = self.get_cost_breakdown(project_id)
         cost_breakdown = []
@@ -185,7 +199,9 @@ class CostService:
             "cost_breakdown": cost_breakdown,
         }
 
-    def calculate_cost_stats(self, project_id: int, budget_amount: float) -> Dict[str, Any]:
+    def calculate_cost_stats(
+        self, project_id: int, budget_amount: float
+    ) -> Dict[str, Any]:
         """项目成本统计（用于仪表盘等）"""
         breakdown = self.get_cost_breakdown(project_id)
         total_cost = breakdown["total_cost"]
@@ -199,7 +215,9 @@ class CostService:
             "cost_variance_rate": variance_rate,
             "cost_by_type": breakdown["cost_by_type"],
             "cost_by_category": breakdown["cost_by_category"],
-            "is_over_budget": total_cost > budget_amount if budget_amount > 0 else False,
+            "is_over_budget": total_cost > budget_amount
+            if budget_amount > 0
+            else False,
         }
 
 

@@ -23,7 +23,10 @@ from app.schemas.project import MachineCreate, MachineResponse, ProjectDocumentR
 from app.services.machine_custom import MachineCustomService
 from app.services.project import ProjectMachineService
 from app.utils.db_helpers import get_or_404
-from app.utils.permission_helpers import check_project_access_or_raise
+from app.utils.permission_helpers import (
+    check_project_access_or_raise,
+    check_project_read_access_or_raise,
+)
 
 router = APIRouter()
 
@@ -55,7 +58,7 @@ def batch_create_project_machines(
 def get_project_machine_summary(
     project_id: int = Path(..., description="项目ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("machine:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     获取项目机台汇总信息
@@ -71,7 +74,7 @@ def get_project_machine_summary(
     """
     from app.services.machine_service import ProjectAggregationService
 
-    check_project_access_or_raise(db, current_user, project_id)
+    check_project_read_access_or_raise(db, current_user, project_id)
 
     project = get_or_404(db, Project, project_id, detail="项目不存在")
 
@@ -165,12 +168,12 @@ def get_project_machine_bom(
     project_id: int = Path(..., description="项目ID"),
     machine_id: int = Path(..., description="机台ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("machine:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     获取机台的BOM列表
     """
-    check_project_access_or_raise(db, current_user, project_id)
+    check_project_read_access_or_raise(db, current_user, project_id)
 
     machine = (
         db.query(Machine)
@@ -243,10 +246,10 @@ def get_machine_documents(
     doc_type: Optional[str] = Query(None, description="文档类型筛选"),
     group_by_type: bool = Query(True, description="是否按类型分组"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("machine:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取设备的所有文档"""
-    check_project_access_or_raise(db, current_user, project_id)
+    check_project_read_access_or_raise(db, current_user, project_id)
 
     machine = (
         db.query(Machine).filter(Machine.id == machine_id, Machine.project_id == project_id).first()
@@ -268,10 +271,10 @@ def download_machine_document(
     machine_id: int = Path(..., description="机台ID"),
     doc_id: int = Path(..., description="文档ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("machine:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """下载设备文档"""
-    check_project_access_or_raise(db, current_user, project_id)
+    check_project_read_access_or_raise(db, current_user, project_id)
 
     machine = (
         db.query(Machine).filter(Machine.id == machine_id, Machine.project_id == project_id).first()
@@ -303,10 +306,10 @@ def get_machine_document_versions(
     machine_id: int = Path(..., description="机台ID"),
     doc_id: int = Path(..., description="文档ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("machine:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取设备文档的所有版本"""
-    check_project_access_or_raise(db, current_user, project_id)
+    check_project_read_access_or_raise(db, current_user, project_id)
 
     machine = (
         db.query(Machine).filter(Machine.id == machine_id, Machine.project_id == project_id).first()
@@ -337,10 +340,10 @@ def get_machine_service_history(
     machine_id: int = Path(..., description="机台ID"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("machine:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取机台服务历史记录"""
-    check_project_access_or_raise(db, current_user, project_id)
+    check_project_read_access_or_raise(db, current_user, project_id)
 
     machine = (
         db.query(Machine).filter(Machine.id == machine_id, Machine.project_id == project_id).first()

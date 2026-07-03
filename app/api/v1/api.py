@@ -100,7 +100,22 @@ def create_api_router() -> APIRouter:
     # ==================== 生产管理 ====================
     try:
         from app.api.v1.endpoints.production import router as production_router
+        from app.api.v1.endpoints.production import exceptions as production_exceptions
+        from app.api.v1.endpoints.production import workers as production_workers
+        from app.api.v1.endpoints import production_daily_reports
+
         api_router.include_router(production_router, prefix="/production", tags=["production"])
+        api_router.include_router(production_workers.router, prefix="/workers", tags=["production-workers"])
+        api_router.include_router(
+            production_exceptions.router,
+            prefix="/production-exceptions",
+            tags=["production-exceptions"],
+        )
+        api_router.include_router(
+            production_daily_reports.router,
+            prefix="/production-daily-reports",
+            tags=["production-daily-reports"],
+        )
         print("✓ 生产管理模块加载成功")
     except Exception as e:
         print(f"✗ 生产管理模块加载失败: {e}")
@@ -116,6 +131,36 @@ def create_api_router() -> APIRouter:
         print(f"✗ 销售管理模块加载失败: {e}")
         if STRICT_API_ROUTER:
             raise RuntimeError(f"关键模块加载失败[sales]: {e}") from e
+
+    # ==================== 财务报表 ====================
+    try:
+        from app.api.v1.endpoints import finance_reports
+        api_router.include_router(finance_reports.router, prefix="/finance", tags=["finance"])
+        print("✓ 财务报表模块加载成功")
+    except Exception as e:
+        print(f"✗ 财务报表模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[finance]: {e}") from e
+
+    # ==================== 研发项目无尾斜杠兼容 ====================
+    try:
+        from app.api.v1.endpoints import rd_project_aliases
+        api_router.include_router(rd_project_aliases.router, prefix="", tags=["rd-projects"])
+        print("✓ 研发项目兼容路由加载成功")
+    except Exception as e:
+        print(f"✗ 研发项目兼容路由加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[rd-project-aliases]: {e}") from e
+
+    # ==================== 项目结算 ====================
+    try:
+        from app.api.v1.endpoints import settlements
+        api_router.include_router(settlements.router, prefix="", tags=["settlements"])
+        print("✓ 项目结算模块加载成功")
+    except Exception as e:
+        print(f"✗ 项目结算模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[settlements]: {e}") from e
     
     # ==================== 工时管理 ====================
     try:
@@ -126,6 +171,16 @@ def create_api_router() -> APIRouter:
         print(f"✗ 工时管理模块加载失败: {e}")
         if STRICT_API_ROUTER:
             raise RuntimeError(f"关键模块加载失败[timesheet]: {e}") from e
+
+    # ==================== 资源负荷兼容接口 ====================
+    try:
+        from app.api.v1.endpoints.workload_compat import router as workload_compat_router
+        api_router.include_router(workload_compat_router, prefix="/workload", tags=["workload"])
+        print("✓ 资源负荷兼容接口加载成功")
+    except Exception as e:
+        print(f"✗ 资源负荷兼容接口加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[workload-compat]: {e}") from e
     
     # ==================== 研发项目 ====================
     try:
@@ -235,6 +290,26 @@ def create_api_router() -> APIRouter:
         api_router.include_router(presale_ai_emotion_router, tags=["presale-ai-emotion"])
         api_router.include_router(presale_ai_quotation_router, tags=["presale-ai"])
         api_router.include_router(presale_ai_win_rate_router, tags=["presale-ai"])
+        from app.api.v1.endpoints.ai_jobs import router as ai_jobs_router
+        api_router.include_router(ai_jobs_router)
+        from app.api.v1.endpoints.sales.activity_minutes import router as sales_minutes_router
+        api_router.include_router(sales_minutes_router)
+        from app.api.v1.endpoints.ai_modules import router as ai_modules_router
+        api_router.include_router(ai_modules_router)
+        from app.api.v1.endpoints.ai_delivery import router as ai_delivery_router
+        api_router.include_router(ai_delivery_router)
+        from app.api.v1.endpoints.ai_engineering import router as ai_engineering_router
+        api_router.include_router(ai_engineering_router)
+        from app.api.v1.endpoints.ai_more import router as ai_more_router
+        api_router.include_router(ai_more_router)
+        from app.api.v1.endpoints.ai_planning import router as ai_planning_router
+        api_router.include_router(ai_planning_router)
+        from app.api.v1.endpoints.ai_advanced import router as ai_advanced_router
+        api_router.include_router(ai_advanced_router)
+        from app.api.v1.endpoints.ai_admin import router as ai_admin_router
+        api_router.include_router(ai_admin_router)
+        from app.api.v1.endpoints.ai_copilot import router as ai_copilot_router
+        api_router.include_router(ai_copilot_router)
         print("✓ 预售AI模块加载成功")
     except Exception as e:
         print(f"✗ 预售AI模块加载失败: {e}")
@@ -245,12 +320,27 @@ def create_api_router() -> APIRouter:
     try:
         from app.api.v1.endpoints.acceptance import router as acceptance_router
         api_router.include_router(acceptance_router, prefix="/acceptance", tags=["acceptance"])
+        api_router.include_router(acceptance_router, tags=["acceptance-legacy"])
         print("✓ 验收管理模块加载成功")
     except Exception as e:
         print(f"✗ 验收管理模块加载失败: {e}")
         if STRICT_API_ROUTER:
             raise RuntimeError(f"关键模块加载失败[acceptance]: {e}") from e
     
+    # ==================== 进度跟踪兼容接口 ====================
+    try:
+        from app.api.v1.endpoints.progress_compat import router as progress_compat_router
+
+        api_router.include_router(progress_compat_router, tags=["progress-compat"])
+        api_router.include_router(
+            progress_compat_router, prefix="/progress", tags=["progress-compat"]
+        )
+        print("✓ 进度跟踪兼容接口加载成功")
+    except Exception as e:
+        print(f"✗ 进度跟踪兼容接口加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[progress-compat]: {e}") from e
+
     # ==================== 报表框架 ====================
     try:
         from app.api.v1.endpoints.reports.unified import router as reports_router
@@ -326,12 +416,26 @@ def create_api_router() -> APIRouter:
     # ==================== 问题管理 ====================
     try:
         from app.api.v1.endpoints.issues import router as issues_router
+        from app.api.v1.endpoints.issues import template_router as issue_template_router
         api_router.include_router(issues_router, prefix="/issues", tags=["issues"])
+        api_router.include_router(
+            issue_template_router, prefix="/issue-templates", tags=["issue-templates"]
+        )
         print("✓ 问题管理模块加载成功")
     except Exception as e:
         print(f"✗ 问题管理模块加载失败: {e}")
         if STRICT_API_ROUTER:
             raise RuntimeError(f"关键模块加载失败[issues]: {e}") from e
+
+    # ==================== 全局里程碑兼容 ====================
+    try:
+        from app.api.v1.endpoints.milestones import router as milestones_router
+        api_router.include_router(milestones_router, prefix="/milestones", tags=["milestones"])
+        print("✓ 全局里程碑兼容路由加载成功")
+    except Exception as e:
+        print(f"✗ 全局里程碑兼容路由加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[milestones]: {e}") from e
 
     # ==================== 奖金管理 ====================
     try:
@@ -523,6 +627,26 @@ def create_api_router() -> APIRouter:
         if STRICT_API_ROUTER:
             raise RuntimeError(f"关键模块加载失败[admin-stats]: {e}") from e
 
+    # ==================== 行政管理兼容接口 ====================
+    try:
+        from app.api.v1.endpoints.admin_compat import router as admin_compat_router
+        api_router.include_router(admin_compat_router, prefix="/admin", tags=["admin-compat"])
+        print("✓ 行政管理兼容接口加载成功")
+    except Exception as e:
+        print(f"✗ 行政管理兼容接口加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[admin-compat]: {e}") from e
+
+    # ==================== 行政考勤 ====================
+    try:
+        from app.api.v1.endpoints.admin_attendance import router as admin_attendance_router
+        api_router.include_router(admin_attendance_router, prefix="/admin", tags=["admin-attendance"])
+        print("✓ 行政考勤模块加载成功")
+    except Exception as e:
+        print(f"✗ 行政考勤模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[admin-attendance]: {e}") from e
+
     # ==================== 采购分析 ====================
     try:
         from app.api.v1.endpoints.procurement_analysis import router as procurement_analysis_router
@@ -613,6 +737,18 @@ def create_api_router() -> APIRouter:
         if STRICT_API_ROUTER:
             raise RuntimeError(f"关键模块加载失败[stage-templates]: {e}") from e
 
+    # ==================== 项目模板配置 ====================
+    try:
+        from app.api.v1.endpoints.template_configs import router as template_configs_router
+        api_router.include_router(
+            template_configs_router, prefix="/template-configs", tags=["template-configs"]
+        )
+        print("✓ 项目模板配置模块加载成功")
+    except Exception as e:
+        print(f"✗ 项目模板配置模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[template-configs]: {e}") from e
+
     # ==================== 优势产品 ====================
     try:
         from app.api.v1.endpoints.advantage_products import router as advantage_products_router
@@ -650,6 +786,29 @@ def create_api_router() -> APIRouter:
         print(f"✗ AI 功能模块加载失败：{e}")
         if STRICT_API_ROUTER:
             raise RuntimeError(f"关键模块加载失败[ai-modules]: {e}") from e
+
+    # ==================== 项目旧路径兼容 ====================
+    try:
+        from app.api.v1.endpoints.project_legacy_compat import (
+            members_router as project_legacy_members_router,
+            stages_router as project_legacy_stages_router,
+        )
+
+        api_router.include_router(
+            project_legacy_members_router,
+            prefix="/members",
+            tags=["project-legacy-compat"],
+        )
+        api_router.include_router(
+            project_legacy_stages_router,
+            prefix="/stages",
+            tags=["project-legacy-compat"],
+        )
+        print("✓ 项目旧路径兼容模块加载成功")
+    except Exception as e:
+        print(f"✗ 项目旧路径兼容模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[project-legacy-compat]: {e}") from e
 
     # ==================== 预算管理 ====================
     try:
@@ -713,7 +872,9 @@ def create_api_router() -> APIRouter:
 
     # ==================== 成套检查 ====================
     try:
+        from app.api.v1.endpoints.kit_check_compat import router as kit_check_compat_router
         from app.api.v1.endpoints.kit_check import router as kit_check_router
+        api_router.include_router(kit_check_compat_router, prefix="/kit-check", tags=["kit-check"])
         api_router.include_router(kit_check_router, prefix="/kit-check", tags=["kit-check"])
         print("✓ 成套检查模块加载成功")
     except Exception as e:
@@ -723,7 +884,9 @@ def create_api_router() -> APIRouter:
 
     # ==================== 管理节奏 ====================
     try:
+        from app.api.v1.endpoints.management_rhythm_compat import router as management_rhythm_compat_router
         from app.api.v1.endpoints.management_rhythm import router as management_rhythm_router
+        api_router.include_router(management_rhythm_compat_router, prefix="/management-rhythm", tags=["management-rhythm"])
         api_router.include_router(management_rhythm_router, prefix="/management-rhythm", tags=["management-rhythm"])
         print("✓ 管理节奏模块加载成功")
     except Exception as e:
@@ -801,6 +964,16 @@ def create_api_router() -> APIRouter:
         print(f"✗ 服务工单模块加载失败：{e}")
         if STRICT_API_ROUTER:
             raise RuntimeError(f"关键模块加载失败[service]: {e}") from e
+
+    # ==================== 售后服务 ====================
+    try:
+        from app.api.v1.endpoints.after_sales import router as after_sales_router
+        api_router.include_router(after_sales_router, prefix="/after-sales", tags=["after-sales"])
+        print("✓ 售后服务模块加载成功")
+    except Exception as e:
+        print(f"✗ 售后服务模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[after-sales]: {e}") from e
 
     # ==================== SLA ====================
     try:
@@ -1004,6 +1177,16 @@ def create_api_router() -> APIRouter:
         if STRICT_API_ROUTER:
             raise RuntimeError(f"关键模块加载失败[resource-scheduling]: {e}") from e
 
+    # ==================== 项目交付排产 ====================
+    try:
+        from app.api.v1.endpoints.project_delivery import router as project_delivery_router
+        api_router.include_router(project_delivery_router, prefix="/project-delivery", tags=["project-delivery"])
+        print("✓ 项目交付排产模块加载成功")
+    except Exception as e:
+        print(f"✗ 项目交付排产模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[project-delivery]: {e}") from e
+
     # ==================== 经验教训库 ====================
     try:
         from app.api.v1.endpoints.lessons_learned import router as lessons_router
@@ -1016,9 +1199,11 @@ def create_api_router() -> APIRouter:
 
     # ==================== 销售区域 ====================
     try:
-        from app.api.v1.endpoints.sales_regions import router as sales_regions_router
-        api_router.include_router(sales_regions_router, prefix="/sales-regions", tags=["sales-regions"])
-        print("✓ 销售区域模块加载成功")
+        # 去重：sales_regions 只是 sales router 的兼容 shim（fallback 到 .sales）。
+        # 挂载会导致同一套销售端点在 /sales-regions/* 下重复一遍，故取消挂载（前端未调用）。
+        # from app.api.v1.endpoints.sales_regions import router as sales_regions_router
+        # api_router.include_router(sales_regions_router, prefix="/sales-regions", tags=["sales-regions"])
+        print("✓ 销售区域模块（已并入 /sales，不再重复挂载）")
     except Exception as e:
         print(f"✗ 销售区域模块加载失败：{e}")
         if STRICT_API_ROUTER:
@@ -1026,9 +1211,10 @@ def create_api_router() -> APIRouter:
 
     # ==================== 销售目标 ====================
     try:
-        from app.api.v1.endpoints.sales_targets import router as sales_targets_router
-        api_router.include_router(sales_targets_router, prefix="/sales-targets", tags=["sales-targets"])
-        print("✓ 销售目标模块加载成功")
+        # 去重：sales_targets 同为 sales router 兼容 shim，取消重复挂载（前端未调用）。
+        # from app.api.v1.endpoints.sales_targets import router as sales_targets_router
+        # api_router.include_router(sales_targets_router, prefix="/sales-targets", tags=["sales-targets"])
+        print("✓ 销售目标模块（已并入 /sales，不再重复挂载）")
     except Exception as e:
         print(f"✗ 销售目标模块加载失败：{e}")
         if STRICT_API_ROUTER:
@@ -1036,9 +1222,10 @@ def create_api_router() -> APIRouter:
 
     # ==================== 销售团队 ====================
     try:
-        from app.api.v1.endpoints.sales_teams import router as sales_teams_router
-        api_router.include_router(sales_teams_router, prefix="/sales-teams", tags=["sales-teams"])
-        print("✓ 销售团队模块加载成功")
+        # 去重：sales_teams 同为 sales router 兼容 shim，取消重复挂载（前端仅用 /sales/sales-teams）。
+        # from app.api.v1.endpoints.sales_teams import router as sales_teams_router
+        # api_router.include_router(sales_teams_router, prefix="/sales-teams", tags=["sales-teams"])
+        print("✓ 销售团队模块（已并入 /sales，不再重复挂载）")
     except Exception as e:
         print(f"✗ 销售团队模块加载失败：{e}")
         if STRICT_API_ROUTER:

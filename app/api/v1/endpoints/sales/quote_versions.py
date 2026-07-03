@@ -84,7 +84,10 @@ def get_quote_versions(
     )
 
 
-@router.get("/quotes/{quote_id}/versions/{version_id}", response_model=ResponseModel)
+# NOTE: 使用 {version_id:int} 整数路径转换器，避免 /versions/compare 这类静态子路径
+# 被动态路由当作 version_id 捕获（否则 "compare" 会被解析为 int 而报 422，
+# 使 compare 接口不可达）。整数转换器让路由匹配与声明顺序无关。
+@router.get("/quotes/{quote_id}/versions/{version_id:int}", response_model=ResponseModel)
 def get_quote_version_detail(
     quote_id: int,
     version_id: int,
@@ -261,7 +264,15 @@ def create_quote_version(
     db.refresh(version)
 
     return ResponseModel(
-        code=200, message="版本创建成功", data={"id": version.id, "version_no": version.version_no}
+        code=200,
+        message="版本创建成功",
+        data={
+            "id": version.id,
+            "version_no": version.version_no,
+            "solution_id": version.presale_solution_id,
+            "presale_solution_id": version.presale_solution_id,
+            "presale_ticket_id": version.presale_ticket_id,
+        },
     )
 
 

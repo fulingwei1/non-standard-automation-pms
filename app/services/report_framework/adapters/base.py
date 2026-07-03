@@ -94,11 +94,26 @@ class BaseReportAdapter(ABC):
         Returns:
             报表结果
         """
-        # 基本转换逻辑
-        # 可以根据需要扩展
         from app.services.report_framework.renderers import JsonRenderer
 
-        renderer = JsonRenderer()
+        normalized_format = "excel" if format == "xlsx" else format
+        if normalized_format == "json":
+            renderer = JsonRenderer()
+        elif normalized_format == "excel":
+            from app.services.report_framework.renderers import ExcelRenderer
+
+            renderer = ExcelRenderer()
+        elif normalized_format == "pdf":
+            from app.services.report_framework.renderers import PdfRenderer
+
+            renderer = PdfRenderer()
+        elif normalized_format == "word":
+            from app.services.report_framework.renderers import WordRenderer
+
+            renderer = WordRenderer()
+        else:
+            raise ValueError(f"不支持的导出格式: {format}")
+
         sections = []
 
         # 转换数据为sections
@@ -108,17 +123,26 @@ class BaseReportAdapter(ABC):
                     "id": "summary",
                     "title": "汇总",
                     "type": "metrics",
-                    "items": data["summary"],
+                    "items": [
+                        {"label": key, "value": value} for key, value in data["summary"].items()
+                    ],
                 }
             )
 
         if "details" in data:
+            details = data["details"] or []
+            columns = (
+                [{"field": key, "label": key} for key in details[0].keys()]
+                if details and isinstance(details[0], dict)
+                else []
+            )
             sections.append(
                 {
                     "id": "details",
                     "title": "明细",
                     "type": "table",
-                    "data": data["details"],
+                    "data": details,
+                    "columns": columns,
                 }
             )
 

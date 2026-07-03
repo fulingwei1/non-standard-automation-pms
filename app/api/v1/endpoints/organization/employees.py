@@ -12,15 +12,17 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.core import security
 from app.core.schemas import list_response, success_response
 from app.models.organization import Employee
+from app.models.user import User
 from app.schemas.organization import (
     EmployeeCreate,
     EmployeeResponse,
     EmployeeUpdate,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("hr:read"))])
 
 
 @router.get("/employees")
@@ -43,6 +45,7 @@ def create_employee(
     *,
     db: Session = Depends(deps.get_db),
     emp_in: EmployeeCreate,
+    current_user: User = Depends(security.require_permission("hr:create")),
 ) -> Any:
     """创建新员工"""
     employee = db.query(Employee).filter(Employee.employee_code == emp_in.employee_code).first()
@@ -87,6 +90,7 @@ def update_employee(
     db: Session = Depends(deps.get_db),
     emp_id: int,
     emp_in: EmployeeUpdate,
+    current_user: User = Depends(security.require_permission("hr:update")),
 ) -> Any:
     """更新员工信息"""
     employee = db.query(Employee).filter(Employee.id == emp_id).first()

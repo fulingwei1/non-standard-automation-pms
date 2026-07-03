@@ -56,6 +56,11 @@ class Department(Base, TimestampMixin):
     manager = relationship("Employee", foreign_keys=[manager_id])
     # projects relationship is defined in Project model with backref or manual
 
+    @property
+    def name(self) -> str:
+        """兼容旧代码中的 department.name。"""
+        return self.dept_name
+
     def __repr__(self):
         return f"<Department {self.dept_name}>"
 

@@ -142,7 +142,10 @@ class BaseApprovalWorkflowService(ABC):
         limit: int = 20,
     ) -> Dict[str, Any]:
         """获取待审批任务列表"""
-        tasks = self.engine.get_pending_tasks(user_id=user_id, entity_type=self.entity_type)
+        tasks_result = self.engine.get_pending_tasks(
+            user_id=user_id, entity_type=self.entity_type, page=1, page_size=100000
+        )
+        tasks = tasks_result.get("items", []) if isinstance(tasks_result, dict) else tasks_result
 
         total = len(tasks)
         paginated_tasks = tasks[offset : offset + limit]
@@ -179,20 +182,22 @@ class BaseApprovalWorkflowService(ABC):
     ) -> Dict[str, Any]:
         """执行审批操作"""
         if action == "approve":
-            result = self.engine.approve(task_id=task_id, approver_id=approver_id, comment=comment)
-            if hasattr(result, "status") and result.status == "APPROVED":
-                self._on_approved(result.entity_id, approver_id)
+            task = self.engine.approve(task_id=task_id, approver_id=approver_id, comment=comment)
+            instance = getattr(task, "instance", None)
+            if instance is not None and instance.status == "APPROVED":
+                self._on_approved(instance.entity_id, approver_id)
         elif action == "reject":
-            result = self.engine.reject(task_id=task_id, approver_id=approver_id, comment=comment)
-            if hasattr(result, "status") and result.status == "REJECTED":
-                self._on_rejected(result.entity_id, approver_id)
+            task = self.engine.reject(task_id=task_id, approver_id=approver_id, comment=comment)
+            instance = getattr(task, "instance", None)
+            if instance is not None and instance.status == "REJECTED":
+                self._on_rejected(instance.entity_id, approver_id)
         else:
             raise ValueError(f"不支持的操作类型: {action}")
 
         return {
             "task_id": task_id,
             "action": action,
-            "instance_status": result.status if hasattr(result, "status") else None,
+            "instance_status": instance.status if instance is not None else None,
         }
 
     def perform_batch_approval(
@@ -306,7 +311,7 @@ class BaseApprovalWorkflowService(ABC):
         if instance.initiator_id != user_id:
             raise ValueError("只能撤回自己提交的审批")
 
-        self.engine.withdraw(instance_id=instance.id, user_id=user_id)
+        self.engine.withdraw(instance_id=instance.id, initiator_id=user_id, comment=reason)
 
         return {
             "order_id": order_id,

@@ -21,6 +21,7 @@ router = APIRouter()
 
 @router.put("/nodes/{node_instance_id}/assign", response_model=ProjectNodeInstanceResponse)
 def assign_node(
+    project_id: int,
     node_instance_id: int,
     assign_in: AssignNodeRequest,
     db: Session = Depends(deps.get_db),

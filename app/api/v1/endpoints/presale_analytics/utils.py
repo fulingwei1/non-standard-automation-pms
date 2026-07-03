@@ -3,6 +3,7 @@
 售前集成 - 辅助工具函数
 """
 
+from datetime import date
 from typing import Any, Dict, List, Tuple
 
 from app.models.enums import WinProbabilityLevelEnum
@@ -17,6 +18,26 @@ def convert_lead_code_to_project_code(lead_id: str) -> str:
     if lead_id.upper().startswith("XS"):
         return "PJ" + lead_id[2:]
     return "PJ" + lead_id
+
+
+def parse_presale_period(period: str) -> Tuple[date, date]:
+    """Parse presale analytics period in YYYY or YYYY-MM format."""
+    try:
+        if len(period) == 7 and period[4] == "-":
+            year = int(period[:4])
+            month = int(period[5:7])
+            if month < 1 or month > 12:
+                raise ValueError
+            start_date = date(year, month, 1)
+            end_date = date(year + 1, 1, 1) if month == 12 else date(year, month + 1, 1)
+            return start_date, end_date
+        if len(period) == 4:
+            year = int(period)
+            return date(year, 1, 1), date(year + 1, 1, 1)
+    except (TypeError, ValueError):
+        pass
+
+    raise ValueError("统计周期格式必须为 YYYY 或 YYYY-MM")
 
 
 def calculate_win_rate(

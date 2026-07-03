@@ -32,14 +32,31 @@ class PurchaseWorkflowService(BaseApprovalWorkflowService):
         }
 
     def _build_pending_item(self, task: Any, entity: Optional[PurchaseOrder]) -> Dict[str, Any]:
+        supplier_name = self._get_supplier_name(entity)
         return {
             "order_no": entity.order_no if entity else None,
             "order_title": entity.order_title if entity else None,
             "amount_with_tax": (
                 float(entity.amount_with_tax) if entity and entity.amount_with_tax else 0
             ),
-            "supplier_name": entity.supplier.vendor_name if entity and entity.supplier else None,
+            "supplier_name": supplier_name,
         }
+
+    def _get_supplier_name(self, entity: Optional[PurchaseOrder]) -> Optional[str]:
+        if entity is None:
+            return None
+
+        vendor = getattr(entity, "vendor", None)
+        supplier_name = getattr(vendor, "supplier_name", None) if vendor is not None else None
+        if isinstance(supplier_name, str):
+            return supplier_name
+
+        supplier = getattr(entity, "supplier", None)
+        legacy_name = getattr(supplier, "vendor_name", None) if supplier is not None else None
+        if isinstance(legacy_name, str):
+            return legacy_name
+
+        return None
 
     def _build_history_item(self, task: Any, entity: Optional[PurchaseOrder]) -> Dict[str, Any]:
         return {

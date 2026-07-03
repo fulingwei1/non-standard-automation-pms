@@ -4,10 +4,14 @@ AI客户端服务
 """
 
 import json
+import logging
 import os
+import time
 from typing import Any, Dict
 
 import httpx
+
+_ai_logger = logging.getLogger("ai.usage")
 
 # 尝试导入 OpenAI SDK
 try:
@@ -28,14 +32,65 @@ except ImportError:
     ZhipuAiClient = None
 
 
+_AI_SETTINGS_CACHE: Dict[str, Any] = {"data": {}, "ts": 0.0}
+
+
+def load_ai_settings(force: bool = False) -> Dict[str, str]:
+    """读取管理员在后台配置的 AI 参数（DB 覆盖 env）。best-effort + 30s 缓存。"""
+    now = time.time()
+    if not force and _AI_SETTINGS_CACHE["data"] and now - _AI_SETTINGS_CACHE["ts"] < 30:
+        return _AI_SETTINGS_CACHE["data"]
+    data: Dict[str, str] = {}
+    try:
+        from sqlalchemy import text as _t
+
+        from app.models.base import SessionLocal
+
+        db = SessionLocal()
+        try:
+            for row in db.execute(_t("SELECT key, value FROM ai_settings")).all():
+                if row[1] not in (None, ""):
+                    data[row[0]] = row[1]
+        finally:
+            db.close()
+    except Exception:  # noqa: BLE001 - 表不存在/DB不可用时静默回退 env
+        data = {}
+    _AI_SETTINGS_CACHE["data"] = data
+    _AI_SETTINGS_CACHE["ts"] = now
+    return data
+
+
 class AIClientService:
     """AI客户端服务"""
 
     def __init__(self):
-        self.openai_api_key = os.getenv("OPENAI_API_KEY", "")
-        self.kimi_api_key = os.getenv("KIMI_API_KEY", "")
-        self.zhipu_api_key = os.getenv("ZHIPU_API_KEY", "")  # 新增智谱API Key
-        self.default_model = "glm-5"  # 默认使用 GLM-5
+        cfg = load_ai_settings()
+
+        def _get(key, default=""):
+            v = cfg.get(key)
+            return v if v not in (None, "") else os.getenv(key, default)
+
+        self.openai_api_key = _get("OPENAI_API_KEY", "")
+        self.kimi_api_key = _get("KIMI_API_KEY", "")
+        self.zhipu_api_key = _get("ZHIPU_API_KEY", "")  # 新增智谱API Key
+        # 阿里百炼 Coding Plan（通义千问）：专属 base_url + 套餐模型（后台可配置，覆盖 env）
+        self.qwen_api_key = _get("ALIBABA_API_KEY", "")
+        self.qwen_base_url = _get(
+            "ALIBABA_BASE_URL", "https://coding.dashscope.aliyuncs.com/v1"
+        ).rstrip("/")
+        self.qwen_model = _get("ALIBABA_MODEL", "qwen3.7-plus")
+        # 统一超时（秒）+ 超时降级用的快模型
+        try:
+            self.qwen_timeout = float(_get("ALIBABA_TIMEOUT", "60"))
+        except (TypeError, ValueError):
+            self.qwen_timeout = 60.0
+        self.qwen_fast_model = _get("ALIBABA_FAST_MODEL", "qwen3-coder-plus")
+        # 默认模型：管理员显式指定 AI_DEFAULT_MODEL（qwen*/glm*/gpt*/kimi* 前缀决定厂商）优先；
+        # 否则用已配置的通义千问，其次 GLM-5
+        self.default_model = (
+            _get("AI_DEFAULT_MODEL", "")
+            or (self.qwen_model if self.qwen_api_key else "glm-5")
+        )
 
         # 初始化OpenAI客户端
         if self.openai_api_key and OPENAI_AVAILABLE:
@@ -52,23 +107,42 @@ class AIClientService:
     def generate_solution(
         self,
         prompt: str,
-        model: str = "glm-5",  # 默认使用 GLM-5
+        model: str = None,
         temperature: float = 0.7,
         max_tokens: int = 2000,
     ) -> Dict[str, Any]:
         """
         生成方案
-        支持模型: glm-5, gpt-4, kimi
+        支持模型: qwen*(阿里百炼Coding Plan), glm-5, gpt-4, kimi
+        未配置对应厂商密钥时，自动回退到已配置的通义千问。
         """
-        if model.startswith("glm"):
-            return self._call_glm5(prompt, model, temperature, max_tokens)
+        model = model or self.default_model
+        if model.startswith("qwen"):
+            return self._call_qwen(prompt, model, temperature, max_tokens)
+        elif model.startswith("glm"):
+            if self.zhipu_client:
+                return self._call_glm5(prompt, model, temperature, max_tokens)
+            return self._fallback_qwen_or(prompt, temperature, max_tokens,
+                                          lambda: self._call_glm5(prompt, model, temperature, max_tokens))
         elif model.startswith("gpt"):
-            return self._call_openai(prompt, model, temperature, max_tokens)
+            if self.openai_client:
+                return self._call_openai(prompt, model, temperature, max_tokens)
+            return self._fallback_qwen_or(prompt, temperature, max_tokens,
+                                          lambda: self._call_openai(prompt, model, temperature, max_tokens))
         elif model.startswith("kimi"):
-            return self._call_kimi(prompt, temperature, max_tokens)
+            if self.kimi_api_key:
+                return self._call_kimi(prompt, temperature, max_tokens)
+            return self._fallback_qwen_or(prompt, temperature, max_tokens,
+                                          lambda: self._call_kimi(prompt, temperature, max_tokens))
         else:
-            # 默认使用 GLM-5
-            return self._call_glm5(prompt, "glm-5", temperature, max_tokens)
+            return self._fallback_qwen_or(prompt, temperature, max_tokens,
+                                          lambda: self._call_glm5(prompt, "glm-5", temperature, max_tokens))
+
+    def _fallback_qwen_or(self, prompt, temperature, max_tokens, otherwise):
+        """未配置目标厂商密钥时，优先回退到通义千问；否则执行原逻辑（可能走mock）。"""
+        if self.qwen_api_key:
+            return self._call_qwen(prompt, self.qwen_model, temperature, max_tokens)
+        return otherwise()
 
     def generate_architecture(
         self, prompt: str, model: str = "gpt-4", temperature: float = 0.5
@@ -112,6 +186,112 @@ class AIClientService:
         except Exception as e:
             print(f"OpenAI API Error: {e}")
             return self._mock_response(prompt, model)
+
+    def _call_qwen(
+        self, prompt: str, model: str, temperature: float, max_tokens: int
+    ) -> Dict[str, Any]:
+        """调用阿里百炼 Coding Plan（通义千问，OpenAI 兼容协议）。
+
+        统一超时（ALIBABA_TIMEOUT）+ 重试1次 + 超时/失败自动降级到快模型 + 用量日志。
+        """
+        if not self.qwen_api_key:
+            return self._mock_response(prompt, model)
+
+        url = f"{self.qwen_base_url}/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.qwen_api_key}",
+            "Content-Type": "application/json",
+        }
+        primary = model or self.qwen_model
+        # 两次尝试：首次用目标模型；重试时降级到快模型（若目标本就是快模型则不变）
+        attempts = [primary, self.qwen_fast_model if primary != self.qwen_fast_model else primary]
+
+        last_err = None
+        for i, use_model in enumerate(attempts):
+            data = {
+                "model": use_model,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "你是一位非标自动化行业的资深技术专家，擅长方案设计和系统架构。",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+            }
+            t0 = time.time()
+            try:
+                with httpx.Client() as client:
+                    response = client.post(
+                        url, headers=headers, json=data, timeout=self.qwen_timeout
+                    )
+                    response.raise_for_status()
+                    result = response.json()
+                usage = result.get(
+                    "usage", {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+                )
+                elapsed = round(time.time() - t0, 2)
+                _ai_logger.info(
+                    "[AI用量] model=%s tokens=%s(prompt=%s,completion=%s) 耗时=%ss 尝试=%s",
+                    result.get("model", use_model),
+                    usage.get("total_tokens"),
+                    usage.get("prompt_tokens"),
+                    usage.get("completion_tokens"),
+                    elapsed,
+                    i + 1,
+                )
+                return {
+                    "content": result["choices"][0]["message"]["content"],
+                    "model": result.get("model", use_model),
+                    "usage": usage,
+                }
+            except Exception as e:
+                last_err = e
+                _ai_logger.warning(
+                    "[AI重试] model=%s 第%s次失败 耗时=%ss error=%s",
+                    use_model,
+                    i + 1,
+                    round(time.time() - t0, 2),
+                    str(e)[:120],
+                )
+                continue
+
+        print(f"Qwen(Bailian) API Error after retries: {last_err}")
+        return self._mock_response(prompt, model)
+
+    def analyze_image(self, prompt: str, image_b64: str, mime: str = "image/jpeg",
+                      max_tokens: int = 2000) -> Dict[str, Any]:
+        """多模态：图纸/现场照片理解（通义千问视觉模型 qwen3.7-plus）。
+        image_b64 为不含前缀的 base64 字符串。"""
+        if not self.qwen_api_key:
+            return self._mock_response(prompt, "qwen-vl")
+        url = f"{self.qwen_base_url}/chat/completions"
+        headers = {"Authorization": f"Bearer {self.qwen_api_key}", "Content-Type": "application/json"}
+        data = {
+            "model": self.qwen_model,  # qwen3.7-plus 具备视觉能力
+            "messages": [
+                {"role": "user", "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{image_b64}"}},
+                ]},
+            ],
+            "temperature": 0.2,
+            "max_tokens": max_tokens,
+        }
+        t0 = time.time()
+        try:
+            with httpx.Client() as client:
+                response = client.post(url, headers=headers, json=data, timeout=self.qwen_timeout)
+                response.raise_for_status()
+                result = response.json()
+            usage = result.get("usage", {})
+            _ai_logger.info("[AI用量-视觉] model=%s tokens=%s 耗时=%ss",
+                            result.get("model"), usage.get("total_tokens"), round(time.time() - t0, 2))
+            return {"content": result["choices"][0]["message"]["content"], "model": result.get("model"), "usage": usage}
+        except Exception as e:  # noqa: BLE001
+            _ai_logger.warning("[AI视觉失败] error=%s", str(e)[:150])
+            return {"content": "", "error": str(e)[:200]}
 
     def _call_kimi(self, prompt: str, temperature: float, max_tokens: int) -> Dict[str, Any]:
         """调用Kimi API"""

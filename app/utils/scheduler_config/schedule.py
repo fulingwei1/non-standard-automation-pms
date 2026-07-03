@@ -13,7 +13,7 @@ SCHEDULE_TASKS = [
         "owner": "PMO",
         "category": "Schedule",
         "description": "整点检查计划任务延期情况。",
-        "enabled": True,
+        "enabled": False,
         "dependencies_tables": ["tasks", "alert_records"],
         "risk_level": "HIGH",
         "sla": {
@@ -47,7 +47,7 @@ SCHEDULE_TASKS = [
         "owner": "PMO",
         "category": "Schedule",
         "description": "整点提醒即将到期的任务负责人。",
-        "enabled": True,
+        "enabled": False,
         "dependencies_tables": ["tasks", "users"],
         "risk_level": "LOW",
         "sla": {

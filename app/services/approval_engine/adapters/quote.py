@@ -78,7 +78,7 @@ class QuoteApprovalAdapter(ApprovalAdapter):
             "customer_id": quote.customer_id,
             "customer_name": quote.customer.name if quote.customer else None,
             "owner_id": quote.owner_id,
-            "owner_name": quote.owner.name if quote.owner else None,
+            "owner_name": (quote.owner.real_name or quote.owner.username) if quote.owner else None,
         }
 
         if version:

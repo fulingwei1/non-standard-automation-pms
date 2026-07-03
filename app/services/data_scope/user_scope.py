@@ -6,10 +6,11 @@
 
 from typing import Set
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.enums import DataScopeEnum
-from app.models.project import ProjectMember
+from app.models.project import Project, ProjectMember
 from app.models.user import User
 
 from .normalization import normalize_data_scope, pick_broadest_scope
@@ -40,13 +41,24 @@ class UserScopeService:
 
     @staticmethod
     def get_user_project_ids(db: Session, user_id: int) -> Set[int]:
-        """获取用户参与的项目ID列表"""
+        """获取用户可按项目范围访问的项目ID列表。"""
         members = (
             db.query(ProjectMember.project_id)
             .filter(ProjectMember.user_id == user_id, ProjectMember.is_active)
             .all()
         )
-        return {m[0] for m in members}
+        project_ids = {m[0] for m in members}
+
+        own_projects = (
+            db.query(Project.id)
+            .filter(
+                or_(Project.created_by == user_id, Project.pm_id == user_id),
+                Project.is_active,
+            )
+            .all()
+        )
+        project_ids.update(p[0] for p in own_projects)
+        return project_ids
 
     @staticmethod
     def get_subordinate_ids(db: Session, user_id: int) -> Set[int]:

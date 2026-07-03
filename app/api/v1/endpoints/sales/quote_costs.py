@@ -11,16 +11,17 @@
 import logging
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func
+from pydantic import BaseModel, Field
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core import security
 from app.core.sales_permissions import check_sales_data_permission, filter_sales_data_by_scope
-from app.models.sales import Quote, QuoteItem, QuoteVersion
+from app.models.sales import PurchaseMaterialCost, Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404
@@ -29,6 +30,23 @@ from app.utils.json_helpers import safe_json_loads
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+class QuoteCostBatchUpdateRequest(BaseModel):
+    """批量更新报价明细价格请求。"""
+
+    version_id: Optional[int] = Field(default=None, description="报价版本ID")
+    mode: Literal["markup", "margin"] = Field(
+        default="markup", description="更新模式：markup=加价率，margin=毛利率"
+    )
+    rate: Decimal = Field(default=Decimal("20"), description="比率")
+
+
+class QuoteCostMatchApplyRequest(BaseModel):
+    """应用成本匹配建议请求。"""
+
+    version_id: Optional[int] = Field(default=None, description="报价版本ID")
+    suggestions: list[dict] = Field(default_factory=list, description="成本匹配建议")
 
 
 # ==================== 通用工具函数 ====================
@@ -86,6 +104,65 @@ def _item_cost_from_meta(item: QuoteItem, tech_meta: dict) -> Decimal:
         return parts
 
     return _to_decimal(item.cost)
+
+
+def _purchase_material_cost_to_dict(record: Optional[PurchaseMaterialCost]) -> Optional[dict]:
+    if not record:
+        return None
+    data = {column.name: getattr(record, column.name) for column in record.__table__.columns}
+    data["submitter_name"] = record.submitter.real_name if record.submitter else None
+    return data
+
+
+def _find_purchase_material_cost_match(
+    db: Session, item_name: Optional[str]
+) -> tuple[Optional[PurchaseMaterialCost], int, list[PurchaseMaterialCost]]:
+    name = (item_name or "").strip()
+    if not name:
+        return None, 0, []
+
+    base_query = (
+        db.query(PurchaseMaterialCost)
+        .filter(PurchaseMaterialCost.is_active.is_(True))
+        .filter(PurchaseMaterialCost.is_standard_part.is_(True))
+    )
+    ordering = (
+        desc(PurchaseMaterialCost.match_priority),
+        desc(PurchaseMaterialCost.purchase_date),
+        desc(PurchaseMaterialCost.id),
+    )
+
+    exact_match = (
+        base_query.filter(PurchaseMaterialCost.material_name == name).order_by(*ordering).first()
+    )
+    if exact_match:
+        return exact_match, 100, []
+
+    name_matches = (
+        base_query.filter(PurchaseMaterialCost.material_name.contains(name))
+        .order_by(*ordering)
+        .limit(5)
+        .all()
+    )
+    if name_matches:
+        return name_matches[0], 80, name_matches[1:]
+
+    for keyword in [part.strip() for part in name.replace("，", ",").split(",") if part.strip()]:
+        if len(keyword) < 2:
+            continue
+        keyword_matches = (
+            base_query.filter(
+                (PurchaseMaterialCost.material_name.contains(keyword))
+                | (PurchaseMaterialCost.match_keywords.contains(keyword))
+            )
+            .order_by(*ordering)
+            .limit(5)
+            .all()
+        )
+        if keyword_matches:
+            return keyword_matches[0], 60, keyword_matches[1:]
+
+    return None, 0, []
 
 
 def calculate_margin(price: Decimal, cost: Decimal) -> Decimal:
@@ -504,6 +581,170 @@ def recalculate_quote_cost(
     )
 
 
+@router.post("/quotes/{quote_id}/cost-match-suggestions", response_model=ResponseModel)
+def get_quote_cost_match_suggestions(
+    quote_id: int,
+    version_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """按报价明细生成历史采购成本匹配建议。"""
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+    _check_quote_scope(quote, current_user, db)
+
+    vid = version_id or quote.current_version_id
+    version = get_or_404(db, QuoteVersion, vid, detail="版本不存在")
+    items = (
+        db.query(QuoteItem)
+        .filter(QuoteItem.quote_version_id == vid)
+        .order_by(QuoteItem.id)
+        .all()
+    )
+
+    suggestions = []
+    warnings = []
+    matched_count = 0
+    current_total_cost = Decimal("0")
+    suggested_total_cost = Decimal("0")
+    total_price = Decimal("0")
+
+    for item in items:
+        qty = _to_decimal(item.qty) or Decimal("1")
+        current_cost = _to_decimal(item.cost)
+        current_total_cost += current_cost * qty
+        if item.unit_price:
+            total_price += _to_decimal(item.unit_price) * qty
+
+        matched_cost, match_score, alternates = _find_purchase_material_cost_match(db, item.item_name)
+        item_warnings = []
+        suggested_cost = current_cost
+        reason = None
+
+        if matched_cost:
+            matched_count += 1
+            suggested_cost = _to_decimal(matched_cost.unit_cost)
+            reason = "按物料名称匹配历史采购成本"
+        else:
+            item_warnings.append("未匹配到历史采购成本")
+
+        suggested_total_cost += suggested_cost * qty
+        if item_warnings:
+            warnings.extend([f"{item.item_name or item.id}: {warning}" for warning in item_warnings])
+
+        suggestions.append(
+            {
+                "item_id": item.id,
+                "item_name": item.item_name or "",
+                "current_cost": float(current_cost),
+                "suggested_cost": float(suggested_cost),
+                "match_score": match_score or None,
+                "suggested_specification": matched_cost.specification if matched_cost else item.specification,
+                "suggested_unit": matched_cost.unit if matched_cost else item.unit,
+                "suggested_lead_time_days": (
+                    matched_cost.lead_time_days if matched_cost else item.lead_time_days
+                ),
+                "suggested_cost_category": matched_cost.material_type if matched_cost else item.cost_category,
+                "reason": reason,
+                "warnings": item_warnings,
+                "matched_cost_record": _purchase_material_cost_to_dict(matched_cost),
+                "alternates": [_purchase_material_cost_to_dict(record) for record in alternates],
+            }
+        )
+
+    suggested_margin = None
+    if total_price > 0:
+        suggested_margin = (
+            (total_price - suggested_total_cost) / total_price * 100
+        ).quantize(Decimal("0.01"))
+
+    return ResponseModel(
+        code=200,
+        message="成本匹配建议生成成功",
+        data={
+            "version_id": version.id,
+            "total_items": len(items),
+            "matched_count": matched_count,
+            "unmatched_count": len(items) - matched_count,
+            "warnings": warnings,
+            "suggestions": suggestions,
+            "summary": {
+                "current_total_cost": float(current_total_cost),
+                "suggested_total_cost": float(suggested_total_cost),
+                "suggested_margin": float(suggested_margin) if suggested_margin is not None else None,
+            },
+        },
+    )
+
+
+@router.post("/quotes/{quote_id}/cost-match-suggestions/apply", response_model=ResponseModel)
+def apply_quote_cost_match_suggestions(
+    quote_id: int,
+    apply_data: QuoteCostMatchApplyRequest,
+    version_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """应用已确认的成本匹配建议到报价明细。"""
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+    _check_quote_scope(quote, current_user, db)
+
+    vid = version_id or apply_data.version_id or quote.current_version_id
+    version = get_or_404(db, QuoteVersion, vid, detail="版本不存在")
+    items = (
+        db.query(QuoteItem)
+        .filter(QuoteItem.quote_version_id == vid)
+        .order_by(QuoteItem.id)
+        .all()
+    )
+    items_by_id = {item.id: item for item in items}
+
+    updated_count = 0
+    for suggestion in apply_data.suggestions:
+        item = items_by_id.get(suggestion.get("item_id"))
+        if not item:
+            continue
+
+        if "cost" in suggestion and suggestion["cost"] not in (None, ""):
+            item.cost = _to_decimal(suggestion["cost"])
+        for field in ("specification", "unit", "cost_category"):
+            if field in suggestion:
+                setattr(item, field, suggestion.get(field))
+        if suggestion.get("lead_time_days") not in (None, ""):
+            item.lead_time_days = int(suggestion["lead_time_days"])
+        item.cost_source = "HISTORY"
+        updated_count += 1
+
+    total_cost = Decimal("0")
+    total_price = Decimal("0")
+    for item in items:
+        qty = _to_decimal(item.qty) or Decimal("1")
+        total_cost += _to_decimal(item.cost) * qty
+        total_price += _to_decimal(item.unit_price) * qty
+
+    version.cost_total = total_cost
+    version.total_price = total_price
+    version.gross_margin = (
+        ((total_price - total_cost) / total_price * 100).quantize(Decimal("0.01"))
+        if total_price > 0
+        else Decimal("0")
+    )
+    version.margin_warning = version.gross_margin < 15 if total_price > 0 else False
+    version.cost_breakdown_complete = True
+    db.commit()
+
+    return ResponseModel(
+        code=200,
+        message="成本匹配建议应用成功",
+        data={
+            "version_id": version.id,
+            "updated_count": updated_count,
+            "total_cost": float(total_cost),
+            "total_price": float(total_price),
+            "gross_margin": float(version.gross_margin),
+        },
+    )
+
+
 # ==================== 成本计算 ====================
 
 
@@ -717,7 +958,7 @@ def get_price_suggestion(
 @router.post("/quotes/{quote_id}/cost-calculations/batch-update", response_model=ResponseModel)
 def batch_update_prices(
     quote_id: int,
-    update_data: dict,
+    update_data: QuoteCostBatchUpdateRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.get_current_active_user),
 ):
@@ -736,12 +977,12 @@ def batch_update_prices(
     quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
     _check_quote_scope(quote, current_user, db)
 
-    version_id = update_data.get("version_id") or quote.current_version_id
+    version_id = update_data.version_id or quote.current_version_id
     if not version_id:
         raise HTTPException(status_code=400, detail="请指定报价版本")
 
-    mode = update_data.get("mode", "markup")  # markup or margin
-    rate = Decimal(str(update_data.get("rate", 20)))
+    mode = update_data.mode
+    rate = Decimal(str(update_data.rate))
 
     items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version_id).all()
 

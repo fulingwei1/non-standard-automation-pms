@@ -23,6 +23,10 @@ from app.schemas.technical_spec import (
     TechnicalSpecRequirementResponse,
     TechnicalSpecRequirementUpdate,
 )
+from app.utils.permission_helpers import (
+    check_project_read_access_or_raise,
+    filter_by_project_access,
+)
 from app.utils.spec_extractor import SpecExtractor
 
 from .serializers import serialize_requirement
@@ -33,7 +37,7 @@ router = APIRouter()
 @router.get("/requirements", response_model=TechnicalSpecRequirementListResponse)
 def list_requirements(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("technical_spec:read")),
+    current_user: User = Depends(security.get_current_active_user),
     project_id: Optional[int] = Query(None, description="项目ID"),
     document_id: Optional[int] = Query(None, description="文档ID"),
     material_code: Optional[str] = Query(None, description="物料编码"),
@@ -45,7 +49,12 @@ def list_requirements(
 
     # 筛选条件
     if project_id:
+        check_project_read_access_or_raise(db, current_user, project_id)
         query = query.filter(TechnicalSpecRequirement.project_id == project_id)
+    else:
+        query = filter_by_project_access(
+            db, query, current_user, TechnicalSpecRequirement.project_id
+        )
     if document_id:
         query = query.filter(TechnicalSpecRequirement.document_id == document_id)
     if material_code:
@@ -88,7 +97,7 @@ def list_requirements(
 def get_requirement(
     requirement_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("technical_spec:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取技术规格要求详情"""
     requirement = (
@@ -99,6 +108,8 @@ def get_requirement(
 
     if not requirement:
         raise HTTPException(status_code=404, detail="规格要求不存在")
+
+    check_project_read_access_or_raise(db, current_user, requirement.project_id)
 
     return serialize_requirement(requirement)
 

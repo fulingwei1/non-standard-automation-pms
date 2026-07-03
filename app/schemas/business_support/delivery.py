@@ -19,7 +19,7 @@ class DeliveryOrderCreate(BaseModel):
         default=None, max_length=50, description="送货单号（不提供则自动生成）"
     )
     order_id: int = Field(description="销售订单ID")
-    delivery_date: date = Field(description="发货日期")
+    delivery_date: date = Field(description="计划发货日期")
     delivery_type: str = Field(max_length=20, description="发货方式")
     logistics_company: Optional[str] = Field(default=None, max_length=100, description="物流公司")
     tracking_no: Optional[str] = Field(default=None, max_length=100, description="物流单号")
@@ -35,7 +35,7 @@ class DeliveryOrderCreate(BaseModel):
 class DeliveryOrderUpdate(BaseModel):
     """更新发货单"""
 
-    delivery_date: Optional[date] = None
+    delivery_date: Optional[date] = Field(default=None, description="计划发货日期")
     delivery_type: Optional[str] = None
     logistics_company: Optional[str] = None
     tracking_no: Optional[str] = None
@@ -58,7 +58,7 @@ class DeliveryOrderResponse(TimestampSchema):
     customer_id: int
     customer_name: Optional[str] = None
     project_id: Optional[int] = None
-    delivery_date: Optional[date] = None
+    delivery_date: Optional[date] = Field(default=None, description="计划发货日期")
     delivery_type: Optional[str] = None
     logistics_company: Optional[str] = None
     tracking_no: Optional[str] = None
@@ -75,7 +75,7 @@ class DeliveryOrderResponse(TimestampSchema):
     special_approval_reason: Optional[str] = None
     delivery_status: Optional[str] = None
     print_date: Optional[datetime] = None
-    ship_date: Optional[datetime] = None
+    ship_date: Optional[datetime] = Field(default=None, description="实际发货日期")
     receive_date: Optional[date] = None
     return_status: Optional[str] = None
     return_date: Optional[date] = None

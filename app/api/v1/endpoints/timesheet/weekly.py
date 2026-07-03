@@ -49,7 +49,7 @@ def get_week_timesheet(
     db: Session = Depends(deps.get_db),
     week_start: Optional[date] = Query(None, description="周开始日期（默认本周一）"),
     user_id: Optional[int] = Query(None, description="用户ID（默认当前用户）"),
-    current_user: User = Depends(security.require_permission("timesheet:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     获取周工时表（按周展示）

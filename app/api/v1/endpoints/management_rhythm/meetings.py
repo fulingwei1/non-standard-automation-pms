@@ -109,7 +109,9 @@ def read_strategic_meetings(
             .filter(
                 and_(
                     MeetingActionItem.meeting_id == meeting.id,
-                    MeetingActionItem.status == ActionItemStatus.COMPLETED.value,
+                    MeetingActionItem.status.in_(
+                        [ActionItemStatus.DONE.value, "COMPLETED"]
+                    ),
                 )
             )
             .count()
@@ -144,7 +146,7 @@ def read_strategic_meetings(
                 ),
                 metrics_snapshot=meeting.metrics_snapshot if meeting.metrics_snapshot else {},
                 attachments=meeting.attachments if meeting.attachments else [],
-                status=meeting.status,
+                status=meeting.status or "SCHEDULED",
                 created_by=meeting.created_by,
                 created_at=meeting.created_at,
                 updated_at=meeting.updated_at,

@@ -8,6 +8,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.bonus import BonusCalculation, BonusDistribution, BonusRule
@@ -128,11 +129,7 @@ class ProjectBonusService:
             奖金发放记录列表
         """
         # 先获取项目相关的计算记录
-        calculation_ids = (
-            self.db.query(BonusCalculation.id)
-            .filter(BonusCalculation.project_id == project_id)
-            .subquery()
-        )
+        calculation_ids = select(BonusCalculation.id).where(BonusCalculation.project_id == project_id)
 
         query = self.db.query(BonusDistribution).filter(
             BonusDistribution.calculation_id.in_(calculation_ids)
@@ -144,7 +141,8 @@ class ProjectBonusService:
         if status:
             query = query.filter(BonusDistribution.status == status)
 
-        return query.order_by(BonusDistribution.distributed_at.desc()).all()
+        sort_field = getattr(BonusDistribution, "distributed_at", None) or BonusDistribution.distribution_date
+        return query.order_by(sort_field.desc(), BonusDistribution.id.desc()).all()
 
     def get_project_member_bonus_summary(self, project_id: int) -> List[Dict[str, Any]]:
         """

@@ -13,6 +13,7 @@ from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from app.models.project import FinancialProjectCost, Project, ProjectCost
+from app.services.cost.cost_basis import actual_project_cost_filter
 
 
 def _month_expr(db: Session, column):
@@ -58,7 +59,8 @@ def get_project_actual_cost_from_records(db: Session, project_id: int) -> Decima
     从 ProjectCost + FinancialProjectCost 合计项目实际成本
     """
     pc = db.query(func.sum(ProjectCost.amount)).filter(
-        ProjectCost.project_id == project_id
+        ProjectCost.project_id == project_id,
+        actual_project_cost_filter(),
     ).scalar() or Decimal("0")
 
     fc = db.query(func.sum(FinancialProjectCost.amount)).filter(
@@ -87,6 +89,7 @@ def get_monthly_cost_data(
             func.sum(ProjectCost.amount).label("monthly_cost"),
         )
         .filter(ProjectCost.project_id == project_id)
+        .filter(actual_project_cost_filter())
         .filter(ProjectCost.cost_date.isnot(None))
     )
     if start_month:
@@ -113,9 +116,13 @@ def get_monthly_cost_data(
     # 合并
     monthly_dict: Dict[str, float] = {}
     for row in result1:
-        monthly_dict[row.month] = monthly_dict.get(row.month, 0) + float(row.monthly_cost or 0)
+        monthly_dict[row.month] = monthly_dict.get(row.month, 0) + float(
+            row.monthly_cost or 0
+        )
     for row in result2:
-        monthly_dict[row.month] = monthly_dict.get(row.month, 0) + float(row.monthly_cost or 0)
+        monthly_dict[row.month] = monthly_dict.get(row.month, 0) + float(
+            row.monthly_cost or 0
+        )
 
     # 排序 + 累计
     cumulative = 0.0
@@ -143,7 +150,9 @@ def get_month_cost_total(
     获取指定月份的成本合计（全局或单项目）
     """
     q1 = db.query(func.sum(ProjectCost.amount)).filter(
-        and_(ProjectCost.cost_date >= month_start, ProjectCost.cost_date <= month_end)
+        ProjectCost.cost_date >= month_start,
+        ProjectCost.cost_date <= month_end,
+        actual_project_cost_filter(),
     )
     q2 = db.query(func.sum(FinancialProjectCost.amount)).filter(
         and_(
@@ -163,5 +172,6 @@ def get_cost_by_type(db: Session, project_id: int, cost_type: str) -> Decimal:
     result = db.query(func.sum(ProjectCost.amount)).filter(
         ProjectCost.project_id == project_id,
         ProjectCost.cost_type == cost_type,
+        actual_project_cost_filter(),
     ).scalar() or Decimal("0")
     return Decimal(str(result))

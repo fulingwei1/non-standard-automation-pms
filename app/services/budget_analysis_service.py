@@ -10,19 +10,33 @@ from sqlalchemy.orm import Session
 
 from app.models.budget import ProjectBudget
 from app.models.project import Project, ProjectCost
+from app.services.cost.cost_basis import actual_project_cost_filter
 
 
 class BudgetAnalysisService:
     """预算分析服务"""
 
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
     @staticmethod
-    def get_budget_execution_analysis(db: Session, project_id: int) -> Dict:
+    def _resolve_db(self_or_db: "BudgetAnalysisService | Session") -> Session:
+        if isinstance(self_or_db, BudgetAnalysisService):
+            if self_or_db.db is None:
+                raise ValueError("数据库会话未初始化")
+            return self_or_db.db
+        return self_or_db
+
+    def get_budget_execution_analysis(
+        self_or_db: "BudgetAnalysisService | Session", project_id: int
+    ) -> Dict:
         """
         获取项目预算执行情况分析
 
         Returns:
             包含预算执行情况的字典
         """
+        db = BudgetAnalysisService._resolve_db(self_or_db)
         project = db.query(Project).filter(Project.id == project_id).first()
         if not project:
             raise ValueError("项目不存在")
@@ -39,23 +53,31 @@ class BudgetAnalysisService:
             .first()
         )
 
-        # 获取实际成本
-        costs = db.query(ProjectCost).filter(ProjectCost.project_id == project_id).all()
+        # 获取实际成本：BOM 等 PLAN 记录只用于计划/估算，不参与预算执行实际额。
+        costs = (
+            db.query(ProjectCost)
+            .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
+            .all()
+        )
         total_actual_cost = sum([float(c.amount or 0) for c in costs])
 
-        # 如果项目有actual_cost字段，优先使用
-        if project.actual_cost:
+        # 旧数据可能只有 Project.actual_cost，没有明细成本记录。
+        if total_actual_cost <= 0 and project.actual_cost:
             total_actual_cost = float(project.actual_cost)
 
         # 预算金额
-        budget_amount = float(budget.total_amount) if budget else float(project.budget_amount or 0)
+        budget_amount = (
+            float(budget.total_amount) if budget else float(project.budget_amount or 0)
+        )
 
         # 计算偏差
         variance = total_actual_cost - budget_amount
         variance_pct = (variance / budget_amount * 100) if budget_amount > 0 else 0
 
         # 预算执行率
-        execution_rate = (total_actual_cost / budget_amount * 100) if budget_amount > 0 else 0
+        execution_rate = (
+            (total_actual_cost / budget_amount * 100) if budget_amount > 0 else 0
+        )
 
         # 剩余预算
         remaining_budget = budget_amount - total_actual_cost
@@ -80,13 +102,19 @@ class BudgetAnalysisService:
                 actual_by_category[category] += float(cost.amount or 0)
 
             # 合并对比
-            all_categories = set(list(budget_by_category.keys()) + list(actual_by_category.keys()))
+            all_categories = set(
+                list(budget_by_category.keys()) + list(actual_by_category.keys())
+            )
             for category in all_categories:
                 budget_amt = budget_by_category.get(category, 0)
                 actual_amt = actual_by_category.get(category, 0)
                 cat_variance = actual_amt - budget_amt
-                cat_variance_pct = (cat_variance / budget_amt * 100) if budget_amt > 0 else 0
-                cat_execution_rate = (actual_amt / budget_amt * 100) if budget_amt > 0 else 0
+                cat_variance_pct = (
+                    (cat_variance / budget_amt * 100) if budget_amt > 0 else 0
+                )
+                cat_execution_rate = (
+                    (actual_amt / budget_amt * 100) if budget_amt > 0 else 0
+                )
 
                 category_comparison.append(
                     {
@@ -99,7 +127,9 @@ class BudgetAnalysisService:
                         "status": (
                             "正常"
                             if abs(cat_variance_pct) <= 5
-                            else "警告" if abs(cat_variance_pct) <= 10 else "超支"
+                            else "警告"
+                            if abs(cat_variance_pct) <= 10
+                            else "超支"
                         ),
                     }
                 )
@@ -130,9 +160,8 @@ class BudgetAnalysisService:
             "category_comparison": category_comparison,
         }
 
-    @staticmethod
     def get_budget_trend_analysis(
-        db: Session,
+        self_or_db: "BudgetAnalysisService | Session",
         project_id: int,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
@@ -147,6 +176,7 @@ class BudgetAnalysisService:
         Returns:
             包含趋势数据的字典
         """
+        db = BudgetAnalysisService._resolve_db(self_or_db)
         project = db.query(Project).filter(Project.id == project_id).first()
         if not project:
             raise ValueError("项目不存在")
@@ -162,10 +192,14 @@ class BudgetAnalysisService:
             .order_by(ProjectBudget.version.desc())
             .first()
         )
-        budget_amount = float(budget.total_amount) if budget else float(project.budget_amount or 0)
+        budget_amount = (
+            float(budget.total_amount) if budget else float(project.budget_amount or 0)
+        )
 
         # 查询成本记录（按日期）
-        query = db.query(ProjectCost).filter(ProjectCost.project_id == project_id)
+        query = db.query(ProjectCost).filter(
+            ProjectCost.project_id == project_id, actual_project_cost_filter()
+        )
         if start_date:
             query = query.filter(ProjectCost.cost_date >= start_date)
         if end_date:

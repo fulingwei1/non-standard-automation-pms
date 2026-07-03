@@ -225,13 +225,15 @@ class PerformanceFeedbackService:
         """
         feedback = self.get_engineer_feedback(engineer_id, period_id)
 
+        period_name = feedback.get("period_name") or f"周期{period_id}"
+
         if not feedback.get("has_data"):
-            return f"您的{feedback['period_name']}绩效数据尚未计算，请稍后查看。"
+            return f"您的{period_name}绩效数据尚未计算，请稍后查看。"
 
         current = feedback["current_performance"]
         comparison = feedback.get("comparison", {})
 
-        message = f"【{feedback['period_name']}绩效反馈】\n\n"
+        message = f"【{period_name}绩效反馈】\n\n"
         message += f"综合得分：{current['total_score']:.1f}分（等级：{current['level']}）\n"
         message += f"部门排名：第{current['dept_rank']}名\n"
         message += f"公司排名：第{current['company_rank']}名\n\n"

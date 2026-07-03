@@ -3,7 +3,7 @@
 员工档案 API端点
 """
 
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import or_
@@ -21,6 +21,57 @@ from app.services.staff_matching import StaffMatchingService
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+
+def _as_json_list(value: Any) -> list:
+    return value if isinstance(value, list) else []
+
+
+def _normalize_profile_object(profile: HrEmployeeProfile) -> HrEmployeeProfile:
+    if profile.total_projects is None:
+        profile.total_projects = 0
+    if profile.current_workload_pct is None:
+        profile.current_workload_pct = 0
+    if profile.available_hours is None:
+        profile.available_hours = 0
+    for field in (
+        "skill_tags",
+        "domain_tags",
+        "attitude_tags",
+        "character_tags",
+        "special_tags",
+    ):
+        if getattr(profile, field, None) is not None and not isinstance(getattr(profile, field), list):
+            setattr(profile, field, [])
+    return profile
+
+
+def _build_profile_summary(employee: Employee, profile: Optional[HrEmployeeProfile]) -> dict:
+    top_skills = []
+    if profile:
+        skill_tags = _as_json_list(profile.skill_tags)
+        top_skills = [
+            skill.get("tag_name", "")
+            for skill in skill_tags[:3]
+            if isinstance(skill, dict)
+        ]
+
+    return {
+        "id": profile.id if profile else 0,
+        "employee_id": employee.id,
+        "employee_name": employee.name,
+        "employee_code": employee.employee_code,
+        "department": employee.department,
+        "employment_status": getattr(employee, "employment_status", "active") or "active",
+        "employment_type": getattr(employee, "employment_type", "regular") or "regular",
+        "top_skills": top_skills,
+        "attitude_score": profile.attitude_score if profile else None,
+        "quality_score": profile.quality_score if profile else None,
+        "current_workload_pct": profile.current_workload_pct if profile and profile.current_workload_pct is not None else 0,
+        "available_hours": profile.available_hours if profile and profile.available_hours is not None else 0,
+        "total_projects": profile.total_projects if profile and profile.total_projects is not None else 0,
+        "avg_performance_score": profile.avg_performance_score if profile else None,
+    }
 
 
 @router.get("/", response_model=List[schemas.EmployeeProfileSummary])
@@ -61,13 +112,15 @@ def list_profiles(
     if min_workload is not None:
         query = query.filter(
             or_(
-                HrEmployeeProfile.id is None, HrEmployeeProfile.current_workload_pct >= min_workload
+                HrEmployeeProfile.id.is_(None),
+                HrEmployeeProfile.current_workload_pct >= min_workload,
             )
         )
     if max_workload is not None:
         query = query.filter(
             or_(
-                HrEmployeeProfile.id is None, HrEmployeeProfile.current_workload_pct <= max_workload
+                HrEmployeeProfile.id.is_(None),
+                HrEmployeeProfile.current_workload_pct <= max_workload,
             )
         )
 
@@ -75,30 +128,7 @@ def list_profiles(
 
     profiles = []
     for employee, profile in results:
-        # 获取前3个技能
-        top_skills = []
-        if profile and profile.skill_tags:
-            skill_tags = profile.skill_tags if isinstance(profile.skill_tags, list) else []
-            top_skills = [s.get("tag_name", "") for s in skill_tags[:3]]
-
-        profiles.append(
-            {
-                "id": profile.id if profile else 0,
-                "employee_id": employee.id,
-                "employee_name": employee.name,
-                "employee_code": employee.employee_code,
-                "department": employee.department,
-                "employment_status": getattr(employee, "employment_status", "active") or "active",
-                "employment_type": getattr(employee, "employment_type", "regular") or "regular",
-                "top_skills": top_skills,
-                "attitude_score": profile.attitude_score if profile else None,
-                "quality_score": profile.quality_score if profile else None,
-                "current_workload_pct": profile.current_workload_pct if profile else 0,
-                "available_hours": profile.available_hours if profile else 0,
-                "total_projects": profile.total_projects if profile else 0,
-                "avg_performance_score": profile.avg_performance_score if profile else None,
-            }
-        )
+        profiles.append(_build_profile_summary(employee, profile))
 
     return profiles
 
@@ -120,7 +150,7 @@ def get_profile(
 
         profile = StaffMatchingService.aggregate_employee_profile(db, employee_id)
 
-    return profile
+    return _normalize_profile_object(profile)
 
 
 @router.post("/{employee_id}/refresh")

@@ -21,6 +21,8 @@ from app.schemas.common import BatchOperationResponse
 from app.services.data_scope import DataScopeService
 from app.utils.batch_operations import BatchOperationExecutor, create_scope_filter
 
+from .utils import close_blocking_issue_alerts
+
 router = APIRouter()
 
 # 创建数据范围过滤函数
@@ -143,12 +145,20 @@ def batch_close_issues(
         )
         db.add(follow_up)
 
-    result = executor.batch_status_update(
+    def close_issue(issue: Issue):
+        """关闭问题并同步关闭阻塞问题预警。"""
+        issue._old_status = issue.status
+        issue.status = "CLOSED"
+        if issue.is_blocking:
+            close_blocking_issue_alerts(db, issue)
+
+    result = executor.execute(
         entity_ids=issue_ids,
-        new_status="CLOSED",
+        operation_func=close_issue,
         validator_func=lambda issue: issue.status != "CLOSED",
         error_message="问题已关闭",
         log_func=log_operation,
+        operation_type="BATCH_STATUS_UPDATE",
     )
 
     return BatchOperationResponse(**result.to_dict(id_field="issue_id"))

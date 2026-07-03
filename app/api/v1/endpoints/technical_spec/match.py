@@ -22,6 +22,10 @@ from app.schemas.technical_spec import (
     SpecMatchRecordListResponse,
     SpecMatchRecordResponse,
 )
+from app.utils.permission_helpers import (
+    check_project_read_access_or_raise,
+    filter_by_project_access,
+)
 from app.utils.spec_matcher import SpecMatcher
 
 from .serializers import serialize_requirement
@@ -131,7 +135,7 @@ def check_spec_match(
 @router.get("/match/records", response_model=SpecMatchRecordListResponse)
 def list_match_records(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("technical_spec:read")),
+    current_user: User = Depends(security.get_current_active_user),
     project_id: Optional[int] = Query(None, description="项目ID"),
     match_type: Optional[str] = Query(None, description="匹配类型"),
     match_status: Optional[str] = Query(None, description="匹配状态"),
@@ -142,7 +146,10 @@ def list_match_records(
     query = db.query(SpecMatchRecord)
 
     if project_id:
+        check_project_read_access_or_raise(db, current_user, project_id)
         query = query.filter(SpecMatchRecord.project_id == project_id)
+    else:
+        query = filter_by_project_access(db, query, current_user, SpecMatchRecord.project_id)
     if match_type:
         query = query.filter(SpecMatchRecord.match_type == match_type)
     if match_status:

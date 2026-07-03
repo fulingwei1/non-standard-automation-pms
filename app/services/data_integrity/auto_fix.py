@@ -25,7 +25,7 @@ class AutoFixMixin:
         report = self.check_data_completeness(engineer_id, period_id)
 
         # 1. 如果缺少跨部门协作评价，建议自动抽取
-        if report["collab_ratings_count"] < 3:
+        if report.get("collab_ratings_count", 0) < 3:
             suggestions.append(
                 {
                     "type": "auto_select_collaborators",
@@ -36,7 +36,7 @@ class AutoFixMixin:
             )
 
         # 2. 如果缺少工作日志，建议提醒工程师
-        if report["work_logs_count"] == 0:
+        if report.get("work_logs_count", 0) == 0:
             suggestions.append(
                 {
                     "type": "remind_work_log",

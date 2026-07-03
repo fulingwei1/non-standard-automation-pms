@@ -6,9 +6,10 @@ Team 5: AI Quotation Generator Schemas
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
+import json
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, validator
 
 
 class QuotationType(str, Enum):
@@ -197,6 +198,53 @@ class QuotationResponse(BaseModel):
         from_attributes = True
         json_encoders = {Decimal: lambda v: float(v), datetime: lambda v: v.isoformat()}
 
+    @field_validator("items", mode="before")
+    @classmethod
+    def _normalize_items(cls, value):
+        if value in (None, ""):
+            return []
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+            except json.JSONDecodeError:
+                return []
+        return value if isinstance(value, list) else []
+
+    @field_validator("subtotal", "tax", "discount", "total", mode="before")
+    @classmethod
+    def _default_decimal(cls, value):
+        return Decimal("0") if value is None else value
+
+    @field_validator("validity_days", "version", "created_by", mode="before")
+    @classmethod
+    def _default_integer(cls, value):
+        return 0 if value is None else value
+
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def _default_created_at(cls, value):
+        return datetime.now() if value is None else value
+
+    @field_validator("quotation_type", mode="before")
+    @classmethod
+    def _normalize_quotation_type(cls, value):
+        if hasattr(value, "value"):
+            value = value.value
+        normalized = str(value or "").lower()
+        if normalized in {"basic", "standard", "premium"}:
+            return normalized
+        return QuotationType.STANDARD
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_status(cls, value):
+        if hasattr(value, "value"):
+            value = value.value
+        normalized = str(value or "").lower()
+        if normalized in {"draft", "pending_approval", "approved", "sent", "accepted", "rejected"}:
+            return normalized
+        return QuotationStatus.DRAFT
+
 
 class ThreeTierQuotationResponse(BaseModel):
     """三档报价方案响应"""
@@ -226,7 +274,7 @@ class QuotationVersionResponse(BaseModel):
 class QuotationHistoryResponse(BaseModel):
     """报价单历史响应"""
 
-    quotation_id: int
+    quotation_id: Optional[int]
     current_version: int
     versions: List[QuotationVersionResponse]
     total_versions: int

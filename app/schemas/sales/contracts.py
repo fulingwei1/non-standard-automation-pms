@@ -5,9 +5,9 @@
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import List, Optional
+from typing import List, Literal, Optional
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 from ..common import TimestampSchema
 
@@ -279,8 +279,18 @@ class ApprovalActionRequest(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    action: str = Field(description="审批动作：APPROVE, REJECT, RETURN")
+    action: Literal["APPROVE", "REJECT", "DELEGATE", "WITHDRAW"] = Field(
+        description="审批动作：APPROVE, REJECT, DELEGATE, WITHDRAW"
+    )
+    delegate_to_id: Optional[int] = Field(default=None, description="委托给的用户ID")
     comment: Optional[str] = Field(default=None, description="审批意见")
+
+    @field_validator("action", mode="before")
+    @classmethod
+    def normalize_action(cls, value):
+        if isinstance(value, str):
+            return value.upper()
+        return value
 
 
 class ApprovalRecordResponse(TimestampSchema):

@@ -32,7 +32,7 @@ class EcnApprovalMatrix(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     ecn_type = Column(String(20), comment="ECN类型")
-    condition_type = Column(String(20), nullable=False, comment="条件类型")
+    condition_type = Column(String(20), default="ALWAYS", comment="条件类型")
     condition_min = Column(Numeric(14, 2), comment="条件下限")
     condition_max = Column(Numeric(14, 2), comment="条件上限")
     approval_level = Column(Integer, nullable=False, comment="审批层级")

@@ -215,6 +215,15 @@ class Contract(Base, TimestampMixin):
     def signed_date(self, value):
         self.signing_date = value
 
+    @property
+    def end_date(self):
+        """Backward-compatible alias for legacy milestone code paths."""
+        return self.expiry_date
+
+    @end_date.setter
+    def end_date(self, value):
+        self.expiry_date = value
+
 
 class ContractDeliverable(Base, TimestampMixin):
     """合同交付物清单表"""

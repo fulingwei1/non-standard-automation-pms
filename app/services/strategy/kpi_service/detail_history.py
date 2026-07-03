@@ -34,7 +34,10 @@ def get_kpi_detail(db: Session, kpi_id: int) -> Optional[KPIDetailResponse]:
         return None
 
     # 获取健康度
-    from .health_calculator import calculate_kpi_completion_rate, calculate_kpi_health
+    from app.services.strategy.health_calculator import (
+        calculate_kpi_completion_rate,
+        calculate_kpi_health,
+    )
 
     health_data = calculate_kpi_health(db, kpi_id)
     completion_rate = calculate_kpi_completion_rate(kpi)

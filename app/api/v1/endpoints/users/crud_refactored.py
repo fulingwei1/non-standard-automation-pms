@@ -17,13 +17,14 @@ from app.core import security
 from app.core.schemas import paginated_response, success_response
 from app.models.organization import Employee
 from app.models.user import User
-from app.schemas.auth import UserCreate, UserResponse, UserRoleAssign, UserUpdate
+from app.schemas.auth import UserCreate, UserOptionResponse, UserResponse, UserRoleAssign, UserUpdate
 from app.services.permission_management.permission_audit_service import PermissionAuditService
 from app.schemas.auth import BatchRoleAssign, UserCreate, UserResponse, UserRoleAssign, UserUpdate
 from app.services.permission_audit_service import PermissionAuditService
 from app.utils.db_helpers import get_or_404
 
 from .utils import (
+    bool_or_default,
     build_user_response,
     ensure_user_access,
     ensure_employee_unbound,
@@ -34,6 +35,15 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _require_role_assign_permission(current_user: User, db: Session) -> None:
+    if security.check_permission(current_user, "role:assign", db):
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="权限不足: role:assign",
+    )
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
@@ -103,8 +113,8 @@ def read_users(
                         department=u.department or "",
                         position=u.position or "",
                         avatar=u.avatar,
-                        is_active=u.is_active,
-                        is_superuser=u.is_superuser,
+                        is_active=bool_or_default(u.is_active, True),
+                        is_superuser=bool_or_default(u.is_superuser, False),
                         last_login_at=u.last_login_at,
                         roles=roles_data["role_names"],
                         role_ids=roles_data["role_ids"],
@@ -127,8 +137,8 @@ def read_users(
                         department=u.department or "",
                         position=u.position or "",
                         avatar=u.avatar,
-                        is_active=u.is_active,
-                        is_superuser=u.is_superuser,
+                        is_active=bool_or_default(u.is_active, True),
+                        is_superuser=bool_or_default(u.is_superuser, False),
                         last_login_at=u.last_login_at,
                         roles=[],
                         role_ids=[],
@@ -148,6 +158,55 @@ def read_users(
         )
 
 
+@router.get("/options", status_code=status.HTTP_200_OK)
+def read_user_options(
+    db: Session = Depends(deps.get_db),
+    pagination: PaginationParams = Depends(get_pagination_query),
+    keyword: Optional[str] = Query(None, description="关键词搜索（用户名/姓名/工号）"),
+    department: Optional[str] = Query(None, description="部门筛选"),
+    is_active: Optional[bool] = Query(True, description="是否启用"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取人员下拉选项（登录用户可用，不暴露用户管理字段）"""
+    query = db.query(User)
+
+    if not current_user.is_superuser:
+        query = query.filter(User.tenant_id == current_user.tenant_id)
+
+    query = apply_keyword_filter(
+        query, User, keyword, ["username", "real_name", "employee_no"]
+    )
+
+    if department:
+        query = query.filter(User.department == department)
+
+    if is_active is not None:
+        query = query.filter(User.is_active == is_active)
+
+    total = query.count()
+    users = apply_pagination(
+        query.order_by(User.real_name.asc(), User.username.asc()),
+        pagination.offset,
+        pagination.limit,
+    ).all()
+
+    items = [
+        UserOptionResponse(
+            id=user.id,
+            username=user.username,
+            name=user.real_name or user.username,
+            real_name=user.real_name or "",
+            department=user.department or "",
+            position=user.position or "",
+        )
+        for user in users
+    ]
+
+    return paginated_response(
+        items=items, total=total, page=pagination.page, page_size=pagination.page_size
+    )
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_user(
     *,
@@ -157,6 +216,9 @@ def create_user(
     current_user: User = Depends(security.require_permission("user:create")),
 ) -> Any:
     """创建新用户"""
+    if user_in.role_ids:
+        _require_role_assign_permission(current_user, db)
+
     exist = db.query(User).filter(User.username == user_in.username).first()
     if exist:
         raise HTTPException(status_code=400, detail="该用户名已存在")
@@ -228,7 +290,7 @@ def create_user(
     )
 
 
-@router.get("/{user_id}")
+@router.get("/{user_id:int}")
 def read_user_by_id(
     user_id: int,
     current_user: User = Depends(security.get_current_active_user),
@@ -244,7 +306,7 @@ def read_user_by_id(
     return success_response(data=build_user_response(user), message="获取用户信息成功")
 
 
-@router.put("/{user_id}", status_code=status.HTTP_200_OK)
+@router.put("/{user_id:int}", status_code=status.HTTP_200_OK)
 def update_user(
     *,
     db: Session = Depends(deps.get_db),
@@ -270,6 +332,9 @@ def update_user(
     update_data = user_in.model_dump(exclude_unset=True)
     role_ids = update_data.pop("role_ids", None)
     new_employee_id = update_data.pop("employee_id", None)
+
+    if role_ids is not None:
+        _require_role_assign_permission(current_user, db)
 
     if new_employee_id and new_employee_id != user.employee_id:
         employee = get_or_404(db, Employee, new_employee_id, "员工不存在")
@@ -330,7 +395,7 @@ def update_user(
     return success_response(data=build_user_response(user), message="用户更新成功")
 
 
-@router.put("/{user_id}/roles", status_code=status.HTTP_200_OK)
+@router.put("/{user_id:int}/roles", status_code=status.HTTP_200_OK)
 def assign_user_roles(
     *,
     db: Session = Depends(deps.get_db),
@@ -340,6 +405,8 @@ def assign_user_roles(
     current_user: User = Depends(security.require_permission("user:update")),
 ) -> Any:
     """分配用户角色"""
+    _require_role_assign_permission(current_user, db)
+
     user = get_or_404(db, User, user_id, "用户不存在")
     ensure_user_access(current_user, user)
 
@@ -371,7 +438,9 @@ def batch_assign_roles(
     current_user: User = Depends(security.require_permission("user:update")),
 ) -> Any:
     """批量分配/移除用户角色（原子操作）"""
-    from app.models.user import Role, UserRole
+    from app.models.user import UserRole
+
+    _require_role_assign_permission(current_user, db)
 
     results = {"success": [], "failed": []}
 
@@ -385,12 +454,17 @@ def batch_assign_roles(
             ensure_user_access(current_user, user)
 
             if batch_data.mode == "remove":
-                # 移除模式：只删除指定角色
+                # 移除模式也走统一替换逻辑，确保权限缓存即时失效。
                 if batch_data.role_ids:
-                    db.query(UserRole).filter(
-                        UserRole.user_id == uid,
-                        UserRole.role_id.in_(batch_data.role_ids),
-                    ).delete(synchronize_session=False)
+                    old_role_ids = [
+                        row[0]
+                        for row in db.query(UserRole.role_id)
+                        .filter(UserRole.user_id == uid)
+                        .all()
+                    ]
+                    remove_ids = set(batch_data.role_ids)
+                    kept_role_ids = [role_id for role_id in old_role_ids if role_id not in remove_ids]
+                    replace_user_roles(db, uid, kept_role_ids, acting_user=current_user)
             else:
                 # 替换模式：完整替换角色
                 replace_user_roles(db, uid, batch_data.role_ids, acting_user=current_user)
@@ -425,7 +499,7 @@ def batch_assign_roles(
     return success_response(data=results, message=msg)
 
 
-@router.delete("/{user_id}", status_code=status.HTTP_200_OK)
+@router.delete("/{user_id:int}", status_code=status.HTTP_200_OK)
 def delete_user(
     *,
     db: Session = Depends(deps.get_db),

@@ -7,7 +7,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.models.enums import (
     ApprovalDecisionEnum,
@@ -16,6 +16,19 @@ from app.models.enums import (
     ChangeTypeEnum,
     ImpactLevelEnum,
 )
+
+
+def _normalize_approval_decision(value):
+    if value is None:
+        return ApprovalDecisionEnum.PENDING
+    if isinstance(value, ApprovalDecisionEnum):
+        return value
+    valid_values = {item.value for item in ApprovalDecisionEnum}
+    return value if value in valid_values else ApprovalDecisionEnum.PENDING
+
+
+def _none_to_false(value):
+    return False if value is None else value
 
 # ==================== 变更请求 ====================
 
@@ -129,6 +142,16 @@ class ChangeRequestResponse(ChangeRequestBase):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
+    @field_validator("notify_customer", "notify_team", mode="before")
+    @classmethod
+    def _normalize_notify_flags(cls, value):
+        return _none_to_false(value)
+
+    @field_validator("approval_decision", mode="before")
+    @classmethod
+    def _normalize_response_decision(cls, value):
+        return _normalize_approval_decision(value)
+
     class Config:
         from_attributes = True
 
@@ -149,6 +172,11 @@ class ChangeRequestListResponse(BaseModel):
     time_impact: Optional[int] = None
     approval_decision: ApprovalDecisionEnum
     created_at: Optional[datetime] = None
+
+    @field_validator("approval_decision", mode="before")
+    @classmethod
+    def _normalize_list_decision(cls, value):
+        return _normalize_approval_decision(value)
 
     class Config:
         from_attributes = True
@@ -178,6 +206,11 @@ class ChangeApprovalRecordResponse(BaseModel):
     comments: Optional[str] = None
     attachments: Optional[List[Dict[str, Any]]] = None
     created_at: Optional[datetime] = None
+
+    @field_validator("decision", mode="before")
+    @classmethod
+    def _normalize_record_decision(cls, value):
+        return _normalize_approval_decision(value)
 
     class Config:
         from_attributes = True

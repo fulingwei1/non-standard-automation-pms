@@ -323,6 +323,10 @@ class BatchOperationExecutor(Generic[ModelType]):
         def update_status_func(entity: ModelType):
             if not hasattr(entity, status_field):
                 raise ValueError(f"实体缺少状态字段: {status_field}")
+            old_status = getattr(entity, status_field)
+            setattr(entity, f"_old_{status_field}", old_status)
+            if status_field == "status":
+                setattr(entity, "_old_status", old_status)
             setattr(entity, status_field, new_status)
 
         return self.execute(

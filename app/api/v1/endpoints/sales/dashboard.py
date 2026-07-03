@@ -91,6 +91,7 @@ def _build_personal(
     )
     achieved = sum(float(o.est_amount or 0) for o in won_opps)
     won_count = len(won_opps)
+    avg_deal_size = round(achieved / won_count, 2) if won_count else 0
 
     # 管道中商机金额（非终态）
     active_stages = ["DISCOVERY", "QUALIFICATION", "PROPOSAL", "NEGOTIATION"]
@@ -168,6 +169,7 @@ def _build_personal(
         "achieved": achieved,
         "quota_pct": quota_pct,
         "won_count": won_count,
+        "avg_deal_size": avg_deal_size,
         "pipeline_value": pipeline_value,
         "monthly": monthly,
     }
@@ -251,6 +253,7 @@ def _build_pipeline(
     total_value = 0
     total_count = 0
     weighted_sum = 0
+    all_stage_ages = []
 
     stage_names = {
         "DISCOVERY": "初步接触",
@@ -264,6 +267,20 @@ def _build_pipeline(
         count = len(stage_opps)
         value = sum(float(o.est_amount or 0) for o in stage_opps)
         prob_sum = sum(float(o.est_amount or 0) * (o.probability or 0) / 100 for o in stage_opps)
+        stage_ages = [
+            max((date.today() - o.created_at.date()).days, 0)
+            for o in stage_opps
+            if o.created_at
+        ]
+        avg_days = round(sum(stage_ages) / len(stage_ages), 1) if stage_ages else 0
+        all_stage_ages.extend(stage_ages)
+
+        if count == 0 or avg_days <= 30:
+            stage_health = "good"
+        elif avg_days <= 60:
+            stage_health = "warning"
+        else:
+            stage_health = "risk"
 
         total_value += value
         total_count += count
@@ -274,22 +291,38 @@ def _build_pipeline(
                 "name": stage_names.get(stage, stage),
                 "count": count,
                 "value": value,
+                "avg_days": avg_days,
+                "health": stage_health,
             }
         )
 
     # 健康分 = 加权金额占比 * 100
     health_score = round(weighted_sum / total_value * 100, 0) if total_value > 0 else 0
+    avg_cycle_days = round(sum(all_stage_ages) / len(all_stage_ages), 1) if all_stage_ages else 0
+    risks = []
+    for stage in stages:
+        if stage["count"] > 0 and stage["health"] == "risk":
+            risks.append({
+                "stage": stage["name"],
+                "desc": f"{stage['name']}平均停留 {stage['avg_days']} 天，建议尽快推进",
+            })
 
     return {
         "total_value": total_value,
+        "weighted_value": round(weighted_sum, 2),
+        "deal_count": total_count,
+        "avg_cycle_days": avg_cycle_days,
         "health_score": int(health_score),
         "stages": stages,
+        "risks": risks,
     }
 
 
 def _build_forecast(db: Session, current_user: User, target_year: int) -> dict:
     """构建季度预测"""
     quarters = []
+    total_forecast = 0
+    total_actual = 0
 
     base_query = db.query(Opportunity)
     base_query = filter_sales_data_by_scope(base_query, current_user, db, Opportunity, "owner_id")
@@ -326,6 +359,8 @@ def _build_forecast(db: Session, current_user: User, target_year: int) -> dict:
             float(o.est_amount or 0) * (o.probability or 0) / 100 for o in pipeline_opps
         )
         forecast_val = actual_val + forecast_from_pipeline
+        total_forecast += forecast_val
+        total_actual += actual_val
 
         variance = round((actual_val - forecast_val) / forecast_val * 100, 1) if forecast_val > 0 else 0
 
@@ -338,4 +373,14 @@ def _build_forecast(db: Session, current_user: User, target_year: int) -> dict:
             }
         )
 
-    return {"quarters": quarters}
+    if total_forecast > 0:
+        accuracy = max(0, 100 - abs(total_actual - total_forecast) / total_forecast * 100)
+    else:
+        accuracy = 100 if total_actual == 0 else 0
+
+    return {
+        "quarters": quarters,
+        "total_forecast": round(total_forecast, 2),
+        "total_actual": round(total_actual, 2),
+        "accuracy": round(accuracy, 1),
+    }

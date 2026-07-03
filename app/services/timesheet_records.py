@@ -55,7 +55,7 @@ class TimesheetRecordsService:
         query = self.db.query(Timesheet)
         
         # 权限控制：普通用户只能查看自己的工时
-        if not current_user.is_admin():
+        if not current_user.is_superuser:
             query = query.filter(Timesheet.user_id == current_user.id)
         
         # 应用筛选条件
@@ -64,9 +64,9 @@ class TimesheetRecordsService:
         if project_id:
             query = query.filter(Timesheet.project_id == project_id)
         if start_date:
-            query = query.filter(Timesheet.date >= start_date)
+            query = query.filter(Timesheet.work_date >= start_date)
         if end_date:
-            query = query.filter(Timesheet.date <= end_date)
+            query = query.filter(Timesheet.work_date <= end_date)
         if status:
             query = query.filter(Timesheet.status == status)
         
@@ -93,25 +93,26 @@ class TimesheetRecordsService:
         Returns:
             创建的工时记录
         """
-        # 检查权限：只能为自己创建工时
-        if timesheet_in.user_id != current_user.id and not current_user.is_admin():
-            raise ValueError("无权为其他用户创建工时记录")
-        
         # 创建工时记录
         timesheet = Timesheet(
-            user_id=timesheet_in.user_id,
+            user_id=current_user.id,
+            user_name=current_user.real_name or current_user.username,
             project_id=timesheet_in.project_id,
-            date=timesheet_in.date,
-            hours=timesheet_in.hours,
-            description=timesheet_in.description,
-            status="draft"  # 新创建的工时默认为草稿状态
+            rd_project_id=timesheet_in.rd_project_id,
+            task_id=timesheet_in.task_id,
+            work_date=timesheet_in.work_date,
+            hours=timesheet_in.work_hours,
+            overtime_type=timesheet_in.work_type,
+            work_content=timesheet_in.description,
+            status="DRAFT",
+            created_by=current_user.id,
         )
         
         self.db.add(timesheet)
         self.db.commit()
         self.db.refresh(timesheet)
         
-        return TimesheetResponse.from_orm(timesheet)
+        return TimesheetResponse.model_validate(timesheet)
 
     def batch_create_timesheets(
         self, 
@@ -134,17 +135,18 @@ class TimesheetRecordsService:
         
         for timesheet_data in timesheets_data:
             try:
-                # 检查权限：只能为自己创建工时
-                if timesheet_data.user_id != current_user.id and not current_user.is_admin():
-                    raise ValueError("无权为其他用户创建工时记录")
-                
                 timesheet = Timesheet(
-                    user_id=timesheet_data.user_id,
+                    user_id=current_user.id,
+                    user_name=current_user.real_name or current_user.username,
                     project_id=timesheet_data.project_id,
-                    date=timesheet_data.date,
-                    hours=timesheet_data.hours,
-                    description=timesheet_data.description,
-                    status="draft"
+                    rd_project_id=timesheet_data.rd_project_id,
+                    task_id=timesheet_data.task_id,
+                    work_date=timesheet_data.work_date,
+                    hours=timesheet_data.work_hours,
+                    overtime_type=timesheet_data.work_type,
+                    work_content=timesheet_data.description,
+                    status="DRAFT",
+                    created_by=current_user.id,
                 )
                 
                 self.db.add(timesheet)
@@ -182,10 +184,10 @@ class TimesheetRecordsService:
             raise ValueError("工时记录不存在")
         
         # 权限检查：只能查看自己的工时或管理员可以查看所有
-        if timesheet.user_id != current_user.id and not current_user.is_admin():
+        if timesheet.user_id != current_user.id and not current_user.is_superuser:
             raise ValueError("无权查看此工时记录")
         
-        return TimesheetResponse.from_orm(timesheet)
+        return TimesheetResponse.model_validate(timesheet)
 
     def update_timesheet(
         self, 
@@ -210,22 +212,31 @@ class TimesheetRecordsService:
             raise ValueError("工时记录不存在")
         
         # 权限检查：只能更新自己的工时或管理员可以更新所有
-        if timesheet.user_id != current_user.id and not current_user.is_admin():
+        if timesheet.user_id != current_user.id and not current_user.is_superuser:
             raise ValueError("无权更新此工时记录")
         
         # 检查状态：已提交或已批准的工时不能直接编辑
-        if timesheet.status in ["submitted", "approved"]:
+        if timesheet.status in ["SUBMITTED", "APPROVED", "submitted", "approved"]:
             raise ValueError("已提交或已批准的工时记录不能直接编辑")
         
         # 更新字段
         update_data = timesheet_in.dict(exclude_unset=True)
+        field_map = {
+            "work_hours": "hours",
+            "work_type": "overtime_type",
+            "description": "work_content",
+            "is_billable": None,
+        }
         for field, value in update_data.items():
-            setattr(timesheet, field, value)
+            model_field = field_map.get(field, field)
+            if model_field is None:
+                continue
+            setattr(timesheet, model_field, value)
         
         self.db.commit()
         self.db.refresh(timesheet)
         
-        return TimesheetResponse.from_orm(timesheet)
+        return TimesheetResponse.model_validate(timesheet)
 
     def delete_timesheet(
         self, 
@@ -245,11 +256,11 @@ class TimesheetRecordsService:
             raise ValueError("工时记录不存在")
         
         # 权限检查：只能删除自己的工时或管理员可以删除所有
-        if timesheet.user_id != current_user.id and not current_user.is_admin():
+        if timesheet.user_id != current_user.id and not current_user.is_superuser:
             raise ValueError("无权删除此工时记录")
         
         # 检查状态：已提交或已批准的工时不能删除
-        if timesheet.status in ["submitted", "approved"]:
+        if timesheet.status in ["SUBMITTED", "APPROVED", "submitted", "approved"]:
             raise ValueError("已提交或已批准的工时记录不能删除")
         
         self.db.delete(timesheet)

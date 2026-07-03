@@ -23,6 +23,16 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
+def _ensure_core_after_sales_tables(db: Session) -> None:
+    bind = db.get_bind()
+    for model in (
+        AfterSalesFeedback,
+        AfterSalesMaintenance,
+        AfterSalesSupportTicket,
+    ):
+        model.__table__.create(bind=bind, checkfirst=True)
+
+
 # ==================== 客户反馈管理 ====================
 
 @router.get("/projects/{project_id}/feedback", response_model=List[dict])
@@ -32,6 +42,7 @@ def get_project_feedback(
     current_user: User = Depends(security.get_current_active_user),
 ):
     """获取项目客户反馈列表"""
+    _ensure_core_after_sales_tables(db)
     feedbacks = db.query(AfterSalesFeedback).filter(
         AfterSalesFeedback.project_id == project_id
     ).order_by(AfterSalesFeedback.created_at.desc()).all()
@@ -60,6 +71,7 @@ def create_feedback(
     current_user: User = Depends(security.get_current_active_user),
 ):
     """创建客户反馈"""
+    _ensure_core_after_sales_tables(db)
     feedback = AfterSalesFeedback(
         project_id=project_id,
         feedback_type=feedback_type,
@@ -84,6 +96,7 @@ def get_project_maintenance(
     current_user: User = Depends(security.get_current_active_user),
 ):
     """获取项目维修保养记录"""
+    _ensure_core_after_sales_tables(db)
     records = db.query(AfterSalesMaintenance).filter(
         AfterSalesMaintenance.project_id == project_id
     ).order_by(AfterSalesMaintenance.scheduled_date.desc()).all()
@@ -111,6 +124,7 @@ def create_maintenance(
     current_user: User = Depends(security.get_current_active_user),
 ):
     """创建维修保养记录"""
+    _ensure_core_after_sales_tables(db)
     record = AfterSalesMaintenance(
         project_id=project_id,
         maintenance_type=maintenance_type,
@@ -135,6 +149,7 @@ def get_project_support_tickets(
     current_user: User = Depends(security.get_current_active_user),
 ):
     """获取项目技术支持工单"""
+    _ensure_core_after_sales_tables(db)
     tickets = db.query(AfterSalesSupportTicket).filter(
         AfterSalesSupportTicket.project_id == project_id
     ).order_by(AfterSalesSupportTicket.created_at.desc()).all()
@@ -162,11 +177,20 @@ def create_support_ticket(
     category: str = Query("TECHNICAL", description="分类"),
     priority: str = Query("MEDIUM", description="优先级"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("aftersales:manage")),
 ):
     """创建技术支持工单"""
-    ticket_no = f"SUP-{datetime.now().strftime('%Y%m%d')}-{project_id}"
-    
+    _ensure_core_after_sales_tables(db)
+    # 工单号加当日同项目流水序列，避免同项目同日重复建单撞唯一约束(原为 SUP-日期-项目)
+    _prefix = f"SUP-{datetime.now().strftime('%Y%m%d')}-{project_id}"
+    _seq = (
+        db.query(AfterSalesSupportTicket)
+        .filter(AfterSalesSupportTicket.ticket_no.like(f"{_prefix}%"))
+        .count()
+        + 1
+    )
+    ticket_no = f"{_prefix}-{_seq:03d}"
+
     ticket = AfterSalesSupportTicket(
         project_id=project_id,
         ticket_no=ticket_no,

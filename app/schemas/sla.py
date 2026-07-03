@@ -8,7 +8,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # ==================== SLA策略 ====================
 
@@ -67,6 +67,16 @@ class SLAPolicyResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    @field_validator("priority", mode="before")
+    @classmethod
+    def _default_priority(cls, value):
+        return 0 if value is None else value
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _default_is_active(cls, value):
+        return True if value is None else value
+
     class Config:
         from_attributes = True
 
@@ -98,6 +108,11 @@ class SLAMonitorResponse(BaseModel):
     remark: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("response_warning_sent", "resolve_warning_sent", mode="before")
+    @classmethod
+    def _default_warning_sent(cls, value):
+        return False if value is None else value
 
     class Config:
         from_attributes = True

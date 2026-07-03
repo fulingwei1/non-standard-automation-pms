@@ -5,10 +5,13 @@
 
 from fastapi import APIRouter
 
-from . import delegates, instances, pending_refactored, tasks, templates
+from . import delegates, instances, legacy_compat, pending_refactored, tasks, templates
 
 # 创建主路由（不在root level设置prefix，允许作为子路由使用）
 router = APIRouter()
+
+# 旧版 /approvals/* 兼容路由必须先于动态 {id} 路由注册。
+router.include_router(legacy_compat.router, tags=["审批兼容"])
 
 # 模板管理
 router.include_router(templates.router, prefix="/templates", tags=["审批模板"])

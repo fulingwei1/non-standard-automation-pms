@@ -9,10 +9,12 @@ from fastapi import APIRouter
 
 from .monthly import router as monthly_router
 from .pending import router as pending_router
+from .quality import router as quality_router
 from .records import router as records_router
 from .reports import router as reports_router
 from .reports_unified import router as reports_unified_router
 from .statistics import router as statistics_router
+from .sync import router as sync_router
 from .weekly import router as weekly_router
 from .workflow import router as workflow_router
 
@@ -27,8 +29,10 @@ router.include_router(pending_router)
 router.include_router(weekly_router)
 router.include_router(monthly_router)
 router.include_router(statistics_router)
+router.include_router(quality_router)
 router.include_router(reports_router)
 router.include_router(reports_unified_router)
+router.include_router(sync_router)
 router.include_router(workflow_router)
 # router.include_router(analytics_router, prefix="/analytics", tags=["工时分析与预测"])
 

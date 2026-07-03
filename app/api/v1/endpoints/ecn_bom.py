@@ -9,19 +9,13 @@ try:
     from .ecnbom import router
 except ImportError:
     try:
-        from .ecn import router
+        from .common.ecn_bom import router
     except ImportError:
         try:
-            from .common.ecn_bom import router
+            from .admin.ecn_bom import router
         except ImportError:
-            try:
-                from .admin.ecn_bom import router
-            except ImportError:
-                # Create a simple router as fallback
-                from fastapi import APIRouter
-                router = APIRouter()
-                @router.get('/')
-                def read_root():
-                    return {'message': 'ecn_bom module placeholder'}
+            from fastapi import APIRouter
+
+            router = APIRouter()
 
 __all__ = ['router']

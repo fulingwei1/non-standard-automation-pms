@@ -354,7 +354,9 @@ class TeamPerformanceService:
         # 获取周期
         period = self.get_period(period_id)
         if not period:
-            return None  # 调用方需要处理404
+            return self._empty_department_performance(
+                dept_id, department_name, member_ids
+            )
 
         # 获取部门绩效结果
         results = (
@@ -401,6 +403,21 @@ class TeamPerformanceService:
             "avg_score": avg_score,
             "level_distribution": level_distribution,
             "teams": teams,
+        }
+
+    def _empty_department_performance(
+        self, dept_id: int, department_name: str, member_ids: List[int]
+    ) -> Dict:
+        """返回空的部门绩效数据"""
+        return {
+            "department_id": dept_id,
+            "department_name": department_name,
+            "period_id": None,
+            "period_name": None,
+            "member_count": len(member_ids),
+            "avg_score": Decimal("0"),
+            "level_distribution": {},
+            "teams": [],
         }
 
     # ==================== 绩效排行榜 ====================

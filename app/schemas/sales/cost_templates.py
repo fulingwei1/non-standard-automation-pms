@@ -143,7 +143,15 @@ class MaterialCostMatchRequest(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    material_ids: List[int] = Field(description="物料ID列表")
+    item_id: Optional[int] = Field(default=None, description="报价项ID")
+    item_name: str = Field(
+        validation_alias=AliasChoices("item_name", "material_name"),
+        description="物料名称",
+    )
+    specification: Optional[str] = Field(default=None, description="规格型号")
+    unit: Optional[str] = Field(default=None, description="单位")
+    current_cost: Optional[Decimal] = Field(default=None, description="当前成本")
+    cost_category: Optional[str] = Field(default=None, description="成本分类")
 
 
 class MaterialCostMatchResponse(BaseModel):
@@ -151,8 +159,14 @@ class MaterialCostMatchResponse(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    matched: List[dict] = Field(default_factory=list, description="匹配结果")
-    unmatched: List[int] = Field(default_factory=list, description="未匹配的物料ID")
+    matched: bool = Field(default=False, description="是否匹配成功")
+    match_score: Optional[int] = Field(default=None, description="匹配分数")
+    matched_cost: Optional[PurchaseMaterialCostResponse] = Field(
+        default=None, description="匹配的成本记录"
+    )
+    suggestions: List[PurchaseMaterialCostResponse] = Field(
+        default_factory=list, description="备选匹配结果"
+    )
 
 
 class MaterialCostUpdateReminderResponse(BaseModel):
@@ -161,10 +175,23 @@ class MaterialCostUpdateReminderResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: int
-    material_id: int
-    reminder_date: Optional[datetime] = None
-    status: Optional[str] = None
+    reminder_type: str = "PERIODIC"
+    reminder_interval_days: int = 30
+    last_reminder_date: Optional[date] = None
+    next_reminder_date: Optional[date] = None
+    is_enabled: bool = True
+    material_type_filter: Optional[str] = None
+    include_standard: bool = True
+    include_non_standard: bool = True
+    notify_roles: Optional[List[str]] = None
+    notify_users: Optional[List[int]] = None
+    reminder_count: int = 0
+    last_updated_by: Optional[int] = None
+    last_updated_at: Optional[datetime] = None
+    days_until_next: Optional[int] = None
+    is_due: bool = False
     created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 
 class MaterialCostUpdateReminderUpdate(BaseModel):
@@ -172,8 +199,15 @@ class MaterialCostUpdateReminderUpdate(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    status: Optional[str] = Field(default=None, description="状态")
-    reminder_date: Optional[datetime] = Field(default=None, description="提醒日期")
+    reminder_type: Optional[str] = Field(default=None, description="提醒类型")
+    reminder_interval_days: Optional[int] = Field(default=None, ge=1, description="提醒间隔天数")
+    next_reminder_date: Optional[date] = Field(default=None, description="下次提醒日期")
+    is_enabled: Optional[bool] = Field(default=None, description="是否启用")
+    material_type_filter: Optional[str] = Field(default=None, description="物料类型筛选")
+    include_standard: Optional[bool] = Field(default=None, description="包含标准件")
+    include_non_standard: Optional[bool] = Field(default=None, description="包含非标件")
+    notify_roles: Optional[List[str]] = Field(default=None, description="通知角色")
+    notify_users: Optional[List[int]] = Field(default=None, description="通知用户")
 
 
 class CostMatchSuggestion(BaseModel):

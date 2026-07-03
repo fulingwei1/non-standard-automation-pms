@@ -25,7 +25,7 @@ class Ecn(Base, TimestampMixin):
     __tablename__ = "ecn"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    ecn_no = Column(String(50), unique=True, nullable=False, comment="ECN编号")
+    ecn_no = Column(String(50), nullable=False, comment="ECN编号")
     ecn_title = Column(String(200), nullable=False, comment="ECN标题")
     ecn_type = Column(String(20), nullable=True, comment="变更类型")
 
@@ -58,12 +58,17 @@ class Ecn(Base, TimestampMixin):
 
     # 申请人
     applicant_id = Column(Integer, ForeignKey("users.id"), comment="申请人")
+    applicant_name = Column(String(50), comment="申请人姓名")
     applicant_dept = Column(String(100), comment="申请部门")
     applied_at = Column(DateTime, comment="申请时间")
 
     # 审批结果
+    approval_instance_id = Column(Integer, ForeignKey("approval_instances.id"), comment="审批实例ID")
+    approval_status = Column(String(20), comment="审批状态")
     approval_result = Column(String(20), comment="审批结果")
     approval_note = Column(Text, comment="审批意见")
+    approval_date = Column(DateTime, comment="审批完成时间")
+    final_approver_id = Column(Integer, ForeignKey("users.id"), comment="最终审批人")
     approved_at = Column(DateTime, comment="审批时间")
 
     # 执行
@@ -77,6 +82,7 @@ class Ecn(Base, TimestampMixin):
     root_cause_category = Column(String(50), comment="原因分类")
 
     # 解决方案
+    impact_analysis = Column(Text, comment="影响分析")
     solution = Column(Text, comment="解决方案")
     solution_template_id = Column(Integer, comment="使用的解决方案模板ID")
     similar_ecn_ids = Column(JSON, comment="相似ECN ID列表")

@@ -31,6 +31,7 @@ router = APIRouter()
 
 @router.put("/{stage_instance_id}/status", response_model=ProjectStageInstanceResponse)
 def update_stage_status(
+    project_id: int,
     stage_instance_id: int,
     status_in: UpdateStageStatusRequest,
     db: Session = Depends(deps.get_db),
@@ -88,6 +89,7 @@ def update_stage_status(
 
 @router.post("/{stage_instance_id}/review", response_model=ProjectStageInstanceResponse)
 def submit_stage_review(
+    project_id: int,
     stage_instance_id: int,
     review_in: StageReviewRequest,
     db: Session = Depends(deps.get_db),

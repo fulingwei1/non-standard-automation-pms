@@ -13,7 +13,7 @@
 from datetime import date
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -27,9 +27,18 @@ from app.models.work_log import WorkLog
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.engineer import MyProjectListResponse, TaskResponse
 from app.schemas.timesheet import TimesheetResponse
-from app.schemas.work_log import WorkLogListResponse, WorkLogResponse
+from app.schemas.work_log import (
+    FieldServiceWorkLogCreate,
+    FieldServiceWorkLogContextResponse,
+    WorkLogCreate,
+    WorkLogListResponse,
+    WorkLogResponse,
+    WorkLogUpdate,
+)
+from app.services.field_service_work_log_service import FieldServiceWorkLogService
 from app.schemas.workload import UserWorkloadResponse
 from app.services.project import ProjectCoreService, ProjectResourceService
+from app.services.work_log_service import WorkLogService
 
 router = APIRouter()
 
@@ -151,3 +160,84 @@ def get_my_work_logs(
         pages=pagination.pages_for_total(total),
     )
     return ResponseModel(data=payload)
+
+
+@router.post(
+    "/work-logs",
+    response_model=ResponseModel[WorkLogResponse],
+    status_code=status.HTTP_201_CREATED,
+)
+def create_my_work_log(
+    work_log_in: WorkLogCreate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """创建我的工作日志"""
+    service = WorkLogService(db)
+    try:
+        work_log = service.create_work_log(current_user.id, work_log_in)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return ResponseModel(data=WorkLogResponse.model_validate(work_log))
+
+
+@router.put("/work-logs/{work_log_id:int}", response_model=ResponseModel[WorkLogResponse])
+def update_my_work_log(
+    work_log_id: int,
+    work_log_in: WorkLogUpdate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """更新我的草稿工作日志"""
+    service = WorkLogService(db)
+    try:
+        work_log = service.update_work_log(work_log_id, current_user.id, work_log_in)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return ResponseModel(data=WorkLogResponse.model_validate(work_log))
+
+
+@router.get(
+    "/work-logs/field-service-context",
+    response_model=ResponseModel[FieldServiceWorkLogContextResponse],
+)
+def get_my_field_service_work_log_context(
+    work_date: Optional[date] = Query(None, description="工作日期，默认今天"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取我的外出服务工作日志上下文"""
+    target_date = work_date or date.today()
+    service = FieldServiceWorkLogService(db)
+    data = service.list_context(current_user.id, target_date)
+    return ResponseModel(data=FieldServiceWorkLogContextResponse.model_validate(data))
+
+
+@router.post(
+    "/work-logs/from-dispatch",
+    response_model=ResponseModel[WorkLogResponse],
+    status_code=status.HTTP_201_CREATED,
+)
+def create_my_work_log_from_dispatch(
+    payload: FieldServiceWorkLogCreate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """从当天外出派工单自动生成我的工作日志"""
+    target_date = payload.work_date or date.today()
+    service = FieldServiceWorkLogService(db)
+    try:
+        work_log = service.create_from_dispatch(
+            current_user.id,
+            work_date=target_date,
+            dispatch_order_ids=payload.dispatch_order_ids,
+            today_progress=payload.today_progress,
+            issues_found=payload.issues_found,
+            next_plan=payload.next_plan,
+            work_hours=payload.work_hours,
+            content=payload.content,
+            status=payload.status or "SUBMITTED",
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return ResponseModel(data=WorkLogResponse.model_validate(work_log))

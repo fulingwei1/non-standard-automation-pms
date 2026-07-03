@@ -8,9 +8,11 @@ from datetime import date
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ..common import TimestampSchema
+
+ZERO_DECIMAL = Decimal("0")
 
 
 class MachineCreate(BaseModel):
@@ -67,7 +69,7 @@ class MachineResponse(TimestampSchema):
     stage: str = "S1"
     status: str = "ST01"
     health: str = "H1"
-    progress_pct: Decimal = 0
+    progress_pct: Decimal = ZERO_DECIMAL
     planned_start_date: Optional[date] = None
     planned_end_date: Optional[date] = None
     actual_start_date: Optional[date] = None
@@ -75,3 +77,40 @@ class MachineResponse(TimestampSchema):
 
     class Config:
         from_attributes = True
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_nulls(cls, value):
+        if isinstance(value, dict):
+            data = dict(value)
+        elif hasattr(value, "id"):
+            fields = (
+                "id",
+                "machine_code",
+                "machine_name",
+                "machine_no",
+                "project_id",
+                "project_name",
+                "machine_type",
+                "stage",
+                "status",
+                "health",
+                "progress_pct",
+                "planned_start_date",
+                "planned_end_date",
+                "actual_start_date",
+                "actual_end_date",
+                "created_at",
+                "updated_at",
+            )
+            data = {field: getattr(value, field, None) for field in fields}
+        else:
+            return value
+
+        data["machine_no"] = data.get("machine_no") or 1
+        data["stage"] = data.get("stage") or "S1"
+        data["status"] = data.get("status") or "ST01"
+        data["health"] = data.get("health") or "H1"
+        if data.get("progress_pct") is None:
+            data["progress_pct"] = ZERO_DECIMAL
+        return data

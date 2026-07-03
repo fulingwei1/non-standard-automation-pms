@@ -60,20 +60,19 @@ class CostForecastService:
         df = pd.DataFrame(monthly_costs)
         df["month_index"] = range(1, len(df) + 1)
 
-        # 线性回归
-        from sklearn.linear_model import LinearRegression
+        # 线性回归（最小二乘法，避免引入 sklearn 这一可选重依赖）
+        import numpy as np
 
-        X = df[["month_index"]].values
-        y = df["cumulative_cost"].values
+        x = df["month_index"].to_numpy(dtype=float)
+        y = df["cumulative_cost"].to_numpy(dtype=float)
 
-        model = LinearRegression()
-        model.fit(X, y)
-
-        slope = float(model.coef_[0])
-        intercept = float(model.intercept_)
+        slope, intercept = (float(v) for v in np.polyfit(x, y, 1))
 
         # 计算R²（拟合优度）
-        r_squared = float(model.score(X, y))
+        y_pred = slope * x + intercept
+        ss_res = float(np.sum((y - y_pred) ** 2))
+        ss_tot = float(np.sum((y - np.mean(y)) ** 2))
+        r_squared = float(1 - ss_res / ss_tot) if ss_tot > 0 else 0.0
 
         # 预测完工成本
         # 估算总月数（基于项目时间）

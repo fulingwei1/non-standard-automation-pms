@@ -10,7 +10,7 @@
 from datetime import date
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -32,6 +32,17 @@ router = APIRouter(prefix="/records", tags=["records"])
 # 共 6 个路由
 
 # ==================== 工时记录管理 ====================
+
+
+def _timesheet_http_error(exc: ValueError) -> HTTPException:
+    detail = str(exc)
+    if "不存在" in detail:
+        status_code = status.HTTP_404_NOT_FOUND
+    elif "无权" in detail:
+        status_code = status.HTTP_403_FORBIDDEN
+    else:
+        status_code = status.HTTP_400_BAD_REQUEST
+    return HTTPException(status_code=status_code, detail=detail)
 
 
 @router.get("", response_model=TimesheetListResponse, status_code=status.HTTP_200_OK)
@@ -114,7 +125,10 @@ def get_timesheet_detail(
     获取工时记录详情
     """
     service = TimesheetRecordsService(db)
-    return service.get_timesheet_detail(timesheet_id, current_user)
+    try:
+        return service.get_timesheet_detail(timesheet_id, current_user)
+    except ValueError as exc:
+        raise _timesheet_http_error(exc) from exc
 
 
 @router.put("/{timesheet_id}", response_model=TimesheetResponse, status_code=status.HTTP_200_OK)
@@ -129,7 +143,10 @@ def update_timesheet(
     更新工时记录
     """
     service = TimesheetRecordsService(db)
-    return service.update_timesheet(timesheet_id, timesheet_in, current_user)
+    try:
+        return service.update_timesheet(timesheet_id, timesheet_in, current_user)
+    except ValueError as exc:
+        raise _timesheet_http_error(exc) from exc
 
 
 @router.delete("/{timesheet_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -143,6 +160,9 @@ def delete_timesheet(
     删除工时记录（仅草稿）
     """
     service = TimesheetRecordsService(db)
-    service.delete_timesheet(timesheet_id, current_user)
+    try:
+        service.delete_timesheet(timesheet_id, current_user)
+    except ValueError as exc:
+        raise _timesheet_http_error(exc) from exc
 
     return ResponseModel(message="工时记录已删除")

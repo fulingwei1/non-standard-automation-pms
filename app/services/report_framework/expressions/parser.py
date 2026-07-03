@@ -209,6 +209,8 @@ class ExpressionParser:
             return True
         if result.lower() == "false":
             return False
+        if result.lower() in ("none", "null"):
+            return None
 
         # 保持字符串
         return result

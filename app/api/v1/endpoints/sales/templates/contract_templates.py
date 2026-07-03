@@ -299,6 +299,13 @@ def apply_contract_template(
     history = _build_template_history(template)
 
     return ContractTemplateApplyResponse(
+        success=True,
+        template_id=template.id,
+        version_id=version.id,
+        applied_sections=list((version.clause_sections or {}).keys())
+        if isinstance(version.clause_sections, dict)
+        else None,
+        message="模板应用数据获取成功",
         template=_serialize_contract_template(template),
         version=ContractTemplateVersionResponse(
             id=version.id,

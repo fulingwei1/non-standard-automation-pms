@@ -12,7 +12,7 @@
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # ==================== 项目阶段实例 Schemas ====================
 
@@ -31,6 +31,27 @@ class ProjectStageInstanceBase(BaseModel):
     planned_start_date: Optional[date] = Field(default=None, description="计划开始日期")
     planned_end_date: Optional[date] = Field(default=None, description="计划结束日期")
     remark: Optional[str] = Field(default=None, description="备注")
+
+    @field_validator("category", mode="before")
+    @classmethod
+    def _default_category(cls, value):
+        return "execution" if value is None else value
+
+    @field_validator("is_milestone", "is_parallel", mode="before")
+    @classmethod
+    def _default_false(cls, value):
+        return False if value is None else value
+
+    @field_validator("progress", mode="before")
+    @classmethod
+    def _normalize_progress(cls, value):
+        if value is None:
+            return 0
+        try:
+            progress = int(value)
+        except (TypeError, ValueError):
+            return 0
+        return max(0, min(progress, 100))
 
 
 class ProjectStageInstanceUpdate(BaseModel):
@@ -63,6 +84,11 @@ class ProjectStageInstanceResponse(ProjectStageInstanceBase):
     # 时间戳
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+    @field_validator("is_modified", "review_required", mode="before")
+    @classmethod
+    def _default_response_false(cls, value):
+        return False if value is None else value
 
     class Config:
         from_attributes = True

@@ -105,6 +105,11 @@ class User(Base, TimestampMixin):
         return self.real_name or self.username
 
     @property
+    def name(self) -> str:
+        """兼容旧服务里仍在读取的 user.name。"""
+        return self.display_name
+
+    @property
     def full_info(self) -> dict:
         """获取用户完整信息"""
         return {
@@ -271,6 +276,7 @@ class RoleTemplate(Base, TimestampMixin):
     __tablename__ = "role_templates"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_code = Column(String(30), unique=True, nullable=False, comment="模板编码")
     template_name = Column(String(50), nullable=False, comment="模板名称")
     role_type = Column(String(20), nullable=False, default="BUSINESS", comment="角色类型")

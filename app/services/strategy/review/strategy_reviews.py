@@ -7,7 +7,7 @@
 
 import json
 from datetime import date
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
@@ -37,8 +37,44 @@ def _safe_json_loads(val):
         return None
 
 
+def _normalize_dict_list(value: Any) -> Optional[List[Dict[str, Any]]]:
+    """兼容旧数据中用字符串数组保存的决策/行动项。"""
+    if value is None:
+        return None
+    if not isinstance(value, list):
+        value = [value]
+
+    normalized: List[Dict[str, Any]] = []
+    for item in value:
+        if isinstance(item, dict):
+            normalized.append(item)
+        elif item is not None:
+            normalized.append({"content": str(item)})
+    return normalized
+
+
+def _normalize_attendees(value: Any) -> tuple[List[int], List[str]]:
+    """Split legacy attendee names from integer user ids."""
+    if value is None:
+        return [], []
+    if not isinstance(value, list):
+        value = [value]
+
+    attendee_ids: List[int] = []
+    attendee_names: List[str] = []
+    for item in value:
+        if isinstance(item, int):
+            attendee_ids.append(item)
+        elif isinstance(item, str) and item.isdigit():
+            attendee_ids.append(int(item))
+        elif item is not None:
+            attendee_names.append(str(item))
+    return attendee_ids, attendee_names
+
+
 def _review_to_response(review: StrategyReview) -> StrategyReviewResponse:
     """将 Model 转为 Response"""
+    attendees, attendee_names = _normalize_attendees(_safe_json_loads(review.attendees))
     return StrategyReviewResponse(
         id=review.id,
         strategy_id=review.strategy_id,
@@ -54,10 +90,11 @@ def _review_to_response(review: StrategyReview) -> StrategyReviewResponse:
         findings=_safe_json_loads(review.findings),
         achievements=_safe_json_loads(review.achievements),
         recommendations=_safe_json_loads(review.recommendations),
-        decisions=_safe_json_loads(review.decisions),
-        action_items=_safe_json_loads(review.action_items),
+        decisions=_normalize_dict_list(_safe_json_loads(review.decisions)),
+        action_items=_normalize_dict_list(_safe_json_loads(review.action_items)),
         meeting_minutes=review.meeting_minutes,
-        attendees=_safe_json_loads(review.attendees),
+        attendees=attendees,
+        attendee_names=attendee_names,
         meeting_duration=review.meeting_duration,
         next_review_date=review.next_review_date,
         is_active=review.is_active,

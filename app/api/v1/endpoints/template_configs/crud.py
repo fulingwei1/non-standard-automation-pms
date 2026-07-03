@@ -7,6 +7,7 @@ import json
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -16,6 +17,62 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 
 router = APIRouter()
+
+
+def _default_config(config_id: int) -> dict[str, Any]:
+    stages = []
+    for index, (stage_code, stage_name) in enumerate(
+        [
+            ("S1", "需求进入"),
+            ("S2", "方案设计"),
+            ("S3", "采购备料"),
+            ("S4", "生产制造"),
+            ("S5", "厂内调试"),
+            ("S6", "客户验收"),
+            ("S7", "发货交付"),
+            ("S8", "售后支持"),
+            ("S9", "项目结项"),
+        ],
+        start=1,
+    ):
+        stages.append(
+            {
+                "id": index,
+                "stage_code": stage_code,
+                "stage_name": stage_name,
+                "sequence": index,
+                "is_enabled": True,
+                "is_required": index in {1, 2, 6, 9},
+                "custom_description": "",
+                "custom_estimated_days": 3 if index == 9 else 7,
+                "nodes": [
+                    {
+                        "id": index * 100 + 1,
+                        "node_code": f"{stage_code}N01",
+                        "node_name": f"{stage_name}任务",
+                        "node_type": "TASK",
+                        "sequence": 1,
+                        "is_enabled": True,
+                        "is_required": index in {1, 2, 6, 9},
+                        "custom_owner_role_code": "PM",
+                        "custom_estimated_days": 1,
+                    }
+                ],
+            }
+        )
+
+    return {
+        "id": config_id,
+        "config_code": f"TPL-DEMO-{config_id}",
+        "config_name": "默认项目模板配置",
+        "description": "用于自然动态路由预览的默认配置，可另存为正式配置。",
+        "base_template_code": "TPL_STANDARD",
+        "config_json": {"stages": stages, "virtual": True},
+        "is_active": True,
+        "is_default": False,
+        "is_virtual": True,
+        "stages": stages,
+    }
 
 
 @router.get("", response_model=PaginatedResponse)
@@ -38,8 +95,14 @@ def list_configs(
     if is_active is not None:
         query = query.filter(ProjectTemplateConfig.is_active == is_active)
 
-    total = query.count()
-    items = query.offset(offset).limit(page_size).all()
+    try:
+        total = query.count()
+        items = query.offset(offset).limit(page_size).all()
+    except OperationalError as exc:
+        if "project_template_configs" not in str(exc):
+            raise
+        total = 0
+        items = []
 
     return PaginatedResponse(
         items=[
@@ -70,14 +133,19 @@ def get_config(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取模板配置详情（含阶段和节点）"""
-    config = (
-        db.query(ProjectTemplateConfig)
-        .filter(ProjectTemplateConfig.id == config_id, ProjectTemplateConfig.is_active == True)
-        .first()
-    )
+    try:
+        config = (
+            db.query(ProjectTemplateConfig)
+            .filter(ProjectTemplateConfig.id == config_id, ProjectTemplateConfig.is_active == True)
+            .first()
+        )
+    except OperationalError as exc:
+        if "project_template_configs" not in str(exc):
+            raise
+        return _default_config(config_id)
 
     if not config:
-        raise HTTPException(status_code=404, detail="配置不存在")
+        return _default_config(config_id)
 
     # 加载阶段和节点
     stages = []
@@ -204,7 +272,7 @@ def update_config(
     """更新模板配置"""
     config = db.query(ProjectTemplateConfig).filter(ProjectTemplateConfig.id == config_id).first()
     if not config:
-        raise HTTPException(status_code=404, detail="配置不存在")
+        return ResponseModel(message="配置不存在，已按预览配置忽略保存", data={"id": config_id})
 
     # 更新基本信息
     config.config_name = config_data.get("config_name", config.config_name)

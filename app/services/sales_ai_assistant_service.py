@@ -301,7 +301,12 @@ class SalesAIAssistantService:
             self.ai_client.openai_client
             and str(self.ai_client.openai_api_key).startswith(("sk-", "sk-proj-"))
         )
-        return bool(openai_ready or self.ai_client.zhipu_client or self.ai_client.kimi_api_key)
+        return bool(
+            openai_ready
+            or self.ai_client.zhipu_client
+            or self.ai_client.kimi_api_key
+            or getattr(self.ai_client, "qwen_api_key", "")  # 阿里百炼 Coding Plan
+        )
 
     def _generate_json(self, prompt: str) -> Optional[Dict[str, Any]]:
         if not self._has_live_ai():

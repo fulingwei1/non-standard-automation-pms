@@ -68,7 +68,7 @@ def get_my_tasks(
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("task_center:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取当前用户的任务列表"""
     service = NodeTaskService(db)

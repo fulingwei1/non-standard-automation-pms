@@ -132,7 +132,7 @@ async def get_quotation(
     获取指定报价单详情
     """
     service = AIQuotationGeneratorService(db)
-    quotation = service.get_quotation(quotation_id)
+    quotation = service.get_quotation_response(quotation_id)
 
     if not quotation:
         raise HTTPException(

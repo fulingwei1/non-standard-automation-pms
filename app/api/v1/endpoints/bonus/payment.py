@@ -58,6 +58,14 @@ def generate_distribution_code() -> str:
     return f"BD{timestamp}"
 
 
+def _can_manage_bonus_payments(user: User, db: Session) -> bool:
+    """Whether the user may see and operate all bonus distributions."""
+    return any(
+        security.check_permission(user, perm_code, db)
+        for perm_code in ("bonus:manage", "bonus:distribute", "bonus:pay")
+    )
+
+
 @router.post(
     "/distribute",
     response_model=ResponseModel[BonusDistributionResponse],
@@ -67,7 +75,7 @@ def create_bonus_distribution(
     *,
     db: Session = Depends(deps.get_db),
     dist_in: BonusDistributionCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("bonus:distribute")),
 ) -> Any:
     """
     创建奖金发放记录
@@ -113,7 +121,7 @@ def get_bonus_distributions(
     *,
     db: Session = Depends(deps.get_db),
     query_params: BonusDistributionQuery = Depends(),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("bonus:read")),
 ) -> Any:
     """
     获取奖金发放记录列表
@@ -128,6 +136,8 @@ def get_bonus_distributions(
         query = query.filter(BonusDistribution.distribution_date >= query_params.start_date)
     if query_params.end_date:
         query = query.filter(BonusDistribution.distribution_date <= query_params.end_date)
+    if not _can_manage_bonus_payments(current_user, db):
+        query = query.filter(BonusDistribution.user_id == current_user.id)
 
     total = query.count()
     pg = get_pagination_params(page=query_params.page, page_size=query_params.page_size)
@@ -156,12 +166,17 @@ def get_bonus_distribution(
     *,
     db: Session = Depends(deps.get_db),
     dist_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("bonus:read")),
 ) -> Any:
     """
     获取奖金发放记录详情
     """
     distribution = get_or_404(db, BonusDistribution, dist_id, "发放记录不存在")
+    if (
+        distribution.user_id != current_user.id
+        and not _can_manage_bonus_payments(current_user, db)
+    ):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="发放记录不存在")
 
     return ResponseModel(code=200, data=distribution)
 
@@ -176,7 +191,7 @@ def pay_bonus_distribution(
     db: Session = Depends(deps.get_db),
     dist_id: int,
     pay_in: BonusDistributionPay,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("bonus:pay")),
 ) -> Any:
     """
     确认发放奖金

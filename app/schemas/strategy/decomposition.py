@@ -191,6 +191,13 @@ class DecompositionTreeResponse(BaseModel):
     strategy_name: str
     year: int
     root: DecompositionTreeNode
+    # Frontend compatibility fields used by the current decomposition page.
+    csfs: List[Dict[str, Any]] = Field(default_factory=list)
+    total_csfs: int = 0
+    total_departments: int = 0
+    total_kpis: int = 0
+    total_personal_kpis: int = 0
+    avg_completion_rate: float = 0
 
     class Config:
         from_attributes = True

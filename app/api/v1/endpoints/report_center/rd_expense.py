@@ -10,6 +10,7 @@
 核心功能：多角色视角报表、智能生成、导出分享
 """
 
+from pathlib import Path
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -30,6 +31,42 @@ router = APIRouter(prefix="/rd-expense", tags=["rd_expense"])
 # 共 6 个路由
 
 # ==================== 研发费用报表 ====================
+
+
+def _normalize_report_format(format_value: str) -> str:
+    """Map public extension names to report framework renderer names."""
+    normalized = (format_value or "json").lower()
+    return "excel" if normalized == "xlsx" else normalized
+
+
+def _download_extension(normalized_format: str) -> str:
+    return "xlsx" if normalized_format == "excel" else normalized_format
+
+
+def _iter_file(file_path: str):
+    with open(file_path, "rb") as file_obj:
+        while chunk := file_obj.read(1024 * 1024):
+            yield chunk
+
+
+def _stream_report_result(result, filename: str):
+    from fastapi.responses import StreamingResponse
+
+    data = result.data if hasattr(result, "data") and isinstance(result.data, dict) else {}
+    file_stream = data.get("file_stream")
+    if file_stream:
+        stream = file_stream
+    else:
+        file_path = getattr(result, "file_path", None) or data.get("file_path")
+        if not file_path or not Path(file_path).exists():
+            raise HTTPException(status_code=500, detail="报表导出文件为空")
+        stream = _iter_file(file_path)
+
+    return StreamingResponse(
+        stream,
+        media_type=getattr(result, "content_type", "application/octet-stream"),
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 @router.get("/rd-auxiliary-ledger", response_model=ResponseModel, status_code=status.HTTP_200_OK)
@@ -363,8 +400,6 @@ def export_rd_report(
     """
     导出研发费用报表（使用统一报表框架）
     """
-    from fastapi.responses import StreamingResponse
-
     from app.services.report_framework import ConfigError
     from app.services.report_framework.adapters.rd_expense import RdExpenseReportAdapter
     from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
@@ -382,6 +417,11 @@ def export_rd_report(
     if not mapped_report_type:
         raise HTTPException(status_code=400, detail=f"不支持的报表类型: {report_type}")
 
+    export_format = _normalize_report_format(format)
+    if export_format not in {"excel", "pdf"}:
+        raise HTTPException(status_code=400, detail=f"不支持的导出格式: {format}")
+    filename = f"rd-{report_type}-{year}.{_download_extension(export_format)}"
+
     try:
         # 优先使用统一报表框架（如果存在YAML配置）
         engine = ReportEngine(db)
@@ -393,48 +433,22 @@ def export_rd_report(
             result = engine.generate(
                 report_code=mapped_report_type,
                 params=params,
-                format=format.lower(),
+                format=export_format,
                 user=current_user,
                 skip_cache=False,
             )
 
-            filename = f"rd-{report_type}-{year}.{format.lower()}"
-            return StreamingResponse(
-                result.data.get("file_stream"),
-                media_type=result.content_type,
-                headers={"Content-Disposition": f"attachment; filename={filename}"},
-            )
+            return _stream_report_result(result, filename)
         except (ConfigError, ParameterError):
             # 如果YAML配置不存在，使用适配器（向后兼容）
             adapter = RdExpenseReportAdapter(db, mapped_report_type)
             result = adapter.generate(
                 params={"year": year, "project_id": project_id},
-                format=format.lower(),
+                format=export_format,
                 user=current_user,
             )
 
-            # 使用统一报表框架的渲染器导出
-            from app.services.report_framework.renderers import ExcelRenderer, PdfRenderer
-
-            if format.lower() == "xlsx":
-                renderer = ExcelRenderer()
-            elif format.lower() == "pdf":
-                renderer = PdfRenderer()
-            else:
-                raise HTTPException(status_code=400, detail=f"不支持的导出格式: {format}")
-
-            data = result.data if hasattr(result, "data") else result
-            render_result = renderer.render(
-                sections=[{"id": "summary", "title": "汇总", "type": "metrics", "items": []}],
-                metadata={"code": mapped_report_type, "name": data.get("title", "研发费用报表")},
-            )
-
-            filename = f"rd-{report_type}-{year}.{format.lower()}"
-            return StreamingResponse(
-                render_result.data.get("file_stream"),
-                media_type=render_result.content_type,
-                headers={"Content-Disposition": f"attachment; filename={filename}"},
-            )
+            return _stream_report_result(result, filename)
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
     except ValueError as e:

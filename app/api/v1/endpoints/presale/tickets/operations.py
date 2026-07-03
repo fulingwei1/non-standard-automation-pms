@@ -269,7 +269,7 @@ def complete_ticket(
     ticket_id: int,
     complete_request: Optional[TicketCompleteRequest] = None,
     actual_hours: Optional[float] = Query(None, description="实际工时（兼容旧查询参数）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("presale:manage")),
 ) -> Any:
     """
     完成工单
@@ -279,6 +279,9 @@ def complete_ticket(
     - PUT /complete {"actual_hours": 8}
     """
     ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
+    # PS2: 幂等/状态前置——已完成或已关闭/取消的工单不可重复完成
+    if str(ticket.status or "").upper() in ("COMPLETED", "CLOSED", "CANCELLED"):
+        raise HTTPException(status_code=400, detail=f"工单当前状态为 {ticket.status}，不可重复完成")
     _ensure_deliverables_approved(ticket)
 
     ticket.status = "COMPLETED"

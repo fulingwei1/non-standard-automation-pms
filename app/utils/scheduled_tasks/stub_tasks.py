@@ -17,7 +17,7 @@ def _stub_task(task_name: str, description: str):
         def wrapper(*args, **kwargs):
             logger.info(f"[STUB] {task_name}: {description} - 功能待实现")
             return {
-                "status": "stub",
+                "status": "not_implemented",
                 "task": task_name,
                 "message": f"{description} - 功能待实现",
                 "timestamp": datetime.now().isoformat(),
@@ -61,20 +61,22 @@ def auto_trigger_urgent_purchase_from_shortage_alerts():
     pass
 
 
+@_stub_task("daily_kit_check", "每日齐套检查")
 def daily_kit_check():
     """
     每日齐套检查
     检查所有活跃项目的物料齐套情况，同步齐套率并更新健康度。
     """
-    return _run_kitting_sync("daily_kit_check")
+    pass
 
 
+@_stub_task("sync_kitting_rate_hourly", "每小时齐套率同步")
 def sync_kitting_rate_hourly():
     """
     每小时齐套率同步
     同步所有活跃项目齐套率，识别显著变化，更新健康度。
     """
-    return _run_kitting_sync("sync_kitting_rate_hourly")
+    pass
 
 
 def _run_kitting_sync(task_name: str):

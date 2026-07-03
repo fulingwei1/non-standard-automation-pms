@@ -9,6 +9,7 @@
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -71,10 +72,9 @@ def get_project_cost_by_month(
     """
     按月汇总项目成本
     """
-    from sqlalchemy import func
-
     # 获取项目
     from app.models.project import Project
+    from app.services.cost.cost_basis import actual_project_cost_filter
 
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
@@ -89,7 +89,7 @@ def get_project_cost_by_month(
             func.coalesce(func.sum(ProjectCost.amount), 0).label("total_amount"),
             func.count(ProjectCost.id).label("count"),
         )
-        .filter(ProjectCost.project_id == project_id)
+        .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
         .group_by(func.strftime("%Y-%m", ProjectCost.cost_date))
         .order_by(func.strftime("%Y-%m", ProjectCost.cost_date).desc())
         .all()
@@ -128,12 +128,12 @@ def get_project_budget_comparison(
         raise HTTPException(status_code=404, detail="项目不存在")
 
     # 计算实际成本
-    from sqlalchemy import func
     from app.models.project import ProjectCost
+    from app.services.cost.cost_basis import actual_project_cost_filter
 
     actual_cost = (
         db.query(func.coalesce(func.sum(ProjectCost.amount), 0))
-        .filter(ProjectCost.project_id == project_id)
+        .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
         .scalar()
     )
 
@@ -151,7 +151,11 @@ def get_project_budget_comparison(
             "actual_cost": actual_cost_float,
             "variance": variance,
             "variance_pct": variance_pct,
-            "status": "under_budget" if variance > 0 else "over_budget" if variance < 0 else "on_budget",
+            "status": "under_budget"
+            if variance > 0
+            else "over_budget"
+            if variance < 0
+            else "on_budget",
         },
     )
 
@@ -192,7 +196,10 @@ def get_project_profit_analysis(
     for machine in machines:
         machine_costs = (
             db.query(ProjectCost)
-            .filter(ProjectCost.project_id == project_id, ProjectCost.machine_id == machine.id)
+            .filter(
+                ProjectCost.project_id == project_id,
+                ProjectCost.machine_id == machine.id,
+            )
             .all()
         )
         machine_total_cost = sum([float(c.amount or 0) for c in machine_costs])
@@ -200,7 +207,9 @@ def get_project_profit_analysis(
         machine_revenue = contract_amount / len(machines) if machines else 0
         machine_profit_amount = machine_revenue - machine_total_cost
         machine_profit_margin = (
-            (machine_profit_amount / machine_revenue * 100) if machine_revenue > 0 else 0
+            (machine_profit_amount / machine_revenue * 100)
+            if machine_revenue > 0
+            else 0
         )
 
         machine_profit.append(
@@ -232,7 +241,9 @@ def get_project_profit_analysis(
             "cost": {
                 "total_cost": round(actual_cost, 2),
                 "budget_amount": round(float(project.budget_amount or 0), 2),
-                "cost_overrun": round(actual_cost - float(project.budget_amount or 0), 2),
+                "cost_overrun": round(
+                    actual_cost - float(project.budget_amount or 0), 2
+                ),
             },
             "profit": {
                 "gross_profit": round(gross_profit, 2),

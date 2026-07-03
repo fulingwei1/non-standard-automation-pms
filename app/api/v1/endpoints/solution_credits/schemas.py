@@ -6,7 +6,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class CreditInfoResponse(BaseModel):
@@ -100,6 +100,11 @@ class CreditConfigItem(BaseModel):
     value: str
     description: Optional[str]
     is_active: bool
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _default_is_active(cls, value):
+        return True if value is None else value
 
 
 class UpdateConfigRequest(BaseModel):

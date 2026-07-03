@@ -232,7 +232,7 @@ def read_acceptance_reports(
                 version=report.version,
                 generated_by=report.generated_by,
                 file_size=report.file_size,
-                include_signatures=report.include_signatures,
+                include_signatures=getattr(report, "include_signatures", True),
                 created_at=report.created_at,
                 updated_at=report.updated_at,
             )

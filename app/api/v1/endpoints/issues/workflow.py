@@ -256,7 +256,8 @@ def verify_issue(
     # 使用状态机执行验证
     sm = IssueStateMachine(issue, db)
     try:
-        if request.verified_result == "PASSED":
+        verified_result = (request.verified_result or "").upper()
+        if verified_result in {"PASS", "PASSED", "VERIFIED"}:
             # 验证通过 -> CLOSED
             target_state = "CLOSED"
             comment = "问题验证通过，已关闭"
@@ -275,6 +276,8 @@ def verify_issue(
             verified_by=current_user.id,
             verified_by_name=current_user.real_name or current_user.username,
         )
+        if verified_result == "PASS":
+            issue.verified_result = "PASS"
 
     except InvalidStateTransitionError as e:
         raise HTTPException(status_code=400, detail=str(e))

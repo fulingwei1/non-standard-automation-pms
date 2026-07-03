@@ -6,7 +6,7 @@ Team 10: 售前AI系统集成与前端UI
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, desc, func
+from sqlalchemy import String, and_, cast, desc, func
 from sqlalchemy.orm import Session
 
 from app.models.presale_ai import (
@@ -91,20 +91,45 @@ class PresaleAIIntegrationService:
         end_date: Optional[date] = None,
         ai_functions: Optional[List[str]] = None,
         user_ids: Optional[List[int]] = None,
-    ) -> List[PresaleAIUsageStats]:
+    ) -> List[Dict[str, Any]]:
         """获取使用统计"""
-        query = self.db.query(PresaleAIUsageStats)
+        ai_function = cast(PresaleAIUsageStats.__table__.c.ai_function, String)
+        query = self.db.query(
+            PresaleAIUsageStats.id,
+            PresaleAIUsageStats.user_id,
+            ai_function.label("ai_function"),
+            PresaleAIUsageStats.usage_count,
+            PresaleAIUsageStats.success_count,
+            PresaleAIUsageStats.avg_response_time,
+            PresaleAIUsageStats.date,
+            PresaleAIUsageStats.created_at,
+            PresaleAIUsageStats.updated_at,
+        )
 
         if start_date:
             query = query.filter(PresaleAIUsageStats.date >= start_date)
         if end_date:
             query = query.filter(PresaleAIUsageStats.date <= end_date)
         if ai_functions:
-            query = query.filter(PresaleAIUsageStats.ai_function.in_(ai_functions))
+            query = query.filter(ai_function.in_(ai_functions))
         if user_ids:
             query = query.filter(PresaleAIUsageStats.user_id.in_(user_ids))
 
-        return query.order_by(desc(PresaleAIUsageStats.date)).all()
+        rows = query.order_by(desc(PresaleAIUsageStats.date)).all()
+        return [
+            {
+                "id": row.id,
+                "user_id": row.user_id,
+                "ai_function": row.ai_function,
+                "usage_count": row.usage_count or 0,
+                "success_count": row.success_count or 0,
+                "avg_response_time": row.avg_response_time,
+                "date": row.date,
+                "created_at": row.created_at,
+                "updated_at": row.updated_at,
+            }
+            for row in rows
+        ]
 
     def get_dashboard_stats(self, days: int = 30) -> DashboardStatsResponse:
         """获取仪表盘统计数据"""
@@ -128,14 +153,15 @@ class PresaleAIIntegrationService:
         avg_response_time = total_stats.avg_time or 0
 
         # Top功能
+        ai_function = cast(PresaleAIUsageStats.__table__.c.ai_function, String)
         top_functions = (
             self.db.query(
-                PresaleAIUsageStats.ai_function,
+                ai_function.label("ai_function"),
                 func.sum(PresaleAIUsageStats.usage_count).label("count"),
                 func.sum(PresaleAIUsageStats.success_count).label("success"),
             )
             .filter(PresaleAIUsageStats.date >= start_date)
-            .group_by(PresaleAIUsageStats.ai_function)
+            .group_by(ai_function)
             .order_by(desc("count"))
             .limit(5)
             .all()

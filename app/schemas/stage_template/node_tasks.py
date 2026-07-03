@@ -12,7 +12,7 @@
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # ==================== 节点子任务 Schemas ====================
 
@@ -27,6 +27,16 @@ class NodeTaskBase(BaseModel):
     planned_end_date: Optional[date] = Field(default=None, description="计划结束日期")
     priority: str = Field(default="NORMAL", description="优先级: LOW/NORMAL/HIGH/URGENT")
     tags: Optional[str] = Field(default=None, max_length=200, description="标签(逗号分隔)")
+
+    @field_validator("task_name", mode="before")
+    @classmethod
+    def _default_task_name(cls, value):
+        return "" if value is None else value
+
+    @field_validator("priority", mode="before")
+    @classmethod
+    def _default_priority(cls, value):
+        return "NORMAL" if value in (None, "") else value
 
 
 class NodeTaskCreate(NodeTaskBase):
@@ -82,6 +92,21 @@ class NodeTaskResponse(NodeTaskBase):
 
     class Config:
         from_attributes = True
+
+    @field_validator("task_code", mode="before")
+    @classmethod
+    def _default_task_code(cls, value):
+        return "" if value is None else value
+
+    @field_validator("sequence", mode="before")
+    @classmethod
+    def _default_sequence(cls, value):
+        return 0 if value is None else value
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_status(cls, value):
+        return "PENDING" if value in (None, "") else value
 
 
 class BatchCreateTasksRequest(BaseModel):

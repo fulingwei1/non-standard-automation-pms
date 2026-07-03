@@ -7,7 +7,7 @@
 """
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -131,7 +131,7 @@ def release_employee(
 def check_assignment_conflict(
     project_id: int = Path(..., description="项目ID"),
     plan_id: int = Path(..., description="资源计划ID"),
-    employee_id: int = Path(..., description="员工ID"),
+    employee_id: int = Query(..., description="员工ID"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("project:read")),
 ) -> Any:

@@ -6,7 +6,7 @@
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ..common import TimestampSchema
 
@@ -127,6 +127,21 @@ class DimensionHealthDetail(BaseModel):
     kpi_at_risk: int = 0
     kpi_off_track: int = 0
     issues: List[str] = []
+
+    @field_validator("score", "csf_count", "kpi_count", "kpi_on_track", "kpi_at_risk", "kpi_off_track", mode="before")
+    @classmethod
+    def _default_int(cls, value):
+        return 0 if value is None else value
+
+    @field_validator("health_level", mode="before")
+    @classmethod
+    def _default_level(cls, value):
+        return "UNKNOWN" if value in (None, "") else value
+
+    @field_validator("kpi_completion_rate", mode="before")
+    @classmethod
+    def _default_rate(cls, value):
+        return 0 if value is None else value
 
 
 # ============================================

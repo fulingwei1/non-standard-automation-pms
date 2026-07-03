@@ -651,7 +651,7 @@ def review_solution(
     db: Session = Depends(deps.get_db),
     solution_id: int,
     review_request: SolutionReviewRequest,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("presale:manage")),
 ) -> Any:
     """
     方案审核

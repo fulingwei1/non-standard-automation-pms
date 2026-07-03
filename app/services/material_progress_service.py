@@ -8,7 +8,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException, status
-from sqlalchemy import func
+from sqlalchemy import func, inspect
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.material import BomHeader, BomItem, MaterialShortage
@@ -18,6 +18,10 @@ from app.models.project.team import ProjectMember
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.user import User
 from app.models.vendor import Vendor
+
+
+def _table_exists(db: Session, table_name: str) -> bool:
+    return inspect(db.get_bind()).has_table(table_name)
 
 
 def _check_project_access(db: Session, project_id: int, user: User) -> Project:
@@ -381,6 +385,8 @@ def get_subscription(
     db: Session, project_id: int, user: User
 ) -> Optional[MaterialProgressSubscription]:
     """获取当前订阅状态"""
+    if not _table_exists(db, MaterialProgressSubscription.__tablename__):
+        return None
     return (
         db.query(MaterialProgressSubscription)
         .filter(

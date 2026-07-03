@@ -595,10 +595,10 @@ def get_customer_360_view(
     active_opps = [
         {
             "id": o.id,
-            "name": o.name,
+            "name": o.opp_name,
             "stage": o.stage,
             "estimated_amount": float(o.est_amount or 0),
-            "win_rate": o.win_rate or 0,
+            "win_rate": o.probability or 0,
             "estimated_close": str(o.expected_close_date) if o.expected_close_date else None,
         }
         for o in active_opportunities

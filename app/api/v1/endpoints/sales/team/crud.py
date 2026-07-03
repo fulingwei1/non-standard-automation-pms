@@ -144,7 +144,7 @@ def create_sales_team(
     )
 
 
-@router.get("/sales-teams/{team_id}", response_model=ResponseModel)
+@router.get("/sales-teams/{team_id:int}", response_model=ResponseModel)
 def get_sales_team(
     *,
     db: Session = Depends(deps.get_db),
@@ -166,7 +166,7 @@ def get_sales_team(
     )
 
 
-@router.put("/sales-teams/{team_id}", response_model=ResponseModel)
+@router.put("/sales-teams/{team_id:int}", response_model=ResponseModel)
 def update_sales_team(
     *,
     db: Session = Depends(deps.get_db),
@@ -196,7 +196,7 @@ def update_sales_team(
     )
 
 
-@router.delete("/sales-teams/{team_id}", response_model=ResponseModel)
+@router.delete("/sales-teams/{team_id:int}", response_model=ResponseModel)
 def delete_sales_team(
     *,
     db: Session = Depends(deps.get_db),

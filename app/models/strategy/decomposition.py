@@ -128,6 +128,26 @@ class PersonalKPI(Base, TimestampMixin):
         String(20), default="PENDING", comment="状态：PENDING/SELF_RATED/MANAGER_RATED/CONFIRMED"
     )
 
+    @property
+    def user_id(self):
+        """兼容旧服务读取的 personal_kpi.user_id。"""
+        return self.employee_id
+
+    @property
+    def dept_objective_id(self):
+        """兼容旧服务读取的 personal_kpi.dept_objective_id。"""
+        return self.department_objective_id
+
+    @property
+    def source_kpi_id(self):
+        """兼容旧服务读取的 personal_kpi.source_kpi_id。"""
+        return self.source_id if self.source_type == "CSF_KPI" else None
+
+    @property
+    def name(self):
+        """兼容旧服务读取的 personal_kpi.name。"""
+        return self.kpi_name
+
     # 软删除
     is_active = Column(Boolean, default=True, comment="是否激活")
 

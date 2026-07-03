@@ -24,6 +24,12 @@ from app.services.engineer_performance.engperf_scope import (
 router = APIRouter(prefix="/collaboration", tags=["跨部门协作"])
 
 
+def _user_display_name(user: Optional[User]) -> Optional[str]:
+    if not user:
+        return None
+    return user.display_name
+
+
 @router.get("/matrix", summary="获取协作评价矩阵")
 async def get_collaboration_matrix(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
@@ -45,7 +51,11 @@ async def get_collaboration_matrix(
             period_id = period.id
 
     if not period_id:
-        raise HTTPException(status_code=404, detail="未找到考核周期")
+        return ResponseModel(
+            code=200,
+            message="success",
+            data={"period_id": None, "matrix": {}, "details": []},
+        )
 
     matrix = service.get_collaboration_matrix(period_id)
 
@@ -104,7 +114,7 @@ async def get_ratings_received(
             {
                 "id": r.id,
                 "rater_id": r.rater_id,
-                "rater_name": rater.name if rater else None,
+                "rater_name": _user_display_name(rater),
                 "rater_job_type": r.rater_job_type,
                 "communication_score": r.communication_score,
                 "response_score": r.response_score,
@@ -149,7 +159,7 @@ async def get_ratings_given(
             {
                 "id": r.id,
                 "ratee_id": r.ratee_id,
-                "ratee_name": ratee.name if ratee else None,
+                "ratee_name": _user_display_name(ratee),
                 "ratee_job_type": r.ratee_job_type,
                 "total_score": float(r.total_score) if r.total_score else None,
                 "comment": r.comment,
@@ -175,7 +185,7 @@ async def get_pending_ratings(
             period_id = period.id
 
     if not period_id:
-        raise HTTPException(status_code=404, detail="未找到考核周期")
+        return ResponseModel(code=200, message="success", data=[])
 
     pending = service.get_pending_ratings(current_user.id, period_id)
 

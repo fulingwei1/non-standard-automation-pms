@@ -78,6 +78,10 @@ class StateMachinePermissionChecker:
         if not current_user:
             return False, "未提供操作人信息"
 
+        # 系统/租户管理员在 API 权限层已被视为全权限用户；状态机内部也应保持一致。
+        if StateMachinePermissionChecker._is_admin_user(current_user):
+            return True, ""
+
         # 检查权限
         if required_permission:
             perm_valid, perm_reason = StateMachinePermissionChecker._check_permission_attr(
@@ -95,6 +99,15 @@ class StateMachinePermissionChecker:
                 return False, role_reason
 
         return True, ""
+
+    @staticmethod
+    def _is_admin_user(current_user: Any) -> bool:
+        """Best-effort admin shortcut that avoids treating bare Mock attrs as truthy."""
+        if getattr(current_user, "is_superuser", None) is True:
+            return True
+        if getattr(current_user, "is_tenant_admin", None) is True:
+            return True
+        return False
 
     @staticmethod
     def _check_permission_attr(current_user: Any, required_permission: str) -> Tuple[bool, str]:
@@ -119,12 +132,24 @@ class StateMachinePermissionChecker:
                 return False, "has_permission 应该是方法"
 
         # 方法2：permissions 属性
-        if hasattr(current_user, "permissions"):
-            permissions = getattr(current_user, "permissions")
-            if isinstance(permissions, (list, set)):
-                if required_permission not in permissions:
-                    return False, f"缺少权限: {required_permission}"
-                return True, ""
+        permissions = getattr(current_user, "permissions", None)
+        if isinstance(permissions, (list, set, tuple)):
+            if required_permission not in permissions:
+                return False, f"缺少权限: {required_permission}"
+            return True, ""
+
+        # 方法3：真实 User ORM 对象，复用现有 API 权限逻辑的无 DB 兜底。
+        user_id = getattr(current_user, "id", None)
+        username = getattr(current_user, "username", None)
+        if isinstance(user_id, int) and isinstance(username, str):
+            try:
+                from app.core.auth import check_permission as auth_check_permission
+
+                if auth_check_permission(current_user, required_permission):
+                    return True, ""
+                return False, f"缺少权限: {required_permission}"
+            except Exception as e:
+                return False, f"权限检查失败: {str(e)}"
 
         # 用户对象不支持权限检查
         return False, "用户对象不支持权限检查（缺少 has_permission 方法或 permissions 属性）"
@@ -152,16 +177,26 @@ class StateMachinePermissionChecker:
                 return False, "has_role 应该是方法"
 
         # 方法2：roles 属性
-        if hasattr(current_user, "roles"):
-            roles = getattr(current_user, "roles")
-            if isinstance(roles, (list, set)):
-                # 支持字符串列表或Role对象列表
+        roles = getattr(current_user, "roles", None)
+        if roles is not None:
+            if callable(getattr(roles, "all", None)):
+                try:
+                    roles = roles.all()
+                except Exception:
+                    roles = []
+
+            if isinstance(roles, (list, set, tuple)):
+                # 支持字符串列表、Role对象列表、UserRole.role 关系对象列表
                 role_names = []
-                for role in roles:
+                for role_item in roles:
+                    role = getattr(role_item, "role", role_item)
                     if isinstance(role, str):
                         role_names.append(role)
-                    elif hasattr(role, "name"):
-                        role_names.append(role.name)
+                    else:
+                        for attr in ("name", "role_code", "role_name"):
+                            value = getattr(role, attr, None)
+                            if value:
+                                role_names.append(value)
 
                 if required_role not in role_names:
                     return False, f"缺少角色: {required_role}"

@@ -243,14 +243,20 @@ class PurchaseService:
         self.db.flush()
 
         # 复制申请项到订单项
-        for request_item in request.items:
+        for index, request_item in enumerate(request.items, start=1):
             order_item = PurchaseOrderItem(
                 order_id=order.id,
+                item_no=index,
                 material_id=request_item.material_id,
+                bom_item_id=getattr(request_item, "bom_item_id", None),
+                material_code=request_item.material_code,
+                material_name=request_item.material_name,
+                specification=getattr(request_item, "specification", None),
+                unit=getattr(request_item, "unit", None) or "件",
                 quantity=request_item.quantity,
                 unit_price=request_item.unit_price,
-                total_amount=request_item.total_amount,
-                request_item_id=request_item.id,
+                amount=getattr(request_item, "amount", None) or 0,
+                required_date=getattr(request_item, "required_date", None),
             )
             self.db.add(order_item)
 

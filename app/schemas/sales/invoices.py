@@ -27,6 +27,8 @@ class InvoiceCreate(BaseModel):
     invoice_date: Optional[date] = Field(default=None, description="开票日期")
     issue_date: Optional[date] = Field(default=None, description="开票日期")
     due_date: Optional[date] = Field(default=None, description="到期日期")
+    buyer_name: Optional[str] = Field(default=None, max_length=100, description="购买方名称")
+    buyer_tax_no: Optional[str] = Field(default=None, max_length=30, description="购买方税号")
     remark: Optional[str] = Field(default=None, description="备注", alias="remarks")
     amount: Optional[Decimal] = Field(default=None, ge=0, description="金额（兼容字段）")
     project_id: Optional[int] = Field(default=None, description="项目 ID")
@@ -49,6 +51,8 @@ class InvoiceCreate(BaseModel):
 class InvoiceUpdate(BaseModel):
     """更新发票"""
 
+    model_config = {"populate_by_name": True}
+
     invoice_code: Optional[str] = None
     invoice_type: Optional[str] = None
     invoice_amount: Optional[Decimal] = None
@@ -57,7 +61,9 @@ class InvoiceUpdate(BaseModel):
     total_amount: Optional[Decimal] = None
     invoice_date: Optional[date] = None
     due_date: Optional[date] = None
-    remark: Optional[str] = None
+    buyer_name: Optional[str] = None
+    buyer_tax_no: Optional[str] = None
+    remark: Optional[str] = Field(default=None, alias="remarks")
     amount: Optional[Decimal] = None
     status: Optional[str] = None
 
@@ -76,6 +82,8 @@ class InvoiceResponse(TimestampSchema):
     total_amount: Optional[Decimal] = Field(default=None, description="总金额")
     invoice_date: Optional[date] = Field(default=None, description="开票日期")
     due_date: Optional[date] = Field(default=None, description="到期日期")
+    buyer_name: Optional[str] = Field(default=None, description="购买方名称")
+    buyer_tax_no: Optional[str] = Field(default=None, description="购买方税号")
     remark: Optional[str] = Field(default=None, description="备注")
     contract_code: Optional[str] = Field(default=None, description="合同编码")
     project_id: Optional[int] = Field(default=None, description="项目 ID")
@@ -88,6 +96,13 @@ class InvoiceResponse(TimestampSchema):
     payment_status: Optional[str] = Field(default=None, description="付款状态")
     status: Optional[str] = Field(default=None, description="发票状态")
     issue_date: Optional[date] = Field(default=None, description="开票日期")
+
+
+class InvoiceTaxCalculationRequest(BaseModel):
+    """发票税额计算请求"""
+
+    amount: Decimal = Field(gt=0, description="不含税金额")
+    tax_rate: Decimal = Field(ge=0, description="税率百分比，例如 13 表示 13%")
 
 
 class InvoiceIssueRequest(BaseModel):

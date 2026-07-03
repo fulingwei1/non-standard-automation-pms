@@ -118,7 +118,12 @@ class QuoteApprovalService:
         Returns:
             包含任务列表和总数的字典
         """
-        tasks = self.approval_engine.get_pending_tasks(user_id=user_id, entity_type="QUOTE")
+        # approval_engine 返回 {"items": [...], "total": ...}，此处需自行做客户筛选与分页，
+        # 因此一次性取全部待审批任务（page_size 取足够大）。
+        pending = self.approval_engine.get_pending_tasks(
+            user_id=user_id, entity_type="QUOTE", page=1, page_size=100000
+        )
+        tasks = pending.get("items", []) if isinstance(pending, dict) else pending
 
         # 客户筛选
         if customer_id:
@@ -370,7 +375,7 @@ class QuoteApprovalService:
         if instance.initiator_id != user_id:
             raise ValueError("只能撤回自己提交的审批")
 
-        self.approval_engine.withdraw(instance_id=instance.id, user_id=user_id)
+        self.approval_engine.withdraw(instance_id=instance.id, initiator_id=user_id, comment=reason)
 
         return {
             "quote_id": quote_id,

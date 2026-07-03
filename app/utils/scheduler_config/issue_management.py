@@ -81,7 +81,7 @@ ISSUE_MANAGEMENT_TASKS = [
         "owner": "Issue Squad",
         "category": "Issue Management",
         "description": "凌晨 1:30 针对问题执行二次升级。",
-        "enabled": True,
+        "enabled": False,
         "dependencies_tables": ["issues", "alert_records"],
         "risk_level": "MEDIUM",
         "sla": {

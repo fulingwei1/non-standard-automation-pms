@@ -385,12 +385,14 @@ class TeamGenerationService:
         if overloaded:
             risks.append(f"{len(overloaded)}名工程师过载：{', '.join(overloaded[:3])}")
 
+        role_count = max(len(role_assignments), 1)
+
         return {
             "project_id": project.id,
             "project_name": project.project_name,
             "total_members": len(role_assignments),
             "total_estimated_hours": total_hours,
-            "estimated_duration_days": int(total_hours / 8 / len(role_assignments)),
+            "estimated_duration_days": max(1, int(total_hours / 8 / role_count)),
             "overall_score": round(overall_score, 1),
             "skill_coverage": skill_coverage,
             "capacity_balance": capacity_balance,

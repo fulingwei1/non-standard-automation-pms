@@ -13,6 +13,7 @@ from app.models.alert import AlertRecord, AlertRule
 from app.models.budget import ProjectBudget
 from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
 from app.models.project import Project, ProjectCost
+from app.services.cost.cost_basis import actual_project_cost_filter
 
 
 def get_project_budget(db: Session, project_id: int, project: Project) -> float:
@@ -43,11 +44,15 @@ def get_actual_cost(db: Session, project_id: int, project: Project) -> float:
     Returns:
         float: 实际成本
     """
-    if project.actual_cost:
-        return float(project.actual_cost)
+    costs = (
+        db.query(ProjectCost)
+        .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
+        .all()
+    )
+    if costs:
+        return sum([float(c.amount or 0) for c in costs])
 
-    costs = db.query(ProjectCost).filter(ProjectCost.project_id == project_id).all()
-    return sum([float(c.amount or 0) for c in costs])
+    return float(project.actual_cost or 0)
 
 
 def get_or_create_alert_rule(db: Session) -> AlertRule:
@@ -169,7 +174,7 @@ def generate_alert_no(db: Session) -> str:
     max_alert_query = apply_like_filter(
         max_alert_query,
         AlertRecord,
-        f'CO{today.strftime("%Y%m%d")}%',
+        f"CO{today.strftime('%Y%m%d')}%",
         "alert_no",
         use_ilike=False,
     )
@@ -180,7 +185,7 @@ def generate_alert_no(db: Session) -> str:
     else:
         seq = 1
 
-    return f'CO{today.strftime("%Y%m%d")}{str(seq).zfill(4)}'
+    return f"CO{today.strftime('%Y%m%d')}{str(seq).zfill(4)}"
 
 
 def create_alert_record(

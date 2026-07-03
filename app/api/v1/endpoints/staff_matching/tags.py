@@ -20,6 +20,23 @@ from app.utils.db_helpers import get_or_404, save_obj
 router = APIRouter()
 
 
+def _tag_response(tag: HrTagDict) -> schemas.TagDictResponse:
+    return schemas.TagDictResponse(
+        id=tag.id,
+        tag_code=tag.tag_code,
+        tag_name=tag.tag_name,
+        tag_type=tag.tag_type,
+        parent_id=tag.parent_id,
+        weight=tag.weight,
+        is_required=bool(tag.is_required or False),
+        description=tag.description,
+        sort_order=tag.sort_order or 0,
+        is_active=True if tag.is_active is None else bool(tag.is_active),
+        created_at=tag.created_at,
+        updated_at=tag.updated_at,
+    )
+
+
 @router.get("/", response_model=List[schemas.TagDictResponse])
 def list_tags(
     tag_type: Optional[str] = Query(None, description="标签类型筛选"),
@@ -43,7 +60,7 @@ def list_tags(
         pagination.offset,
         pagination.limit,
     ).all()
-    return tags
+    return [_tag_response(tag) for tag in tags]
 
 
 @router.get("/tree", response_model=List[schemas.TagDictTreeNode])
@@ -98,7 +115,7 @@ def create_tag(
         raise HTTPException(status_code=400, detail=f"标签编码已存在: {tag_data.tag_code}")
 
     tag = HrTagDict(**tag_data.model_dump())
-    return save_obj(db, tag)
+    return _tag_response(save_obj(db, tag))
 
 
 @router.put("/{tag_id}", response_model=schemas.TagDictResponse)
@@ -116,7 +133,7 @@ def update_tag(
 
     db.commit()
     db.refresh(tag)
-    return tag
+    return _tag_response(tag)
 
 
 @router.delete("/{tag_id}")

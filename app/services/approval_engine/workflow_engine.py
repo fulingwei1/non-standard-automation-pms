@@ -333,6 +333,32 @@ class WorkflowEngine:
         """
         提交审批决策
         """
+        from app.models.approval import ApprovalTask as NewApprovalTask
+
+        decision_val = decision.value if hasattr(decision, "value") else str(decision)
+        if hasattr(instance, "template_id"):
+            task = (
+                self.db.query(NewApprovalTask)
+                .filter(
+                    NewApprovalTask.instance_id == instance.id,
+                    NewApprovalTask.assignee_id == approver_id,
+                    NewApprovalTask.status == "PENDING",
+                )
+                .first()
+            )
+            if task:
+                task.status = "COMPLETED"
+                task.action = "REJECT" if decision_val in {"REJECT", "REJECTED"} else "APPROVE"
+                task.comment = comment
+                task.completed_at = datetime.now()
+                instance.status = "REJECTED" if task.action == "REJECT" else "APPROVED"
+                instance.completed_at = datetime.now()
+                instance.current_node_id = None
+                self.db.add(task)
+                self.db.add(instance)
+                self.db.commit()
+                return task
+
         node = self.get_current_node(instance)
         if not node:
             raise ValueError("没有可审批的节点")

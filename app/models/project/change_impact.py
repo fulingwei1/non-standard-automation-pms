@@ -105,7 +105,7 @@ class ProjectChangeImpact(Base, TimestampMixin):
 
     # ── 关系 ──
     ecn = relationship("Ecn", foreign_keys=[ecn_id])
-    project = relationship("Project", foreign_keys=[project_id])
+    project = relationship("Project", foreign_keys=[project_id], back_populates="change_impacts")
     machine = relationship("Machine", foreign_keys=[machine_id])
     assessor = relationship("User", foreign_keys=[assessed_by])
     executor = relationship("User", foreign_keys=[executed_by])

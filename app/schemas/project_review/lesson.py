@@ -5,7 +5,7 @@
 from datetime import date, datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ProjectLessonBase(BaseModel):
@@ -70,6 +70,16 @@ class ProjectLessonResponse(BaseModel):
     ai_confidence: Optional[float] = None
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("priority", mode="before")
+    @classmethod
+    def _default_priority(cls, value):
+        return "MEDIUM" if value in (None, "") else value
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_status(cls, value):
+        return "OPEN" if value in (None, "") else value
 
     class Config:
         from_attributes = True

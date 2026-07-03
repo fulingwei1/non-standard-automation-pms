@@ -161,7 +161,7 @@ def search_standard_costs(
     return costs
 
 
-@router.get("/{cost_id}", response_model=StandardCostResponse)
+@router.get("/{cost_id:int}", response_model=StandardCostResponse)
 def get_standard_cost(
     *,
     db: Session = Depends(deps.get_db),
@@ -178,7 +178,7 @@ def get_standard_cost(
     return cost
 
 
-@router.put("/{cost_id}", response_model=StandardCostResponse)
+@router.put("/{cost_id:int}", response_model=StandardCostResponse)
 def update_standard_cost(
     *,
     db: Session = Depends(deps.get_db),
@@ -240,7 +240,7 @@ def update_standard_cost(
     return new_cost
 
 
-@router.delete("/{cost_id}", response_model=ResponseModel)
+@router.delete("/{cost_id:int}", response_model=ResponseModel)
 def deactivate_standard_cost(
     *,
     db: Session = Depends(deps.get_db),

@@ -12,11 +12,16 @@
 """
 
 from .base import ChannelHandler, NotificationResult
-from .email_handler import EmailChannelHandler
-from .sms_handler import SMSChannelHandler
-from .system_handler import SystemChannelHandler
-from .webhook_handler import WebhookChannelHandler
-from .wechat_handler import WeChatChannelHandler
+
+# 各渠道处理器采用惰性导入（PEP 562），避免 channels.base 被
+# unified_adapter 导入时连带触发 *_handler，进而回环导入 handlers.* 造成循环依赖。
+_LAZY_HANDLERS = {
+    "EmailChannelHandler": ".email_handler",
+    "SMSChannelHandler": ".sms_handler",
+    "SystemChannelHandler": ".system_handler",
+    "WebhookChannelHandler": ".webhook_handler",
+    "WeChatChannelHandler": ".wechat_handler",
+}
 
 __all__ = [
     "ChannelHandler",
@@ -27,3 +32,13 @@ __all__ = [
     "SMSChannelHandler",
     "WebhookChannelHandler",
 ]
+
+
+def __getattr__(name):
+    module_path = _LAZY_HANDLERS.get(name)
+    if module_path is not None:
+        import importlib
+
+        module = importlib.import_module(module_path, __name__)
+        return getattr(module, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

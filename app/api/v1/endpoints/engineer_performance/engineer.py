@@ -331,7 +331,7 @@ async def list_engineers(
             {
                 "id": p.id,
                 "user_id": p.user_id,
-                "user_name": user.name if user else None,
+                "user_name": user.display_name if user else None,
                 "job_type": p.job_type,
                 "job_level": p.job_level,
                 "skills": p.skills,

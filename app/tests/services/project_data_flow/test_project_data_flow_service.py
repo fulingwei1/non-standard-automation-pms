@@ -278,6 +278,8 @@ class TestProjectDataFlowService:
             query_mock = MagicMock()
             if model is BomHeader:
                 query_mock.filter.return_value.all.return_value = [bom]
+            elif model is PurchaseRequest:
+                query_mock.filter.return_value.first.return_value = None
             elif model is BomItem:
                 query_mock.filter.return_value.all.return_value = [bom_item]
             elif model is MaterialStock or "coalesce" in str(model):
@@ -319,6 +321,48 @@ class TestProjectDataFlowService:
         assert request_item.unit_price == Decimal("1200")
         assert request_item.amount == Decimal("3600")
         assert request_item.required_date == date(2026, 6, 20)
+
+    def test_create_purchase_requests_from_bom_returns_existing_request(
+        self, service, mock_db_session
+    ):
+        """同一项目同一 BOM 已生成采购申请时不重复创建"""
+        from app.models.material import BomHeader
+        from app.models.purchase import PurchaseRequest
+
+        bom = SimpleNamespace(id=501)
+        existing_request = SimpleNamespace(
+            id=700,
+            request_no="PR-20260701-61",
+            project_id=61,
+            source_type="BOM",
+            source_id=501,
+        )
+
+        def query(model):
+            query_mock = MagicMock()
+            if model is BomHeader:
+                query_mock.filter.return_value.all.return_value = [bom]
+            elif model is PurchaseRequest:
+                query_mock.filter.return_value.first.return_value = existing_request
+            else:
+                raise AssertionError(f"unexpected model queried: {model}")
+            return query_mock
+
+        mock_db_session.query.side_effect = query
+
+        result = service.create_purchase_requests_from_bom(project_id=61)
+
+        assert result == {
+            "project_id": 61,
+            "request_no": "PR-20260701-61",
+            "request_id": 700,
+            "total_materials": 0,
+            "items_with_net_demand": 0,
+            "skipped_existing": True,
+        }
+        mock_db_session.add.assert_not_called()
+        mock_db_session.flush.assert_not_called()
+        mock_db_session.commit.assert_not_called()
 
     def test_create_delivery_schedule_project_not_found(self, service, mock_db_session):
         """测试项目不存在时返回错误"""

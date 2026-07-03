@@ -46,11 +46,12 @@ class ShortageReportsService:
         end_date: Optional[date] = None,
     ) -> PaginatedResponse:
         """获取缺料报告列表"""
+        # 模型仅定义了 project/machine/material 关系（reporter/handler 等仅为 *_id 外键，
+        # 无 ORM relationship），此处仅 eager load 真实存在的关系，避免 AttributeError。
         query = self.db.query(ShortageReport).options(
-            joinedload(ShortageReport.reporter),
-            joinedload(ShortageReport.confirmer),
-            joinedload(ShortageReport.handler),
-            joinedload(ShortageReport.resolver),
+            joinedload(ShortageReport.project),
+            joinedload(ShortageReport.machine),
+            joinedload(ShortageReport.material),
         )
 
         # 搜索条件
@@ -116,10 +117,9 @@ class ShortageReportsService:
         return (
             self.db.query(ShortageReport)
             .options(
-                joinedload(ShortageReport.reporter),
-                joinedload(ShortageReport.confirmer),
-                joinedload(ShortageReport.handler),
-                joinedload(ShortageReport.resolver),
+                joinedload(ShortageReport.project),
+                joinedload(ShortageReport.machine),
+                joinedload(ShortageReport.material),
             )
             .filter(ShortageReport.id == report_id)
             .first()

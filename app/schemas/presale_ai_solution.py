@@ -6,7 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # ==================== 请求模型 ====================
 
@@ -146,6 +146,21 @@ class SolutionResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_status(cls, value):
+        return "draft" if value in (None, "") else value
+
+    @field_validator("created_by", mode="before")
+    @classmethod
+    def _default_created_by(cls, value):
+        return 0 if value is None else value
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def _default_timestamp(cls, value):
+        return datetime.now() if value is None else value
 
 
 class SolutionGenerationResponse(BaseModel):

@@ -1,9 +1,37 @@
 # -*- coding: utf-8 -*-
 """项目售后关联视图 - 完整版"""
 
-from typing import Any, Dict, List
 from datetime import date
+from typing import Any, Dict, List
+
+from sqlalchemy import inspect
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
+
+
+def _empty_after_sales_overview() -> Dict[str, Any]:
+    return {
+        "warranty": {
+            "has_warranty": False,
+            "warranty_type": None,
+            "warranty_end": None,
+            "days_remaining": 0,
+            "is_expired": True,
+        },
+        "feedbacks": {"total": 0, "pending": 0, "resolved": 0, "complaints": 0},
+        "maintenance": {"total": 0, "scheduled": 0, "completed": 0, "overdue": 0},
+        "support_tickets": {"total": 0, "open": 0, "in_progress": 0, "resolved": 0, "urgent": 0},
+        "spare_parts": {"total": 0, "in_stock": 0, "low_stock": 0, "out_of_stock": 0},
+        "field_services": {
+            "total": 0,
+            "planned": 0,
+            "completed": 0,
+            "total_hours": 0,
+            "warranty_services": 0,
+        },
+        "sla": {"total": 0, "response_met_rate": 0, "resolve_met_rate": 0},
+        "satisfaction": {"total": 0, "avg_score": 0, "avg_nps": 0},
+    }
 
 
 def get_project_after_sales_overview(db: Session, project_id: int) -> Dict[str, Any]:
@@ -18,32 +46,56 @@ def get_project_after_sales_overview(db: Session, project_id: int) -> Dict[str, 
         AfterSalesSLA,
         AfterSalesSatisfaction,
     )
+
+    required_tables = [
+        model.__tablename__
+        for model in (
+            AfterSalesFeedback,
+            AfterSalesMaintenance,
+            AfterSalesSupportTicket,
+            AfterSalesWarranty,
+            AfterSalesSparePart,
+            AfterSalesFieldService,
+            AfterSalesSLA,
+            AfterSalesSatisfaction,
+        )
+    ]
+    inspector = inspect(db.get_bind())
+    if any(not inspector.has_table(table_name) for table_name in required_tables):
+        return _empty_after_sales_overview()
     
     # 客户反馈
-    feedbacks = db.query(AfterSalesFeedback).filter(AfterSalesFeedback.project_id == project_id).all()
+    try:
+        feedbacks = db.query(AfterSalesFeedback).filter(AfterSalesFeedback.project_id == project_id).all()
+        
+        # 维修保养
+        maintenance = db.query(AfterSalesMaintenance).filter(AfterSalesMaintenance.project_id == project_id).all()
+        
+        # 支持工单
+        tickets = db.query(AfterSalesSupportTicket).filter(AfterSalesSupportTicket.project_id == project_id).all()
+        
+        # 质保
+        warranties = db.query(AfterSalesWarranty).filter(AfterSalesWarranty.project_id == project_id).all()
+        
+        # 备件
+        spare_parts = db.query(AfterSalesSparePart).filter(AfterSalesSparePart.project_id == project_id).all()
+        
+        # 现场服务
+        field_services = db.query(AfterSalesFieldService).filter(AfterSalesFieldService.project_id == project_id).all()
+        
+        # SLA
+        sla_records = db.query(AfterSalesSLA).filter(AfterSalesSLA.project_id == project_id).all()
+        
+        # 满意度
+        satisfaction = db.query(AfterSalesSatisfaction).filter(AfterSalesSatisfaction.project_id == project_id).all()
+    except OperationalError as exc:
+        if "no such table" in str(exc).lower():
+            db.rollback()
+            return _empty_after_sales_overview()
+        raise
     
-    # 维修保养
-    maintenance = db.query(AfterSalesMaintenance).filter(AfterSalesMaintenance.project_id == project_id).all()
-    
-    # 支持工单
-    tickets = db.query(AfterSalesSupportTicket).filter(AfterSalesSupportTicket.project_id == project_id).all()
-    
-    # 质保
-    warranties = db.query(AfterSalesWarranty).filter(AfterSalesWarranty.project_id == project_id).all()
     active_warranty = next((w for w in warranties if w.status == "ACTIVE"), None)
-    
-    # 备件
-    spare_parts = db.query(AfterSalesSparePart).filter(AfterSalesSparePart.project_id == project_id).all()
-    
-    # 现场服务
-    field_services = db.query(AfterSalesFieldService).filter(AfterSalesFieldService.project_id == project_id).all()
-    
-    # SLA
-    sla_records = db.query(AfterSalesSLA).filter(AfterSalesSLA.project_id == project_id).all()
     sla_total = len(sla_records)
-    
-    # 满意度
-    satisfaction = db.query(AfterSalesSatisfaction).filter(AfterSalesSatisfaction.project_id == project_id).all()
     sat_total = len(satisfaction)
     
     return {

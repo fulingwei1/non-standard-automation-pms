@@ -432,7 +432,10 @@ class KnowledgeBaseResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    _normalize_status = field_validator("status", mode="before")(normalize_knowledge_base_status)
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_response_status(cls, value):
+        return normalize_knowledge_base_status(value) or KnowledgeBaseStatusEnum.DRAFT.value
 
     class Config:
         from_attributes = True

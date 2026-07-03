@@ -6,7 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # ============= 成本估算 Schemas =============
 
@@ -21,6 +21,19 @@ class CostBreakdown(BaseModel):
     risk_reserve: Decimal = Field(default=0, description="风险储备金")
     total_cost: Decimal = Field(description="总成本")
 
+    @field_validator(
+        "hardware_cost",
+        "software_cost",
+        "installation_cost",
+        "service_cost",
+        "risk_reserve",
+        "total_cost",
+        mode="before",
+    )
+    @classmethod
+    def _default_decimal(cls, value):
+        return Decimal("0") if value is None else value
+
 
 class PricingRecommendation(BaseModel):
     """定价推荐"""
@@ -31,6 +44,11 @@ class PricingRecommendation(BaseModel):
     suggested_price: Decimal = Field(description="建议报价")
     target_margin_rate: Decimal = Field(description="目标毛利率(%)")
     market_analysis: Optional[str] = Field(None, description="市场分析")
+
+    @field_validator("low", "medium", "high", "suggested_price", "target_margin_rate", mode="before")
+    @classmethod
+    def _default_decimal(cls, value):
+        return Decimal("0") if value is None else value
 
 
 class OptimizationSuggestion(BaseModel):
@@ -44,6 +62,16 @@ class OptimizationSuggestion(BaseModel):
     saving_rate: Decimal = Field(description="节省比例(%)")
     feasibility_score: Optional[Decimal] = Field(None, description="可行性评分")
     alternative_solutions: Optional[List[str]] = Field(None, description="替代方案")
+
+    @field_validator("type", "description", mode="before")
+    @classmethod
+    def _default_text(cls, value):
+        return "" if value is None else value
+
+    @field_validator("original_cost", "optimized_cost", "saving_amount", "saving_rate", mode="before")
+    @classmethod
+    def _default_decimal(cls, value):
+        return Decimal("0") if value is None else value
 
 
 class CostEstimationInput(BaseModel):
@@ -93,8 +121,7 @@ class CostEstimationResponse(BaseModel):
     model_version: Optional[str]
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
 
 
 # ============= 成本优化 Schemas =============

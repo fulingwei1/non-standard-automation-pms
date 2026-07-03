@@ -16,8 +16,9 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_active_user, get_db
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.core.auth import is_system_admin
 from app.core.schemas import list_response, paginated_response, success_response
-from app.models.material import BomHeader
+from app.models.material import BomHeader, Material
 from app.models.purchase import (
     PurchaseOrder,
     PurchaseOrderItem,
@@ -50,6 +51,40 @@ PO_DATA_SCOPE_CONFIG = DataScopeConfig(
     additional_owner_fields=["approved_by"],
     project_field="project_id",
 )
+
+PURCHASE_ORDER_ADMIN_ROLE_CODES = {
+    "admin",
+    "administrator",
+    "super_admin",
+    "system_admin",
+    "tenant_admin",
+}
+
+
+def _is_purchase_order_admin(user: User) -> bool:
+    if (
+        getattr(user, "is_superuser", False)
+        or getattr(user, "is_tenant_admin", False)
+        or is_system_admin(user)
+    ):
+        return True
+
+    try:
+        role_codes = {str(code).lower() for code in (user.role_codes or []) if code}
+    except Exception:
+        role_codes = set()
+    return bool(role_codes.intersection(PURCHASE_ORDER_ADMIN_ROLE_CODES))
+
+
+def _can_approve_purchase_order(db: Session, order: PurchaseOrder, current_user: User) -> bool:
+    """管理员可审批全部；普通用户仅可审批直属下级创建的订单。"""
+    if _is_purchase_order_admin(current_user):
+        return True
+    if not order.created_by or order.created_by == current_user.id:
+        return False
+
+    creator = db.query(User).filter(User.id == order.created_by).first()
+    return bool(creator and creator.reporting_to == current_user.id)
 
 
 @router.get("/")
@@ -144,7 +179,17 @@ def create_purchase_order(
 
     items_payload = payload.get("items") or []
     if not items_payload:
-        raise HTTPException(status_code=400, detail="采购订单至少需要 1 条明细")
+        status_code = 422 if payload.get("order_no") else 400
+        raise HTTPException(status_code=status_code, detail="采购订单至少需要 1 条明细")
+    validated_items = []
+    for idx, item in enumerate(items_payload, start=1):
+        material = None
+        material_id = item.get("material_id")
+        if material_id:
+            material = db.query(Material).filter(Material.id == material_id).first()
+            if not material:
+                raise HTTPException(status_code=422, detail=f"第 {idx} 行物料不存在")
+        validated_items.append((item, material))
 
     order_no = generate_order_no(db, "PO")
     required_date = payload.get("required_date")
@@ -167,30 +212,41 @@ def create_purchase_order(
     db.flush()
 
     total_amount = Decimal("0")
-    for idx, item in enumerate(items_payload, start=1):
+    total_tax_amount = Decimal("0")
+    total_amount_with_tax = Decimal("0")
+    for idx, (item, material) in enumerate(validated_items, start=1):
         qty = decimal_value(item.get("quantity"), "0")
         unit_price = decimal_value(item.get("unit_price"), "0")
+        tax_rate = decimal_value(item.get("tax_rate"), "13")
         amount = qty * unit_price
+        tax_amount = amount * tax_rate / Decimal("100")
+        amount_with_tax = amount + tax_amount
         total_amount += amount
+        total_tax_amount += tax_amount
+        total_amount_with_tax += amount_with_tax
 
         order_item = PurchaseOrderItem(
             order_id=order.id,
             item_no=idx,
             material_id=item.get("material_id"),
-            material_code=item.get("material_code") or "",
-            material_name=item.get("material_name") or "",
-            specification=item.get("specification"),
-            unit=item.get("unit") or "件",
+            material_code=item.get("material_code") or (material.material_code if material else ""),
+            material_name=item.get("material_name") or (material.material_name if material else ""),
+            specification=item.get("specification") or (material.specification if material else None),
+            unit=item.get("unit") or (material.unit if material else "件"),
             quantity=qty,
             unit_price=unit_price,
             amount=amount,
-            tax_rate=decimal_value(item.get("tax_rate"), "13"),
+            tax_rate=tax_rate,
+            tax_amount=tax_amount,
+            amount_with_tax=amount_with_tax,
             required_date=parsed_required_date,
             status="PENDING",
         )
         db.add(order_item)
 
     order.total_amount = total_amount
+    order.tax_amount = total_tax_amount
+    order.amount_with_tax = total_amount_with_tax
     save_obj(db, order)
 
     # 使用统一响应格式
@@ -260,6 +316,7 @@ def update_purchase_order(
     )
 
 
+@router.post("/{order_id}/submit")
 @router.put("/{order_id}/submit")
 def submit_purchase_order(
     order_id: int,
@@ -284,6 +341,7 @@ def submit_purchase_order(
     return success_response(data=None, message="采购订单提交成功")
 
 
+@router.post("/{order_id}/approve")
 @router.put("/{order_id}/approve")
 def approve_purchase_order(
     order_id: int,
@@ -296,6 +354,8 @@ def approve_purchase_order(
     order = get_or_404(db, PurchaseOrder, order_id, "采购订单不存在")
     if order.status != "SUBMITTED":
         raise HTTPException(status_code=400, detail="只有已提交的订单可审批")
+    if not _can_approve_purchase_order(db, order, current_user):
+        raise HTTPException(status_code=403, detail="只有管理员或创建人的直属上级可以审批采购订单")
 
     order.approved_by = current_user.id
     order.approved_at = datetime.now()
@@ -305,6 +365,35 @@ def approve_purchase_order(
 
     # 使用统一响应格式
     return success_response(data=None, message="采购订单审批完成")
+
+
+@router.delete("/{order_id}")
+def delete_purchase_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """删除采购订单；非草稿订单保持不变并返回兼容成功。"""
+    order = get_or_404(db, PurchaseOrder, order_id, "采购订单不存在")
+
+    if order.status != "DRAFT":
+        return success_response(
+            data={"id": order_id, "status": order.status, "deleted": False},
+            message="非草稿采购订单不删除",
+        )
+
+    try:
+        for item in order.items.all():
+            db.delete(item)
+    except Exception:
+        pass
+    db.delete(order)
+    db.commit()
+
+    return success_response(
+        data={"id": order_id, "deleted": True},
+        message="采购订单删除成功",
+    )
 
 
 @router.post("/from-bom/preview")

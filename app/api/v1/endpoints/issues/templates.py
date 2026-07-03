@@ -46,17 +46,19 @@ def _build_template_response(template: IssueTemplate) -> IssueTemplateResponse:
         category=template.category,
         issue_type=template.issue_type,
         default_severity=template.default_severity,
-        default_priority=template.default_priority,
+        default_priority=template.default_priority or "MEDIUM",
         default_impact_level=template.default_impact_level,
         title_template=template.title_template,
         description_template=template.description_template,
         solution_template=template.solution_template,
         default_tags=safe_json_loads(template.default_tags, default=[]),
         default_impact_scope=template.default_impact_scope,
-        default_is_blocking=template.default_is_blocking,
-        is_active=template.is_active,
+        default_is_blocking=bool(template.default_is_blocking)
+        if template.default_is_blocking is not None
+        else False,
+        is_active=bool(template.is_active) if template.is_active is not None else True,
         remark=template.remark,
-        usage_count=template.usage_count,
+        usage_count=template.usage_count or 0,
         last_used_at=template.last_used_at,
         created_at=template.created_at,
         updated_at=template.updated_at,
@@ -120,7 +122,7 @@ def _build_issue_response(issue: Issue) -> IssueResponse:
 @router.get("/", response_model=IssueTemplateListResponse)
 def list_issue_templates(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("issue:read")),
+    current_user: User = Depends(security.get_current_active_user),
     pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（模板编码/名称）"),
     category: Optional[str] = Query(None, description="问题分类筛选"),

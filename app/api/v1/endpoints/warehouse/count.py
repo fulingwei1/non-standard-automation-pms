@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """仓储管理 - 盘点管理"""
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -58,7 +58,7 @@ class CountOrderOut(BaseModel):
     total_items: int = 0
     matched_items: int = 0
     diff_items: int = 0
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None
     items: List[CountItemOut] = []
 
     class Config:

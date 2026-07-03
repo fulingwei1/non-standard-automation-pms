@@ -162,6 +162,10 @@ class ReportEngine:
         }
 
         result = renderer.render(rendered_sections, metadata)
+        if format == "json" and isinstance(result.data, dict):
+            for key, value in context.items():
+                if key != "params" and key not in result.data:
+                    result.data[key] = value
 
         # 8. 缓存结果
         if not skip_cache:

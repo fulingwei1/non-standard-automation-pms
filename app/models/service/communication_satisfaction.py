@@ -38,6 +38,12 @@ class CustomerCommunication(Base, TimestampMixin):
     customer_phone = Column(String(20), comment="客户电话")
     customer_email = Column(String(100), comment="客户邮箱")
 
+    # 关联ID：按ID挂钩客户/商机/线索/项目（支持按ID聚合销售活动，不再仅靠名字文本）
+    customer_id = Column(Integer, index=True, comment="客户ID")
+    opportunity_id = Column(Integer, index=True, comment="商机ID")
+    lead_id = Column(Integer, index=True, comment="线索ID")
+    project_id = Column(Integer, index=True, comment="项目ID")
+
     # 项目信息
     project_code = Column(String(50), comment="项目编号")
     project_name = Column(String(200), comment="项目名称")

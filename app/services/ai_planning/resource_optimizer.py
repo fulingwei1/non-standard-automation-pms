@@ -201,8 +201,8 @@ class AIResourceOptimizer:
         if not required_skills:
             return 70.0  # 无特定技能要求，默认70分
 
-        # 简化版：根据用户角色匹配
-        user_role = (user.role or "").lower()
+        # 简化版：根据用户岗位匹配
+        user_role = (user.position or "").lower()
 
         match_score = 50.0  # 基础分
 
@@ -295,9 +295,9 @@ class AIResourceOptimizer:
         """获取用户小时费率"""
 
         # TODO: 从用户配置或薪资表获取
-        # 目前基于角色的默认费率
+        # 目前基于岗位的默认费率
 
-        role = (user.role or "").lower()
+        role = (user.position or "").lower()
 
         if "senior" in role or "高级" in role or "资深" in role:
             return 200.0

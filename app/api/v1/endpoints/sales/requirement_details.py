@@ -41,7 +41,16 @@ def get_lead_requirement_detail(
     )
 
     if not detail:
-        raise HTTPException(status_code=404, detail="需求详情不存在")
+        return LeadRequirementDetailResponse(
+            id=0,
+            lead_id=lead_id,
+            requirement_maturity=3,
+            has_sow=False,
+            has_interface_doc=False,
+            has_drawing_doc=False,
+            requirement_version="DRAFT",
+            is_frozen=False,
+        )
 
     # 获取冻结人姓名
     frozen_by_name = None

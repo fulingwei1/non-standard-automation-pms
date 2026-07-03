@@ -139,8 +139,8 @@ def read_meeting_map(
 
 @router.get("/calendar", response_model=List[MeetingCalendarResponse])
 def read_meeting_calendar(
-    start_date: date = Query(..., description="开始日期"),
-    end_date: date = Query(..., description="结束日期"),
+    start_date: Optional[date] = Query(None, description="开始日期"),
+    end_date: Optional[date] = Query(None, description="结束日期"),
     rhythm_level: Optional[str] = Query(None, description="会议层级筛选"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
@@ -148,6 +148,11 @@ def read_meeting_calendar(
     """
     获取会议日历视图
     """
+    if start_date is None:
+        start_date = date.today()
+    if end_date is None:
+        end_date = start_date + timedelta(days=30)
+
     query = db.query(StrategicMeeting).filter(
         and_(StrategicMeeting.meeting_date >= start_date, StrategicMeeting.meeting_date <= end_date)
     )

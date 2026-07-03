@@ -12,6 +12,7 @@ from app.api import deps
 from app.core import security
 from app.models.outsourcing import (
     OutsourcingDelivery,
+    OutsourcingDeliveryItem,
     OutsourcingOrder,
     OutsourcingOrderItem,
     OutsourcingPayment,
@@ -21,6 +22,10 @@ from app.models.user import User
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+
+def _float_or_zero(value) -> float:
+    return float(value or 0)
 
 
 @router.get(
@@ -67,11 +72,11 @@ def print_outsourcing_order(
                 "specification": item.specification,
                 "drawing_no": item.drawing_no,
                 "process_type": item.process_type,
-                "unit": item.unit,
-                "quantity": float(item.quantity),
-                "unit_price": float(item.unit_price),
-                "amount": float(item.amount),
-                "material_provided": item.material_provided,
+                "unit": item.unit or "件",
+                "quantity": _float_or_zero(item.quantity),
+                "unit_price": _float_or_zero(item.unit_price),
+                "amount": _float_or_zero(item.amount),
+                "material_provided": bool(item.material_provided),
             }
         )
 
@@ -85,14 +90,20 @@ def print_outsourcing_order(
 
     deliveries_data = []
     for delivery in deliveries:
+        delivery_qty = sum(
+            _float_or_zero(item.delivery_quantity)
+            for item in db.query(OutsourcingDeliveryItem)
+            .filter(OutsourcingDeliveryItem.delivery_id == delivery.id)
+            .all()
+        )
         deliveries_data.append(
             {
                 "delivery_no": delivery.delivery_no,
                 "delivery_date": (
                     delivery.delivery_date.isoformat() if delivery.delivery_date else None
                 ),
-                "delivery_qty": float(delivery.delivery_qty or 0),
-                "status": delivery.status,
+                "delivery_qty": delivery_qty,
+                "status": delivery.status or "PENDING",
             }
         )
 

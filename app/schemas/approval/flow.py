@@ -6,7 +6,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # ==================== 流程定义 ====================
 
@@ -17,6 +17,11 @@ class ApprovalFlowBase(BaseModel):
     flow_name: str = Field(..., min_length=1, max_length=100, description="流程名称")
     flow_description: Optional[str] = Field(None, description="流程描述")
     is_default: bool = Field(False, description="是否默认流程")
+
+    @field_validator("is_default", mode="before")
+    @classmethod
+    def _normalize_is_default(cls, value):
+        return False if value is None else value
 
 
 class ApprovalFlowCreate(ApprovalFlowBase):
@@ -46,6 +51,11 @@ class ApprovalFlowResponse(ApprovalFlowBase):
     updated_at: Optional[datetime] = None
     nodes: Optional[List["ApprovalNodeResponse"]] = None
 
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _normalize_is_active(cls, value):
+        return True if value is None else value
+
     class Config:
         from_attributes = True
 
@@ -73,6 +83,21 @@ class ApprovalNodeBase(BaseModel):
     timeout_hours: Optional[int] = Field(None, description="超时时间（小时）")
     timeout_action: Optional[str] = Field(None, description="超时操作")
     notify_config: Optional[Dict[str, Any]] = Field(None, description="通知配置")
+
+    @field_validator("can_add_approver", mode="before")
+    @classmethod
+    def _normalize_can_add_approver(cls, value):
+        return False if value is None else value
+
+    @field_validator("can_transfer", "can_delegate", mode="before")
+    @classmethod
+    def _normalize_true_flags(cls, value):
+        return True if value is None else value
+
+    @field_validator("can_reject_to", mode="before")
+    @classmethod
+    def _normalize_can_reject_to(cls, value):
+        return "START" if value is None else value
 
 
 class ApprovalNodeCreate(ApprovalNodeBase):
@@ -108,6 +133,11 @@ class ApprovalNodeResponse(ApprovalNodeBase):
     is_active: bool
     created_at: datetime
     updated_at: Optional[datetime] = None
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _normalize_node_active(cls, value):
+        return True if value is None else value
 
     class Config:
         from_attributes = True

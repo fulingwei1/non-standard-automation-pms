@@ -43,6 +43,17 @@ scheduler = BackgroundScheduler(
 )
 
 
+class SchedulerTaskResultError(RuntimeError):
+    """Raised when a task returns an explicit failed result sentinel."""
+
+
+def _is_failed_task_result(result: Any) -> bool:
+    """Treat explicit sentinel return values as failed scheduler runs."""
+    if not isinstance(result, dict):
+        return False
+    return result.get("status") in {"stub", "not_implemented", "error", "failed"}
+
+
 def job_listener(event):
     """任务执行监听器"""
     payload = {
@@ -92,6 +103,26 @@ def _wrap_job_callable(func: Callable[..., Any], task: Dict[str, Any]) -> Callab
         try:
             result = func(*args, **kwargs)
             duration_ms = round((time.time() - start_time) * 1000, 2)
+            if _is_failed_task_result(result):
+                error = result.get("message") or f"任务返回失败状态: {result.get('status')}"
+                logger.error(
+                    "[scheduler] "
+                    + json.dumps(
+                        {
+                            **task_context,
+                            "event": "job_run_failed",
+                            "duration_ms": duration_ms,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                            "error": error,
+                            "result": result,
+                        },
+                        ensure_ascii=False,
+                    )
+                )
+                record_job_failure(
+                    task["id"], duration_ms, datetime.now(timezone.utc).isoformat()
+                )
+                raise SchedulerTaskResultError(error)
             logger.info(
                 "[scheduler] "
                 + json.dumps(
@@ -107,6 +138,8 @@ def _wrap_job_callable(func: Callable[..., Any], task: Dict[str, Any]) -> Callab
             record_job_success(task["id"], duration_ms, datetime.now(timezone.utc).isoformat())
             return result
         except Exception as exc:
+            if isinstance(exc, SchedulerTaskResultError):
+                raise
             duration_ms = round((time.time() - start_time) * 1000, 2)
             logger.error(
                 "[scheduler] "

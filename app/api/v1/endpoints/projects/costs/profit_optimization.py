@@ -21,6 +21,7 @@ from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.profit_analysis_service import ProfitAnalysisService
+from app.utils.permission_helpers import check_project_read_access_or_raise
 
 router = APIRouter()
 
@@ -31,12 +32,14 @@ def get_profit_optimization(
     db: Session = Depends(deps.get_db),
     project_id: int,
     target_margin: float = Query(25.0, description="目标毛利率（%）"),
-    current_user: User = Depends(security.require_permission("cost:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     综合利润分析
     聚合毛利率、成本优化建议、报价偏差分析
     """
+    check_project_read_access_or_raise(db, current_user, project_id)
+
     service = ProfitAnalysisService(db)
     result = service.get_profit_analysis(project_id, target_margin)
     if result.get("error"):

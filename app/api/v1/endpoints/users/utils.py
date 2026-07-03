@@ -16,6 +16,10 @@ from app.schemas.auth import UserCreate, UserResponse
 logger = logging.getLogger(__name__)
 
 
+def bool_or_default(value: Optional[bool], default: bool) -> bool:
+    return bool(default if value is None else value)
+
+
 def get_role_names(user: User) -> List[str]:
     """提取用户角色名称（安全版本）"""
     try:
@@ -53,8 +57,8 @@ def build_user_response(user: User) -> UserResponse:
         department=user.department,
         position=user.position,
         avatar=user.avatar,
-        is_active=user.is_active,
-        is_superuser=user.is_superuser,
+        is_active=bool_or_default(user.is_active, True),
+        is_superuser=bool_or_default(user.is_superuser, False),
         last_login_at=user.last_login_at,
         roles=get_role_names(user),
         role_ids=get_role_ids(user),

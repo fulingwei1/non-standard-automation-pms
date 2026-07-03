@@ -52,7 +52,7 @@ def get_month_summary(
     year: int = Query(..., description="年份"),
     month: int = Query(..., ge=1, le=12, description="月份"),
     user_id: Optional[int] = Query(None, description="用户ID（默认当前用户）"),
-    current_user: User = Depends(security.require_permission("timesheet:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     获取月度汇总

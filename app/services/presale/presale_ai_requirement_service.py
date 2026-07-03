@@ -27,10 +27,21 @@ from app.utils.db_helpers import save_obj
 class AIRequirementAnalyzer:
     """AI需求分析器 - 核心AI引擎"""
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4"):
-        self.api_key = api_key or getattr(settings, "OPENAI_API_KEY", None)
-        self.model = model
-        self.api_base_url = "https://api.openai.com/v1/chat/completions"
+    def __init__(self, api_key: Optional[str] = None, model: str = None):
+        # 优先使用阿里百炼 Coding Plan（通义千问）；回退 OpenAI 配置
+        self.api_key = (
+            api_key
+            or getattr(settings, "ALIBABA_API_KEY", None)
+            or getattr(settings, "OPENAI_API_KEY", None)
+        )
+        _base = str(getattr(settings, "ALIBABA_BASE_URL", "") or "").rstrip("/")
+        if self.api_key and getattr(settings, "ALIBABA_API_KEY", None) and _base:
+            # 需求分析为结构化JSON抽取，用更快的 coder 模型（避免重推理模型高延迟）
+            self.model = model or "qwen3-coder-plus"
+            self.api_base_url = f"{_base}/chat/completions"
+        else:
+            self.model = model or "gpt-4"
+            self.api_base_url = "https://api.openai.com/v1/chat/completions"
 
     async def analyze_requirement(
         self, raw_requirement: str, analysis_depth: str = "standard"
@@ -268,7 +279,8 @@ class AIRequirementAnalyzer:
             "max_tokens": 2000,
         }
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        _timeout = float(getattr(settings, "ALIBABA_TIMEOUT", 60.0) or 60.0)
+        async with httpx.AsyncClient(timeout=_timeout) as client:
             response = await client.post(self.api_base_url, headers=headers, json=payload)
             response.raise_for_status()
 

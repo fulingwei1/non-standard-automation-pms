@@ -153,3 +153,28 @@ class EcnBomImpact(Base, TimestampMixin):
         Index("idx_bom_impact_bom", "bom_version_id"),
         Index("idx_bom_impact_machine", "machine_id"),
     )
+
+
+class EcnBomChange(Base, TimestampMixin):
+    """ECN 同步到 BOM 的变更记录（审计留痕）"""
+
+    __tablename__ = "ecn_bom_changes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
+    bom_id = Column(Integer, ForeignKey("bom_headers.id"), comment="BOM ID")
+    project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
+
+    material_code = Column(String(64), comment="物料编码")
+    change_action = Column(String(20), comment="变更动作：UPDATE/REPLACE/ADD/DELETE")
+    old_value = Column(Text, comment="变更前值")
+    new_value = Column(Text, comment="变更后值")
+    cost_impact = Column(Numeric(14, 2), default=0, comment="成本影响")
+    applied_at = Column(DateTime, comment="应用时间")
+
+    ecn = relationship("Ecn")
+
+    __table_args__ = (
+        Index("idx_bom_change_ecn", "ecn_id"),
+        Index("idx_bom_change_bom", "bom_id"),
+    )

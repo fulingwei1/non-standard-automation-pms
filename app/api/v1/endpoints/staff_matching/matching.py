@@ -3,7 +3,8 @@
 AI匹配 API端点
 """
 
-from typing import List, Optional
+from datetime import datetime
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -16,6 +17,38 @@ from app.schemas import staff_matching as schemas
 from app.services.staff_matching import StaffMatchingService
 
 router = APIRouter()
+
+
+def _as_json_dict(value: Any) -> dict:
+    return value if isinstance(value, dict) else {}
+
+
+def _project_name(project: Any) -> Optional[str]:
+    if not project:
+        return None
+    return getattr(project, "project_name", None) or getattr(project, "name", None)
+
+
+def _build_matching_log_response(log: HrAIMatchingLog) -> dict:
+    return {
+        "id": log.id,
+        "request_id": log.request_id,
+        "project_id": log.project_id,
+        "staffing_need_id": log.staffing_need_id,
+        "candidate_employee_id": log.candidate_employee_id,
+        "total_score": log.total_score or 0,
+        "dimension_scores": _as_json_dict(log.dimension_scores),
+        "rank": log.rank or 0,
+        "recommendation_type": log.recommendation_type,
+        "is_accepted": log.is_accepted,
+        "accept_time": log.accept_time,
+        "acceptor_id": log.acceptor_id,
+        "reject_reason": log.reject_reason,
+        "matching_time": log.matching_time or log.created_at or datetime.now(),
+        "project_name": _project_name(log.project),
+        "employee_name": log.candidate.name if log.candidate else None,
+        "acceptor_name": log.acceptor.real_name if log.acceptor else None,
+    }
 
 
 @router.post("/execute/{staffing_need_id}")
@@ -69,27 +102,7 @@ def get_matching_results(
 
     result = []
     for log in logs:
-        result.append(
-            {
-                "id": log.id,
-                "request_id": log.request_id,
-                "project_id": log.project_id,
-                "staffing_need_id": log.staffing_need_id,
-                "candidate_employee_id": log.candidate_employee_id,
-                "total_score": log.total_score,
-                "dimension_scores": log.dimension_scores,
-                "rank": log.rank,
-                "recommendation_type": log.recommendation_type,
-                "is_accepted": log.is_accepted,
-                "accept_time": log.accept_time,
-                "acceptor_id": log.acceptor_id,
-                "reject_reason": log.reject_reason,
-                "matching_time": log.matching_time,
-                "project_name": log.project.name if log.project else None,
-                "employee_name": log.candidate.name if log.candidate else None,
-                "acceptor_name": log.acceptor.real_name if log.acceptor else None,
-            }
-        )
+        result.append(_build_matching_log_response(log))
 
     return result
 
@@ -148,26 +161,6 @@ def get_matching_history(
 
     result = []
     for log in logs:
-        result.append(
-            {
-                "id": log.id,
-                "request_id": log.request_id,
-                "project_id": log.project_id,
-                "staffing_need_id": log.staffing_need_id,
-                "candidate_employee_id": log.candidate_employee_id,
-                "total_score": log.total_score,
-                "dimension_scores": log.dimension_scores,
-                "rank": log.rank,
-                "recommendation_type": log.recommendation_type,
-                "is_accepted": log.is_accepted,
-                "accept_time": log.accept_time,
-                "acceptor_id": log.acceptor_id,
-                "reject_reason": log.reject_reason,
-                "matching_time": log.matching_time,
-                "project_name": log.project.name if log.project else None,
-                "employee_name": log.candidate.name if log.candidate else None,
-                "acceptor_name": log.acceptor.real_name if log.acceptor else None,
-            }
-        )
+        result.append(_build_matching_log_response(log))
 
     return result

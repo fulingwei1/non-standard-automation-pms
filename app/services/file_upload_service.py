@@ -313,6 +313,9 @@ class FileUploadService:
         Returns:
             哈希值（十六进制字符串）
         """
+        # 容错：若传入字符串则按 UTF-8 编码，避免 hashlib 抛 "Strings must be encoded"
+        if isinstance(file_content, str):
+            file_content = file_content.encode("utf-8")
         if algorithm == "md5":
             return hashlib.md5(file_content).hexdigest()
         elif algorithm == "sha1":

@@ -18,6 +18,17 @@ from app.utils.json_helpers import safe_json_loads
 
 router = APIRouter()
 
+# 进入审批流或已成交的报价不允许删除。
+# 覆盖两套状态词汇（QuoteStatusEnum 与 quote_status.py 状态机），避免词汇漂移导致漏判。
+NON_DELETABLE_QUOTE_STATUSES = {
+    "SUBMITTED",
+    "IN_REVIEW",
+    "APPROVED",
+    "ACCEPTED",
+    "CONVERTED",
+    "CONTRACTED",
+}
+
 
 def _parse_item_tech_meta(remark: str) -> tuple[str, dict]:
     """
@@ -45,7 +56,7 @@ def _parse_item_tech_meta(remark: str) -> tuple[str, dict]:
     return base.strip(), tech_meta
 
 
-@router.get("/quotes/{quote_id}", response_model=ResponseModel)
+@router.get("/quotes/{quote_id:int}", response_model=ResponseModel)
 def get_quote_detail(
     quote_id: int,
     db: Session = Depends(get_db),
@@ -66,7 +77,8 @@ def get_quote_detail(
         joinedload(Quote.opportunity),
         joinedload(Quote.customer),
         joinedload(Quote.owner),
-        joinedload(Quote.current_version).joinedload(QuoteVersion.items)
+        joinedload(Quote.current_version).joinedload(QuoteVersion.items),
+        joinedload(Quote.current_version).joinedload(QuoteVersion.presale_ticket),
     ).filter(Quote.id == quote_id).first()
 
     if not quote:
@@ -96,10 +108,23 @@ def get_quote_detail(
                 **tech_meta,
             })
 
+    presale_ticket = current_version.presale_ticket if current_version else None
+    presale_solution_id = current_version.presale_solution_id if current_version else None
+    presale_ticket_id = current_version.presale_ticket_id if current_version else None
+
     data = {
         "id": quote.id,
         "quote_code": quote.quote_code,
         "opportunity_id": quote.opportunity_id,
+        "lead_id": (
+            quote.opportunity.lead_id
+            if quote.opportunity and quote.opportunity.lead_id
+            else (presale_ticket.lead_id if presale_ticket else None)
+        ),
+        "project_id": presale_ticket.project_id if presale_ticket else None,
+        "solution_id": presale_solution_id,
+        "presale_solution_id": presale_solution_id,
+        "presale_ticket_id": presale_ticket_id,
         "opportunity_name": (
             getattr(quote.opportunity, "opp_name", None)
             or getattr(quote.opportunity, "name", None)
@@ -129,6 +154,9 @@ def get_quote_detail(
             "cost_total": float(current_version.cost_total) if current_version.cost_total else None,
             "gross_margin": float(current_version.gross_margin) if current_version.gross_margin else None,
             "lead_time_days": current_version.lead_time_days,
+            "solution_id": current_version.presale_solution_id,
+            "presale_solution_id": current_version.presale_solution_id,
+            "presale_ticket_id": current_version.presale_ticket_id,
             "items": items_data,
         } if current_version else None,
         "created_at": quote.created_at.isoformat() if quote.created_at else None,
@@ -138,7 +166,7 @@ def get_quote_detail(
     return ResponseModel(code=200, message="获取报价详情成功", data=data)
 
 
-@router.put("/quotes/{quote_id}", response_model=ResponseModel)
+@router.put("/quotes/{quote_id:int}", response_model=ResponseModel)
 def update_quote(
     quote_id: int,
     quote_data: dict,
@@ -177,7 +205,7 @@ def update_quote(
     return ResponseModel(code=200, message="报价更新成功", data={"id": quote.id})
 
 
-@router.delete("/quotes/{quote_id}", response_model=ResponseModel)
+@router.delete("/quotes/{quote_id:int}", response_model=ResponseModel)
 def delete_quote(
     quote_id: int,
     db: Session = Depends(get_db),
@@ -200,9 +228,11 @@ def delete_quote(
     if not security.check_sales_data_permission(quote, current_user, db, "owner_id"):
         raise HTTPException(status_code=403, detail="无权删除该报价")
 
-    # 检查状态，已审批的不允许删除
-    if quote.status in ["APPROVED", "CONTRACTED"]:
-        raise HTTPException(status_code=400, detail="已审批或已签约的报价不能删除")
+    # 检查状态：进入审批或已成交的报价不允许删除。
+    # 注：原实现误用了不存在的状态 "CONTRACTED"，导致 ACCEPTED/CONVERTED 等
+    # 已成交报价仍可被硬删除（级联删除版本与明细）。这里改用真实状态词汇。
+    if quote.status in NON_DELETABLE_QUOTE_STATUSES:
+        raise HTTPException(status_code=400, detail="审批中、已审批或已成交的报价不能删除")
 
     # 硬删除（级联删除版本和明细）
     delete_obj(db, quote)

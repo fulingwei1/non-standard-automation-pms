@@ -7,7 +7,7 @@ ECN(工程变更通知)在完成评估后需要提交审批以确认变更。
 """
 
 import logging
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -40,7 +40,7 @@ class ApprovalActionRequest(BaseModel):
     """审批操作请求"""
 
     task_id: int = Field(..., description="审批任务ID")
-    action: str = Field(..., description="操作类型: approve/reject")
+    action: Literal["approve", "reject"] = Field(..., description="操作类型: approve/reject")
     comment: Optional[str] = Field(None, description="审批意见")
 
 
@@ -48,7 +48,7 @@ class BatchApprovalRequest(BaseModel):
     """批量审批请求"""
 
     task_ids: list[int] = Field(..., description="审批任务ID列表")
-    action: str = Field(..., description="操作类型: approve/reject")
+    action: Literal["approve", "reject"] = Field(..., description="操作类型: approve/reject")
     comment: Optional[str] = Field(None, description="审批意见")
 
 

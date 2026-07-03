@@ -8,7 +8,7 @@ from .config import EcnApprovalMatrix, EcnType
 from .core import Ecn
 from .evaluation_approval import EcnApproval, EcnEvaluation
 from .execution import EcnTask
-from .impact import EcnAffectedMaterial, EcnAffectedOrder, EcnBomImpact
+from .impact import EcnAffectedMaterial, EcnAffectedOrder, EcnBomChange, EcnBomImpact
 from .cost_record import EcnCostRecord
 from .log import EcnLog
 from .material_impact import EcnExecutionProgress, EcnMaterialDisposition, EcnStakeholder
@@ -24,6 +24,7 @@ __all__ = [
     "EcnAffectedMaterial",
     "EcnAffectedOrder",
     "EcnBomImpact",
+    "EcnBomChange",
     "EcnResponsibility",
     "EcnSolutionTemplate",
     "EcnCostRecord",

@@ -271,7 +271,7 @@ def get_global_workload_overview(
         dept_stats.append(
             {
                 "department_id": dept.id,
-                "department_name": dept.name,
+                "department_name": dept.dept_name,
                 "member_count": len(members),
                 "avg_allocation": round(avg_alloc, 1),
                 "status": (
@@ -302,7 +302,7 @@ def get_global_workload_overview(
     )
 
 
-@router.get("/analytics/workload/bottlenecks", response_model=ResponseModel)
+@router.get("/workload/bottlenecks", response_model=ResponseModel)
 def get_workload_bottlenecks(
     db: Session = Depends(get_db),
     start_date: Optional[date] = Query(None),

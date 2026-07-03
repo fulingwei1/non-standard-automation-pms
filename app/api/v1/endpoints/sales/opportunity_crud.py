@@ -15,14 +15,14 @@ from app.core import security
 from app.models.project import Customer
 from app.models.sales import Opportunity, OpportunityRequirement
 from app.models.user import User
-from app.schemas.common import PaginatedResponse
+from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.sales import (
     OpportunityCreate,
     OpportunityRequirementResponse,
     OpportunityResponse,
     OpportunityUpdate,
 )
-from app.utils.db_helpers import get_or_404
+from app.utils.db_helpers import delete_obj, get_or_404
 
 from .utils import (
     generate_opportunity_code,
@@ -298,3 +298,24 @@ def update_opportunity(
         )
 
     return OpportunityResponse(**opp_dict)
+
+
+@router.delete("/opportunities/{opp_id}", response_model=ResponseModel)
+def delete_opportunity(
+    *,
+    db: Session = Depends(deps.get_db),
+    opp_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """删除商机。"""
+    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+
+    if not security.check_sales_delete_permission(
+        current_user,
+        db,
+        get_entity_creator_id(opportunity),
+    ):
+        raise HTTPException(status_code=403, detail="您没有权限删除此商机")
+
+    delete_obj(db, opportunity)
+    return ResponseModel(code=200, message="商机删除成功", data={"id": opp_id})

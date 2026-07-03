@@ -48,7 +48,16 @@ async def get_ranking(
     if not period_id:
         period = db.query(PerformancePeriod).filter(PerformancePeriod.is_active).first()
         if not period:
-            raise HTTPException(status_code=404, detail="未找到当前考核周期")
+            return ResponseModel(
+                code=200,
+                message="暂无考核周期",
+                data={
+                    "period_id": None,
+                    "period_name": "暂无考核周期",
+                    "total": 0,
+                    "items": [],
+                },
+            )
         period_id = period.id
     else:
         period = db.query(PerformancePeriod).filter(PerformancePeriod.id == period_id).first()

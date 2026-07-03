@@ -17,6 +17,7 @@ class DataSourceType(str, Enum):
     QUERY = "query"
     SERVICE = "service"
     AGGREGATE = "aggregate"
+    ADAPTER = "adapter"
 
 
 class SectionType(str, Enum):
@@ -101,6 +102,7 @@ class DataSourceConfig(BaseModel):
     type: DataSourceType
     sql: Optional[str] = None  # for query type
     method: Optional[str] = None  # for service type
+    adapter: Optional[str] = None  # for adapter type
     args: Dict[str, Any] = Field(default_factory=dict)
     function: Optional[str] = None  # for aggregate type
 

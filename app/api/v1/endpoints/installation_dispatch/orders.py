@@ -41,6 +41,7 @@ def _enrich_order_with_relations(
         machine = db.query(Machine).filter(Machine.id == order.machine_id).first()
         if machine:
             order.machine_no = machine.machine_no
+            order.machine_name = machine.machine_name
     if order.customer_id:
         customer = db.query(Customer).filter(Customer.id == order.customer_id).first()
         if customer:

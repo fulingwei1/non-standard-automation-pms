@@ -88,6 +88,26 @@ class StrategyComparison(Base, TimestampMixin):
     # 软删除
     is_active = Column(Boolean, default=True, comment="是否激活")
 
+    @property
+    def comparison_type(self) -> str:
+        """兼容旧 API 字段名。"""
+        return "YEAR_OVER_YEAR"
+
+    @property
+    def base_year(self):
+        """兼容旧 API 字段名。"""
+        return self.previous_year
+
+    @property
+    def compare_year(self):
+        """兼容旧 API 字段名。"""
+        return self.current_year
+
+    @property
+    def created_by(self):
+        """兼容旧 API 字段名。"""
+        return self.generated_by
+
     # 关系
     current_strategy = relationship("Strategy", foreign_keys=[current_strategy_id])
     previous_strategy = relationship("Strategy", foreign_keys=[previous_strategy_id])

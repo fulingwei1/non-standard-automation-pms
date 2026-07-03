@@ -7,7 +7,7 @@
 
 from typing import Any, Dict, Optional
 
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.models.rd_project import RdCost, RdCostType, RdProject
@@ -180,11 +180,21 @@ def build_personnel_data(db: Session, year: int) -> Dict[str, Any]:
     Returns:
         报表数据字典
     """
+    project_start_date = func.coalesce(
+        RdProject.actual_start_date,
+        RdProject.planned_start_date,
+        RdProject.initiation_date,
+    )
+    project_end_date = func.coalesce(
+        RdProject.actual_end_date,
+        RdProject.planned_end_date,
+        RdProject.close_date,
+    )
     rd_projects = (
         db.query(RdProject)
         .filter(
-            func.extract("year", RdProject.start_date) <= year,
-            func.extract("year", RdProject.end_date) >= year,
+            func.extract("year", project_start_date) <= year,
+            or_(project_end_date.is_(None), func.extract("year", project_end_date) >= year),
         )
         .all()
     )

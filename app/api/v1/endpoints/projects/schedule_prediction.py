@@ -380,6 +380,7 @@ def generate_schedule_report(
 
 @router.get("/risk-overview")
 def get_risk_overview(
+    project_id: Optional[int] = None,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:

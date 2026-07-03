@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.schemas.common import PageParams, PaginatedResponse
 
@@ -64,6 +64,51 @@ class ProjectEvaluationResponse(ProjectEvaluationBase):
 
     class Config:
         from_attributes = True
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_nulls(cls, value):
+        if isinstance(value, dict):
+            data = dict(value)
+        elif hasattr(value, "id"):
+            data = {
+                "id": getattr(value, "id", None),
+                "evaluation_code": getattr(value, "evaluation_code", None),
+                "project_id": getattr(value, "project_id", None),
+                "novelty_score": getattr(value, "novelty_score", None),
+                "new_tech_score": getattr(value, "new_tech_score", None),
+                "difficulty_score": getattr(value, "difficulty_score", None),
+                "workload_score": getattr(value, "workload_score", None),
+                "amount_score": getattr(value, "amount_score", None),
+                "weights": getattr(value, "weights", None),
+                "evaluation_detail": getattr(value, "evaluation_detail", None),
+                "evaluation_note": getattr(value, "evaluation_note", None),
+                "total_score": getattr(value, "total_score", None),
+                "evaluation_level": getattr(value, "evaluation_level", None),
+                "evaluator_id": getattr(value, "evaluator_id", None),
+                "evaluator_name": getattr(value, "evaluator_name", None),
+                "evaluation_date": getattr(value, "evaluation_date", None),
+                "status": getattr(value, "status", None),
+                "created_at": getattr(value, "created_at", None),
+                "updated_at": getattr(value, "updated_at", None),
+            }
+        else:
+            return value
+
+        for field in (
+            "novelty_score",
+            "new_tech_score",
+            "difficulty_score",
+            "workload_score",
+            "amount_score",
+        ):
+            if data.get(field) is None:
+                data[field] = Decimal("1")
+        if data.get("total_score") is None:
+            data["total_score"] = Decimal("0")
+        data["evaluation_level"] = data.get("evaluation_level") or "D"
+        data["status"] = data.get("status") or "DRAFT"
+        return data
 
 
 class ProjectEvaluationQuery(PageParams):

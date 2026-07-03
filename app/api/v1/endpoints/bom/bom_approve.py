@@ -5,7 +5,7 @@ BOM管理端点 - BOM审核通过后自动创建采购订单
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core.security import require_permission
@@ -16,9 +16,9 @@ router = APIRouter(prefix="/headers", tags=["bom"])
 
 
 @router.post("/{bom_id}/approve")
-async def approve_bom(
+def approve_bom(
     bom_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("bom:approve")),
 ):
     """
@@ -42,11 +42,11 @@ async def approve_bom(
     """
 
     try:
-        result = await BOMService.approve_bom_and_create_purchase_orders(
+        result = BOMService.approve_bom_and_create_purchase_orders(
             db=db, bom_id=bom_id, approved_by=current_user.id
         )
 
-        await db.commit()
+        db.commit()
 
         return {
             "success": True,
@@ -59,5 +59,5 @@ async def approve_bom(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        await db.rollback()
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"BOM审核失败：{str(e)}")

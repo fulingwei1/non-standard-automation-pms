@@ -25,5 +25,5 @@ def _serialize_project_status_log(log: ProjectStatusLog) -> Dict[str, Any]:
         "change_reason": log.change_reason,
         "changed_by": log.changed_by,
         "changed_at": log.changed_at.isoformat() if log.changed_at else None,
-        "created_at": log.created_at.isoformat() if log.created_at else None,
+        "created_at": log.changed_at.isoformat() if log.changed_at else None,
     }

@@ -45,12 +45,10 @@ def get_project_workspace(
         build_task_info,
         build_team_info,
     )
-    from app.utils.permission_helpers import check_project_access_or_raise
+    from app.utils.permission_helpers import check_project_read_access_or_raise
 
     # 检查项目访问权限
-    check_project_access_or_raise(db, current_user, project_id)
-
-    project = get_or_404(db, Project, project_id, "项目不存在")
+    project = check_project_read_access_or_raise(db, current_user, project_id)
 
     # 构建各类信息
     project_info = build_project_basic_info(project)
@@ -135,6 +133,14 @@ def get_project_bonuses(
 
     bonus_service = ProjectBonusService(db)
 
+    def _calculation_user_name(calculation) -> str:
+        user = getattr(calculation, "user", None)
+        if user is None and getattr(calculation, "user_id", None):
+            user = db.query(User).filter(User.id == calculation.user_id).first()
+        if user:
+            return getattr(user, "real_name", None) or getattr(user, "username", None) or "Unknown"
+        return "Unknown"
+
     return {
         "rules": [
             {
@@ -148,7 +154,7 @@ def get_project_bonuses(
             {
                 "id": c.id,
                 "calculation_code": c.calculation_code,
-                "user_name": c.user.real_name or c.user.username if c.user else "Unknown",
+                "user_name": _calculation_user_name(c),
                 "calculated_amount": float(c.calculated_amount or 0),
                 "status": c.status,
             }

@@ -51,6 +51,16 @@ class TechnicalAssessmentResponse(TimestampSchema):
     version_no: Optional[str] = None
     item_scores: Optional[str] = None
 
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_status(cls, value):
+        return "PENDING" if value is None else value
+
+    @field_validator("veto_triggered", mode="before")
+    @classmethod
+    def _normalize_veto_triggered(cls, value):
+        return False if value is None else value
+
 
 class ScoringRuleCreate(BaseModel):
     """创建评分规则"""

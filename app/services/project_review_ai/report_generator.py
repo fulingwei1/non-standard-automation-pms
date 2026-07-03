@@ -14,6 +14,7 @@ from app.models.project import Project
 from app.models.project.financial import ProjectCost
 from app.models.timesheet import Timesheet
 from app.services.ai_client_service import AIClientService
+from app.services.cost.cost_basis import actual_project_cost_filter
 
 
 class ProjectReviewReportGenerator:
@@ -48,7 +49,9 @@ class ProjectReviewReportGenerator:
             raise ValueError(f"项目 {project_id} 不存在或数据不完整")
 
         # 2. 构建AI提示词
-        prompt = self._build_review_prompt(project_data, review_type, additional_context)
+        prompt = self._build_review_prompt(
+            project_data, review_type, additional_context
+        )
 
         # 3. 调用GLM-5生成报告
         ai_response = self.ai_client.generate_solution(
@@ -77,13 +80,23 @@ class ProjectReviewReportGenerator:
             return None
 
         # 获取工时数据
-        timesheets = self.db.query(Timesheet).filter(Timesheet.project_id == project_id).all()
+        timesheets = (
+            self.db.query(Timesheet).filter(Timesheet.project_id == project_id).all()
+        )
 
         # 获取成本数据
-        costs = self.db.query(ProjectCost).filter(ProjectCost.project_id == project_id).all()
+        costs = (
+            self.db.query(ProjectCost)
+            .filter(ProjectCost.project_id == project_id, actual_project_cost_filter())
+            .all()
+        )
 
         # 获取变更数据
-        changes = self.db.query(ChangeRequest).filter(ChangeRequest.project_id == project_id).all()
+        changes = (
+            self.db.query(ChangeRequest)
+            .filter(ChangeRequest.project_id == project_id)
+            .all()
+        )
 
         # 计算统计数据
         total_hours = sum(t.work_hours or 0 for t in timesheets)
@@ -106,21 +119,31 @@ class ProjectReviewReportGenerator:
                 "name": project.project_name,
                 "description": project.description,
                 "customer_name": (
-                    project.customer.customer_name if getattr(project, "customer", None) else project.customer_name
+                    project.customer.customer_name
+                    if getattr(project, "customer", None)
+                    else project.customer_name
                 ),
                 "status": project.status,
                 "type": project.project_type,
                 "planned_start": (
-                    project.planned_start_date.isoformat() if project.planned_start_date else None
+                    project.planned_start_date.isoformat()
+                    if project.planned_start_date
+                    else None
                 ),
                 "planned_end": (
-                    project.planned_end_date.isoformat() if project.planned_end_date else None
+                    project.planned_end_date.isoformat()
+                    if project.planned_end_date
+                    else None
                 ),
                 "actual_start": (
-                    project.actual_start_date.isoformat() if project.actual_start_date else None
+                    project.actual_start_date.isoformat()
+                    if project.actual_start_date
+                    else None
                 ),
                 "actual_end": (
-                    project.actual_end_date.isoformat() if project.actual_end_date else None
+                    project.actual_end_date.isoformat()
+                    if project.actual_end_date
+                    else None
                 ),
                 "budget": float(project.budget_amount or 0),
             },
@@ -136,10 +159,14 @@ class ProjectReviewReportGenerator:
             "team_members": (
                 [
                     {
-                        "name": member.user.username if hasattr(member, "user") else "Unknown",
+                        "name": member.user.username
+                        if hasattr(member, "user")
+                        else "Unknown",
                         "role": member.role,
                         "hours": sum(
-                            t.work_hours or 0 for t in timesheets if t.user_id == member.user_id
+                            t.work_hours or 0
+                            for t in timesheets
+                            if t.user_id == member.user_id
                         ),
                     }
                     for member in project.members
@@ -159,7 +186,10 @@ class ProjectReviewReportGenerator:
         }
 
     def _build_review_prompt(
-        self, project_data: Dict[str, Any], review_type: str, additional_context: Optional[str]
+        self,
+        project_data: Dict[str, Any],
+        review_type: str,
+        additional_context: Optional[str],
     ) -> str:
         """构建AI提示词"""
         project = project_data["project"]
@@ -168,39 +198,45 @@ class ProjectReviewReportGenerator:
         schedule_label = (
             "延期"
             if stats["schedule_variance"] > 0
-            else "提前" if stats["schedule_variance"] < 0 else "准时"
+            else "提前"
+            if stats["schedule_variance"] < 0
+            else "准时"
         )
         cost_label = (
             "超支"
             if stats["cost_variance"] > 0
-            else "结余" if stats["cost_variance"] < 0 else "持平"
+            else "结余"
+            if stats["cost_variance"] < 0
+            else "持平"
         )
         team_size = len(project_data["team_members"])
         changes_text = self._format_changes(project_data["changes"])
-        extra_section = f"## 补充信息\n{additional_context}" if additional_context else ""
+        extra_section = (
+            f"## 补充信息\n{additional_context}" if additional_context else ""
+        )
 
         prompt = f"""# 项目复盘报告生成任务
 
 ## 项目基本信息
-- 项目名称：{project['name']}
-- 项目编号：{project['code']}
-- 客户名称：{project['customer_name']}
-- 项目类型：{project['type']}
-- 项目描述：{project['description']}
+- 项目名称：{project["name"]}
+- 项目编号：{project["code"]}
+- 客户名称：{project["customer_name"]}
+- 项目类型：{project["type"]}
+- 项目描述：{project["description"]}
 
 ## 项目周期
-- 计划工期：{stats['plan_duration']}天
-- 实际工期：{stats['actual_duration']}天
-- 进度偏差：{stats['schedule_variance']}天 ({schedule_label})
+- 计划工期：{stats["plan_duration"]}天
+- 实际工期：{stats["actual_duration"]}天
+- 进度偏差：{stats["schedule_variance"]}天 ({schedule_label})
 
 ## 项目成本
-- 预算金额：¥{project['budget']:,.2f}
-- 实际成本：¥{stats['total_cost']:,.2f}
-- 成本偏差：¥{stats['cost_variance']:,.2f} ({cost_label})
+- 预算金额：¥{project["budget"]:,.2f}
+- 实际成本：¥{stats["total_cost"]:,.2f}
+- 成本偏差：¥{stats["cost_variance"]:,.2f} ({cost_label})
 
 ## 项目统计
-- 总工时：{stats['total_hours']}小时
-- 变更次数：{stats['change_count']}次
+- 总工时：{stats["total_hours"]}小时
+- 变更次数：{stats["change_count"]}次
 - 团队人数：{team_size}人
 
 ## 主要变更

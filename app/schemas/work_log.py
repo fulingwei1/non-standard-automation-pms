@@ -79,6 +79,9 @@ class MentionResponse(BaseModel):
     mention_id: int
     mention_name: Optional[str] = None
 
+    class Config:
+        from_attributes = True
+
 
 class WorkLogResponse(TimestampSchema):
     """工作日志响应"""
@@ -92,11 +95,64 @@ class WorkLogResponse(TimestampSchema):
     mentions: List[MentionResponse] = []
     timesheet_id: Optional[int] = None
 
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_status(cls, value):
+        return "SUBMITTED" if value in (None, "") else value
+
 
 class WorkLogListResponse(PaginatedResponse):
     """工作日志列表响应"""
 
     items: List[WorkLogResponse]
+
+
+class FieldServiceWorkLogContextItem(BaseModel):
+    """外出服务工作日志上下文条目"""
+
+    dispatch_order_id: int
+    order_no: str
+    status: str
+    task_type: str
+    task_title: str
+    task_description: Optional[str] = None
+    project_id: int
+    project_name: Optional[str] = None
+    machine_id: Optional[int] = None
+    machine_name: Optional[str] = None
+    customer_id: int
+    customer_name: Optional[str] = None
+    scheduled_date: date
+    location: Optional[str] = None
+    progress: Optional[int] = 0
+    execution_notes: Optional[str] = None
+    issues_found: Optional[str] = None
+    solution_provided: Optional[str] = None
+    estimated_hours: Optional[Decimal] = None
+    default_content: str
+
+
+class FieldServiceWorkLogContextResponse(BaseModel):
+    """外出服务工作日志上下文响应"""
+
+    work_date: date
+    has_submitted_log: bool = False
+    submitted_log_id: Optional[int] = None
+    draft_log_id: Optional[int] = None
+    items: List[FieldServiceWorkLogContextItem] = []
+
+
+class FieldServiceWorkLogCreate(BaseModel):
+    """从外出派工单生成工作日志"""
+
+    work_date: Optional[date] = Field(default=None, description="工作日期，默认今天")
+    dispatch_order_ids: List[int] = Field(default=[], description="外出派工单ID列表")
+    today_progress: Optional[str] = Field(default=None, max_length=160, description="今日进展")
+    issues_found: Optional[str] = Field(default=None, max_length=120, description="现场问题")
+    next_plan: Optional[str] = Field(default=None, max_length=120, description="下一步计划")
+    work_hours: Optional[Decimal] = Field(default=None, ge=0, le=24, description="工作时长")
+    content: Optional[str] = Field(default=None, max_length=300, description="自定义日志内容")
+    status: Optional[str] = Field(default="SUBMITTED", description="状态：DRAFT/SUBMITTED")
 
 
 # ==================== 工作日志配置 ====================

@@ -49,6 +49,7 @@ class ProjectCrudService:
         health: Optional[str] = None,
         project_type: Optional[str] = None,
         pm_id: Optional[int] = None,
+        project_ids: Optional[List[int]] = None,
         min_progress: Optional[float] = None,
         max_progress: Optional[float] = None,
         is_active: Optional[bool] = None,
@@ -94,6 +95,13 @@ class ProjectCrudService:
         # 项目经理筛选
         if pm_id:
             query = query.filter(Project.pm_id == pm_id)
+
+        # 指定项目范围：用于“我的项目”等已由调用方完成授权收窄的自服务列表
+        if project_ids is not None:
+            if not project_ids:
+                query = query.filter(False)
+            else:
+                query = query.filter(Project.id.in_(project_ids))
 
         # 进度筛选
         if min_progress is not None:
@@ -150,6 +158,7 @@ class ProjectCrudService:
         health: Optional[str] = None,
         project_type: Optional[str] = None,
         pm_id: Optional[int] = None,
+        project_ids: Optional[List[int]] = None,
         min_progress: Optional[float] = None,
         max_progress: Optional[float] = None,
         is_active: Optional[bool] = None,
@@ -169,6 +178,7 @@ class ProjectCrudService:
             health=health,
             project_type=project_type,
             pm_id=pm_id,
+            project_ids=project_ids,
             min_progress=min_progress,
             max_progress=max_progress,
             is_active=is_active,
@@ -234,6 +244,18 @@ class ProjectCrudService:
 
         init_project_stages(self.db, project.id)
 
+        if project.stage_template_id:
+            from app.services.stage_instance import StageInstanceService
+
+            stage_service = StageInstanceService(self.db)
+            stage_service.initialize_project_stages(
+                project_id=project.id,
+                template_id=project.stage_template_id,
+                start_date=project.planned_start_date,
+            )
+            self.db.commit()
+            self.db.refresh(project)
+
         return project
 
     def get_project_by_id(self, project_id: int) -> Optional[Project]:
@@ -279,10 +301,10 @@ class ProjectCrudService:
                     member.user.real_name if member.user and member.user.real_name else None
                 ),
                 "role_code": member.role_code,
-                "allocation_pct": member.allocation_pct,
+                "allocation_pct": member.allocation_pct or 100,
                 "start_date": member.start_date,
                 "end_date": member.end_date,
-                "is_active": member.is_active,
+                "is_active": True if member.is_active is None else member.is_active,
                 "remark": member.remark,
             }
             members.append(ProjectMemberResponse(**member_data))

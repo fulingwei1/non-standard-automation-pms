@@ -622,3 +622,14 @@ from app.models.project_delivery import (
     ProjectDeliveryChangeLog,
     ProjectDeliveryDependency,
 )
+
+try:
+    from app.models.base import _ensure_sqlite_schema, get_engine
+
+    _engine = get_engine()
+    if str(_engine.url).startswith("sqlite"):
+        _ensure_sqlite_schema(_engine)
+except Exception:
+    import logging
+
+    logging.getLogger(__name__).debug("SQLite 模型导出后 schema 补丁跳过", exc_info=True)

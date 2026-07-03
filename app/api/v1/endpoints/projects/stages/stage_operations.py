@@ -26,6 +26,7 @@ router = APIRouter()
 
 @router.post("/{stage_instance_id}/start", response_model=ProjectStageInstanceResponse)
 def start_stage(
+    project_id: int,
     stage_instance_id: int,
     actual_start_date: Optional[date] = Query(None, description="实际开始日期"),
     db: Session = Depends(deps.get_db),
@@ -43,6 +44,7 @@ def start_stage(
 
 @router.post("/{stage_instance_id}/complete", response_model=ProjectStageInstanceResponse)
 def complete_stage(
+    project_id: int,
     stage_instance_id: int,
     actual_end_date: Optional[date] = Query(None, description="实际结束日期"),
     auto_start_next: bool = Query(True, description="是否自动开始下一阶段"),
@@ -65,6 +67,7 @@ def complete_stage(
 
 @router.post("/{stage_instance_id}/skip", response_model=ProjectStageInstanceResponse)
 def skip_stage(
+    project_id: int,
     stage_instance_id: int,
     reason: Optional[str] = Query(None, description="跳过原因"),
     db: Session = Depends(deps.get_db),
@@ -82,6 +85,7 @@ def skip_stage(
 
 @router.put("/{stage_instance_id}", response_model=ProjectStageInstanceResponse)
 def update_stage_instance(
+    project_id: int,
     stage_instance_id: int,
     update_in: ProjectStageInstanceUpdate,
     db: Session = Depends(deps.get_db),

@@ -137,7 +137,7 @@ def approve_production_plan(
     plan_id: int,
     approved: bool = Query(True, description="是否审批通过"),
     approval_note: Optional[str] = Query(None, description="审批意见"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("production:manage")),
 ) -> Any:
     """
     审批通过生产计划
@@ -156,7 +156,7 @@ def publish_production_plan(
     *,
     db: Session = Depends(deps.get_db),
     plan_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("production:manage")),
 ) -> Any:
     """
     计划发布

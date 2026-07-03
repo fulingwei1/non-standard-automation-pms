@@ -6,7 +6,25 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+
+def _int_default(value, default: int = 0, *, clamp_progress: bool = False) -> int:
+    if value is None:
+        value = default
+    try:
+        normalized = int(value)
+    except (TypeError, ValueError):
+        normalized = default
+    if clamp_progress:
+        return max(0, min(normalized, 100))
+    return normalized
+
+
+def _decimal_default(value, default: str = "0") -> Decimal:
+    if value is None:
+        return Decimal(default)
+    return value
 
 # ==================== 进度日志 Schemas ====================
 
@@ -23,6 +41,16 @@ class ProductionProgressLogBase(BaseModel):
     work_hours: Optional[Decimal] = Field(None, ge=0, description="本次工时")
     status: str = Field(..., description="工单状态")
     note: Optional[str] = None
+
+    @field_validator("current_progress", mode="before")
+    @classmethod
+    def _normalize_current_progress(cls, value):
+        return _int_default(value, clamp_progress=True)
+
+    @field_validator("completed_qty", "qualified_qty", "defect_qty", mode="before")
+    @classmethod
+    def _normalize_quantities(cls, value):
+        return _int_default(value)
 
 
 class ProductionProgressLogCreate(ProductionProgressLogBase):
@@ -46,6 +74,11 @@ class ProductionProgressLogResponse(ProductionProgressLogBase):
     is_delayed: int
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("previous_progress", "is_delayed", mode="before")
+    @classmethod
+    def _normalize_response_ints(cls, value):
+        return _int_default(value)
 
     class Config:
         from_attributes = True
@@ -96,6 +129,35 @@ class WorkstationStatusResponse(WorkstationStatusBase):
     remark: Optional[str]
     created_at: datetime
     updated_at: datetime
+
+    @field_validator(
+        "completed_qty_today",
+        "target_qty_today",
+        "is_bottleneck",
+        "bottleneck_level",
+        "alert_count",
+        mode="before",
+    )
+    @classmethod
+    def _normalize_status_ints(cls, value):
+        return _int_default(value)
+
+    @field_validator("current_progress", mode="before")
+    @classmethod
+    def _normalize_status_progress(cls, value):
+        return _int_default(value, clamp_progress=True)
+
+    @field_validator(
+        "capacity_utilization",
+        "work_hours_today",
+        "idle_hours_today",
+        "planned_hours_today",
+        "quality_rate",
+        mode="before",
+    )
+    @classmethod
+    def _normalize_status_decimals(cls, value):
+        return _decimal_default(value)
 
     class Config:
         from_attributes = True
@@ -195,6 +257,11 @@ class WorkOrderProgressTimeline(BaseModel):
     actual_end_time: Optional[datetime]
     timeline: List[ProductionProgressLogResponse]
     alerts: List[ProgressAlertResponse]
+
+    @field_validator("current_progress", mode="before")
+    @classmethod
+    def _normalize_timeline_progress(cls, value):
+        return _int_default(value, clamp_progress=True)
 
 
 class BottleneckWorkstation(BaseModel):

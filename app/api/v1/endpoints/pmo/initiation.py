@@ -81,9 +81,18 @@ def read_initiations(
     status_filter: Optional[str] = Query(None, alias="status", description="状态筛选"),
     applicant_id: Optional[int] = Query(None, description="申请人ID筛选"),
     contract_no: Optional[str] = Query(None, description="合同编号筛选"),
-    current_user: User = Depends(security.require_permission("project:initiation:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """立项申请列表"""
+    has_initiation_read = security.check_permission(
+        current_user, "project:initiation:read", db
+    )
+    if not has_initiation_read and applicant_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="权限不足: project:initiation:read",
+        )
+
     try:
         service = PmoInitiationService(db)
         initiations, total = service.get_initiations(

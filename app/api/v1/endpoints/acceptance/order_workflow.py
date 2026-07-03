@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.post(
-    "/acceptance-orders/{order_id}/submit",
+    "/acceptance-orders/{order_id:int}/submit",
     response_model=AcceptanceOrderResponse,
     status_code=status.HTTP_200_OK,
 )
@@ -110,7 +110,7 @@ def complete_acceptance(
     order_id: int,
     complete_in: AcceptanceOrderComplete,
     auto_trigger_invoice: bool = Query(True, description="自动触发开票"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("acceptance:manage")),
 ) -> Any:
     """
     完成验收（自动触发收款计划开票）

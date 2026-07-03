@@ -14,7 +14,7 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, synonym
 
 from ..base import Base, TimestampMixin
 
@@ -37,6 +37,7 @@ class EcnEvaluation(Base, TimestampMixin):
     cost_estimate = Column(Numeric(14, 2), default=0, comment="成本估算")
     schedule_estimate = Column(Integer, default=0, comment="工期估算(天)")
     resource_requirement = Column(Text, comment="资源需求")
+    resource_requirent = synonym("resource_requirement")
     risk_assessment = Column(Text, comment="风险评估")
 
     # 评估结论

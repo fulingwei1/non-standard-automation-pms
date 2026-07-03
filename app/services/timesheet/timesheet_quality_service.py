@@ -32,6 +32,7 @@ class TimesheetQualityService:
         user_id: Optional[int] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
+        current_user: Optional[User] = None,
     ) -> List[Dict[str, Any]]:
         """
         检测工时异常
@@ -40,11 +41,17 @@ class TimesheetQualityService:
             user_id: 用户ID（可选）
             start_date: 开始日期（可选）
             end_date: 结束日期（可选）
+            current_user: 当前登录用户（可选，传入时按工时访问范围过滤）
 
         Returns:
             异常记录列表
         """
         query = self.db.query(Timesheet).filter(Timesheet.status == "APPROVED")
+
+        if current_user:
+            from app.core.permissions.timesheet import apply_timesheet_access_filter
+
+            query = apply_timesheet_access_filter(query, self.db, current_user)
 
         if user_id:
             query = query.filter(Timesheet.user_id == user_id)

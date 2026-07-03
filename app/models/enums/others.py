@@ -187,6 +187,7 @@ class MeetingCycleType(str, Enum):
 class ActionItemStatus(str, Enum):
     TODO = "TODO"
     IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "DONE"
     DONE = "DONE"
     CANCELLED = "CANCELLED"
     OVERDUE = "OVERDUE"

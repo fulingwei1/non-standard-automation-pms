@@ -271,7 +271,7 @@ class ProjectEvaluationService:
 
         # 查询项目的总工时（小时）
         total_hours_result = (
-            self.db.query(func.coalesce(func.sum(Timesheet.total_hours), 0))
+            self.db.query(func.coalesce(func.sum(Timesheet.hours), 0))
             .filter(Timesheet.project_id == project.id)
             .scalar()
         )

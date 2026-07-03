@@ -52,7 +52,7 @@ class ProjectReportMixin:
             db.query(ProjectMilestone)
             .filter(
                 ProjectMilestone.project_id == project_id,
-                ProjectMilestone.milestone_date.between(start_date, end_date),
+                ProjectMilestone.planned_date.between(start_date, end_date),
             )
             .all()
         )
@@ -128,8 +128,8 @@ class ProjectReportMixin:
                             m.milestone_name if hasattr(m, "milestone_name") else f"里程碑{m.id}"
                         ),
                         "date": (
-                            m.milestone_date.isoformat()
-                            if hasattr(m, "milestone_date") and m.milestone_date
+                            m.planned_date.isoformat()
+                            if hasattr(m, "planned_date") and m.planned_date
                             else None
                         ),
                         "status": m.status if hasattr(m, "status") else "PENDING",
@@ -212,7 +212,7 @@ class ProjectReportMixin:
             db.query(ProjectMilestone)
             .filter(
                 ProjectMilestone.project_id == project_id,
-                ProjectMilestone.milestone_date.between(start_date, end_date),
+                ProjectMilestone.planned_date.between(start_date, end_date),
             )
             .all()
         )
@@ -223,8 +223,8 @@ class ProjectReportMixin:
                 {
                     "name": m.milestone_name if hasattr(m, "milestone_name") else f"里程碑{m.id}",
                     "planned_date": (
-                        m.milestone_date.isoformat()
-                        if hasattr(m, "milestone_date") and m.milestone_date
+                        m.planned_date.isoformat()
+                        if hasattr(m, "planned_date") and m.planned_date
                         else None
                     ),
                     "actual_date": (

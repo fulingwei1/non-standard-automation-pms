@@ -16,12 +16,13 @@ from app.core.sales_permissions import (
     check_sales_data_permission,
     filter_sales_finance_data_by_scope,
 )
-from app.models.project import ProjectPaymentPlan
+from app.models.project import Project, ProjectPaymentPlan
 from app.models.sales import Contract
 from app.models.user import User
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.project_utils import generate_project_code
 
 router = APIRouter()
 
@@ -54,6 +55,31 @@ def _infer_payment_type(stage_name: str) -> str:
     if any(keyword in normalized for keyword in ("质保", "尾款", "WARRANTY")):
         return "WARRANTY"
     return "CUSTOM"
+
+
+def _ensure_contract_project(db: Session, contract: Contract) -> int:
+    """为旧合同补一个收款计划承载项目。"""
+    if contract.project_id:
+        return contract.project_id
+
+    customer_name = contract.customer.customer_name if contract.customer else None
+    project = Project(
+        project_code=generate_project_code(db),
+        project_name=contract.contract_name or f"{contract.contract_code}收款项目",
+        customer_id=contract.customer_id,
+        customer_name=customer_name,
+        contract_id=contract.id,
+        contract_no=contract.contract_code,
+        contract_amount=contract.total_amount or Decimal("0"),
+        stage="S1",
+        status="ST01",
+        health="H1",
+        is_active=True,
+    )
+    db.add(project)
+    db.flush()
+    contract.project_id = project.id
+    return project.id
 
 
 @router.get("/payments/plans", response_model=PaginatedResponse)
@@ -148,12 +174,7 @@ def create_payment_plans(
     if not payload.payment_stages:
         raise HTTPException(status_code=422, detail="payment_stages 不能为空")
 
-    project_id = contract.project_id
-    if not project_id:
-        raise HTTPException(
-            status_code=409,
-            detail="合同未关联项目，需完成PMO立项或项目创建后再创建收款计划",
-        )
+    project_id = _ensure_contract_project(db, contract)
 
     created_plans = []
     for index, stage in enumerate(payload.payment_stages, start=1):

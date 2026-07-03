@@ -32,6 +32,19 @@ from app.utils.db_helpers import save_obj
 class ResourcePlanService:
     """资源计划服务"""
 
+    @staticmethod
+    def normalize_plan_for_response(plan: ProjectStageResourcePlan) -> ProjectStageResourcePlan:
+        """兼容历史资源计划中的空值和旧阶段编码。"""
+        if plan.stage_code not in {f"S{i}" for i in range(1, 10)}:
+            plan.stage_code = "S1"
+        if plan.headcount is None or plan.headcount < 1:
+            plan.headcount = 1
+        if plan.allocation_pct is None:
+            plan.allocation_pct = Decimal("100")
+        if not plan.assignment_status:
+            plan.assignment_status = "PENDING"
+        return plan
+
     # ==================== 工具方法 ====================
 
     @staticmethod
@@ -48,11 +61,12 @@ class ResourcePlanService:
         if not requirements:
             return 100.0
 
-        total_headcount = sum(r.headcount for r in requirements)
+        normalized = [ResourcePlanService.normalize_plan_for_response(r) for r in requirements]
+        total_headcount = sum(r.headcount for r in normalized)
         if total_headcount == 0:
             return 100.0
 
-        filled_count = sum(r.headcount for r in requirements if r.assignment_status == "ASSIGNED")
+        filled_count = sum(r.headcount for r in normalized if r.assignment_status == "ASSIGNED")
 
         return round(filled_count / total_headcount * 100, 2)
 
@@ -106,9 +120,10 @@ class ResourcePlanService:
         )
         if stage_code:
             query = query.filter(ProjectStageResourcePlan.stage_code == stage_code)
-        return query.order_by(
+        plans = query.order_by(
             ProjectStageResourcePlan.stage_code, ProjectStageResourcePlan.role_code
         ).all()
+        return [ResourcePlanService.normalize_plan_for_response(plan) for plan in plans]
 
     @staticmethod
     def create_resource_plan(

@@ -46,9 +46,12 @@ def get_financial_metrics(
 
     from app.models.budget import ProjectBudget
     from app.models.project.financial import ProjectCost, ProjectPaymentPlan
+    from app.services.cost.cost_basis import actual_project_cost_filter
 
     # 构建日期过滤条件
-    cost_query = db.query(func.coalesce(func.sum(ProjectCost.amount), 0))
+    cost_query = db.query(func.coalesce(func.sum(ProjectCost.amount), 0)).filter(
+        actual_project_cost_filter()
+    )
     if start_date:
         cost_query = cost_query.filter(ProjectCost.cost_date >= start_date)
     if end_date:
@@ -58,11 +61,13 @@ def get_financial_metrics(
     total_cost = float(cost_query.scalar() or 0)
 
     # 查询收入（已收款金额）
-    revenue_query = db.query(func.coalesce(func.sum(ProjectPaymentPlan.actual_amount), 0)).filter(
-        ProjectPaymentPlan.status.in_(["PARTIAL", "COMPLETED"])
-    )
+    revenue_query = db.query(
+        func.coalesce(func.sum(ProjectPaymentPlan.actual_amount), 0)
+    ).filter(ProjectPaymentPlan.status.in_(["PARTIAL", "COMPLETED"]))
     if start_date:
-        revenue_query = revenue_query.filter(ProjectPaymentPlan.actual_date >= start_date)
+        revenue_query = revenue_query.filter(
+            ProjectPaymentPlan.actual_date >= start_date
+        )
     if end_date:
         revenue_query = revenue_query.filter(ProjectPaymentPlan.actual_date <= end_date)
     total_revenue = float(revenue_query.scalar() or 0)
@@ -113,8 +118,12 @@ def get_project_metrics(
 
     # 获取项目统计数据
     total_projects = db.query(Project).count()
-    active_projects = db.query(Project).filter(Project.health.in_(["H1", "H2", "H3"])).count()
-    at_risk_projects = db.query(Project).filter(Project.health.in_(["H2", "H3"])).count()
+    active_projects = (
+        db.query(Project).filter(Project.health.in_(["H1", "H2", "H3"])).count()
+    )
+    at_risk_projects = (
+        db.query(Project).filter(Project.health.in_(["H2", "H3"])).count()
+    )
 
     metrics = {
         "total_projects": total_projects,
@@ -124,7 +133,9 @@ def get_project_metrics(
     }
 
     # 统计健康度分布
-    health_counts = db.query(Project.health, func.count(Project.id)).group_by(Project.health).all()
+    health_counts = (
+        db.query(Project.health, func.count(Project.id)).group_by(Project.health).all()
+    )
     for health, count in health_counts:
         metrics["project_health_distribution"][health] = count
 
@@ -161,7 +172,9 @@ def get_task_metrics(
         "total_tasks": total_tasks,
         "completed_tasks": completed_tasks,
         "overdue_tasks": overdue_tasks,
-        "completion_rate": (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0.0,
+        "completion_rate": (completed_tasks / total_tasks * 100)
+        if total_tasks > 0
+        else 0.0,
     }
 
     return metrics

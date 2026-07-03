@@ -283,21 +283,6 @@ def complete_work_report(
     return _get_work_report_response(db, report)
 
 
-@router.get("/work-reports/{report_id}", response_model=WorkReportResponse)
-def get_work_report_detail(
-    *,
-    db: Session = Depends(deps.get_db),
-    report_id: int,
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    获取报工详情
-    """
-    report = get_or_404(db, WorkReport, report_id, detail="报工记录不存在")
-
-    return _get_work_report_response(db, report)
-
-
 @router.get("/work-reports", response_model=PaginatedResponse)
 def read_work_reports(
     db: Session = Depends(deps.get_db),
@@ -331,45 +316,6 @@ def read_work_reports(
     items = [_get_work_report_response(db, report) for report in reports]
 
     return pagination.to_response(items, total)
-
-
-@router.put("/work-reports/{report_id}/approve", response_model=ResponseModel)
-def approve_work_report(
-    *,
-    db: Session = Depends(deps.get_db),
-    report_id: int,
-    approved: bool = Query(True, description="是否审批通过"),
-    approval_note: Optional[str] = Query(None, description="审批意见"),
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    报工审批（车间主管）
-    """
-    report = get_or_404(db, WorkReport, report_id, detail="报工记录不存在")
-
-    if report.status != "PENDING":
-        raise HTTPException(status_code=400, detail="只有待审核的报工记录才能审批")
-
-    if approved:
-        report.status = "APPROVED"
-        report.approved_by = current_user.id
-        report.approved_at = datetime.now()
-    else:
-        report.status = "REJECTED"
-        report.approved_by = current_user.id
-        report.approved_at = datetime.now()
-
-    if approval_note:
-        base_note = report.description or report.remark or ""
-        report.description = f"{base_note}\n审批意见：{approval_note}" if base_note else f"审批意见：{approval_note}"
-
-    db.add(report)
-    db.commit()
-
-    return ResponseModel(
-        code=200,
-        message="审批成功" if approved else "已驳回"
-    )
 
 
 @router.get("/work-reports/my", response_model=PaginatedResponse)
@@ -418,3 +364,57 @@ def get_my_work_reports(
         ))
 
     return pagination.to_response(items, total)
+
+
+@router.get("/work-reports/{report_id:int}", response_model=WorkReportResponse)
+def get_work_report_detail(
+    *,
+    db: Session = Depends(deps.get_db),
+    report_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取报工详情
+    """
+    report = get_or_404(db, WorkReport, report_id, detail="报工记录不存在")
+
+    return _get_work_report_response(db, report)
+
+
+@router.put("/work-reports/{report_id:int}/approve", response_model=ResponseModel)
+def approve_work_report(
+    *,
+    db: Session = Depends(deps.get_db),
+    report_id: int,
+    approved: bool = Query(True, description="是否审批通过"),
+    approval_note: Optional[str] = Query(None, description="审批意见"),
+    current_user: User = Depends(security.require_permission("production:manage")),
+) -> Any:
+    """
+    报工审批（车间主管）
+    """
+    report = get_or_404(db, WorkReport, report_id, detail="报工记录不存在")
+
+    if report.status != "PENDING":
+        raise HTTPException(status_code=400, detail="只有待审核的报工记录才能审批")
+
+    if approved:
+        report.status = "APPROVED"
+        report.approved_by = current_user.id
+        report.approved_at = datetime.now()
+    else:
+        report.status = "REJECTED"
+        report.approved_by = current_user.id
+        report.approved_at = datetime.now()
+
+    if approval_note:
+        base_note = report.description or report.remark or ""
+        report.description = f"{base_note}\n审批意见：{approval_note}" if base_note else f"审批意见：{approval_note}"
+
+    db.add(report)
+    db.commit()
+
+    return ResponseModel(
+        code=200,
+        message="审批成功" if approved else "已驳回"
+    )

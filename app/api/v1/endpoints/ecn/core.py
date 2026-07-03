@@ -91,7 +91,7 @@ def read_ecns(
     return pagination.to_response(items, total)
 
 
-@router.get("/ecns/{ecn_id}", response_model=EcnResponse, status_code=status.HTTP_200_OK)
+@router.get("/ecns/{ecn_id:int}", response_model=EcnResponse, status_code=status.HTTP_200_OK)
 def read_ecn(
     ecn_id: int,
     db: Session = Depends(deps.get_db),
@@ -156,7 +156,7 @@ def create_ecn(
     return build_ecn_response(db, ecn)
 
 
-@router.put("/ecns/{ecn_id}", response_model=EcnResponse, status_code=status.HTTP_200_OK)
+@router.put("/ecns/{ecn_id:int}", response_model=EcnResponse, status_code=status.HTTP_200_OK)
 def update_ecn(
     *,
     db: Session = Depends(deps.get_db),
@@ -183,7 +183,7 @@ def update_ecn(
     return build_ecn_response(db, ecn)
 
 
-@router.put("/ecns/{ecn_id}/submit", response_model=EcnResponse, status_code=status.HTTP_200_OK)
+@router.put("/ecns/{ecn_id:int}/submit", response_model=EcnResponse, status_code=status.HTTP_200_OK)
 def submit_ecn(
     *,
     db: Session = Depends(deps.get_db),
@@ -265,7 +265,7 @@ def submit_ecn(
     return build_ecn_response(db, ecn)
 
 
-@router.put("/ecns/{ecn_id}/cancel", response_model=EcnResponse, status_code=status.HTTP_200_OK)
+@router.put("/ecns/{ecn_id:int}/cancel", response_model=EcnResponse, status_code=status.HTTP_200_OK)
 def cancel_ecn(
     *,
     db: Session = Depends(deps.get_db),

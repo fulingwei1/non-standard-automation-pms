@@ -59,6 +59,12 @@ def sign_contract(
     if not check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
         raise HTTPException(status_code=403, detail="无权签订该合同")
 
+    # F2: 签署前置——合同须已审批通过（approval_status/status 任一为 approved）
+    _appr = str(getattr(contract, "approval_status", "") or "").lower()
+    _st = str(getattr(contract, "status", "") or "").lower()
+    if _appr != "approved" and _st not in ("approved", "signed", "executing", "completed"):
+        raise HTTPException(status_code=400, detail="合同未审批通过，不能签署")
+
     contract.signing_date = sign_request.signed_date
     contract.status = "SIGNED"
 

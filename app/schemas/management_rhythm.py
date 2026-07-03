@@ -6,7 +6,7 @@
 from datetime import date, datetime, time
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # ==================== 管理节律配置 ====================
 
@@ -156,6 +156,11 @@ class StrategicMeetingResponse(BaseModel):
     action_items_count: Optional[int] = 0
     completed_action_items_count: Optional[int] = 0
 
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_meeting_status(cls, value):
+        return "SCHEDULED" if value in (None, "") else value
+
     class Config:
         from_attributes = True
 
@@ -202,6 +207,16 @@ class ActionItemResponse(BaseModel):
     created_by: Optional[int]
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_action_status(cls, value):
+        return "TODO" if value in (None, "") else value
+
+    @field_validator("priority", mode="before")
+    @classmethod
+    def _default_action_priority(cls, value):
+        return "MEDIUM" if value in (None, "") else value
 
     class Config:
         from_attributes = True
@@ -257,6 +272,11 @@ class MeetingMapItem(BaseModel):
     organizer_name: Optional[str]
     action_items_count: int
     completed_action_items_count: int
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_meeting_status(cls, value):
+        return "SCHEDULED" if value in (None, "") else value
 
 
 class MeetingMapResponse(BaseModel):
@@ -324,6 +344,16 @@ class MeetingReportResponse(BaseModel):
     published_at: Optional[datetime]
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _default_status(cls, value):
+        return "DRAFT" if value in (None, "") else value
+
+    @field_validator("generated_at", mode="before")
+    @classmethod
+    def _default_generated_at(cls, value):
+        return datetime.now() if value is None else value
 
     class Config:
         from_attributes = True
@@ -427,6 +457,16 @@ class MeetingReportConfigResponse(BaseModel):
     created_by: Optional[int]
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("is_default", mode="before")
+    @classmethod
+    def _default_is_default(cls, value):
+        return False if value is None else value
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _default_is_active(cls, value):
+        return True if value is None else value
 
     class Config:
         from_attributes = True

@@ -50,7 +50,7 @@ def get_timesheet_statistics(
     end_date: Optional[date] = Query(None, description="结束日期"),
     user_id: Optional[int] = Query(None, description="用户ID筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
-    current_user: User = Depends(security.require_permission("timesheet:read")),
+    current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     工时统计分析（多维统计）

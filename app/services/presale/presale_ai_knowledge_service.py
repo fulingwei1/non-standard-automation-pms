@@ -684,7 +684,12 @@ class PresaleAIKnowledgeService:
             self.ai_client.openai_client
             and str(self.ai_client.openai_api_key).startswith(("sk-", "sk-proj-"))
         )
-        return bool(openai_ready or self.ai_client.zhipu_client or self.ai_client.kimi_api_key)
+        return bool(
+            openai_ready
+            or self.ai_client.zhipu_client
+            or self.ai_client.kimi_api_key
+            or self.ai_client.qwen_api_key
+        )
 
     def _generate_ai_content(
         self, prompt: str, temperature: float = 0.3, max_tokens: int = 1800

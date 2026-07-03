@@ -13,7 +13,7 @@ FINANCE_TASKS = [
         "owner": "Finance",
         "category": "Cost",
         "description": "每天 10 点检查项目成本超支情况。",
-        "enabled": True,
+        "enabled": False,
         "dependencies_tables": ["projects", "project_costs", "alert_records"],
         "risk_level": "HIGH",
         "sla": {

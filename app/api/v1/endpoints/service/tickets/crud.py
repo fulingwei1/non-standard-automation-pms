@@ -193,7 +193,7 @@ def create_service_ticket(
     # 创建抄送人员
     if ticket_in.cc_user_ids:
         for user_id in ticket_in.cc_user_ids:
-            if user_id != ticket.assignee_id:  # 处理人不作为抄送人
+            if user_id != ticket.assigned_to_id:  # 处理人不作为抄送人
                 cc_user = ServiceTicketCcUser(
                     ticket_id=ticket.id, user_id=user_id, notified_at=datetime.now()
                 )

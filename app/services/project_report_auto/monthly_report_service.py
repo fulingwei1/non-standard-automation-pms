@@ -12,19 +12,19 @@
 import logging
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from sqlalchemy import and_, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.issue import Issue
 from app.models.project.core import Project
 from app.models.project.financial import ProjectCost, ProjectMilestone
 from app.models.project.team import ProjectMember
-from app.models.project_risk import ProjectRisk
 from app.models.report_center import ReportGeneration, ReportTemplate
 from app.models.timesheet import Timesheet
 from app.models.user import User
+from app.services.cost.cost_basis import actual_project_cost_filter
 
 logger = logging.getLogger(__name__)
 
@@ -234,6 +234,7 @@ class MonthlyReportService:
             .filter(
                 ProjectCost.project_id == project_id,
                 ProjectCost.cost_date.between(start, end),
+                actual_project_cost_filter(),
             )
             .group_by(ProjectCost.cost_type)
             .all()
@@ -266,9 +267,9 @@ class MonthlyReportService:
                 "cost_performance_index": cpi,
                 "estimate_at_completion": eac,
                 "budget_remaining": round(budget - actual_total, 2),
-                "budget_consumed_pct": round(
-                    actual_total / budget * 100, 1
-                ) if budget > 0 else 0.0,
+                "budget_consumed_pct": round(actual_total / budget * 100, 1)
+                if budget > 0
+                else 0.0,
             },
         }
 
@@ -375,8 +376,7 @@ class MonthlyReportService:
         # 获取用户名
         all_ids = list(
             set(
-                [m.user_id for m in new_members]
-                + [m.user_id for m in departed_members]
+                [m.user_id for m in new_members] + [m.user_id for m in departed_members]
             )
         )
         user_map = {}
@@ -410,9 +410,7 @@ class MonthlyReportService:
             "departed_count": len(departed_members),
         }
 
-    def _weekly_trend(
-        self, project_id: int, start: date, end: date
-    ) -> Dict[str, Any]:
+    def _weekly_trend(self, project_id: int, start: date, end: date) -> Dict[str, Any]:
         """月内周度趋势"""
         weeks = []
         current = start

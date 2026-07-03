@@ -2,7 +2,7 @@
 项目复盘报告API端点
 """
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -27,6 +27,41 @@ from app.services.project_review_ai import (
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+
+def _to_project_review_response(review: ProjectReview) -> ProjectReviewResponse:
+    return ProjectReviewResponse(
+        id=review.id,
+        review_no=review.review_no,
+        project_id=review.project_id,
+        project_code=review.project_code,
+        review_type=review.review_type or "POST_MORTEM",
+        review_date=review.review_date or date.today(),
+        plan_duration=review.plan_duration,
+        actual_duration=review.actual_duration,
+        schedule_variance=review.schedule_variance,
+        budget_amount=review.budget_amount,
+        actual_cost=review.actual_cost,
+        cost_variance=review.cost_variance,
+        quality_issues=review.quality_issues or 0,
+        change_count=review.change_count or 0,
+        customer_satisfaction=review.customer_satisfaction,
+        success_factors=review.success_factors,
+        problems=review.problems,
+        improvements=review.improvements,
+        best_practices=review.best_practices,
+        conclusion=review.conclusion,
+        reviewer_id=review.reviewer_id,
+        reviewer_name=review.reviewer_name,
+        participant_names=review.participant_names,
+        ai_generated=bool(review.ai_generated),
+        ai_generated_at=review.ai_generated_at,
+        ai_summary=review.ai_summary,
+        quality_score=review.quality_score,
+        status=review.status or "DRAFT",
+        created_at=review.created_at or datetime.now(),
+        updated_at=review.updated_at or datetime.now(),
+    )
 
 
 @router.post("/generate", response_model=ReviewGenerateResponse)
@@ -141,7 +176,7 @@ async def list_reviews(
     items = query.order_by(ProjectReview.created_at.desc()).offset(skip).limit(limit).all()
 
     return ProjectReviewListResponse(
-        total=total, items=[ProjectReviewResponse.from_orm(item) for item in items]
+        total=total, items=[_to_project_review_response(item) for item in items]
     )
 
 
@@ -152,7 +187,7 @@ async def get_review(
     """获取复盘报告详情"""
     review = get_or_404(db, ProjectReview, review_id, "复盘报告不存在")
 
-    return ProjectReviewResponse.from_orm(review)
+    return _to_project_review_response(review)
 
 
 @router.patch("/{review_id}", response_model=ProjectReviewResponse)
@@ -173,7 +208,7 @@ async def update_review(
     db.commit()
     db.refresh(review)
 
-    return ProjectReviewResponse.from_orm(review)
+    return _to_project_review_response(review)
 
 
 @router.delete("/{review_id}")
@@ -224,6 +259,6 @@ async def get_review_stats(
         "ai_generated_count": ai_generated_count,
         "ai_generated_ratio": ai_generated_count / total_reviews if total_reviews > 0 else 0,
         "average_quality_score": float(avg_quality_score) if avg_quality_score else 0,
-        "by_type": {type_: count for type_, count in by_type},
-        "by_status": {status: count for status, count in by_status},
+        "by_type": {type_ or "POST_MORTEM": count for type_, count in by_type},
+        "by_status": {status or "DRAFT": count for status, count in by_status},
     }

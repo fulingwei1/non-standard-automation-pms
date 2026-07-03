@@ -64,7 +64,7 @@ TIMESHEET_TASKS = [
         "owner": "Backend Platform",
         "category": "Timesheet Management",
         "description": "每月1号凌晨4点生成上个月的各类报表并同步到各系统",
-        "enabled": True,
+        "enabled": False,
         "dependencies_tables": ["timesheet", "financial_project_costs", "rd_cost", "project_cost"],
         "risk_level": "HIGH",
         "sla": {

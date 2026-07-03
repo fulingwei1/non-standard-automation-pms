@@ -181,7 +181,7 @@ class SolutionEngineerBonusService(BonusCalculatorBase):
             raise ValueError(f"考核周期不存在: {period_id}")
 
         service = EngineerPerformanceService(self.db)
-        score = service._calculate_solution_score(engineer_id, period)
+        score = service.performance_calculator._calculate_solution_score(engineer_id, period)
 
         # 获取方案数据
         solutions = (

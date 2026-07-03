@@ -4,12 +4,12 @@
 提供AI驱动的成本预测、超支预警和优化建议功能
 """
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
@@ -64,12 +64,54 @@ class PredictionResultSchema(BaseModel):
     model_version: Optional[str]
     data_quality_score: Optional[Decimal]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_nulls(cls, value):
+        if isinstance(value, dict):
+            data = dict(value)
+        elif hasattr(value, "id"):
+            data = {
+                "id": getattr(value, "id", None),
+                "project_id": getattr(value, "project_id", None),
+                "project_code": getattr(value, "project_code", None),
+                "prediction_date": getattr(value, "prediction_date", None),
+                "prediction_version": getattr(value, "prediction_version", None),
+                "current_bac": getattr(value, "current_bac", None),
+                "current_ac": getattr(value, "current_ac", None),
+                "current_ev": getattr(value, "current_ev", None),
+                "current_cpi": getattr(value, "current_cpi", None),
+                "current_percent_complete": getattr(value, "current_percent_complete", None),
+                "predicted_eac": getattr(value, "predicted_eac", None),
+                "predicted_eac_confidence": getattr(value, "predicted_eac_confidence", None),
+                "eac_lower_bound": getattr(value, "eac_lower_bound", None),
+                "eac_upper_bound": getattr(value, "eac_upper_bound", None),
+                "eac_most_likely": getattr(value, "eac_most_likely", None),
+                "overrun_probability": getattr(value, "overrun_probability", None),
+                "expected_overrun_amount": getattr(value, "expected_overrun_amount", None),
+                "overrun_percentage": getattr(value, "overrun_percentage", None),
+                "risk_level": getattr(value, "risk_level", None),
+                "risk_score": getattr(value, "risk_score", None),
+                "cost_trend": getattr(value, "cost_trend", None),
+                "prediction_method": getattr(value, "prediction_method", None),
+                "model_version": getattr(value, "model_version", None),
+                "data_quality_score": getattr(value, "data_quality_score", None),
+            }
+        else:
+            return value
+
+        data["project_code"] = data.get("project_code") or ""
+        for field in ("current_bac", "current_ac", "current_ev"):
+            if data.get(field) is None:
+                data[field] = Decimal("0")
+        return data
 
 
 class PredictionDetailSchema(PredictionResultSchema):
     """预测详情（包含完整分析）"""
+
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
 
     # 完整分析数据
     risk_factors: Optional[dict]
@@ -86,6 +128,37 @@ class PredictionDetailSchema(PredictionResultSchema):
     created_by: Optional[int]
     created_at: Optional[date]
     notes: Optional[str]
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_detail_legacy_nulls(cls, value):
+        data = super().normalize_legacy_nulls(value)
+        if not isinstance(data, dict):
+            return data
+        if not isinstance(value, dict) and hasattr(value, "id"):
+            data.update(
+                {
+                    "risk_factors": getattr(value, "risk_factors", None),
+                    "trend_analysis": getattr(value, "trend_analysis", None),
+                    "cpi_trend_data": getattr(value, "cpi_trend_data", None),
+                    "ai_analysis_summary": getattr(value, "ai_analysis_summary", None),
+                    "ai_insights": getattr(value, "ai_insights", None),
+                    "sensitivity_analysis": getattr(value, "sensitivity_analysis", None),
+                    "is_approved": getattr(value, "is_approved", None),
+                    "approved_by": getattr(value, "approved_by", None),
+                    "approved_at": getattr(value, "approved_at", None),
+                    "created_by": getattr(value, "created_by", None),
+                    "created_at": getattr(value, "created_at", None),
+                    "notes": getattr(value, "notes", None),
+                }
+            )
+        if data.get("is_approved") is None:
+            data["is_approved"] = False
+        if isinstance(data.get("created_at"), datetime):
+            data["created_at"] = data["created_at"].date()
+        if isinstance(data.get("approved_at"), datetime):
+            data["approved_at"] = data["approved_at"].date()
+        return data
 
 
 class CreatePredictionRequest(BaseModel):
@@ -159,6 +232,56 @@ class OptimizationSuggestionDetailSchema(OptimizationSuggestionSchema):
     created_by: Optional[int]
     created_at: Optional[date]
 
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_datetimes(cls, value):
+        if isinstance(value, dict):
+            data = dict(value)
+        elif hasattr(value, "id"):
+            data = {
+                "id": getattr(value, "id", None),
+                "suggestion_code": getattr(value, "suggestion_code", None),
+                "suggestion_title": getattr(value, "suggestion_title", None),
+                "suggestion_type": getattr(value, "suggestion_type", None),
+                "priority": getattr(value, "priority", None),
+                "description": getattr(value, "description", None),
+                "proposed_action": getattr(value, "proposed_action", None),
+                "estimated_cost_saving": getattr(value, "estimated_cost_saving", None),
+                "implementation_cost": getattr(value, "implementation_cost", None),
+                "net_benefit": getattr(value, "net_benefit", None),
+                "roi_percentage": getattr(value, "roi_percentage", None),
+                "impact_on_schedule": getattr(value, "impact_on_schedule", None),
+                "impact_on_quality": getattr(value, "impact_on_quality", None),
+                "implementation_risk": getattr(value, "implementation_risk", None),
+                "ai_confidence_score": getattr(value, "ai_confidence_score", None),
+                "status": getattr(value, "status", None),
+                "current_situation": getattr(value, "current_situation", None),
+                "implementation_steps": getattr(value, "implementation_steps", None),
+                "ai_reasoning": getattr(value, "ai_reasoning", None),
+                "similar_cases": getattr(value, "similar_cases", None),
+                "assigned_to": getattr(value, "assigned_to", None),
+                "start_date": getattr(value, "start_date", None),
+                "target_completion_date": getattr(value, "target_completion_date", None),
+                "actual_completion_date": getattr(value, "actual_completion_date", None),
+                "actual_cost_saving": getattr(value, "actual_cost_saving", None),
+                "actual_implementation_cost": getattr(value, "actual_implementation_cost", None),
+                "effectiveness_rating": getattr(value, "effectiveness_rating", None),
+                "lessons_learned": getattr(value, "lessons_learned", None),
+                "reviewed_by": getattr(value, "reviewed_by", None),
+                "reviewed_at": getattr(value, "reviewed_at", None),
+                "review_decision": getattr(value, "review_decision", None),
+                "review_comments": getattr(value, "review_comments", None),
+                "created_by": getattr(value, "created_by", None),
+                "created_at": getattr(value, "created_at", None),
+            }
+        else:
+            return value
+
+        for field in ("created_at", "reviewed_at", "start_date", "target_completion_date", "actual_completion_date"):
+            if isinstance(data.get(field), datetime):
+                data[field] = data[field].date()
+        return data
+
 
 class ApprovalRequest(BaseModel):
     """审批请求"""
@@ -190,6 +313,7 @@ class ImplementationResultRequest(BaseModel):
     "/predictions", response_model=PredictionDetailSchema, status_code=status.HTTP_201_CREATED
 )
 def create_cost_prediction(
+    project_id: int,
     request: CreatePredictionRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -212,6 +336,12 @@ def create_cost_prediction(
     """
     service = ProjectCostPredictionService(db)
 
+    if request.project_id != project_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="路径项目ID与请求项目ID不一致",
+        )
+
     try:
         prediction = service.create_prediction(
             project_id=request.project_id,
@@ -229,27 +359,6 @@ def create_cost_prediction(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"预测创建失败: {str(e)}"
         )
-
-
-@router.get("/predictions/{prediction_id}", response_model=PredictionDetailSchema)
-def get_prediction_detail(
-    prediction_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    获取预测详情
-
-    返回指定预测的完整详情，包括AI分析结果和风险因素。
-    """
-    prediction = db.query(CostPrediction).filter(CostPrediction.id == prediction_id).first()
-
-    if not prediction:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"预测不存在: id={prediction_id}"
-        )
-
-    return prediction
 
 
 @router.get("/predictions/latest", response_model=PredictionDetailSchema)
@@ -291,8 +400,38 @@ def get_prediction_history(
     return predictions
 
 
+@router.get("/predictions/{prediction_id}", response_model=PredictionDetailSchema)
+def get_prediction_detail(
+    project_id: int,
+    prediction_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    获取预测详情
+
+    返回指定预测的完整详情，包括AI分析结果和风险因素。
+    """
+    prediction = (
+        db.query(CostPrediction)
+        .filter(
+            CostPrediction.id == prediction_id,
+            CostPrediction.project_id == project_id,
+        )
+        .first()
+    )
+
+    if not prediction:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"预测不存在: id={prediction_id}"
+        )
+
+    return prediction
+
+
 @router.post("/predictions/{prediction_id}/approve", response_model=PredictionDetailSchema)
 def approve_prediction(
+    project_id: int,
     prediction_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -302,7 +441,14 @@ def approve_prediction(
 
     审批通过后，预测结果可用于正式决策。
     """
-    prediction = db.query(CostPrediction).filter(CostPrediction.id == prediction_id).first()
+    prediction = (
+        db.query(CostPrediction)
+        .filter(
+            CostPrediction.id == prediction_id,
+            CostPrediction.project_id == project_id,
+        )
+        .first()
+    )
 
     if not prediction:
         raise HTTPException(
@@ -326,6 +472,7 @@ def approve_prediction(
     "/predictions/{prediction_id}/suggestions", response_model=List[OptimizationSuggestionSchema]
 )
 def get_optimization_suggestions(
+    project_id: int,
     prediction_id: int,
     status_filter: Optional[str] = Query(None, description="状态筛选"),
     priority_filter: Optional[str] = Query(None, description="优先级筛选"),
@@ -341,7 +488,8 @@ def get_optimization_suggestions(
     - **priority_filter**: 按优先级筛选（CRITICAL/HIGH/MEDIUM/LOW）
     """
     query = db.query(CostOptimizationSuggestion).filter(
-        CostOptimizationSuggestion.prediction_id == prediction_id
+        CostOptimizationSuggestion.prediction_id == prediction_id,
+        CostOptimizationSuggestion.project_id == project_id,
     )
 
     if status_filter:
@@ -357,6 +505,7 @@ def get_optimization_suggestions(
 
 @router.get("/suggestions/{suggestion_id}", response_model=OptimizationSuggestionDetailSchema)
 def get_suggestion_detail(
+    project_id: int,
     suggestion_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -368,7 +517,10 @@ def get_suggestion_detail(
     """
     suggestion = (
         db.query(CostOptimizationSuggestion)
-        .filter(CostOptimizationSuggestion.id == suggestion_id)
+        .filter(
+            CostOptimizationSuggestion.id == suggestion_id,
+            CostOptimizationSuggestion.project_id == project_id,
+        )
         .first()
     )
 
@@ -384,6 +536,7 @@ def get_suggestion_detail(
     "/suggestions/{suggestion_id}/review", response_model=OptimizationSuggestionDetailSchema
 )
 def review_suggestion(
+    project_id: int,
     suggestion_id: int,
     request: ApprovalRequest,
     db: Session = Depends(get_db),
@@ -397,7 +550,10 @@ def review_suggestion(
     """
     suggestion = (
         db.query(CostOptimizationSuggestion)
-        .filter(CostOptimizationSuggestion.id == suggestion_id)
+        .filter(
+            CostOptimizationSuggestion.id == suggestion_id,
+            CostOptimizationSuggestion.project_id == project_id,
+        )
         .first()
     )
 
@@ -426,6 +582,7 @@ def review_suggestion(
     "/suggestions/{suggestion_id}/assign", response_model=OptimizationSuggestionDetailSchema
 )
 def assign_suggestion(
+    project_id: int,
     suggestion_id: int,
     request: AssignmentRequest,
     db: Session = Depends(get_db),
@@ -440,7 +597,10 @@ def assign_suggestion(
 
     suggestion = (
         db.query(CostOptimizationSuggestion)
-        .filter(CostOptimizationSuggestion.id == suggestion_id)
+        .filter(
+            CostOptimizationSuggestion.id == suggestion_id,
+            CostOptimizationSuggestion.project_id == project_id,
+        )
         .first()
     )
 
@@ -471,6 +631,7 @@ def assign_suggestion(
     "/suggestions/{suggestion_id}/complete", response_model=OptimizationSuggestionDetailSchema
 )
 def complete_suggestion(
+    project_id: int,
     suggestion_id: int,
     request: ImplementationResultRequest,
     db: Session = Depends(get_db),
@@ -483,7 +644,10 @@ def complete_suggestion(
     """
     suggestion = (
         db.query(CostOptimizationSuggestion)
-        .filter(CostOptimizationSuggestion.id == suggestion_id)
+        .filter(
+            CostOptimizationSuggestion.id == suggestion_id,
+            CostOptimizationSuggestion.project_id == project_id,
+        )
         .first()
     )
 

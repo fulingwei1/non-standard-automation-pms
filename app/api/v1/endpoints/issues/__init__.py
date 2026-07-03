@@ -16,7 +16,15 @@
 └── templates.py      # 问题模板CRUD、从模板创建问题
 """
 
-from fastapi import APIRouter
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Query, status
+
+from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.core import security
+from app.models.user import User
+from app.schemas.issue import IssueTemplateCreate, IssueTemplateListResponse, IssueTemplateResponse
 
 from . import (
     analytics,
@@ -65,6 +73,47 @@ router.include_router(workflow.router, tags=["issue-workflow"])
 
 # 模板路由
 template_router.include_router(templates.router, tags=["issue-templates"])
+
+
+@template_router.get(
+    "",
+    response_model=IssueTemplateListResponse,
+    include_in_schema=False,
+)
+def list_issue_templates_no_slash(
+    db=Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+    pagination: PaginationParams = Depends(get_pagination_query),
+    keyword: Optional[str] = Query(None, description="关键词搜索（模板编码/名称）"),
+    category: Optional[str] = Query(None, description="问题分类筛选"),
+    is_active: Optional[bool] = Query(None, description="是否启用"),
+):
+    return templates.list_issue_templates(
+        db=db,
+        current_user=current_user,
+        pagination=pagination,
+        keyword=keyword,
+        category=category,
+        is_active=is_active,
+    )
+
+
+@template_router.post(
+    "",
+    response_model=IssueTemplateResponse,
+    status_code=status.HTTP_201_CREATED,
+    include_in_schema=False,
+)
+def create_issue_template_no_slash(
+    template_in: IssueTemplateCreate,
+    db=Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("issue:read")),
+):
+    return templates.create_issue_template(
+        template_in=template_in,
+        db=db,
+        current_user=current_user,
+    )
 
 # 导出工具函数供外部使用
 from .utils import (

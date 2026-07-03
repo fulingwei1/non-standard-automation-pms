@@ -91,6 +91,7 @@ from .invoices import (
     InvoiceCreate,
     InvoiceIssueRequest,
     InvoiceResponse,
+    InvoiceTaxCalculationRequest,
     InvoiceUpdate,
     ReceivableDisputeCreate,
     ReceivableDisputeResponse,
@@ -286,6 +287,7 @@ __all__ = [
     "InvoiceUpdate",
     "InvoiceResponse",
     "InvoiceIssueRequest",
+    "InvoiceTaxCalculationRequest",
     "InvoiceApprovalCreate",
     "InvoiceApprovalResponse",
     # 回款争议相关

@@ -12,6 +12,7 @@
 只有 /quick-stats 端点使用了基类重构。
 """
 
+from datetime import date
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends
@@ -211,6 +212,9 @@ def get_execution_status(
         "LEARNING": "学习成长维度",
     }
 
+    detail = strategy_service.get_strategy_detail(db, strategy_id)
+    strategy_name = detail.name if detail else ""
+    year = detail.year if detail else date.today().year
     items = []
     for dim_code, dim_name in dimension_names.items():
         # 统计 KPI
@@ -264,20 +268,30 @@ def get_execution_status(
             {
                 "dimension": dim_code,
                 "dimension_name": dim_name,
-                "kpi_total": kpi_total,
+                "csf_count": db.query(CSF).filter(
+                    CSF.strategy_id == strategy_id,
+                    CSF.dimension == dim_code,
+                    CSF.is_active,
+                ).count(),
+                "kpi_count": kpi_total,
                 "kpi_on_track": kpi_on_track,
                 "kpi_at_risk": kpi_at_risk,
                 "kpi_off_track": kpi_off_track,
-                "work_total": work_total,
-                "work_completed": work_completed,
-                "work_in_progress": work_in_progress,
-                "work_not_started": work_not_started,
+                "annual_work_count": work_total,
+                "annual_work_completed": work_completed,
+                "annual_work_in_progress": work_in_progress,
+                "annual_work_delayed": sum(1 for w in works if w.status == "DELAYED"),
+                "health_score": 0,
+                "health_level": "UNKNOWN",
             }
         )
 
     return ExecutionStatusResponse(
         strategy_id=strategy_id,
-        items=items,
+        strategy_name=strategy_name,
+        year=year,
+        as_of_date=date.today(),
+        dimensions=items,
     )
 
 

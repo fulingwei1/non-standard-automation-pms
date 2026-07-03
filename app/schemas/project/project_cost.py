@@ -8,7 +8,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ..common import TimestampSchema
 
@@ -16,10 +16,13 @@ from ..common import TimestampSchema
 class ProjectCostCreate(BaseModel):
     """创建成本记录"""
 
-    project_id: Optional[int] = Field(None, description="项目ID（可选，通常从路径中获取）")
+    project_id: Optional[int] = Field(
+        None, description="项目ID（可选，通常从路径中获取）"
+    )
     machine_id: Optional[int] = None
     cost_type: str = Field(max_length=50)
     cost_category: str = Field(max_length=50)
+    cost_basis: str = Field(default="ACTUAL", max_length=20)
     source_module: Optional[str] = None
     source_type: Optional[str] = None
     source_id: Optional[int] = None
@@ -36,6 +39,7 @@ class ProjectCostUpdate(BaseModel):
     machine_id: Optional[int] = None
     cost_type: Optional[str] = None
     cost_category: Optional[str] = None
+    cost_basis: Optional[str] = Field(default=None, max_length=20)
     source_module: Optional[str] = None
     source_type: Optional[str] = None
     source_id: Optional[int] = None
@@ -54,6 +58,7 @@ class ProjectCostResponse(TimestampSchema):
     machine_id: Optional[int] = None
     cost_type: str
     cost_category: str
+    cost_basis: str = "ACTUAL"
     source_module: Optional[str] = None
     source_type: Optional[str] = None
     source_id: Optional[int] = None
@@ -68,32 +73,86 @@ class ProjectCostResponse(TimestampSchema):
     class Config:
         from_attributes = True
 
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_nulls(cls, value):
+        if isinstance(value, dict):
+            data = dict(value)
+        elif hasattr(value, "id"):
+            data = {
+                "id": getattr(value, "id", None),
+                "project_id": getattr(value, "project_id", None),
+                "machine_id": getattr(value, "machine_id", None),
+                "cost_type": getattr(value, "cost_type", None),
+                "cost_category": getattr(value, "cost_category", None),
+                "cost_basis": getattr(value, "cost_basis", None),
+                "source_module": getattr(value, "source_module", None),
+                "source_type": getattr(value, "source_type", None),
+                "source_id": getattr(value, "source_id", None),
+                "source_no": getattr(value, "source_no", None),
+                "amount": getattr(value, "amount", None),
+                "tax_amount": getattr(value, "tax_amount", None),
+                "description": getattr(value, "description", None),
+                "cost_date": getattr(value, "cost_date", None),
+                "created_at": getattr(value, "created_at", None),
+                "updated_at": getattr(value, "updated_at", None),
+            }
+        else:
+            return value
+
+        data["cost_type"] = data.get("cost_type") or "OTHER"
+        data["cost_category"] = data.get("cost_category") or "OTHER"
+        data["cost_basis"] = data.get("cost_basis") or "ACTUAL"
+        data["tax_amount"] = data.get("tax_amount") or Decimal("0")
+        data["cost_date"] = data.get("cost_date") or date.today()
+        return data
+
 
 class FinancialProjectCostCreate(BaseModel):
     """创建财务项目成本"""
 
     project_id: int = Field(description="项目ID")
-    project_code: Optional[str] = Field(default=None, max_length=50, description="项目编号")
-    project_name: Optional[str] = Field(default=None, max_length=200, description="项目名称")
+    project_code: Optional[str] = Field(
+        default=None, max_length=50, description="项目编号"
+    )
+    project_name: Optional[str] = Field(
+        default=None, max_length=200, description="项目名称"
+    )
     machine_id: Optional[int] = Field(default=None, description="设备ID")
-    cost_type: str = Field(max_length=50, description="成本类型：LABOR/TRAVEL/ENTERTAINMENT/OTHER")
+    cost_type: str = Field(
+        max_length=50, description="成本类型：LABOR/TRAVEL/ENTERTAINMENT/OTHER"
+    )
     cost_category: str = Field(max_length=50, description="成本分类")
-    cost_item: Optional[str] = Field(default=None, max_length=200, description="成本项名称")
+    cost_item: Optional[str] = Field(
+        default=None, max_length=200, description="成本项名称"
+    )
     amount: Decimal = Field(description="金额")
     tax_amount: Optional[Decimal] = Field(default=0, description="税额")
     currency: Optional[str] = Field(default="CNY", max_length=10, description="币种")
     cost_date: date = Field(description="发生日期")
-    cost_month: Optional[str] = Field(default=None, max_length=7, description="成本月份(YYYY-MM)")
+    cost_month: Optional[str] = Field(
+        default=None, max_length=7, description="成本月份(YYYY-MM)"
+    )
     description: Optional[str] = Field(default=None, description="费用说明")
     location: Optional[str] = Field(default=None, max_length=200, description="地点")
-    participants: Optional[str] = Field(default=None, max_length=500, description="参与人员")
-    purpose: Optional[str] = Field(default=None, max_length=500, description="用途/目的")
+    participants: Optional[str] = Field(
+        default=None, max_length=500, description="参与人员"
+    )
+    purpose: Optional[str] = Field(
+        default=None, max_length=500, description="用途/目的"
+    )
     user_id: Optional[int] = Field(default=None, description="人员ID（人工费用）")
-    user_name: Optional[str] = Field(default=None, max_length=50, description="人员姓名")
+    user_name: Optional[str] = Field(
+        default=None, max_length=50, description="人员姓名"
+    )
     hours: Optional[Decimal] = Field(default=None, description="工时")
     hourly_rate: Optional[Decimal] = Field(default=None, description="时薪")
-    source_no: Optional[str] = Field(default=None, max_length=100, description="来源单号")
-    invoice_no: Optional[str] = Field(default=None, max_length=100, description="发票号")
+    source_no: Optional[str] = Field(
+        default=None, max_length=100, description="来源单号"
+    )
+    invoice_no: Optional[str] = Field(
+        default=None, max_length=100, description="发票号"
+    )
 
 
 class FinancialProjectCostResponse(TimestampSchema):
@@ -227,7 +286,9 @@ class ProjectCostSummary(BaseModel):
 
     total_cost: Decimal = Field(default=Decimal("0"), description="总成本")
     budget: Decimal = Field(default=Decimal("0"), description="预算")
-    budget_used_pct: Decimal = Field(default=Decimal("0"), description="预算使用率（百分比）")
+    budget_used_pct: Decimal = Field(
+        default=Decimal("0"), description="预算使用率（百分比）"
+    )
     overrun: bool = Field(default=False, description="是否超支")
     variance: Decimal = Field(default=Decimal("0"), description="成本差异（实际-预算）")
     variance_pct: Decimal = Field(default=Decimal("0"), description="差异率（百分比）")
