@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -121,3 +122,49 @@ class TestQuoteCostQuantityContracts:
         version = db.get(QuoteVersion, version_id)
         assert float(version.cost_total) == pytest.approx(300.0)
         assert float(version.gross_margin) == pytest.approx(50.0)
+
+    def test_cost_analysis_uses_quote_current_version_not_latest_created_version(
+        self, client: TestClient, admin_token: str, db
+    ):
+        quote = _create_quote_with_quantity_cost(db)
+        current_version = db.get(QuoteVersion, quote.current_version_id)
+        current_version.version_no = "V1-CURRENT"
+        current_version.created_at = datetime.now() - timedelta(days=1)
+
+        draft_version = QuoteVersion(
+            quote_id=quote.id,
+            version_no="V2-DRAFT",
+            total_price=Decimal("900.00"),
+            cost_total=Decimal("450.00"),
+            gross_margin=Decimal("50.00"),
+            created_at=datetime.now(),
+            created_by=current_version.created_by,
+        )
+        db.add(draft_version)
+        db.flush()
+        db.add(
+            QuoteItem(
+                quote_version_id=draft_version.id,
+                item_type="MATERIAL",
+                item_name="未设为当前版本的明细",
+                cost_category="材料",
+                qty=Decimal("1"),
+                unit_price=Decimal("900.00"),
+                cost=Decimal("450.00"),
+                unit="件",
+            )
+        )
+        quote.current_version_id = current_version.id
+        db.commit()
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/sales/quotes/{quote.id}/cost-analysis",
+            headers=_auth_headers(admin_token),
+        )
+
+        assert response.status_code == 200, response.text
+        data = response.json()["data"]
+        assert data["version_count"] == 2
+        assert data["current_version"]["version_no"] == "V1-CURRENT"
+        assert data["current_version"]["total_price"] == pytest.approx(600.0)
+        assert data["current_version"]["cost_total"] == pytest.approx(100.0)

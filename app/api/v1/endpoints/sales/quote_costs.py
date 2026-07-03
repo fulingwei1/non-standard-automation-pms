@@ -9,7 +9,7 @@
 """
 
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Literal, Optional
 
@@ -56,6 +56,16 @@ def _check_quote_scope(quote: Quote, current_user: User, db: Session) -> None:
     """校验当前用户是否有权访问该报价，无权则抛 403"""
     if not check_sales_data_permission(quote, current_user, db, "owner_id"):
         raise HTTPException(status_code=403, detail="无权访问该报价的成本数据")
+
+
+def _select_current_quote_version(quote: Quote, versions: list[QuoteVersion]) -> QuoteVersion:
+    """优先使用报价主表 current_version_id，缺失时才回退到最新创建版本。"""
+    if quote.current_version_id:
+        matched = next((v for v in versions if v.id == quote.current_version_id), None)
+        if matched is not None:
+            return matched
+
+    return max(versions, key=lambda v: (v.created_at or datetime.min, v.id or 0))
 
 
 def _to_decimal(value) -> Decimal:
@@ -218,7 +228,7 @@ def get_cost_analysis(
     versions = (
         db.query(QuoteVersion)
         .filter(QuoteVersion.quote_id == quote_id)
-        .order_by(QuoteVersion.created_at)
+        .order_by(QuoteVersion.created_at, QuoteVersion.id)
         .all()
     )
 
@@ -237,8 +247,8 @@ def get_cost_analysis(
         for v in versions
     ]
 
-    # 当前版本的成本结构
-    current = versions[-1]
+    # 当前版本的成本结构：优先使用 Quote.current_version_id，与报价详情/统计口径一致。
+    current = _select_current_quote_version(quote, versions)
     items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == current.id).all()
 
     # 按类型汇总
