@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { usePaymentApproval } from '../usePaymentApproval';
-import { unifiedApprovalApi as paymentApprovalApi } from '../../../../services/api';
+import { paymentApprovalApi } from '../../../../services/api';
 
 // Mock API
 vi.mock('../../../../services/api', async (importOriginal) => {
@@ -39,7 +39,7 @@ vi.mock('../../../../services/api', async (importOriginal) => {
   };
 });
 
-describe.skip('usePaymentApproval Hook', () => {
+describe('usePaymentApproval Hook', () => {
   // Setup common mock data
   const mockItems = [{ id: 1, name: 'Test 1' }, { id: 2, name: 'Test 2' }];
   const mockDetail = { id: 1, name: 'Test Detail' };
@@ -72,5 +72,7 @@ describe.skip('usePaymentApproval Hook', () => {
 
     // Basic assertion
     expect(result.current).toBeDefined();
+    expect(paymentApprovalApi.list).toHaveBeenCalledWith({ tab: 'pending', page_size: 50 });
+    expect(result.current.approvals).toEqual(mockItems);
   });
 });
