@@ -1,5 +1,12 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：功能审计 SALES-08 修复（目标 actual_value 实时回填）
+
+- 修复项：`SALES-08`，目标列表接口 `# TODO 实现目标绩效计算逻辑`——`actual_value` 取不存在的模型列恒 0，达成率恒 0；而 `SalesTeamService.calculate_target_performance`（SALES-15 补的）已具备完整口径，又是"算法真接线假"。
+- 代码面：`sales/targets.py` 列表接口接线 `calculate_target_performance` 实时计算。口径：LEAD_COUNT/OPPORTUNITY_COUNT 按 owner 计数、CONTRACT_AMOUNT 按合同负责人金额求和、COLLECTION_AMOUNT 按发票实收；达成率 = actual/target*100；团队/部门级目标暂无归集口径返回 0（备注在台账）。
+- 验证：红灯（actual 恒 0）→ 绿灯 `tests/unit/test_sales_target_actuals.py` 1 passed；团队服务回归 39 passed + p7 覆盖 23 passed；py_compile 通过。
+- 联动：ForecastDashboard（SALES-07 刚修）读的就是该列表的 actual_value——至此目标页"目标-实际-预测"三个数字全部来自真实数据。
+
 ## 2026-07-03 继续：功能审计 SALES-06/07 修复（销售预测接线真算法 + 前端去假）
 
 - 修复项：`SALES-06`（全局 P0#15，预测接口整文件硬编码，SalesForecastService 500 行真实现是死代码）+ `SALES-07`（ForecastDashboard 假数据兜底、AI 预测卡纯常量）。
@@ -13,6 +20,23 @@
   - 假兜底全清：目标汇总（5000万/2850万常量）、团队（华南/华东/华北演示区）、个人（张三李四）→ 空态；"驾驶舱"tab 整段编造数字（新客户 106.7%/客单价 158 万/红绿灯）下架。
 - 验证：`tests/unit/test_sales_forecast_wiring.py` 3 项红转绿（真数据计算/端点接线/8 端点 501）；P0-15 复现 2 项过；`import app.main` 通过；`npm run build` + eslint 通过。
 - 残留：SALES-08（目标 actual_value 自动回填）待修——SalesTeamService 已有目标实际值计算逻辑（SALES-15 补的），可复用；团队/个人预测分解做实排期在 ROADMAP F6。
+
+## 2026-07-03 继续：功能审计 APPR-22 小切口（自动数据库备份）
+
+- 修复项：`APPR-22` 子项②，系统有 `BackupService` 和 shell 脚本，但没有 scheduler 任务自动执行；且默认运行库是 SQLite（`data/app.db`），旧 `backup_database.sh` 是 MySQL/mysqldump 口径，直接接调度也不会产生真实可用备份。
+- 改动：
+  - `BackupService.create_backup("database")` 在 SQLite URL 下直接用 Python `sqlite3.iterdump()` 生成 `pms_YYYYmmdd_HHMMSS.sql.gz`，并写同名 `.md5`。
+  - `sqlite:///:memory:` 测试环境保留旧脚本回退，避免破坏既有脚本包装测试。
+  - 新增 `app/utils/scheduled_tasks/backup_tasks.py::daily_database_backup_task()`。
+  - `scheduler_config/other.py` 新增 enabled 任务 `daily_database_backup`，每天 2:30 执行。
+  - `scheduled_tasks/__init__.py` 导出/注册 `daily_database_backup_task`。
+- 验证：
+  - 红灯：`pytest tests/unit/test_backup_scheduler_appr22.py -q` -> 2 failed，SQLite 备份走旧脚本失败，调度任务不存在。
+  - 绿灯：同命令 -> 2 passed。
+  - 备份服务回归：`app/tests/services/backup/test_backup_service.py tests/unit/test_backup_service_deep.py tests/unit/test_backup_scheduler_appr22.py` -> 35 passed。
+  - 调度相邻回归：`tests/unit/test_scheduler_utils.py tests/audit_p0/test_p0_10_stub_tasks.py tests/unit/test_j3_scheduled_tasks.py::TestStubTasks tests/unit/test_backup_scheduler_appr22.py` -> 49 passed。
+  - 静态检查：相关文件 `py_compile` passed；`ruff check` passed。
+- 台账：`APPR-22` 子项②已标已回归；当前 `APPR-22` 只剩子项④“第二调度器不进监控”。
 
 ## 2026-07-03 继续：功能审计 PROJ-21 修复（项目变更通知）
 

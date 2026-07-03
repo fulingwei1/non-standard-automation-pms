@@ -98,12 +98,16 @@ def get_sales_targets(
         query.order_by(desc(SalesTarget.created_at)), pagination.offset, pagination.limit
     ).all()
 
-    # 计算实际完成值和完成率
+    # 计算实际完成值和完成率（SALES-08：个人目标按真实业务数据实时回填）
+    from app.services.sales_team_service import SalesTeamService
+
+    performance_service = SalesTeamService(db)
     items = []
     for target in targets:
-        # TODO: 实现目标绩效计算逻辑
-        actual_value = getattr(target, "actual_value", 0) or 0
-        completion_rate = (actual_value / target.target_value * 100) if target.target_value else 0
+        # 口径：LEAD/OPPORTUNITY 按 owner 计数，CONTRACT_AMOUNT 按合同负责人金额，
+        # COLLECTION_AMOUNT 按发票实收；达成率 = actual/target*100。
+        # 团队/部门级目标暂无归集口径，返回 0（见 FUNCTIONAL_AUDIT_TRACKER SALES-08 备注）。
+        actual_value, completion_rate = performance_service.calculate_target_performance(target)
 
         # 获取用户/部门名称
         user_name = None
