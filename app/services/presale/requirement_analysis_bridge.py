@@ -87,6 +87,20 @@ def confirm_and_backfill(db, analysis_id: int, user_id: Optional[int]) -> Dict[s
 
     analysis.status = "approved"
 
+    # 确认即采纳：反馈闭环第一处业务接线（随本事务一起提交）
+    from app.services import ai_feedback_service
+
+    ai_feedback_service.record(
+        db,
+        feature_key="presale_requirement_analysis",
+        verdict="ADOPTED",
+        ref_type="requirement_analysis",
+        ref_id=analysis.id,
+        reason="人工确认需求分析",
+        user_id=user_id,
+        commit=False,
+    )
+
     ticket = (
         db.query(PresaleSupportTicket)
         .filter(PresaleSupportTicket.id == analysis.presale_ticket_id)

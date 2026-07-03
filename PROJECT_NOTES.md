@@ -1,5 +1,20 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：AI 反馈闭环第一步（采纳/驳回记录 + 采纳率统计）
+
+- 背景：AI 融入业务流程闭环愿景（需求识别→信息收集→判断分析→执行动作→结果反馈→持续优化）中"结果反馈"环节此前为 0——所有 AI 建议看完即走，无采纳记录、无采纳率、无从校准。
+- 代码面：
+  - 新增 `app/models/ai_feedback.py`：`ai_output_feedbacks` 表（feature_key/ref_type/ref_id/verdict/reason/detail/created_by），append-only。
+  - 新增 `app/services/ai_feedback_service.py`：`record()`（verdict 只认 ADOPTED/REJECTED/PARTIAL）+ `stats()`（同一产出多次反馈按最新去重，按 feature_key 出采纳率）。
+  - 新增端点 `POST /ai-feedback`（记录）+ `GET /ai-feedback/stats`（采纳率统计）；挂载在 ai_jobs 之后。
+  - 第一处业务接线：PRE-10 确认端点 `confirm_and_backfill` 自动落一条 ADOPTED 反馈（确认即采纳，随同事务提交）。
+  - 迁移 `migrations/20260703_ai_output_feedback_sqlite.sql` 已应用到 data/app.db。
+- 验证：
+  - 红灯：`tests/unit/test_ai_feedback_contracts.py` 收集失败（模块不存在）。
+  - 绿灯：4 passed + 桥接套件回归 5 passed。
+  - 动态：TestClient 起真实 app，`GET /ai-feedback/stats`、`POST /ai-feedback` 未认证 401（路由真实挂载 + 权限门生效），路由加载失败 0 项。
+- 后续接线点（前端加"采纳/驳回"按钮即可）：三档报价、谈判建议、流失预测、经营简报行动项、方案评审；经营侧月度复盘用 stats 出各 AI 功能真实采纳率。
+
 ## 2026-07-03 继续：功能审计 PRE-10 修复（AI 需求分析下游贯通）
 
 - 修复项：`PRE-10`，AI 需求分析结果数据孤岛：方案生成只存 requirement_analysis_id 不读内容（需求靠前端重贴）、三档报价只认手填 base_requirements、分析结果永不回填商机，与商机域 ai-enrich-requirement 两套抽取互不相通。

@@ -281,6 +281,8 @@ def create_api_router() -> APIRouter:
         api_router.include_router(presale_ai_quotation_router, tags=["presale-ai"])
         from app.api.v1.endpoints.ai_jobs import router as ai_jobs_router
         api_router.include_router(ai_jobs_router)
+        from app.api.v1.endpoints.ai_feedback import router as ai_feedback_router
+        api_router.include_router(ai_feedback_router)
         from app.api.v1.endpoints.sales.activity_minutes import router as sales_minutes_router
         api_router.include_router(sales_minutes_router)
         from app.api.v1.endpoints.ai_modules import router as ai_modules_router
