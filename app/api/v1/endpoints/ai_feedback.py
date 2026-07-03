@@ -56,3 +56,14 @@ def feedback_stats(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     return {"items": ai_feedback_service.stats(db, feature_key=feature_key)}
+
+
+@router.get("/quote-calibration", summary="AI 三档报价 vs 成交金额对账")
+def quote_calibration(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """报出各档偏差、最贴近档位与按档平均绝对偏差，供经营复盘校准报价规则。"""
+    from app.services import ai_quote_calibration_service
+
+    return ai_quote_calibration_service.quote_calibration(db)

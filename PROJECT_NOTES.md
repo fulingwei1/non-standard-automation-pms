@@ -1,5 +1,14 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：AI 报价对账（持续优化环节数据地基第一块）
+
+- 背景：AI 三档报价与实际成交从无勾稽，报价规则无从校准（backlog 中"报价→实际闭环校准"一直未做）。
+- 代码面：
+  - 新增 `app/services/ai_quote_calibration_service.py`：链路 AI 报价(售前工单)→工单商机→已签合同（signed/executing/completed），逐工单报各档偏差+最贴近档位，汇总按档平均绝对偏差与最贴近档分布；同工单同档多次生成取最新；未成交计 unmatched 不进偏差。
+  - 新增端点 `GET /ai-feedback/quote-calibration`。
+  - 边界：实际成本对账待成本归集口径修复（MISC-09/PROJ-11）后扩展，本轮只对成交金额。
+- 验证：红灯 4 项（模块不存在/种子 created_by 缺）→ 绿灯 `tests/unit/test_ai_quote_calibration_contracts.py` 4 passed + AI 反馈/闸门套件 12 passed；TestClient 动态验证端点 401 权限门；`import app.main` 通过。
+
 ## 2026-07-03 继续：AI 方案评审嵌入 G2 闸门（决策流改造第一处）
 
 - 背景：ai-solution-review（PRE-19 正面确认项）结果不落库、看完即丢，AI 初判无法进决策流。本次把"未处置的 HIGH 风险"变成 G2（商机→报价）硬约束——AI 出风险清单（初步判断），人处置留痕（关键判断+责任承担），闸门消费处置状态（决策流硬约束）。
