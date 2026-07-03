@@ -124,11 +124,14 @@ def validate_g1_lead_to_opportunity(
     return len(errors) == 0, errors + warnings
 
 
-def validate_g2_opportunity_to_quote(opportunity: Opportunity) -> Tuple[bool, List[str]]:
+def validate_g2_opportunity_to_quote(
+    opportunity: Opportunity, db: Optional[Session] = None
+) -> Tuple[bool, List[str]]:
     """
     G2：商机 → 报价 验证
     预算范围、决策链、交付窗口、验收标准明确
     技术可行性初评通过
+    AI 方案评审的 HIGH 风险必须已人工处置（做过评审才检查，评审本身不强制）
     """
     errors = []
 
@@ -144,6 +147,17 @@ def validate_g2_opportunity_to_quote(opportunity: Opportunity) -> Tuple[bool, Li
     # 技术可行性初评（简化：检查是否有评分）
     if opportunity.score is None or opportunity.score < 60:
         errors.append("技术可行性初评未通过（评分需≥60分）")
+
+    # AI 方案评审风险门：有未处置的 HIGH 风险不放行
+    if db is not None:
+        from .solution_review import unresolved_high_risk
+
+        high = unresolved_high_risk(db, opportunity.id)
+        if high:
+            errors.append(
+                f"AI 方案评审有 {high} 项高风险未处置，"
+                "请先处置（消除或带险推进并写明理由）再提交 G2"
+            )
 
     return len(errors) == 0, errors
 

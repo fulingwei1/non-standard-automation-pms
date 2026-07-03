@@ -1,5 +1,17 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：AI 方案评审嵌入 G2 闸门（决策流改造第一处）
+
+- 背景：ai-solution-review（PRE-19 正面确认项）结果不落库、看完即丢，AI 初判无法进决策流。本次把"未处置的 HIGH 风险"变成 G2（商机→报价）硬约束——AI 出风险清单（初步判断），人处置留痕（关键判断+责任承担），闸门消费处置状态（决策流硬约束）。
+- 代码面：
+  - 新增 `sales/utils/solution_review.py`：`persist_solution_review`（评审结果存 opportunity_requirements.extra_json，覆盖旧评审并重置处置态）、`resolve_solution_review`（RESOLVED/ACCEPT_RISK 双动作，强制写理由，留人/时间痕，落 AI 反馈）、`unresolved_high_risk`（G2 消费口）。
+  - `validate_g2_opportunity_to_quote` 增加可选 db 参数：有未处置 HIGH 风险即拦截；**未做过评审不新增拦截**（评审暂不强制，不破坏存量流程）；闸门提交端点传 db。
+  - `ai-solution-review` 端点评审后自动落库；新增 `POST /opportunities/{id}/solution-review/resolution` 处置端点。
+- 验证：
+  - 红灯：`tests/unit/test_ai_review_gate_contracts.py` 4 项（持久化/拦截/处置放行+反馈/处置校验）。
+  - 绿灯：4 passed；相邻回归 `test_api_p6_coverage + integration/sales/test_opportunities + ai_feedback + requirement_bridge` 134 passed；`import app.main` 通过。
+- 后续：前端商机页评审卡片需加"处置"入口（调 resolution 端点）；G2 拦截文案已给操作指引；评审是否转强制（无评审不能过 G2）待业务拍板后一行切换。
+
 ## 2026-07-03 继续：AI 反馈闭环第一步（采纳/驳回记录 + 采纳率统计）
 
 - 背景：AI 融入业务流程闭环愿景（需求识别→信息收集→判断分析→执行动作→结果反馈→持续优化）中"结果反馈"环节此前为 0——所有 AI 建议看完即走，无采纳记录、无采纳率、无从校准。

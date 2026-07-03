@@ -252,9 +252,47 @@ def ai_solution_review(
     reviews = parsed if isinstance(parsed, list) else (parsed.get("reviews") if isinstance(parsed, dict) else None)
     if not isinstance(reviews, list) or not reviews:
         raise HTTPException(status_code=502, detail="AI 方案评审失败，请先完善需求")
-    high = sum(1 for r in reviews if isinstance(r, dict) and str(r.get("risk_level")).upper() == "HIGH")
-    return ResponseModel(code=200, message=f"AI 方案评审完成：{len(reviews)}项，其中高风险{high}项",
-                         data={"opportunity_id": opp_id, "high_risk": high, "reviews": reviews})
+    # 评审结果落库：G2 闸门消费未处置的 HIGH 风险（PRE-19 → 决策流接线）
+    from .utils.solution_review import persist_solution_review
+
+    record = persist_solution_review(db, opp_id, [r for r in reviews if isinstance(r, dict)])
+    high = record["high_risk"]
+    return ResponseModel(
+        code=200,
+        message=f"AI 方案评审完成：{len(reviews)}项，其中高风险{high}项"
+        + ("；高风险须处置后才能过 G2" if high else ""),
+        data={"opportunity_id": opp_id, "high_risk": high, "reviews": reviews},
+    )
+
+
+@router.post("/opportunities/{opp_id}/solution-review/resolution", response_model=ResponseModel)
+def resolve_ai_solution_review(
+    *,
+    db: Session = Depends(deps.get_db),
+    opp_id: int,
+    payload: dict = Body(...),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """处置 AI 方案评审风险：RESOLVED（已消除）或 ACCEPT_RISK（带险推进），必须写明理由。
+    处置留痕（人/时间/理由）并解除 G2 拦截；同时落 AI 反馈供采纳率统计。"""
+    from .utils.solution_review import resolve_solution_review
+
+    get_or_404(db, Opportunity, opp_id, "商机不存在")
+    try:
+        record = resolve_solution_review(
+            db,
+            opp_id,
+            action=payload.get("action", ""),
+            note=payload.get("note", ""),
+            user_id=current_user.id,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return ResponseModel(
+        code=200,
+        message="评审风险已处置，G2 闸门解除拦截",
+        data={"opportunity_id": opp_id, "resolution": record.get("resolution")},
+    )
 
 
 @router.post("/opportunities/{opp_id}/ai-acceptance-criteria", response_model=ResponseModel)
@@ -783,7 +821,7 @@ def submit_opportunity_gate(
     # 根据阶段门类型进行验证
     validation_errors = []
     if gate_type == "G2":
-        is_valid, errors = validate_g2_opportunity_to_quote(opportunity)
+        is_valid, errors = validate_g2_opportunity_to_quote(opportunity, db=db)
         if not is_valid:
             validation_errors = errors
 
