@@ -39,7 +39,8 @@ def _is_stub_result(result):
 
 @pytest.mark.parametrize("fname", STUB_FUNCS)
 def test_registered_task_is_not_a_stub(fname):
-    mod = importlib.import_module("app.utils.scheduled_tasks.stub_tasks")
+    # 从任务包解析（回填后的任务已移出 stub_tasks，如 generate_shortage_alerts）
+    mod = importlib.import_module("app.utils.scheduled_tasks")
     func = getattr(mod, fname)
     result = func()
     # 正确行为：真实定时任务不应返回 stub 哨兵

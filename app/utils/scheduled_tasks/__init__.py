@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 from .alert_tasks import (
     calculate_response_metrics,
     check_alert_escalation,
+    check_sla_warnings_task,
     retry_failed_notifications,
     send_alert_notifications,
 )
@@ -33,6 +34,11 @@ from .base import (
     log_task_result,
     safe_task_execution,
     send_notification_for_alert,
+)
+
+# ==================== 备份任务 ====================
+from .backup_tasks import (
+    daily_database_backup_task,
 )
 
 # ==================== HR任务 ====================
@@ -89,6 +95,11 @@ from .risk_tasks import (
     create_daily_risk_snapshots,
 )
 
+# ==================== OTD 项目交付智能体 ====================
+from .otd_tasks import (
+    daily_otd_scan,
+)
+
 # ==================== AI 日报/周报推送 ====================
 from .ai_report_tasks import (
     push_daily_reports,
@@ -104,6 +115,7 @@ from .sales_tasks import (
 )
 
 # ==================== 存根任务（待实现）====================
+from .shortage_tasks import generate_shortage_alerts  # noqa: F401  # APPR-04 已回填真实现
 from .stub_tasks import (
     auto_trigger_urgent_purchase_from_shortage_alerts,
     check_cost_overrun_alerts,
@@ -119,7 +131,6 @@ from .stub_tasks import (
     sync_kitting_rate_hourly,
     generate_job_duty_tasks,
     generate_monthly_reports_task,
-    generate_shortage_alerts,
     generate_shortage_daily_report,
 )
 
@@ -180,9 +191,12 @@ SCHEDULED_TASKS = {
     "retry_failed_notifications": retry_failed_notifications,
     "send_alert_notifications": send_alert_notifications,
     "calculate_response_metrics": calculate_response_metrics,
+    "check_sla_warnings_task": check_sla_warnings_task,
     # HR任务
     "check_contract_expiry_reminder": check_contract_expiry_reminder,
     "check_employee_confirmation_reminder": check_employee_confirmation_reminder,
+    # 备份任务
+    "daily_database_backup_task": daily_database_backup_task,
     # 齐套率任务
     "daily_kit_rate_snapshot": daily_kit_rate_snapshot,
     "daily_kit_check": daily_kit_check,
@@ -191,6 +205,8 @@ SCHEDULED_TASKS = {
     "calculate_all_project_risks": calculate_all_project_risks,
     "create_daily_risk_snapshots": create_daily_risk_snapshots,
     "check_high_risk_projects": check_high_risk_projects,
+    # OTD 项目交付智能体
+    "daily_otd_scan": daily_otd_scan,
 }
 
 # ==================== 任务分组 ====================
@@ -260,6 +276,7 @@ TASK_GROUPS = {
         "name": "预警通知",
         "tasks": [
             "check_alert_escalation",
+            "check_sla_warnings_task",
             "retry_failed_notifications",
             "send_alert_notifications",
             "calculate_response_metrics",
@@ -270,6 +287,12 @@ TASK_GROUPS = {
         "tasks": [
             "check_contract_expiry_reminder",
             "check_employee_confirmation_reminder",
+        ],
+    },
+    "backup": {
+        "name": "备份管理",
+        "tasks": [
+            "daily_database_backup_task",
         ],
     },
     "kit_rate": {
@@ -286,6 +309,12 @@ TASK_GROUPS = {
             "calculate_all_project_risks",
             "create_daily_risk_snapshots",
             "check_high_risk_projects",
+        ],
+    },
+    "otd": {
+        "name": "OTD 项目交付智能体",
+        "tasks": [
+            "daily_otd_scan",
         ],
     },
 }
@@ -392,12 +421,15 @@ __all__ = [
     "generate_production_daily_reports",
     # 预警通知
     "check_alert_escalation",
+    "check_sla_warnings_task",
     "retry_failed_notifications",
     "send_alert_notifications",
     "calculate_response_metrics",
     # HR
     "check_contract_expiry_reminder",
     "check_employee_confirmation_reminder",
+    # 备份
+    "daily_database_backup_task",
     # 齐套率
     "daily_kit_rate_snapshot",
     "create_kit_rate_snapshot",
@@ -408,6 +440,8 @@ __all__ = [
     "calculate_all_project_risks",
     "create_daily_risk_snapshots",
     "check_high_risk_projects",
+    # OTD 项目交付智能体
+    "daily_otd_scan",
     # AI 日报/周报
     "push_daily_reports",
     "push_weekly_reports",

@@ -13,7 +13,7 @@ SHORTAGE_TASKS = [
         "owner": "Supply Chain",
         "category": "Shortage",
         "description": "每天 7 点生成缺料预警并更新 AlertRecord。",
-        "enabled": False,
+        "enabled": True,  # APPR-04 已回填 SmartAlertEngine 真实现，解除 stub 时代禁用
         "dependencies_tables": [
             "bom_items",
             "materials",

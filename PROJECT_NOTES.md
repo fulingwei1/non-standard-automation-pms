@@ -1,5 +1,16 @@
 # PROJECT_NOTES
 
+## 2026-07-04 继续：功能审计 APPR-04 首个回填（缺料预警任务接真引擎）
+
+- 修复项：`APPR-04`（全局 P0#10）剩余的"业务回填"部分，首个回填 `generate_shortage_alerts`——PROD-02 修好的 SmartAlertEngine 一直没有调度消费方。
+- 代码面：
+  - 新增 `scheduled_tasks/shortage_tasks.py`：真任务调 `SmartAlertEngine.scan_and_alert()` 全量扫描（工单/BOM 需求 vs 库存+在途，CRITICAL/URGENT 自动生成处理方案）；success 返回生成数量，异常返回 error 哨兵（调度监控计失败并按 SLA 重试）。
+  - `stub_tasks.py` 移除该任务存根与导出；包 `__init__` 改从真实模块导入（外部导入路径不变）。
+  - `scheduler_config/shortage.py` 解禁该任务（每日 7:00）。
+  - 测试口径更新：`test_p0_10` 改从任务包解析（回填后任务移出 stub 模块）；`test_j3` 的 stub 断言改为"必须已移出 stub"。
+- 验证：红灯 4 项 → 绿灯 `tests/unit/test_shortage_alert_task_backfill.py` 4 passed；P0-10 全套 19 passed；`import app.main` 通过。`test_j3` 4 项通知类失败经 HEAD worktree 证实为并行会话域既有测试债。
+- 剩余回填：紧急采购自动触发（依赖 PROD-15 做实）、缺料日报（ShortageDailyReport 幽灵表需先定义写入口径）、维保计划（随 AS-14）。
+
 ## 2026-07-04 继续：功能审计 PRE-17/18 修复（中文检索短期方案，详#16）
 
 - 修复项：`PRE-17`（"语义搜索"实为字符哈希/Jaccard）+ `PRE-18`（相似案例 equipment_type 精确匹配、空值互配）。前置勘察：百炼 Coding Plan 端点 `/embeddings` 实测 404——真向量方案需标准百炼密钥，中期再升级（ROADMAP F4）。
@@ -2217,3 +2228,40 @@
   - `ruff check app/api/v1/endpoints/documents/crud_refactored.py tests/unit/test_documents_upload_misc06.py` 通过。
   - `npm exec eslint src/services/api/projects.js src/services/api/__tests__/routeContracts.test.js src/pages/__tests__/Documents.test.jsx`（cwd=`frontend`）通过。
   - `git diff --check app/api/v1/endpoints/documents/crud_refactored.py frontend/src/services/api/projects.js tests/unit/test_documents_upload_misc06.py frontend/src/services/api/__tests__/routeContracts.test.js frontend/src/pages/__tests__/Documents.test.jsx FUNCTIONAL_AUDIT_TRACKER.md PROJECT_NOTES.md` 通过。
+
+## 2026-07-04 继续：MISC-05 legacy endpoints/knowledge 下架止血
+
+- 修复目标：`app/api/v1/endpoints/knowledge` 旧自动沉淀聚合包不能继续聚合 `extraction/induction/alerts/search` 四个半成品路由；这些路由依赖默认库不存在的 `knowledge_entries/knowledge_alerts`，误挂后会 500 或暴露硬编码 AI 行为。真实前端知识库继续走 `/knowledge-base` 和 `/service/knowledge-base`。
+- 现场确认：
+  - `api.py` / `api_lazy.py` 当前没有 include `app.api.v1.endpoints.knowledge`，也没有 legacy `/knowledge` 主挂载。
+  - 默认 `data/app.db` 只有 `knowledge_base`，查询 `knowledge_entries` 报 `no such table: knowledge_entries`。
+  - `frontend/src/services/api/knowledge.js`、`knowledgeBase.js` 走 `/knowledge-base`；客服知识库走 `/service/knowledge-base`。
+- 红测：
+  - `tests/unit/test_knowledge_legacy_misc05.py::test_legacy_knowledge_router_no_longer_aggregates_broken_subrouters` 先失败：旧包仍 include `extraction.router` 等四个子路由。
+  - `test_legacy_knowledge_endpoint_returns_501_when_accidentally_mounted` 先失败：没有 `legacy_knowledge_disabled` 止血入口。
+- 代码面：
+  - `endpoints/knowledge/__init__.py` 去掉 `.alerts/.extraction/.induction/.search` 导入和 include_router。
+  - 新增 catch-all `legacy_knowledge_disabled`，误挂时对 GET/POST/PUT/PATCH/DELETE/OPTIONS 返回 501，并提示使用 `/knowledge-base` 或 `/service/knowledge-base`。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_knowledge_legacy_misc05.py --tb=short --disable-warnings` 先红后绿（3 个用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/endpoints/knowledge/__init__.py tests/unit/test_knowledge_legacy_misc05.py` 通过。
+  - `ruff check app/api/v1/endpoints/knowledge/__init__.py tests/unit/test_knowledge_legacy_misc05.py` 通过。
+
+## 2026-07-04 继续：MISC-08 change_impact 占位路由下架并挂真实现
+
+- 修复目标：主 `api.py` 不能继续把旧 `/change-impact` shim 当成可用功能上线；真实项目变更影响接口应挂载 `/project-change-impacts/*`，旧占位不能再返回 `change_impact module placeholder`。
+- 现场确认：
+  - `api.py` 原来 include `app.api.v1.endpoints.change_impact` 到 `/change-impact`，该文件 ImportError 后返回占位 JSON。
+  - `api_lazy.py` 已挂 `app.api.v1.endpoints.projects.change_impact`，但主 `api.py` 未挂。
+  - `app/api/v1/endpoints/projects/change_impact.py` 有真实 `assess/execute-linkage/detail/by-ecn/by-project` 端点；默认 `data/app.db` 存在 `project_change_impacts` 表。
+- 红测：
+  - `tests/unit/test_change_impact_misc08.py::test_main_api_mounts_real_project_change_impact_not_legacy_placeholder` 先失败：主 `api.py` 未挂真实 `projects.change_impact`，仍挂 `/change-impact`。
+  - `test_legacy_change_impact_router_no_longer_returns_placeholder_payload` 先失败：旧 shim 仍含 `change_impact module placeholder`。
+  - `test_legacy_change_impact_endpoint_returns_501_when_accidentally_mounted` 先失败：没有 `legacy_change_impact_disabled`。
+- 代码面：
+  - `api.py` 的变更影响块改为 include `app.api.v1.endpoints.projects.change_impact`，prefix 为空，暴露真实 `/project-change-impacts/*`。
+  - `endpoints/change_impact.py` 改为 disabled legacy shim，误挂时 GET/POST/PUT/PATCH/DELETE/OPTIONS 返回 501，并提示使用 `/project-change-impacts`。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_change_impact_misc08.py --tb=short --disable-warnings` 先红后绿（4 个用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/api.py app/api/v1/endpoints/change_impact.py tests/unit/test_change_impact_misc08.py` 通过。
+  - `ruff check app/api/v1/api.py app/api/v1/endpoints/change_impact.py tests/unit/test_change_impact_misc08.py` 通过。
