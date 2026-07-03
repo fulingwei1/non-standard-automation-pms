@@ -195,6 +195,14 @@ class PresaleAIService:
         # 3. 调用AI生成方案
         ai_response = self.ai_client.generate_solution(prompt=prompt, model=request.ai_model)
 
+        # 3.5 mock 守卫：降级演示数据不得当真方案入库（详#10）
+        from app.services.ai_client_service import is_mock_response
+
+        if is_mock_response(ai_response):
+            raise ValueError(
+                "AI 服务不可用（返回的是演示数据），已拒绝生成方案；请检查 AI 密钥配置后重试"
+            )
+
         # 4. 解析AI响应
         solution_content = self._parse_solution_response(ai_response)
 
@@ -495,11 +503,41 @@ class PresaleAIService:
             "generation_time_seconds": generation_time,
         }
 
+    def _lookup_real_price(self, name: str) -> Optional[Dict[str, Any]]:
+        """按名称查真实价格：物料库（最近采购价优先）→ AI 标准模块库参考成本。"""
+        if not (name or "").strip():
+            return None
+        from sqlalchemy import text as _t
+
+        row = self.db.execute(
+            _t(
+                "SELECT last_price, standard_price FROM materials "
+                "WHERE material_name LIKE :n ORDER BY id DESC LIMIT 1"
+            ),
+            {"n": f"%{name.strip()}%"},
+        ).first()
+        if row:
+            price = float(row[0] or 0) or float(row[1] or 0)
+            if price > 0:
+                return {"unit_price": price, "price_source": "material"}
+        try:
+            row = self.db.execute(
+                _t(
+                    "SELECT ref_cost FROM ai_standard_modules "
+                    "WHERE module_name LIKE :n ORDER BY source_count DESC LIMIT 1"
+                ),
+                {"n": f"%{name.strip()}%"},
+            ).first()
+        except Exception:  # noqa: BLE001 - 模块库表可能不存在（未跑过挖模块）
+            row = None
+        if row and float(row[0] or 0) > 0:
+            return {"unit_price": float(row[0]), "price_source": "module"}
+        return None
+
     def _generate_bom_item(
         self, equipment: Dict[str, Any], include_cost: bool, include_suppliers: bool
     ) -> Dict[str, Any]:
-        """生成单个BOM项"""
-        # 基础信息
+        """生成单个BOM项：价格只认物料库/模块库真实数据，查无价标"待询价"（详#10）"""
         item = {
             "item_name": equipment.get("name", "未命名设备"),
             "model": equipment.get("model", "待定型号"),
@@ -508,17 +546,21 @@ class PresaleAIService:
             "notes": equipment.get("notes", ""),
         }
 
-        # 成本估算 (这里使用模拟数据，实际应调用AI或数据库)
         if include_cost:
-            # TODO: 调用AI或价格数据库
-            item["unit_price"] = 10000.00  # 模拟价格
-            item["total_price"] = item["unit_price"] * item["quantity"]
+            priced = self._lookup_real_price(item["item_name"])
+            if priced:
+                item["unit_price"] = priced["unit_price"]
+                item["total_price"] = round(priced["unit_price"] * item["quantity"], 2)
+                item["price_source"] = priced["price_source"]
+            else:
+                item["unit_price"] = None
+                item["total_price"] = None
+                item["price_status"] = "待询价"
 
-        # 供应商推荐
         if include_suppliers:
-            # TODO: 调用供应商数据库
-            item["supplier"] = "推荐供应商A"
-            item["lead_time_days"] = 30
+            # 供应商推荐尚无真实数据源，宁缺毋假
+            item["supplier"] = None
+            item["lead_time_days"] = None
 
         return item
 

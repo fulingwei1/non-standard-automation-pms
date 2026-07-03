@@ -281,6 +281,10 @@ def _handle_parse_meeting_minutes(session, params: Dict[str, Any], user_id: Opti
     resp = ai.generate_solution(
         prompt=prompt, model="qwen3-coder-plus", temperature=0.2, max_tokens=1500
     )
+    from app.services.ai_client_service import is_mock_response
+
+    if is_mock_response(resp):
+        raise ValueError("AI 服务不可用（返回的是演示数据），纪要解析失败；请检查 AI 密钥配置后重试")
     structured = _extract_json(resp.get("content") or "")
     candidates = _match_candidates(session, customer_id, structured.get("customer_name"))
     return {

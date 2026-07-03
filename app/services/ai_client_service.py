@@ -60,6 +60,17 @@ def load_ai_settings(force: bool = False) -> Dict[str, str]:
     return data
 
 
+def is_mock_response(response) -> bool:
+    """判断 AI 响应是否为降级演示数据（模型名带 -mock 后缀）。
+
+    业务侧在把 AI 输出写入真实数据前必须调用本函数把关，
+    演示数据静默入库是审计判定的共性根因之一。
+    """
+    if not isinstance(response, dict):
+        return False
+    return str(response.get("model") or "").endswith("-mock")
+
+
 class AIClientService:
     """AI客户端服务"""
 

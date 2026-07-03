@@ -1,5 +1,39 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：功能审计 PRE 详#10/#7 修复（mock 方案禁入库 + BOM 真实询价）
+
+- 修复项：审计详#10（generate_solution 不检测 mock，AI 故障时"自动上料机"演示方案以 0.8 置信度入库；BOM 单价写死 10000 元/"推荐供应商A"/交期 30 天）+ 详#7（纪要解析后台任务 mock 也标 SUCCESS）。
+- 代码面：
+  - `ai_client_service` 新增共享守卫 `is_mock_response()`（模型名 -mock 后缀判定），业务写库前必须过闸。
+  - `generate_solution`：mock 响应直接 ValueError 拒绝入库（走 ai_job 时任务标 FAILED，错误信息指向 AI 配置）。
+  - `_handle_parse_meeting_minutes`：mock 同样 raise，job 不再假 SUCCESS。
+  - `_generate_bom_item` 接真实数据源：物料库 `materials`（最近采购价优先，其次标准价）→ AI 模块库 `ai_standard_modules.ref_cost`；查无价 `unit_price=null` 标"待询价"；供应商/交期无真实数据源，置 null 宁缺毋假。
+- 验证：红灯 4 项 → 绿灯 `tests/unit/test_presale_ai_mock_guard.py` 4 passed + bridge 套件 7 passed；相邻回归 10 passed；`import app.main` 通过。
+- 备注：方案生成 mock 检测后，AI 密钥配错时工作台会显式报"AI 服务不可用"而非静默出演示方案——这是预期行为变化。
+
+## 2026-07-03 继续：功能审计 APPR-16 修复（ECN 超期检查调度路径）
+
+- 修复项：`APPR-16`，`check_ecn_overdue` enabled 调度任务配置到不存在的 `app.services.ecn_scheduler`，APScheduler 初始化时导入失败并跳过注册，ECN 超期检查实际不运行。
+- 改动：
+  - `app/utils/scheduler_config/other.py`：模块路径改为真实实现 `app.services.ecn.ecn_scheduler`，callable 仍为 `run_ecn_scheduler`。
+  - `tests/unit/test_scheduler_utils.py` 新增配置契约，锁定 `check_ecn_overdue` 必须能经 `_resolve_callable()` 解析到真实 `run_ecn_scheduler`。
+- 验证：
+  - 红灯：`pytest tests/unit/test_scheduler_utils.py::TestResolveCallable::test_registered_ecn_overdue_job_resolves_real_callable -q` -> failed，`ModuleNotFoundError: No module named 'app.services.ecn_scheduler'`。
+  - 绿灯：同命令 -> 1 passed；`pytest tests/unit/test_scheduler_utils.py::TestResolveCallable -q` -> 4 passed。
+- 残留：本项只修 ECN job 注册路径；`APPR-22` 里“调度器 except ImportError 只记录日志后继续”的平台治理问题仍单独保留。
+
+## 2026-07-03 继续：功能审计 MISC-03 修复（预警超时升级扫描）
+
+- 修复项：`MISC-03`，`check_alert_timeout_escalation()` 用 `not AlertRecord.is_escalated` 构造 SQLAlchemy 查询，实际会把列对象变成 Python `False`，导致过滤条件短路，升级扫描永远查不到待升级预警。
+- 改动：
+  - `app/utils/alert_escalation_task.py` 改为 SQL 表达式：`AlertRecord.is_escalated.is_(False)` 或历史 NULL。
+  - 扫描状态纳入 `OPEN/PENDING/ACKNOWLEDGED/PROCESSING`，和 APPR-17 的 `PENDING→OPEN` 状态流转对齐。
+  - `tests/unit/test_utils_missing.py` 增加查询契约，锁定不能出现裸 `False` 条件、必须扫描 `OPEN`；旧升级用例改为验证超时 INFO 预警会升级到 WARNING 并发送升级通知。
+- 验证：
+  - 红灯：`pytest tests/unit/test_utils_missing.py::TestAlertEscalationTask::test_check_alert_timeout_escalation_query_targets_open_unescalated_alerts tests/unit/test_utils_missing.py::TestAlertEscalationTask::test_check_alert_timeout_escalation -q` -> 1 failed，捕获到过滤条件 `[status IN (...), False]`。
+  - 绿灯：同命令 -> 2 passed；`pytest tests/unit/test_utils_missing.py::TestAlertEscalationTask -q` -> 6 passed。
+- 残留：本项只修升级任务自身查询和状态覆盖；订阅默认接收人与 webhook 渠道问题仍归 `AS-25`，备份/调度监控残项仍归 `APPR-22`。
+
 ## 2026-07-03 继续：售前 AI 前端闭环重建（requirement_analysis_id 全链贯通）
 
 - 背景：旧售前 AI 方案栈前端在去重重构中下线，方案生成连后端 HTTP 端点都没有；`presaleAIService.js` 不存在但测试文件还在（孤儿测试债）。PRE-10 后端贯通后前端无处可接。
