@@ -1136,3 +1136,76 @@
 - 归一动作：/kit-rates/unified/{id} → **/kit-rate/unified/{id}**、/kit-rates/comparison → **/kit-rate/comparison**（与 assembly_kit 的 /kit-rate/* 无路径冲突，实测共存）；前端 procurement.js 与其测试同步；复数前缀清零。
 - **产品口径宣言（记录为约定）**：跨模块展示齐套率一律以 `/kit-rate/unified/{project_id}`（KitRateService 聚合层）为权威查询口径——它同时返回三种算法结果与差异，天然可解释；各专用端点（time-based 预警、enhanced 分析、dashboard 快照）作为专业场景保留，但都归于 /kit-rate 单一命名空间。后续新页面接齐套率一律走 unified。
 - 验证：/kit-rate/unified/66 实测返回真实聚合（DEMO26 项目 15 项物料三算法对比）、comparison 200、旧复数路径 404；前端 procurement 测试 38 绿；build 通过；后端 kit 面 4 过。
+
+## 2026-07-03 继续：SALES-05 商机赢/输单状态守卫
+
+- 修复目标：商机 LOST/WON 终态不能被通用更新或旧阶段接口随意翻转，尤其禁止 LOST→WON。
+- 红测：
+  - `tests/api/test_sales.py::TestOpportunityManagement::test_update_opportunity_rejects_lost_to_won_transition` 先失败，通用 PUT 返回 200。
+  - `tests/api/test_sales.py::TestOpportunityManagement::test_stage_endpoint_rejects_lost_to_won_transition` 先失败，旧 `/stage` 返回 200。
+  - `tests/api/test_sales.py::TestOpportunityManagement::test_legacy_win_endpoint_rejects_lost_opportunity` 先失败，旧 PUT `/win` 返回 200。
+- 代码面：
+  - `app/api/v1/endpoints/sales/utils/stage_guard.py` 新增统一商机阶段守卫。
+  - `app/api/v1/endpoints/sales/opportunity_crud.py` 通用更新 `stage` 走守卫。
+  - `app/api/v1/endpoints/sales/opportunity_workflow.py` 旧 `/stage`、PUT `/win`、PUT `/lose` 走守卫/终态保护。
+  - `app/api/v1/endpoints/sales/opportunity_batch.py` 批量阶段更新复用守卫，且修正终态字符串/Enum 混比。
+- 验证：
+  - `.venv/bin/python -m pytest tests/api/test_sales.py::TestOpportunityManagement::test_update_opportunity_rejects_lost_to_won_transition tests/api/test_sales.py::TestOpportunityManagement::test_stage_endpoint_rejects_lost_to_won_transition tests/api/test_sales.py::TestOpportunityManagement::test_legacy_win_endpoint_rejects_lost_opportunity -q` 通过。
+  - `.venv/bin/python -m pytest tests/api/test_sales.py::TestOpportunityManagement tests/api/test_sales.py::TestContractManagement::test_create_contract_success tests/api/test_sales.py::TestSalesFunnelWorkflow::test_g2_quote_can_continue_to_g3_contract tests/api/test_sales_contracts_api.py::TestSalesContractsAPI::test_create_contract tests/api/test_sales_contracts_api.py::TestSalesContractsAPI::test_create_contract_accepts_legacy_quote_payload_and_infers_context -q` 通过（11 个用例）。
+  - `.venv/bin/python -m compileall app/api/v1/endpoints/sales/opportunity_crud.py app/api/v1/endpoints/sales/opportunity_workflow.py app/api/v1/endpoints/sales/opportunity_batch.py app/api/v1/endpoints/sales/utils/stage_guard.py app/api/v1/endpoints/sales/utils/__init__.py tests/api/test_sales.py` 通过。
+
+## 2026-07-03 继续：SALES-21 商机阶段词表统一
+
+- 修复目标：消除商机阶段 `ON_HOLD/QUALIFIED/REVIEW` 等旧前端词表与后端 `OpportunityStageEnum` 的分裂；`PUT /stage`、`advance`、统计桶、前端下拉/展示都走 `DISCOVERY/QUALIFICATION/PROPOSAL/NEGOTIATION/CLOSING/WON/LOST`。
+- 红测：
+  - `tests/api/test_sales.py::TestOpportunityManagement::test_stage_endpoint_rejects_legacy_on_hold_stage` 先失败，旧 `/stage` 接受 `ON_HOLD` 并返回 200。
+  - `tests/api/test_sales.py::TestOpportunityManagement::test_opportunity_stage_statistics_use_canonical_closing_bucket` 先失败，统计接口没有 `CLOSING` 桶且仍产出 `ON_HOLD`。
+  - `frontend/src/pages/__tests__/OpportunityManagement.test.jsx` 新增常量测试，先失败，显示前端仍为 `QUALIFIED/REVIEW/ON_HOLD`。
+- 代码面：
+  - `sales/utils/stage_guard.py` 的有效阶段收敛到 `OpportunityStageEnum`。
+  - `sales/statistics_core.py` 阶段统计桶改由枚举生成；`statistics_reports.py` pipeline 金额只认非终态枚举阶段。
+  - `opportunity_batch.py` 同步修正终态字符串/Enum 混比，并复用阶段守卫。
+  - `frontend/src/pages/OpportunityManagement/constants.js`、`OpportunityManagement/index.jsx`、`OpportunityDetail.jsx`、`WinRateAnalysisCard.jsx`、`SalesStatistics.jsx`、`lib/constants/opportunityBoard.js` 统一前端阶段词表。
+  - `migrations/20260703_sales_opportunity_stage_vocab_sqlite.sql` 清洗旧阶段值：`QUALIFIED/QUALIFYING -> QUALIFICATION`，`PROPOSING -> PROPOSAL`，`NEGOTIATING/ON_HOLD -> NEGOTIATION`。
+- 验证：
+  - `.venv/bin/python -m pytest tests/api/test_sales.py::TestOpportunityManagement tests/api/test_sales.py::TestSalesFunnelWorkflow::test_g2_quote_can_continue_to_g3_contract tests/api/test_sales_contracts_api.py::TestSalesContractsAPI::test_create_contract tests/api/test_sales_contracts_api.py::TestSalesContractsAPI::test_create_contract_accepts_legacy_quote_payload_and_infers_context -q` 通过（12 个用例）。
+  - `npm test -- --run src/pages/__tests__/OpportunityManagement.test.jsx src/pages/SalesStatistics.test.jsx src/pages/SalesFunnel.test.jsx` 通过（24 个用例；SalesFunnel 测试仍有既有 mock 方法缺失/React key warning）。
+  - `npm run build` 通过（保留既有动态/静态混合导入与 chunk size warning）。
+  - `sqlite3 data/app.db` 事务 dry-run 执行清洗迁移后，阶段分布归一为 `QUALIFICATION/PROPOSAL/NEGOTIATION/DISCOVERY/WON/LOST/<NULL>`，无旧阶段值。
+
+## 2026-07-03 继续：SALES-20 报价数量/单价正数校验
+
+- 修复目标：报价首版创建、报价新版本创建、报价明细新增/更新都不能写入数量或单价为 0/负数的明细；前端报价明细输入也给出正数约束。
+- 红测：
+  - `tests/api/test_sales.py::TestQuoteManagement::test_create_quote_rejects_non_positive_item_qty_and_unit_price` 先失败，首版创建对 `qty=0/-1`、`unit_price=0/-100` 返回 201。
+  - `tests/api/test_sales.py::TestQuoteManagement::test_create_quote_version_rejects_zero_quantity_without_defaulting_to_one` 先失败，新版本接口把 `qty=0` 静默默认成 1。
+  - `tests/api/test_sales.py::TestQuoteManagement::test_quote_item_create_and_update_reject_non_positive_unit_price` 先失败，明细创建 `unit_price=0` 返回 200。
+  - `frontend/src/pages/__tests__/QuoteCreateEdit.test.jsx` 正数输入约束测试先失败，数量/单价 number input 没有 `min/step`。
+- 代码面：
+  - `app/api/v1/endpoints/sales/utils/quote_item_validation.py` 新增统一校验：数量、单价必须是有限 Decimal 且大于 0。
+  - `quotes.py`、`quote_versions.py` 在落库前预校验明细，保留旧客户端缺省数量按 1 处理，但明确传 0/负数直接 400。
+  - `quote_items.py` 在直接新增/更新明细时校验 `qty/unit_price`。
+  - `app/schemas/sales/quotes.py` 将 QuoteItem schema 的单价和更新数量/单价约束对齐为 `gt=0`。
+  - `frontend/src/pages/QuoteCreateEdit/QuoteItemsTable.jsx` 给数量/单价输入加 `min="0.01"`、`step="0.01"`。
+- 数据现状：
+  - `sqlite3 data/app.db` 查到 8 条历史 `quote_items` 空数量/空单价、无负数；这些行的明细名称也为空，无法从版本总额无损推回单价，本次不自动改历史价格。
+- 验证：
+  - `.venv/bin/python -m pytest tests/api/test_sales.py::TestQuoteManagement -q` 通过（12 个用例）。
+  - `.venv/bin/python -m pytest tests/api/test_sales.py::TestQuoteManagement tests/api/test_sales.py::TestSalesFunnelWorkflow::test_g2_quote_can_continue_to_g3_contract tests/api/test_sales_contracts_api.py::TestSalesContractsAPI::test_create_contract tests/api/test_sales_contracts_api.py::TestSalesContractsAPI::test_create_contract_accepts_legacy_quote_payload_and_infers_context -q` 通过（15 个用例）。
+  - `npm test -- --run src/pages/__tests__/QuoteCreateEdit.test.jsx` 通过（2 个用例，仍有 Node `module.register()` deprecation warning）。
+  - `npm run build` 通过（保留既有动态/静态混合导入、chunk size 与 Node `module.register()` warning）。
+  - `.venv/bin/python -m compileall app/api/v1/endpoints/sales/quotes.py app/api/v1/endpoints/sales/quote_versions.py app/api/v1/endpoints/sales/quote_items.py app/api/v1/endpoints/sales/utils/quote_item_validation.py app/schemas/sales/quotes.py` 通过。
+  - `git diff --check` 通过。
+
+## 2026-07-03 继续：双任务表整合 P2+P3 原子切换（门面方案）
+
+- 方案升级：不逐个改 34 个消费文件，而是把 models/progress.Task 改造为 **task_unified 的门面模型**，P2 写路径与 P3 读路径一次原子切换：
+  - 列名映射（task_name→title、stage→project_stage、owner_id→assignee_id、plan_start→plan_start_date、progress_percent→progress），54 处 query(Task) 零改动；
+  - **状态词汇双向翻译**：自定义 hybrid Comparator——Python 侧沿用 TODO/DONE/BLOCKED，存储侧 PENDING/COMPLETED/PAUSED，查询字面量（==、in_）自动翻译，全库 ~60 处状态字面量零清洗；
+  - **全局 PROJECT 过滤**：Session do_orm_execute + with_loader_criteria 注入 task_type='PROJECT'（任务中心 TaskUnified 不受影响）；
+  - **写入默认值**：before_insert 兜底 task_type/source/priority/task_code/负责人(项目PM→created_by→admin)/项目冗余列。
+- 裸 SQL 4 文件手改：gantt_dependency、ai_report_tasks(日报数据源)、template_projects(WBS INSERT，顺带修历史小写'pending'脏值)、activity_minutes(纪要派生任务)。
+- 聚合词汇修正 2 处：member_view 分组结果翻译回旧口径；project_dashboard_service 历史上就按 COMPLETED/PENDING 键读旧表（永远拿 0 的潜在 bug），门面切换后首次正确，BLOCKED 键改 PAUSED。
+- 前端断链修复：progress.js updateProgress/complete 接任务中心真实端点；update/delete/updateAssignee（后端从不存在、零消费方）移除。
+- 验证：任务域 sweep（progress/task/workload/milestone/gantt）100 过；实测门面读（旧契约输出+状态翻译）、门面写（新任务落 task_unified）、**旧 tasks 表冻结 131 行**；大面 sweep 的其余失败经逐类甄别为另一会话在改的销售/报价面在途状态与既有债（404/422 路由类、405、mock 路径类、schema 缺字段类——与 Task/状态面零交集）。
+- ⚠️ 运维教训：并行会话下**禁止 git stash 对照**（对方 mid-edit 会被卷进 stash、pop 冲突）——本轮已用"从 stash 精准 checkout 我的文件"恢复，改用 HEAD worktree 做对照（但 worktree 缺测试库数据时结论也不可靠，最终以失败签名与改动面的交集判断）。stash@{0} 保留未 drop（内含对方过程态快照，勿动）。

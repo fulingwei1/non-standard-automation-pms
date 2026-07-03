@@ -93,7 +93,7 @@ class QualityRiskDetection(Base, TimestampMixin):
     # 关联信息
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     module_name = Column(String(200), comment="模块名称")
-    task_id = Column(Integer, ForeignKey("tasks.id"), comment="任务ID")
+    task_id = Column(Integer, ForeignKey("task_unified.id"), comment="任务ID")
     detection_date = Column(Date, nullable=False, comment="检测日期")
 
     # 数据来源

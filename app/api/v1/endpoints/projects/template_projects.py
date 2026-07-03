@@ -193,11 +193,15 @@ def create_project_from_template(
                         db.execute(
                             text(
                                 """
-                            INSERT INTO tasks 
-                            (project_id, task_name, stage, weight,
-                             plan_start, plan_end, status, progress_percent, created_at, updated_at)
-                            VALUES (:pid, :name, :stage, :weight,
-                                    :start, :end, 'pending', 0, :now, :now)
+                            INSERT INTO task_unified
+                            (task_code, title, task_type, source_type, source_id,
+                             project_id, project_stage, weight,
+                             plan_start_date, plan_end_date, status, progress, priority,
+                             is_active, assignee_id, created_at, updated_at)
+                            VALUES ('PT-' || lower(hex(randomblob(5))), :name, 'PROJECT', 'PROJECT', :pid,
+                                    :pid, :stage, :weight,
+                                    :start, :end, 'PENDING', 0, 'MEDIUM',
+                                    1, COALESCE((SELECT pm_id FROM projects WHERE id = :pid), 1), :now, :now)
                         """
                             ),
                             {

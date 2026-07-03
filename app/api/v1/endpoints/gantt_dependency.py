@@ -129,9 +129,10 @@ def get_gantt_data(
 
     task_sql = text(
         """
-        SELECT id, task_name, plan_start, plan_end, progress_percent, status, stage
-        FROM tasks
-        WHERE project_id = :project_id
+        SELECT id, title AS task_name, plan_start_date AS plan_start, plan_end_date AS plan_end,
+               progress AS progress_percent, status, project_stage AS stage
+        FROM task_unified
+        WHERE task_type = 'PROJECT' AND project_id = :project_id
         ORDER BY COALESCE(plan_start, plan_end), id
     """
     )
@@ -199,7 +200,7 @@ def add_dependency(
 
     task_check_sql = text(
         """
-        SELECT id FROM tasks
+        SELECT id FROM task_unified
         WHERE project_id = :project_id
           AND id IN (:task_id, :depends_on_task_id)
     """
@@ -341,9 +342,10 @@ def get_critical_path(
 
     task_sql = text(
         """
-        SELECT id, task_name, plan_start, plan_end, progress_percent, status, stage
-        FROM tasks
-        WHERE project_id = :project_id
+        SELECT id, title AS task_name, plan_start_date AS plan_start, plan_end_date AS plan_end,
+               progress AS progress_percent, status, project_stage AS stage
+        FROM task_unified
+        WHERE task_type = 'PROJECT' AND project_id = :project_id
         ORDER BY id
     """
     )

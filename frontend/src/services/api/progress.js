@@ -17,11 +17,10 @@ export const progressApi = {
     },
     get: (id) => api.get(`/progress/tasks/${id}`),
     create: (projectId, data) => api.post(`/progress/projects/${projectId}/tasks`, data),
-    update: (id, data) => api.put(`/progress/tasks/${id}`, data),
-    delete: (id) => api.delete(`/progress/tasks/${id}`),
-    updateProgress: (id, data) => api.put(`/progress/tasks/${id}/progress`, data),
-    updateAssignee: (id, data) => api.put(`/progress/tasks/${id}/assignee`, data),
-    complete: (id) => api.put(`/progress/tasks/${id}/complete`),
+    // 2026-07-03 双任务表整合：项目任务已收编 task_unified，进度/完成走任务中心真实端点
+    // （原 update/delete/updateAssignee 指向从不存在的后端，已移除；改任务请走任务中心）
+    updateProgress: (id, data) => api.put(`/task-center/tasks/${id}/progress`, data),
+    complete: (id, data) => api.put(`/task-center/tasks/${id}/complete`, data),
   },
 
   // Progress Reports

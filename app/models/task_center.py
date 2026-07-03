@@ -184,8 +184,8 @@ class TaskUnified(Base, TimestampMixin):
 
     # 项目执行任务收编字段（2026-07-03 双任务表整合 P1，见 TASK_UNIFICATION_DESIGN.md）
     project_stage = Column(String(20), comment="项目阶段(S1-S9)，承接原 tasks.stage")
-    machine_id = Column(Integer, comment="机台ID，承接原 tasks.machine_id")
-    milestone_id = Column(Integer, comment="里程碑ID，承接原 tasks.milestone_id")
+    machine_id = Column(Integer, ForeignKey("machines.id"), comment="机台ID，承接原 tasks.machine_id")
+    milestone_id = Column(Integer, ForeignKey("project_milestones.id"), comment="里程碑ID，承接原 tasks.milestone_id")
     weight = Column(Numeric(5, 2), comment="进度加权，承接原 tasks.weight")
     block_reason = Column(Text, comment="阻塞原因，承接原 tasks.block_reason")
 

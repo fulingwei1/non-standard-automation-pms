@@ -70,7 +70,13 @@ class MemberViewDashboardAdapter(DashboardAdapter):
             .group_by(Task.status)
             .all()
         )
-        task_stats = {s: c for s, c in my_tasks}
+        # 门面聚合返回存储词汇（PENDING/COMPLETED），翻译回旧词汇口径
+        from app.models.progress import _status_from_storage
+
+        task_stats = {}
+        for s, c in my_tasks:
+            k = _status_from_storage(s)
+            task_stats[k] = task_stats.get(k, 0) + c
         total_tasks = sum(task_stats.values())
         todo_tasks = task_stats.get("TODO", 0)
         in_progress_tasks = task_stats.get("IN_PROGRESS", 0)

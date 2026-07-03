@@ -270,8 +270,10 @@ def confirm_minutes(
             try:
                 db.execute(
                     text(
-                        "INSERT INTO tasks(project_id, task_name, stage, status, owner_id, created_at, updated_at) "
-                        "VALUES(:p, :n, 'PRESALE', 'TODO', :o, :t, :t)"
+                        "INSERT INTO task_unified(task_code, title, task_type, source_type, source_id, "
+                        "project_id, project_stage, status, progress, priority, is_active, assignee_id, created_at, updated_at) "
+                        "VALUES('PT-' || lower(hex(randomblob(5))), :n, 'PROJECT', 'PROJECT', :p, "
+                        ":p, 'PRESALE', 'PENDING', 0, 'MEDIUM', 1, :o, :t, :t)"
                     ),
                     {"p": request.project_id, "n": f"[{kind}] {item}"[:200], "o": current_user.id, "t": now},
                 )

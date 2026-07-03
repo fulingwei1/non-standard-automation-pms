@@ -130,7 +130,7 @@ def calculate_task_stats(db: Session, project_id: int) -> Dict[str, Any]:
     task_completed = status_dict.get("COMPLETED", 0)
     task_in_progress = status_dict.get("IN_PROGRESS", 0)
     task_pending = status_dict.get("PENDING", 0) + status_dict.get("ACCEPTED", 0)
-    task_blocked = status_dict.get("BLOCKED", 0)
+    task_blocked = status_dict.get("PAUSED", 0)  # 存储词汇：BLOCKED 已映射为 PAUSED
 
     # 计算平均进度
     avg_progress_result = (

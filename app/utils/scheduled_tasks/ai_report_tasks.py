@@ -96,8 +96,8 @@ def push_daily_reports(period: str = "day", max_users: int = 50):
         for (u,) in db.execute(text("SELECT DISTINCT created_by FROM customer_communications "
                                     "WHERE created_by IS NOT NULL AND created_at >= datetime('now', :d)"), {"d": win}).all():
             uset.add(u)
-        for (u,) in db.execute(text("SELECT DISTINCT owner_id FROM tasks "
-                                    "WHERE owner_id IS NOT NULL AND updated_at >= datetime('now', :d)"), {"d": win}).all():
+        for (u,) in db.execute(text("SELECT DISTINCT assignee_id FROM task_unified "
+                                    "WHERE task_type='PROJECT' AND assignee_id IS NOT NULL AND updated_at >= datetime('now', :d)"), {"d": win}).all():
             uset.add(u)
         today = datetime.now().strftime("%Y-%m-%d")
         for uid in list(uset)[:max_users]:
@@ -108,8 +108,8 @@ def push_daily_reports(period: str = "day", max_users: int = 50):
             acts = db.execute(text("SELECT topic, content FROM customer_communications "
                                    "WHERE created_by=:u AND created_at >= datetime('now', :d) ORDER BY created_at DESC LIMIT 30"),
                               {"u": uid, "d": win}).all()
-            tks = db.execute(text("SELECT task_name, stage, status, progress_percent FROM tasks "
-                                  "WHERE owner_id=:u AND updated_at >= datetime('now', :d) ORDER BY updated_at DESC LIMIT 30"),
+            tks = db.execute(text("SELECT title AS task_name, project_stage AS stage, status, progress AS progress_percent FROM task_unified "
+                                  "WHERE task_type='PROJECT' AND assignee_id=:u AND updated_at >= datetime('now', :d) ORDER BY updated_at DESC LIMIT 30"),
                              {"u": uid, "d": win}).all()
             if not acts and not tks:
                 continue
