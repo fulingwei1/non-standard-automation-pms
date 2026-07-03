@@ -26,7 +26,10 @@ def test_company_overview_is_not_hardcoded(api):
 
 
 def test_executive_dashboard_is_not_hardcoded(api):
+    """修复终态两种皆合格：501 止损下架（当前），或做实后 200 且无写死常量。"""
     r = api.get("/sales/forecast/forecast/executive-dashboard")
+    if r.status_code == 501:
+        return  # SALES-06 止损：硬编码演示数据已下架
     assert r.status_code == 200, r.text
     text = r.text
     hits = [c for c in (str(HARDCODED_REVENUE), HARDCODED_TEAM) if c in text]

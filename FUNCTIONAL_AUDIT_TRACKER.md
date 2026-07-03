@@ -30,8 +30,8 @@
 | SALES-03 | 报价成本汇总漏乘数量，毛利率虚高 | P0 | 已验证 | sales/quote_costs.py；tests/api/test_sales_quote_costs_quantity_contracts.py | 0.5d+存量重算0.5d | ✅已动态复现并回归（test_p0_03，2026-07-03） | 全局P0#3；资金急救包；成本汇总按 `Σ(qty*cost)`，本地有明细版本已重算 |
 | SALES-04 | 回款登记无勾稽/无权限/错配发票（可超额） | P0 | 已验证 | sales/payments/payment_records.py；tests/api/test_sales_payment_record_contracts.py | 2-3d | ✅已动态复现并回归（test_p0_04，2026-07-03） | 全局P0#4；资金急救包；登记/更新拒绝超发票未收/总额，核销要求路径回款与发票一致，权限按合同负责人过滤 |
 | SALES-05 | 商机赢/输单可非法跳转（LOST→WON），前端走的正是无守卫 PUT | P1 | 已验证 | sales/opportunity_crud.py；sales/opportunity_workflow.py；sales/opportunity_batch.py；sales/utils/stage_guard.py；tests/api/test_sales.py | 1d | 静态已证；✅已动态复现并回归（2026-07-03） | 通用 PUT、旧 /stage、旧 PUT /win 现已不能把 LOST 终态翻回 WON；批量阶段更新复用同一阶段守卫；前端 sales.js:46 |
-| SALES-06 | 销售预测线上接口整文件硬编码，真算法服务是死代码 | P1 | 待修 | sales/sales_forecast.py 全文件 | 3-5d | 静态已证 | 全局P0#15；止损包（先下架假接口）；ROADMAP F6 |
-| SALES-07 | 目标预测页前端假数据兜底、AI 预测卡纯常量 | P1 | 待修 | ForecastDashboard.jsx:57-108,281-293 | 1-2d | 静态已证 | 止损包；依赖 SALES-06 |
+| SALES-06 | 销售预测线上接口整文件硬编码，真算法服务是死代码 | P1 | 已修待验 | sales/sales_forecast.py；services/sales_forecast_service.py；tests/unit/test_sales_forecast_wiring.py | 3-5d | 静态已证；✅契约+P0复现回归（2026-07-03） | 全局P0#15；company-overview 已接线真服务（修模型漂移：Contract 小写状态/est_amount/终态阶段剔除）；其余 8 个零消费假端点 501 下架；团队/个人/驾驶舱做实待排期（ROADMAP F6） |
+| SALES-07 | 目标预测页前端假数据兜底、AI 预测卡纯常量 | P1 | 已修待验 | ForecastDashboard.jsx | 1-2d | 静态已证；✅构建+lint 通过（2026-07-03） | AI 预测卡改调真接口（失败显式"暂不可用"）；漏斗改真实枚举键；目标/团队/个人假兜底全部改空态；驾驶舱 tab（整段编造数字）下架 |
 | SALES-08 | 销售目标 actual_value 无自动回填，达成率口径未定义 | P1 | 待修 | models/sales/target_v2.py:85 | 2d | 静态已证 | 与 SALES-07 假兜底联动 |
 | SALES-09 | 发票写操作只挂 finance:read + 未签署（草稿）合同可开票 | P1 | 已验证 | sales/invoices/basic.py；sales/invoices/operations.py；models/sales/invoices.py；tests/api/test_sales_invoice_gate_contracts.py | 1d | 静态已证；✅已动态回归（2026-07-03） | 资金急救包；写入口改为 finance:create/update/delete，未签署合同禁止开票，金额上限与状态字段门禁已补 |
 | SALES-10 | 合同审批 F1 复核：模板数据已补，但 200 掩盖失败与种子缺口仍在 | P1 | 已验证 | sales/contracts/approval.py；api/v1/endpoints/approval_submit_guard.py；app/utils/init_approval_data.py；tests/api/test_approval_submit_error_contracts.py | 0.5-1d | 静态已证；✅已动态回归（2026-07-03） | 关联 APPR-01/APPR-02；合同审批全失败提交不再 200，新库审批模板种子已补 |
@@ -72,7 +72,7 @@
 | PRE-18 | 相似案例检索为 equipment_type 精确匹配 SQL，非语义 | P2 | 待修 | opportunity_workflow.py:170-175 | 并入 PRE-17 | 静态已证 | 详#16；空值互配、命中率低 |
 | PRE-19 | 方案 AI 评审 ai-solution-review / 验收标准生成 | — | 已验证 | — | — | 静态已证（正面确认） | 无缺陷；ai-acceptance-criteria 真回填 |
 | PRE-20 | AI 工作流编排只建状态壳无执行器（DB 中 20 行 status 全空） | P2 | 待修 | presale_ai_integration.py:285-319 | 做实3d/下架0.5d | 静态已证 | 详#17；止损包 |
-| PRE-21 | AI 后台任务重启后 PENDING/RUNNING 永久卡死（无恢复无超时） | P2 | 已修待验 | ai_job_service.py；main.py startup；tests/unit/test_ai_job_recovery.py | 0.5d | 静态已证；✅契约测试回归（2026-07-03） | 详#18；**主项**：APPR-22① 同问题并入本项（互为引用）；startup recover_stale_jobs + 轮询惰性超时（AI_JOB_MAX_RUNTIME_SECONDS 默认1800s） |
+| PRE-21 | AI 后台任务重启后 PENDING/RUNNING 永久卡死（无恢复无超时） | P2 | 已验证 | ai_job_service.py；main.py startup；tests/unit/test_ai_job_recovery.py | 0.5d | 静态已证；✅已动态回归（2026-07-03） | 详#18；**主项**：APPR-22① 同问题并入本项（互为引用）；startup recover_stale_jobs + 轮询惰性超时（AI_JOB_MAX_RUNTIME_SECONDS 默认1800s）；`import app.main` 路由加载成功 |
 | PRE-22 | 模块库 ai-modules（挖掘/列表/标准化建议，DB 7 模块） | — | 已验证 | — | — | 静态已证（正面确认） | 无缺陷 |
 | PRE-23 | 立项提交关卡异常静默放行（except 后 missing=[]） | P2 | 已验证 | pmo_initiation/service.py:363-371 | 0.25d | 静态已证；✅已修复并回归（2026-07-03） | 详#19；Quick-win 闸门包；handover 构建异常 now raises ValueError，不再静默提交 |
 | PRE-24 | 遗留脏数据字典（quotation_type 非法枚举 / assessment_status 两套值报表漏 93%） | P3 | 待修 | presale_ai_quotation.quotation_type；opportunities.assessment_status（DB 实证 51 vs 4） | 0.5d | 静态已证 | 详#20；数据清洗专项 |
@@ -101,7 +101,7 @@
 | PROJ-18 | 四维趋势健康度成本维恒满分（幽灵字段 + 枚举错位双 bug） | P1 | 待修 | health_trend_service.py:335,352；enums/others.py:245 | 0.5-1d | 静态已证 | 详#8 |
 | PROJ-19 | 健康度快照维度字段写死 0（四分维写同一总值） | P2 | 待修 | project_scheduled_tasks.py:227-248 | 与 PROJ-17 打包 | 静态已证 | 详#9；DB：355 条快照 295 条全零 |
 | PROJ-20 | 变更请求审批通过不回写项目基线（真联动引擎只绑 ECN） | P0 | 待修 | project_change_requests/service.py:193-242；project_change_impact_service.py:144-219 未接 | 3-5d | ✅已动态复现（test_p0_08） | 全局P0#8；三套变更实现互不联动（集群6） |
-| PROJ-21 | 变更/立项审批通知均未实现（TODO/pass） | P2 | 待修 | project_change_requests/service.py:114-116,238-240 | 1-2d | 静态已证 | 详#16；F3 扩围候补 |
+| PROJ-21 | 变更/立项审批通知均未实现（TODO/pass） | P2 | 已验证 | project_change_requests/service.py；tests/unit/test_project_change_notifications_proj21.py | 1-2d | 静态已证；✅已动态回归（2026-07-03） | 详#16；F3 扩围候补已收口；变更提交 now 通知项目 PM，审批结果 now 通知提交人，均走真实站内通知 |
 | PROJ-22 | 验收全流程 + 报告生成（真 reportlab PDF） | — | 已验证 | acceptance/report_utils.py:75-208 | — | 静态已证（正面确认） | 无缺陷 |
 | PROJ-23 | 验收通过后无售后/ITR 移交联动（售后需人工重建） | P2 | 待修 | acceptance 域 grep after_sales/itr 零命中；acceptance_service.py:171-172 | 2d | 静态已证 | 详#18；关联 AS-10（设备建档钩子即本项修复落点）/AS-12 |
 | PROJ-24 | 项目复盘可用，但 AI 降级 mock 语义错配（预售文案进复盘） | P3 | 待修 | ai_client_service.py:406-422 | 1-2d | 静态已证 | 详#19；附带：change_impact_ai_service.py 653 行死代码无端点 |
@@ -163,7 +163,7 @@
 | AS-20 | 保修在保/过保判断缺失，无过保收费（ProjectWarranty 自述未启用） | P2 | 待修 | project/extensions.py:145-202；after_sales.py:227 | 2.5d | 静态已证 | — |
 | AS-21 | 关单不触发回访；调查"发送"不触达、前端 submit 接口 404；评分员工代填 | P2 | 待修 | surveys.py:250-277；services/api/service.js:236；status.py:128,145-164 | 3d | 静态已证 | — |
 | AS-22 | 故障诊断 AI 真调 LLM 但零上下文（历史工单/知识库未注入）；降级语义错位 | P2 | 待修 | ai_engineering.py:78-89 | 2.5d | 静态已证 | — |
-| AS-23 | 售后事件通知产生端缺失：12 端点零通知；派工 CC 直写 notified_at 造假 | P2 | 待修 | service/tickets/assignment.py:144-146；after_sales.py grep 零命中 | 1d | 静态已证 | F3 扩围；集群4（假成功） |
+| AS-23 | 售后事件通知产生端缺失：12 端点零通知；派工 CC 直写 notified_at 造假 | P2 | 已验证 | after_sales.py；service/tickets/assignment.py；service/tickets/crud.py；service/tickets/status.py；service_ticket_notifications.py；tests/unit/test_service_ticket_notifications_as23.py | 1d | 静态已证；✅已动态回归（2026-07-03） | F3 扩围；集群4（假成功）；服务工单创建/派工/状态变更/关闭已发真实站内通知，CC `notified_at` 改为发送成功后写；`after_sales.py` 反馈/保养/support ticket/质保/备件/现场服务/满意度/知识库/升级写端已通知项目 PM/创建人 |
 | AS-24 | 双轨派工占用账不同步；派工完工工时不生成 Timesheet（外勤成本消失） | P2 | 待修 | state_machine/installation_dispatch.py:105-106,190 | 4d | 静态已证 | 集群6 |
 | AS-25 | 订阅默认接收人 TODO 返回空（双 resolver 口径不一）；webhook 仅企微 | P2 | 已验证 | alert_subscription_service.py；notification_utils.py；notification_service.py；channels/webhook_handler.py；tests/unit/test_notification_utils_as25.py | 2.5d | 静态已证；✅已动态回归（2026-07-03） | F3 扩围；默认接收人 now 取处理人/项目 PM 等业务负责人；旧 `app.services.notification_utils`/`notification_service` 路径恢复；Webhook 支持 `WEBHOOK_URL` 并兼容企微 URL |
 
@@ -192,7 +192,7 @@
 | APPR-19 | 大额审批路由规则挂孤儿模板：≥50 万报价不再经总经理 | P2 | 待修 | router.py:26-61；quote_approval_service.py:79 | 1d | 静态已证 | 附带 _advance_to_next_node 丢 entity_data（engine/core.py:174-180） |
 | APPR-20 | legacy 兼容端点创建的审批实例无节点无任务，永久 PENDING | P2 | 待修 | approvals/legacy_compat.py:27-70,86-112 | 0.5d | 静态已证 | 数据清洗（entity_type 空实例 3 条） |
 | APPR-21 | 角色型 SINGLE 节点审批人取"全库第一个"，与业务上下文无关 | P2 | 待修 | executor.py:50-57；router.py:267-294 | 1.5d | 静态已证 | 上下文有 project_id 未用 |
-| APPR-22 | 后台机制综合：①AI job 无重启恢复 ②备份 4 个月未自动执行 ③禁用任务重启复活 ④第二调度器不进监控 ⑤调度器 except ImportError 全静默 | P2 | 待修 | scheduler.py:136-140；main.py:113-152；data/ 备份停在 2026-03-01 | 0.5d起（分项） | 静态已证 | F3 扩围；**①与 PRE-21 重复，该子项并入 PRE-21**，其余子项在本项推进 |
+| APPR-22 | 后台机制综合：①AI job 无重启恢复 ②备份 4 个月未自动执行 ③禁用任务重启复活 ④第二调度器不进监控 ⑤调度器 except ImportError 全静默 | P2 | 修复中 | scheduler.py；main.py startup；tests/unit/test_ai_job_recovery.py；tests/unit/test_scheduler_utils.py；data/ 备份停在 2026-03-01 | 0.5d起（分项） | 静态已证；✅子项①/③/⑤已动态回归（2026-07-03） | F3 扩围；**①与 PRE-21 重复并已验证**；③已修：DB `is_enabled=false` 配置不再被过滤，重启不会回落默认 enabled；⑤已修：任务解析/注册失败写入 scheduler failure metrics，`main.py` scheduler 整体导入失败记录错误日志；②备份自动执行、④第二调度器监控仍待做 |
 
 ### 七、并行会话补充：合同+发票状态流（PEER，5 项）
 
@@ -405,7 +405,7 @@
 | **Quick-win 闸门包**（≤1d/项，本周清完） | PROJ-06（已验证：结项 readiness 门禁）、PROJ-10（已验证：里程碑 except 重抛+全局 complete 接状态机）、PRE-16（已验证：_has_live_ai 补 qwen）、PRE-23（已验证：立项关卡异常不再静默）、AS-19（已验证：关单 payload/id + 质保工单兜底）、APPR-07（已验证：撤回参数名）、AS-16（Header 铃铛）、PROD-13（报工回写移审批后） | 约 3d |
 | **假实现止损下架包** | SALES-06（假接口下架）、SALES-07（前端假兜底）、SALES-13（智能报价页）、PROD-17（AI 排程建议）、PRE-15（售前移动端路由）、PRE-20（AI 工作流编排）、PRE-12（方案"PDF 导出"）、PRE-13（export-report 假 URL） | 约 2d |
 | **F1 扩围（库存台账真实化）** | PROD-03（已验证）→ PROD-11（已验证，含 PROD-22）→ PROD-04（已验证）→ PROD-12（已验证）→ PROD-14（已验证）＋ PROD-02（已验证）；PROD-05（齐套修正）与 PROD-15（缺料→紧急采购闭环）仍待修 | 约 13d |
-| **F3 扩围（通知+调度可信化）** | AS-02（已验证）、AS-15（已验证）、AS-03（已验证）、AS-06（已验证）、AS-25（已验证）、APPR-16（已验证）、APPR-17（已验证）、MISC-03（已验证）、APPR-04（stub 标记/禁用已完成，缺料回填待做）、AS-23、APPR-22（备份/复活/监控）、PRE-21（AI job 恢复，含 APPR-22①）、PROJ-21（候补） | 约 10-14d |
+| **F3 扩围（通知+调度可信化）** | AS-02（已验证）、AS-15（已验证）、AS-03（已验证）、AS-06（已验证）、AS-25（已验证）、AS-23（已验证）、PROJ-21（已验证）、APPR-16（已验证）、APPR-17（已验证）、MISC-03（已验证）、PRE-21（已验证，含 APPR-22①）、APPR-04（stub 标记/禁用已完成，缺料回填待做）、APPR-22（①/③/⑤已修，备份/第二调度器监控待做） | 约 10-14d |
 | **其他（结构性/体验/收口，按域推进）** | 结构断链：PROD-08、AS-10、AS-11、PROJ-20、PROD-01、AS-04、PROD-06、PROD-07、PROD-16、AS-12；审批收口（F2 相关）：APPR-08、APPR-09、APPR-12、APPR-13（含 PEER-01/02）、APPR-19、APPR-20、APPR-21、PROD-09、PROD-10、SALES-05、AS-05、PROJ-04、PROJ-07；北极星体验：SALES-11、SALES-12、APPR-18、APPR-14、PROJ-03、PRE-04、PRE-10；数据可信：PROJ-11、PROJ-13、PROJ-14、PROJ-15、PROJ-16、PROJ-17/18/19、SALES-08、SALES-15；其余 P2/P3 按域排期 | 余量 |
 
 ## 视图三：数据清洗专项清单（存量脏数据，任何状态机修复前置）

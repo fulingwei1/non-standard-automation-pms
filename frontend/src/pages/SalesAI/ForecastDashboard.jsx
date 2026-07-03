@@ -17,10 +17,8 @@ import {
   Users,
   Award,
   AlertTriangle,
-  ArrowUpRight,
   Activity,
   BarChart3,
-  Eye,
   Settings,
   Plus,
 } from "lucide-react";
@@ -46,22 +44,31 @@ import {
   Alert,
 } from "../../components/ui";
 import TargetSettingModal from "../../components/sales/TargetSettingModal";
-import { salesTargetApi } from "../../services/api";
+import api, { salesTargetApi } from "../../services/api";
 import { formatCurrencyCompact as formatCurrency } from "../../lib/formatters";
 
-// 公司整体预测（整合目标数据）
+// 漏斗阶段中文名（与后端 OpportunityStageEnum 对齐）
+const STAGE_LABELS = {
+  DISCOVERY: "初步接触",
+  QUALIFICATION: "需求挖掘",
+  PROPOSAL: "方案介绍",
+  NEGOTIATION: "价格谈判",
+  CLOSING: "成交促成",
+};
+
+// 公司整体预测（整合目标数据 + 真实预测接口）
 function CompanyOverview({ targets }) {
-  // 计算目标汇总
+  // 计算目标汇总（无数据就是 0，不再用演示常量兜底）
   const targetSummary = useMemo(() => {
     if (!targets || targets.length === 0) {
       return {
-        quarterly_target: 50000000,
-        actual_revenue: 28500000,
-        completion_rate: 57.0,
-        time_progress: 66.7,
+        quarterly_target: 0,
+        actual_revenue: 0,
+        completion_rate: 0,
+        time_progress: 0,
       };
     }
-    
+
     // 筛选当前季度的合同金额目标
     const now = new Date();
     const quarter = Math.ceil((now.getMonth() + 1) / 3);
@@ -84,37 +91,33 @@ function CompanyOverview({ targets }) {
     const timeProgress = Math.min(100, (elapsedDays / totalDays) * 100);
     
     return {
-      quarterly_target: totalTarget || 50000000,
-      actual_revenue: totalActual || 28500000,
-      completion_rate: totalTarget > 0 ? (totalActual / totalTarget) * 100 : 57.0,
+      quarterly_target: totalTarget,
+      actual_revenue: totalActual,
+      completion_rate: totalTarget > 0 ? (totalActual / totalTarget) * 100 : 0,
       time_progress: timeProgress,
     };
   }, [targets]);
 
-  const [forecast] = useState({
-    prediction: {
-      predicted_revenue: 52800000,
-      predicted_completion_rate: 105.6,
-      confidence_level: 85,
-      risk_level: "LOW",
-    },
-    funnel_contribution: {
-      stage1: { count: 45, total_amount: 18000000, win_rate: 25 },
-      stage2: { count: 28, total_amount: 12000000, win_rate: 50 },
-      stage3: { count: 15, total_amount: 8000000, win_rate: 65 },
-      stage4: { count: 10, total_amount: 5000000, win_rate: 75 },
-      stage5: { count: 5, total_amount: 2500000, win_rate: 85 },
-    },
-  });
+  // 真实预测：SALES-06 接线后的 company-overview 端点（不再使用演示常量）
+  const [forecast, setForecast] = useState(null);
+  const [forecastError, setForecastError] = useState(null);
+  useEffect(() => {
+    api
+      .get("/sales/forecast/forecast/company-overview", { params: { period: "quarterly" } })
+      .then(({ data }) => setForecast(data?.data || data))
+      .catch(() => setForecastError("预测服务暂不可用"));
+  }, []);
 
   // 计算预测完成率
   const predictedCompletion = useMemo(() => {
-    if (targetSummary.quarterly_target === 0) return 0;
+    if (!forecast || targetSummary.quarterly_target === 0) return 0;
     return (forecast.prediction.predicted_revenue / targetSummary.quarterly_target) * 100;
   }, [targetSummary, forecast]);
 
   // 计算差距
-  const predictedGap = forecast.prediction.predicted_revenue - targetSummary.quarterly_target;
+  const predictedGap = forecast
+    ? forecast.prediction.predicted_revenue - targetSummary.quarterly_target
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -154,10 +157,10 @@ function CompanyOverview({ targets }) {
               AI 预测
             </div>
             <div className="text-2xl font-bold text-green-500">
-              {formatCurrency(forecast.prediction.predicted_revenue)}
+              {forecast ? formatCurrency(forecast.prediction.predicted_revenue) : forecastError || "加载中…"}
             </div>
             <div className="text-sm text-green-500">
-              {predictedCompletion.toFixed(1)}%
+              {forecast ? `${predictedCompletion.toFixed(1)}%` : "—"}
             </div>
           </CardContent>
         </Card>
@@ -169,7 +172,7 @@ function CompanyOverview({ targets }) {
               {predictedGap >= 0 ? "+" : ""}{formatCurrency(predictedGap)}
             </div>
             <div className="text-sm text-slate-400">
-              置信度 {forecast.prediction.confidence_level}%
+              {forecast ? `置信度 ${forecast.prediction.confidence_level}%` : "—"}
             </div>
           </CardContent>
         </Card>
@@ -226,15 +229,14 @@ function CompanyOverview({ targets }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {Object.entries(forecast.funnel_contribution).map(([stage, data]) => (
+            {!forecast && (
+              <div className="text-sm text-slate-400">{forecastError || "加载中…"}</div>
+            )}
+            {Object.entries(forecast?.funnel_contribution || {})
+              .filter(([stage]) => STAGE_LABELS[stage])
+              .map(([stage, data]) => (
               <div key={stage} className="flex items-center gap-4">
-                <div className="w-20 text-sm">
-                  {stage === 'stage1' && '初步接触'}
-                  {stage === 'stage2' && '需求挖掘'}
-                  {stage === 'stage3' && '方案介绍'}
-                  {stage === 'stage4' && '价格谈判'}
-                  {stage === 'stage5' && '成交促成'}
-                </div>
+                <div className="w-20 text-sm">{STAGE_LABELS[stage]}</div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-slate-400">
@@ -277,13 +279,9 @@ function TeamBreakdown({ targets }) {
       team.actual += Number(t.actual_value || 0);
     });
     
-    // 如果没有数据，使用默认数据
+    // 没有数据就是空清单，不再用演示大区兜底
     if (teamMap.size === 0) {
-      return [
-        { team_name: "华南大区", manager: "王五", target: 18000000, actual: 10800000, completion: 60.0, predicted: 108.3, risk: "LOW", trend: "up", rank: 1 },
-        { team_name: "华东大区", manager: "李四", target: 16000000, actual: 9200000, completion: 57.5, predicted: 107.5, risk: "MEDIUM", trend: "stable", rank: 2 },
-        { team_name: "华北大区", manager: "赵六", target: 16000000, actual: 8500000, completion: 53.1, predicted: 98.8, risk: "HIGH", trend: "down", rank: 3 },
-      ];
+      return [];
     }
     
     return Array.from(teamMap.values())
@@ -374,13 +372,9 @@ function SalesRepBreakdown({ targets }) {
     // 筛选个人目标
     const personalTargets = (targets || []).filter(t => t.target_scope === "PERSONAL");
     
+    // 没有个人目标就是空清单，不再用演示人员兜底
     if (personalTargets.length === 0) {
-      return [
-        { name: "张三", team: "华南大区", target: 10000000, actual: 6500000, completion: 65.0, predicted: 112.0, pipeline: 8500000, rank: 1 },
-        { name: "李四", team: "华东大区", target: 10000000, actual: 5800000, completion: 58.0, predicted: 105.0, pipeline: 7200000, rank: 2 },
-        { name: "王五", team: "华南大区", target: 10000000, actual: 5200000, completion: 52.0, predicted: 92.0, pipeline: 6500000, rank: 3 },
-        { name: "赵六", team: "华北大区", target: 10000000, actual: 4800000, completion: 48.0, predicted: 88.0, pipeline: 5800000, rank: 4 },
-      ];
+      return [];
     }
     
     return personalTargets
@@ -454,133 +448,6 @@ function SalesRepBreakdown({ targets }) {
 }
 
 // 领导驾驶舱
-function ExecutiveDashboard({ targets }) {
-  // 基于目标计算关键 KPI
-  const kpis = useMemo(() => {
-    const totalTarget = (targets || []).reduce((sum, t) => sum + Number(t.target_value || 0), 0);
-    const totalActual = (targets || []).reduce((sum, t) => sum + Number(t.actual_value || 0), 0);
-    const predictedCompletion = totalTarget > 0 ? (totalActual / totalTarget) * 100 * 1.5 : 105.6;
-    
-    return {
-      predicted_completion: Math.min(120, predictedCompletion),
-      excess_amount: totalTarget > 0 ? totalActual * 1.5 - totalTarget : 2800000,
-    };
-  }, [targets]);
-
-  return (
-    <div className="space-y-6">
-      {/* 核心 KPI */}
-      <div className="grid md:grid-cols-3 gap-4">
-        <Card className="border-green-500">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-green-500">
-              <DollarSign className="w-5 h-5" />
-              业绩预测
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-500 mb-2">
-              {kpis.predicted_completion.toFixed(1)}%
-            </div>
-            <div className="text-sm text-slate-400">预计完成季度目标</div>
-            <div className="flex items-center gap-2 mt-2 text-sm text-green-500">
-              <TrendingUp className="w-4 h-4" />
-              <span>{kpis.excess_amount >= 0 ? "超额" : "缺口"} {formatCurrency(Math.abs(kpis.excess_amount))}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-blue-500">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-500">
-              <Users className="w-5 h-5" />
-              新客户
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-500 mb-2">106.7%</div>
-            <div className="text-sm text-slate-400">预计完成获客目标</div>
-            <div className="flex items-center gap-2 mt-2 text-sm text-blue-500">
-              <TrendingUp className="w-4 h-4" />
-              <span>超额 2 家</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-purple-500">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-purple-500">
-              <Target className="w-5 h-5" />
-              平均客单价
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-purple-500 mb-2">¥158 万</div>
-            <div className="text-sm text-slate-400">同比提升 5.3%</div>
-            <div className="flex items-center gap-2 mt-2 text-sm text-green-500">
-              <ArrowUpRight className="w-4 h-4" />
-              <span>超目标 8 万</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* 红绿灯预警 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>红绿灯预警</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-green-500/10 rounded border border-green-500">
-              <div className="text-2xl font-bold text-green-500 mb-1">华南大区</div>
-              <div className="text-sm">预测 108.3% ✅</div>
-            </div>
-            <div className="text-center p-4 bg-green-500/10 rounded border border-green-500">
-              <div className="text-2xl font-bold text-green-500 mb-1">华东大区</div>
-              <div className="text-sm">预测 107.5% ✅</div>
-            </div>
-            <div className="text-center p-4 bg-red-500/10 rounded border border-red-500">
-              <div className="text-2xl font-bold text-red-500 mb-1">华北大区</div>
-              <div className="text-sm">预测 98.8% ⚠️</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 需要领导关注 */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Eye className="w-5 h-5" />
-            需要您关注的事项
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3 p-3 bg-red-500/10 rounded">
-              <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
-              <div className="flex-1">
-                <div className="font-medium">拜访欣旺达高层</div>
-                <div className="text-sm text-slate-400">320 万项目处于决策阶段，需要高层推动</div>
-                <div className="text-sm text-red-500 mt-1">截止：3 月 10 日</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-orange-500/10 rounded">
-              <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5" />
-              <div className="flex-1">
-                <div className="font-medium">审批华北大区特殊折扣政策</div>
-                <div className="text-sm text-slate-400">帮助华北大区追赶进度</div>
-                <div className="text-sm text-orange-500 mt-1">截止：3 月 5 日</div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
 // 主页面
 export default function ForecastDashboard() {
   const [showTargetModal, setShowTargetModal] = useState(false);
@@ -638,7 +505,7 @@ export default function ForecastDashboard() {
         />
 
         <Tabs defaultValue="overview" className="mt-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
+          <TabsList className="grid w-full grid-cols-3 lg:w-[450px]">
             <TabsTrigger value="overview">
               <BarChart3 className="w-4 h-4 mr-2" />
               公司预测
@@ -650,10 +517,6 @@ export default function ForecastDashboard() {
             <TabsTrigger value="individual">
               <Award className="w-4 h-4 mr-2" />
               个人分解
-            </TabsTrigger>
-            <TabsTrigger value="executive">
-              <Eye className="w-4 h-4 mr-2" />
-              驾驶舱
             </TabsTrigger>
           </TabsList>
 
@@ -667,10 +530,6 @@ export default function ForecastDashboard() {
 
           <TabsContent value="individual" className="mt-6">
             <SalesRepBreakdown targets={targets} />
-          </TabsContent>
-
-          <TabsContent value="executive" className="mt-6">
-            <ExecutiveDashboard targets={targets} />
           </TabsContent>
         </Tabs>
       </div>

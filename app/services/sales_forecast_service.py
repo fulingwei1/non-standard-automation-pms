@@ -186,7 +186,10 @@ class SalesForecastService:
                     and_(
                         Contract.signing_date >= start_date,
                         Contract.signing_date <= end_date,
-                        Contract.status.in_(["ACTIVE", "COMPLETED"]),
+                        # 现行小写状态词表；兼容历史大写脏数据
+                        Contract.status.in_(
+                            ["signed", "executing", "completed", "ACTIVE", "COMPLETED"]
+                        ),
                     )
                 )
             )
@@ -203,17 +206,13 @@ class SalesForecastService:
             pipeline = {}
             total_weighted = 0.0
 
-            for stage in OpportunityStageEnum:
+            # 只统计非终态阶段（STAGE_WIN_RATES 的键即在途阶段）；金额字段为 est_amount
+            for stage in self.STAGE_WIN_RATES:
                 result = self.db.execute(
                     select(
                         func.count(Opportunity.id),
-                        func.sum(Opportunity.estimated_amount),
-                    ).where(
-                        and_(
-                            Opportunity.stage == stage,
-                            Opportunity.outcome == None,  # 尚未关闭
-                        )
-                    )
+                        func.sum(Opportunity.est_amount),
+                    ).where(Opportunity.stage == stage.value)
                 )
                 row = result.one()
                 count = row[0] or 0

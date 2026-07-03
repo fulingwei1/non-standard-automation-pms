@@ -1,5 +1,97 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：功能审计 SALES-06/07 修复（销售预测接线真算法 + 前端去假）
+
+- 修复项：`SALES-06`（全局 P0#15，预测接口整文件硬编码，SalesForecastService 500 行真实现是死代码）+ `SALES-07`（ForecastDashboard 假数据兜底、AI 预测卡纯常量）。
+- 后端：
+  - 真服务修模型漂移：`Contract.status` 大写→现行小写词表（兼容历史大写）、`Opportunity.estimated_amount`→`est_amount`、去掉不存在的 `outcome` 列、漏斗只统计 STAGE_WIN_RATES 的 5 个非终态阶段。
+  - `company-overview` 端点接线真服务（已签合同 + 漏斗 est_amount×阶段赢单率 + 季节因子）。
+  - 其余 8 个端点（团队/个人分解、准确性、驾驶舱、增强预测族）整段硬编码且前端零调用，统一 501 下架（同 MISC-01 止损口径），detail 指引用 company-overview。
+  - `tests/audit_p0/test_p0_15_forecast_hardcoded.py` 驾驶舱用例更新口径：501 止损或 200 无常量皆合格。
+- 前端 ForecastDashboard：
+  - AI 预测卡改调真接口 `/sales/forecast/forecast/company-overview`，失败显式"预测服务暂不可用"；漏斗改真实枚举键（STAGE_LABELS）。
+  - 假兜底全清：目标汇总（5000万/2850万常量）、团队（华南/华东/华北演示区）、个人（张三李四）→ 空态；"驾驶舱"tab 整段编造数字（新客户 106.7%/客单价 158 万/红绿灯）下架。
+- 验证：`tests/unit/test_sales_forecast_wiring.py` 3 项红转绿（真数据计算/端点接线/8 端点 501）；P0-15 复现 2 项过；`import app.main` 通过；`npm run build` + eslint 通过。
+- 残留：SALES-08（目标 actual_value 自动回填）待修——SalesTeamService 已有目标实际值计算逻辑（SALES-15 补的），可复用；团队/个人预测分解做实排期在 ROADMAP F6。
+
+## 2026-07-03 继续：功能审计 PROJ-21 修复（项目变更通知）
+
+- 修复项：`PROJ-21`，`ProjectChangeRequestsService` 中变更提交后的团队通知、审批结果通知都是 TODO/pass，业务状态已变但无真实站内通知。
+- 改动：
+  - `create_change_request()`：`notify_team=True` 时，向项目 PM 发送 `PROJECT_CHANGE_SUBMITTED` 站内通知。
+  - `approve_change_request()`：审批通过/拒绝/退回后，向提交人发送 `PROJECT_CHANGE_{decision}` 站内通知。
+  - 新增 `_send_change_notification()`，统一走 `NotificationRequest` + `channels=["system"]` + `force_send=True`；只在真实 SQLAlchemy Session 下发送，避免旧 mock 单测多出 commit。
+  - 新增 `tests/unit/test_project_change_notifications_proj21.py`，用真实测试 DB 查询 `notifications` 表。
+- 验证：
+  - 红灯：`pytest tests/unit/test_project_change_notifications_proj21.py -q` -> 2 failed，无 `notifications` 记录。
+  - 绿灯：同命令 -> 2 passed。
+  - 相邻回归：`tests/unit/test_project_change_notifications_proj21.py` + 原有创建/审批 mock 用例 -> 6 passed。
+  - 项目变更 service 回归（排除既有 `test_get_approval_records_success` raw SQL/mock 测试债）：46 passed。
+  - API 旧数据兼容契约：`tests/api/test_path_param_route_contracts.py::test_project_change_routes_tolerate_legacy_nulls_and_old_decisions` -> passed。
+  - 静态检查：`py_compile app/services/project_change_requests/service.py tests/unit/test_project_change_notifications_proj21.py` passed；`ruff check` passed。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `PROJ-21` 已改为 `已验证`；F3 扩围列表同步标记 `PROJ-21（已验证）`。
+
+## 2026-07-03 继续：功能审计 APPR-22 小切口（调度禁用/导入失败治理）
+
+- 修复项：`APPR-22` 子项③/⑤。
+  - ③：`scheduler_task_configs.is_enabled=false` 的 DB 配置在 `_load_task_config_from_db()` 中被 `SchedulerTaskConfig.is_enabled` 过滤掉，启动时查不到禁用配置，就回落 `scheduler_config.py` 默认 enabled，导致管理员禁用的任务重启后复活。
+  - ⑤：调度任务模块/函数导入失败只写日志并跳过，不进入 scheduler failure metrics；`main.py` scheduler 整体导入失败是裸 `except ImportError: pass`。
+- 改动：
+  - `app/utils/scheduler.py`：DB 配置查询只按 `task_id` 查，不再过滤 `is_enabled`；返回 `{"enabled": False, "cron": ...}` 后由 `init_scheduler()` 原有逻辑跳过注册。
+  - `app/utils/scheduler.py`：任务解析/注册失败调用 `record_job_failure(task_id, 0.0, timestamp)`，监控面能看到注册失败。
+  - `app/main.py`：scheduler 整体导入失败改为记录 `定时任务调度器导入失败` 错误日志，不再静默吞掉。
+  - `tests/unit/test_scheduler_utils.py`：新增 APPR-22 契约，锁定禁用配置必须可加载、且启动时不会调用 `scheduler.add_job()`。
+  - `tests/unit/test_scheduler_utils.py`：新增导入失败入 metrics、main 外层 ImportError 不静默的契约。
+- 验证：
+  - 红灯：`pytest tests/unit/test_scheduler_utils.py::TestSchedulerDbConfig -q` -> 2 failed，禁用配置加载为 `None` 且被重新注册。
+  - 绿灯：同命令 -> 2 passed；`tests/unit/test_scheduler_utils.py` -> 18 passed。
+  - 红灯：`pytest tests/unit/test_scheduler_utils.py::TestSchedulerDbConfig::test_init_scheduler_records_failure_for_unresolvable_task -q` -> failed，导入失败未调用 `record_job_failure`。
+  - 红灯：`pytest tests/unit/test_scheduler_utils.py::TestSchedulerStartup::test_main_scheduler_import_error_is_logged -q` -> failed，`main.py` 没有错误日志文本。
+  - 绿灯：`tests/unit/test_scheduler_utils.py` -> 20 passed；`import app.main` 路由加载成功。
+  - 相邻回归：`tests/audit_p0/test_p0_10_stub_tasks.py tests/unit/test_j3_scheduled_tasks.py::TestStubTasks tests/unit/test_scheduler_utils.py` -> 47 passed。
+  - 静态检查：`py_compile app/utils/scheduler.py app/main.py tests/unit/test_scheduler_utils.py` passed；`ruff check` passed。
+- 台账：`APPR-22` 从 `待修` 改为 `修复中`；子项①/③/⑤已标已回归，②备份自动执行、④第二调度器监控仍待做。
+
+## 2026-07-03 继续：功能审计 PRE-21 验收收口（AI job 恢复）
+
+- 收口项：`PRE-21` 之前代码已补 startup 恢复和轮询惰性超时，但 `FUNCTIONAL_AUDIT_TRACKER.md` 仍是 `已修待验`。
+- 本轮复核：
+  - `pytest tests/unit/test_ai_job_recovery.py -q` -> 4 passed。
+  - `import app.main` -> 路由加载成功（3004 routes），startup 接线源码包含 `recover_stale_jobs`。
+- 台账：`PRE-21` 已从 `已修待验` 改为 `已验证`；F3 扩围列表同步标记 `PRE-21（已验证，含 APPR-22①）`。
+
+## 2026-07-03 继续：功能审计 AS-23 收口（after_sales 写端通知）
+
+- 修复项：补齐 `AS-23` 剩余旧 `app/api/v1/endpoints/after_sales.py` 项目售后写端；原反馈、保养、support ticket、质保、备件、现场服务、满意度、知识库、support ticket 升级均只写业务表，不产生真实站内通知。
+- 改动：
+  - `after_sales.py` 新增 `_send_after_sales_notification()`，统一发 `AFTER_SALES_*` 站内通知，强制 `channels=["system"]`、`force_send=True`。
+  - 项目上下文写端默认通知项目 PM；知识库这类无项目上下文写端通知创建人。
+  - `create_maintenance()` / `create_field_service()` 的日期参数改为 `date`，与 SQLAlchemy `Date` 字段和 FastAPI 参数解析一致。
+  - 所有写端在业务 `commit + refresh` 后发通知；通知异常只记日志，不阻断主业务提交。
+- 验证：
+  - 红灯：`pytest tests/unit/test_service_ticket_notifications_as23.py -q` -> 3 failed，命中 after_sales 写端没有 `notifications` 记录。
+  - 绿灯：同命令 -> 7 passed，覆盖服务工单 lifecycle + after_sales 项目售后写端 + 知识库创建。
+  - 相邻回归：`tests/unit/test_service_ticket_notifications_as23.py tests/unit/test_service_tickets_service.py tests/unit/test_service_tickets_service_coverage.py tests/unit/test_status_update_service.py` -> 62 passed。
+  - 合并回归：`tests/unit/test_sla_service_coverage.py tests/unit/test_batch2_sla_service.py tests/unit/test_sla_as06.py tests/unit/test_service_ticket_notifications_as23.py tests/unit/test_service_tickets_service.py tests/unit/test_service_tickets_service_coverage.py tests/unit/test_status_update_service.py` -> passed。
+  - 静态检查：相关文件 `py_compile` passed；`ruff check` passed；`git diff --check` passed。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `AS-23` 已更新为 `已验证`；F3 扩围列表同步标记 `AS-23（已验证）`。
+
+## 2026-07-03 继续：功能审计 AS-23 小切口（服务工单事件通知）
+
+- 修复项：`AS-23` 的服务工单 lifecycle 部分；原创建/派工端点会写业务状态和 CC 记录，但没有真实通知，且 `ServiceTicketCcUser.notified_at` 在未发送通知时直接置当前时间，属于假成功。
+- 改动：
+  - 新增 `app/services/service/service_ticket_notifications.py`，统一发送服务工单站内通知，强制 `channels=["system"]`，返回实际成功用户 ID。
+  - `create_service_ticket()`：创建时通知处理人、报告人、CC；CC 的 `notified_at` 仅在对应用户通知成功后写。
+  - `assign_service_ticket()`：派工时通知新处理人、报告人、CC；CC 的 `notified_at` 同样改为发送成功后写。
+  - `update_service_ticket_status()` / `close_service_ticket()`：状态变更和关闭后通知处理人、报告人、CC。
+  - 新增 `app/services/unified_notification_service.py` 兼容 re-export，恢复旧测试/旧调用 patch 路径。
+- 验证：
+  - 红灯：`pytest tests/unit/test_service_ticket_notifications_as23.py -q` -> 2 failed，创建/派工都没有 `notifications` 记录。
+  - 绿灯：扩展后同命令 -> 4 passed，覆盖创建/派工/状态变更/关闭。
+  - 相邻回归：`tests/unit/test_service_tickets_service.py tests/unit/test_service_tickets_service_coverage.py tests/unit/test_status_update_service.py tests/unit/test_service_ticket_notifications_as23.py` -> passed。
+  - 静态检查：相关文件 `py_compile` passed；`ruff check` passed。
+- 残留：旧 `app/api/v1/endpoints/after_sales.py` 项目售后写端已在后续 AS-23 收口小切口补齐，`AS-23` 台账已改为 `已验证`。
+
 ## 2026-07-03 继续：功能审计 SALES-16 修复（AI 助手降级标注 + 流失清单口径）
 
 - 修复项：`SALES-16`，AI 销售助手 5 个方法（话术/方案/竞品/谈判/流失）AI 不可用时静默返回罐头文本冒充 AI 输出；流失清单 20 客户全走规则分但无任何标注。
@@ -23,7 +115,7 @@
   - 绿灯：同命令 -> passed；`tests/unit/test_sla_service_coverage.py tests/unit/test_batch2_sla_service.py tests/unit/test_sla_as06.py` -> passed。
   - 相邻回归：`tests/unit/test_scheduled_alert_tasks.py tests/unit/test_j3_scheduled_tasks.py::TestSendAlertNotifications tests/unit/test_scheduled_tasks_h2.py::TestAlertTasksExtended::test_send_alert_notifications_no_pending_alerts` -> passed。
   - 静态检查：`py_compile` passed；`ruff check` passed；`git diff --check` passed；调度元数据解析 `check_sla_warnings -> app.utils.scheduled_tasks.check_sla_warnings_task` 成功。
-- 残留：本项不直接修改生产/本地 `data/app.db` 的历史策略行；代码已兼容 NULL，后续若要数据清洗可单独迁移为 `is_active=1`。AS-23 的售后业务事件通知产生端仍未处理。
+- 残留：本项不直接修改生产/本地 `data/app.db` 的历史策略行；代码已兼容 NULL，后续若要数据清洗可单独迁移为 `is_active=1`。AS-23 的售后业务事件通知产生端已在后续小切口处理。
 
 ## 2026-07-03 继续：功能审计 AS-25 修复（预警订阅接收人与 Webhook 兼容）
 
@@ -38,7 +130,7 @@
   - 绿灯：同命令 -> passed；旧通知 facade 全套 `tests/unit/test_notification_service_n3.py` -> passed。
   - 相邻回归：`tests/unit/test_i6_core_services.py::TestNotificationService tests/unit/test_notification_service_deep.py tests/unit/test_views_and_others_auto.py::TestNotificationService tests/unit/test_notification_utils_service.py tests/unit/test_notification_utils.py tests/unit/test_webhook_handler_coverage.py tests/unit/test_alert_subscription_service_coverage.py tests/unit/test_notification_utils_as25.py` -> passed。
   - 静态检查：`py_compile` passed；`ruff check` passed；`git diff --check` passed。
-- 残留：本项不解决“哪些业务端点必须产生售后事件通知”的 AS-23；SLA 策略激活/调度已由后续 AS-06 单独处理。
+- 残留：本项不解决“哪些业务端点必须产生售后事件通知”的 AS-23；该项后续已补齐。SLA 策略激活/调度已由后续 AS-06 单独处理。
 
 ## 2026-07-03 继续：功能审计 PRE 详#10/#7 修复（mock 方案禁入库 + BOM 真实询价）
 
@@ -60,7 +152,7 @@
 - 验证：
   - 红灯：`pytest tests/unit/test_scheduler_utils.py::TestResolveCallable::test_registered_ecn_overdue_job_resolves_real_callable -q` -> failed，`ModuleNotFoundError: No module named 'app.services.ecn_scheduler'`。
   - 绿灯：同命令 -> 1 passed；`pytest tests/unit/test_scheduler_utils.py::TestResolveCallable -q` -> 4 passed。
-- 残留：本项只修 ECN job 注册路径；`APPR-22` 里“调度器 except ImportError 只记录日志后继续”的平台治理问题仍单独保留。
+- 残留：本项只修 ECN job 注册路径；`APPR-22` 里导入失败可见化已在后续小切口处理，备份自动执行和第二调度器监控仍单独保留。
 
 ## 2026-07-03 继续：功能审计 MISC-03 修复（预警超时升级扫描）
 
