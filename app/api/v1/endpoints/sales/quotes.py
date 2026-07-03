@@ -32,6 +32,9 @@ from app.services.sales.presale_quote_context import (
     resolve_presale_ticket_id_for_quote,
     resolve_presale_solution_for_quote,
 )
+from app.api.v1.endpoints.sales.utils.quote_item_validation import (
+    validate_quote_item_quantity_price,
+)
 from app.services.sales.quotes_service import QuotesService
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.utils.db_helpers import get_or_404
@@ -369,6 +372,22 @@ def create_quote(
         version_payload=version_payload,
         presale_solution=presale_solution,
     )
+    items = version_payload.get("items") or []
+    if presale_solution and not items and (total_price > 0 or cost_total > 0):
+        items = [build_solution_quote_item(presale_solution, total_price, cost_total)]
+
+    validated_items = []
+    for item in items:
+        qty_value = item.get("qty")
+        if qty_value in (None, ""):
+            qty_value = 1
+        qty, unit_price = validate_quote_item_quantity_price(
+            qty_value,
+            item.get("unit_price"),
+        )
+        meta = _extract_item_meta(item)
+        item_cost = _calculate_item_cost(item, meta)
+        validated_items.append((item, qty, unit_price, item_cost, meta))
 
     quote = Quote(
         quote_code=(
@@ -402,16 +421,8 @@ def create_quote(
 
     total_price_calc = Decimal("0")
     total_cost_calc = Decimal("0")
-    items = version_payload.get("items") or []
-    if presale_solution and not items and (total_price > 0 or cost_total > 0):
-        items = [build_solution_quote_item(presale_solution, total_price, cost_total)]
 
-    for item in items:
-        qty = _to_decimal(item.get("qty"))
-        unit_price = _to_decimal(item.get("unit_price"))
-        meta = _extract_item_meta(item)
-        item_cost = _calculate_item_cost(item, meta)
-
+    for item, qty, unit_price, item_cost, meta in validated_items:
         db.add(
             QuoteItem(
                 quote_version_id=version.id,

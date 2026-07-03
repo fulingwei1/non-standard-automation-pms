@@ -87,6 +87,8 @@ export default function QuoteItemsTable({ items, onAddItem, onRemoveItem, onItem
                     <TableCell>
                       <Input
                         type="number"
+                        min="0.01"
+                        step="0.01"
                         value={item.qty ?? ""}
                         onChange={(e) =>
                           onItemChange(index, "qty", parseFloat(e.target.value) || 0)
@@ -107,6 +109,8 @@ export default function QuoteItemsTable({ items, onAddItem, onRemoveItem, onItem
                     <TableCell>
                       <Input
                         type="number"
+                        min="0.01"
+                        step="0.01"
                         value={item.unit_price ?? ""}
                         onChange={(e) =>
                           onItemChange(index, "unit_price", parseFloat(e.target.value) || 0)

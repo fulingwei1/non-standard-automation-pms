@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import QuoteCreateEdit from "../QuoteCreateEdit";
+import QuoteItemsTable from "../QuoteCreateEdit/QuoteItemsTable";
 import { opportunityApi, quoteApi } from "../../services/api";
 
 const navigateMock = vi.hoisted(() => vi.fn());
@@ -90,5 +91,32 @@ describe("QuoteCreateEdit presale solution context", () => {
     });
     expect(window.alert).toHaveBeenCalledWith("创建成功");
     expect(navigateMock).toHaveBeenCalledWith("/sales/quotes");
+  });
+});
+
+describe("QuoteItemsTable validation hints", () => {
+  it("marks quantity and unit price inputs as positive-only values", () => {
+    const { container } = render(
+      <QuoteItemsTable
+        items={[
+          {
+            item_name: "自动化测试平台",
+            qty: 1,
+            unit_price: 1000,
+            cost: 600,
+          },
+        ]}
+        onAddItem={vi.fn()}
+        onRemoveItem={vi.fn()}
+        onItemChange={vi.fn()}
+      />,
+    );
+
+    const numberInputs = container.querySelectorAll('input[type="number"]');
+
+    expect(numberInputs[0]).toHaveAttribute("min", "0.01");
+    expect(numberInputs[0]).toHaveAttribute("step", "0.01");
+    expect(numberInputs[1]).toHaveAttribute("min", "0.01");
+    expect(numberInputs[1]).toHaveAttribute("step", "0.01");
   });
 });

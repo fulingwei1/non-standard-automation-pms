@@ -16,6 +16,10 @@ from app.core import security
 from app.models.sales import Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.api.v1.endpoints.sales.utils.quote_item_validation import (
+    validate_positive_quantity,
+    validate_positive_unit_price,
+)
 from app.utils.db_helpers import get_or_404
 
 
@@ -189,14 +193,16 @@ def create_quote_item(
         # 验证报价版本存在 + 数据权限
         version = _check_version_scope(db, quote_version_id, current_user)
         _ensure_version_editable(db, version)
+        qty = validate_positive_quantity(item_data.get("qty"))
+        unit_price = validate_positive_unit_price(item_data.get("unit_price"))
 
         # 创建明细
         item = QuoteItem(
             quote_version_id=quote_version_id,
             item_type=item_data.get("item_type"),
             item_name=item_data.get("item_name"),
-            qty=item_data.get("qty"),
-            unit_price=item_data.get("unit_price"),
+            qty=qty,
+            unit_price=unit_price,
             cost=item_data.get("cost"),
             lead_time_days=item_data.get("lead_time_days"),
             remark=item_data.get("remark"),
@@ -244,6 +250,11 @@ def update_quote_item(
             QuoteVersion.id == item.quote_version_id
         ).first()
         _ensure_version_editable(db, version)
+
+        if "qty" in item_data:
+            item_data["qty"] = validate_positive_quantity(item_data["qty"])
+        if "unit_price" in item_data:
+            item_data["unit_price"] = validate_positive_unit_price(item_data["unit_price"])
 
         # 更新字段
         for field in [

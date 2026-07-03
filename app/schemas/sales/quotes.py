@@ -36,7 +36,7 @@ class QuoteItemCreate(BaseModel):
     brand: Optional[str] = Field(default=None, max_length=100, description="品牌")
     quantity: Decimal = Field(gt=0, description="数量")
     unit: Optional[str] = Field(default=None, max_length=20, description="单位")
-    unit_price: Optional[Decimal] = Field(default=None, ge=0, description="单价")
+    unit_price: Optional[Decimal] = Field(default=None, gt=0, description="单价")
     discount_rate: Optional[Decimal] = Field(default=None, ge=0, le=100, description="折扣率(%)")
     discount_amount: Optional[Decimal] = Field(default=None, ge=0, description="折扣金额")
     total_amount: Optional[Decimal] = Field(default=None, ge=0, description="总金额")
@@ -52,9 +52,9 @@ class QuoteItemUpdate(BaseModel):
     product_name: Optional[str] = None
     specification: Optional[str] = None
     brand: Optional[str] = None
-    quantity: Optional[Decimal] = None
+    quantity: Optional[Decimal] = Field(default=None, gt=0)
     unit: Optional[str] = None
-    unit_price: Optional[Decimal] = None
+    unit_price: Optional[Decimal] = Field(default=None, gt=0)
     discount_rate: Optional[Decimal] = None
     discount_amount: Optional[Decimal] = None
     total_amount: Optional[Decimal] = None

@@ -16,6 +16,9 @@ from app.core import security
 from app.models.sales import Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.api.v1.endpoints.sales.utils.quote_item_validation import (
+    validate_quote_item_quantity_price,
+)
 from app.services.sales.presale_quote_context import (
     build_quote_values_from_presale_solution,
     build_solution_quote_item,
@@ -198,6 +201,21 @@ def create_quote_version(
         version_payload=version_data,
         presale_solution=presale_solution,
     )
+    items = version_data.get("items") or []
+    if presale_solution and not items and (total_price > 0 or cost_total > 0):
+        items = [build_solution_quote_item(presale_solution, total_price, cost_total)]
+
+    validated_items = []
+    for item in items:
+        qty_value = item.get("qty")
+        if qty_value in (None, ""):
+            qty_value = 1
+        qty, unit_price = validate_quote_item_quantity_price(
+            qty_value,
+            item.get("unit_price"),
+        )
+        item_cost = to_decimal(item.get("cost"))
+        validated_items.append((item, qty, unit_price, item_cost))
 
     # 创建新版本
     version = QuoteVersion(
@@ -218,14 +236,8 @@ def create_quote_version(
     # 创建明细项
     total_price_calc = Decimal("0")
     total_cost_calc = Decimal("0")
-    items = version_data.get("items") or []
-    if presale_solution and not items and (total_price > 0 or cost_total > 0):
-        items = [build_solution_quote_item(presale_solution, total_price, cost_total)]
 
-    for item in items:
-        qty = to_decimal(item.get("qty") or 1)
-        unit_price = to_decimal(item.get("unit_price"))
-        item_cost = to_decimal(item.get("cost"))
+    for item, qty, unit_price, item_cost in validated_items:
         db.add(
             QuoteItem(
                 quote_version_id=version.id,
