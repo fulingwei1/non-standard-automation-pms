@@ -16,9 +16,9 @@ from app.core import security
 from app.models.material import BomHeader, BomItem
 from app.models.production import WorkOrder, Workshop
 from app.models.project import Machine, Project
-from app.models.purchase import PurchaseOrderItem
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.purchase import in_transit as purchase_in_transit
 
 from .utils import calculate_work_order_kit_rate
 
@@ -184,30 +184,18 @@ def get_work_order_kit_detail(
                     available_qty = Decimal(material.current_stock or 0)
 
                     # 计算在途数量
-                    in_transit_qty = Decimal(0)
-                    po_items = (
-                        db.query(PurchaseOrderItem)
-                        .filter(PurchaseOrderItem.material_id == item.material_id)
-                        .filter(
-                            PurchaseOrderItem.status.in_(
-                                ["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]
-                            )
-                        )
-                        .all()
+                    in_transit_qty = purchase_in_transit.get_purchase_in_transit_qty(
+                        db, item.material_id
                     )
-                    for po_item in po_items:
-                        in_transit_qty += Decimal(po_item.quantity or 0) - Decimal(
-                            po_item.received_qty or 0
-                        )
 
                     # 需求数量
                     required_qty = Decimal(item.quantity or 0) * Decimal(work_order.plan_qty or 1)
-                    total_available = available_qty + in_transit_qty
+                    total_available = available_qty
 
                     # 确定状态
-                    if total_available >= required_qty:
+                    if available_qty >= required_qty:
                         status = "fulfilled"
-                    elif total_available > 0:
+                    elif available_qty > 0:
                         status = "partial"
                     else:
                         status = "shortage"

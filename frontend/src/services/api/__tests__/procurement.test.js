@@ -439,7 +439,7 @@ describe('Procurement API', () => {
     });
 
     it('unified() - 应该获取统一齐套率', async () => {
-      mock.onGet('/api/v1/kit-rates/unified/1').reply(200, {
+      mock.onGet('/api/v1/kit-rate/unified/1').reply(200, {
         success: true,
         data: { kit_rate: 0.88 },
       });

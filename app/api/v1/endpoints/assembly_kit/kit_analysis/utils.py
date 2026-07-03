@@ -68,7 +68,7 @@ def calculate_available_qty(
         # 采购订单表查询失败时忽略在途数量
         logger.debug("查询在途数量失败，已忽略", exc_info=True)
 
-    available = max(Decimal(0), stock_qty - allocated_qty + in_transit_qty)
+    available = max(Decimal(0), stock_qty - allocated_qty)
     return (stock_qty, allocated_qty, in_transit_qty, available)
 
 

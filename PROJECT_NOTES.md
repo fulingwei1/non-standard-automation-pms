@@ -1084,3 +1084,55 @@
 - 即刻生效的价值：任务中心总览/我的任务首次出现 PROJECT 类型任务（实测 by_type PROJECT:7）。
 - 现状与下一步：tasks 表保留只读双读校验（写路径仍写 tasks，P2 切换；期间可重跑迁移脚本追平增量）。P2=写路径切换（WBS/模板/售前遗留同步/导入），P3=34 个读消费方+前端断链修复，P4=下线旧表。
 - 回归：tests/api task/progress/task_center 面 43 过；后端启动 0 失败；数据库迁移前备份在 scratchpad（data-app.db.pre-task-unification.bak）。
+
+## 2026-07-03 继续：PROD-05 齐套率口径修复
+
+- 修复目标：齐套率当前/预计口径拆分，解决审计 PROD-05 的三类问题：在途计入已齐套、`received_qty` 与库存双算、主齐套服务不考虑预留可用量。
+- 代码面：
+  - `app/services/kit_rate/kit_rate_service.py`：当前齐套只按现有可用库存判断；新增 `MaterialStock.available_quantity` 优先口径，无库存跟踪记录时才回退 `Material.current_stock`。
+  - `app/api/v1/endpoints/kit_rate/utils.py`、`app/utils/scheduled_tasks/kit_rate_tasks.py`、`app/api/v1/endpoints/kit_check/utils.py`、`app/api/v1/endpoints/kit_check/work_orders.py`、`app/api/v1/endpoints/assembly_kit/kit_analysis/utils.py`、`app/services/assembly_kit_service.py`、`app/services/project_workspace_service.py`：移除 `received_qty + current_stock` 双算和 `current + in_transit` 判当前齐套；在途继续保留为单独字段/预计到货依据。
+  - `kit_check/work_orders.py` 详情在途读取改接 `app.services.purchase.in_transit.get_purchase_in_transit_qty`，不再用旧 POI.status 小字典。
+- 验证：
+  - `.venv/bin/python -m pytest tests/unit/test_kit_rate_service.py tests/unit/test_kit_rate_utils.py tests/unit/test_scheduled_kit_rate_tasks.py tests/unit/test_kit_check_utils.py tests/unit/test_assembly_kit_analysis_utils.py tests/unit/test_assembly_kit_service.py tests/services/test_assembly_kit_service.py tests/unit/test_project_workspace_service.py -q` 通过。
+  - focused 组合 45 个用例通过；源码搜索未再发现齐套域 `received_qty + stock_qty`、`available_qty + in_transit_qty`、`PurchaseOrderItem.status.in_(["APPROVED","ORDERED","PARTIAL_RECEIVED"])` 残留。
+
+## 2026-07-03 继续：PROD-15 现场缺料应急处理闭环
+
+- 修复目标：现场缺料处理选择采购时不能只写处理状态；紧急采购不能停在 `DRAFT`；增强缺料预警不能只返回紧急采购，替代/调拨方案不再空转。
+- 代码面：
+  - `app/api/v1/endpoints/shortage/handling/reports.py`：`solution_type=PURCHASE` now 创建并提交来源 `SHORTAGE` 的紧急采购申请，失败时返回 400 提示检查供应商配置。
+  - `app/services/urgent_purchase_from_shortage_service.py`：AlertRecord 自动触发和现场 ShortageReport 触发均生成 `SUBMITTED` 采购申请，写 `submitted_at/requested_by/requested_at`，并按 source 去重。
+  - `app/services/shortage/smart_alert_engine.py`：替代方案查询 `material_alternatives`，调拨方案查询 `MaterialStock.available_quantity`；同一事务内方案号递增，避免多方案撞号。
+- 验证：
+  - `.venv/bin/python -m pytest tests/api/test_shortage_handling.py tests/unit/test_urgent_purchase_service_coverage.py tests/unit/test_smart_alert_n2.py tests/unit/test_smart_alert_engine.py -q` 通过（11 个既有 skip 保持原状）。
+  - `.venv/bin/python -m compileall -q app/services/urgent_purchase_from_shortage_service.py app/services/shortage/smart_alert_engine.py app/api/v1/endpoints/shortage/handling/reports.py` 通过；`git diff --check` 通过。
+
+## 2026-07-03 继续：PROD-10 采购申请转订单闸门
+
+- 修复目标：采购申请转订单必须走完审批，不能对未审批申请直接生成订单；同一申请不能重复生成订单；转单后要回写申请明细 `ordered_qty`，否则后续仍会认为未采购。
+- 代码面：
+  - `app/services/purchase/purchase_service.py`：`generate_orders_from_request()` now 要求申请状态 `APPROVED`，已有任何 `source_request_id` 订单即拒绝重复生成；成功转单后回写 `PurchaseRequestItem.ordered_qty` 与 `PurchaseRequest.auto_po_created/auto_po_created_at`。
+  - 同文件顺带修正两个真实模型字段名错配：`PurchaseRequestItem.amount` 替代不存在的 `total_amount`，`GoodsReceiptItem.received_qty/qualified_qty` 替代不存在的 `received_quantity/qualified_quantity`。
+- 验证：
+  - `.venv/bin/python -m pytest tests/unit/test_purchase_service_generate_orders.py app/tests/services/purchase/test_purchase_service.py tests/api/test_purchase.py::TestPurchaseRequest -q` 通过（25 个用例）。
+  - `.venv/bin/python -m compileall -q app/services/purchase/purchase_service.py app/api/v1/endpoints/purchase/requests_refactored.py` 通过；`git diff --check` 通过。
+
+## 2026-07-03 继续：PROD-09 ECN 通用状态机审批绕过
+
+- 修复目标：ECN 通用状态机不能把 `SUBMITTED` 等待评估/待审批状态直接写成 `APPROVED/REJECTED`；状态写入口不能只要登录态。
+- 红测：
+  - `tests/api/test_ecn_state_machine_contracts.py::test_ecn_state_machine_rejects_submitted_to_approved_bypass` 先失败，证明 `SUBMITTED` 的 allowed 列表暴露 `APPROVED/REJECTED`。
+  - `tests/api/test_ecn_state_machine_contracts.py::test_ecn_state_machine_transition_requires_update_permission` 先失败，证明普通登录用户可 POST `/ecn/state-machine/{id}/transition` 写状态。
+- 代码面：
+  - `app/api/v1/endpoints/ecn/state_machine.py`：`CURRENT_ECN_TRANSITIONS` 移除通用路径中的 `APPROVED/REJECTED` 目标；`_reject_approval_result_target()` 兜底禁止任何通用 transition/batch-transition 写审批结果状态。
+  - `transition_ecn_state()` 与 `batch_transition_ecns()` 改为 `Depends(require_permission("ecn:update"))`；审批通过/驳回继续走 `/ecns/approval/action` 和审批适配器回调。
+- 验证：
+  - `.venv/bin/python -m pytest tests/api/test_ecn_state_machine_contracts.py -q` 通过。
+  - `.venv/bin/python -m pytest tests/api/test_ecn_state_machine_contracts.py tests/api/test_path_param_route_contracts.py::test_ecn_state_machine_routes_tolerate_null_legacy_status tests/unit/test_state_machines_depth.py::TestEcnStateMachineIntegration tests/unit/test_ecn_adapter.py tests/unit/test_ecn_approval_adapter_n3.py -q` 通过（75 个用例）。
+
+## 2026-07-03 继续：kit-rate 双前缀归一 + 齐套率产品口径宣言
+
+- 现状澄清：/kit-rate 命名空间实为两个包共享——assembly_kit/kit_rate.py（AssemblyKitService，装配阶段/时间预警/增强分析）与 endpoints/kit_rate 包（KitRateService，看板/机台/项目/统一）。而"统一口径层"其实早已有人建好：kit_rate/unified.py 聚合三种算法（数量金额比例 quantity_based / 物料计数 kit_check / 装配阶段 stage_based）并给出对比——只是埋在 /kit-rates 复数前缀下无人知晓。
+- 归一动作：/kit-rates/unified/{id} → **/kit-rate/unified/{id}**、/kit-rates/comparison → **/kit-rate/comparison**（与 assembly_kit 的 /kit-rate/* 无路径冲突，实测共存）；前端 procurement.js 与其测试同步；复数前缀清零。
+- **产品口径宣言（记录为约定）**：跨模块展示齐套率一律以 `/kit-rate/unified/{project_id}`（KitRateService 聚合层）为权威查询口径——它同时返回三种算法结果与差异，天然可解释；各专用端点（time-based 预警、enhanced 分析、dashboard 快照）作为专业场景保留，但都归于 /kit-rate 单一命名空间。后续新页面接齐套率一律走 unified。
+- 验证：/kit-rate/unified/66 实测返回真实聚合（DEMO26 项目 15 项物料三算法对比）、comparison 200、旧复数路径 404；前端 procurement 测试 38 绿；build 通过；后端 kit 面 4 过。

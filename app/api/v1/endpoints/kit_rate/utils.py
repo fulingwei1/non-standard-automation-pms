@@ -45,15 +45,12 @@ def calculate_kit_rate(
     fulfilled_amount = Decimal(0)
 
     for item in bom_items:
-        # 计算可用数量 = 当前库存 + 已到货数量
+        # 当前齐套只看现有库存；received_qty 是采购到货进度字段，入库后已体现在库存中。
         material = item.material
-        available_qty = (material.current_stock or 0) + (item.received_qty or 0)
+        available_qty = Decimal(material.current_stock or 0) if material else Decimal(0)
 
         # 计算在途数量 = 已采购但未到货的数量
         in_transit_qty = get_purchase_in_transit_qty(db, item.material_id)
-
-        # 总可用数量 = 可用数量 + 在途数量
-        total_available = available_qty + in_transit_qty
 
         # 需求数量
         required_qty = item.quantity or 0
@@ -64,23 +61,23 @@ def calculate_kit_rate(
 
         if calculate_by == "quantity":
             total_quantity += required_qty
-            if total_available >= required_qty:
+            if available_qty >= required_qty:
                 fulfilled_items += 1
                 fulfilled_quantity += required_qty
-            elif total_available > 0:
-                in_transit_items += 1
             else:
                 shortage_items += 1
+                if in_transit_qty > 0:
+                    in_transit_items += 1
         else:  # by amount
             total_quantity += required_qty
-            if total_available >= required_qty:
+            if available_qty >= required_qty:
                 fulfilled_items += 1
                 fulfilled_quantity += required_qty
                 fulfilled_amount += item_amount
-            elif total_available > 0:
-                in_transit_items += 1
             else:
                 shortage_items += 1
+                if in_transit_qty > 0:
+                    in_transit_items += 1
 
     # 计算齐套率
     if calculate_by == "quantity":

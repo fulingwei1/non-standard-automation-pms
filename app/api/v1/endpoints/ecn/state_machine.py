@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.core.security import get_current_active_user
+from app.core.security import get_current_active_user, require_permission
 from app.core.state_machine.ecn import EcnStateMachine
 from app.core.state_machine.ecn_status import EcnStatus
 from app.models.ecn import Ecn, EcnLog
@@ -32,22 +32,18 @@ CURRENT_ECN_TRANSITIONS: Dict[str, List[str]] = {
         "EVALUATION_PENDING",
         "PENDING_APPROVAL",
         "APPROVAL_PENDING",
-        "APPROVED",
-        "REJECTED",
         "CANCELLED",
     ],
-    "EVALUATING": ["EVALUATED", "PENDING_APPROVAL", "APPROVED", "REJECTED", "CANCELLED"],
-    "EVALUATED": ["PENDING_APPROVAL", "APPROVED", "REJECTED", "CANCELLED"],
+    "EVALUATING": ["EVALUATED", "PENDING_APPROVAL", "CANCELLED"],
+    "EVALUATED": ["PENDING_APPROVAL", "CANCELLED"],
     "EVALUATION_PENDING": [
         "EVALUATION_IN_PROGRESS",
         "APPROVAL_PENDING",
-        "APPROVED",
-        "REJECTED",
         "CANCELLED",
     ],
-    "EVALUATION_IN_PROGRESS": ["APPROVAL_PENDING", "APPROVED", "REJECTED", "CANCELLED"],
-    "PENDING_APPROVAL": ["APPROVED", "REJECTED", "CANCELLED"],
-    "APPROVAL_PENDING": ["APPROVED", "REJECTED", "CANCELLED"],
+    "EVALUATION_IN_PROGRESS": ["APPROVAL_PENDING", "CANCELLED"],
+    "PENDING_APPROVAL": ["CANCELLED"],
+    "APPROVAL_PENDING": ["CANCELLED"],
     "APPROVED": ["EXECUTING", "READY_TO_EXECUTE", "IN_PROGRESS", "IMPLEMENTED", "CANCELLED"],
     "READY_TO_EXECUTE": ["EXECUTING", "IN_PROGRESS", "CANCELLED"],
     "EXECUTING": ["PENDING_VERIFY", "COMPLETED", "EXECUTION_COMPLETED", "CANCELLED"],
@@ -105,6 +101,8 @@ CURRENT_CANCELLABLE_STATES = {
     "EXECUTION_PAUSED",
     "PENDING_VERIFY",
 }
+
+APPROVAL_RESULT_TARGET_STATES = {"APPROVED", "REJECTED"}
 
 CURRENT_ACTION_MAP = {
     "SUBMITTED": "SUBMIT",
@@ -190,13 +188,26 @@ def _display_name(state: str) -> str:
 
 
 def _allowed_current_transitions(current_state: str) -> List[str]:
-    return CURRENT_ECN_TRANSITIONS.get(current_state, [])
+    return [
+        state
+        for state in CURRENT_ECN_TRANSITIONS.get(current_state, [])
+        if state not in APPROVAL_RESULT_TARGET_STATES
+    ]
+
+
+def _reject_approval_result_target(target_state: str) -> None:
+    if target_state in APPROVAL_RESULT_TARGET_STATES:
+        raise HTTPException(
+            status_code=400,
+            detail="审批结果状态必须通过 ECN 审批流程处理，不能使用通用状态机直接写入",
+        )
 
 
 def _validate_current_transition(current_state: str, target_state: str) -> None:
     known_states = _known_current_states()
     if target_state not in known_states:
         raise HTTPException(status_code=400, detail=f"无效的状态值: {target_state}")
+    _reject_approval_result_target(target_state)
 
     allowed = _allowed_current_transitions(current_state)
     if target_state not in allowed:
@@ -370,7 +381,7 @@ def get_ecn_state(
 async def transition_ecn_state(
     ecn_id: int,
     request: TransitionRequest,
-    current_user: Any = Depends(get_current_active_user),
+    current_user: Any = Depends(require_permission("ecn:update")),
     db: Session = Depends(get_db),
 ) -> Any:
     """
@@ -385,6 +396,7 @@ async def transition_ecn_state(
     try:
         state_machine = get_ecn_state_machine(ecn_id, db)
         current_state = _state_value(state_machine)
+        _reject_approval_result_target(request.target_state)
 
         if current_state in CURRENT_ECN_TRANSITIONS:
             payload = _apply_current_transition(
@@ -544,7 +556,7 @@ async def batch_transition_ecns(
     ecn_ids: List[int],
     target_state: str,
     comment: str = "",
-    current_user: Any = Depends(get_current_active_user),
+    current_user: Any = Depends(require_permission("ecn:update")),
     db: Session = Depends(get_db),
 ) -> Any:
     """
@@ -558,6 +570,7 @@ async def batch_transition_ecns(
         try:
             state_machine = get_ecn_state_machine(item_id, db)
             current_state = _state_value(state_machine)
+            _reject_approval_result_target(target_state)
 
             if current_state in CURRENT_ECN_TRANSITIONS:
                 payload = _apply_current_transition(

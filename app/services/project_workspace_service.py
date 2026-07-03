@@ -1161,7 +1161,7 @@ def _calculate_project_kitting(db: Session, project_id: int) -> Dict[str, Any]:
         required_qty = _dec(item.quantity)
         received_qty = _dec(item.received_qty)
         stock_qty = stock_map.get(item.material_id, Decimal("0")) if item.material_id else Decimal("0")
-        available_qty = received_qty + stock_qty
+        available_qty = stock_qty
 
         if available_qty >= required_qty:
             kitted_count += 1

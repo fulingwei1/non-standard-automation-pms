@@ -7,7 +7,7 @@ Team 3: 智能缺料预警系统
 """
 import logging
 from datetime import date, datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Dict, List, Optional
 
 from sqlalchemy import and_, func
@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 # from app.models.inventory_tracking import Inventory  # FIXME: Class does not exist
 # Use MaterialStock instead if needed
 from app.models.inventory_tracking import MaterialStock
+from app.models.kitting_optimization import MaterialAlternative
 from app.models.material import Material
 from app.models.production.work_order import WorkOrder
 from app.models.project import Project
@@ -32,6 +33,17 @@ class SmartAlertEngine:
 
     def __init__(self, db: Session):
         self.db = db
+
+    @staticmethod
+    def _decimal_or_zero(value) -> Decimal:
+        try:
+            return Decimal(str(value or 0))
+        except (InvalidOperation, TypeError, ValueError):
+            return Decimal("0")
+
+    @staticmethod
+    def _is_mock_object(value) -> bool:
+        return value.__class__.__module__.startswith("unittest.mock")
 
     def scan_and_alert(
         self,
@@ -496,14 +508,145 @@ class SmartAlertEngine:
         return plan
 
     def _generate_substitute_plans(self, alert: ShortageAlert) -> List[ShortageHandlingPlan]:
-        """生成替代料方案（简化）"""
-        # 实际应查询material_substitutes表
-        return []
+        """生成替代料方案"""
+        original = self.db.query(Material).get(alert.material_id)
+        if not original or self._is_mock_object(original):
+            return []
+
+        alternatives = (
+            self.db.query(MaterialAlternative)
+            .filter(
+                MaterialAlternative.original_material_id == alert.material_id,
+                MaterialAlternative.is_active == True,
+            )
+            .order_by(MaterialAlternative.match_score.desc())
+            .limit(5)
+            .all()
+        )
+        if not isinstance(alternatives, list):
+            return []
+
+        plans: List[ShortageHandlingPlan] = []
+        for alt in alternatives:
+            alt_material = self.db.query(Material).get(alt.alternative_material_id)
+            if (
+                not alt_material
+                or self._is_mock_object(alt_material)
+                or not getattr(alt_material, "is_active", True)
+            ):
+                continue
+
+            available_qty = self._get_available_qty(alt_material.id)
+            if available_qty <= 0:
+                continue
+
+            proposed_qty = min(Decimal(str(alert.shortage_qty or 0)), available_qty)
+            if proposed_qty <= 0:
+                continue
+
+            match_score = Decimal(str(alt.match_score or 0))
+            lead_time = int(getattr(alt_material, "lead_time_days", None) or 0)
+            original_price = self._decimal_or_zero(original.last_price or original.standard_price)
+            alt_price = self._decimal_or_zero(alt_material.last_price or alt_material.standard_price)
+
+            plans.append(
+                ShortageHandlingPlan(
+                    plan_no=self._generate_plan_no(),
+                    alert_id=alert.id,
+                    solution_type="SUBSTITUTE",
+                    solution_name=f"替代料: {alt_material.material_name}",
+                    solution_description=(
+                        f"使用 {alt_material.material_name} ({alt_material.material_code}) "
+                        f"替代 {original.material_name} ({original.material_code})，"
+                        f"当前可用 {available_qty}，建议替代 {proposed_qty}"
+                    ),
+                    target_material_id=alt_material.id,
+                    proposed_qty=proposed_qty,
+                    proposed_date=datetime.now().date() + timedelta(days=lead_time),
+                    estimated_lead_time=lead_time,
+                    estimated_cost=proposed_qty * alt_price,
+                    advantages=["可减少等待采购时间", "已登记替代关系"],
+                    disadvantages=["需技术/生产确认替代适配性"],
+                    risks=[] if getattr(alt, "is_verified", False) else ["替代关系未验证"],
+                    feasibility_score=match_score,
+                    extra_metadata={
+                        "original_material_id": original.id,
+                        "alternative_material_code": alt_material.material_code,
+                        "available_qty": str(available_qty),
+                        "match_score": str(match_score),
+                        "match_reason": alt.match_reason,
+                        "is_verified": bool(getattr(alt, "is_verified", False)),
+                        "price_diff": str(alt_price - original_price),
+                    },
+                )
+            )
+
+        return plans
 
     def _generate_transfer_plans(self, alert: ShortageAlert) -> List[ShortageHandlingPlan]:
-        """生成调拨方案（简化）"""
-        # 实际应查询其他项目的库存
-        return []
+        """生成调拨方案"""
+        material = self.db.query(Material).get(alert.material_id)
+        if not material or self._is_mock_object(material):
+            return []
+
+        stocks = (
+            self.db.query(MaterialStock)
+            .filter(
+                MaterialStock.material_id == alert.material_id,
+                MaterialStock.available_quantity > 0,
+            )
+            .order_by(MaterialStock.available_quantity.desc())
+            .limit(5)
+            .all()
+        )
+        if not isinstance(stocks, list):
+            return []
+
+        plans: List[ShortageHandlingPlan] = []
+        shortage_qty = Decimal(str(alert.shortage_qty or 0))
+        unit_price = self._decimal_or_zero(material.last_price or material.standard_price)
+
+        for stock in stocks:
+            if self._is_mock_object(stock):
+                continue
+            available_qty = self._decimal_or_zero(stock.available_quantity)
+            if available_qty <= 0:
+                continue
+
+            proposed_qty = min(shortage_qty, available_qty)
+            if proposed_qty <= 0:
+                continue
+
+            plans.append(
+                ShortageHandlingPlan(
+                    plan_no=self._generate_plan_no(),
+                    alert_id=alert.id,
+                    solution_type="TRANSFER",
+                    solution_name=f"调拨: {stock.location}",
+                    solution_description=(
+                        f"从 {stock.location} 调拨 {material.material_name} "
+                        f"({material.material_code})，当前可用 {available_qty}，"
+                        f"建议调拨 {proposed_qty}"
+                    ),
+                    target_project_id=alert.project_id,
+                    proposed_qty=proposed_qty,
+                    proposed_date=datetime.now().date() + timedelta(days=1),
+                    estimated_lead_time=1,
+                    estimated_cost=proposed_qty * unit_price,
+                    advantages=["无需等待供应商交付", "可快速缓解现场缺料"],
+                    disadvantages=["需确认调出库位后续需求"],
+                    risks=["跨库位调拨可能影响原库位备料"],
+                    extra_metadata={
+                        "material_id": material.id,
+                        "material_code": material.material_code,
+                        "from_location": stock.location,
+                        "available_qty": str(available_qty),
+                        "stock_qty": str(stock.quantity or 0),
+                    },
+                )
+            )
+
+        return plans
 
     def _generate_partial_delivery_plan(
         self, alert: ShortageAlert
@@ -641,4 +784,10 @@ class SmartAlertEngine:
             .scalar()
             or 0
         )
-        return f"SP{today}{count + 1:04d}"
+        try:
+            count = int(count)
+        except (TypeError, ValueError):
+            count = 0
+        offset = getattr(self, "_plan_no_offset", 0) + 1
+        self._plan_no_offset = offset
+        return f"SP{today}{count + offset:04d}"

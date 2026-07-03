@@ -55,7 +55,6 @@ def _calculate_kit_rate_for_bom_items(
 
     for item in bom_items:
         required_qty = item.quantity or 0
-        received_qty = item.received_qty or 0
         unit_price = item.unit_price or 0
 
         item_amount = required_qty * unit_price
@@ -69,7 +68,7 @@ def _calculate_kit_rate_for_bom_items(
         # 在途数量
         transit_qty = get_purchase_in_transit_qty(db, item.material_id)
 
-        available_qty = received_qty + stock_qty + transit_qty
+        available_qty = stock_qty
 
         if available_qty >= required_qty:
             fulfilled_items += 1
@@ -77,7 +76,7 @@ def _calculate_kit_rate_for_bom_items(
             shortage_items += 1
             shortage_amount += (required_qty - available_qty) * unit_price
 
-        if transit_qty > 0:
+        if transit_qty > 0 and available_qty < required_qty:
             in_transit_items += 1
 
     # 计算齐套率

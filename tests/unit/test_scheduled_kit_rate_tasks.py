@@ -91,8 +91,8 @@ class TestCalculateKitRateForBomItems:
         assert result["kit_rate"] == 50.0
         assert result["kit_status"] == "shortage"
 
-    def test_in_transit_items_counted(self):
-        """有在途订单时 transit_qty 被计入"""
+    def test_in_transit_items_are_not_counted_as_currently_fulfilled(self):
+        """有在途订单时仅标记在途，不计入当前齐套"""
         db = _make_db()
 
         item = MagicMock()
@@ -103,18 +103,16 @@ class TestCalculateKitRateForBomItems:
         item.material.current_stock = 0
         item.material_id = 5
 
-        # 在途订单补足需求
-        po_item = MagicMock()
-        po_item.quantity = 10
-        po_item.received_qty = 0
-        db.query.return_value.filter.return_value.filter.return_value.all.return_value = [po_item]
-
         from app.utils.scheduled_tasks.kit_rate_tasks import _calculate_kit_rate_for_bom_items
 
-        result = _calculate_kit_rate_for_bom_items(db, [item])
+        with patch("app.utils.scheduled_tasks.kit_rate_tasks.get_purchase_in_transit_qty", return_value=Decimal("10")):
+            result = _calculate_kit_rate_for_bom_items(db, [item])
 
         assert result["in_transit_items"] == 1
-        assert result["kit_rate"] == 100.0
+        assert result["fulfilled_items"] == 0
+        assert result["shortage_items"] == 1
+        assert result["kit_rate"] == 0.0
+        assert result["shortage_amount"] == 1000.0
 
     def test_calculate_by_amount(self):
         """按金额计算时使用 shortage_amount"""

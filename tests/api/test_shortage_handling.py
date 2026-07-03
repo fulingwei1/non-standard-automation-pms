@@ -16,8 +16,10 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.material import Material
 from app.models.project import Project
+from app.models.purchase import PurchaseRequest, PurchaseRequestItem
 from app.models.shortage.reports import ShortageReport
 from app.models.user import User
+from app.models.vendor import Vendor
 from tests.factories import ProjectFactory
 
 HANDLING_BASE = f"{settings.API_V1_PREFIX}/shortage/handling"
@@ -37,17 +39,42 @@ def _create_material(db_session: Session) -> Material:
     return material
 
 
+def _create_supplier(db_session: Session) -> Vendor:
+    supplier = Vendor(
+        supplier_code=f"SUP-{uuid4().hex[:8].upper()}",
+        supplier_name="缺料处理测试供应商",
+        vendor_type="MATERIAL",
+        status="ACTIVE",
+    )
+    db_session.add(supplier)
+    db_session.commit()
+    db_session.refresh(supplier)
+    return supplier
+
+
 @pytest.fixture
 def shortage_test_context(db_session: Session) -> Dict[str, Any]:
     """
     Provide a dedicated project + material for shortage report tests and clean them up afterwards.
     """
     project = ProjectFactory()
+    supplier = _create_supplier(db_session)
     material = _create_material(db_session)
-    context = {"project": project, "material": material}
+    material.default_supplier_id = supplier.id
+    material.standard_price = Decimal("12.50")
+    db_session.commit()
+    context = {"project": project, "material": material, "supplier": supplier}
     yield context
+    db_session.query(PurchaseRequestItem).filter(
+        PurchaseRequestItem.material_id == material.id
+    ).delete(synchronize_session=False)
+    db_session.query(PurchaseRequest).filter(
+        PurchaseRequest.source_type == "SHORTAGE",
+        PurchaseRequest.project_id == project.id,
+    ).delete(synchronize_session=False)
     db_session.query(Project).filter(Project.id == project.id).delete()
     db_session.query(Material).filter(Material.id == material.id).delete()
+    db_session.query(Vendor).filter(Vendor.id == supplier.id).delete()
     db_session.commit()
 
 
@@ -191,6 +218,19 @@ def test_report_status_flow_confirm_handle_resolve(
         assert handled["status"] == "HANDLING"
         assert handled["handler_id"] == engineer_user.id
         assert handled["solution_type"] == "PURCHASE"
+        purchase_request = (
+            db_session.query(PurchaseRequest)
+            .filter(
+                PurchaseRequest.source_type == "SHORTAGE",
+                PurchaseRequest.source_id == report_id,
+            )
+            .first()
+        )
+        assert purchase_request is not None
+        assert purchase_request.status == "SUBMITTED"
+        assert purchase_request.supplier_id == material.default_supplier_id
+        assert purchase_request.submitted_at is not None
+        assert purchase_request.items.count() == 1
 
         resolve_resp = client.put(
             f"{HANDLING_BASE}/reports/{report_id}/resolve",

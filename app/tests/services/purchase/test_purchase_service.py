@@ -64,7 +64,7 @@ def sample_purchase_request():
     request.project_id = 100
     request.requested_by = 1
     request.total_amount = Decimal("3000.00")
-    request.status = "DRAFT"
+    request.status = "APPROVED"
     request.created_at = datetime.now()
     request.project = Mock()
     request.project.name = "测试项目"
@@ -330,11 +330,17 @@ class TestPurchaseService:
         sample_purchase_request.items = [mock_item]
         added = []
 
-        mock_query = Mock()
-        mock_filtered = Mock()
-        mock_query.filter = Mock(return_value=mock_filtered)
-        mock_filtered.first = Mock(return_value=sample_purchase_request)
-        mock_db.query.return_value = mock_query
+        request_query = Mock()
+        request_filtered = Mock()
+        request_query.filter = Mock(return_value=request_filtered)
+        request_filtered.first = Mock(return_value=sample_purchase_request)
+
+        existing_order_query = Mock()
+        existing_order_filtered = Mock()
+        existing_order_query.filter = Mock(return_value=existing_order_filtered)
+        existing_order_filtered.first = Mock(return_value=None)
+
+        mock_db.query.side_effect = [request_query, existing_order_query]
         mock_db.flush = Mock()
         mock_db.add.side_effect = added.append
 

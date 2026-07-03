@@ -94,7 +94,7 @@ export const purchaseApi = {
     getProjectMaterialStatus: (projectId) =>
       api.get(`/projects/${projectId}/material-status`),
     unified: (projectId, params) =>
-      api.get(`/kit-rates/unified/${projectId}`, { params }),
+      api.get(`/kit-rate/unified/${projectId}`, { params }),
     dashboard: (params) => api.get("/kit-rate/dashboard", { params }),
     trend: (params) => api.get("/kit-rate/trend", { params }),
   },

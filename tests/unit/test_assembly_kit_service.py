@@ -2,6 +2,7 @@
 """Tests for assembly_kit_service.py"""
 from datetime import date
 from decimal import Decimal
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from app.services.assembly_kit_service import (
@@ -119,3 +120,112 @@ class TestCalculateStageKitRates:
         assert can_proceed is False
         assert blocked == "MECH"
         assert workable == "FRAME"
+
+
+class TestAssemblyKitServiceStageRate:
+    def test_stage_kit_rate_does_not_count_received_or_transit_as_fulfilled(self):
+        from app.services.assembly_kit_service import AssemblyKitService
+
+        db = MagicMock()
+        bom = SimpleNamespace(id=1)
+        material = SimpleNamespace(
+            current_stock=2,
+            material_code="MAT-001",
+            material_name="在途物料",
+        )
+        bom_item = SimpleNamespace(
+            id=10,
+            item_no="001",
+            material=material,
+            material_id=1,
+            quantity=10,
+            received_qty=8,
+        )
+        attrs = SimpleNamespace(
+            bom_item_id=10,
+            assembly_stage="MECH",
+            is_blocking=True,
+        )
+
+        call_count = [0]
+
+        def query_side_effect(*models):
+            query = MagicMock()
+            query.filter.return_value = query
+            if call_count[0] == 0:
+                query.all.return_value = [bom]
+            elif call_count[0] == 1:
+                query.all.return_value = [bom_item]
+            else:
+                query.all.return_value = [attrs]
+            call_count[0] += 1
+            return query
+
+        db.query.side_effect = query_side_effect
+        service = AssemblyKitService(db)
+
+        with patch(
+            "app.services.assembly_kit_service.get_purchase_in_transit_qty",
+            return_value=Decimal("8"),
+        ):
+            result = service.calculate_stage_kit_rate(project_id=1)
+
+        stage = result["stages"]["MECH"]
+        assert stage["fulfilled_items"] == 0
+        assert stage["shortage_items"] == 1
+        assert stage["in_transit_items"] == 1
+        assert stage["overall_kit_rate"] == 0.0
+
+    def test_time_based_kit_rate_does_not_count_received_qty_as_available(self):
+        from app.services.assembly_kit_service import AssemblyKitService
+
+        db = MagicMock()
+        bom = SimpleNamespace(id=1)
+        material = SimpleNamespace(
+            current_stock=2,
+            material_code="MAT-001",
+            material_name="已到货字段不等于库存",
+        )
+        bom_item = SimpleNamespace(
+            id=10,
+            item_no="001",
+            material=material,
+            material_id=1,
+            quantity=10,
+            received_qty=8,
+        )
+        attrs = SimpleNamespace(bom_item_id=10, assembly_stage="MECH")
+
+        call_count = [0]
+
+        def query_side_effect(*models):
+            query = MagicMock()
+            query.filter.return_value = query
+            if call_count[0] == 0:
+                query.all.return_value = [bom]
+            elif call_count[0] == 1:
+                query.all.return_value = [bom_item]
+            elif call_count[0] == 2:
+                query.all.return_value = [attrs]
+            else:
+                query.join.return_value.filter.return_value.all.return_value = []
+            call_count[0] += 1
+            return query
+
+        db.query.side_effect = query_side_effect
+        service = AssemblyKitService(db)
+
+        with patch.object(
+            service,
+            "calculate_stage_kit_rate",
+            return_value={"stages": {"MECH": {"overall_kit_rate": 0}}},
+        ), patch.object(
+            service,
+            "get_material_lead_time",
+            return_value={"avg_lead_time": 5},
+        ):
+            result = service.calculate_time_based_kit_rate(project_id=1)
+
+        shortage_item = result["stages"]["MECH"]["shortage_items"][0]
+        assert shortage_item["available_qty"] == 2
+        assert shortage_item["shortage_qty"] == 8

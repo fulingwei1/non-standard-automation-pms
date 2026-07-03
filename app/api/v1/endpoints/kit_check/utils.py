@@ -88,30 +88,15 @@ def calculate_work_order_kit_rate(
         # 计算在途数量 = 已采购但未到货的数量
         in_transit_qty = get_purchase_in_transit_qty(db, item.material_id)
 
-        # 总可用数量 = 可用数量 + 在途数量
-        total_available = available_qty + in_transit_qty
-
         # 需求数量 = BOM用量 * 工单计划数量
         required_qty = Decimal(item.quantity or 0) * Decimal(work_order.plan_qty or 1)
 
-        if total_available >= required_qty:
+        if available_qty >= required_qty:
             fulfilled_items += 1
-        elif total_available > 0:
-            in_transit_items += 1
-            shortage_details.append(
-                {
-                    "material_id": material.id,
-                    "material_code": material.material_code,
-                    "material_name": material.material_name,
-                    "required_qty": float(required_qty),
-                    "available_qty": float(available_qty),
-                    "in_transit_qty": float(in_transit_qty),
-                    "shortage_qty": float(required_qty - total_available),
-                    "status": "partial",
-                }
-            )
         else:
             shortage_items += 1
+            if in_transit_qty > 0:
+                in_transit_items += 1
             shortage_details.append(
                 {
                     "material_id": material.id,
@@ -120,8 +105,8 @@ def calculate_work_order_kit_rate(
                     "required_qty": float(required_qty),
                     "available_qty": float(available_qty),
                     "in_transit_qty": float(in_transit_qty),
-                    "shortage_qty": float(required_qty),
-                    "status": "shortage",
+                    "shortage_qty": float(required_qty - available_qty),
+                    "status": "partial" if available_qty > 0 else "shortage",
                 }
             )
 

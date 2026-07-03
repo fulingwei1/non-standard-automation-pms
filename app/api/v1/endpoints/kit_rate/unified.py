@@ -141,7 +141,7 @@ def _get_stage_kit_rate(
         }
 
 
-@router.get("/kit-rates/unified/{project_id}")
+@router.get("/kit-rate/unified/{project_id}")
 def get_unified_kit_rates(
     *,
     db: Session = Depends(deps.get_db),
@@ -241,7 +241,7 @@ def get_unified_kit_rates(
     }
 
 
-@router.get("/kit-rates/comparison")
+@router.get("/kit-rate/comparison")
 def compare_project_kit_rates(
     *,
     db: Session = Depends(deps.get_db),

@@ -253,6 +253,25 @@ def handle_shortage_report(
     report.solution_type = solution_type
     report.solution_note = solution_note
 
+    if solution_type.upper() == "PURCHASE":
+        from app.api.v1.endpoints.purchase import generate_request_no
+        from app.services.urgent_purchase_from_shortage_service import (
+            create_urgent_purchase_request_from_report,
+        )
+
+        request = create_urgent_purchase_request_from_report(
+            db=db,
+            report=report,
+            current_user_id=current_user.id,
+            generate_request_no_func=generate_request_no,
+        )
+        if not request:
+            raise HTTPException(status_code=400, detail="创建紧急采购申请失败，请检查物料供应商配置")
+        purchase_note = f"已创建并提交紧急采购申请：{request.request_no}"
+        report.solution_note = (
+            f"{solution_note}\n{purchase_note}" if solution_note else purchase_note
+        )
+
     save_obj(db, report)
 
     return _build_report_response(report, db)

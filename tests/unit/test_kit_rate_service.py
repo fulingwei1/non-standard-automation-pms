@@ -278,6 +278,51 @@ class TestCalculateKitRate:
         assert result["kit_rate"] == 0.0
         assert result["kit_status"] == "shortage"
 
+    def test_calculate_kit_rate_does_not_count_in_transit_as_fulfilled(self):
+        mock_db = MagicMock()
+        service = KitRateService(mock_db)
+
+        material = MockMaterial(current_stock=2)
+        items = [MockBomItem(id=1, quantity=10, material_id=1, material=material)]
+
+        with patch.object(service, "_get_in_transit_qty", return_value=Decimal("8")):
+            result = service.calculate_kit_rate(items, "quantity")
+
+        assert result["fulfilled_items"] == 0
+        assert result["shortage_items"] == 1
+        assert result["in_transit_items"] == 1
+        assert result["kit_rate"] == 0.0
+        assert result["kit_status"] == "shortage"
+
+    def test_calculate_kit_rate_does_not_double_count_received_qty_and_stock(self):
+        mock_db = MagicMock()
+        service = KitRateService(mock_db)
+
+        material = MockMaterial(current_stock=6)
+        items = [MockBomItem(id=1, quantity=10, received_qty=6, material_id=1, material=material)]
+
+        with patch.object(service, "_get_in_transit_qty", return_value=Decimal("0")):
+            result = service.calculate_kit_rate(items, "quantity")
+
+        assert result["fulfilled_items"] == 0
+        assert result["shortage_items"] == 1
+        assert result["kit_rate"] == 0.0
+
+    def test_calculate_kit_rate_uses_material_stock_available_quantity_before_current_stock(self):
+        mock_db = MagicMock()
+        mock_db.query.return_value.filter.return_value.one.return_value = (1, Decimal("4"))
+        service = KitRateService(mock_db)
+
+        material = MockMaterial(current_stock=10)
+        items = [MockBomItem(id=1, quantity=6, material_id=1, material=material)]
+
+        with patch.object(service, "_get_in_transit_qty", return_value=Decimal("0")):
+            result = service.calculate_kit_rate(items, "quantity")
+
+        assert result["fulfilled_items"] == 0
+        assert result["shortage_items"] == 1
+        assert result["kit_rate"] == 0.0
+
     def test_calculate_kit_rate_by_amount(self):
         mock_db = MagicMock()
 
@@ -563,8 +608,59 @@ class TestGetMachineMaterialStatus:
         assert item["required_qty"] == 100
         assert item["current_stock"] == 50
         assert item["received_qty"] == 20
-        assert item["available_qty"] == 70  # 50 + 20
+        assert item["available_qty"] == 50
+        assert item["total_available"] == 50
+        assert item["shortage_qty"] == 50
         assert item["is_key_item"] is True
+
+
+@pytest.mark.unit
+class TestGetProjectMaterialStatus:
+    """测试项目物料状态汇总"""
+
+    def test_project_material_status_does_not_count_received_or_transit_as_available(self):
+        mock_db = MagicMock()
+        mock_project = MockProject()
+        mock_machine = MockMachine(id=1, project_id=1)
+        material = MockMaterial(current_stock=6)
+        mock_bom_item = MockBomItem(
+            id=1,
+            material_code="MAT001",
+            quantity=10,
+            received_qty=6,
+            material_id=1,
+            material=material,
+        )
+        mock_bom = MockBomHeader(items=[mock_bom_item])
+
+        call_count = [0]
+
+        def mock_query_side_effect(model):
+            mock_q = MagicMock()
+            mock_q.filter.return_value = mock_q
+            if call_count[0] == 0:
+                mock_q.first.return_value = mock_project
+            elif call_count[0] == 1:
+                mock_q.all.return_value = [mock_machine]
+            else:
+                mock_q.first.return_value = mock_bom
+            call_count[0] += 1
+            return mock_q
+
+        mock_db.query.side_effect = mock_query_side_effect
+        service = KitRateService(mock_db)
+
+        with patch.object(service, "_get_in_transit_qty", return_value=Decimal("4")):
+            result = service.get_project_material_status(1)
+
+        assert result["summary"]["total_available_qty"] == 6.0
+        assert result["summary"]["total_shortage_qty"] == 4.0
+        material_row = result["materials"][0]
+        assert material_row["total_received_qty"] == 6.0
+        assert material_row["total_in_transit_qty"] == 4.0
+        assert material_row["total_available_qty"] == 6.0
+        assert material_row["shortage_qty"] == 4.0
+        assert material_row["status"] == "partial"
 
 
 @pytest.mark.unit

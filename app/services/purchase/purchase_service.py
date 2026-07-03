@@ -6,8 +6,10 @@
 """
 
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List, Optional
 
+from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.query_filters import apply_pagination
@@ -20,12 +22,18 @@ from app.models.purchase import (
     PurchaseRequestItem,
 )
 
-
 class PurchaseService:
     """采购管理服务"""
 
     def __init__(self, db: Session):
         self.db = db
+
+    @staticmethod
+    def _decimal_or_zero(value) -> Decimal:
+        try:
+            return Decimal(str(value or 0))
+        except (InvalidOperation, TypeError, ValueError):
+            return Decimal("0")
 
     def get_purchase_orders(
         self,
@@ -165,8 +173,11 @@ class PurchaseService:
             item = GoodsReceiptItem(
                 receipt_id=receipt.id,
                 order_item_id=item_data.get("order_item_id"),
-                received_quantity=item_data.get("received_quantity"),
-                qualified_quantity=item_data.get("qualified_quantity"),
+                material_code=item_data.get("material_code", ""),
+                material_name=item_data.get("material_name", ""),
+                delivery_qty=item_data.get("delivery_qty") or item_data.get("received_quantity"),
+                received_qty=item_data.get("received_qty") or item_data.get("received_quantity"),
+                qualified_qty=item_data.get("qualified_qty") or item_data.get("qualified_quantity"),
                 remark=item_data.get("remark"),
             )
             self.db.add(item)
@@ -215,9 +226,13 @@ class PurchaseService:
             item = PurchaseRequestItem(
                 request_id=request.id,
                 material_id=item_data.get("material_id"),
+                material_code=item_data.get("material_code", ""),
+                material_name=item_data.get("material_name", ""),
+                specification=item_data.get("specification"),
+                unit=item_data.get("unit", "件"),
                 quantity=item_data.get("quantity"),
                 unit_price=item_data.get("unit_price"),
-                total_amount=item_data.get("total_amount"),
+                amount=item_data.get("amount") or item_data.get("total_amount"),
             )
             self.db.add(item)
 
@@ -228,6 +243,21 @@ class PurchaseService:
         request = self.db.query(PurchaseRequest).filter(PurchaseRequest.id == request_id).first()
         if not request:
             return False
+
+        if request.status != "APPROVED":
+            raise HTTPException(status_code=400, detail="只有已审批的采购申请才能生成采购订单")
+
+        existing_order = (
+            self.db.query(PurchaseOrder)
+            .filter(PurchaseOrder.source_request_id == request_id)
+            .first()
+        )
+        if existing_order:
+            raise HTTPException(status_code=400, detail="该采购申请已生成采购订单，不能重复生成")
+
+        request_items = request.items.all() if hasattr(request.items, "all") else list(request.items)
+        if not request_items:
+            raise HTTPException(status_code=400, detail="采购申请没有明细")
 
         # 创建采购订单
         order = PurchaseOrder(
@@ -243,7 +273,8 @@ class PurchaseService:
         self.db.flush()
 
         # 复制申请项到订单项
-        for index, request_item in enumerate(request.items, start=1):
+        for index, request_item in enumerate(request_items, start=1):
+            quantity = self._decimal_or_zero(request_item.quantity)
             order_item = PurchaseOrderItem(
                 order_id=order.id,
                 item_no=index,
@@ -253,12 +284,20 @@ class PurchaseService:
                 material_name=request_item.material_name,
                 specification=getattr(request_item, "specification", None),
                 unit=getattr(request_item, "unit", None) or "件",
-                quantity=request_item.quantity,
+                quantity=quantity,
                 unit_price=request_item.unit_price,
                 amount=getattr(request_item, "amount", None) or 0,
                 required_date=getattr(request_item, "required_date", None),
             )
             self.db.add(order_item)
+            request_item.ordered_qty = self._decimal_or_zero(
+                getattr(request_item, "ordered_qty", 0)
+            ) + quantity
 
         request.status = "ORDER_GENERATED"
+        request.auto_po_created = all(
+            (item.ordered_qty or 0) >= (item.quantity or 0) for item in request_items
+        )
+        if request.auto_po_created:
+            request.auto_po_created_at = datetime.now()
         return True

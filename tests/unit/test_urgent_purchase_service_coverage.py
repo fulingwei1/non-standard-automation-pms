@@ -279,6 +279,60 @@ class TestCreateUrgentPurchaseRequestFromAlert:
 
         assert mock_db.add.called
 
+    def test_created_urgent_purchase_is_submitted_for_approval(self, mock_db):
+        """紧急采购不能停在草稿，应自动提交进入审批池"""
+        import json
+
+        from app.services.urgent_purchase_from_shortage_service import (
+            create_urgent_purchase_request_from_alert,
+        )
+
+        alert = make_alert(
+            target_id=1,
+            alert_data=json.dumps({"shortage_qty": "8", "required_date": "2024-02-01"}),
+        )
+
+        mock_material = MagicMock()
+        mock_material.unit = "个"
+
+        preferred_supplier = MagicMock()
+        preferred_supplier.supplier_id = 5
+        preferred_supplier.price = Decimal("12.50")
+
+        created_requests = []
+
+        def capture_purchase_request(**kwargs):
+            request = MagicMock(**kwargs)
+            request.id = 99
+            created_requests.append(request)
+            return request
+
+        mock_db.query.return_value.filter.return_value.first.side_effect = [
+            mock_material,
+            preferred_supplier,
+            preferred_supplier,
+        ]
+
+        with (
+            patch(
+                "app.services.urgent_purchase_from_shortage_service.PurchaseRequest",
+                side_effect=capture_purchase_request,
+            ),
+            patch("app.services.urgent_purchase_from_shortage_service.PurchaseRequestItem"),
+        ):
+            result = create_urgent_purchase_request_from_alert(
+                mock_db,
+                alert,
+                current_user_id=7,
+                generate_request_no_func=MagicMock(return_value="PR-2024-001"),
+            )
+
+        assert result is created_requests[0]
+        assert result.status == "SUBMITTED"
+        assert result.submitted_at is not None
+        assert result.requested_by == 7
+        assert result.requested_at is not None
+
 
 # ─── auto_trigger_urgent_purchase_for_alerts ─────────────────────────────────
 

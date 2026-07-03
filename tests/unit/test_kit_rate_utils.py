@@ -97,15 +97,13 @@ class TestCalculateKitRate:
             mock_item.unit_price = Decimal("1.00")
             items.append(mock_item)
 
-            with patch.object(db_session, "query") as mock_query:
-                mock_query.return_value.filter.return_value.filter.return_value.all.return_value = (
-                    []
-                )
+        with patch.object(db_session, "query") as mock_query:
+            mock_query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
-                result = calculate_kit_rate(db_session, items)
+            result = calculate_kit_rate(db_session, items)
 
-                # 80% 齐套应该是 partial 状态
-                assert result["kit_status"] == "partial"
+            # 80% 齐套应该是 partial 状态
+            assert result["kit_status"] == "partial"
 
     def test_calculate_by_amount(self, db_session):
         """按金额计算齐套率。"""
@@ -129,7 +127,7 @@ class TestCalculateKitRate:
             assert result["fulfilled_amount"] == 1000.0
 
     def test_in_transit_items(self, db_session):
-        """测试在途物料的计算。"""
+        """在途物料只能标记预计补齐，不能算当前齐套。"""
         mock_material = MagicMock()
         mock_material.current_stock = 0  # 库存为0
 
@@ -145,13 +143,13 @@ class TestCalculateKitRate:
         mock_po_item.quantity = 60
         mock_po_item.received_qty = 10  # 在途 50
 
-        with patch.object(db_session, "query") as mock_query:
-            mock_query.return_value.filter.return_value.filter.return_value.all.return_value = [
-                mock_po_item
-            ]
-
+        with patch(
+            "app.api.v1.endpoints.kit_rate.utils.get_purchase_in_transit_qty",
+            return_value=Decimal("50"),
+        ):
             result = calculate_kit_rate(db_session, [mock_item])
 
-            # 在途数量 50 >= 需求 50，应该齐套
-            assert result["fulfilled_items"] == 1
-            assert result["kit_rate"] == 100.0
+            assert result["fulfilled_items"] == 0
+            assert result["shortage_items"] == 1
+            assert result["in_transit_items"] == 1
+            assert result["kit_rate"] == 0.0

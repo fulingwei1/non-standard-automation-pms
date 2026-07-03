@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 
 from app.models.material import Material, MaterialSupplier
 from app.models.purchase import PurchaseRequest, PurchaseRequestItem
+from app.models.shortage import ShortageReport
 
 logger = logging.getLogger(__name__)
 
@@ -198,7 +199,10 @@ def create_urgent_purchase_request_from_alert(
                 f"影响描述：{impact_description or '无'}"
             ),
             required_date=required_date,
-            status="DRAFT",  # 草稿状态，需要人工审核
+            status="SUBMITTED",  # 紧急缺料直接进入审批池，避免停在草稿无人处理
+            submitted_at=datetime.now(),
+            requested_by=current_user_id,
+            requested_at=datetime.now(),
             created_by=current_user_id,
         )
         db.add(request)
@@ -228,7 +232,7 @@ def create_urgent_purchase_request_from_alert(
         alert.status = "PROCESSING"
         alert.handle_start_at = datetime.now()
         alert_data["handle_method"] = "urgent_purchase"
-        alert_data["handle_plan"] = f"已自动创建紧急采购申请：{request_no}，等待审核"
+        alert_data["handle_plan"] = f"已自动创建紧急采购申请：{request_no}，并提交审批"
         alert_data["related_po_no"] = request_no
         alert.alert_data = json.dumps(alert_data, ensure_ascii=False)
 
@@ -245,6 +249,96 @@ def create_urgent_purchase_request_from_alert(
 
     except Exception as e:
         logger.error(f"为缺料预警 {alert.alert_no} 创建紧急采购申请失败：{str(e)}", exc_info=True)
+        db.rollback()
+        return None
+
+
+def create_urgent_purchase_request_from_report(
+    db: Session,
+    report: ShortageReport,
+    current_user_id: int,
+    generate_request_no_func,
+) -> Optional[PurchaseRequest]:
+    """根据现场缺料上报创建并提交紧急采购申请。"""
+    try:
+        existing = (
+            db.query(PurchaseRequest)
+            .filter(
+                PurchaseRequest.source_type == "SHORTAGE",
+                PurchaseRequest.source_id == report.id,
+            )
+            .first()
+        )
+        if existing:
+            if existing.status == "DRAFT" and existing.items.count() > 0:
+                existing.status = "SUBMITTED"
+                existing.submitted_at = datetime.now()
+                existing.requested_by = existing.requested_by or current_user_id
+                existing.requested_at = existing.requested_at or datetime.now()
+                db.commit()
+                db.refresh(existing)
+            return existing
+
+        material = db.query(Material).filter(Material.id == report.material_id).first()
+        if not material:
+            logger.warning(f"缺料上报 {report.report_no} 的物料不存在，无法创建采购申请")
+            return None
+
+        supplier_id = get_material_supplier(db, report.material_id, report.project_id)
+        if not supplier_id:
+            logger.warning(f"缺料上报 {report.report_no} 的物料未配置供应商，无法创建采购申请")
+            return None
+
+        unit_price = get_material_price(db, report.material_id, supplier_id)
+        request_no = generate_request_no_func(db)
+        shortage_qty = Decimal(str(report.shortage_qty or 0))
+        amount = shortage_qty * unit_price
+
+        request = PurchaseRequest(
+            request_no=request_no,
+            project_id=report.project_id,
+            machine_id=report.machine_id,
+            supplier_id=supplier_id,
+            request_type="URGENT",
+            source_type="SHORTAGE",
+            source_id=report.id,
+            request_reason=(
+                f"现场缺料上报触发紧急采购\n"
+                f"上报单号：{report.report_no}\n"
+                f"物料：{report.material_name} ({report.material_code})\n"
+                f"缺料数量：{shortage_qty}\n"
+                f"紧急程度：{report.urgent_level}"
+            ),
+            total_amount=amount,
+            status="SUBMITTED",
+            submitted_at=datetime.now(),
+            requested_by=current_user_id,
+            requested_at=datetime.now(),
+            created_by=current_user_id,
+        )
+        db.add(request)
+        db.flush()
+
+        item = PurchaseRequestItem(
+            request_id=request.id,
+            material_id=report.material_id,
+            material_code=report.material_code,
+            material_name=report.material_name,
+            specification=material.specification,
+            unit=material.unit or "件",
+            quantity=shortage_qty,
+            unit_price=unit_price,
+            amount=amount,
+            remark=f"由缺料上报 {report.report_no} 自动生成",
+        )
+        db.add(item)
+
+        db.commit()
+        db.refresh(request)
+        logger.info(f"成功为缺料上报 {report.report_no} 创建紧急采购申请 {request_no}")
+        return request
+    except Exception as exc:
+        logger.error(f"为缺料上报 {report.report_no} 创建紧急采购申请失败：{exc}", exc_info=True)
         db.rollback()
         return None
 

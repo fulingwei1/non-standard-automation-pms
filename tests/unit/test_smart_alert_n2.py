@@ -11,6 +11,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.models.inventory_tracking import MaterialStock
+from app.models.kitting_optimization import MaterialAlternative
+from app.models.material import Material
 from app.services.shortage.smart_alert_engine import SmartAlertEngine
 
 
@@ -32,14 +35,44 @@ def make_alert(
     a = MagicMock()
     a.id = alert_id
     a.alert_no = "ALT-001"
-    a.shortage_qty = shortage_qty or Decimal("50")
-    a.available_qty = available_qty or Decimal("20")
+    a.shortage_qty = shortage_qty if shortage_qty is not None else Decimal("50")
+    a.available_qty = available_qty if available_qty is not None else Decimal("20")
     a.required_date = required_date or date.today() + timedelta(days=10)
     a.estimated_delay_days = estimated_delay_days
-    a.estimated_cost_impact = estimated_cost_impact or Decimal("10000")
+    a.estimated_cost_impact = (
+        estimated_cost_impact if estimated_cost_impact is not None else Decimal("10000")
+    )
     a.alert_level = alert_level
     a.risks = []
     return a
+
+
+class _FakeQuery:
+    def __init__(self, rows=None, scalar_value=None, get_map=None):
+        self.rows = rows or []
+        self.scalar_value = scalar_value
+        self.get_map = get_map or {}
+
+    def filter(self, *args, **kwargs):
+        return self
+
+    def order_by(self, *args, **kwargs):
+        return self
+
+    def limit(self, *args, **kwargs):
+        return self
+
+    def all(self):
+        return self.rows
+
+    def first(self):
+        return self.rows[0] if self.rows else None
+
+    def scalar(self):
+        return self.scalar_value
+
+    def get(self, obj_id):
+        return self.get_map.get(obj_id)
 
 
 # ======================= _calculate_risk_score =======================
@@ -219,13 +252,13 @@ class TestScoreCost:
         assert result == Decimal("40")
 
     def test_zero_cost_impact_returns_40(self, engine):
-        """cost_impact=0 时 ratio=1，返回 40"""
+        """cost_impact=0 时 ratio=1，按当前分档返回 60"""
         sol = MagicMock()
         sol.estimated_cost = Decimal("5000")
         alert = MagicMock()
         alert.estimated_cost_impact = Decimal("0")
         result = engine._score_cost(sol, alert)
-        assert result == Decimal("40")
+        assert result == Decimal("60")
 
 
 # ======================= _score_time =======================
@@ -369,6 +402,101 @@ class TestGenerateSolutions:
 
         result = engine.generate_solutions(alert)
         assert result == []
+
+
+class TestGenerateSubstituteAndTransferPlans:
+    def test_registered_alternative_generates_substitute_plan(self, engine):
+        """已登记替代料应生成 SUBSTITUTE 方案，不能空返回"""
+        alert = make_alert(shortage_qty=Decimal("12"))
+        alert.material_id = 1
+        alert.project_id = 100
+
+        original = Material(
+            id=1,
+            material_code="MAT-OLD",
+            material_name="原物料",
+            standard_price=Decimal("10"),
+            lead_time_days=5,
+        )
+        alternative = Material(
+            id=2,
+            material_code="MAT-ALT",
+            material_name="替代料",
+            standard_price=Decimal("8"),
+            lead_time_days=2,
+            is_active=True,
+        )
+        alt_rel = MaterialAlternative(
+            id=10,
+            original_material_id=1,
+            alternative_material_id=2,
+            match_score=Decimal("92"),
+            match_reason="已验证替代",
+            is_verified=True,
+            is_active=True,
+        )
+
+        def query(model):
+            if model is Material:
+                return _FakeQuery(get_map={1: original, 2: alternative})
+            if model is MaterialAlternative:
+                return _FakeQuery(rows=[alt_rel])
+            if model is MaterialStock:
+                return _FakeQuery(scalar_value=Decimal("20"))
+            return _FakeQuery()
+
+        engine.db.query.side_effect = query
+        engine._generate_plan_no = MagicMock(return_value="SP-SUB-001")
+        engine._get_available_qty = MagicMock(return_value=Decimal("20"))
+
+        plans = engine._generate_substitute_plans(alert)
+
+        assert len(plans) == 1
+        assert plans[0].solution_type == "SUBSTITUTE"
+        assert plans[0].target_material_id == 2
+        assert plans[0].proposed_qty == Decimal("12")
+        assert "MAT-ALT" in plans[0].solution_description
+
+    def test_other_location_stock_generates_transfer_plan(self, engine):
+        """其他库位有可用库存时应生成 TRANSFER 方案，不能空返回"""
+        alert = make_alert(shortage_qty=Decimal("5"))
+        alert.material_id = 1
+        alert.project_id = 100
+        alert.material_code = "MAT-001"
+        alert.material_name = "缺料物料"
+
+        material = Material(
+            id=1,
+            material_code="MAT-001",
+            material_name="缺料物料",
+            standard_price=Decimal("10"),
+        )
+        stock = MaterialStock(
+            tenant_id=1,
+            material_id=1,
+            material_code="MAT-001",
+            material_name="缺料物料",
+            location="华南仓-A",
+            available_quantity=Decimal("9"),
+            quantity=Decimal("10"),
+        )
+
+        def query(model):
+            if model is Material:
+                return _FakeQuery(get_map={1: material})
+            if model is MaterialStock:
+                return _FakeQuery(rows=[stock])
+            return _FakeQuery()
+
+        engine.db.query.side_effect = query
+        engine._generate_plan_no = MagicMock(return_value="SP-TRF-001")
+
+        plans = engine._generate_transfer_plans(alert)
+
+        assert len(plans) == 1
+        assert plans[0].solution_type == "TRANSFER"
+        assert plans[0].proposed_qty == Decimal("5")
+        assert plans[0].extra_metadata["from_location"] == "华南仓-A"
 
 
 # ======================= _generate_alert_no =======================

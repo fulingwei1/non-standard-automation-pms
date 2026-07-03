@@ -227,8 +227,6 @@ class AssemblyKitService:
 
             # 计算可用数量
             required_qty = float(item.quantity or 0)
-            received_qty = float(item.received_qty or 0)
-
             # 库存数量
             stock_qty = 0
             if item.material:
@@ -237,7 +235,7 @@ class AssemblyKitService:
             # 在途数量
             transit_qty = float(get_purchase_in_transit_qty(self.db, item.material_id))
 
-            available_qty = received_qty + stock_qty + transit_qty
+            available_qty = stock_qty
 
             # 判断是否齐套
             is_fulfilled = available_qty >= required_qty
@@ -252,7 +250,7 @@ class AssemblyKitService:
                 if is_blocking:
                     stage_data["blocking_shortage"] += 1
 
-            if transit_qty > 0:
+            if transit_qty > 0 and not is_fulfilled:
                 stage_data["in_transit_items"] += 1
 
             if is_blocking:
@@ -515,10 +513,9 @@ class AssemblyKitService:
             stage = attrs.assembly_stage if attrs else "UNKNOWN"
 
             required_qty = float(item.quantity or 0)
-            received_qty = float(item.received_qty or 0)
             stock_qty = float(item.material.current_stock or 0) if item.material else 0
 
-            available_qty = received_qty + stock_qty
+            available_qty = stock_qty
             shortage_qty = max(0, required_qty - available_qty)
 
             # 如果有短缺，计算预计到货时间

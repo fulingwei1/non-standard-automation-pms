@@ -10,6 +10,7 @@ Batch: 2
 
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -76,6 +77,43 @@ class TestProjectWorkspaceService:
         from app.services.project_workspace_service import build_document_info
 
         pass
+
+    def test_project_kitting_does_not_double_count_received_qty_and_stock(self):
+        from app.services.project_workspace_service import _calculate_project_kitting
+
+        db = MagicMock()
+        bom_item = SimpleNamespace(
+            id=1,
+            material_id=1,
+            material_code="MAT-001",
+            material_name="物料1",
+            specification="SPEC",
+            quantity=Decimal("10"),
+            received_qty=Decimal("6"),
+            purchased_qty=Decimal("10"),
+            is_key_item=True,
+        )
+
+        call_count = [0]
+
+        def query_side_effect(*columns):
+            query = MagicMock()
+            if call_count[0] == 0:
+                query.join.return_value.filter.return_value.all.return_value = [bom_item]
+            else:
+                query.filter.return_value.all.return_value = [(1, Decimal("6"))]
+            call_count[0] += 1
+            return query
+
+        db.query.side_effect = query_side_effect
+
+        result = _calculate_project_kitting(db, project_id=1)
+
+        assert result["kitting_rate"] == 0.0
+        assert result["kitted_items"] == 0
+        assert result["shortage_items"] == 1
+        assert result["shortage_details"][0]["available_qty"] == 6.0
+        assert result["shortage_details"][0]["shortage_qty"] == 4.0
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

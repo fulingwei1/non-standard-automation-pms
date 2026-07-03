@@ -8,7 +8,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import inspect
+from sqlalchemy import func, inspect
 from sqlalchemy.orm import Session
 
 from app.models.assembly_kit import KitRateSnapshot
@@ -61,6 +61,37 @@ class KitRateService:
     def _get_in_transit_qty(self, material_id: Optional[int]) -> Decimal:
         return get_purchase_in_transit_qty(self.db, material_id)
 
+    @staticmethod
+    def _to_decimal(value: Any) -> Decimal:
+        try:
+            return Decimal(value or 0)
+        except Exception:
+            try:
+                return Decimal(str(value))
+            except Exception:
+                return Decimal(0)
+
+    def _get_current_available_qty(self, material: Any, material_id: Optional[int]) -> Decimal:
+        """Return current usable stock, preferring reservation-aware MaterialStock rows."""
+        if material_id:
+            try:
+                from app.models.inventory_tracking import MaterialStock
+
+                stock_count, available_qty = (
+                    self.db.query(
+                        func.count(MaterialStock.id),
+                        func.coalesce(func.sum(MaterialStock.available_quantity), 0),
+                    )
+                    .filter(MaterialStock.material_id == material_id)
+                    .one()
+                )
+                if isinstance(stock_count, (int, float, Decimal)) and Decimal(stock_count) > 0:
+                    return self._to_decimal(available_qty)
+            except Exception:
+                pass
+
+        return self._to_decimal(getattr(material, "current_stock", 0) if material else 0)
+
     def calculate_kit_rate(
         self,
         bom_items: List[BomItem],
@@ -91,10 +122,8 @@ class KitRateService:
         for item in bom_items:
             material = item.material
             # KR-500: BOM 项可能未关联物料(material_id 为空)，防御 NoneType
-            stock = (material.current_stock or 0) if material else 0
-            available_qty = stock + (item.received_qty or 0)
+            available_qty = self._get_current_available_qty(material, item.material_id)
             in_transit_qty = self._get_in_transit_qty(item.material_id)
-            total_available = available_qty + in_transit_qty
 
             required_qty = item.quantity or 0
             item_amount = required_qty * (item.unit_price or 0)
@@ -102,23 +131,23 @@ class KitRateService:
 
             if calculate_by == "quantity":
                 total_quantity += required_qty
-                if total_available >= required_qty:
+                if available_qty >= required_qty:
                     fulfilled_items += 1
                     fulfilled_quantity += required_qty
-                elif total_available > 0:
-                    in_transit_items += 1
                 else:
                     shortage_items += 1
+                    if in_transit_qty > 0:
+                        in_transit_items += 1
             else:
                 total_quantity += required_qty
-                if total_available >= required_qty:
+                if available_qty >= required_qty:
                     fulfilled_items += 1
                     fulfilled_quantity += required_qty
                     fulfilled_amount += item_amount
-                elif total_available > 0:
-                    in_transit_items += 1
                 else:
                     shortage_items += 1
+                    if in_transit_qty > 0:
+                        in_transit_items += 1
 
         if calculate_by == "quantity":
             kit_rate = (
@@ -208,14 +237,14 @@ class KitRateService:
             required_qty = item.quantity or 0
             current_stock = material.current_stock or 0 if material else 0
             received_qty = item.received_qty or 0
-            available_qty = current_stock + received_qty
+            available_qty = self._get_current_available_qty(material, item.material_id)
             in_transit_qty = self._get_in_transit_qty(item.material_id)
-            total_available = available_qty + in_transit_qty
-            shortage_qty = max(0, required_qty - total_available)
+            total_available = available_qty
+            shortage_qty = max(0, required_qty - available_qty)
 
-            if total_available >= required_qty:
+            if available_qty >= required_qty:
                 status = "fulfilled"
-            elif total_available > 0:
+            elif available_qty > 0:
                 status = "partial"
             else:
                 status = "shortage"
@@ -272,7 +301,9 @@ class KitRateService:
                         "specification": item.specification,
                         "unit": item.unit,
                         "total_required_qty": Decimal(0),
-                        "current_stock": float(material.current_stock or 0) if material else 0,
+                        "current_stock": float(
+                            self._get_current_available_qty(material, item.material_id)
+                        ),
                         "total_received_qty": Decimal(0),
                         "total_in_transit_qty": Decimal(0),
                         "is_key_material": item.is_key_item,
@@ -298,11 +329,7 @@ class KitRateService:
         total_shortage = Decimal(0)
 
         for _, summary in material_summary.items():
-            total_available_qty = (
-                summary["current_stock"]
-                + float(summary["total_received_qty"])
-                + float(summary["total_in_transit_qty"])
-            )
+            total_available_qty = summary["current_stock"]
             shortage_qty = max(0, float(summary["total_required_qty"]) - total_available_qty)
 
             total_required += summary["total_required_qty"]
