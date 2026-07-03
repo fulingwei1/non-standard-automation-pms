@@ -3,14 +3,19 @@
 销售团队管理服务
 """
 
-from typing import Any, Dict, List, Optional
+from calendar import monthrange
+from datetime import date, datetime, time
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import HTTPException
-from sqlalchemy import and_
+from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session
 
+from app.models.sales import Contract, Customer, Invoice, Lead, LeadFollowUp, Opportunity
 from app.models.sales.region import SalesRegion
 from app.models.sales.team import SalesTeam, SalesTeamMember
+from app.models.sales.workflow import SalesTarget
 from app.schemas.sales_team import (
     SalesRegionCreate,
     SalesRegionUpdate,
@@ -24,6 +29,9 @@ from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 class SalesTeamService:
     """销售团队服务类"""
+
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
 
     @staticmethod
     def create_team(db: Session, team_data: SalesTeamCreate, created_by: int) -> SalesTeam:
@@ -200,41 +208,380 @@ class SalesTeamService:
         return member
 
     @staticmethod
-    def build_personal_target_map(user_ids, month_value=None, year_value=None):
+    def parse_period_value(period_value: str, period_type: str) -> Tuple[Optional[date], Optional[date]]:
+        """解析 legacy sales_targets 的周期值。"""
+        try:
+            normalized_type = (period_type or "").upper()
+            if normalized_type == "MONTHLY":
+                year, month = [int(part) for part in period_value.split("-", 1)]
+                return date(year, month, 1), date(year, month, monthrange(year, month)[1])
+            if normalized_type == "QUARTERLY":
+                year_text, quarter_text = period_value.split("-Q", 1)
+                year = int(year_text)
+                quarter = int(quarter_text)
+                if quarter not in {1, 2, 3, 4}:
+                    return None, None
+                start_month = (quarter - 1) * 3 + 1
+                end_month = start_month + 2
+                return (
+                    date(year, start_month, 1),
+                    date(year, end_month, monthrange(year, end_month)[1]),
+                )
+            if normalized_type == "YEARLY":
+                year = int(period_value)
+                return date(year, 1, 1), date(year, 12, 31)
+        except (TypeError, ValueError):
+            return None, None
+        return None, None
+
+    @staticmethod
+    def _date_bounds(start_value=None, end_value=None):
+        start_dt = None
+        end_dt = None
+        if isinstance(start_value, datetime):
+            start_dt = start_value
+        elif isinstance(start_value, date):
+            start_dt = datetime.combine(start_value, time.min)
+
+        if isinstance(end_value, datetime):
+            end_dt = end_value
+        elif isinstance(end_value, date):
+            end_dt = datetime.combine(end_value, time.max)
+
+        return start_dt, end_dt
+
+    @staticmethod
+    def _empty_customer_distribution():
+        return {
+            "total": 0,
+            "new": 0,
+            "new_customers": 0,
+            "active": 0,
+            "categories": [],
+        }
+
+    @staticmethod
+    def _empty_lead_quality_stats():
+        return {
+            "total": 0,
+            "total_leads": 0,
+            "converted": 0,
+            "conversion_rate": 0.0,
+            "modeling_rate": 0.0,
+            "avg_completeness": 0.0,
+        }
+
+    @staticmethod
+    def _empty_opportunity_stats():
+        return {
+            "total": 0,
+            "opportunity_count": 0,
+            "won": 0,
+            "amount": 0.0,
+            "pipeline_amount": 0.0,
+            "avg_est_margin": 0.0,
+        }
+
+    def build_personal_target_map(self, user_ids, month_value=None, year_value=None):
         """构建个人目标映射"""
-        return {uid: {} for uid in user_ids}
+        if not user_ids or (not month_value and not year_value):
+            return {}
 
-    @staticmethod
-    def get_recent_followups_map(user_ids, start_datetime=None, end_datetime=None):
+        result = {uid: {} for uid in user_ids}
+        if self.db is None:
+            return result
+
+        period_values = [value for value in [month_value, year_value] if value]
+        targets = (
+            self.db.query(SalesTarget)
+            .filter(SalesTarget.target_scope == "PERSONAL")
+            .filter(SalesTarget.user_id.in_(user_ids))
+            .filter(SalesTarget.status == "ACTIVE")
+            .filter(SalesTarget.period_value.in_(period_values))
+            .all()
+        )
+
+        period_key_map = {
+            "MONTHLY": "monthly",
+            "QUARTERLY": "quarterly",
+            "YEARLY": "yearly",
+        }
+        for target in targets:
+            period_key = period_key_map.get((target.target_period or "").upper())
+            if not period_key:
+                continue
+            actual_value, completion_rate = self.calculate_target_performance(target)
+            result.setdefault(target.user_id, {})[period_key] = {
+                "target_id": target.id,
+                "target_type": target.target_type,
+                "target_period": target.target_period,
+                "period_value": target.period_value,
+                "target_value": float(target.target_value or 0),
+                "actual_value": float(actual_value or 0),
+                "completion_rate": round(float(completion_rate or 0), 2),
+            }
+
+        return result
+
+    def get_recent_followups_map(self, user_ids, start_datetime=None, end_datetime=None):
         """获取最近跟进记录映射"""
-        return {uid: [] for uid in user_ids}
+        result = {uid: [] for uid in user_ids}
+        if not user_ids or self.db is None:
+            return result
 
-    @staticmethod
-    def get_customer_distribution_map(user_ids, start_datetime=None, end_datetime=None):
+        query = (
+            self.db.query(LeadFollowUp)
+            .join(Lead, LeadFollowUp.lead_id == Lead.id)
+            .filter(LeadFollowUp.created_by.in_(user_ids))
+        )
+        if start_datetime:
+            query = query.filter(LeadFollowUp.created_at >= start_datetime)
+        if end_datetime:
+            query = query.filter(LeadFollowUp.created_at <= end_datetime)
+
+        followups = query.order_by(LeadFollowUp.created_at.desc()).all()
+        for followup in followups:
+            if len(result.setdefault(followup.created_by, [])) >= 5:
+                continue
+            lead = followup.lead
+            result[followup.created_by].append(
+                {
+                    "id": followup.id,
+                    "lead_id": followup.lead_id,
+                    "lead_code": getattr(lead, "lead_code", None),
+                    "customer_name": getattr(lead, "customer_name", None),
+                    "follow_up_type": followup.follow_up_type,
+                    "content": followup.content,
+                    "next_action": followup.next_action,
+                    "next_action_at": followup.next_action_at,
+                    "created_at": followup.created_at,
+                }
+            )
+        return result
+
+    def get_customer_distribution_map(self, user_ids, start_datetime=None, end_datetime=None):
         """获取客户分布映射"""
-        return {uid: {"total": 0, "new": 0, "active": 0} for uid in user_ids}
+        result = {uid: self._empty_customer_distribution() for uid in user_ids}
+        if not user_ids or self.db is None:
+            return result
 
-    @staticmethod
-    def get_followup_statistics_map(user_ids, start_datetime=None, end_datetime=None):
+        start_dt, end_dt = self._date_bounds(start_datetime, end_datetime)
+
+        total_rows = (
+            self.db.query(
+                Customer.sales_owner_id.label("owner_id"),
+                func.count(Customer.id).label("total"),
+                func.sum(case((Customer.status == "ACTIVE", 1), else_=0)).label("active"),
+            )
+            .filter(Customer.sales_owner_id.in_(user_ids))
+            .group_by(Customer.sales_owner_id)
+            .all()
+        )
+        for row in total_rows:
+            result[row.owner_id]["total"] = int(row.total or 0)
+            result[row.owner_id]["active"] = int(row.active or 0)
+
+        new_query = self.db.query(
+            Customer.sales_owner_id.label("owner_id"),
+            func.count(Customer.id).label("new_customers"),
+        ).filter(Customer.sales_owner_id.in_(user_ids))
+        if start_dt:
+            new_query = new_query.filter(Customer.created_at >= start_dt)
+        if end_dt:
+            new_query = new_query.filter(Customer.created_at <= end_dt)
+        for row in new_query.group_by(Customer.sales_owner_id).all():
+            result[row.owner_id]["new"] = int(row.new_customers or 0)
+            result[row.owner_id]["new_customers"] = int(row.new_customers or 0)
+
+        category_rows = (
+            self.db.query(
+                Customer.sales_owner_id.label("owner_id"),
+                func.coalesce(Customer.customer_level, Customer.status, "UNKNOWN").label("category"),
+                func.count(Customer.id).label("count"),
+            )
+            .filter(Customer.sales_owner_id.in_(user_ids))
+            .group_by(Customer.sales_owner_id, "category")
+            .all()
+        )
+        for row in category_rows:
+            result[row.owner_id]["categories"].append(
+                {"name": row.category or "UNKNOWN", "value": int(row.count or 0)}
+            )
+
+        return result
+
+    def get_followup_statistics_map(self, user_ids, start_datetime=None, end_datetime=None):
         """获取跟进统计映射"""
-        return {uid: {"total": 0, "completed": 0} for uid in user_ids}
+        result = {uid: {"total": 0, "completed": 0} for uid in user_ids}
+        if not user_ids or self.db is None:
+            return result
 
-    @staticmethod
-    def get_lead_quality_stats_map(user_ids, start_datetime=None, end_datetime=None):
+        query = (
+            self.db.query(
+                LeadFollowUp.created_by.label("owner_id"),
+                LeadFollowUp.follow_up_type.label("follow_up_type"),
+                func.count(LeadFollowUp.id).label("count"),
+            )
+            .filter(LeadFollowUp.created_by.in_(user_ids))
+        )
+        if start_datetime:
+            query = query.filter(LeadFollowUp.created_at >= start_datetime)
+        if end_datetime:
+            query = query.filter(LeadFollowUp.created_at <= end_datetime)
+
+        for row in query.group_by(LeadFollowUp.created_by, LeadFollowUp.follow_up_type).all():
+            owner_stats = result.setdefault(row.owner_id, {"total": 0, "completed": 0})
+            count = int(row.count or 0)
+            owner_stats["total"] += count
+            owner_stats["completed"] += count
+            if row.follow_up_type:
+                owner_stats[row.follow_up_type] = owner_stats.get(row.follow_up_type, 0) + count
+
+        return result
+
+    def get_lead_quality_stats_map(self, user_ids, start_datetime=None, end_datetime=None):
         """获取线索质量统计映射"""
-        return {uid: {"total": 0, "converted": 0, "conversion_rate": 0} for uid in user_ids}
+        result = {uid: self._empty_lead_quality_stats() for uid in user_ids}
+        if not user_ids or self.db is None:
+            return result
 
-    @staticmethod
-    def get_opportunity_stats_map(user_ids, start_datetime=None, end_datetime=None):
+        query = (
+            self.db.query(
+                Lead.owner_id.label("owner_id"),
+                func.count(Lead.id).label("total"),
+                func.sum(case((Lead.status == "CONVERTED", 1), else_=0)).label("converted"),
+                func.sum(
+                    case(
+                        (
+                            or_(
+                                Lead.requirement_detail_id.isnot(None),
+                                Lead.assessment_id.isnot(None),
+                                Lead.completeness > 0,
+                            ),
+                            1,
+                        ),
+                        else_=0,
+                    )
+                ).label("modeled"),
+                func.avg(func.coalesce(Lead.completeness, 0)).label("avg_completeness"),
+            )
+            .filter(Lead.owner_id.in_(user_ids))
+        )
+        if start_datetime:
+            query = query.filter(Lead.created_at >= start_datetime)
+        if end_datetime:
+            query = query.filter(Lead.created_at <= end_datetime)
+
+        for row in query.group_by(Lead.owner_id).all():
+            total = int(row.total or 0)
+            converted = int(row.converted or 0)
+            modeled = int(row.modeled or 0)
+            result[row.owner_id] = {
+                "total": total,
+                "total_leads": total,
+                "converted": converted,
+                "conversion_rate": round(converted / total * 100, 2) if total else 0.0,
+                "modeling_rate": round(modeled / total * 100, 2) if total else 0.0,
+                "avg_completeness": round(float(row.avg_completeness or 0), 2),
+            }
+
+        return result
+
+    def get_opportunity_stats_map(self, user_ids, start_datetime=None, end_datetime=None):
         """获取商机统计映射"""
-        return {uid: {"total": 0, "won": 0, "amount": 0} for uid in user_ids}
+        result = {uid: self._empty_opportunity_stats() for uid in user_ids}
+        if not user_ids or self.db is None:
+            return result
 
-    @staticmethod
-    def calculate_target_performance(target):
+        query = (
+            self.db.query(
+                Opportunity.owner_id.label("owner_id"),
+                func.count(Opportunity.id).label("total"),
+                func.sum(case((Opportunity.stage == "WON", 1), else_=0)).label("won"),
+                func.sum(func.coalesce(Opportunity.est_amount, 0)).label("pipeline_amount"),
+                func.avg(func.coalesce(Opportunity.est_margin, 0)).label("avg_est_margin"),
+            )
+            .filter(Opportunity.owner_id.in_(user_ids))
+        )
+        if start_datetime:
+            query = query.filter(Opportunity.created_at >= start_datetime)
+        if end_datetime:
+            query = query.filter(Opportunity.created_at <= end_datetime)
+
+        for row in query.group_by(Opportunity.owner_id).all():
+            total = int(row.total or 0)
+            pipeline_amount = float(row.pipeline_amount or 0)
+            result[row.owner_id] = {
+                "total": total,
+                "opportunity_count": total,
+                "won": int(row.won or 0),
+                "amount": pipeline_amount,
+                "pipeline_amount": pipeline_amount,
+                "avg_est_margin": round(float(row.avg_est_margin or 0), 4),
+            }
+
+        return result
+
+    def calculate_target_performance(self, target):
         """计算目标绩效"""
-        actual_value = getattr(target, "actual_value", 0) or 0
-        target_value = getattr(target, "target_value", 0) or 1
-        return actual_value, (actual_value / target_value * 100)
+        actual_value = Decimal("0")
+        target_value = Decimal(str(getattr(target, "target_value", 0) or 0))
+
+        if self.db is not None:
+            start_date, end_date = self.parse_period_value(
+                getattr(target, "period_value", None), getattr(target, "target_period", None)
+            )
+            if start_date and end_date:
+                start_dt = datetime.combine(start_date, time.min)
+                end_dt = datetime.combine(end_date, time.max)
+                user_id = getattr(target, "user_id", None)
+                target_type = (getattr(target, "target_type", "") or "").upper()
+                if user_id and target_type == "LEAD_COUNT":
+                    actual_value = Decimal(
+                        self.db.query(func.count(Lead.id))
+                        .filter(Lead.owner_id == user_id)
+                        .filter(Lead.created_at >= start_dt)
+                        .filter(Lead.created_at <= end_dt)
+                        .scalar()
+                        or 0
+                    )
+                elif user_id and target_type == "OPPORTUNITY_COUNT":
+                    actual_value = Decimal(
+                        self.db.query(func.count(Opportunity.id))
+                        .filter(Opportunity.owner_id == user_id)
+                        .filter(Opportunity.created_at >= start_dt)
+                        .filter(Opportunity.created_at <= end_dt)
+                        .scalar()
+                        or 0
+                    )
+                elif user_id and target_type == "CONTRACT_AMOUNT":
+                    actual_value = Decimal(
+                        str(
+                            self.db.query(func.sum(func.coalesce(Contract.total_amount, 0)))
+                            .filter(Contract.sales_owner_id == user_id)
+                            .filter(Contract.created_at >= start_dt)
+                            .filter(Contract.created_at <= end_dt)
+                            .scalar()
+                            or 0
+                        )
+                    )
+                elif user_id and target_type == "COLLECTION_AMOUNT":
+                    actual_value = Decimal(
+                        str(
+                            self.db.query(func.sum(func.coalesce(Invoice.paid_amount, 0)))
+                            .join(Contract, Invoice.contract_id == Contract.id)
+                            .filter(Contract.sales_owner_id == user_id)
+                            .filter(Invoice.payment_status.in_(["PAID", "PARTIAL"]))
+                            .filter(Invoice.paid_date >= start_date)
+                            .filter(Invoice.paid_date <= end_date)
+                            .scalar()
+                            or 0
+                        )
+                    )
+
+        if target_value <= 0:
+            return actual_value, 0.0
+        return actual_value, float(actual_value / target_value * 100)
 
 
 class SalesRegionService:

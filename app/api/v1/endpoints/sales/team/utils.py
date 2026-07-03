@@ -51,7 +51,7 @@ def collect_sales_team_members(
     month_value = start_date_value.strftime("%Y-%m")
     year_value = str(start_date_value.year)
 
-    team_service = SalesTeamService()
+    team_service = SalesTeamService(db)
     personal_targets_map = team_service.build_personal_target_map(user_ids, month_value, year_value)
     recent_followups_map = team_service.get_recent_followups_map(
         user_ids, start_datetime, end_datetime
