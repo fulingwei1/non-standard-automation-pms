@@ -139,8 +139,6 @@ def create_api_router() -> APIRouter:
 
     # ==================== 采购智能管理 (暂时禁用 - 缺少MaterialShortage) ====================
     # try:
-    #     from app.api.v1.endpoints.purchase_intelligence import router as purchase_intelligence_router
-    #     api_router.include_router(purchase_intelligence_router, prefix="/purchase", tags=["purchase-intelligence"])
     #     print("✓ 采购智能管理模块加载成功")
     # except Exception as e:
     #     print(f"✗ 采购智能管理模块加载失败: {e}")

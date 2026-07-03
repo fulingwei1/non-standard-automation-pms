@@ -220,8 +220,6 @@ def create_api_router() -> APIRouter:
     
     # ==================== 采购智能管理 (暂时禁用 - 缺少MaterialShortage) ====================
     # try:
-    #     from app.api.v1.endpoints.purchase_intelligence import router as purchase_intelligence_router
-    #     api_router.include_router(purchase_intelligence_router, prefix="/purchase", tags=["purchase-intelligence"])
     #     print("✓ 采购智能管理模块加载成功")
     # except Exception as e:
     #     print(f"✗ 采购智能管理模块加载失败: {e}")
@@ -641,7 +639,7 @@ def create_api_router() -> APIRouter:
 
     # ==================== 采购分析 ====================
     try:
-        from app.api.v1.endpoints.procurement_analysis import router as procurement_analysis_router
+        from app.api.v1.endpoints.procurement.analysis import router as procurement_analysis_router
         api_router.include_router(procurement_analysis_router, prefix="/procurement-analysis", tags=["procurement-analysis"])
         print("✓ 采购分析模块加载成功")
     except Exception as e:
@@ -661,7 +659,7 @@ def create_api_router() -> APIRouter:
 
     # ==================== 供应商价格趋势 ====================
     try:
-        from app.api.v1.endpoints.supplier_price_trend import router as supplier_price_trend_router
+        from app.api.v1.endpoints.procurement.supplier_price_trend import router as supplier_price_trend_router
         api_router.include_router(supplier_price_trend_router, prefix="/supplier-price", tags=["supplier-price"])
         print("✓ 供应商价格趋势模块加载成功")
     except Exception as e:

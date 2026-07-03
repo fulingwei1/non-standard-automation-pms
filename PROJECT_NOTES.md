@@ -1,5 +1,28 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：功能审计 APPR-02 修复（统一审批新库种子）
+
+- 修复项：`APPR-02`，全新初始化数据库没有统一审批模板、默认流程、节点和路由规则，导致 F1/ECN/采购/外协/验收/立项等审批链在新部署环境全部不可用。
+- 根因：
+  - `scripts/init_db.py` 只建表、跑迁移、建默认账号，没有统一审批种子入口；旧迁移里的审批模板 code 也与当前业务代码漂移。
+  - `python scripts/init_db.py` 时 `sys.path[0]` 为 `scripts/`，直接执行脚本会先因找不到 `app` 失败。
+- 改动：
+  - `scripts/init_db.py`：补项目根目录到 `sys.path`；默认账号后调用统一审批种子初始化。
+  - `app/utils/init_approval_data.py`：统一维护 10 个审批模板、13 条 flow、30 个审批节点、3 条 routing rule，采用 upsert 幂等写法。
+  - `app/utils/init_data.py`：应用启动基础数据初始化时也调用统一审批种子，避免只修脚本不修运行态。
+  - `tests/audit_p0/test_p0_02_approval_template_no_seed.py`：从只查模板数量升级为校验关键 code、默认 flow、active 节点、flow/node/rule 数量。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`APPR-02` 标为 `已验证`；`SALES-10` 同步标为 `已验证`。
+- 验证：
+  - 红灯 1：`.venv/bin/python -m pytest tests/audit_p0/test_p0_02_approval_template_no_seed.py -q` -> failed（`ModuleNotFoundError: No module named 'app'`）。
+  - 红灯 2：修复脚本入口后同命令 -> failed（`approval_templates=0`，10 个关键 code 全缺）。
+  - 绿灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_02_approval_template_no_seed.py -q` -> 1 passed。
+  - 回归：`.venv/bin/python -m pytest tests/audit_p0/test_p0_01_approval_template_mismatch.py tests/audit_p0/test_p0_02_approval_template_no_seed.py tests/api/test_approval_submit_error_contracts.py tests/unit/test_acceptance_approval_service.py tests/api/test_purchase_workflow_contracts.py tests/unit/test_api_p7_coverage.py app/tests/services/purchase_workflow/test_purchase_workflow.py -q` -> 71 passed。
+  - 合同专项：`.venv/bin/python -m pytest tests/api/test_sales_contracts_api.py::TestSalesContractsAPI::test_contract_approval_submit -q` -> 1 passed。
+  - 幂等实测：全新库 `init_db.py` 后再次连续调用两次 `init_approval_workflow_seeds()`，数量保持 `templates=10/flows=13/nodes=30/rules=3`。
+  - 静态检查：`py_compile` passed；`ruff check app/utils/init_approval_data.py scripts/init_db.py app/utils/init_data.py tests/audit_p0/test_p0_02_approval_template_no_seed.py` -> All checks passed；`git diff --check` passed。
+- 残留：
+  - `APPR-03` 仍待修：会签/或签驳回语义，以及项目审批路由 404 后续一起收。
+
 ## 2026-07-03 继续：功能审计 APPR-01 修复（审批链模板 code 与 200 掩盖）
 
 - 修复项：`APPR-01`，采购/外协/验收/立项 4 条审批链引用的 `template_code` 与库里 `approval_templates` 错位；提交失败时部分接口仍返回 HTTP 200，前端和调用方会误判成功。同步消除 `SALES-10` 的同型 200 掩盖问题，种子缺口仍留给 `APPR-02`。
@@ -874,3 +897,15 @@
 - 同步：前端 assemblyKit.js TEMPLATE_BASE + production.js 8 处调用改单段；tests/api/test_batch5、test_path_param（kit-analysis 路径）、frontend routeContracts.test.js 更新。
 - 顺带清断链：production.js assemblyKitApi 的 listKits(/assembly/projects/readiness)、analyzeKit(/assembly/analysis) 指向从不存在的路径且无消费方，移除。
 - 验证：openapi 双段/冗余清零（assembly 28 条全部单段）；实机 5 个自然路径 200、旧双段 404；batch5+path_param 36 绿；前端 routeContracts 24 绿；build 通过。
+
+## 2026-07-03 继续：采购域去重清理
+
+- 排查（采购域路径 122 个）：
+  - **procurement 包"活两个死四个"**：包聚合 router（suppliers+price-analysis+kitting-analysis）从未挂载于活动注册表；其中 suppliers.py(531行,端点已标deprecated) 与顶层活跃的 /suppliers 重复，price_analysis/kitting_analysis/kitting_optimization 无任何消费方——四个死模块删除，__init__ 重写为纯包声明。活的 analysis(/procurement-analysis) 与 supplier_price_trend(/supplier-price) 保留并由 api.py 直连挂载。
+  - **shim 收敛**：procurement_analysis.py、supplier_price_trend.py 两个 9 行转发壳删除（api.py 改直连包内模块）。
+  - **purchase_intelligence.py 删除**：荒诞的"四层 try-import 兜底空 router"占位文件，挂载在 api.py/api_medium 均被注释——连注释一并清掉。服务层 purchase_intelligence(有单测)保留。
+  - **补删售前遗漏**：tests/unit/services/sales/test_solution_version_service.py（子目录真测试）、test_presale_ai_export_service_coverage.py 两个引用已删服务的测试（此前造成 2 个收集错误）。
+- 记录不动：
+  - **endpoints/material/ 包**（tracking/sync/procurement_optimization/project_fusion 四模块）只被备用注册表 api_lazy 挂载，活动注册表(api.py)不挂——生产环境全部不可达；MaterialTracking 前端页实际走 /materials + /purchase-orders。与 ROADMAP F1 库存台账相关，留待该项决策。
+  - 既有测试债（stash 对照确认与本次无关）：test_procurement_analysis_service 期望的 price_analyzer 等服务模块名从来不存在（实际为 cost_trend 等）；test_kitting_optimization_deep、test_best_practice_deep 同类。
+- 验证：启动 0 加载失败；/procurement-analysis/overview、/supplier-price 实机 200（直连挂载生效）；tests/api 采购面 88 通过；收集错误清零。

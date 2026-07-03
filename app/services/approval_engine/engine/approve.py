@@ -6,7 +6,7 @@
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from app.models.approval import ApprovalNodeDefinition, ApprovalTask
+from app.models.approval import ApprovalCountersignResult, ApprovalNodeDefinition, ApprovalTask
 from app.models.user import User
 
 from .core import ApprovalEngineCore
@@ -14,6 +14,51 @@ from .core import ApprovalEngineCore
 
 class ApprovalProcessMixin:
     """审批处理功能混入类"""
+
+    def _get_task_approval_mode(self: ApprovalEngineCore, task: ApprovalTask) -> str:
+        """获取任务所在节点审批模式，兼容只混入本类的单元测试。"""
+        node = getattr(task, "node", None)
+        mode = getattr(node, "approval_mode", None)
+        return mode if isinstance(mode, str) and mode else "SINGLE"
+
+    def _get_countersign_final_result(self: ApprovalEngineCore, task: ApprovalTask) -> Optional[str]:
+        """读取会签汇总结果；非会签节点返回 None。"""
+        if self._get_task_approval_mode(task) != "AND_SIGN":
+            return None
+
+        result = (
+            self.db.query(ApprovalCountersignResult)
+            .filter(
+                ApprovalCountersignResult.instance_id == task.instance_id,
+                ApprovalCountersignResult.node_id == task.node_id,
+            )
+            .first()
+        )
+        return result.final_result if result else None
+
+    def _cancel_pending_instance_tasks(
+        self: ApprovalEngineCore,
+        instance_id: int,
+        exclude_task_id: Optional[int] = None,
+    ):
+        """取消实例下仍待处理的任务，用于实例进入终态时清理旧待办。"""
+        query = self.db.query(ApprovalTask).filter(
+            ApprovalTask.instance_id == instance_id,
+            ApprovalTask.status == "PENDING",
+        )
+        if exclude_task_id is not None:
+            query = query.filter(ApprovalTask.id != exclude_task_id)
+        query.update({"status": "CANCELLED"}, synchronize_session=False)
+
+    def _complete_instance_as_rejected(
+        self: ApprovalEngineCore,
+        instance,
+        exclude_task_id: Optional[int] = None,
+    ):
+        """将实例置为驳回终态，并清理剩余待办，避免后续任务复活实例。"""
+        self._cancel_pending_instance_tasks(instance.id, exclude_task_id=exclude_task_id)
+        instance.status = "REJECTED"
+        instance.completed_at = datetime.now()
 
     def approve(
         self: ApprovalEngineCore,
@@ -50,6 +95,8 @@ class ApprovalProcessMixin:
             attachments=attachments,
             eval_data=eval_data,
         )
+        if error:
+            raise ValueError(error)
 
         # 记录日志
         self._log_action(
@@ -65,11 +112,48 @@ class ApprovalProcessMixin:
         )
 
         if can_proceed:
-            # 流转到下一节点
-            self._advance_to_next_node(instance, task)
+            if self._get_countersign_final_result(task) == "FAILED":
+                self._complete_instance_as_rejected(instance, exclude_task_id=task.id)
+                self._call_adapter_callback(instance, "on_rejected")
+                self.notify.notify_rejected(
+                    instance,
+                    rejector_name=approver.real_name or approver.username if approver else None,
+                    reject_comment="会签未通过",
+                )
+            else:
+                # 流转到下一节点
+                self._advance_to_next_node(instance, task)
 
         self.db.commit()
         return task
+
+    def _reject_instance_to_start(
+        self: ApprovalEngineCore,
+        instance,
+        task: ApprovalTask,
+        approver: Optional[User],
+        comment: str,
+    ):
+        """驳回到发起人并进入终态。"""
+        self._complete_instance_as_rejected(instance, exclude_task_id=task.id)
+
+        # 调用适配器的驳回回调
+        self._call_adapter_callback(instance, "on_rejected")
+
+        # 通知发起人
+        self.notify.notify_rejected(
+            instance,
+            rejector_name=approver.real_name or approver.username if approver else None,
+            reject_comment=comment,
+        )
+
+    def _advance_after_positive_aggregate_result(
+        self: ApprovalEngineCore,
+        instance,
+        task: ApprovalTask,
+    ):
+        """会签汇总通过时继续流转。"""
+        self._advance_to_next_node(instance, task)
 
     def reject(
         self: ApprovalEngineCore,
@@ -102,12 +186,14 @@ class ApprovalProcessMixin:
         approver = self.db.query(User).filter(User.id == approver_id).first()
 
         # 处理审批
-        self.executor.process_approval(
+        can_proceed, error = self.executor.process_approval(
             task=task,
             action="REJECT",
             comment=comment,
             attachments=attachments,
         )
+        if error:
+            raise ValueError(error)
 
         # 记录日志
         self._log_action(
@@ -125,27 +211,22 @@ class ApprovalProcessMixin:
 
         # 根据驳回目标处理
         if reject_to == "START":
-            # 驳回到发起人（审批结束）
-            instance.status = "REJECTED"
-            instance.completed_at = datetime.now()
+            approval_mode = self._get_task_approval_mode(task)
+            if approval_mode in {"OR_SIGN", "AND_SIGN"} and not can_proceed:
+                self.db.commit()
+                return task
 
-            # 调用适配器的驳回回调
-            self._call_adapter_callback(instance, "on_rejected")
-
-            # 通知发起人
-            self.notify.notify_rejected(
-                instance,
-                rejector_name=approver.real_name or approver.username if approver else None,
-                reject_comment=comment,
-            )
+            if self._get_countersign_final_result(task) == "PASSED":
+                self._advance_after_positive_aggregate_result(instance, task)
+            else:
+                self._reject_instance_to_start(instance, task, approver, comment)
         elif reject_to == "PREV":
             # 退回到上一节点
             prev_node = self._get_previous_node(node)
             if prev_node:
                 self._return_to_node(instance, prev_node)
             else:
-                instance.status = "REJECTED"
-                instance.completed_at = datetime.now()
+                self._complete_instance_as_rejected(instance, exclude_task_id=task.id)
         else:
             # 退回到指定节点
             try:
@@ -158,11 +239,9 @@ class ApprovalProcessMixin:
                 if target_node:
                     self._return_to_node(instance, target_node)
                 else:
-                    instance.status = "REJECTED"
-                    instance.completed_at = datetime.now()
+                    self._complete_instance_as_rejected(instance, exclude_task_id=task.id)
             except ValueError:
-                instance.status = "REJECTED"
-                instance.completed_at = datetime.now()
+                self._complete_instance_as_rejected(instance, exclude_task_id=task.id)
 
         self.db.commit()
         return task

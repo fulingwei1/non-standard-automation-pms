@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.common.query_filters import apply_like_filter
 from app.models.approval import (
     ApprovalActionLog,
+    ApprovalCountersignResult,
     ApprovalInstance,
     ApprovalNodeDefinition,
     ApprovalTask,
@@ -20,6 +21,9 @@ from ..delegate import ApprovalDelegateService
 from ..executor import ApprovalNodeExecutor
 from ..notify import ApprovalNotifyService
 from ..router import ApprovalRouterService
+
+
+TERMINAL_INSTANCE_STATUSES = {"APPROVED", "REJECTED", "CANCELLED", "TERMINATED"}
 
 
 class ApprovalEngineCore:
@@ -243,6 +247,57 @@ class ApprovalEngineCore:
         }
         self._create_node_tasks(instance, target_node, context)
 
+    def _get_task_approval_mode(self, task: ApprovalTask) -> str:
+        """获取任务所在节点审批模式，兼容测试中不完整的 mock。"""
+        node = getattr(task, "node", None)
+        mode = getattr(node, "approval_mode", None)
+        return mode if isinstance(mode, str) and mode else "SINGLE"
+
+    def _get_countersign_final_result(self, task: ApprovalTask) -> Optional[str]:
+        """读取会签汇总结果；非会签节点返回 None。"""
+        if self._get_task_approval_mode(task) != "AND_SIGN":
+            return None
+
+        result = (
+            self.db.query(ApprovalCountersignResult)
+            .filter(
+                ApprovalCountersignResult.instance_id == task.instance_id,
+                ApprovalCountersignResult.node_id == task.node_id,
+            )
+            .first()
+        )
+        return result.final_result if result else None
+
+    def _cancel_pending_instance_tasks(
+        self,
+        instance_id: int,
+        exclude_task_id: Optional[int] = None,
+    ):
+        """取消实例下仍待处理的任务，用于实例进入终态时清理旧待办。"""
+        query = self.db.query(ApprovalTask).filter(
+            ApprovalTask.instance_id == instance_id,
+            ApprovalTask.status == "PENDING",
+        )
+        if exclude_task_id is not None:
+            query = query.filter(ApprovalTask.id != exclude_task_id)
+        query.update({"status": "CANCELLED"}, synchronize_session=False)
+
+    def _complete_instance_as_rejected(
+        self,
+        instance: ApprovalInstance,
+        exclude_task_id: Optional[int] = None,
+    ):
+        """将实例置为驳回终态，并清理剩余待办，避免后续任务复活实例。"""
+        self._cancel_pending_instance_tasks(instance.id, exclude_task_id=exclude_task_id)
+        instance.status = "REJECTED"
+        instance.completed_at = datetime.now()
+
+    def _ensure_instance_not_terminal(self, instance: ApprovalInstance):
+        """终态实例禁止继续处理审批任务。"""
+        status = getattr(instance, "status", None)
+        if isinstance(status, str) and status.upper() in TERMINAL_INSTANCE_STATUSES:
+            raise ValueError(f"审批实例已结束: {status}")
+
     def _get_and_validate_task(
         self,
         task_id: int,
@@ -259,6 +314,8 @@ class ApprovalEngineCore:
 
         if task.status != "PENDING":
             raise ValueError(f"任务状态不正确: {task.status}")
+
+        self._ensure_instance_not_terminal(task.instance)
 
         return task
 

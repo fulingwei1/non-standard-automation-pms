@@ -81,7 +81,7 @@ def apply_sqlite_migrations(db_path: Path, migration_files: Iterable[Path]) -> T
                 try:
                     cursor.execute(statement)
                     applied += 1
-                except sqlite3.Error as exc:
+                except sqlite3.Error:
                     skipped += 1
                     continue
 
