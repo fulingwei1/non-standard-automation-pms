@@ -1,5 +1,15 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：AI 闭环前端接入（反馈按钮 + 评审处置入口）
+
+- 背景：反馈闭环/G2 风险门后端已通，但对人不可用——前端无反馈入口、评审卡片无处置动作。
+- 代码面：
+  - 新增 `components/ai/AiFeedbackButtons.jsx`：通用采纳/驳回按钮（驳回强制写原因），打 `POST /ai-feedback`；任何 AI 卡片挂上即接入闭环。
+  - 新增 `components/opportunity/SolutionReviewCard.jsx`：方案评审卡片抽组件，HIGH 风险显示 G2 拦截提示 + "已消除风险/带险推进"处置按钮（强制写理由），调 `POST /sales/opportunities/{id}/solution-review/resolution`。
+  - `OpportunityDetail.jsx`：评审卡片换用新组件；推进建议/报价估算/验收标准三张 AI 卡片挂反馈按钮（feature_key：opportunity_next_action / opportunity_quote_estimate / opportunity_acceptance_criteria）。
+- 验证：红灯（组件不存在收集失败）→ 绿灯组件测试 7 passed；连同 OpportunityManagement 回归 16 passed；`npm run build` 通过（仅既有 chunk 警告）。
+- 备注：售前方案生成/三档报价前端页已在早前去重重构中下线，`requirement_analysis_id` 前端传参待售前 AI 页重建时接（后端已兼容）。
+
 ## 2026-07-03 继续：AI 报价对账（持续优化环节数据地基第一块）
 
 - 背景：AI 三档报价与实际成交从无勾稽，报价规则无从校准（backlog 中"报价→实际闭环校准"一直未做）。

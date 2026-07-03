@@ -37,6 +37,8 @@ import {
 } from "../components/ui/select";
 import { cn, formatDate } from "../lib/utils";
 import api, { opportunityApi } from "../services/api";
+import AiFeedbackButtons from "../components/ai/AiFeedbackButtons";
+import SolutionReviewCard from "../components/opportunity/SolutionReviewCard";
 import WinRateAnalysisCard from "../components/opportunity/WinRateAnalysisCard";
 import QuickActivityLog from "../components/sales/QuickActivityLog";
 
@@ -539,7 +541,10 @@ export default function OpportunityDetail() {
         <CardContent>
           {quoteEst && (
             <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm">
-              <div className="font-medium mb-1">💰 AI 报价估算（模块累加+风险加成，可微调）</div>
+              <div className="font-medium mb-1 flex items-center justify-between">
+                <span>💰 AI 报价估算（模块累加+风险加成，可微调）</span>
+                <AiFeedbackButtons featureKey="opportunity_quote_estimate" refType="opportunity" refId={Number(id)} />
+              </div>
               <div className="text-xs text-muted-foreground mb-2">{quoteEst.basis}</div>
               <div className="space-y-0.5">
                 {(quoteEst.recommended_modules || []).map((m, i) => (
@@ -671,32 +676,22 @@ export default function OpportunityDetail() {
           )}
           {nextAct && (
             <div className="mb-4 rounded-lg border border-indigo-500/30 bg-indigo-500/5 p-3 text-sm">
-              <div className="font-medium mb-1">🎯 AI 推进建议</div>
+              <div className="font-medium mb-1 flex items-center justify-between">
+                <span>🎯 AI 推进建议</span>
+                <AiFeedbackButtons featureKey="opportunity_next_action" refType="opportunity" refId={Number(id)} />
+              </div>
               <div className="text-xs"><b>下一步：</b>{(nextAct.next_actions || []).join("；")}</div>
               <div className="text-xs text-amber-600"><b>短板：</b>{(nextAct.gaps || []).join("；")}</div>
               <div className="text-xs text-muted-foreground"><b>阶段：</b>{nextAct.stage_advice}</div>
             </div>
           )}
-          {reviews && (
-            <div className="mb-4 rounded-lg border border-purple-500/30 bg-purple-500/5 p-3 text-sm">
-              <div className="font-medium mb-2">🔍 AI 方案评审（定稿前抓返工点）</div>
-              <div className="space-y-1.5">
-                {reviews.map((r, i) => {
-                  const lv = String(r.risk_level).toUpperCase();
-                  const color = lv === "HIGH" ? "text-red-500" : lv === "MEDIUM" ? "text-amber-600" : "text-slate-400";
-                  return (
-                    <div key={i} className="text-xs">
-                      <span className={`font-medium ${color}`}>[{lv}] {r.aspect}</span>：{r.finding}
-                      <div className="text-muted-foreground">→ {r.suggestion}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          {reviews && <SolutionReviewCard opportunityId={Number(id)} reviews={reviews} />}
           {acCriteria && (
             <div className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 text-sm">
-              <div className="font-medium mb-2">📋 AI 可测量验收标准（与客户/售前对齐，减少验收扯皮）</div>
+              <div className="font-medium mb-2 flex items-center justify-between">
+                <span>📋 AI 可测量验收标准（与客户/售前对齐，减少验收扯皮）</span>
+                <AiFeedbackButtons featureKey="opportunity_acceptance_criteria" refType="opportunity" refId={Number(id)} />
+              </div>
               <div className="space-y-1">
                 {acCriteria.map((c, i) => (
                   <div key={i} className="text-xs border-l-2 border-blue-500/40 pl-2">
