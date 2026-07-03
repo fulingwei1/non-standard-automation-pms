@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.sales_permissions import can_manage_sales_opportunity
+from app.api.v1.endpoints.sales.utils import validate_opportunity_stage_transition
 from app.models.enums import OpportunityStageEnum
 from app.models.sales import Opportunity
 from app.models.user import User
@@ -125,14 +126,14 @@ def batch_update_stage(
             continue
 
         # 检查是否已结束
-        if opp.stage in [OpportunityStageEnum.WON, OpportunityStageEnum.LOST]:
+        if opp.stage in [OpportunityStageEnum.WON.value, OpportunityStageEnum.LOST.value]:
             results.append(
                 BatchResultItem(id=opp_id, success=False, message="已结束的商机无法更新阶段")
             )
             continue
 
         try:
-            opp.stage = target_stage
+            opp.stage = validate_opportunity_stage_transition(opp.stage, target_stage)
             opp.updated_by = current_user.id
             opp.updated_at = datetime.utcnow()
             results.append(BatchResultItem(id=opp_id, success=True))
@@ -224,7 +225,7 @@ def batch_close_opportunities(
     - 部分失败不影响其他商机
     - is_won=True 标记为赢单，is_won=False 标记为输单
     """
-    target_stage = OpportunityStageEnum.WON if request.is_won else OpportunityStageEnum.LOST
+    target_stage = OpportunityStageEnum.WON.value if request.is_won else OpportunityStageEnum.LOST.value
 
     # 查询所有商机
     opportunities = (
@@ -250,14 +251,18 @@ def batch_close_opportunities(
             continue
 
         # 检查是否已结束
-        if opp.stage in [OpportunityStageEnum.WON, OpportunityStageEnum.LOST]:
+        if opp.stage in [OpportunityStageEnum.WON.value, OpportunityStageEnum.LOST.value]:
             results.append(
                 BatchResultItem(id=opp_id, success=False, message="商机已关闭")
             )
             continue
 
         try:
-            opp.stage = target_stage
+            opp.stage = validate_opportunity_stage_transition(
+                opp.stage,
+                target_stage,
+                allow_direct_win=request.is_won,
+            )
             opp.closed_at = datetime.utcnow()
             if request.reason:
                 opp.close_reason = request.reason

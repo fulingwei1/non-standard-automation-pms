@@ -30,6 +30,11 @@ from .gate_validation import (
     validate_g3_quote_to_contract,
     validate_g4_contract_to_project,
 )
+from .stage_guard import (
+    normalize_opportunity_stage,
+    validate_opportunity_stage_transition,
+    validate_opportunity_stage_value,
+)
 
 __all__ = [
     # 通用函数
@@ -48,6 +53,9 @@ __all__ = [
     "validate_g2_opportunity_to_quote",
     "validate_g3_quote_to_contract",
     "validate_g4_contract_to_project",
+    "normalize_opportunity_stage",
+    "validate_opportunity_stage_transition",
+    "validate_opportunity_stage_value",
     # 编码生成函数
     "generate_lead_code",
     "generate_opportunity_code",

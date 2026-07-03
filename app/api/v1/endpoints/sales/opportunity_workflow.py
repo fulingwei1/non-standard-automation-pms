@@ -21,7 +21,7 @@ from app.schemas.common import ResponseModel
 from app.schemas.sales import OpportunityRequirementResponse, OpportunityResponse
 from app.utils.db_helpers import get_or_404
 
-from .utils import validate_g2_opportunity_to_quote
+from .utils import validate_g2_opportunity_to_quote, validate_opportunity_stage_transition
 
 logger = logging.getLogger(__name__)
 
@@ -819,13 +819,7 @@ def update_opportunity_stage(
     """
     opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
-    valid_stages = ["DISCOVERY", "QUALIFICATION", "PROPOSAL", "NEGOTIATION", "WON", "LOST", "ON_HOLD"]
-    if stage not in valid_stages:
-        raise HTTPException(
-            status_code=400, detail=f"无效的阶段，必须是: {', '.join(valid_stages)}"
-        )
-
-    opportunity.stage = stage
+    opportunity.stage = validate_opportunity_stage_transition(opportunity.stage, stage)
     opportunity.updated_by = current_user.id
     db.commit()
     db.refresh(opportunity)
@@ -911,6 +905,13 @@ def win_opportunity(
     """
     opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
+    if opportunity.stage == OpportunityStageEnum.LOST.value:
+        raise HTTPException(status_code=400, detail="商机已输单，无法标记赢单")
+    validate_opportunity_stage_transition(
+        opportunity.stage,
+        OpportunityStageEnum.WON.value,
+        allow_direct_win=True,
+    )
     opportunity.stage = "WON"
     opportunity.gate_status = "PASS"
     opportunity.gate_passed_at = datetime.now()
@@ -951,6 +952,10 @@ def lose_opportunity(
     """
     opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
+    validate_opportunity_stage_transition(
+        opportunity.stage,
+        OpportunityStageEnum.LOST.value,
+    )
     opportunity.stage = "LOST"
     if lose_reason:
         opportunity.lose_reason = lose_reason

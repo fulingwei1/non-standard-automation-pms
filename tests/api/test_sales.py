@@ -18,6 +18,7 @@ import uuid
 from datetime import date, timedelta
 from decimal import Decimal
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -406,6 +407,129 @@ class TestOpportunityManagement:
         assert data["stage"] == "PROPOSAL"
         assert data["probability"] == 50
 
+    def test_update_opportunity_rejects_lost_to_won_transition(
+        self, client: TestClient, admin_token: str
+    ):
+        """输单商机不能通过通用更新接口直接翻回赢单。"""
+
+        opportunity = _create_opportunity(client, admin_token)
+        headers = _auth_headers(admin_token)
+
+        lose_response = client.put(
+            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}",
+            json={"stage": "LOST", "probability": 0},
+            headers=headers,
+        )
+        assert lose_response.status_code == 200, lose_response.text
+
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}",
+            json={"stage": "WON", "probability": 100},
+            headers=headers,
+        )
+
+        assert response.status_code == 400
+        assert "非法商机阶段流转" in response.text
+
+        current = client.get(
+            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}",
+            headers=headers,
+        )
+        assert current.status_code == 200, current.text
+        data = current.json()
+        assert data["stage"] == "LOST"
+        assert data["probability"] == 0
+
+    def test_stage_endpoint_rejects_lost_to_won_transition(
+        self, client: TestClient, admin_token: str
+    ):
+        """旧阶段接口也不能把输单商机翻回赢单。"""
+
+        opportunity = _create_opportunity(client, admin_token)
+        headers = _auth_headers(admin_token)
+
+        lose_response = client.put(
+            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}",
+            json={"stage": "LOST", "probability": 0},
+            headers=headers,
+        )
+        assert lose_response.status_code == 200, lose_response.text
+
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}/stage",
+            params={"stage": "WON"},
+            headers=headers,
+        )
+
+        assert response.status_code == 400
+        assert "非法商机阶段流转" in response.text
+
+    def test_stage_endpoint_rejects_legacy_on_hold_stage(
+        self, client: TestClient, admin_token: str
+    ):
+        """商机阶段写入口只接受统一枚举，不能再写入旧 ON_HOLD 词表值。"""
+
+        opportunity = _create_opportunity(client, admin_token)
+        headers = _auth_headers(admin_token)
+
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}/stage",
+            params={"stage": "ON_HOLD"},
+            headers=headers,
+        )
+
+        assert response.status_code == 400
+        assert "无效的商机阶段" in response.text
+
+    def test_opportunity_stage_statistics_use_canonical_closing_bucket(
+        self, client: TestClient, admin_token: str
+    ):
+        """商机阶段统计使用统一词表，应包含 CLOSING 且不再产出 ON_HOLD 桶。"""
+
+        opportunity = _create_opportunity(client, admin_token)
+        headers = _auth_headers(admin_token)
+
+        stage_response = client.put(
+            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}/stage",
+            params={"stage": "CLOSING"},
+            headers=headers,
+        )
+        assert stage_response.status_code == 200, stage_response.text
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/sales/statistics/opportunities-by-stage",
+            headers=headers,
+        )
+
+        assert response.status_code == 200, response.text
+        data = response.json()["data"]
+        assert "CLOSING" in data
+        assert data["CLOSING"]["count"] >= 1
+        assert "ON_HOLD" not in data
+
+    def test_legacy_win_endpoint_rejects_lost_opportunity(
+        self, client: TestClient, admin_token: str
+    ):
+        """旧 PUT /win 不能把输单商机重新标记为赢单。"""
+
+        opportunity = _create_opportunity(client, admin_token)
+        headers = _auth_headers(admin_token)
+
+        lose_response = client.put(
+            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}",
+            json={"stage": "LOST", "probability": 0},
+            headers=headers,
+        )
+        assert lose_response.status_code == 200, lose_response.text
+
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}/win",
+            headers=headers,
+        )
+
+        assert response.status_code == 400
+        assert "商机已输单" in response.text
+
     def test_submit_gate_validation(
         self, client: TestClient, admin_token: str, opportunity_id: int = None
     ):
@@ -431,6 +555,121 @@ class TestQuoteManagement:
         quote = _create_quote(client, admin_token)
         assert quote["opportunity_id"] is not None
         assert "quote_code" in quote
+
+    @pytest.mark.parametrize(
+        ("item_values", "expected_message"),
+        [
+            ({"qty": 0, "unit_price": 1000.0}, "数量必须大于 0"),
+            ({"qty": -1, "unit_price": 1000.0}, "数量必须大于 0"),
+            ({"qty": 1, "unit_price": 0.0}, "单价必须大于 0"),
+            ({"qty": 1, "unit_price": -100.0}, "单价必须大于 0"),
+        ],
+    )
+    def test_create_quote_rejects_non_positive_item_qty_and_unit_price(
+        self,
+        client: TestClient,
+        admin_token: str,
+        item_values: dict,
+        expected_message: str,
+    ):
+        """创建报价时明细数量和单价必须为正数。"""
+
+        opportunity = _create_opportunity(client, admin_token)
+        headers = _auth_headers(admin_token)
+        item = {
+            "item_type": "SYSTEM",
+            "item_name": "校验测试设备",
+            "qty": 1,
+            "unit_price": 1000.0,
+            "cost": 600.0,
+            **item_values,
+        }
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/quotes",
+            json={
+                "quote_code": _unique_code("QUOTE-VALID"),
+                "opportunity_id": opportunity["id"],
+                "customer_id": opportunity["customer_id"],
+                "valid_until": (date.today() + timedelta(days=45)).isoformat(),
+                "version": {
+                    "version_no": "V1",
+                    "items": [item],
+                },
+            },
+            headers=headers,
+        )
+
+        assert response.status_code == 400
+        assert expected_message in response.text
+
+    def test_create_quote_version_rejects_zero_quantity_without_defaulting_to_one(
+        self, client: TestClient, admin_token: str
+    ):
+        """创建新版本时 qty=0 不应被静默默认成 1。"""
+
+        quote = _create_quote(client, admin_token)
+        headers = _auth_headers(admin_token)
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/quotes/{quote['id']}/versions",
+            json={
+                "version_no": "V2",
+                "items": [
+                    {
+                        "item_type": "SYSTEM",
+                        "item_name": "数量为零的设备",
+                        "qty": 0,
+                        "unit_price": 1000.0,
+                        "cost": 600.0,
+                    }
+                ],
+            },
+            headers=headers,
+        )
+
+        assert response.status_code == 400
+        assert "数量必须大于 0" in response.text
+
+    def test_quote_item_create_and_update_reject_non_positive_unit_price(
+        self, client: TestClient, admin_token: str
+    ):
+        """直接增改报价明细时同样拒绝非正单价。"""
+
+        quote = _create_quote(client, admin_token)
+        headers = _auth_headers(admin_token)
+        version_id = quote["current_version_id"]
+
+        create_response = client.post(
+            f"{settings.API_V1_PREFIX}/sales/quotes/{version_id}/items",
+            json={
+                "item_type": "SYSTEM",
+                "item_name": "零单价设备",
+                "qty": 1,
+                "unit_price": 0,
+                "cost": 600.0,
+            },
+            headers=headers,
+        )
+
+        assert create_response.status_code == 400
+        assert "单价必须大于 0" in create_response.text
+
+        items_response = client.get(
+            f"{settings.API_V1_PREFIX}/sales/quotes/{version_id}/items",
+            headers=headers,
+        )
+        assert items_response.status_code == 200, items_response.text
+        item_id = items_response.json()["data"][0]["id"]
+
+        update_response = client.put(
+            f"{settings.API_V1_PREFIX}/sales/quotes/items/{item_id}",
+            json={"unit_price": -1},
+            headers=headers,
+        )
+
+        assert update_response.status_code == 400
+        assert "单价必须大于 0" in update_response.text
 
     def test_create_quote_inherits_approved_presale_solution_cost_baseline(
         self, client: TestClient, db_session: Session, admin_token: str

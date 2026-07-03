@@ -27,6 +27,7 @@ from app.utils.db_helpers import delete_obj, get_or_404
 from .utils import (
     generate_opportunity_code,
     get_entity_creator_id,
+    validate_opportunity_stage_transition,
 )
 
 
@@ -255,6 +256,11 @@ def update_opportunity(
         raise HTTPException(status_code=403, detail="您没有权限编辑此商机")
 
     update_data = opp_in.model_dump(exclude_unset=True, exclude={"requirement"})
+    if "stage" in update_data:
+        update_data["stage"] = validate_opportunity_stage_transition(
+            opportunity.stage,
+            update_data["stage"],
+        )
     for field, value in update_data.items():
         setattr(opportunity, field, value)
     opportunity.updated_by = current_user.id
