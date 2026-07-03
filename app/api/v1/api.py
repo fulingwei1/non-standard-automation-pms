@@ -308,8 +308,10 @@ def create_api_router() -> APIRouter:
     # ==================== 验收管理 ====================
     try:
         from app.api.v1.endpoints.acceptance import router as acceptance_router
-        api_router.include_router(acceptance_router, prefix="/acceptance", tags=["acceptance"])
-        api_router.include_router(acceptance_router, tags=["acceptance-legacy"])
+        # 2026-07-03 去重：原双挂载（/acceptance 前缀 + 裸挂）产生 32 对双生路径
+        # （/acceptance/acceptance-orders 与 /acceptance-orders 同函数）；前端只用裸路径，
+        # 保留裸挂、去前缀挂载
+        api_router.include_router(acceptance_router, tags=["acceptance"])
         print("✓ 验收管理模块加载成功")
     except Exception as e:
         print(f"✗ 验收管理模块加载失败: {e}")

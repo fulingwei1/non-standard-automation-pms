@@ -36,7 +36,7 @@ AUDIT_P0_BASE_URL=http://127.0.0.1:8123 .venv/bin/python -m pytest tests/audit_p
 | test_p0_02_approval_template_no_seed | 2 模板无种子 | 子进程跑 init_db 后 approval_templates=0 |
 | test_p0_03_quote_fund_trio | 3 报价资金三连 | API：状态直改自批 / 审批后改明细 / cost 漏乘 qty |
 | test_p0_04_payment_no_reconciliation | 4 回款无勾稽 | API：超发票额回款成功（负数已被 schema 拦，记为偏差） |
-| test_p0_05_cosign_reject_flip | 5 会签翻转 | **skip（受限）**，前置无法在时限内稳定构造 |
+| test_p0_05_cosign_reject_flip | 5 会签翻转 | 内存审批引擎：AND_SIGN 汇总失败、OR_SIGN 等待其他审批人、终态防复活 |
 | test_p0_06_receipt_no_stock | 6 收货不入库 | 源码接线：receipts 不调 InboundService |
 | test_p0_07_shortage_scan_500 | 7 缺料扫描崩溃 | API：POST scan 返回 500 |
 | test_p0_08_closure_gate_and_change_baseline | 8 结项门禁+变更基线 | API 结项 + 源码变更审批不回基线 |

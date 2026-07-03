@@ -1469,27 +1469,27 @@ def test_acceptance_and_node_task_routes_tolerate_legacy_nulls(
 
     headers = _auth_headers(admin_token)
     items = client.get(
-        f"{settings.API_V1_PREFIX}/acceptance/acceptance-orders/{order.id}/items",
+        f"{settings.API_V1_PREFIX}/acceptance-orders/{order.id}/items",
         headers=headers,
         follow_redirects=False,
     )
     issue_detail = client.get(
-        f"{settings.API_V1_PREFIX}/acceptance/acceptance-issues/{issue.id}",
+        f"{settings.API_V1_PREFIX}/acceptance-issues/{issue.id}",
         headers=headers,
         follow_redirects=False,
     )
     issue_list = client.get(
-        f"{settings.API_V1_PREFIX}/acceptance/acceptance-orders/{order.id}/issues",
+        f"{settings.API_V1_PREFIX}/acceptance-orders/{order.id}/issues",
         headers=headers,
         follow_redirects=False,
     )
     signatures = client.get(
-        f"{settings.API_V1_PREFIX}/acceptance/acceptance-orders/{order.id}/signatures",
+        f"{settings.API_V1_PREFIX}/acceptance-orders/{order.id}/signatures",
         headers=headers,
         follow_redirects=False,
     )
     reports = client.get(
-        f"{settings.API_V1_PREFIX}/acceptance/acceptance-orders/{order.id}/report",
+        f"{settings.API_V1_PREFIX}/acceptance-orders/{order.id}/report",
         headers=headers,
         follow_redirects=False,
     )

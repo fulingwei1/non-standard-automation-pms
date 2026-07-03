@@ -6,8 +6,10 @@
   逐项动态复现，并固化为 pytest 验收用例（`tests/audit_p0/`，标记 `@pytest.mark.audit_p0`）
 - 运行：`.venv/bin/python -m pytest tests/audit_p0 -m audit_p0`
   （首次自动冷启一个沙箱后端，约 1 分钟；结束自动 kill）
-- 结果快照：**47 failed / 4 passed / 1 skipped**。全部 failed 即“正确行为”断言在当前代码上不成立
-  = 问题复现；4 passed 为取证/守卫用例；1 skipped 为受限项（P0-5）。
+- 原始结果快照：**47 failed / 4 passed / 1 skipped**。全部 failed 即“正确行为”断言在当时代码上不成立
+  = 问题复现；4 passed 为取证/守卫用例；1 skipped 为当时受限项（P0-5）。
+- 2026-07-03 补充：P0-5/APPR-03 已改为稳定的内存审批引擎动态复现与回归用例，
+  覆盖会签汇总失败、或签等待其他审批人、终态 REJECTED 禁止复活。
 
 ---
 
@@ -40,7 +42,7 @@
 | 3b | 审批后可改明细 | API：对 APPROVED 版本 `PUT /quotes/items/{id}` | HTTP 200「报价明细更新成功」，无状态门禁 | **已复现** | `test_p0_03_quote_fund_trio.py::test_items_of_approved_quote_must_be_locked` |
 | 3c | 成本汇总漏乘 qty | API：`GET /quotes/{id}/cost-breakdown`，比对 total_cost 与 Σ(qty×cost) | 返回 6773243.39 = Σ(cost)，应为 Σ(qty×cost)=19040825.62 → 毛利虚高 | **已复现** | `test_p0_03_quote_fund_trio.py::test_cost_breakdown_multiplies_by_quantity` |
 | 4 | 回款无勾稽 | API：对有 ISSUED 发票的合同 `POST 回款`，金额远超发票额 | 回款 9,999,999 记入 474,000 的发票，paid=9,999,999、unpaid=-9,525,999，HTTP 200 | **已复现（部分偏差）** | `test_p0_04_payment_no_reconciliation.py::test_overpayment_beyond_invoice_amount_is_rejected` |
-| 5 | 会签驳回可翻转 APPROVED | 需两会签人 + ECN 会签流端到端前置 | 前置无法在时限内稳定构造 | **受限（未复现）** | `test_p0_05_cosign_reject_flip.py`（skip，静态见报告 A#3） |
+| 5 | 会签驳回可翻转 APPROVED | 内存审批引擎构造两人 AND_SIGN/OR_SIGN 节点 + 终态实例待办 | 修复前：会签/或签一票拒立即 REJECTED，终态 REJECTED 可被 pending 任务 approve 翻成 APPROVED；修复后 3 用例通过 | **已复现并回归** | `test_p0_05_cosign_reject_flip.py`（3 用例） |
 | 6 | 收货不入库 | 源码接线：`purchase/receipts.py` 是否调 InboundService / 写库存 | receipts 全文无库存入库接线；`receive_goods/purchase_in` 无业务调用方 | **已复现** | `test_p0_06_receipt_no_stock.py`（2 用例） |
 | 7 | 缺料引擎崩溃 | API：`POST /shortage/smart-alerts/scan` | HTTP 500，`AttributeError: WorkOrder.is_critical_path` | **已复现** | `test_p0_07_shortage_scan_500.py::test_smart_alert_scan_does_not_500` |
 | 8a | 结项无门禁 | API：对 readiness=False 的项目 `POST closure` | readiness 明确 ready=false（0/8 阶段、缺验收），仍 HTTP 201 建结项，项目 status 不变 | **已复现** | `test_p0_08_closure_gate_and_change_baseline.py::test_closure_blocked_when_not_ready` |
@@ -68,10 +70,9 @@
    9,999,999 记入 474,000 的发票导致 unpaid=-9,525,999。故 P0-4 定级不变，仅“负数”这一子路径
    已随 pydantic 校验收窄。报告结论主体属实。
 
-2. **P0-5 会签翻转：未能动态复现（受限，非否定）**。构造两名会签审批人 + 触发 ECN AND_SIGN
-   会签流的端到端前置（审批人解析依赖 ROLE 全库首个用户、委托表、节点激活）在时限内不稳定。
-   已按任务要求 `skip` 并注明；静态证据（`engine/approve.py:105-140` reject 即置 REJECTED、
-   `engine/core.py:246-263` approve 不校验实例状态）充分，**不推翻静态结论，但本轮未取得动态实锤**。
+2. **P0-5 会签翻转：已补稳定动态复现**。原先 ECN 端到端造数前置不稳定，现改为直接构造
+   内存审批引擎场景：两人 AND_SIGN、两人 OR_SIGN、以及终态 REJECTED + pending task。用例已捕获
+   `engine.reject()` 不尊重汇总裁决、`approve()` 不校验实例终态导致的复活路径，并在 APPR-03 修复后转绿。
 
 3. **复现手段说明（非偏差，防误读）**：P0-1/2/6/8b/10/11/12/13/17 采用 **DB 断言 / 子进程 init /
    源码接线 / 导入直调** 而非纯 HTTP 端到端。原因是这些 P0 的根因就是「代码根本不接线 / 表列缺失 /

@@ -182,8 +182,7 @@ def create_api_router() -> APIRouter:
     api_router.include_router(
         technical_spec.router, prefix="/technical-spec", tags=["technical-spec"]
     )
-    api_router.include_router(acceptance.router, prefix="/acceptance", tags=["acceptance"])
-    api_router.include_router(acceptance.router, tags=["acceptance-legacy"])
+    api_router.include_router(acceptance.router, tags=["acceptance"])
     api_router.include_router(admin_stats.router, prefix="/admin-stats", tags=["admin-stats"])
     api_router.include_router(
         advantage_products.router, prefix="/advantage-products", tags=["advantage-products"]

@@ -65,7 +65,7 @@ def test_acceptance_template_list_handles_legacy_nullable_flags(
     db_session.commit()
 
     response = client.get(
-        f"{settings.API_V1_PREFIX}/acceptance/acceptance-templates",
+        f"{settings.API_V1_PREFIX}/acceptance-templates",
         params={"page": 1, "page_size": 100},
         headers=_auth_headers(admin_token),
     )

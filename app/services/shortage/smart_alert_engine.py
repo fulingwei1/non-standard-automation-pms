@@ -290,13 +290,13 @@ class SmartAlertEngine:
             Material.material_name,
             WorkOrder.plan_qty.label("required_qty"),
             WorkOrder.plan_start_date.label("required_date"),
-            WorkOrder.is_critical_path,
         ).join(Material, Material.id == WorkOrder.material_id)
 
         # 过滤条件
         filters = [
             WorkOrder.status.in_(["PENDING", "CONFIRMED", "IN_PROGRESS"]),
-            WorkOrder.planned_start_date <= datetime.now().date() + timedelta(days=days_ahead),
+            WorkOrder.plan_start_date.isnot(None),
+            WorkOrder.plan_start_date <= datetime.now().date() + timedelta(days=days_ahead),
         ]
 
         if project_id:
@@ -318,7 +318,7 @@ class SmartAlertEngine:
                     "required_qty": row.required_qty,
                     "required_date": row.required_date,
                     "days_to_required": days_to_required,
-                    "is_critical_path": row.is_critical_path or False,
+                    "is_critical_path": False,
                 }
             )
 
@@ -327,7 +327,7 @@ class SmartAlertEngine:
     def _get_available_qty(self, material_id: int) -> Decimal:
         """获取可用库存"""
         result = (
-            self.db.query(func.sum(MaterialStock.available_qty))
+            self.db.query(func.sum(MaterialStock.available_quantity))
             .filter(MaterialStock.material_id == material_id)
             .scalar()
         )

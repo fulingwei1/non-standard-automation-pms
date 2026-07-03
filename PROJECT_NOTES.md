@@ -1,5 +1,26 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：功能审计 APPR-03 修复（会签/或签驳回汇总与终态防复活）
+
+- 修复项：`APPR-03`，会签/或签驳回语义破坏，`REJECTED` 审批实例可被剩余待办继续 `approve` 翻回 `APPROVED`。
+- 根因：
+  - `engine.reject()` 调了 `executor.process_approval()` 但忽略 `can_proceed/final_result`，导致 OR_SIGN/AND_SIGN 一票拒就直接置 `REJECTED`。
+  - `engine.approve()` 只校验任务 `PENDING`，不校验实例是否已是 `APPROVED/REJECTED/CANCELLED/TERMINATED` 终态。
+  - 会签最终汇总为 `FAILED` 时，approve 路径仍直接 `_advance_to_next_node()`，可把失败汇总推进成通过。
+- 改动：
+  - `app/services/approval_engine/engine/core.py`：新增终态实例守卫、会签汇总结果读取、实例驳回终态清理待办 helper；`_get_and_validate_task()` 禁止终态实例继续处理待办。
+  - `app/services/approval_engine/engine/approve.py`：approve 路径识别会签 `FAILED` 并置 `REJECTED`；reject 路径对 OR_SIGN/AND_SIGN 尊重 `can_proceed`，未完成汇总时不提前终止，汇总通过时继续流转，汇总失败时驳回到发起人。
+  - `tests/audit_p0/test_p0_05_cosign_reject_flip.py`：从 skip 占位改为 3 个稳定动态用例，覆盖 AND_SIGN 汇总失败、OR_SIGN 等待其他审批人、终态 REJECTED 防复活。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`、`P0_REPRO_REPORT.md`、`tests/audit_p0/README.md`：APPR-03 标为已动态复现并回归。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_05_cosign_reject_flip.py -q` -> 3 failed（会签/或签一票拒立即 REJECTED；终态 REJECTED 未拦截并被翻 APPROVED）。
+  - 绿灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_05_cosign_reject_flip.py -q` -> 3 passed。
+  - 邻近回归：`.venv/bin/python -m pytest tests/unit/test_approval_engine_approve.py tests/services/test_approval_approve.py tests/unit/test_approval_executor.py -q` -> 88 passed。
+  - APPR 回归包：`.venv/bin/python -m pytest tests/audit_p0/test_p0_01_approval_template_mismatch.py tests/audit_p0/test_p0_02_approval_template_no_seed.py tests/audit_p0/test_p0_05_cosign_reject_flip.py tests/audit_p0/test_p0_17_contract_withdraw_typeerror.py tests/api/test_approval_submit_error_contracts.py -q` -> 17 passed。
+  - 静态检查：`py_compile` passed；`ruff check app/services/approval_engine/engine/approve.py app/services/approval_engine/engine/core.py tests/audit_p0/test_p0_05_cosign_reject_flip.py` -> All checks passed。
+- 已知测试边界：
+  - 更大组合 `tests/unit/test_approval_engine_core.py tests/services/test_approval_workflow_engine.py tests/integration/test_approval_integration.py` 仍有 6 个既有失败：旧 mock 假设 `_generate_instance_no().scalar()`、workflow_engine 旧断言、integration 测试给 `ApprovalTask` 传已不存在的 `is_active`。与 APPR-03 改动不在同一根因，后续单独收口。
+
 ## 2026-07-03 继续：功能审计 APPR-02 修复（统一审批新库种子）
 
 - 修复项：`APPR-02`，全新初始化数据库没有统一审批模板、默认流程、节点和路由规则，导致 F1/ECN/采购/外协/验收/立项等审批链在新部署环境全部不可用。
@@ -21,7 +42,7 @@
   - 幂等实测：全新库 `init_db.py` 后再次连续调用两次 `init_approval_workflow_seeds()`，数量保持 `templates=10/flows=13/nodes=30/rules=3`。
   - 静态检查：`py_compile` passed；`ruff check app/utils/init_approval_data.py scripts/init_db.py app/utils/init_data.py tests/audit_p0/test_p0_02_approval_template_no_seed.py` -> All checks passed；`git diff --check` passed。
 - 残留：
-  - `APPR-03` 仍待修：会签/或签驳回语义，以及项目审批路由 404 后续一起收。
+  - 会签/或签驳回语义已随 `APPR-03` 修复；项目审批路由 404 仍需后续另项收口。
 
 ## 2026-07-03 继续：功能审计 APPR-01 修复（审批链模板 code 与 200 掩盖）
 
@@ -42,7 +63,7 @@
   - 回归：`.venv/bin/python -m pytest tests/audit_p0/test_p0_01_approval_template_mismatch.py tests/api/test_approval_submit_error_contracts.py tests/unit/test_acceptance_approval_service.py tests/api/test_purchase_workflow_contracts.py tests/unit/test_api_p7_coverage.py app/tests/services/purchase_workflow/test_purchase_workflow.py -q` -> 70 passed。
   - 静态检查：`py_compile` passed；`ruff check` 本轮触达 Python/测试文件 -> All checks passed。
 - 残留：
-  - `tests/integration/test_project_approval_smoke.py` 当前提交路径仍 404，归入 `APPR-03`/项目审批路由收口，不计入 `APPR-01` 已修范围。
+  - `tests/integration/test_project_approval_smoke.py` 当前提交路径仍 404，归入后续项目审批路由收口，不计入 `APPR-01` 已修范围。
   - `tests/unit/test_outsourcing_workflow_service.py` 当前有 9 个旧失败，集中在成本归集私有方法/撤回参数/Mock 结构，不是本轮模板码或 200 掩盖改动引入；后续另项处理。
   - `tests/unit/test_contract_approval_service.py` 当前有 1 个旧断言失败，服务实际调用已带 `page/page_size`。
 
@@ -909,3 +930,9 @@
   - **endpoints/material/ 包**（tracking/sync/procurement_optimization/project_fusion 四模块）只被备用注册表 api_lazy 挂载，活动注册表(api.py)不挂——生产环境全部不可达；MaterialTracking 前端页实际走 /materials + /purchase-orders。与 ROADMAP F1 库存台账相关，留待该项决策。
   - 既有测试债（stash 对照确认与本次无关）：test_procurement_analysis_service 期望的 price_analyzer 等服务模块名从来不存在（实际为 cost_trend 等）；test_kitting_optimization_deep、test_best_practice_deep 同类。
 - 验证：启动 0 加载失败；/procurement-analysis/overview、/supplier-price 实机 200（直连挂载生效）；tests/api 采购面 88 通过；收集错误清零。
+
+## 2026-07-03 继续：售后域去重清理（全链最后一域）
+
+- **acceptance 双挂载收敛**：acceptance 包原被挂两次（/acceptance 前缀 + 裸挂 legacy），产生 32 对双生路径（/acceptance/acceptance-orders 与 /acceptance-orders 同函数）。前端只用裸路径；已去前缀挂载（api.py+api_lazy），32 对双生清零、裸 32 条保留。测试 3 个文件 8 处路径迁移，71 过。
+- 排查无恙：installation-dispatch(9)/after-sales(10)/field(7) 均单挂载；售后域前端无孤儿页。
+- **记录（命名空间设计问题，非重复）**：客服 service 包裸挂顶层，喷出 /tickets、/records、/communications、/surveys、/statistics 等通用命名空间（前端 service.js 在调），极易与其他域撞车——建议后续统一迁 /service/* 前缀（涉及 service.js 全量调用点，独立一刀）。

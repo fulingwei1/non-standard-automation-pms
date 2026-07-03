@@ -16,7 +16,7 @@ def _auth_headers(token: str) -> dict:
     [
         "/sales/quotes/approval/batch-action",
         "/sales/contracts/approval/batch-action",
-        "/acceptance/acceptance-orders/approval/batch-action",
+        "/acceptance-orders/approval/batch-action",
         "/ecns/approval/batch-action",
         "/purchase-orders/workflow/batch-action",
         "/outsourcing-orders/workflow/batch-action",
@@ -44,7 +44,7 @@ def test_batch_approval_rejects_unknown_action_before_service_layer(
     [
         "/sales/quotes/approval/batch-action",
         "/sales/contracts/approval/batch-action",
-        "/acceptance/acceptance-orders/approval/batch-action",
+        "/acceptance-orders/approval/batch-action",
         "/ecns/approval/batch-action",
         "/purchase-orders/workflow/batch-action",
         "/outsourcing-orders/workflow/batch-action",
