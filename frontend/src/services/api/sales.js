@@ -190,6 +190,8 @@ export const contractApi = {
   get: (id) => api.get(`/sales/contracts/${id}`),
   getPaymentPlans: (id) => api.get(`/sales/contracts/${id}/payment-plans`),
   create: (data) => api.post("/sales/contracts", data),
+  // SALES-12：报价一键转合同（后端自动带出客户/商机/金额/版本，走 G3 验证）
+  fromQuote: (data) => api.post("/sales/contracts/from-quote", data),
   update: (id, data) => api.put(`/sales/contracts/${id}`, data),
   sign: (id, data) => api.post(`/sales/contracts/${id}/sign`, data),
   createProject: (id, data) => api.post(`/sales/contracts/${id}/project`, data),

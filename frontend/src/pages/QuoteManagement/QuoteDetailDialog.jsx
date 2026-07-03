@@ -3,11 +3,13 @@
  * 报价详情对话框
  */
 
-import { DollarSign, Eye, GitCompare, CheckCircle2, XCircle, Printer } from "lucide-react";
+import { useState } from "react";
+import { DollarSign, Eye, GitCompare, CheckCircle2, XCircle, Printer, FileSignature } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { cn } from "../../lib/utils";
+import { contractApi } from "../../services/api";
 
 export default function QuoteDetailDialog({
   open,
@@ -18,6 +20,23 @@ export default function QuoteDetailDialog({
   onSend,
   onEdit
 }) {
+  // SALES-12：报价一键转合同（后端自动带出客户/商机/金额/当前版本，走 G3 验证）
+  const [converting, setConverting] = useState(false);
+  const [contractResult, setContractResult] = useState(null);
+  const canConvert = ["APPROVED", "ACCEPTED"].includes(selectedQuote?.status);
+
+  const handleConvertToContract = async () => {
+    setConverting(true);
+    try {
+      const res = await contractApi.fromQuote({ quote_id: selectedQuote.id });
+      const contract = res.data?.data || res.data;
+      setContractResult(contract);
+    } catch (error) {
+      alert(error?.response?.data?.detail || "转合同失败");
+    } finally {
+      setConverting(false);
+    }
+  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl bg-slate-900 border-slate-700 text-white max-h-[90vh] overflow-y-auto">
@@ -187,6 +206,21 @@ export default function QuoteDetailDialog({
                   >
                     提交审批
                   </Button>
+                )}
+                {canConvert && !contractResult && (
+                  <Button
+                    disabled={converting}
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={handleConvertToContract}
+                  >
+                    <FileSignature className="w-4 h-4 mr-1.5" />
+                    {converting ? "转换中…" : "转合同"}
+                  </Button>
+                )}
+                {contractResult && (
+                  <span className="text-sm text-emerald-400">
+                    ✅ 已生成合同 {contractResult.contract_code}（客户/商机/金额已自动带出）
+                  </span>
                 )}
               </div>
               <div className="flex gap-2">

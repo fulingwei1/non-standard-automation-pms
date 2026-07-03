@@ -1,5 +1,14 @@
 # PROJECT_NOTES
 
+## 2026-07-04 继续：功能审计 SALES-12 修复（报价转合同前端入口）
+
+- 修复项：`SALES-12`（北极星项），后端 `POST /sales/contracts/from-quote`（自动带出客户/商机/金额/当前版本 + G3 验证）一直齐备，前端零入口——销售建合同要手抄金额和版本 ID。
+- 代码面：
+  - `services/api/sales.js` contractApi 补 `fromQuote`。
+  - `QuoteDetailDialog.jsx`：APPROVED/ACCEPTED 报价显示"转合同"按钮，一键调 from-quote；成功展示合同编码；G3 拦截（400）把缺口信息弹给人（不静默、不自动跳过）。
+- 验证：红灯 2 项 → 绿灯组件测试 3 passed（含 G3 拦截展示）；QuoteCreateEdit 回归 2 passed；`npm run build` 通过。
+- 至此北极星链路（线索→商机→报价→合同）的两处断链（SALES-11/12）全部接通：每一跳都数据自动带出、闸门默认生效、绕门须人工留痕。
+
 ## 2026-07-04 继续：功能审计 SALES-11 修复（线索转商机承接 + G1 默认走门）
 
 - 修复项：`SALES-11`（北极星项），转商机丢字段（LeadRequirementDetail 里已录的对象/节拍/接口/验收/安全全部丢弃）+ 前端 LeadManagement 写死 skip_validation=true 默认绕 G1。
