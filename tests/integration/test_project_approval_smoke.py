@@ -17,7 +17,7 @@ from app.models.project import Project
 from app.models.user import User
 from tests.factories import ProjectFactory
 
-PROJECT_TEMPLATE_CODE = "PROJECT_TEMPLATE"
+PROJECT_TEMPLATE_CODE = "TPL_PROJECT"
 
 
 def _ensure_api_permission_group_column(db_session: Session) -> None:
@@ -32,7 +32,7 @@ def _ensure_api_permission_group_column(db_session: Session) -> None:
 
 @pytest.fixture(scope="function")
 def ensure_project_template(db_session: Session) -> ApprovalTemplate:
-    """确保 PROJECT_TEMPLATE 及其默认节点存在."""
+    """确保 TPL_PROJECT 及其默认节点存在."""
 
     _ensure_api_permission_group_column(db_session)
 

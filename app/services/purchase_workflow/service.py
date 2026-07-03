@@ -15,7 +15,7 @@ class PurchaseWorkflowService(BaseApprovalWorkflowService):
     """采购工作流服务"""
 
     entity_type = "PURCHASE_ORDER"
-    template_code = "PURCHASE_ORDER_APPROVAL"
+    template_code = "TPL_PURCHASE"
     model_class = PurchaseOrder
     entity_label = "采购订单"
 

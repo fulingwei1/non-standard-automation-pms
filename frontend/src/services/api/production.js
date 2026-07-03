@@ -324,12 +324,8 @@ export const bomApi = {
 };
 
 export const kitCheckApi = {
-  list: (params) => api.get("/kit-checks", { params }),
-  get: (id) => api.get(`/kit-checks/${id}`),
-  create: (data) => api.post("/kit-checks", data),
-  update: (id, data) => api.put(`/kit-checks/${id}`, data),
-  delete: (id) => api.delete(`/kit-checks/${id}`),
-  getStatistics: (params) => api.get("/kit-checks/statistics", { params }),
+  // 2026-07-03 去重：原 /kit-checks CRUD 方法后端从不存在（断链），已移除；
+  // 齐套检查真实接口为 /kit-check/work-orders*（真DB实现，演示compat已下线）
   workOrders: {
     list: (params) => api.get("/kit-check/work-orders", { params }),
     get: (id) => api.get(`/kit-check/work-orders/${id}`),

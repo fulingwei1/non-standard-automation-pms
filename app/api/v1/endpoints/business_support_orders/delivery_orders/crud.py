@@ -25,6 +25,7 @@ from app.schemas.business_support import (
     DeliveryOrderUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.services.sales.payment_plan_service import PaymentPlanService
 from app.utils.db_helpers import get_or_404
 
 from ..utils import generate_delivery_no
@@ -338,6 +339,11 @@ async def ship_delivery_order(
 
         delivery_order.delivery_status = "shipped"
         delivery_order.ship_date = datetime.now()
+        PaymentPlanService(db).trigger_delivery_payment_plan(
+            delivery_order,
+            triggered_by=current_user.id,
+            triggered_by_name=current_user.real_name or current_user.username,
+        )
 
         db.commit()
         db.refresh(delivery_order)

@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.api.v1.endpoints.approval_submit_guard import reject_all_failed_submit
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.user import User
@@ -49,10 +50,10 @@ def submit_orders_for_approval(
         comment=request.comment,
     )
 
-    db.commit()
-
     success_count = len(result["success"])
     error_count = len(result["errors"])
+    reject_all_failed_submit(db, result["success"], result["errors"])
+    db.commit()
 
     return ResponseModel(
         code=200,

@@ -1,5 +1,22 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：功能审计 APPR-15 修复（发货款回款计划触发器）
+
+- 修复项：`APPR-15`，发货款（默认 40%）回款计划生成后没有任何业务触发器，设备已发货也不会进入开票申请流程，财务只能人工盯。
+- 根因：
+  - `PaymentPlanService` 只负责生成 `DELIVERY` 类型收款计划，不负责触发。
+  - `business_support_orders/delivery_orders/crud.py::ship_delivery_order` 发货确认只更新发货单状态和 `ship_date`，没有联动 `ProjectPaymentPlan` 或 `InvoiceRequest`。
+- 改动：
+  - `app/services/sales/payment_plan_service.py`：新增 `trigger_delivery_payment_plan()`，按发货单 `project_id/contract_id` 查找 `DELIVERY` 收款计划；发货日早于计划日时将计划日期推进到实际发货日；若未存在待审/已批开票申请，则自动创建发货款 `InvoiceRequest`。
+  - `app/api/v1/endpoints/business_support_orders/delivery_orders/crud.py`：确认发货时调用上述服务，与发货状态在同一事务提交。
+  - `tests/api/test_delivery_payment_plan_trigger_contracts.py`：新增合约测试，覆盖“已审批发货单确认发货后自动创建发货款开票申请”。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`APPR-15` 标为 `已验证`，P0-0 资金正确性急救包同步。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/api/test_delivery_payment_plan_trigger_contracts.py -q` -> failed（无 `InvoiceRequest`）。
+  - 绿灯：`.venv/bin/python -m pytest tests/api/test_delivery_payment_plan_trigger_contracts.py -q` -> 1 passed。
+  - 回归：`.venv/bin/python -m pytest tests/api/test_delivery_payment_plan_trigger_contracts.py tests/unit/test_delivery_order_project_filter.py tests/services/test_payment_plan_service.py tests/api/test_sales_invoice_gate_contracts.py tests/audit_p0/test_p0_16_invoice_gate.py -q` -> 26 passed。
+  - 静态检查：`py_compile` passed；`ruff check app/services/sales/payment_plan_service.py app/api/v1/endpoints/business_support_orders/delivery_orders/crud.py tests/api/test_delivery_payment_plan_trigger_contracts.py` -> All checks passed。
+
 ## 2026-07-03 继续：功能审计 APPR-10/APPR-11/SALES-09/PEER-05 修复（发票开票与 update 门禁）
 
 - 修复项：`APPR-10`、`APPR-11`、`SALES-09`、`PEER-05`，集中处理发票未审批可开票、通用 update 绕状态/金额门禁、作废后可重开票、写操作挂 `finance:read` 和未签合同可建发票的问题。
@@ -815,3 +832,14 @@
   - **顺带发现的断链**（记录）：progress.js taskApi 的 update/delete/updateProgress/updateAssignee/complete 调的 PUT/DELETE /tasks/* 后端从来不存在（仅 GET），迁移后仍 404——真正任务 CRUD 在 /task-center；后续如需页面内改任务应切 task-center。
 - 测试同步：test_batch10（裸别名断言改为 404 验证）、test_progress（compat 路由测试改 /progress 路径）、test_project_team_collaboration（任务创建改 /progress 路径）；test_milestones 两例适配 /milestones/ 分页化响应（items 包裹，系另一会话的里程碑改造，测试未跟上）。
 - 验证：openapi 裸别名清零、/progress/* 16 条完好；pytest -k 'progress/wbs/milestone/gantt' 全绿；batch10 5/5；实机冒烟 /progress 两口 200、裸口 404；前端 build 通过。integration/test_project_team_collaboration 整文件失败经 stash 对照确认为既有债（fixture 层）。
+
+## 2026-07-03 继续：生产域去重清理
+
+- 排查（生产域路径 399 个），确认三处双挂载 + 一处假实现占位 + 前端断链：
+  - **kit-check 假实现换真**：kit_check 包内路由自带 /kit-check 前缀，挂载又加 prefix → 真实现（真DB查询+齐套率计算）全部落在 /kit-check/kit-check/* 不可达，自然路径被 batch5 造的**硬编码演示数据 compat** 占用（功能审计"末梢假"实锤之一）。已挂载去前缀让真实现上位、compat 下线；/kit-check/history 顺带首次可达。响应契约两者一致（code/data{work_orders,summary,pagination}），页面无感。
+  - **workers 双挂载**：顶层 /workers 与 /production/workers 同 router 两挂（api.py+api_lazy 都有），前端只用后者；顶层摘除。
+  - **production exceptions 双挂载**：顶层 /production-exceptions 与 /production/exceptions 同 router 两挂——启动日志 Duplicate Operation ID 的根源；顶层摘除后警告清零。
+  - **前端断链清理**：services/api/kit.js（kitApi 全指向不存在的 /kit-checks 复数路径）删除；production.js kitCheckApi 的 6 个 /kit-checks 死方法删除（保留 workOrders 活方法）；pages/KitCheck/ 目录（hooks+constants，无人引用且与 KitCheck.jsx 同名解析歧义）删除。备份均在 scratchpad/deleted_presale。
+- 测试同步：test_production_write_smoke / test_production_compat_endpoints 路径迁到 /production/*；batch5 kit-check 断言直接过（真实现同 200）。
+- 验证：openapi 双挂载清零、kit-check 5 条自然路径；实机 /kit-check/work-orders 真数据 200（空列表=演示库无未来7天工单，比假数据诚实）、history 200；Duplicate Operation 警告 0；两测试文件全绿；-k sweep 中 2 例失败为跨文件隔离债（单跑/同文件跑均绿）；前端 build 通过。
+- 遗留（下一刀）：**assembly-kit 双段路径**——8 个子路由 /dashboard/dashboard、/stages/stages、/templates/templates、/alert-rules/alert-rules、/shortage-alerts/shortage-alerts 等同病根，batch5 当时让前端将就了双段路径；修复涉及包内前缀+前端 assemblyKit.js+batch5/6 测试，面较大单独做。kit-rate/kit-rates 分散、tasks/task_unified 双表维持记录。

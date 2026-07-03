@@ -25,14 +25,14 @@ def _admin_user(db: Session) -> User:
 def _seed_purchase_workflow(db: Session, approver_id: int, suffix: str) -> None:
     existing = (
         db.query(ApprovalTemplate)
-        .filter(ApprovalTemplate.template_code == "PURCHASE_ORDER_APPROVAL")
+        .filter(ApprovalTemplate.template_code == "TPL_PURCHASE")
         .first()
     )
     if existing:
         return
 
     template = ApprovalTemplate(
-        template_code="PURCHASE_ORDER_APPROVAL",
+        template_code="TPL_PURCHASE",
         template_name=f"QA 采购审批 {suffix}",
         category="BUSINESS",
         entity_type="PURCHASE_ORDER",

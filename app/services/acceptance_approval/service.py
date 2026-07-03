@@ -14,6 +14,8 @@ from app.services.approval_engine import ApprovalEngineService
 
 logger = logging.getLogger(__name__)
 
+ACCEPTANCE_APPROVAL_TEMPLATE_CODE = "TPL_ACCEPTANCE"
+
 
 class AcceptanceApprovalService:
     """验收单审批服务"""
@@ -67,7 +69,7 @@ class AcceptanceApprovalService:
 
             try:
                 instance = self.engine.submit(
-                    template_code="ACCEPTANCE_ORDER_APPROVAL",
+                    template_code=ACCEPTANCE_APPROVAL_TEMPLATE_CODE,
                     entity_type="ACCEPTANCE_ORDER",
                     entity_id=order_id,
                     form_data={

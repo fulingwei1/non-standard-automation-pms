@@ -18,7 +18,7 @@ class OutsourcingWorkflowService(BaseApprovalWorkflowService):
     """外协工作流服务"""
 
     entity_type = "OUTSOURCING_ORDER"
-    template_code = "OUTSOURCING_ORDER_APPROVAL"
+    template_code = "TPL_OUTSOURCING"
     model_class = OutsourcingOrder
     entity_label = "外协订单"
 

@@ -49,7 +49,7 @@ class TestPurchaseWorkflowService:
     def test_entity_type_definition(self, workflow_service):
         """测试实体类型定义"""
         assert workflow_service.entity_type == "PURCHASE_ORDER"
-        assert workflow_service.template_code == "PURCHASE_ORDER_APPROVAL"
+        assert workflow_service.template_code == "TPL_PURCHASE"
         assert workflow_service.entity_label == "采购订单"
 
     def test_get_submittable_statuses(self, workflow_service):

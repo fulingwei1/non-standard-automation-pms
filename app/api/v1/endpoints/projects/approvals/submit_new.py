@@ -28,6 +28,7 @@ router = APIRouter()
 
 # 项目审批的实体类型常量
 ENTITY_TYPE_PROJECT = "PROJECT"
+PROJECT_APPROVAL_TEMPLATE_CODE = "TPL_PROJECT"
 
 
 # 已移除 POST "/" 路由，避免与项目CRUD的 POST /projects/ 冲突
@@ -91,7 +92,7 @@ def submit_project_approval(
 
         # 提交审批
         instance = approval_service.submit(
-            template_code="PROJECT_TEMPLATE",
+            template_code=PROJECT_APPROVAL_TEMPLATE_CODE,
             entity_type=ENTITY_TYPE_PROJECT,
             entity_id=project_id,
             form_data=form_data,

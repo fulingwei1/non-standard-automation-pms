@@ -98,7 +98,6 @@ export * from "./api/dependency.js";
 export * from "./api/engineerKnowledge.js";
 export * from "./api/goodsReceipt.js";
 export * from "./api/inventory.js";
-export * from "./api/kit.js";
 export * from "./api/knowledge.js";
 export * from "./api/knowledgeBase.js";
 export * from "./api/leadAssessment.js";

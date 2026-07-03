@@ -37,7 +37,7 @@ class BaseApprovalWorkflowService(ABC):
 
     # ---- 子类必须定义的类属性 ----
     entity_type: str  # e.g. "PURCHASE_ORDER"
-    template_code: str  # e.g. "PURCHASE_ORDER_APPROVAL"
+    template_code: str  # e.g. "TPL_PURCHASE"
     model_class: Type  # e.g. PurchaseOrder
     entity_label: str  # e.g. "采购订单"
 

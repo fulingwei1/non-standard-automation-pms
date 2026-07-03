@@ -70,7 +70,7 @@ class TestAcceptanceApprovalServiceSubmit(unittest.TestCase):
         # 验证engine.submit被正确调用
         self.service.engine.submit.assert_called_once()
         call_args = self.service.engine.submit.call_args
-        self.assertEqual(call_args[1]["template_code"], "ACCEPTANCE_ORDER_APPROVAL")
+        self.assertEqual(call_args[1]["template_code"], "TPL_ACCEPTANCE")
         self.assertEqual(call_args[1]["entity_type"], "ACCEPTANCE_ORDER")
         self.assertEqual(call_args[1]["entity_id"], 1)
         self.assertEqual(call_args[1]["initiator_id"], 1)

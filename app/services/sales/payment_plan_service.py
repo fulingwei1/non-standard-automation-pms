@@ -6,15 +6,18 @@
 """
 
 import re
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter
+from app.models.business_support import DeliveryOrder, InvoiceRequest
 from app.models.project import Project, ProjectMilestone, ProjectPaymentPlan
 from app.models.sales import Contract
+from app.services.business_support_utils import BusinessSupportUtilsService
 
 
 class PaymentPlanService:
@@ -47,6 +50,152 @@ class PaymentPlanService:
 
         self.db.flush()
         return plans
+
+    def trigger_delivery_payment_plan(
+        self,
+        delivery_order: DeliveryOrder,
+        *,
+        triggered_by: Optional[int] = None,
+        triggered_by_name: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """设备发货后触发 DELIVERY 类型收款计划，自动生成开票申请。"""
+        if not delivery_order.project_id:
+            return {"success": True, "message": "发货单未关联项目", "invoice_requests": []}
+
+        shipped_date = self._delivery_order_shipped_date(delivery_order)
+        query = self.db.query(ProjectPaymentPlan).filter(
+            ProjectPaymentPlan.project_id == delivery_order.project_id,
+            ProjectPaymentPlan.payment_type == "DELIVERY",
+            ProjectPaymentPlan.status.in_(["PENDING", "INVOICED"]),
+        )
+        if delivery_order.contract_id:
+            query = query.filter(ProjectPaymentPlan.contract_id == delivery_order.contract_id)
+
+        plans = query.order_by(ProjectPaymentPlan.payment_no.asc(), ProjectPaymentPlan.id.asc()).all()
+        created_requests = []
+
+        for plan in plans:
+            if plan.invoice_id:
+                continue
+
+            if plan.planned_date is None or plan.planned_date > shipped_date:
+                plan.planned_date = shipped_date
+
+            existing_request = (
+                self.db.query(InvoiceRequest)
+                .filter(
+                    InvoiceRequest.payment_plan_id == plan.id,
+                    InvoiceRequest.status.in_(["PENDING", "APPROVED"]),
+                )
+                .first()
+            )
+            if existing_request:
+                created_requests.append(
+                    {
+                        "request_id": existing_request.id,
+                        "request_no": existing_request.request_no,
+                        "existing": True,
+                    }
+                )
+                continue
+
+            request = self._create_delivery_invoice_request(
+                plan,
+                delivery_order,
+                shipped_date,
+                triggered_by=triggered_by,
+                triggered_by_name=triggered_by_name,
+            )
+            if request:
+                created_requests.append(
+                    {
+                        "request_id": request.id,
+                        "request_no": request.request_no,
+                        "existing": False,
+                    }
+                )
+
+        if created_requests:
+            self.db.flush()
+
+        return {
+            "success": True,
+            "message": f"已触发 {len(created_requests)} 个发货款开票申请",
+            "invoice_requests": created_requests,
+        }
+
+    def _delivery_order_shipped_date(self, delivery_order: DeliveryOrder) -> date:
+        if delivery_order.ship_date:
+            if isinstance(delivery_order.ship_date, datetime):
+                return delivery_order.ship_date.date()
+            return delivery_order.ship_date
+        if delivery_order.delivery_date:
+            return delivery_order.delivery_date
+        return date.today()
+
+    def _create_delivery_invoice_request(
+        self,
+        plan: ProjectPaymentPlan,
+        delivery_order: DeliveryOrder,
+        shipped_date: date,
+        *,
+        triggered_by: Optional[int],
+        triggered_by_name: Optional[str],
+    ) -> Optional[InvoiceRequest]:
+        contract = plan.contract
+        if not contract and plan.contract_id:
+            contract = self.db.query(Contract).filter(Contract.id == plan.contract_id).first()
+        if not contract:
+            return None
+
+        amount = self._money(plan.planned_amount)
+        if amount <= 0:
+            return None
+
+        customer = contract.customer
+        customer_id = contract.customer_id or delivery_order.customer_id
+        customer_name = (
+            customer.customer_name
+            if customer
+            else delivery_order.customer_name
+        )
+        if not customer_id:
+            return None
+
+        tax_rate = Decimal("13.00")
+        tax_amount = self._money(amount * tax_rate / Decimal("100"))
+        total_amount = self._money(amount + tax_amount)
+        project = plan.project
+
+        invoice_request = InvoiceRequest(
+            request_no=BusinessSupportUtilsService(self.db).generate_invoice_request_no(),
+            contract_id=contract.id,
+            project_id=plan.project_id,
+            project_name=project.project_name if project else None,
+            customer_id=customer_id,
+            customer_name=customer_name,
+            payment_plan_id=plan.id,
+            invoice_type="NORMAL",
+            invoice_title=customer_name,
+            tax_rate=tax_rate,
+            amount=amount,
+            tax_amount=tax_amount,
+            total_amount=total_amount,
+            currency="CNY",
+            expected_issue_date=shipped_date,
+            expected_payment_date=shipped_date,
+            reason=f"发货自动触发：{delivery_order.delivery_no}",
+            status="PENDING",
+            requested_by=triggered_by or 1,
+            requested_by_name=triggered_by_name,
+            receipt_status="UNPAID",
+        )
+        self.db.add(invoice_request)
+        self.db.flush()
+        return invoice_request
+
+    def _money(self, value: Any) -> Decimal:
+        return Decimal(str(value or 0)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     def _validate_contract(self, contract: Contract) -> bool:
         """验证合同是否有效"""

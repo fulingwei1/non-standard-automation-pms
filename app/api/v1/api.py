@@ -100,17 +100,9 @@ def create_api_router() -> APIRouter:
     # ==================== 生产管理 ====================
     try:
         from app.api.v1.endpoints.production import router as production_router
-        from app.api.v1.endpoints.production import exceptions as production_exceptions
-        from app.api.v1.endpoints.production import workers as production_workers
         from app.api.v1.endpoints import production_daily_reports
 
         api_router.include_router(production_router, prefix="/production", tags=["production"])
-        api_router.include_router(production_workers.router, prefix="/workers", tags=["production-workers"])
-        api_router.include_router(
-            production_exceptions.router,
-            prefix="/production-exceptions",
-            tags=["production-exceptions"],
-        )
         api_router.include_router(
             production_daily_reports.router,
             prefix="/production-daily-reports",
@@ -872,10 +864,11 @@ def create_api_router() -> APIRouter:
 
     # ==================== 成套检查 ====================
     try:
-        from app.api.v1.endpoints.kit_check_compat import router as kit_check_compat_router
+        # 2026-07-03 去重：kit_check 包内路由自带 /kit-check 前缀，此前挂载又加 prefix 导致真实现
+        # 全部落在 /kit-check/kit-check/* 不可达，自然路径被硬编码演示数据的 compat 占用。
+        # 现挂载去前缀让真实现（真DB查询+齐套率计算）上位，演示 compat 下线。
         from app.api.v1.endpoints.kit_check import router as kit_check_router
-        api_router.include_router(kit_check_compat_router, prefix="/kit-check", tags=["kit-check"])
-        api_router.include_router(kit_check_router, prefix="/kit-check", tags=["kit-check"])
+        api_router.include_router(kit_check_router, tags=["kit-check"])
         print("✓ 成套检查模块加载成功")
     except Exception as e:
         print(f"✗ 成套检查模块加载失败：{e}")
