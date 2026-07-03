@@ -86,7 +86,6 @@ const PerformanceIncentive = lazyLoad(() => import("../../pages/SalesAI/Performa
 const Collaboration = lazyLoad(() => import("../../pages/SalesAI/Collaboration"));
 const RelationshipMaturity = lazyLoad(() => import("../../pages/SalesAI/RelationshipMaturity"));
 const WinRatePrediction = lazyLoad(() => import("../../pages/SalesAI/WinRatePrediction"));
-const CompetitorAnalysis = lazyLoad(() => import("../../pages/SalesAI/CompetitorAnalysis"));
 const DataQuality = lazyLoad(() => import("../../pages/SalesAI/DataQuality"));
 const RoleBasedView = lazyLoad(() => import("../../pages/SalesAI/RoleBasedView"));
 
@@ -230,7 +229,6 @@ export function SalesRoutes() {
       <Route path="/sales/relationship-maturity" element={<RelationshipMaturity />} />
       <Route path="/sales/win-rate-prediction" element={<WinRatePrediction />} />
       <Route path="/sales/win-rate-prediction/:id" element={<WinRatePrediction />} />
-      <Route path="/sales/competitor-analysis" element={<CompetitorAnalysis />} />
       {/* 去重：组织架构已并入"销售团队"统一入口(SalesTeam 的组织架构Tab)，重定向 */}
       <Route path="/sales/organization" element={<Navigate to="/sales/team" replace />} />
       <Route path="/sales/data-quality" element={<DataQuality />} />

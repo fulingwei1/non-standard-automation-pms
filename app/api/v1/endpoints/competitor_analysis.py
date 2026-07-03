@@ -7,7 +7,7 @@
 from datetime import date
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -15,6 +15,13 @@ from app.core import security
 from app.models.user import User
 
 router = APIRouter()
+
+
+def _raise_competitor_analysis_unavailable() -> None:
+    raise HTTPException(
+        status_code=501,
+        detail="竞品分析模块已下架止血：当前实现为硬编码演示数据，未接真实数据源。",
+    )
 
 
 # ========== 1. 竞争对手总览 ==========
@@ -33,6 +40,7 @@ def get_competitor_overview(
     - 对各竞品的赢单率
     - 竞争优势/劣势分析
     """
+    _raise_competitor_analysis_unavailable()
 
     overview = {
         "analysis_date": date.today().isoformat(),
@@ -199,6 +207,7 @@ def get_competitor_detailed_analysis(
     - 价格对比
     - 竞争优势/劣势
     """
+    _raise_competitor_analysis_unavailable()
 
     # 示例：竞品 A 分析
     analysis = {
@@ -435,6 +444,7 @@ def get_competitor_strategy_recommendations(
     - 销售话术建议
     - 定价策略建议
     """
+    _raise_competitor_analysis_unavailable()
 
     recommendations = {
         "generated_date": date.today().isoformat(),
