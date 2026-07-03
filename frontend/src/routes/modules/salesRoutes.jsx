@@ -13,6 +13,7 @@ const ModuleLibrary = lazyLoad(() => import("../../pages/ModuleLibrary"));
 const FaultDiagnosis = lazyLoad(() => import("../../pages/FaultDiagnosis"));
 const AIAssistant = lazyLoad(() => import("../../pages/AIAssistant"));
 const AdminAIConfig = lazyLoad(() => import("../../pages/AdminAIConfig"));
+const AIEffectiveness = lazyLoad(() => import("../../pages/AIEffectiveness"));
 
 // 客户管理
 const CustomerList = lazyLoad(() => import("../../pages/CustomerList"));
@@ -130,6 +131,7 @@ export function SalesRoutes() {
       <Route path="/service/fault-diagnosis" element={<FaultDiagnosis />} />
       <Route path="/ai/assistant" element={<AIAssistant />} />
       <Route path="/admin/ai-config" element={<AdminAIConfig />} />
+      <Route path="/ai/effectiveness" element={<AIEffectiveness />} />
       <Route path="/sales/customers/:id" element={<CustomerDetail />} />
       <Route path="/opportunities" element={<OpportunityBoard />} />
       <Route path="/lead-assessment" element={<LeadAssessment />} />

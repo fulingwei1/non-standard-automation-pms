@@ -1,5 +1,13 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：AI 效果看板（持续优化环节的人工消费入口）
+
+- 新增 `pages/AIEffectiveness.jsx`（路由 `/ai/effectiveness`，菜单"AI效果看板"挂客户关系层 AI 组）：
+  - 采纳率统计表：GET /ai-feedback/stats，feature_key 中文名映射，采纳/驳回/部分/采纳率；
+  - 报价对账：GET /ai-feedback/quote-calibration，三档平均偏差卡片 + 逐单明细（成交金额 vs 三档、最贴近档）。
+- 验证：页面测试 3 passed（含空态）；路由回归 salesCompetitorAnalysisStopgap 2 passed；`npm run build` 通过。
+- 至此闭环六环节全部有人机接口：需求识别/判断分析（存量）→ 执行动作（确认回填+G2 门）→ 结果反馈（反馈按钮+处置留痕）→ 持续优化（效果看板）。
+
 ## 2026-07-03 继续：AI 闭环前端接入（反馈按钮 + 评审处置入口）
 
 - 背景：反馈闭环/G2 风险门后端已通，但对人不可用——前端无反馈入口、评审卡片无处置动作。

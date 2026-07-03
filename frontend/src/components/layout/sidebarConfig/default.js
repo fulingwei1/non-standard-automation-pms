@@ -70,6 +70,7 @@ export const defaultNavGroups = [
       { name: "AI故障诊断", path: "/service/fault-diagnosis", icon: "Wrench", permission: "customer:read", permissionLabel: "AI故障诊断" },
       { name: "AI助手(图纸/问答)", path: "/ai/assistant", icon: "Sparkles", permission: "customer:read", permissionLabel: "AI助手" },
       { name: "AI接入配置", path: "/admin/ai-config", icon: "Settings", permission: "customer:read", permissionLabel: "AI接入配置(管理员)" },
+      { name: "AI效果看板", path: "/ai/effectiveness", icon: "Sparkles", permission: "customer:read", permissionLabel: "AI效果看板(采纳率/报价对账)" },
       // 财务回收层
       { name: "应收账款", path: "/sales/receivables", icon: "CreditCard", permission: "finance:receivable:read", permissionLabel: "应收账款" },
       { name: "发票管理", path: "/invoices", icon: "Receipt", permission: "finance:invoice:read", permissionLabel: "发票管理" },
