@@ -8,6 +8,24 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 
+class TestMaterialProgressSchemas:
+    def test_key_material_item_allows_unlinked_material_id(self):
+        """BOM 行可能还没有关联物料主数据，但仍应能返回关键物料进度。"""
+        from app.schemas.material_progress import KeyMaterialItem
+
+        item = KeyMaterialItem(
+            material_id=None,
+            material_code="TMP-001",
+            material_name="临时关键物料",
+            required_qty=Decimal("10"),
+            received_qty=Decimal("2"),
+            shortage_qty=Decimal("8"),
+            kitting_status="SHORTAGE",
+        )
+
+        assert item.material_id is None
+
+
 class TestMaterialProgressService:
     """物料进度服务测试"""
 

@@ -527,7 +527,9 @@ class TestQuoteApprovalServiceCore(unittest.TestCase):
         self.assertEqual(result["quote_id"], 1)
         self.assertEqual(result["status"], "withdrawn")
 
-        self.service.approval_engine.withdraw.assert_called_once_with(instance_id=1001, user_id=50)
+        self.service.approval_engine.withdraw.assert_called_once_with(
+            instance_id=1001, initiator_id=50, comment="需要修改"
+        )
 
     def test_withdraw_approval_quote_not_found(self):
         """测试撤回不存在的报价"""

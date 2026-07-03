@@ -86,6 +86,8 @@ def test_materials(db: Session):
     for config in material_configs:
         existing = db.query(Material).filter_by(material_code=config["material_code"]).first()
         if existing:
+            for field, value in config.items():
+                setattr(existing, field, value)
             materials.append(existing)
         else:
             material = Material(category_id=category.id, **config)

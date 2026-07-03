@@ -5,18 +5,86 @@
 测试客户的创建、查询、更新、删除及相关功能
 """
 
+from uuid import uuid4
+
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.security import create_access_token, get_password_hash
+from app.models.project.customer import Customer
+from app.models.user import User
 
 
 def _auth_headers(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
+def _auth_headers_for_user(user: User) -> dict:
+    token = create_access_token(data={"sub": str(user.id)})
+    return {"Authorization": f"Bearer {token}"}
+
+
+def _create_customer_list_user(db_session: Session, suffix: str, real_name: str) -> User:
+    user = User(
+        username=f"customer_list_{suffix}",
+        password_hash=get_password_hash("customer123"),
+        email=f"customer_list_{suffix}@example.com",
+        real_name=real_name,
+        department="销售部",
+        position="销售",
+        is_active=True,
+        is_superuser=False,
+    )
+    db_session.add(user)
+    db_session.flush()
+    return user
+
+
+def _create_customer_record(db_session: Session, owner: User, suffix: str) -> Customer:
+    customer = Customer(
+        customer_code=f"CUST-LIST-{suffix}",
+        customer_name=f"客户列表-{suffix}",
+        short_name=f"客户-{suffix}",
+        industry="制造业",
+        status="ACTIVE",
+        credit_level="B",
+        sales_owner_id=owner.id,
+        created_by=owner.id,
+    )
+    db_session.add(customer)
+    db_session.flush()
+    return customer
+
+
 class TestSalesCustomersAPI:
     """销售客户管理 API 测试类"""
+
+    def test_regular_sales_user_can_read_own_customers_without_customer_read(
+        self,
+        client: TestClient,
+        db_session: Session,
+    ):
+        """旧 /customers/ 列表按销售范围过滤，不要求 customer:read"""
+        suffix = uuid4().hex[:8].upper()
+        owner = _create_customer_list_user(db_session, f"OWNER-{suffix}", "客户列表本人")
+        other = _create_customer_list_user(db_session, f"OTHER-{suffix}", "客户列表他人")
+        own_customer = _create_customer_record(db_session, owner, f"OWN-{suffix}")
+        other_customer = _create_customer_record(db_session, other, f"OTHER-{suffix}")
+        db_session.commit()
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/customers/",
+            params={"page": 1, "page_size": 100},
+            headers=_auth_headers_for_user(owner),
+        )
+
+        assert response.status_code == 200, response.text
+        data = response.json()
+        customer_ids = {item["id"] for item in data["items"]}
+        assert own_customer.id in customer_ids
+        assert other_customer.id not in customer_ids
 
     def test_list_customers(self, client: TestClient, admin_token: str):
         """测试获取客户列表"""

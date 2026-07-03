@@ -13,6 +13,7 @@
 import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Optional
 
 import pytest
 from fastapi.testclient import TestClient
@@ -616,6 +617,92 @@ class TestPurchaseOrderUpdate:
 class TestPurchaseOrderApproval:
     """采购订单审批流程测试"""
 
+    def _create_login_user(
+        self,
+        db_session: Session,
+        *,
+        username: str,
+        password: str,
+        real_name: str,
+        reporting_to: Optional[int] = None,
+        is_superuser: bool = False,
+        tenant_id: Optional[int] = None,
+    ):
+        from app.core.security import get_password_hash
+        from app.models.user import User
+
+        user = User(
+            username=username,
+            password_hash=get_password_hash(password),
+            real_name=real_name,
+            department="采购部",
+            is_active=True,
+            is_superuser=is_superuser,
+            tenant_id=tenant_id,
+            reporting_to=reporting_to,
+        )
+        db_session.add(user)
+        db_session.flush()
+        return user
+
+    def _login_headers(self, client: TestClient, username: str, password: str) -> dict:
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/auth/login",
+            data={"username": username, "password": password},
+        )
+        assert response.status_code == 200
+        return {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+    def _create_submitted_order_for_user(
+        self,
+        db_session: Session,
+        *,
+        created_by: int,
+    ) -> PurchaseOrder:
+        supplier = db_session.query(Vendor).filter(Vendor.vendor_type == "MATERIAL").first()
+        if not supplier:
+            supplier = Vendor(
+                supplier_code=f"SUP-APPROVAL-{uuid.uuid4().hex[:8]}",
+                supplier_name="测试供应商 - 审批权限",
+                vendor_type="MATERIAL",
+                contact_person="供应商联系人",
+                contact_phone="13900000000",
+                status="ACTIVE",
+                created_by=created_by,
+            )
+            db_session.add(supplier)
+            db_session.flush()
+
+        order = PurchaseOrder(
+            order_no=f"PO-APPROVAL-{uuid.uuid4().hex[:8].upper()}",
+            supplier_id=supplier.id,
+            order_type="NORMAL",
+            order_title="审批权限测试订单",
+            status="SUBMITTED",
+            created_by=created_by,
+            order_date=date.today(),
+            submitted_at=datetime.now(),
+            total_amount=Decimal("100.00"),
+        )
+        db_session.add(order)
+        db_session.flush()
+        item = PurchaseOrderItem(
+            order_id=order.id,
+            item_no=1,
+            material_code=_MAT001,
+            material_name="测试物料",
+            unit="个",
+            quantity=10,
+            unit_price=Decimal("10.00"),
+            amount=Decimal("100.00"),
+            tax_rate=Decimal("13"),
+            status="PENDING",
+        )
+        db_session.add(item)
+        db_session.commit()
+        db_session.refresh(order)
+        return order
+
     def test_submit_order(self, client: TestClient, admin_token: str, draft_purchase_order: PurchaseOrder):
         """测试提交采购订单"""
         if not admin_token:
@@ -679,6 +766,91 @@ class TestPurchaseOrderApproval:
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.put(
             f"{settings.API_V1_PREFIX}/purchase-orders/{submitted_purchase_order.id}/approve?approved=true",
+            headers=headers,
+        )
+
+        assert response.status_code == 200
+
+    def test_non_admin_order_requires_direct_manager_approval(
+        self, client: TestClient, db_session: Session
+    ):
+        """普通用户不能自审采购订单，直属上级可以审批。"""
+        manager_password = "manager123"
+        requester_password = "requester123"
+        suffix = uuid.uuid4().hex[:8]
+        manager = self._create_login_user(
+            db_session,
+            username=f"po_manager_{suffix}",
+            password=manager_password,
+            real_name="采购主管",
+        )
+        peer_password = "peer123"
+        peer = self._create_login_user(
+            db_session,
+            username=f"po_peer_{suffix}",
+            password=peer_password,
+            real_name="采购同事",
+        )
+        requester = self._create_login_user(
+            db_session,
+            username=f"po_requester_{suffix}",
+            password=requester_password,
+            real_name="采购员",
+            reporting_to=manager.id,
+        )
+        order = self._create_submitted_order_for_user(db_session, created_by=requester.id)
+
+        requester_headers = self._login_headers(client, requester.username, requester_password)
+        self_response = client.put(
+            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}/approve?approved=true",
+            headers=requester_headers,
+        )
+        assert self_response.status_code == 403
+
+        peer_headers = self._login_headers(client, peer.username, peer_password)
+        peer_response = client.put(
+            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}/approve?approved=true",
+            headers=peer_headers,
+        )
+        assert peer_response.status_code == 403
+
+        manager_headers = self._login_headers(client, manager.username, manager_password)
+        manager_response = client.put(
+            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}/approve"
+            f"?approved=true&approval_note=直属上级审批通过",
+            headers=manager_headers,
+        )
+        assert manager_response.status_code == 200
+
+    def test_superuser_with_tenant_can_approve_own_purchase_order(
+        self, client: TestClient, db_session: Session
+    ):
+        """本地管理员即使带 tenant_id，也允许审批自己创建的采购订单。"""
+        from app.models.tenant import Tenant
+
+        password = "admin123"
+        suffix = uuid.uuid4().hex[:8]
+        tenant = Tenant(
+            tenant_code=f"tenant_po_approval_{suffix}",
+            tenant_name="采购审批测试租户",
+            status="ACTIVE",
+        )
+        db_session.add(tenant)
+        db_session.flush()
+
+        admin = self._create_login_user(
+            db_session,
+            username=f"po_admin_{suffix}",
+            password=password,
+            real_name="采购管理员",
+            is_superuser=True,
+            tenant_id=tenant.id,
+        )
+        order = self._create_submitted_order_for_user(db_session, created_by=admin.id)
+
+        headers = self._login_headers(client, admin.username, password)
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}/approve?approved=true",
             headers=headers,
         )
 

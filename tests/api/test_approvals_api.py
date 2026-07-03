@@ -10,17 +10,33 @@
 - /api/v1/approvals/delegates - 代理人管理
 """
 
-from datetime import date, timedelta
+import uuid
+from datetime import date, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+from app.core.security import create_access_token, get_password_hash
+from app.models.approval import (
+    ApprovalCarbonCopy,
+    ApprovalFlowDefinition,
+    ApprovalInstance,
+    ApprovalNodeDefinition,
+    ApprovalTask,
+    ApprovalTemplate,
+)
+from app.models.user import User
 
 
 def _auth_headers(token: str) -> dict:
     """生成认证请求头"""
     return {"Authorization": f"Bearer {token}"}
+
+
+def _auth_headers_for_user(user: User) -> dict:
+    token = create_access_token(data={"sub": str(user.id)})
+    return _auth_headers(token)
 
 
 # ==================== 审批模板 API 测试 ====================
@@ -353,6 +369,204 @@ class TestApprovalTasksAPI:
 
 class TestApprovalPendingAPI:
     """待办查询测试"""
+
+    def test_regular_user_can_read_only_own_approval_workbench(
+        self,
+        client: TestClient,
+        db_session,
+    ):
+        """普通登录用户应能读取自己的审批待办工作台，不需要额外 approval:view 权限"""
+        marker = f"APPROVAL-SELF-{uuid.uuid4().hex}"
+
+        actor = User(
+            username=f"{marker.lower()}-actor",
+            password_hash=get_password_hash("password123"),
+            real_name="审批自服务用户",
+            department="综合管理部",
+            is_active=True,
+            is_superuser=False,
+        )
+        other_user = User(
+            username=f"{marker.lower()}-other",
+            password_hash=get_password_hash("password123"),
+            real_name="其他审批用户",
+            department="综合管理部",
+            is_active=True,
+            is_superuser=False,
+        )
+        db_session.add_all([actor, other_user])
+        db_session.flush()
+
+        template = ApprovalTemplate(
+            template_code=f"TPL-{marker}",
+            template_name="审批自服务测试模板",
+            category="GENERAL",
+            entity_type="TEST",
+            is_published=True,
+            published_at=datetime.now(),
+            published_by=actor.id,
+            is_active=True,
+            created_by=actor.id,
+        )
+        db_session.add(template)
+        db_session.flush()
+
+        flow = ApprovalFlowDefinition(
+            template_id=template.id,
+            flow_name="审批自服务测试流程",
+            is_default=True,
+            version=1,
+            is_active=True,
+            created_by=actor.id,
+        )
+        db_session.add(flow)
+        db_session.flush()
+
+        node = ApprovalNodeDefinition(
+            flow_id=flow.id,
+            node_name="审批自服务节点",
+            node_type="APPROVAL",
+            node_order=1,
+            approval_mode="SINGLE",
+            is_active=True,
+        )
+        db_session.add(node)
+        db_session.flush()
+
+        def make_instance(title: str, initiator: User, urgency: str = "NORMAL") -> ApprovalInstance:
+            instance = ApprovalInstance(
+                instance_no=f"AP-{uuid.uuid4().hex[:12].upper()}",
+                template_id=template.id,
+                flow_id=flow.id,
+                entity_type="TEST",
+                entity_id=1,
+                initiator_id=initiator.id,
+                initiator_name=initiator.real_name,
+                form_data={"title": title},
+                status="PENDING",
+                current_node_id=node.id,
+                current_node_order=1,
+                urgency=urgency,
+                title=title,
+                summary=title,
+            )
+            db_session.add(instance)
+            db_session.flush()
+            return instance
+
+        own_pending_instance = make_instance(f"{marker}-own-pending", other_user, "URGENT")
+        own_initiated_instance = make_instance(f"{marker}-own-initiated", actor)
+        own_processed_instance = make_instance(f"{marker}-own-processed", other_user)
+        other_pending_instance = make_instance(f"{marker}-other-pending", other_user)
+
+        own_pending_task = ApprovalTask(
+            instance_id=own_pending_instance.id,
+            node_id=node.id,
+            task_type="APPROVAL",
+            task_order=1,
+            assignee_id=actor.id,
+            assignee_name=actor.real_name,
+            assignee_type="NORMAL",
+            status="PENDING",
+        )
+        own_processed_task = ApprovalTask(
+            instance_id=own_processed_instance.id,
+            node_id=node.id,
+            task_type="APPROVAL",
+            task_order=1,
+            assignee_id=actor.id,
+            assignee_name=actor.real_name,
+            assignee_type="NORMAL",
+            status="COMPLETED",
+            action="APPROVE",
+            completed_at=datetime.now(),
+        )
+        other_pending_task = ApprovalTask(
+            instance_id=other_pending_instance.id,
+            node_id=node.id,
+            task_type="APPROVAL",
+            task_order=1,
+            assignee_id=other_user.id,
+            assignee_name=other_user.real_name,
+            assignee_type="NORMAL",
+            status="PENDING",
+        )
+        own_cc = ApprovalCarbonCopy(
+            instance_id=own_initiated_instance.id,
+            cc_user_id=actor.id,
+            cc_user_name=actor.real_name,
+            cc_source="FLOW",
+            is_read=False,
+        )
+        other_cc = ApprovalCarbonCopy(
+            instance_id=other_pending_instance.id,
+            cc_user_id=other_user.id,
+            cc_user_name=other_user.real_name,
+            cc_source="FLOW",
+            is_read=False,
+        )
+        db_session.add_all(
+            [own_pending_task, own_processed_task, other_pending_task, own_cc, other_cc]
+        )
+        db_session.commit()
+
+        headers = _auth_headers_for_user(actor)
+        params = {"page": 1, "page_size": 100}
+
+        pending_response = client.get(
+            f"{settings.API_V1_PREFIX}/approvals/pending/mine",
+            params=params,
+            headers=headers,
+        )
+        assert pending_response.status_code == 200, pending_response.text
+        pending_titles = {
+            item["instance_title"] for item in pending_response.json()["items"]
+        }
+        assert f"{marker}-own-pending" in pending_titles
+        assert f"{marker}-other-pending" not in pending_titles
+
+        initiated_response = client.get(
+            f"{settings.API_V1_PREFIX}/approvals/pending/initiated",
+            params=params,
+            headers=headers,
+        )
+        assert initiated_response.status_code == 200, initiated_response.text
+        initiated_titles = {item["title"] for item in initiated_response.json()["items"]}
+        assert f"{marker}-own-initiated" in initiated_titles
+        assert f"{marker}-other-pending" not in initiated_titles
+
+        cc_response = client.get(
+            f"{settings.API_V1_PREFIX}/approvals/pending/cc",
+            params=params,
+            headers=headers,
+        )
+        assert cc_response.status_code == 200, cc_response.text
+        cc_titles = {item["instance_title"] for item in cc_response.json()["items"]}
+        assert f"{marker}-own-initiated" in cc_titles
+        assert f"{marker}-other-pending" not in cc_titles
+
+        processed_response = client.get(
+            f"{settings.API_V1_PREFIX}/approvals/pending/processed",
+            params=params,
+            headers=headers,
+        )
+        assert processed_response.status_code == 200, processed_response.text
+        processed_titles = {
+            item["instance_title"] for item in processed_response.json()["items"]
+        }
+        assert f"{marker}-own-processed" in processed_titles
+        assert f"{marker}-other-pending" not in processed_titles
+
+        counts_response = client.get(
+            f"{settings.API_V1_PREFIX}/approvals/pending/counts",
+            headers=headers,
+        )
+        assert counts_response.status_code == 200, counts_response.text
+        counts = counts_response.json()["data"]
+        assert counts["pending"] >= 1
+        assert counts["initiated_pending"] >= 1
+        assert counts["unread_cc"] >= 1
+        assert counts["urgent"] >= 1
 
     def test_get_my_pending_tasks(self, client: TestClient, admin_token: str):
         """测试获取待我审批的任务"""

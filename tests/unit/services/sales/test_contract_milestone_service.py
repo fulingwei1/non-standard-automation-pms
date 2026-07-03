@@ -17,6 +17,7 @@ from app.services.sales.contract_milestone_service import (
     ContractMilestone,
     MILESTONE_CONFIG,
 )
+from app.models.sales import Contract
 
 
 # ========== 测试夹具 ==========
@@ -146,6 +147,31 @@ class TestExtractMilestones:
         assert len(contract_milestones) == 1
         assert contract_milestones[0].milestone_name == "合同到期"
         assert contract_milestones[0].days_until == 30
+
+    def test_extracts_contract_expiry_date_from_model_alias(self, service):
+        """真实合同模型使用 expiry_date 字段时也能提取到期里程碑"""
+        today = date.today()
+        contract = Contract(
+            id=99,
+            contract_code="CT202606250001",
+            contract_name="模型字段合同",
+            contract_type="sales",
+            customer_id=1,
+            total_amount=300000,
+            expiry_date=today + timedelta(days=30),
+        )
+
+        milestones = service._extract_milestones(
+            contract,
+            today,
+            today - timedelta(days=90),
+            today + timedelta(days=60),
+        )
+
+        contract_milestones = [m for m in milestones if m.milestone_type == MilestoneType.CONTRACT_END]
+        assert len(contract_milestones) == 1
+        assert contract_milestones[0].contract_id == 99
+        assert contract_milestones[0].due_date == today + timedelta(days=30)
 
     def test_extracts_warranty_end_milestone(self, service, mock_contract):
         """提取质保到期里程碑"""

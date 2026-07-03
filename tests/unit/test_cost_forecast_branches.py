@@ -17,7 +17,7 @@ from datetime import date, datetime, timedelta
 # 标记：如果导入失败则跳过所有测试
 pytestmark = pytest.mark.skipif(
     False,  # 稍后会设置
-    reason="成本预测相关模块未找到"
+    reason="成本预测相关模块未找到",
 )
 
 HAS_MODULE = True
@@ -28,6 +28,7 @@ CostCollectionService = None
 
 try:
     from app.services.cost.cost_forecast_service import CostForecastService as _CFS
+
     CostForecastService = _CFS
 except Exception as e:
     print(f"Failed to import CostForecastService: {e}")
@@ -35,6 +36,7 @@ except Exception as e:
 
 try:
     from app.services.evm_service import EVMCalculator as _EC, EVMService as _ES
+
     EVMCalculator = _EC
     EVMService = _ES
 except Exception as e:
@@ -43,6 +45,7 @@ except Exception as e:
 
 try:
     from app.services.cost_collection_service import CostCollectionService as _CCS
+
     CostCollectionService = _CCS
 except Exception as e:
     print(f"Failed to import CostCollectionService: {e}")
@@ -56,6 +59,7 @@ pytestmark = pytest.mark.skipif(not HAS_MODULE, reason="成本预测相关模块
 # 测试数据工厂
 # ============================================================================
 
+
 def make_project(
     project_id=1,
     name="Test Project",
@@ -63,7 +67,7 @@ def make_project(
     actual_cost=0,
     progress_pct=0,
     planned_start=None,
-    planned_end=None
+    planned_end=None,
 ):
     """创建模拟项目对象"""
     p = MagicMock()
@@ -85,17 +89,20 @@ def make_monthly_costs(months_count=3, base_cost=5000):
     for i in range(months_count):
         monthly = base_cost * (1 + i * 0.1)  # 每月增长10%
         cumulative += monthly
-        monthly_costs.append({
-            "month": f"2024-{i+1:02d}",
-            "monthly_cost": Decimal(str(monthly)),
-            "cumulative_cost": Decimal(str(cumulative))
-        })
+        monthly_costs.append(
+            {
+                "month": f"2024-{i + 1:02d}",
+                "monthly_cost": Decimal(str(monthly)),
+                "cumulative_cost": Decimal(str(cumulative)),
+            }
+        )
     return monthly_costs
 
 
 # ============================================================================
 # CostForecastService 分支测试
 # ============================================================================
+
 
 class TestCostForecastLinearForecast:
     """测试线性回归预测的所有分支"""
@@ -117,9 +124,17 @@ class TestCostForecastLinearForecast:
         db.query.return_value.filter.return_value.first.return_value = make_project()
         svc = CostForecastService(db)
 
-        with patch.object(svc, "_get_monthly_costs", return_value=[
-            {"month": "2024-01", "monthly_cost": Decimal("5000"), "cumulative_cost": Decimal("5000")}
-        ]):
+        with patch.object(
+            svc,
+            "_get_monthly_costs",
+            return_value=[
+                {
+                    "month": "2024-01",
+                    "monthly_cost": Decimal("5000"),
+                    "cumulative_cost": Decimal("5000"),
+                }
+            ],
+        ):
             result = svc.linear_forecast(1)
 
             assert "error" in result
@@ -208,9 +223,17 @@ class TestCostForecastExponentialForecast:
         db.query.return_value.filter.return_value.first.return_value = make_project()
         svc = CostForecastService(db)
 
-        with patch.object(svc, "_get_monthly_costs", return_value=[
-            {"month": "2024-01", "monthly_cost": Decimal("5000"), "cumulative_cost": Decimal("5000")}
-        ]):
+        with patch.object(
+            svc,
+            "_get_monthly_costs",
+            return_value=[
+                {
+                    "month": "2024-01",
+                    "monthly_cost": Decimal("5000"),
+                    "cumulative_cost": Decimal("5000"),
+                }
+            ],
+        ):
             result = svc.exponential_forecast(1)
 
             assert "error" in result
@@ -342,7 +365,9 @@ class TestCostForecastAlerts:
         svc = CostForecastService(db)
 
         with patch.object(svc, "_get_alert_rules", return_value={}):
-            with patch.object(svc, "_get_monthly_costs", return_value=make_monthly_costs()):
+            with patch.object(
+                svc, "_get_monthly_costs", return_value=make_monthly_costs()
+            ):
                 alerts = svc.check_cost_alerts(1, auto_create=False)
 
                 assert isinstance(alerts, list)
@@ -354,10 +379,16 @@ class TestCostForecastAlerts:
         db.query.return_value.filter.return_value.first.return_value = project
         svc = CostForecastService(db)
 
-        with patch.object(svc, "_get_alert_rules", return_value={
-            "OVERSPEND": {"warning_threshold": 80, "critical_threshold": 100}
-        }):
-            with patch.object(svc, "_get_monthly_costs", return_value=make_monthly_costs()):
+        with patch.object(
+            svc,
+            "_get_alert_rules",
+            return_value={
+                "OVERSPEND": {"warning_threshold": 80, "critical_threshold": 100}
+            },
+        ):
+            with patch.object(
+                svc, "_get_monthly_costs", return_value=make_monthly_costs()
+            ):
                 alerts = svc.check_cost_alerts(1, auto_create=False)
 
                 overspend_alerts = [a for a in alerts if a["alert_type"] == "OVERSPEND"]
@@ -371,10 +402,16 @@ class TestCostForecastAlerts:
         db.query.return_value.filter.return_value.first.return_value = project
         svc = CostForecastService(db)
 
-        with patch.object(svc, "_get_alert_rules", return_value={
-            "OVERSPEND": {"warning_threshold": 80, "critical_threshold": 100}
-        }):
-            with patch.object(svc, "_get_monthly_costs", return_value=make_monthly_costs()):
+        with patch.object(
+            svc,
+            "_get_alert_rules",
+            return_value={
+                "OVERSPEND": {"warning_threshold": 80, "critical_threshold": 100}
+            },
+        ):
+            with patch.object(
+                svc, "_get_monthly_costs", return_value=make_monthly_costs()
+            ):
                 alerts = svc.check_cost_alerts(1, auto_create=False)
 
                 overspend_alerts = [a for a in alerts if a["alert_type"] == "OVERSPEND"]
@@ -387,13 +424,19 @@ class TestCostForecastAlerts:
         db.query.return_value.filter.return_value.first.return_value = project
         svc = CostForecastService(db)
 
-        with patch.object(svc, "_get_alert_rules", return_value={
-            "PROGRESS_MISMATCH": {"deviation_threshold": 15}
-        }):
-            with patch.object(svc, "_get_monthly_costs", return_value=make_monthly_costs()):
+        with patch.object(
+            svc,
+            "_get_alert_rules",
+            return_value={"PROGRESS_MISMATCH": {"deviation_threshold": 15}},
+        ):
+            with patch.object(
+                svc, "_get_monthly_costs", return_value=make_monthly_costs()
+            ):
                 alerts = svc.check_cost_alerts(1, auto_create=False)
 
-                mismatch_alerts = [a for a in alerts if a["alert_type"] == "PROGRESS_MISMATCH"]
+                mismatch_alerts = [
+                    a for a in alerts if a["alert_type"] == "PROGRESS_MISMATCH"
+                ]
                 assert len(mismatch_alerts) > 0
 
     def test_trend_anomaly(self):
@@ -405,15 +448,31 @@ class TestCostForecastAlerts:
 
         # 创建增长率超过30%的月度数据
         high_growth_costs = [
-            {"month": "2024-01", "monthly_cost": Decimal("5000"), "cumulative_cost": Decimal("5000")},
-            {"month": "2024-02", "monthly_cost": Decimal("7000"), "cumulative_cost": Decimal("12000")},
-            {"month": "2024-03", "monthly_cost": Decimal("10000"), "cumulative_cost": Decimal("22000")},
+            {
+                "month": "2024-01",
+                "monthly_cost": Decimal("5000"),
+                "cumulative_cost": Decimal("5000"),
+            },
+            {
+                "month": "2024-02",
+                "monthly_cost": Decimal("7000"),
+                "cumulative_cost": Decimal("12000"),
+            },
+            {
+                "month": "2024-03",
+                "monthly_cost": Decimal("10000"),
+                "cumulative_cost": Decimal("22000"),
+            },
         ]
 
-        with patch.object(svc, "_get_alert_rules", return_value={
-            "TREND_ANOMALY": {"growth_rate_threshold": 0.3}
-        }):
-            with patch.object(svc, "_get_monthly_costs", return_value=high_growth_costs):
+        with patch.object(
+            svc,
+            "_get_alert_rules",
+            return_value={"TREND_ANOMALY": {"growth_rate_threshold": 0.3}},
+        ):
+            with patch.object(
+                svc, "_get_monthly_costs", return_value=high_growth_costs
+            ):
                 alerts = svc.check_cost_alerts(1, auto_create=False)
 
                 trend_alerts = [a for a in alerts if a["alert_type"] == "TREND_ANOMALY"]
@@ -423,6 +482,7 @@ class TestCostForecastAlerts:
 # ============================================================================
 # EVMCalculator 和 EVMService 分支测试
 # ============================================================================
+
 
 class TestEVMCalculatorBranches:
     """测试EVM计算器的所有分支"""
@@ -496,8 +556,7 @@ class TestEVMCalculatorBranches:
     def test_tcpi_based_on_eac(self):
         """分支: 基于EAC计算TCPI"""
         tcpi = EVMCalculator.calculate_to_complete_performance_index(
-            Decimal("100000"), Decimal("50000"), Decimal("60000"),
-            eac=Decimal("120000")
+            Decimal("100000"), Decimal("50000"), Decimal("60000"), eac=Decimal("120000")
         )
         # TCPI = (BAC - EV) / (EAC - AC) = 50000 / 60000 = 0.833333
         assert tcpi == Decimal("0.833333")
@@ -534,7 +593,7 @@ class TestEVMServiceBranches:
                 pv=Decimal("10000"),
                 ev=Decimal("8000"),
                 ac=Decimal("9000"),
-                bac=Decimal("100000")
+                bac=Decimal("100000"),
             )
 
     def test_create_evm_data_success(self):
@@ -551,7 +610,7 @@ class TestEVMServiceBranches:
             pv=Decimal("10000"),
             ev=Decimal("12000"),
             ac=Decimal("9000"),
-            bac=Decimal("100000")
+            bac=Decimal("100000"),
         )
 
         assert result.period_type == "MONTH"
@@ -630,6 +689,7 @@ class TestEVMServiceBranches:
 # CostCollectionService 分支测试
 # ============================================================================
 
+
 class TestCostCollectionPurchaseOrder:
     """测试采购订单成本采集的所有分支"""
 
@@ -648,7 +708,7 @@ class TestCostCollectionPurchaseOrder:
         order = MagicMock()
         order.id = 1
         order.project_id = None
-        db.query.return_value.filter.return_value.first.return_value = order
+        db.query.return_value.filter.return_value.first.side_effect = [order, None]
 
         result = CostCollectionService.collect_from_purchase_order(db, 1)
 
@@ -723,8 +783,12 @@ class TestCostCollectionPurchaseOrder:
 
         db.query.side_effect = query_side_effect
 
-        with patch("app.services.cost_collection_service.CostAlertService.check_budget_execution"):
-            result = CostCollectionService.collect_from_purchase_order(db, 1, created_by=1)
+        with patch(
+            "app.services.cost_collection_service.CostAlertService.check_budget_execution"
+        ):
+            result = CostCollectionService.collect_from_purchase_order(
+                db, 1, created_by=1
+            )
 
         assert db.add.called
 
@@ -738,7 +802,7 @@ class TestCostCollectionOutsourcingOrder:
         order = MagicMock()
         order.id = 1
         order.project_id = None
-        db.query.return_value.filter.return_value.first.return_value = order
+        db.query.return_value.filter.return_value.first.side_effect = [order, None]
 
         result = CostCollectionService.collect_from_outsourcing_order(db, 1)
 
@@ -771,7 +835,12 @@ class TestCostCollectionOutsourcingOrder:
 
         db.query.side_effect = query_side_effect
 
-        with patch("app.services.cost_collection_service.CostAlertService.check_budget_execution"):
+        with (
+            patch(
+                "app.services.cost_collection_service.CostAlertService.check_budget_execution"
+            ),
+            patch.object(CostCollectionService, "_recalculate_project_actual_cost"),
+        ):
             result = CostCollectionService.collect_from_outsourcing_order(db, 1)
 
         assert db.add.called
@@ -861,7 +930,12 @@ class TestCostCollectionECN:
 
         db.query.side_effect = query_side_effect
 
-        with patch("app.services.cost_collection_service.CostAlertService.check_budget_execution"):
+        with (
+            patch(
+                "app.services.cost_collection_service.CostAlertService.check_budget_execution"
+            ),
+            patch.object(CostCollectionService, "_recalculate_project_actual_cost"),
+        ):
             result = CostCollectionService.collect_from_ecn(db, 1)
 
         assert db.add.called
@@ -930,7 +1004,10 @@ class TestCostCollectionBOM:
 
         db.query.side_effect = query_side_effect
 
-        with patch("app.services.cost_collection_service.delete_obj"):
+        with (
+            patch("app.services.cost_collection_service.delete_obj"),
+            patch.object(CostCollectionService, "_recalculate_project_actual_cost"),
+        ):
             result = CostCollectionService.collect_from_bom(db, 1)
 
         assert result is None
@@ -970,7 +1047,12 @@ class TestCostCollectionBOM:
 
         db.query.side_effect = query_side_effect
 
-        with patch("app.services.cost_collection_service.CostAlertService.check_budget_execution"):
+        with (
+            patch(
+                "app.services.cost_collection_service.CostAlertService.check_budget_execution"
+            ),
+            patch.object(CostCollectionService, "_recalculate_project_actual_cost"),
+        ):
             result = CostCollectionService.collect_from_bom(db, 1)
 
         assert db.add.called
@@ -1010,9 +1092,10 @@ class TestCostCollectionRemove:
 
         db.query.side_effect = query_side_effect
 
-        result = CostCollectionService.remove_cost_from_source(
-            db, "PURCHASE", "PURCHASE_ORDER", 1
-        )
+        with patch.object(CostCollectionService, "_recalculate_project_actual_cost"):
+            result = CostCollectionService.remove_cost_from_source(
+                db, "PURCHASE", "PURCHASE_ORDER", 1
+            )
 
         assert result is True
         assert db.delete.called

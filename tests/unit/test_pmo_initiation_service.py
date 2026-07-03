@@ -371,8 +371,15 @@ class TestPmoInitiationServiceSubmit(unittest.TestCase):
         self.db = MagicMock(spec=Session)
         self.service = PmoInitiationService(self.db)
 
+    def _mock_handover(self, missing=None, assessment_status="COMPLETED"):
+        current = {"status": assessment_status} if assessment_status else None
+        return {
+            "handover_status": {"ready": not missing, "missing": missing or []},
+            "technical_assessment": {"current": current},
+        }
+
     def test_submit_initiation_success(self):
-        """测试成功提交立项"""
+        """测试成功提交立项（技术评估已完成）"""
         mock_initiation = MagicMock(id=1, status="DRAFT")
 
         mock_query = MagicMock()
@@ -380,12 +387,59 @@ class TestPmoInitiationServiceSubmit(unittest.TestCase):
         mock_query.first.return_value = mock_initiation
         self.db.query.return_value = mock_query
 
-        result = self.service.submit_initiation(initiation_id=1)
+        with patch.object(
+            self.service,
+            "build_presale_handover_context",
+            return_value=self._mock_handover(),
+        ):
+            result = self.service.submit_initiation(initiation_id=1)
 
         # 验证状态已更新
         self.assertEqual(mock_initiation.status, "SUBMITTED")
         self.db.add.assert_called_once()
         self.db.commit.assert_called_once()
+
+    def test_submit_initiation_blocked_without_assessment(self):
+        """缺少售前技术评估时提交应被拦截"""
+        mock_initiation = MagicMock(id=1, status="DRAFT")
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = mock_initiation
+        self.db.query.return_value = mock_query
+
+        with patch.object(
+            self.service,
+            "build_presale_handover_context",
+            return_value=self._mock_handover(
+                missing=["technical_assessment"], assessment_status=None
+            ),
+        ):
+            with self.assertRaises(ValueError) as context:
+                self.service.submit_initiation(initiation_id=1)
+
+        self.assertIn("缺少售前技术评估", str(context.exception))
+        self.assertEqual(mock_initiation.status, "DRAFT")
+
+    def test_submit_initiation_blocked_with_pending_assessment(self):
+        """技术评估仅申请未完成(PENDING)时提交应被拦截"""
+        mock_initiation = MagicMock(id=1, status="DRAFT")
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = mock_initiation
+        self.db.query.return_value = mock_query
+
+        with patch.object(
+            self.service,
+            "build_presale_handover_context",
+            return_value=self._mock_handover(assessment_status="PENDING"),
+        ):
+            with self.assertRaises(ValueError) as context:
+                self.service.submit_initiation(initiation_id=1)
+
+        self.assertIn("尚未完成", str(context.exception))
+        self.assertEqual(mock_initiation.status, "DRAFT")
 
     def test_submit_initiation_not_found(self):
         """测试提交不存在的立项"""

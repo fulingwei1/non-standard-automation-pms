@@ -3,6 +3,7 @@
 成本自动归集服务单元测试
 覆盖: app/services/cost_collection_service.py
 """
+
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
@@ -72,7 +73,9 @@ class TestCollectFromPurchaseOrder:
             None,  # no existing cost
             mock_project,  # Project
         ]
-        mock_db.query.return_value.filter.return_value.all.return_value = mock_project_costs
+        mock_db.query.return_value.filter.return_value.all.return_value = (
+            mock_project_costs
+        )
 
         with patch("app.services.cost_collection_service.ProjectCost") as MockCost:
             mock_cost = MagicMock()
@@ -105,7 +108,9 @@ class TestCollectFromPurchaseOrder:
             existing_cost,  # existing ProjectCost
             mock_project,  # Project
         ]
-        mock_db.query.return_value.filter.return_value.all.return_value = mock_project_costs
+        mock_db.query.return_value.filter.return_value.all.return_value = (
+            mock_project_costs
+        )
 
         result = CostCollectionService.collect_from_purchase_order(mock_db, 1)
         assert existing_cost.amount == Decimal("12000")

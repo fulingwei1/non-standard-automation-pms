@@ -103,6 +103,45 @@ class TestUserCRUD:
         paginated_data = assert_paginated_response(response_data)
         assert "items" in paginated_data
 
+    def test_list_users_handles_null_boolean_flags(
+        self, client: TestClient, admin_token: str, db_session: Session
+    ):
+        """历史演示库中布尔字段可能为空，列表接口应兜底返回 bool。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        unique_suffix = uuid.uuid4().hex[:6]
+        user = User(
+            username=f"null_bool_user_{unique_suffix}",
+            password_hash="test",
+            email=f"null_bool_user_{unique_suffix}@example.com",
+            real_name="空布尔字段用户",
+        )
+        db_session.add(user)
+        db_session.commit()
+        db_session.execute(
+            User.__table__.update()
+            .where(User.id == user.id)
+            .values(is_active=None, is_superuser=None)
+        )
+        db_session.commit()
+
+        try:
+            response = client.get(
+                f"{settings.API_V1_PREFIX}/users/",
+                params={"page": 1, "page_size": 50, "keyword": user.username},
+                headers=headers,
+            )
+
+            assert response.status_code == 200, response.text
+            items = assert_paginated_response(response.json())["items"]
+            listed_user = next(item for item in items if item["username"] == user.username)
+            assert listed_user["is_active"] is True
+            assert listed_user["is_superuser"] is False
+        finally:
+            _cleanup_user(db_session, user.id)
+
     def test_list_users_with_keyword(self, client: TestClient, admin_token: str):
         """测试关键词搜索用户"""
         if not admin_token:
@@ -286,6 +325,58 @@ class TestUserPermissionEnforcement:
             headers=headers,
         )
         assert response.status_code == 403
+
+    def test_user_options_available_without_user_read(
+        self,
+        client: TestClient,
+        normal_user_token: str,
+        db_session: Session,
+    ):
+        """人员下拉选项可供登录用户读取，但不能暴露用户管理字段"""
+        if not normal_user_token:
+            pytest.skip("Normal user token not available")
+
+        suffix = uuid.uuid4().hex[:8]
+        option_user = User(
+            username=f"option_user_{suffix}",
+            password_hash="test",
+            email=f"option_user_{suffix}@example.com",
+            phone="13800000000",
+            real_name="人员选项用户",
+            employee_no=f"OPT{suffix[:6]}",
+            department="服务部",
+            position="服务工程师",
+            is_active=True,
+            is_superuser=False,
+        )
+        db_session.add(option_user)
+        db_session.commit()
+        db_session.refresh(option_user)
+
+        headers = _auth_headers(normal_user_token)
+        forbidden = client.get(f"{settings.API_V1_PREFIX}/users/", headers=headers)
+        assert forbidden.status_code == 403
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/users/options",
+            params={"page": 1, "page_size": 100, "is_active": True},
+            headers=headers,
+        )
+
+        assert response.status_code == 200, response.text
+        data = assert_paginated_response(response.json())
+        items = data["items"]
+        option = next(item for item in items if item["id"] == option_user.id)
+        assert option == {
+            "id": option_user.id,
+            "username": option_user.username,
+            "name": option_user.real_name,
+            "real_name": option_user.real_name,
+            "department": option_user.department,
+            "position": option_user.position,
+        }
+        for sensitive_key in ("email", "phone", "roles", "role_ids", "is_superuser"):
+            assert sensitive_key not in option
 
     @pytest.mark.skip(reason="权限分配流程在测试环境中不完整，roles/{id}/permissions 路由未注册")
     def test_role_assignment_grants_user_view_access(

@@ -32,7 +32,7 @@ class TestPresaleAiKnowledgeServiceCRUD:
     @pytest.fixture
     def service(self):
         mock_db = Mock()
-        return PresaleAiKnowledgeService(mock_db)
+        return PresaleAIKnowledgeService(mock_db)
 
     def test_create_case_method_exists(self, service):
         """测试方法存在"""
@@ -57,7 +57,7 @@ class TestPresaleAiKnowledgeServiceSearch:
     @pytest.fixture
     def service(self):
         mock_db = Mock()
-        return PresaleAiKnowledgeService(mock_db)
+        return PresaleAIKnowledgeService(mock_db)
 
     def test_semantic_search_method_exists(self, service):
         """测试方法存在"""
@@ -78,7 +78,7 @@ class TestPresaleAiKnowledgeServiceAI:
     @pytest.fixture
     def service(self):
         mock_db = Mock()
-        return PresaleAiKnowledgeService(mock_db)
+        return PresaleAIKnowledgeService(mock_db)
 
     def test_recommend_best_practices_method_exists(self, service):
         """测试方法存在"""
@@ -96,6 +96,19 @@ class TestPresaleAiKnowledgeServiceAI:
         """测试方法存在"""
         assert hasattr(service, 'submit_qa_feedback')
 
+    def test_has_live_ai_accepts_qwen_client(self):
+        """配置通义千问/百炼时不应降级为规则模板。"""
+        service = PresaleAIKnowledgeService(Mock())
+        ai_client = Mock()
+        ai_client.openai_client = None
+        ai_client.openai_api_key = ""
+        ai_client.zhipu_client = None
+        ai_client.kimi_api_key = ""
+        ai_client.qwen_api_key = "test-qwen-key"
+        service.ai_client = ai_client
+
+        assert service._has_live_ai() is True
+
 
 class TestPresaleAiKnowledgeServiceEmbedding:
     """测试嵌入向量"""
@@ -103,7 +116,7 @@ class TestPresaleAiKnowledgeServiceEmbedding:
     @pytest.fixture
     def service(self):
         mock_db = Mock()
-        return PresaleAiKnowledgeService(mock_db)
+        return PresaleAIKnowledgeService(mock_db)
 
     def test__generate_embedding_method_exists(self, service):
         """测试方法存在"""
@@ -132,7 +145,7 @@ class TestPresaleAiKnowledgeServiceAnalysis:
     @pytest.fixture
     def service(self):
         mock_db = Mock()
-        return PresaleAiKnowledgeService(mock_db)
+        return PresaleAIKnowledgeService(mock_db)
 
     def test__analyze_success_patterns_method_exists(self, service):
         """测试方法存在"""

@@ -63,7 +63,8 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
         mock_customer.name = "测试客户"
 
         mock_owner = MagicMock()
-        mock_owner.name = "张三"
+        # User 模型字段为 real_name（无 name 字段）
+        mock_owner.real_name = "张三"
 
         # 创建mock版本
         mock_version = MagicMock(spec=QuoteVersion)

@@ -301,6 +301,53 @@ class TestSQLiteSchemaPatches:
         assert "material_status" in project_columns
         assert "shortage_items_count" in project_columns
 
+    def test_strategy_and_bom_patch_adds_legacy_missing_columns(self, tmp_path):
+        from app.models.base import _ensure_sqlite_schema
+
+        db_path = tmp_path / "legacy_strategy_bom.db"
+        engine = create_engine(f"sqlite:///{db_path}")
+
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE annual_key_works (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        code VARCHAR(50) NOT NULL UNIQUE,
+                        title VARCHAR(200) NOT NULL,
+                        year INTEGER NOT NULL,
+                        progress_percent INTEGER DEFAULT 0,
+                        created_at DATETIME,
+                        updated_at DATETIME
+                    )
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE bom_items (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        bom_id INTEGER NOT NULL,
+                        item_no INTEGER NOT NULL,
+                        material_code VARCHAR(50) NOT NULL,
+                        material_name VARCHAR(200) NOT NULL,
+                        quantity NUMERIC(10, 4) NOT NULL,
+                        created_at DATETIME,
+                        updated_at DATETIME
+                    )
+                    """
+                )
+            )
+
+        _ensure_sqlite_schema(engine)
+
+        annual_columns = {col["name"] for col in inspect(engine).get_columns("annual_key_works")}
+        bom_item_columns = {col["name"] for col in inspect(engine).get_columns("bom_items")}
+
+        assert "progress_description" in annual_columns
+        assert "kitting_status" in bom_item_columns
+
     def test_stage_templates_and_quotes_patch_adds_legacy_missing_columns(self, tmp_path):
         from app.models.base import _ensure_sqlite_schema
 
@@ -392,6 +439,159 @@ class TestSQLiteSchemaPatches:
         assert "is_latest" in columns
         assert "previous_version_id" in columns
         assert "item_scores" in columns
+
+    def test_presale_tables_patch_adds_workbench_columns(self, tmp_path):
+        from app.models.base import _ensure_sqlite_schema
+
+        db_path = tmp_path / "legacy_presale_workbench.db"
+        engine = create_engine(f"sqlite:///{db_path}")
+
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE presale_tender_record (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        ticket_id INTEGER,
+                        opportunity_id INTEGER,
+                        tender_no VARCHAR(50),
+                        tender_name VARCHAR(200) NOT NULL,
+                        customer_name VARCHAR(100),
+                        result VARCHAR(20),
+                        created_at DATETIME,
+                        updated_at DATETIME
+                    )
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE presale_ticket_deliverable (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        ticket_id INTEGER NOT NULL,
+                        name VARCHAR(200) NOT NULL,
+                        status VARCHAR(20),
+                        created_at DATETIME,
+                        updated_at DATETIME
+                    )
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE presale_expenses (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        project_id INTEGER,
+                        opportunity_id INTEGER,
+                        expense_type VARCHAR(50) NOT NULL,
+                        amount NUMERIC(14, 2) NOT NULL,
+                        expense_date DATE NOT NULL,
+                        created_at DATETIME,
+                        updated_at DATETIME
+                    )
+                    """
+                )
+            )
+
+        _ensure_sqlite_schema(engine)
+
+        tender_columns = {
+            col["name"] for col in inspect(engine).get_columns("presale_tender_record")
+        }
+        deliverable_columns = {
+            col["name"] for col in inspect(engine).get_columns("presale_ticket_deliverable")
+        }
+        expense_columns = {col["name"] for col in inspect(engine).get_columns("presale_expenses")}
+
+        assert "project_id" in tender_columns
+        assert "is_required" in deliverable_columns
+        assert {
+            "ticket_id",
+            "approval_status",
+            "approved_by",
+            "approved_at",
+            "approval_note",
+        }.issubset(expense_columns)
+
+    def test_warehouse_patch_creates_core_tables(self, tmp_path):
+        from app.models.base import _ensure_sqlite_schema
+
+        db_path = tmp_path / "legacy_warehouse_missing_tables.db"
+        engine = create_engine(f"sqlite:///{db_path}")
+
+        _ensure_sqlite_schema(engine)
+
+        inspector = inspect(engine)
+        tables = set(inspector.get_table_names())
+        assert {
+            "warehouses",
+            "warehouse_locations",
+            "inbound_orders",
+            "inbound_order_items",
+            "outbound_orders",
+            "outbound_order_items",
+            "inventory",
+            "stock_count_orders",
+            "stock_count_items",
+        }.issubset(tables)
+
+        inbound_columns = {col["name"] for col in inspector.get_columns("inbound_orders")}
+        outbound_columns = {col["name"] for col in inspector.get_columns("outbound_orders")}
+        inventory_columns = {col["name"] for col in inspector.get_columns("inventory")}
+
+        assert {"order_no", "status", "total_quantity", "created_at", "updated_at"}.issubset(
+            inbound_columns
+        )
+        assert {"order_no", "status", "is_urgent", "created_at", "updated_at"}.issubset(
+            outbound_columns
+        )
+        assert {
+            "warehouse_id",
+            "material_code",
+            "quantity",
+            "available_quantity",
+            "min_stock",
+            "max_stock",
+        }.issubset(inventory_columns)
+
+    def test_requirement_extraction_patch_creates_required_tables(self, tmp_path):
+        from app.models.base import _ensure_sqlite_schema
+
+        db_path = tmp_path / "legacy_requirement_extraction_missing_tables.db"
+        engine = create_engine(f"sqlite:///{db_path}")
+
+        _ensure_sqlite_schema(engine)
+
+        inspector = inspect(engine)
+        tables = set(inspector.get_table_names())
+        assert {"project_requirements", "engineer_recommendations"}.issubset(tables)
+
+        requirement_columns = {
+            col["name"] for col in inspector.get_columns("project_requirements")
+        }
+        recommendation_columns = {
+            col["name"] for col in inspector.get_columns("engineer_recommendations")
+        }
+
+        assert {
+            "project_id",
+            "requirement_type",
+            "required_skills",
+            "estimated_hours",
+            "priority",
+            "created_at",
+            "updated_at",
+        }.issubset(requirement_columns)
+        assert {
+            "requirement_id",
+            "engineer_id",
+            "overall_match_score",
+            "rank",
+            "created_at",
+            "updated_at",
+        }.issubset(recommendation_columns)
 
 
 class TestDatabaseSecurity:

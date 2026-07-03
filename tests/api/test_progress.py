@@ -76,6 +76,44 @@ class TestWbsTemplates:
 class TestProjectTasks:
     """项目任务测试"""
 
+    def test_create_project_task_via_project_compat_route(
+        self, client: TestClient, admin_token: str, test_project
+    ):
+        """测试项目任务页使用的 /projects/{id}/tasks 兼容创建路由"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/projects/{test_project.id}/tasks",
+            json={
+                "task_name": "项目任务页新建任务",
+                "stage": "S1",
+                "planned_start_date": "2026-07-01",
+                "planned_end_date": "2026-07-05",
+                "weight": 10,
+                "description": "来自项目任务页按钮",
+            },
+            headers=headers,
+        )
+
+        assert response.status_code == 201
+        data = response.json()
+        assert data["project_id"] == test_project.id
+        assert data["task_name"] == "项目任务页新建任务"
+        assert data["stage"] == "S1"
+        assert data["planned_start_date"] == "2026-07-01"
+
+        list_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{test_project.id}/tasks",
+            headers=headers,
+        )
+        assert list_response.status_code == 200
+        assert any(
+            item["task_name"] == "项目任务页新建任务"
+            for item in list_response.json()["items"]
+        )
+
     def test_list_project_tasks(self, client: TestClient, admin_token: str):
         """测试获取项目任务列表"""
         if not admin_token:

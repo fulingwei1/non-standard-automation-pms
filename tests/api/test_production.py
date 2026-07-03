@@ -4,7 +4,7 @@
 测试车间管理、工位管理、生产计划、工单管理、报工系统等功能
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -13,7 +13,17 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.production import ProductionPlan, WorkOrder, WorkReport, Worker, Workshop, Workstation
+from app.models.production import (
+    Equipment,
+    EquipmentOEERecord,
+    ProductionPlan,
+    WorkOrder,
+    WorkReport,
+    Worker,
+    WorkerEfficiencyRecord,
+    Workshop,
+    Workstation,
+)
 
 
 def _auth_headers(token: str) -> dict:
@@ -57,6 +67,16 @@ def production_seed(db: Session) -> dict:
         is_active=True,
     )
     db.add(workstation)
+    db.flush()
+
+    equipment = Equipment(
+        equipment_code=f"EQ-{suffix}",
+        equipment_name=f"测试设备-{suffix}",
+        workshop_id=workshop.id,
+        status="IDLE",
+        is_active=True,
+    )
+    db.add(equipment)
     db.flush()
 
     plan = ProductionPlan(
@@ -112,11 +132,53 @@ def production_seed(db: Session) -> dict:
         status="APPROVED",
     )
     db.add(report)
+
+    for index, record_date in enumerate((today - timedelta(days=14), today - timedelta(days=7))):
+        db.add(
+            EquipmentOEERecord(
+                equipment_id=equipment.id,
+                workshop_id=workshop.id,
+                workstation_id=workstation.id,
+                record_date=record_date,
+                planned_production_time=480,
+                planned_downtime=20,
+                unplanned_downtime=20,
+                operating_time=440,
+                ideal_cycle_time=Decimal("1.00"),
+                actual_output=90 + index * 10,
+                target_output=100,
+                qualified_qty=88 + index * 10,
+                defect_qty=2,
+                availability=Decimal("91.67"),
+                performance=Decimal("90.00"),
+                quality=Decimal("97.78"),
+                oee=Decimal("80.67"),
+            )
+        )
+        db.add(
+            WorkerEfficiencyRecord(
+                worker_id=worker.id,
+                workshop_id=workshop.id,
+                workstation_id=workstation.id,
+                work_order_id=work_order.id,
+                record_date=record_date,
+                standard_hours=Decimal("4.00"),
+                actual_hours=Decimal("4.50"),
+                completed_qty=10 + index,
+                qualified_qty=10 + index,
+                defect_qty=0,
+                efficiency=Decimal("88.89"),
+                quality_rate=Decimal("100.00"),
+                utilization_rate=Decimal("95.00"),
+                overall_efficiency=Decimal("84.45"),
+            )
+        )
     db.commit()
 
     return {
         "workshop_id": workshop.id,
         "workstation_id": workstation.id,
+        "equipment_id": equipment.id,
         "plan_id": plan.id,
         "work_order_id": work_order.id,
         "worker_id": worker.id,
@@ -229,6 +291,47 @@ class TestWorkstations:
             pytest.skip("Workstations endpoint not found")
 
         assert response.status_code == 200
+
+
+class TestCapacityAnalysis:
+    """产能分析测试"""
+
+    def test_capacity_trend_week_and_month_work_on_sqlite(
+        self, client: TestClient, admin_token: str, production_seed: dict
+    ):
+        """周/月粒度不应使用 SQLite 不支持的 date_format 函数。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        headers = _auth_headers(admin_token)
+
+        oee_response = client.get(
+            f"{settings.API_V1_PREFIX}/production/capacity/trend",
+            params={
+                "type": "oee",
+                "granularity": "week",
+                "equipment_id": production_seed["equipment_id"],
+            },
+            headers=headers,
+        )
+        assert oee_response.status_code == 200, oee_response.text
+        oee_data = oee_response.json()["data"]
+        assert oee_data["items"]
+        assert "period" in oee_data["items"][0]
+
+        efficiency_response = client.get(
+            f"{settings.API_V1_PREFIX}/production/capacity/trend",
+            params={
+                "type": "efficiency",
+                "granularity": "month",
+                "worker_id": production_seed["worker_id"],
+            },
+            headers=headers,
+        )
+        assert efficiency_response.status_code == 200, efficiency_response.text
+        efficiency_data = efficiency_response.json()["data"]
+        assert efficiency_data["items"]
+        assert "period" in efficiency_data["items"][0]
 
 
 class TestProductionPlans:

@@ -601,7 +601,9 @@ class TestContractApprovalService(unittest.TestCase):
 
         self.assertEqual(result["contract_id"], 1)
         self.assertEqual(result["status"], "withdrawn")
-        self.service.engine.withdraw.assert_called_once_with(instance_id=1, user_id=1)
+        self.service.engine.withdraw.assert_called_once_with(
+            instance_id=1, initiator_id=1, comment="需要修改"
+        )
 
     def test_withdraw_approval_contract_not_found(self):
         """测试撤回不存在的合同"""

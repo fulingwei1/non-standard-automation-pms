@@ -12,6 +12,11 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+from app.core.security import create_access_token, get_password_hash
+from app.models.project import Customer, Project, ProjectMember
+from app.models.stage_instance import ProjectStageInstance
+from app.models.stage_template import StageDefinition, StageTemplate
+from app.models.user import User
 
 
 def _generate_project_code() -> str:
@@ -21,8 +26,494 @@ def _generate_project_code() -> str:
     return f"PJ{today_part}{unique_part}"
 
 
+def _auth_headers_for_user(user: User) -> dict:
+    token = create_access_token(data={"sub": str(user.id)})
+    return {"Authorization": f"Bearer {token}"}
+
+
 class TestProjectCRUD:
     """项目CRUD操作测试"""
+
+    def test_regular_member_can_read_only_my_projects(
+        self,
+        client: TestClient,
+        db_session,
+    ):
+        """普通登录用户应能读取自己参与的项目，不需要额外 project:read 权限"""
+        marker = f"PROJECT-SELF-{uuid.uuid4().hex}"
+        actor = User(
+            username=f"{marker.lower()}-actor",
+            password_hash=get_password_hash("password123"),
+            real_name="项目自服务用户",
+            department="项目部",
+            is_active=True,
+            is_superuser=False,
+        )
+        other_user = User(
+            username=f"{marker.lower()}-other",
+            password_hash=get_password_hash("password123"),
+            real_name="其他项目用户",
+            department="项目部",
+            is_active=True,
+            is_superuser=False,
+        )
+        db_session.add_all([actor, other_user])
+        db_session.flush()
+
+        customer = Customer(
+            customer_code=f"CUST-{uuid.uuid4().hex[:8].upper()}",
+            customer_name=f"{marker}-客户",
+            contact_person="QA",
+            contact_phone="13800000000",
+            status="ACTIVE",
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        own_project = Project(
+            project_code=f"PJ-{uuid.uuid4().hex[:8].upper()}",
+            project_name=f"{marker}-own",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            is_active=True,
+            created_by=actor.id,
+        )
+        other_project = Project(
+            project_code=f"PJ-{uuid.uuid4().hex[:8].upper()}",
+            project_name=f"{marker}-other",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            is_active=True,
+            created_by=other_user.id,
+        )
+        db_session.add_all([own_project, other_project])
+        db_session.flush()
+
+        db_session.add_all(
+            [
+                ProjectMember(
+                    project_id=own_project.id,
+                    user_id=actor.id,
+                    role_code="MEMBER",
+                    is_active=True,
+                    created_by=actor.id,
+                ),
+                ProjectMember(
+                    project_id=other_project.id,
+                    user_id=other_user.id,
+                    role_code="MEMBER",
+                    is_active=True,
+                    created_by=other_user.id,
+                ),
+            ]
+        )
+        db_session.commit()
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/my-projects",
+            params={"page": 1, "page_size": 100, "is_active": True},
+            headers=_auth_headers_for_user(actor),
+        )
+
+        assert response.status_code == 200, response.text
+        project_names = {item["project_name"] for item in response.json()["items"]}
+        assert f"{marker}-own" in project_names
+        assert f"{marker}-other" not in project_names
+
+    def test_regular_member_can_read_member_project_detail_without_project_read(
+        self,
+        client: TestClient,
+        db_session,
+    ):
+        """普通项目成员能读取参与项目详情，但不能读取无关项目详情"""
+        marker = f"PROJECT-DETAIL-SELF-{uuid.uuid4().hex}"
+        actor = User(
+            username=f"{marker.lower()}-actor",
+            password_hash=get_password_hash("password123"),
+            real_name="项目详情自服务用户",
+            department="项目部",
+            is_active=True,
+            is_superuser=False,
+        )
+        other_user = User(
+            username=f"{marker.lower()}-other",
+            password_hash=get_password_hash("password123"),
+            real_name="其他项目用户",
+            department="项目部",
+            is_active=True,
+            is_superuser=False,
+        )
+        db_session.add_all([actor, other_user])
+        db_session.flush()
+
+        customer = Customer(
+            customer_code=f"CUST-{uuid.uuid4().hex[:8].upper()}",
+            customer_name=f"{marker}-客户",
+            contact_person="QA",
+            contact_phone="13800000000",
+            status="ACTIVE",
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        member_project = Project(
+            project_code=f"PJ-{uuid.uuid4().hex[:8].upper()}",
+            project_name=f"{marker}-member",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            is_active=True,
+            created_by=other_user.id,
+            pm_id=other_user.id,
+        )
+        unrelated_project = Project(
+            project_code=f"PJ-{uuid.uuid4().hex[:8].upper()}",
+            project_name=f"{marker}-unrelated",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            is_active=True,
+            created_by=other_user.id,
+            pm_id=other_user.id,
+        )
+        db_session.add_all([member_project, unrelated_project])
+        db_session.flush()
+
+        db_session.add(
+            ProjectMember(
+                project_id=member_project.id,
+                user_id=actor.id,
+                role_code="MEMBER",
+                is_active=True,
+                created_by=other_user.id,
+            )
+        )
+        db_session.commit()
+
+        headers = _auth_headers_for_user(actor)
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{member_project.id}",
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+        assert response.json()["project_name"] == member_project.project_name
+
+        unrelated_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{unrelated_project.id}",
+            headers=headers,
+        )
+        assert unrelated_response.status_code == 403
+
+    def test_regular_member_can_read_member_project_workspace_without_project_read(
+        self,
+        client: TestClient,
+        db_session,
+    ):
+        """普通项目成员能读取参与项目工作空间，但不能读取无关项目工作空间"""
+        marker = f"PROJECT-WORKSPACE-SELF-{uuid.uuid4().hex}"
+        actor = User(
+            username=f"{marker.lower()}-actor",
+            password_hash=get_password_hash("password123"),
+            real_name="项目空间自服务用户",
+            department="项目部",
+            is_active=True,
+            is_superuser=False,
+        )
+        other_user = User(
+            username=f"{marker.lower()}-other",
+            password_hash=get_password_hash("password123"),
+            real_name="其他项目用户",
+            department="项目部",
+            is_active=True,
+            is_superuser=False,
+        )
+        db_session.add_all([actor, other_user])
+        db_session.flush()
+
+        customer = Customer(
+            customer_code=f"CUST-{uuid.uuid4().hex[:8].upper()}",
+            customer_name=f"{marker}-客户",
+            contact_person="QA",
+            contact_phone="13800000000",
+            status="ACTIVE",
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        member_project = Project(
+            project_code=f"PJ-{uuid.uuid4().hex[:8].upper()}",
+            project_name=f"{marker}-member",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            is_active=True,
+            created_by=other_user.id,
+            pm_id=other_user.id,
+        )
+        unrelated_project = Project(
+            project_code=f"PJ-{uuid.uuid4().hex[:8].upper()}",
+            project_name=f"{marker}-unrelated",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            is_active=True,
+            created_by=other_user.id,
+            pm_id=other_user.id,
+        )
+        db_session.add_all([member_project, unrelated_project])
+        db_session.flush()
+
+        db_session.add(
+            ProjectMember(
+                project_id=member_project.id,
+                user_id=actor.id,
+                role_code="MEMBER",
+                is_active=True,
+                created_by=other_user.id,
+            )
+        )
+        db_session.commit()
+
+        headers = _auth_headers_for_user(actor)
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/project-workspace/projects/{member_project.id}/workspace",
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+        assert response.json()["project"]["project_name"] == member_project.project_name
+
+        unrelated_response = client.get(
+            f"{settings.API_V1_PREFIX}/project-workspace/projects/{unrelated_project.id}/workspace",
+            headers=headers,
+        )
+        assert unrelated_response.status_code == 403
+
+    def test_regular_member_can_read_legacy_member_and_stage_blocks_without_project_read(
+        self,
+        client: TestClient,
+        db_session,
+    ):
+        """普通项目成员能读取详情页旧成员/阶段子接口，但不能读取无关项目"""
+        marker = f"PROJECT-LEGACY-BLOCKS-SELF-{uuid.uuid4().hex}"
+        actor = User(
+            username=f"{marker.lower()}-actor",
+            password_hash=get_password_hash("password123"),
+            real_name="项目子块自服务用户",
+            department="项目部",
+            is_active=True,
+            is_superuser=False,
+        )
+        other_user = User(
+            username=f"{marker.lower()}-other",
+            password_hash=get_password_hash("password123"),
+            real_name="其他项目用户",
+            department="项目部",
+            is_active=True,
+            is_superuser=False,
+        )
+        db_session.add_all([actor, other_user])
+        db_session.flush()
+
+        customer = Customer(
+            customer_code=f"CUST-{uuid.uuid4().hex[:8].upper()}",
+            customer_name=f"{marker}-客户",
+            contact_person="QA",
+            contact_phone="13800000000",
+            status="ACTIVE",
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        member_project = Project(
+            project_code=f"PJ-{uuid.uuid4().hex[:8].upper()}",
+            project_name=f"{marker}-member",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            is_active=True,
+            created_by=other_user.id,
+            pm_id=other_user.id,
+        )
+        unrelated_project = Project(
+            project_code=f"PJ-{uuid.uuid4().hex[:8].upper()}",
+            project_name=f"{marker}-unrelated",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            is_active=True,
+            created_by=other_user.id,
+            pm_id=other_user.id,
+        )
+        db_session.add_all([member_project, unrelated_project])
+        db_session.flush()
+
+        db_session.add_all(
+            [
+                ProjectMember(
+                    project_id=member_project.id,
+                    user_id=actor.id,
+                    role_code="MEMBER",
+                    is_active=True,
+                    created_by=other_user.id,
+                ),
+                ProjectStageInstance(
+                    project_id=member_project.id,
+                    stage_code="S1",
+                    stage_name=f"{marker}-阶段",
+                    sequence=1,
+                    status="PENDING",
+                ),
+            ]
+        )
+        db_session.commit()
+
+        headers = _auth_headers_for_user(actor)
+        members_response = client.get(
+            f"{settings.API_V1_PREFIX}/members/projects/{member_project.id}/members",
+            headers=headers,
+        )
+        assert members_response.status_code == 200, members_response.text
+        member_user_ids = {item["user_id"] for item in members_response.json()["items"]}
+        assert actor.id in member_user_ids
+
+        stages_response = client.get(
+            f"{settings.API_V1_PREFIX}/stages/projects/{member_project.id}/stages",
+            headers=headers,
+        )
+        assert stages_response.status_code == 200, stages_response.text
+        assert stages_response.json()[0]["stage_name"] == f"{marker}-阶段"
+
+        unrelated_members_response = client.get(
+            f"{settings.API_V1_PREFIX}/members/projects/{unrelated_project.id}/members",
+            headers=headers,
+        )
+        assert unrelated_members_response.status_code == 403
+
+        unrelated_stages_response = client.get(
+            f"{settings.API_V1_PREFIX}/stages/projects/{unrelated_project.id}/stages",
+            headers=headers,
+        )
+        assert unrelated_stages_response.status_code == 403
+
+    def test_regular_member_can_read_project_profit_card_without_cost_read(
+        self,
+        client: TestClient,
+        db_session,
+    ):
+        """普通项目成员能读取参与项目利润卡，但不能读取无关项目或其它成本接口"""
+        marker = f"PROJECT-PROFIT-SELF-{uuid.uuid4().hex}"
+        actor = User(
+            username=f"{marker.lower()}-actor",
+            password_hash=get_password_hash("password123"),
+            real_name="项目利润卡自服务用户",
+            department="项目部",
+            is_active=True,
+            is_superuser=False,
+        )
+        other_user = User(
+            username=f"{marker.lower()}-other",
+            password_hash=get_password_hash("password123"),
+            real_name="其他项目用户",
+            department="项目部",
+            is_active=True,
+            is_superuser=False,
+        )
+        db_session.add_all([actor, other_user])
+        db_session.flush()
+
+        customer = Customer(
+            customer_code=f"CUST-{uuid.uuid4().hex[:8].upper()}",
+            customer_name=f"{marker}-客户",
+            contact_person="QA",
+            contact_phone="13800000000",
+            status="ACTIVE",
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        member_project = Project(
+            project_code=f"PJ-{uuid.uuid4().hex[:8].upper()}",
+            project_name=f"{marker}-member",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            is_active=True,
+            created_by=other_user.id,
+            pm_id=other_user.id,
+            contract_amount=100000,
+            budget_amount=70000,
+            progress_pct=50,
+        )
+        unrelated_project = Project(
+            project_code=f"PJ-{uuid.uuid4().hex[:8].upper()}",
+            project_name=f"{marker}-unrelated",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            is_active=True,
+            created_by=other_user.id,
+            pm_id=other_user.id,
+            contract_amount=200000,
+            budget_amount=150000,
+            progress_pct=10,
+        )
+        db_session.add_all([member_project, unrelated_project])
+        db_session.flush()
+
+        db_session.add(
+            ProjectMember(
+                project_id=member_project.id,
+                user_id=actor.id,
+                role_code="MEMBER",
+                is_active=True,
+                created_by=other_user.id,
+            )
+        )
+        db_session.commit()
+
+        headers = _auth_headers_for_user(actor)
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{member_project.id}/costs/profit-optimization",
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+        payload = response.json()["data"]
+        assert payload["project_id"] == member_project.id
+        assert payload["contract_amount"] == 100000
+
+        unrelated_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{unrelated_project.id}/costs/profit-optimization",
+            headers=headers,
+        )
+        assert unrelated_response.status_code == 403
+
+        margin_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{member_project.id}/costs/margin-analysis",
+            headers=headers,
+        )
+        assert margin_response.status_code == 403
 
     def test_create_project_success(self, client: TestClient, admin_token: str):
         """测试正常创建项目"""
@@ -123,6 +614,74 @@ class TestProjectCRUD:
             data = response.json()
             # 如果没有指定stage，应该默认为S1
             assert data.get("stage") in ["S1", None]  # 根据实际实现调整
+
+    def test_create_project_with_stage_template_initializes_stage_instances(
+        self,
+        client: TestClient,
+        db_session,
+        admin_token: str,
+    ):
+        """创建项目选择阶段模板后，应立即生成新阶段视图使用的阶段实例"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        marker = uuid.uuid4().hex[:8]
+        customer = Customer(
+            customer_code=f"CUST-STAGE-{marker}",
+            customer_name=f"阶段模板客户-{marker}",
+            status="ACTIVE",
+        )
+        template = StageTemplate(
+            template_code=f"QA_STAGE_TEMPLATE_{marker}",
+            template_name=f"QA阶段模板-{marker}",
+            is_active=True,
+        )
+        db_session.add_all([customer, template])
+        db_session.flush()
+
+        stage = StageDefinition(
+            template_id=template.id,
+            stage_code="S1",
+            stage_name="需求进入",
+            sequence=1,
+            category="presales",
+            estimated_days=3,
+            is_required=True,
+        )
+        db_session.add(stage)
+        db_session.commit()
+
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/projects/",
+            json={
+                "project_code": f"PJ{datetime.now().strftime('%y%m%d')}{marker.upper()}",
+                "project_name": f"阶段实例初始化验证-{marker}",
+                "customer_id": customer.id,
+                "stage_template_id": template.id,
+                "planned_start_date": "2026-07-01",
+            },
+            headers=headers,
+        )
+
+        assert response.status_code in [200, 201], response.text
+        project_id = response.json()["id"]
+
+        stages_response = client.get(
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/stages/",
+            headers=headers,
+        )
+        assert stages_response.status_code == 200, stages_response.text
+        stages = stages_response.json()
+        assert [stage["stage_code"] for stage in stages] == ["S1"]
+        assert stages[0]["status"] == "PENDING"
+
+        persisted_count = (
+            db_session.query(ProjectStageInstance)
+            .filter(ProjectStageInstance.project_id == project_id)
+            .count()
+        )
+        assert persisted_count == 1
 
     def test_get_project(self, client: TestClient, admin_token: str):
         """测试获取项目详情"""

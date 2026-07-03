@@ -317,7 +317,7 @@ class TestStubTasks:
     """stub_tasks.py: 所有存根任务可调用并返回 stub 状态"""
 
     def _check_stub_result(self, result):
-        assert result["status"] == "stub"
+        assert result["status"] == "not_implemented"
         assert "task" in result
         assert "message" in result
         assert "timestamp" in result

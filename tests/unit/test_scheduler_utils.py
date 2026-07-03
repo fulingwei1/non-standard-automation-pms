@@ -166,6 +166,25 @@ class TestWrapJobCallable:
             args = mock_failure.call_args[0]
             assert args[0] == "fail_job"
 
+    def test_not_implemented_result_records_failure(self):
+        """Sentinel not_implemented results are failures, not successful runs."""
+
+        def not_implemented_task():
+            return {"status": "not_implemented", "message": "功能待实现"}
+
+        task = {"id": "stub_job", "name": "Stub Job", "owner": None, "category": None}
+        wrapped = _wrap_job_callable(not_implemented_task, task)
+
+        with (
+            patch("app.utils.scheduler.record_job_success") as mock_success,
+            patch("app.utils.scheduler.record_job_failure") as mock_failure,
+        ):
+            with pytest.raises(RuntimeError, match="功能待实现"):
+                wrapped()
+            mock_success.assert_not_called()
+            mock_failure.assert_called_once()
+            assert mock_failure.call_args[0][0] == "stub_job"
+
     @patch("app.utils.scheduler.logger")
     def test_logs_start_and_success_events(self, mock_logger):
         """Wrapped function logs start and success events."""

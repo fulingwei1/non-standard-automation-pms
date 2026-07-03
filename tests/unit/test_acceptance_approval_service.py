@@ -660,7 +660,9 @@ class TestAcceptanceApprovalServiceWithdraw(unittest.TestCase):
         self.assertEqual(result["order_id"], 1)
         self.assertEqual(result["order_no"], "ACC-001")
         self.assertEqual(result["status"], "withdrawn")
-        self.service.engine.withdraw.assert_called_once_with(instance_id=101, user_id=1)
+        self.service.engine.withdraw.assert_called_once_with(
+            instance_id=101, initiator_id=1, comment="需要修改"
+        )
 
     def test_withdraw_approval_order_not_found(self):
         """测试撤回审批 - 验收单不存在"""

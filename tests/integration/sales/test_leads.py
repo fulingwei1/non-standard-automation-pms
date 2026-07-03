@@ -15,6 +15,10 @@
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+
+from app.models.sales import Lead
+from app.models.user import User
 
 
 @pytest.fixture(scope="module")
@@ -103,6 +107,37 @@ class TestLeadList:
         """测试未认证访问线索列表"""
         response = client.get("/api/v1/sales/leads")
         assert response.status_code in [401, 403]
+
+    def test_list_leads_handles_legacy_advantage_product_codes(
+        self,
+        client: TestClient,
+        auth_headers: dict,
+        db_session: Session,
+        engineer_user: User,
+    ):
+        """历史库里优势产品字段为产品编码数组时，列表接口不应 500"""
+        lead = Lead(
+            lead_code="LEGACY-ADV-CODES",
+            customer_name="历史优势产品客户",
+            contact_name="王经理",
+            source="历史数据",
+            status="NEW",
+            owner_id=engineer_user.id,
+            selected_advantage_products='["EOL","FCT","MES"]',
+        )
+        db_session.add(lead)
+        db_session.commit()
+
+        response = client.get(
+            "/api/v1/sales/leads",
+            params={"keyword": "历史优势产品客户"},
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert items
+        assert items[0]["selected_advantage_products"] in ([], None)
 
 
 class TestLeadCreate:

@@ -11,7 +11,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
-from app.core.security import get_password_hash
+from app.core.security import create_access_token, get_password_hash
+from app.models.issue import IssueTemplate
 from app.models.organization import Employee
 from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
 
@@ -584,6 +585,52 @@ class TestIssueStatistics:
 
 class TestIssueTemplates:
     """问题模板测试"""
+
+    def test_logged_in_user_can_list_active_issue_templates_without_issue_read(
+        self,
+        client: TestClient,
+        db_session,
+    ):
+        """项目页方案库只读加载模板列表不应强依赖 issue:read"""
+        import uuid
+
+        marker = f"ISSUE-TEMPLATE-SELF-{uuid.uuid4().hex}"
+        user = User(
+            username=f"{marker.lower()}-user",
+            password_hash=get_password_hash("password123"),
+            real_name="模板只读用户",
+            department="项目部",
+            is_active=True,
+            is_superuser=False,
+        )
+        template = IssueTemplate(
+            template_name=f"{marker}-模板",
+            template_code=f"TPL-{uuid.uuid4().hex[:8].upper()}",
+            category="PROJECT",
+            issue_type="DEFECT",
+            title_template=f"{marker}-标题",
+            solution_template="处理方案",
+            is_active=True,
+        )
+        db_session.add_all([user, template])
+        db_session.commit()
+
+        token = create_access_token(data={"sub": str(user.id)})
+        headers = {"Authorization": f"Bearer {token}"}
+
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/issue-templates",
+            params={"keyword": marker, "page": 1, "page_size": 10, "is_active": True},
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+        assert response.json()["items"][0]["template_name"] == f"{marker}-模板"
+
+        detail_response = client.get(
+            f"{settings.API_V1_PREFIX}/issue-templates/{template.id}",
+            headers=headers,
+        )
+        assert detail_response.status_code == 403
 
     def test_list_templates(self, client: TestClient, admin_token: str):
         """测试获取模板列表"""

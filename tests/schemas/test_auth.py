@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas.auth import (
+    BatchRoleAssign,
     DataScopeRuleCreate,
     LoginRequest,
     PasswordChange,
@@ -94,6 +95,19 @@ class TestUserUpdate:
     def test_partial(self):
         u = UserUpdate(email="a@b.com", is_active=False)
         assert u.is_active is False
+
+
+class TestBatchRoleAssign:
+    def test_valid_modes(self):
+        replace = BatchRoleAssign(user_ids=[1], role_ids=[2], mode="replace")
+        remove = BatchRoleAssign(user_ids=[1], role_ids=[2], mode="remove")
+
+        assert replace.mode == "replace"
+        assert remove.mode == "remove"
+
+    def test_invalid_mode(self):
+        with pytest.raises(ValidationError):
+            BatchRoleAssign(user_ids=[1], role_ids=[2], mode="append")
 
 
 class TestPasswordChange:

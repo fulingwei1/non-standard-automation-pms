@@ -10,7 +10,8 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
-from app.models.pmo import PmoProjectPhase
+from app.core.security import create_access_token, get_password_hash
+from app.models.pmo import PmoProjectInitiation, PmoProjectPhase
 from app.models.enums import OpenItemStatusEnum
 from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Project
@@ -21,6 +22,11 @@ from app.services.pmo_initiation.service import PmoInitiationService
 
 
 def _auth_headers(token: str) -> dict:
+    return {"Authorization": f"Bearer {token}"}
+
+
+def _auth_headers_for_user(user: User) -> dict:
+    token = create_access_token(data={"sub": str(user.id)})
     return {"Authorization": f"Bearer {token}"}
 
 
@@ -183,6 +189,70 @@ class TestInitiations:
         items = _items(response.json())
         assert any(item["id"] == target["id"] for item in items)
         assert all(item["contract_no"] == target_contract_no for item in items)
+
+    def test_regular_applicant_can_list_only_own_initiations(
+        self, client: TestClient, db_session
+    ):
+        """普通登录用户只能通过 applicant_id 查询自己的立项申请"""
+        marker = f"PMO-SELF-{uuid4().hex[:12]}"
+        applicant = User(
+            username=f"{marker.lower()}-applicant",
+            password_hash=get_password_hash("password123"),
+            real_name="立项自服务用户",
+            department="销售部",
+            is_active=True,
+            is_superuser=False,
+        )
+        other_user = User(
+            username=f"{marker.lower()}-other",
+            password_hash=get_password_hash("password123"),
+            real_name="其他立项用户",
+            department="销售部",
+            is_active=True,
+            is_superuser=False,
+        )
+        db_session.add_all([applicant, other_user])
+        db_session.flush()
+
+        own_initiation = PmoProjectInitiation(
+            application_no=f"{marker}-OWN",
+            project_name=f"{marker}-own",
+            customer_name="测试客户",
+            contract_no=f"{marker}-C-OWN",
+            applicant_id=applicant.id,
+            applicant_name=applicant.real_name,
+            status="DRAFT",
+        )
+        other_initiation = PmoProjectInitiation(
+            application_no=f"{marker}-OTHER",
+            project_name=f"{marker}-other",
+            customer_name="测试客户",
+            contract_no=f"{marker}-C-OTHER",
+            applicant_id=other_user.id,
+            applicant_name=other_user.real_name,
+            status="DRAFT",
+        )
+        db_session.add_all([own_initiation, other_initiation])
+        db_session.commit()
+
+        headers = _auth_headers_for_user(applicant)
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/pmo/initiations",
+            params={"page": 1, "page_size": 100, "applicant_id": applicant.id},
+            headers=headers,
+        )
+
+        assert response.status_code == 200, response.text
+        project_names = {item["project_name"] for item in _items(response.json())}
+        assert f"{marker}-own" in project_names
+        assert f"{marker}-other" not in project_names
+
+        denied = client.get(
+            f"{settings.API_V1_PREFIX}/pmo/initiations",
+            params={"page": 1, "page_size": 100, "applicant_id": other_user.id},
+            headers=headers,
+        )
+        assert denied.status_code == 403, denied.text
 
     def test_create_initiation_rejects_duplicate_active_contract_no(
         self, client: TestClient, admin_token: str

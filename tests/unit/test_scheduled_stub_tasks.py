@@ -14,7 +14,7 @@ import pytest
 # ================================================================
 #  所有存根任务
 # 存根任务通过 @_stub_task 装饰器实现，直接调用即可
-# 每个函数应返回含 status='stub' 的字典
+# 每个函数应返回含 status='not_implemented' 的字典
 # ================================================================
 
 
@@ -22,9 +22,11 @@ class TestStubTasks:
     """测试所有存根任务的基本行为"""
 
     def _assert_stub_result(self, result, expected_task: str):
-        """通用断言：结果是 stub 字典"""
+        """通用断言：结果是未实现标记字典"""
         assert isinstance(result, dict), "结果应为字典"
-        assert result.get("status") == "stub", f"status 应为 'stub'，得到: {result.get('status')}"
+        assert result.get("status") == "not_implemented", (
+            f"status 应为 'not_implemented'，得到: {result.get('status')}"
+        )
         assert (
             result.get("task") == expected_task
         ), f"task 字段应为 '{expected_task}'，得到: {result.get('task')}"
@@ -140,5 +142,5 @@ class TestStubTasksReturnStructure:
 
         r1 = daily_kit_check()
         r2 = daily_kit_check()
-        assert r1["status"] == r2["status"] == "stub"
+        assert r1["status"] == r2["status"] == "not_implemented"
         assert r1["task"] == r2["task"]
