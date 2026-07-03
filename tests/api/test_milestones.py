@@ -129,10 +129,12 @@ class TestMilestoneCRUD:
         # 先获取里程碑列表
         list_response = client.get(f"{settings.API_V1_PREFIX}/milestones/", headers=headers)
 
-        if list_response.status_code != 200 or not list_response.json():
+        payload = list_response.json()
+        items = payload.get("items") if isinstance(payload, dict) else payload
+        if list_response.status_code != 200 or not items:
             pytest.skip("No milestones available for testing")
 
-        milestone_id = list_response.json()[0]["id"]
+        milestone_id = items[0]["id"]
 
         response = client.get(
             f"{settings.API_V1_PREFIX}/milestones/{milestone_id}", headers=headers
@@ -162,10 +164,12 @@ class TestMilestoneCRUD:
         # 先获取里程碑列表
         list_response = client.get(f"{settings.API_V1_PREFIX}/milestones/", headers=headers)
 
-        if list_response.status_code != 200 or not list_response.json():
+        payload = list_response.json()
+        items = payload.get("items") if isinstance(payload, dict) else payload
+        if list_response.status_code != 200 or not items:
             pytest.skip("No milestones available for testing")
 
-        milestone = list_response.json()[0]
+        milestone = items[0]
         milestone_id = milestone["id"]
 
         update_data = {

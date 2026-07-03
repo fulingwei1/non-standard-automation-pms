@@ -10,28 +10,28 @@ def _auth_headers(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
-def test_wbs_template_root_and_progress_aliases_are_registered(
+def test_wbs_template_progress_route_is_registered(
     client: TestClient, admin_token: str
 ):
+    # 2026-07-03 去重：progress_compat 裸挂载（/wbs-templates 顶层别名）已下线，统一走 /progress
     headers = _auth_headers(admin_token)
-    root_response = client.get(
-        f"{settings.API_V1_PREFIX}/wbs-templates",
-        params={"page": 1, "page_size": 100},
-        headers=headers,
-        follow_redirects=False,
-    )
     progress_response = client.get(
         f"{settings.API_V1_PREFIX}/progress/wbs-templates",
         params={"page": 1, "page_size": 100},
         headers=headers,
         follow_redirects=False,
     )
+    root_response = client.get(
+        f"{settings.API_V1_PREFIX}/wbs-templates",
+        params={"page": 1, "page_size": 100},
+        headers=headers,
+        follow_redirects=False,
+    )
 
-    assert root_response.status_code == 200, root_response.text
     assert progress_response.status_code == 200, progress_response.text
-    assert "items" in root_response.json()
-    assert "total" in root_response.json()
     assert "items" in progress_response.json()
+    assert "total" in progress_response.json()
+    assert root_response.status_code == 404, "裸挂载别名应已下线"
 
 
 def test_batch_material_readiness_kit_rate_route_is_registered(
@@ -51,14 +51,15 @@ def test_batch_material_readiness_kit_rate_route_is_registered(
 def test_progress_report_compat_routes_precede_dynamic_report_routes(
     client: TestClient, admin_token: str
 ):
+    # 2026-07-03 去重：报表兼容路由统一走 /progress/reports/*
     headers = _auth_headers(admin_token)
     milestone_response = client.get(
-        f"{settings.API_V1_PREFIX}/reports/milestone-rate",
+        f"{settings.API_V1_PREFIX}/progress/reports/milestone-rate",
         headers=headers,
         follow_redirects=False,
     )
     delay_response = client.get(
-        f"{settings.API_V1_PREFIX}/reports/delay-reasons",
+        f"{settings.API_V1_PREFIX}/progress/reports/delay-reasons",
         params={"top_n": 10},
         headers=headers,
         follow_redirects=False,

@@ -330,7 +330,8 @@ def create_api_router() -> APIRouter:
     try:
         from app.api.v1.endpoints.progress_compat import router as progress_compat_router
 
-        api_router.include_router(progress_compat_router, tags=["progress-compat"])
+        # 2026-07-03 去重：原同时裸挂 + /progress 两处（21端点×2）；前端已统一迁到 /progress，
+        # 裸挂载（/tasks、/wbs-templates、/reports/* 顶层污染）下线
         api_router.include_router(
             progress_compat_router, prefix="/progress", tags=["progress-compat"]
         )

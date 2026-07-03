@@ -1,5 +1,28 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：功能审计 APPR-10/APPR-11/SALES-09/PEER-05 修复（发票开票与 update 门禁）
+
+- 修复项：`APPR-10`、`APPR-11`、`SALES-09`、`PEER-05`，集中处理发票未审批可开票、通用 update 绕状态/金额门禁、作废后可重开票、写操作挂 `finance:read` 和未签合同可建发票的问题。
+- 根因：
+  - `/sales/invoices/{id}/issue` 仍查旧 `ApprovalRecord` 轨道；统一审批实例不存在时会放行。
+  - `Invoice` ORM 未映射库里已有的 `approval_instance_id/approval_status`，审批 adapter 写入字段但不可靠。
+  - `update_invoice` 对传入字段直接 `setattr`，可改 `status`，也可把金额改到超过合同累计开票上限。
+  - 发票创建/更新/删除/开票/作废等写入口使用 `finance:read`，且发票创建没有合同签署状态前置校验。
+- 改动：
+  - `app/models/sales/invoices.py`：补 `approval_instance_id`、`approval_status` 映射。
+  - `app/services/approval_engine/adapters/invoice.py`：提交/通过/驳回/撤回时同步回写统一审批实例 ID 与审批状态。
+  - `app/api/v1/endpoints/sales/invoices/operations.py`：开票前要求发票当前状态为 `APPROVED`，且统一 `approval_instances` 最新实例为 `APPROVED`；作废/取消等写操作权限改为 `finance:update`。
+  - `app/api/v1/endpoints/sales/invoices/basic.py`：创建发票要求合同为 `SIGNED/ACTIVE/COMPLETED`；发票金额新增与更新均重跑合同累计开票上限；通用 PUT 禁止变更 `status`；写权限改为 `finance:create/update/delete`。
+  - `tests/api/test_sales_invoice_gate_contracts.py`：新增发票门禁合约测试，覆盖统一审批实例、作废重开票、通用状态变更、金额上限、未签合同。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`APPR-10/APPR-11/SALES-09/PEER-05` 标为 `已验证`，P0-0 资金正确性急救包同步。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_16_invoice_gate.py -q` -> 2 failed；`.venv/bin/python -m pytest tests/api/test_sales_invoice_gate_contracts.py -q` -> 5 failed。
+  - 绿灯：`.venv/bin/python -m pytest tests/api/test_sales_invoice_gate_contracts.py -q` -> 7 passed；`.venv/bin/python -m pytest tests/audit_p0/test_p0_16_invoice_gate.py -q` -> 2 passed。
+  - 回归：`.venv/bin/python -m pytest tests/api/test_invoice_basic_route_contracts.py tests/api/test_invoice_approval_workflow_contracts.py -q` -> 19 passed。
+  - 专项包：`.venv/bin/python -m pytest tests/api/test_sales_invoice_gate_contracts.py tests/api/test_invoice_basic_route_contracts.py tests/api/test_invoice_approval_workflow_contracts.py tests/audit_p0/test_p0_16_invoice_gate.py tests/api/test_sales_invoices_api.py tests/api/test_sales.py::TestInvoiceManagement -q` -> 44 passed, 1 skipped。
+  - 资金相邻 P0：`.venv/bin/python -m pytest tests/audit_p0/test_p0_03_quote_fund_trio.py tests/audit_p0/test_p0_04_payment_no_reconciliation.py tests/audit_p0/test_p0_16_invoice_gate.py -q` -> 7 passed。
+  - 静态检查：`py_compile` passed；`ruff check` 本轮触达 Python/测试文件 -> All checks passed。
+
 ## 2026-07-03
 
 - 根据桌面审计报告先做一轮小切口止血，未改 ROADMAP：
@@ -782,3 +805,13 @@
   - 连带删 2 个 10 行 import 覆盖桩测试。
 - 表和模型保留（presale_ai_solution/presale_solution_templates 数据在库，模型导出链未动，仅代码面无人再写）。
 - 验证：后端重启 0 加载失败；tests/api -k 'presale or solution' 80 全绿；auto 覆盖测试对已删模块正确 skip（try/except ImportError）；test_ppt_generator_auto 的 2 个失败经 stash 对照确认为既有债（构造器签名，与本次无关）；test_services_p5_coverage 的模板服务用例引用本就不存在的顶层路径，属既有失败。
+
+## 2026-07-03 继续：项目管理域去重排查与清理
+
+- 排查结论（项目域路径 584 个）：
+  - **确认重复并已清理**：progress_compat 同一 router 挂两处（裸挂 + /progress，21端点×2）——6月抢修时有意做的双别名（batch10 测试曾断言两处都通）。前端消费方集中在 services/api/progress.js 一个文件，已全部迁到 /progress 前缀（18处），裸挂载下线（顶层不再被 /tasks、/wbs-templates、/reports/* 污染）。前端孤儿页 ProjectGantt.jsx 删除（无路由无引用；/gantt API 保留，BlockingChain 组件在用）。
+  - **有意的兼容层，保留**：/milestones/projects/{id}/milestones、/members/projects/…、/stages/projects/…（operationId 带 legacy/compat，前端 projects.js 在用）；rd_project_aliases（自述"Redirect-free aliases"）。
+  - **记录不动（表级/分散）**：tasks(131行) 与 task_unified(91行) 双任务表并存+task-center/node-tasks/ecn-tasks 多任务面——ROADMAP 级重构；kit-rate(看板/分析) 与 kit-rates(统一口径/对比) 两前缀各有消费方属分散；/projects/{id}/{template_id} 类粗糙嵌套参数路径存在但不冲突。
+  - **顺带发现的断链**（记录）：progress.js taskApi 的 update/delete/updateProgress/updateAssignee/complete 调的 PUT/DELETE /tasks/* 后端从来不存在（仅 GET），迁移后仍 404——真正任务 CRUD 在 /task-center；后续如需页面内改任务应切 task-center。
+- 测试同步：test_batch10（裸别名断言改为 404 验证）、test_progress（compat 路由测试改 /progress 路径）、test_project_team_collaboration（任务创建改 /progress 路径）；test_milestones 两例适配 /milestones/ 分页化响应（items 包裹，系另一会话的里程碑改造，测试未跟上）。
+- 验证：openapi 裸别名清零、/progress/* 16 条完好；pytest -k 'progress/wbs/milestone/gantt' 全绿；batch10 5/5；实机冒烟 /progress 两口 200、裸口 404；前端 build 通过。integration/test_project_team_collaboration 整文件失败经 stash 对照确认为既有债（fixture 层）。

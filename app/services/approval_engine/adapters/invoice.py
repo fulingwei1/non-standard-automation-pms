@@ -72,6 +72,8 @@ class InvoiceApprovalAdapter(ApprovalAdapter):
         invoice = self.get_entity(entity_id)
         if invoice:
             invoice.status = "PENDING_APPROVAL"
+            invoice.approval_instance_id = instance.id
+            invoice.approval_status = instance.status
             self.db.flush()
 
     def on_approved(self, entity_id: int, instance: ApprovalInstance) -> None:
@@ -79,6 +81,8 @@ class InvoiceApprovalAdapter(ApprovalAdapter):
         invoice = self.get_entity(entity_id)
         if invoice:
             invoice.status = "APPROVED"
+            invoice.approval_instance_id = instance.id
+            invoice.approval_status = instance.status
             self.db.flush()
 
     def on_rejected(self, entity_id: int, instance: ApprovalInstance) -> None:
@@ -86,6 +90,8 @@ class InvoiceApprovalAdapter(ApprovalAdapter):
         invoice = self.get_entity(entity_id)
         if invoice:
             invoice.status = "REJECTED"
+            invoice.approval_instance_id = instance.id
+            invoice.approval_status = instance.status
             self.db.flush()
 
     def on_withdrawn(self, entity_id: int, instance: ApprovalInstance) -> None:
@@ -93,6 +99,8 @@ class InvoiceApprovalAdapter(ApprovalAdapter):
         invoice = self.get_entity(entity_id)
         if invoice:
             invoice.status = "DRAFT"
+            invoice.approval_instance_id = instance.id
+            invoice.approval_status = instance.status
             self.db.flush()
 
     def get_title(self, entity_id: int) -> str:

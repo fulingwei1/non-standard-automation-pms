@@ -13,13 +13,9 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.enums import (
-    ApprovalRecordStatusEnum,
-    InvoiceStatusEnum,
-    WorkflowTypeEnum,
-)
+from app.models.approval import ApprovalInstance
+from app.models.enums import InvoiceStatusEnum, WorkflowTypeEnum
 from app.models.sales import Invoice
-from app.models.sales.workflow import ApprovalRecord
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import InvoiceIssueRequest
@@ -31,35 +27,57 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
+def _latest_invoice_approval_instance(db: Session, invoice: Invoice) -> ApprovalInstance | None:
+    if invoice.approval_instance_id:
+        instance = (
+            db.query(ApprovalInstance)
+            .filter(
+                ApprovalInstance.id == invoice.approval_instance_id,
+                ApprovalInstance.entity_type == WorkflowTypeEnum.INVOICE.value,
+                ApprovalInstance.entity_id == invoice.id,
+            )
+            .first()
+        )
+        if instance:
+            return instance
+
+    return (
+        db.query(ApprovalInstance)
+        .filter(
+            ApprovalInstance.entity_type == WorkflowTypeEnum.INVOICE.value,
+            ApprovalInstance.entity_id == invoice.id,
+        )
+        .order_by(ApprovalInstance.created_at.desc(), ApprovalInstance.id.desc())
+        .first()
+    )
+
+
+def _require_invoice_ready_to_issue(db: Session, invoice: Invoice) -> None:
+    current_status = (invoice.status or "").upper()
+    if current_status != InvoiceStatusEnum.APPROVED.value:
+        raise HTTPException(status_code=400, detail="发票尚未处于已审批状态，无法开票")
+
+    instance = _latest_invoice_approval_instance(db, invoice)
+    if not instance or instance.status != "APPROVED":
+        raise HTTPException(status_code=400, detail="发票尚未通过审批，无法开票")
+
+
 @router.post("/invoices/{invoice_id}/issue", response_model=ResponseModel)
 def issue_invoice(
     *,
     db: Session = Depends(deps.get_db),
     invoice_id: int,
     issue_request: InvoiceIssueRequest,
-    current_user: User = Depends(security.require_permission("finance:read")),
+    current_user: User = Depends(security.require_permission("finance:update")),
 ) -> Any:
     """
     开票
     """
     invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
-
-    # 检查是否已通过审批（如果启用了审批工作流）。
-    record = (
-        db.query(ApprovalRecord)
-        .filter(
-            ApprovalRecord.entity_type == WorkflowTypeEnum.INVOICE.value,
-            ApprovalRecord.entity_id == invoice_id,
-        )
-        .order_by(ApprovalRecord.created_at.desc())
-        .first()
-    )
-
-    if record and record.status != ApprovalRecordStatusEnum.APPROVED.value:
-        raise HTTPException(status_code=400, detail="发票尚未通过审批，无法开票")
+    _require_invoice_ready_to_issue(db, invoice)
 
     invoice.issue_date = issue_request.issue_date
-    invoice.status = InvoiceStatusEnum.ISSUED
+    invoice.status = InvoiceStatusEnum.ISSUED.value
     invoice.payment_status = "PENDING"
 
     # 如果没有设置到期日期，默认设置为开票日期后30天
@@ -156,7 +174,7 @@ def void_invoice(
     db: Session = Depends(deps.get_db),
     invoice_id: int,
     reason: Optional[str] = Query(None, description="作废原因"),
-    current_user: User = Depends(security.require_permission("finance:read")),
+    current_user: User = Depends(security.require_permission("finance:update")),
 ) -> Any:
     """
     作废发票
@@ -170,7 +188,7 @@ def cancel_invoice_legacy(
     db: Session = Depends(deps.get_db),
     invoice_id: int,
     cancel_request: dict[str, Any] | None = Body(default=None),
-    current_user: User = Depends(security.require_permission("finance:read")),
+    current_user: User = Depends(security.require_permission("finance:update")),
 ) -> Any:
     """旧版发票作废入口，兼容 POST /invoices/{id}/cancel。"""
     payload = cancel_request or {}

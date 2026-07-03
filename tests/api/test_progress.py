@@ -79,13 +79,13 @@ class TestProjectTasks:
     def test_create_project_task_via_project_compat_route(
         self, client: TestClient, admin_token: str, test_project
     ):
-        """测试项目任务页使用的 /projects/{id}/tasks 兼容创建路由"""
+        """测试项目任务页使用的 /progress/projects/{id}/tasks 兼容创建路由（2026-07-03 裸别名下线）"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/{test_project.id}/tasks",
+            f"{settings.API_V1_PREFIX}/progress/projects/{test_project.id}/tasks",
             json={
                 "task_name": "项目任务页新建任务",
                 "stage": "S1",
@@ -105,7 +105,7 @@ class TestProjectTasks:
         assert data["planned_start_date"] == "2026-07-01"
 
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{test_project.id}/tasks",
+            f"{settings.API_V1_PREFIX}/progress/projects/{test_project.id}/tasks",
             headers=headers,
         )
         assert list_response.status_code == 200

@@ -154,5 +154,7 @@ def test_create_submitted_invoice_keeps_buyer_name_and_starts_unified_approval(
         .one()
     )
     assert instance.status == "PENDING"
+    assert invoice.approval_instance_id == instance.id
+    assert invoice.approval_status == "PENDING"
     assert task.status == "PENDING"
     assert task.assignee_id == admin.id

@@ -463,7 +463,7 @@ def test_invoice_update_route_updates_legacy_alias_fields(
         contract_type="sales",
         customer_id=project.customer_id,
         opportunity_id=opportunity.id,
-        total_amount=1000,
+        total_amount=2000,
         status="SIGNED",
     )
     db_session.add(contract)
@@ -487,7 +487,6 @@ def test_invoice_update_route_updates_legacy_alias_fields(
             "invoice_amount": 1500,
             "remarks": "更新后的备注",
             "buyer_name": "更新后的购买方",
-            "status": "issued",
         },
     )
 
@@ -496,13 +495,13 @@ def test_invoice_update_route_updates_legacy_alias_fields(
     assert Decimal(str(data["invoice_amount"])) == Decimal("1500.00")
     assert data["remark"] == "更新后的备注"
     assert data["buyer_name"] == "更新后的购买方"
-    assert data["status"] == "ISSUED"
+    assert data["status"] == "DRAFT"
 
     db_session.refresh(invoice)
     assert invoice.amount == 1500
     assert invoice.remark == "更新后的备注"
     assert invoice.buyer_name == "更新后的购买方"
-    assert invoice.status == "ISSUED"
+    assert invoice.status == "DRAFT"
 
 
 def test_invoice_approval_approve_uses_unified_engine_task(

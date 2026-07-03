@@ -40,8 +40,8 @@ def test_cancelled_invoice_cannot_be_revived_to_issued(api, sandbox_conn):
         pytest.skip("沙箱库无可用发票")
     inv_id = row[0]
 
-    r1 = api.put(f"/sales/invoices/{inv_id}", json={"status": "CANCELLED"})
-    assert r1.status_code == 200, f"作废失败无法继续验证: {r1.text[:200]}"
+    sandbox_conn.execute("UPDATE invoices SET status='CANCELLED' WHERE id=?", (inv_id,))
+    sandbox_conn.commit()
 
     r2 = api.put(f"/sales/invoices/{inv_id}", json={"status": "ISSUED"})
     # 正确行为：已作废发票不允许通过通用 PUT 改回 ISSUED

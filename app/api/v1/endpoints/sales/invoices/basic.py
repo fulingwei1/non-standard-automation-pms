@@ -35,6 +35,8 @@ from app.utils.db_helpers import delete_obj, get_or_404
 
 router = APIRouter()
 
+INVOICEABLE_CONTRACT_STATUSES = {"SIGNED", "ACTIVE", "COMPLETED"}
+
 
 def _json_number(value: Decimal) -> int | float:
     """Return compact JSON numbers while keeping money rounded to cents."""
@@ -42,6 +44,62 @@ def _json_number(value: Decimal) -> int | float:
     if rounded == rounded.to_integral_value():
         return int(rounded)
     return float(rounded)
+
+
+def _decimal_money(value: Any) -> Decimal:
+    return Decimal(str(value or 0)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def _ensure_contract_can_be_invoiced(contract: Contract) -> None:
+    status = (contract.status or "").upper()
+    if status not in INVOICEABLE_CONTRACT_STATUSES:
+        raise HTTPException(status_code=400, detail="合同未签署，不能创建发票")
+
+
+def _ensure_invoice_amount_within_contract(
+    db: Session,
+    contract: Contract,
+    amount: Any,
+    *,
+    exclude_invoice_id: int | None = None,
+) -> None:
+    new_amount = _decimal_money(amount)
+    if new_amount <= 0:
+        raise HTTPException(status_code=400, detail="发票金额必须大于0")
+
+    contract_amount = (
+        _decimal_money(contract.total_amount) if contract.total_amount is not None else None
+    )
+    if not contract_amount or contract_amount <= 0:
+        return
+
+    query = db.query(func.coalesce(func.sum(Invoice.amount), 0)).filter(
+        Invoice.contract_id == contract.id,
+        func.upper(func.coalesce(Invoice.status, "")) != InvoiceStatusEnum.CANCELLED.value,
+    )
+    if exclude_invoice_id is not None:
+        query = query.filter(Invoice.id != exclude_invoice_id)
+
+    invoiced = _decimal_money(query.scalar() or 0)
+    total_after = invoiced + new_amount
+    if total_after > contract_amount:
+        raise HTTPException(
+            status_code=400,
+            detail=f"累计开票金额({total_after})超过合同金额({contract_amount})",
+        )
+
+
+def _reject_direct_status_change(invoice: Invoice, requested_status: Any) -> None:
+    if requested_status is None:
+        return
+
+    requested = str(requested_status).upper()
+    current = (invoice.status or "").upper()
+    if requested != current:
+        raise HTTPException(
+            status_code=400,
+            detail="发票状态不能通过通用更新接口变更，请使用审批、开票或作废专用接口",
+        )
 
 
 @router.get("/invoices", response_model=PaginatedResponse[InvoiceResponse])
@@ -215,26 +273,10 @@ def _create_invoice_logic(
     contract = db.query(Contract).filter(Contract.id == invoice_data["contract_id"]).first()
     if not contract:
         raise HTTPException(status_code=404, detail="合同不存在")
+    _ensure_contract_can_be_invoiced(contract)
 
     # F3: 累计开票金额不得超过合同金额（排除已作废发票）
-    contract_amount = Decimal(str(contract.total_amount)) if contract.total_amount is not None else None
-    if contract_amount and contract_amount > 0:
-        invoiced = (
-            db.query(func.coalesce(func.sum(Invoice.amount), 0))
-            .filter(
-                Invoice.contract_id == contract.id,
-                func.upper(func.coalesce(Invoice.status, "")) != "CANCELLED",
-            )
-            .scalar()
-            or 0
-        )
-        new_amount = Decimal(str(invoice_data.get("amount") or 0))
-        total_after = Decimal(str(invoiced)) + new_amount
-        if total_after > contract_amount:
-            raise HTTPException(
-                status_code=400,
-                detail=f"累计开票金额({total_after})超过合同金额({contract_amount})",
-            )
+    _ensure_invoice_amount_within_contract(db, contract, invoice_data.get("amount"))
 
     invoice = Invoice(**invoice_data)
     db.add(invoice)
@@ -282,7 +324,7 @@ def create_invoice_slash(
     *,
     db: Session = Depends(deps.get_db),
     invoice_in: InvoiceCreate,
-    current_user: User = Depends(security.require_permission("finance:read")),
+    current_user: User = Depends(security.require_permission("finance:create")),
 ) -> Any:
     """创建发票 (trailing slash)"""
     return _create_invoice_logic(db, invoice_in, current_user)
@@ -293,7 +335,7 @@ def create_invoice(
     *,
     db: Session = Depends(deps.get_db),
     invoice_in: InvoiceCreate,
-    current_user: User = Depends(security.require_permission("finance:read")),
+    current_user: User = Depends(security.require_permission("finance:create")),
 ) -> Any:
     """创建发票"""
     return _create_invoice_logic(db, invoice_in, current_user)
@@ -305,7 +347,7 @@ def update_invoice(
     db: Session = Depends(deps.get_db),
     invoice_id: int,
     invoice_in: InvoiceUpdate,
-    current_user: User = Depends(security.require_permission("finance:read")),
+    current_user: User = Depends(security.require_permission("finance:update")),
 ) -> Any:
     """更新发票。"""
     invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
@@ -331,9 +373,19 @@ def update_invoice(
     invoice_data.pop("invoice_amount", None)
     invoice_data.pop("invoice_date", None)
 
+    if "status" in invoice_data:
+        _reject_direct_status_change(invoice, invoice_data.pop("status"))
+
+    if "amount" in invoice_data:
+        invoice_data["amount"] = _decimal_money(invoice_data["amount"])
+        _ensure_invoice_amount_within_contract(
+            db,
+            invoice.contract,
+            invoice_data["amount"],
+            exclude_invoice_id=invoice.id,
+        )
+
     for field, value in invoice_data.items():
-        if field == "status" and isinstance(value, str):
-            value = value.upper()
         if hasattr(invoice, field):
             setattr(invoice, field, value)
 
@@ -360,7 +412,7 @@ def delete_invoice(
     *,
     db: Session = Depends(deps.get_db),
     invoice_id: int,
-    current_user: User = Depends(security.require_permission("finance:read")),
+    current_user: User = Depends(security.require_permission("finance:delete")),
 ) -> Any:
     """
     删除发票（仅限草稿状态）

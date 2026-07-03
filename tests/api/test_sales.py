@@ -152,6 +152,7 @@ def _create_contract(client: TestClient, token: str) -> dict:
         "quote_version_id": quote.get("current_version_id"),
         "contract_amount": 150000.0,
         "signed_date": date.today().isoformat(),
+        "status": "SIGNED",
     }
     response = client.post(
         f"{settings.API_V1_PREFIX}/sales/contracts",

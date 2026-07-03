@@ -167,7 +167,7 @@ class TestProjectTeamCollaboration:
         }
 
         response = client.post(
-            f"/api/v1/projects/{project_id}/tasks", json=task_data, headers=auth_headers
+            f"/api/v1/progress/projects/{project_id}/tasks", json=task_data, headers=auth_headers
         )
         assert response.status_code == 200
         task = response.json()

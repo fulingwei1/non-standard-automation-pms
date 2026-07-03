@@ -44,6 +44,8 @@ class Invoice(Base, TimestampMixin):
     buyer_name = Column(String(100), comment="购买方名称")
     buyer_tax_no = Column(String(30), comment="购买方税号")
     remark = Column(Text, comment="备注")
+    approval_instance_id = Column(Integer, comment="审批实例ID")
+    approval_status = Column(String(30), default="DRAFT", comment="审批状态")
 
     contract = relationship("Contract", back_populates="invoices")
     project = relationship("Project", foreign_keys=[project_id])

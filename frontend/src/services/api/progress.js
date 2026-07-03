@@ -8,20 +8,20 @@ export const progressApi = {
     list: (params) => {
       // If project_id is provided, use project-specific endpoint
       if (params?.project_id) {
-        return api.get(`/projects/${params.project_id}/tasks`, {
+        return api.get(`/progress/projects/${params.project_id}/tasks`, {
           params: { ...params, project_id: undefined },
         });
       }
       // Otherwise, need to fetch from all projects (not directly supported)
       return Promise.reject(new Error("project_id is required"));
     },
-    get: (id) => api.get(`/tasks/${id}`),
-    create: (projectId, data) => api.post(`/projects/${projectId}/tasks`, data),
-    update: (id, data) => api.put(`/tasks/${id}`, data),
-    delete: (id) => api.delete(`/tasks/${id}`),
-    updateProgress: (id, data) => api.put(`/tasks/${id}/progress`, data),
-    updateAssignee: (id, data) => api.put(`/tasks/${id}/assignee`, data),
-    complete: (id) => api.put(`/tasks/${id}/complete`),
+    get: (id) => api.get(`/progress/tasks/${id}`),
+    create: (projectId, data) => api.post(`/progress/projects/${projectId}/tasks`, data),
+    update: (id, data) => api.put(`/progress/tasks/${id}`, data),
+    delete: (id) => api.delete(`/progress/tasks/${id}`),
+    updateProgress: (id, data) => api.put(`/progress/tasks/${id}/progress`, data),
+    updateAssignee: (id, data) => api.put(`/progress/tasks/${id}/assignee`, data),
+    complete: (id) => api.put(`/progress/tasks/${id}/complete`),
   },
 
   // Progress Reports
@@ -34,11 +34,11 @@ export const progressApi = {
     getGantt: (projectId) => api.get(`/projects/${projectId}/progress/gantt`),
     getBoard: (projectId) => api.get(`/projects/${projectId}/progress/board`),
     getMilestoneRate: (projectId) =>
-      api.get("/reports/milestone-rate", {
+      api.get("/progress/reports/milestone-rate", {
         params: projectId ? { project_id: projectId } : {},
       }),
     getDelayReasons: (projectId, topN = 10) =>
-      api.get("/reports/delay-reasons", {
+      api.get("/progress/reports/delay-reasons", {
         params: { project_id: projectId, top_n: topN },
       }),
   },
@@ -85,16 +85,16 @@ export const progressApi = {
   },
   // WBS Templates
   wbsTemplates: {
-    list: (params) => api.get("/wbs-templates", { params }),
-    get: (id) => api.get(`/wbs-templates/${id}`),
-    create: (data) => api.post("/wbs-templates", data),
-    update: (id, data) => api.put(`/wbs-templates/${id}`, data),
-    delete: (id) => api.delete(`/wbs-templates/${id}`),
-    getTasks: (templateId) => api.get(`/wbs-templates/${templateId}/tasks`),
+    list: (params) => api.get("/progress/wbs-templates", { params }),
+    get: (id) => api.get(`/progress/wbs-templates/${id}`),
+    create: (data) => api.post("/progress/wbs-templates", data),
+    update: (id, data) => api.put(`/progress/wbs-templates/${id}`, data),
+    delete: (id) => api.delete(`/progress/wbs-templates/${id}`),
+    getTasks: (templateId) => api.get(`/progress/wbs-templates/${templateId}/tasks`),
     addTask: (templateId, data) =>
-      api.post(`/wbs-templates/${templateId}/tasks`, data),
+      api.post(`/progress/wbs-templates/${templateId}/tasks`, data),
     updateTask: (taskId, data) =>
-      api.put(`/wbs-template-tasks/${taskId}`, data),
+      api.put(`/progress/wbs-template-tasks/${taskId}`, data),
   },
 
   // Projects WBS Init
