@@ -114,6 +114,22 @@ class AIQuotationGeneratorService:
 
         return quotation
 
+    def resolve_base_requirements(self, request: ThreeTierQuotationRequest) -> str:
+        """需求来源解析：手填 base_requirements 优先；为空时从需求分析记录组装；两者皆空拒绝。"""
+        base = (request.base_requirements or "").strip()
+        if base:
+            return base
+        if request.requirement_analysis_id:
+            from app.services.presale import requirement_analysis_bridge as bridge
+
+            analysis = bridge.get_analysis(self.db, request.requirement_analysis_id)
+            if not analysis:
+                raise ValueError(f"需求分析记录 {request.requirement_analysis_id} 不存在")
+            composed = bridge.compose_requirements_text(analysis)
+            if composed:
+                return composed
+        raise ValueError("需求为空：请提供 base_requirements 或有效的 requirement_analysis_id")
+
     def generate_three_tier_quotations(
         self, request: ThreeTierQuotationRequest, user_id: int
     ) -> Tuple[PresaleAIQuotation, PresaleAIQuotation, PresaleAIQuotation]:
@@ -125,10 +141,13 @@ class AIQuotationGeneratorService:
         Returns:
             (基础版, 标准版, 高级版) 报价单元组
         """
+        # 需求来源解析：base_requirements 为空时自动从 requirement_analysis_id 带出
+        base_requirements = self.resolve_base_requirements(request)
+
         # 基于需求生成三档方案
-        basic_items = self._generate_basic_items(request.base_requirements)
-        standard_items = self._generate_standard_items(request.base_requirements, basic_items)
-        premium_items = self._generate_premium_items(request.base_requirements, standard_items)
+        basic_items = self._generate_basic_items(base_requirements)
+        standard_items = self._generate_standard_items(base_requirements, basic_items)
+        premium_items = self._generate_premium_items(base_requirements, standard_items)
 
         # 生成基础版报价单
         basic_request = QuotationGenerateRequest(

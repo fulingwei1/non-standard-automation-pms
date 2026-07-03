@@ -186,6 +186,31 @@ def get_clarification_questions(
 
 
 @router.post(
+    "/analysis/{analysis_id}/confirm",
+    summary="确认需求分析并回填商机需求",
+    description="""
+    人工确认 AI 需求分析结果（状态置 approved）。
+
+    工单关联了商机时，同步把分析结果**增量回填**商机需求表
+    （opportunity_requirements）：只补空缺字段，人工已填的值一律不覆盖；
+    完整分析内容带确认人/时间挂到 extra_json 供溯源。
+    """,
+)
+def confirm_requirement_analysis(
+    analysis_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """确认分析结果并打通商机需求回填（PRE-10）"""
+    from app.services.presale import requirement_analysis_bridge as bridge
+
+    try:
+        return bridge.confirm_and_backfill(db, analysis_id, current_user.id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.post(
     "/update-structured-requirement",
     response_model=RequirementAnalysisResponse,
     summary="更新结构化需求",

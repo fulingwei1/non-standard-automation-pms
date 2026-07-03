@@ -99,7 +99,12 @@ class ThreeTierQuotationRequest(BaseModel):
 
     presale_ticket_id: int = Field(..., description="售前工单ID")
     customer_id: Optional[int] = Field(None, description="客户ID")
-    base_requirements: str = Field(..., description="基础需求描述")
+    requirement_analysis_id: Optional[int] = Field(
+        None, description="需求分析ID（base_requirements 为空时自动从分析记录组装）"
+    )
+    base_requirements: str = Field(
+        "", description="基础需求描述（与 requirement_analysis_id 至少给一个）"
+    )
     budget_range: Optional[Dict[str, Decimal]] = Field(None, description="预算范围")
     priority_features: Optional[List[str]] = Field(None, description="优先功能列表")
 

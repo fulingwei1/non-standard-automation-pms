@@ -177,6 +177,9 @@ class PresaleAIService:
         """
         start_time = time.time()
 
+        # 0. 解析需求来源：requirement_analysis_id 自动带出已存分析，显式 requirements 字段优先
+        requirements = self._resolve_requirements(request)
+
         # 1. 获取参考模板
         template = None
         matched_template_ids = []
@@ -187,7 +190,7 @@ class PresaleAIService:
             matched_template_ids = [request.template_id]
 
         # 2. 构建AI提示词
-        prompt = self._build_solution_prompt(request.requirements, template)
+        prompt = self._build_solution_prompt(requirements, template)
 
         # 3. 调用AI生成方案
         ai_response = self.ai_client.generate_solution(prompt=prompt, model=request.ai_model)
@@ -199,7 +202,7 @@ class PresaleAIService:
         architecture_diagram = None
         if request.generate_architecture:
             arch_response = self.generate_architecture(
-                requirements=request.requirements, diagram_type="architecture"
+                requirements=requirements, diagram_type="architecture"
             )
             architecture_diagram = arch_response.get("diagram_code")
 
@@ -263,6 +266,22 @@ class PresaleAIService:
             "ai_model_used": request.ai_model,
             "tokens_used": ai_response.get("usage", {}).get("total_tokens", 0),
         }
+
+    def _resolve_requirements(self, request: SolutionGenerationRequest) -> Dict[str, Any]:
+        """需求来源合并：分析记录打底，请求里显式给的字段覆盖。两者皆空则拒绝生成。"""
+        from app.services.presale import requirement_analysis_bridge as bridge
+
+        merged: Dict[str, Any] = {}
+        if request.requirement_analysis_id:
+            analysis = bridge.get_analysis(self.db, request.requirement_analysis_id)
+            if not analysis:
+                raise ValueError(f"需求分析记录 {request.requirement_analysis_id} 不存在")
+            merged.update(bridge.build_requirements_payload(analysis))
+        if request.requirements:
+            merged.update(request.requirements)
+        if not merged:
+            raise ValueError("需求为空：请提供 requirements 或有效的 requirement_analysis_id")
+        return merged
 
     def _build_solution_prompt(
         self, requirements: Dict[str, Any], template: Optional[PresaleSolutionTemplate]

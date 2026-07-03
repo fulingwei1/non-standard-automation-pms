@@ -26,9 +26,13 @@ class SolutionGenerationRequest(BaseModel):
     """方案生成请求"""
 
     presale_ticket_id: int = Field(..., description="售前工单ID")
-    requirement_analysis_id: Optional[int] = Field(None, description="需求分析ID")
+    requirement_analysis_id: Optional[int] = Field(
+        None, description="需求分析ID（给定时自动带出已存分析内容，requirements 可省略）"
+    )
     template_id: Optional[int] = Field(None, description="参考模板ID")
-    requirements: Dict[str, Any] = Field(..., description="需求详情")
+    requirements: Optional[Dict[str, Any]] = Field(
+        None, description="需求详情（与 requirement_analysis_id 至少给一个；显式字段优先）"
+    )
     generate_architecture: bool = Field(True, description="是否生成架构图")
     generate_bom: bool = Field(True, description="是否生成BOM")
     ai_model: Optional[str] = Field("gpt-4", description="AI模型选择")
