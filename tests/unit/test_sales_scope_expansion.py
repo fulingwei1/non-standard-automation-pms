@@ -7,9 +7,42 @@ correctly enforce data-scope checks via filter_sales_data_by_scope (for
 bulk queries) or check_sales_data_permission (for parent-entity gating).
 """
 
+import ast
+from pathlib import Path
 from unittest.mock import MagicMock, patch, call
 
 import pytest
+
+
+SALES_PERMISSIONS_PATH = (
+    Path(__file__).resolve().parents[2] / "app/core/sales_permissions.py"
+)
+
+
+def test_sales_permissions_defines_single_check_sales_data_permission():
+    """权限入口不能被同名函数覆盖。"""
+
+    tree = ast.parse(SALES_PERMISSIONS_PATH.read_text(encoding="utf-8"))
+    function_defs = [
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef)
+        and node.name == "check_sales_data_permission"
+    ]
+    all_assign = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.Assign)
+        and any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets)
+    )
+    exported_names = [
+        element.value
+        for element in all_assign.value.elts
+        if isinstance(element, ast.Constant) and isinstance(element.value, str)
+    ]
+
+    assert len(function_defs) == 1
+    assert exported_names.count("check_sales_data_permission") == 1
 
 
 # ---------------------------------------------------------------------------
@@ -218,10 +251,15 @@ class TestContractExportScope:
 
     def test_pdf_has_scope_check(self):
         import inspect
-        from app.api.v1.endpoints.sales.contracts.export import export_contract_pdf
+        from app.api.v1.endpoints.sales.contracts.export import (
+            _build_contract_pdf_response,
+            export_contract_pdf,
+        )
 
-        source = inspect.getsource(export_contract_pdf)
-        assert "check_sales_data_permission" in source
+        endpoint_source = inspect.getsource(export_contract_pdf)
+        helper_source = inspect.getsource(_build_contract_pdf_response)
+        assert "_build_contract_pdf_response" in endpoint_source
+        assert "check_sales_data_permission" in helper_source
 
 
 # ---------------------------------------------------------------------------
