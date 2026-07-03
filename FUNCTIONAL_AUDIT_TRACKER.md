@@ -15,7 +15,7 @@
 
 **P0 动态复现（17 项全局 P0）**：17/17 已动态复现；P0-5（会签驳回翻转 = APPR-03）已补稳定内存审批引擎复现并回归；P0-4（SALES-04）金额可负已被 pydantic Field(gt=0) 拦截（守卫 PASS），超额无勾稽仍成立，定级不变、危害描述删"可负"。详见 P0_REPRO_REPORT.md 与主表验证方式列。
 
-**2026-07-03 止血进展**：APPR-01/APPR-02 已修复审批模板 code、全失败 200 掩盖与新库审批种子；APPR-03 已补稳定复现并修复会签/或签驳回汇总与终态防复活；APPR-07 已修复并回归；PRE-16 已修复 qwen/百炼 live AI 判断；PRE-23 已修复立项关卡异常静默放行；PROJ-06 已修复结项 readiness 强制门禁；PROJ-10 已修复里程碑完成门禁异常吞掉和全局 complete 旁路；PROD-02/03/04/11/12/14/22 已完成库存入库、在途、领料扣库、调拨动库与缺料扫描 500 止血回归；MISC-01 已下架竞品分析假数据菜单/路由并让直链接口返回 501；SALES-01/02/03/04 已完成报价资金三连与回款勾稽止血回归；SALES-09/APPR-10/APPR-11/PEER-05 已完成发票资金门禁止血回归；SALES-14 已修复付款审批前端 404 断链；SALES-15 已修复销售团队统计/排名恒 0 桩；AS-02/AS-15 已修复邮件/短信触达假成功与工时提醒 SMTP 配置错位；AS-03 已修复通知队列默认同步止血与 worker 导入断裂，APPR-17 预警积压/状态流转仍待修；AS-19 已修复客服关单 payload/id 与质保工单兜底列表；RPT-16 已验证负荷瓶颈部门名兼容；APPR-04 已完成 stub 标记、调度失败计数、stub-backed 任务默认禁用，业务回填仍待做；PERM-11 已先补组织员工/HR 档案权限小切口；奖金 payment 端点已补 bonus 权限，HR-17 主审批链仍待修。
+**2026-07-03 止血进展**：APPR-01/APPR-02 已修复审批模板 code、全失败 200 掩盖与新库审批种子；APPR-03 已补稳定复现并修复会签/或签驳回汇总与终态防复活；APPR-07 已修复并回归；PRE-16 已修复 qwen/百炼 live AI 判断；PRE-23 已修复立项关卡异常静默放行；PROJ-06 已修复结项 readiness 强制门禁；PROJ-10 已修复里程碑完成门禁异常吞掉和全局 complete 旁路；PROD-02/03/04/11/12/14/22 已完成库存入库、在途、领料扣库、调拨动库与缺料扫描 500 止血回归；MISC-01 已下架竞品分析假数据菜单/路由并让直链接口返回 501；SALES-01/02/03/04 已完成报价资金三连与回款勾稽止血回归；SALES-09/APPR-10/APPR-11/PEER-05 已完成发票资金门禁止血回归；SALES-14 已修复付款审批前端 404 断链；SALES-15 已修复销售团队统计/排名恒 0 桩；AS-02/AS-15 已修复邮件/短信触达假成功与工时提醒 SMTP 配置错位；AS-03 已修复通知队列默认同步止血与 worker 导入断裂，APPR-17 预警积压/状态流转仍待修；AS-19 已修复客服关单 payload/id 与质保工单兜底列表；RPT-16 已验证负荷瓶颈部门名兼容；APPR-04 已完成 stub 标记、调度失败计数、stub-backed 任务默认禁用，业务回填仍待做；PERM-11 已先补组织员工/HR 档案权限小切口；奖金 payment 端点已补 bonus 权限，HR-17 主审批链仍待修；PRE-21 已修复 AI 后台任务重启恢复与轮询超时；PRE-10 已打通 AI 需求分析下游（方案/报价自动带出 + 确认回填商机需求）。
 
 ---
 
@@ -61,7 +61,7 @@
 | PRE-07 | update_quotation 税额/折扣不随明细重算 | P2 | 待修 | presale_ai_quotation_service.py:194-212 | 0.5d | 静态已证 | 详#4 |
 | PRE-08 | ai-enrich-requirement 整行覆盖清空已有需求；mock 回退破坏性写入 | P1 | 待修 | opportunity_workflow.py:508-522；ai_client_service.py:256-257 | 1d | 静态已证 | 详#5；mock 集群（集群2）统一拦截点 |
 | PRE-09 | ai-quote-estimate mock 回退静默返回垃圾 200 | P2 | 待修 | opportunity_workflow.py:358-363 | 0.5d | 静态已证 | 详#6；修复并入 PRE-08 |
-| PRE-10 | AI 需求分析结果无下游消费（数据孤岛，北极星断点） | P1 | 待修 | presale_ai_service.py:169-193 | 3d | 静态已证 | 详#8；与商机域两套需求抽取互不相通 |
+| PRE-10 | AI 需求分析结果无下游消费（数据孤岛，北极星断点） | P1 | 已修待验 | presale/requirement_analysis_bridge.py；presale_ai_service.py；presale_ai_quotation_service.py；tests/unit/test_presale_requirement_bridge.py | 3d | 静态已证；✅契约测试回归（2026-07-03） | 详#8；方案生成/三档报价支持 requirement_analysis_id 自动带出；新增 POST /presale/ai/analysis/{id}/confirm 确认后增量回填商机需求（不覆盖人工值，extra_json 溯源） |
 | PRE-11 | 方案生成 mock 方案可入库（confidence 0.8）+ BOM 成本硬编码 10000 元 | P1 | 待修 | presale_ai_service.py:193-242,492-504 | 2d | 静态已证 | 详#10；mock 集群 |
 | PRE-12 | 方案导出 PDF 是纯文本桩、Word/Excel 为 pass 缺失 | P1 | 待修 | presale_ai_export_service.py:46-72；presale_ai_routes.py:257-268 | 2-3d | 静态已证 | 详#11；止损包（先提示假导出）；同域有真 reportlab 可复用 |
 | PRE-13 | AI 使用报告 export-report 返回不存在的文件 URL | P2 | 待修 | presale_ai_integration.py:399-409 | 1d | 静态已证 | 详#12；止损包 |
@@ -72,7 +72,7 @@
 | PRE-18 | 相似案例检索为 equipment_type 精确匹配 SQL，非语义 | P2 | 待修 | opportunity_workflow.py:170-175 | 并入 PRE-17 | 静态已证 | 详#16；空值互配、命中率低 |
 | PRE-19 | 方案 AI 评审 ai-solution-review / 验收标准生成 | — | 已验证 | — | — | 静态已证（正面确认） | 无缺陷；ai-acceptance-criteria 真回填 |
 | PRE-20 | AI 工作流编排只建状态壳无执行器（DB 中 20 行 status 全空） | P2 | 待修 | presale_ai_integration.py:285-319 | 做实3d/下架0.5d | 静态已证 | 详#17；止损包 |
-| PRE-21 | AI 后台任务重启后 PENDING/RUNNING 永久卡死（无恢复无超时） | P2 | 待修 | ai_job_service.py:22,43；main.py startup 无恢复 | 0.5d | 静态已证 | 详#18；**主项**：APPR-22① 同问题并入本项（互为引用） |
+| PRE-21 | AI 后台任务重启后 PENDING/RUNNING 永久卡死（无恢复无超时） | P2 | 已修待验 | ai_job_service.py；main.py startup；tests/unit/test_ai_job_recovery.py | 0.5d | 静态已证；✅契约测试回归（2026-07-03） | 详#18；**主项**：APPR-22① 同问题并入本项（互为引用）；startup recover_stale_jobs + 轮询惰性超时（AI_JOB_MAX_RUNTIME_SECONDS 默认1800s） |
 | PRE-22 | 模块库 ai-modules（挖掘/列表/标准化建议，DB 7 模块） | — | 已验证 | — | — | 静态已证（正面确认） | 无缺陷 |
 | PRE-23 | 立项提交关卡异常静默放行（except 后 missing=[]） | P2 | 已验证 | pmo_initiation/service.py:363-371 | 0.25d | 静态已证；✅已修复并回归（2026-07-03） | 详#19；Quick-win 闸门包；handover 构建异常 now raises ValueError，不再静默提交 |
 | PRE-24 | 遗留脏数据字典（quotation_type 非法枚举 / assessment_status 两套值报表漏 93%） | P3 | 待修 | presale_ai_quotation.quotation_type；opportunities.assessment_status（DB 实证 51 vs 4） | 0.5d | 静态已证 | 详#20；数据清洗专项 |

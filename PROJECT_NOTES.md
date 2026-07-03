@@ -1,5 +1,29 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：功能审计 PRE-10 修复（AI 需求分析下游贯通）
+
+- 修复项：`PRE-10`，AI 需求分析结果数据孤岛：方案生成只存 requirement_analysis_id 不读内容（需求靠前端重贴）、三档报价只认手填 base_requirements、分析结果永不回填商机，与商机域 ai-enrich-requirement 两套抽取互不相通。
+- 代码面：
+  - 新增 `app/services/presale/requirement_analysis_bridge.py`：`build_requirements_payload`（方案生成结构化输入）、`compose_requirements_text`（报价文本输入）、`confirm_and_backfill`（确认+回填）。
+  - `presale_ai_service.generate_solution` 增加 `_resolve_requirements`：requirement_analysis_id 自动带出分析内容打底，显式 requirements 字段覆盖，两者皆空 ValueError；`SolutionGenerationRequest.requirements` 转可选。
+  - `presale_ai_quotation_service` 新增 `resolve_base_requirements` 并接入三档报价入口；`ThreeTierQuotationRequest` 增加 `requirement_analysis_id`，`base_requirements` 转可选。
+  - 新增端点 `POST /presale/ai/analysis/{id}/confirm`：人工确认（状态 approved）后增量回填商机 `opportunity_requirements`——只补空缺字段、人工值不覆盖，完整分析内容带确认人/时间挂 `extra_json` 溯源。
+- 验证：
+  - 红灯：`tests/unit/test_presale_requirement_bridge.py` 5 项先失败（schema 必填/方法不存在/桥接模块不存在）。
+  - 绿灯：同套件 5 passed。
+  - 相邻回归：presale_ai_service/quotation/schemas 套件 82 passed / 16 skipped；`tests/unit/test_presale_ai_service.py` 32 项失败为既有测试债（patch 兼容壳旧路径），已用 HEAD 临时 worktree 证实与本次改动无关。
+  - `py_compile` 全部触达文件 + `import app.main` 通过。
+- 残留：前端方案生成/三档报价页面尚未传 requirement_analysis_id（后端已兼容旧调用方式）；确认回填目前只写 opportunity_requirements，不动商机主表字段（商机主表回填走已有 ai-enrich-requirement）。
+
+## 2026-07-03 继续：功能审计 PRE-21 修复（AI 后台任务重启恢复与超时）
+
+- 修复项：`PRE-21`（含 APPR-22① 并入），进程内线程池不跨重启，DB 里遗留 PENDING/RUNNING 任务永久卡死，轮询无超时判定。
+- 代码面：
+  - `ai_job_service.recover_stale_jobs()`：启动时把遗留 PENDING/RUNNING 统一标 FAILED（"进程重启导致任务中断，请重新提交"）；会话工厂运行时解析（支持测试注入 db）。
+  - `get()` 轮询惰性超时：超过 `AI_JOB_MAX_RUNTIME_SECONDS`（默认 1800s，env 可配）仍未完成即标 FAILED。
+  - `main.py` startup 接线 recover_stale_jobs（异常不阻断启动）。
+- 验证：红灯 3 项（恢复/超时/startup 接线）→ 绿灯 `tests/unit/test_ai_job_recovery.py` 4 passed；`import app.main` 通过。
+
 ## 2026-07-03 继续：功能审计 AS-03 修复（Redis 通知队列默认同步止血）
 
 - 修复项：`AS-03`，通知队列“有生产者无消费者”：Redis 可用时会把通知标记为 `QUEUED`，但默认没有 worker 进程消费；同时 `scripts/notification_worker.py` 仍导入已不存在的旧模块路径。
