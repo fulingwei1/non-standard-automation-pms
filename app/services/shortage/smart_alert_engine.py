@@ -21,6 +21,7 @@ from app.models.production.work_order import WorkOrder
 from app.models.project import Project
 from app.models.purchase import GoodsReceipt, PurchaseOrder, PurchaseOrderItem
 from app.models.shortage.smart_alert import ShortageAlert, ShortageHandlingPlan
+from app.services.purchase.in_transit import get_purchase_in_transit_qty
 from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
@@ -336,20 +337,7 @@ class SmartAlertEngine:
 
     def _get_in_transit_qty(self, material_id: int) -> Decimal:
         """获取在途数量"""
-        result = (
-            self.db.query(func.sum(PurchaseOrderItem.quantity - PurchaseOrderItem.received_qty))
-            .join(PurchaseOrder, PurchaseOrder.id == PurchaseOrderItem.order_id)
-            .filter(
-                and_(
-                    PurchaseOrderItem.material_id == material_id,
-                    PurchaseOrder.status.in_(["CONFIRMED", "IN_TRANSIT"]),
-                    PurchaseOrderItem.quantity > PurchaseOrderItem.received_qty,
-                )
-            )
-            .scalar()
-        )
-
-        return result or Decimal("0")
+        return get_purchase_in_transit_qty(self.db, material_id)
 
     def _create_alert(self, **kwargs) -> ShortageAlert:
         """创建预警记录"""

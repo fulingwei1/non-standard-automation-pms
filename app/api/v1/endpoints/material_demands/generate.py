@@ -14,9 +14,9 @@ from app.api import deps
 from app.core import security
 from app.models.material import BomHeader, BomItem, Material
 from app.models.project import Machine
-from app.models.purchase import PurchaseOrderItem
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.purchase.in_transit import get_purchase_in_transit_qty
 
 router = APIRouter()
 
@@ -79,17 +79,7 @@ def generate_purchase_requisition(
         current_stock = material.current_stock or Decimal("0")
 
         # 计算在途数量
-        in_transit_qty = Decimal("0")
-        po_items = (
-            db.query(PurchaseOrderItem)
-            .filter(PurchaseOrderItem.material_id == result.material_id)
-            .filter(PurchaseOrderItem.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]))
-            .all()
-        )
-        for po_item in po_items:
-            in_transit_qty += (po_item.quantity or Decimal("0")) - (
-                po_item.received_qty or Decimal("0")
-            )
+        in_transit_qty = get_purchase_in_transit_qty(db, result.material_id)
 
         total_available = current_stock + in_transit_qty
         shortage_qty = max(Decimal("0"), result.total_demand - total_available)

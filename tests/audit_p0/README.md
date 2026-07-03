@@ -37,8 +37,8 @@ AUDIT_P0_BASE_URL=http://127.0.0.1:8123 .venv/bin/python -m pytest tests/audit_p
 | test_p0_03_quote_fund_trio | 3 报价资金三连 | API：状态直改自批 / 审批后改明细 / cost 漏乘 qty |
 | test_p0_04_payment_no_reconciliation | 4 回款无勾稽 | API：超发票额回款成功（负数已被 schema 拦，记为偏差） |
 | test_p0_05_cosign_reject_flip | 5 会签翻转 | 内存审批引擎：AND_SIGN 汇总失败、OR_SIGN 等待其他审批人、终态防复活 |
-| test_p0_06_receipt_no_stock | 6 收货不入库 | 源码接线：receipts 不调 InboundService |
-| test_p0_07_shortage_scan_500 | 7 缺料扫描崩溃 | API：POST scan 返回 500 |
+| test_p0_06_receipt_no_stock | 6 收货不入库 | 源码接线：修复前 receipts 不调 InboundService；修复后合格收货入库，并由采购收货契约覆盖 PO/POI 状态与金额流转 |
+| test_p0_07_shortage_scan_500 | 7 缺料扫描崩溃 | API：POST scan 修复前返回 500，修复后不再 5xx |
 | test_p0_08_closure_gate_and_change_baseline | 8 结项门禁+变更基线 | API 结项 + 源码变更审批不回基线 |
 | test_p0_09_field_checkin_fake | 9 现场调试假实现 | API 签到成功但 field_checkins 无新增 |
 | test_p0_10_stub_tasks | 10 stub 任务 | 导入调用 14 个 stub 返回 {"status":"stub"} |

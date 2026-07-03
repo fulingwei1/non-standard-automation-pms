@@ -15,6 +15,7 @@ from app.dependencies import get_db_session
 from app.models.assembly_kit import KitRateSnapshot
 from app.models.material import BomHeader
 from app.models.project import Machine, Project
+from app.services.purchase.in_transit import get_purchase_in_transit_qty
 
 logger = logging.getLogger(__name__)
 
@@ -66,18 +67,7 @@ def _calculate_kit_rate_for_bom_items(
             stock_qty = item.material.current_stock or 0
 
         # 在途数量
-        transit_qty = 0
-        if item.material_id:
-            from app.models.purchase import PurchaseOrderItem
-
-            po_items = (
-                db.query(PurchaseOrderItem)
-                .filter(PurchaseOrderItem.material_id == item.material_id)
-                .filter(PurchaseOrderItem.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]))
-                .all()
-            )
-            for po_item in po_items:
-                transit_qty += (po_item.quantity or 0) - (po_item.received_qty or 0)
+        transit_qty = get_purchase_in_transit_qty(db, item.material_id)
 
         available_qty = received_qty + stock_qty + transit_qty
 

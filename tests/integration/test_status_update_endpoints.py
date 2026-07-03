@@ -6,8 +6,8 @@
 
 路由结构（经 api.py 确认）：
 - 服务工单: service_router prefix="" → tickets prefix="/tickets"
-  → PUT /api/v1/tickets/{id}/status
-  → PUT /api/v1/tickets/{id}/close
+  → PUT /api/v1/service/tickets/{id}/status
+  → PUT /api/v1/service/tickets/{id}/close
 - 生产工单: production_router prefix="" → work_orders
   → PUT /api/v1/work-orders/{id}/start|complete|pause|resume|cancel
 - 项目阶段: projects_router prefix="/projects" → stages prefix="/{project_id}/stages"
@@ -83,9 +83,9 @@ class TestServiceTicketStatusUpdate:
         db_session.commit()
         db_session.refresh(ticket)
 
-        # 实际路由: PUT /api/v1/tickets/{id}/status?status=IN_PROGRESS
+        # 实际路由: PUT /api/v1/service/tickets/{id}/status?status=IN_PROGRESS
         response = client.put(
-            f"/api/v1/tickets/{ticket.id}/status",
+            f"/api/v1/service/tickets/{ticket.id}/status",
             params={"status": "IN_PROGRESS"},
             headers={"Authorization": f"Bearer {admin_token}"},
         )
@@ -134,7 +134,7 @@ class TestServiceTicketStatusUpdate:
 
         # 使用无效状态
         response = client.put(
-            f"/api/v1/tickets/{ticket.id}/status",
+            f"/api/v1/service/tickets/{ticket.id}/status",
             params={"status": "INVALID_STATUS"},
             headers={"Authorization": f"Bearer {admin_token}"},
         )
@@ -165,9 +165,9 @@ class TestServiceTicketStatusUpdate:
         db_session.commit()
         db_session.refresh(ticket)
 
-        # 实际路由: PUT /api/v1/tickets/{id}/close
+        # 实际路由: PUT /api/v1/service/tickets/{id}/close
         response = client.put(
-            f"/api/v1/tickets/{ticket.id}/close",
+            f"/api/v1/service/tickets/{ticket.id}/close",
             json={
                 "solution": "问题已解决",
                 "root_cause": "配置错误",

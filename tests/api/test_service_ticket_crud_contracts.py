@@ -16,7 +16,7 @@ def test_service_ticket_create_with_assignee_and_cc_user(
     headers = _auth_headers(admin_token)
 
     response = client.post(
-        f"{settings.API_V1_PREFIX}/tickets",
+        f"{settings.API_V1_PREFIX}/service/tickets",
         json={
             "project_id": 1,
             "customer_id": 1,
@@ -43,7 +43,7 @@ def test_service_ticket_close_accepts_resolution_alias(
     headers = _auth_headers(admin_token)
 
     created = client.post(
-        f"{settings.API_V1_PREFIX}/tickets",
+        f"{settings.API_V1_PREFIX}/service/tickets",
         json={
             "project_id": 1,
             "customer_id": 1,
@@ -58,7 +58,7 @@ def test_service_ticket_close_accepts_resolution_alias(
     assert created.status_code == 201, created.text
 
     response = client.put(
-        f"{settings.API_V1_PREFIX}/tickets/{created.json()['id']}/close",
+        f"{settings.API_V1_PREFIX}/service/tickets/{created.json()['id']}/close",
         json={"resolution": "远程复位后恢复正常", "satisfaction": 5},
         headers=headers,
     )

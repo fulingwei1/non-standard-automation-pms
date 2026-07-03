@@ -6,7 +6,7 @@ purchase/receipts.py 全文无任何库存写入；inventory/inbound_service.py 
 零业务调用方（只在 facade/__init__ 里被 import/export，从不被收货流触发）。
 
 正确行为：收货合格确认应触发库存入库（调用 InboundService / 写 MaterialStock /
-增 current_stock）。当前收货端点与入库服务无任何接线 -> 失败即证明断链。
+增 current_stock）。修复前收货端点与入库服务无任何接线 -> 失败即证明断链。
 
 采用源码接线断言（静态复现）：动态造 PO->收货->质检全链的前置成本极高，且即便
 造出来也不会写库；核心缺陷在“收货代码根本不调入库”，源码接线检查更稳、更直指根因。

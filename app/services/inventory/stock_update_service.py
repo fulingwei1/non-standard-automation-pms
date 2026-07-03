@@ -63,9 +63,12 @@ class StockUpdateService:
             )
             self.db.add(stock)
 
+        stock_delta = Decimal(0)
+
         if transaction_type in ["PURCHASE_IN", "TRANSFER_IN", "RETURN"]:
             stock.quantity += quantity
             stock.available_quantity += quantity
+            stock_delta = quantity
             stock.last_in_date = datetime.now()
             if transaction_type == "PURCHASE_IN" and unit_price > 0:
                 old_value = stock.quantity * stock.unit_price
@@ -82,15 +85,19 @@ class StockUpdateService:
                 )
             stock.quantity -= quantity
             stock.available_quantity -= quantity
+            stock_delta = -quantity
             stock.last_out_date = datetime.now()
 
         elif transaction_type == "ADJUST":
             stock.quantity += quantity
             stock.available_quantity += quantity
+            stock_delta = quantity
 
         stock.total_value = stock.quantity * stock.unit_price
         stock.last_update = datetime.now()
         stock.status = self._calculate_stock_status(stock)
+        if material and stock_delta:
+            material.current_stock = (material.current_stock or Decimal(0)) + stock_delta
         self.db.flush()
         return stock
 

@@ -44,7 +44,7 @@ def test_service_record_get_update_frontend_contract(
     }
 
     created = client.post(
-        f"{settings.API_V1_PREFIX}/records",
+        f"{settings.API_V1_PREFIX}/service/records",
         json=payload,
         headers=headers,
     )
@@ -52,14 +52,14 @@ def test_service_record_get_update_frontend_contract(
     record_id = created.json()["id"]
 
     fetched = client.get(
-        f"{settings.API_V1_PREFIX}/records/{record_id}",
+        f"{settings.API_V1_PREFIX}/service/records/{record_id}",
         headers=headers,
     )
     assert fetched.status_code == 200, fetched.text
     assert fetched.json()["id"] == record_id
 
     updated = client.put(
-        f"{settings.API_V1_PREFIX}/records/{record_id}",
+        f"{settings.API_V1_PREFIX}/service/records/{record_id}",
         json={
             "service_content": "QA service record contract updated",
             "service_result": "Updated result",
@@ -115,7 +115,7 @@ def test_knowledge_delete_removes_uploaded_file(
     db.refresh(article)
 
     response = client.delete(
-        f"{settings.API_V1_PREFIX}/knowledge-base/{article.id}",
+        f"{settings.API_V1_PREFIX}/service/knowledge-base/{article.id}",
         headers=headers,
     )
 

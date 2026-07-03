@@ -306,7 +306,7 @@ def test_service_ticket_list_requires_service_read(
     regular_user_token: str,
 ):
     response = client.get(
-        "/api/v1/tickets",
+        "/api/v1/service/tickets",
         headers={"Authorization": f"Bearer {regular_user_token}"},
     )
 
@@ -341,7 +341,7 @@ def test_service_tickets_are_filtered_by_project_scope(
         suffix=suffix,
     )
 
-    response = client.get("/api/v1/tickets", params={"keyword": suffix}, headers=headers)
+    response = client.get("/api/v1/service/tickets", params={"keyword": suffix}, headers=headers)
 
     assert response.status_code == 200, response.text
     ids = {item["id"] for item in response.json()["items"]}
@@ -368,7 +368,7 @@ def test_service_ticket_detail_for_foreign_project_is_forbidden(
         suffix=_suffix(),
     )
 
-    response = client.get(f"/api/v1/tickets/{hidden_ticket.id}", headers=headers)
+    response = client.get(f"/api/v1/service/tickets/{hidden_ticket.id}", headers=headers)
 
     assert response.status_code == 403
     assert "服务工单" in response.json()["detail"]
@@ -405,7 +405,7 @@ def test_service_records_are_filtered_by_project_scope(
         suffix=suffix,
     )
 
-    response = client.get("/api/v1/records", params={"keyword": suffix}, headers=headers)
+    response = client.get("/api/v1/service/records", params={"keyword": suffix}, headers=headers)
 
     assert response.status_code == 200, response.text
     ids = {item["id"] for item in response.json()["items"]}
@@ -428,7 +428,7 @@ def test_surveys_only_return_current_users_owned_data(
     own_survey = _create_survey(db_session, creator=engineer_user, suffix=suffix, label="own")
     other_survey = _create_survey(db_session, creator=pm_user, suffix=suffix, label="other")
 
-    response = client.get("/api/v1/surveys", params={"keyword": suffix}, headers=headers)
+    response = client.get("/api/v1/service/surveys", params={"keyword": suffix}, headers=headers)
 
     assert response.status_code == 200, response.text
     ids = {item["id"] for item in response.json()["items"]}
@@ -451,7 +451,7 @@ def test_communications_only_return_current_users_owned_data(
     own_comm = _create_communication(db_session, creator=engineer_user, suffix=suffix, label="own")
     other_comm = _create_communication(db_session, creator=pm_user, suffix=suffix, label="other")
 
-    response = client.get("/api/v1/communications", params={"keyword": suffix}, headers=headers)
+    response = client.get("/api/v1/service/communications", params={"keyword": suffix}, headers=headers)
 
     assert response.status_code == 200, response.text
     ids = {item["id"] for item in response.json()["items"]}
@@ -472,7 +472,7 @@ def test_knowledge_update_requires_author_or_superuser(
     article = _create_article(db_session, author=pm_user)
 
     response = client.put(
-        f"/api/v1/knowledge-base/{article.id}",
+        f"/api/v1/service/knowledge-base/{article.id}",
         json={"title": "attempted-overwrite"},
         headers=headers,
     )

@@ -952,7 +952,9 @@ def create_api_router() -> APIRouter:
     # ==================== 服务工单 ====================
     try:
         from app.api.v1.endpoints.service import router as service_router
-        api_router.include_router(service_router, tags=["service"])
+        # 2026-07-03：客服包原裸挂顶层，喷出 /tickets、/records、/statistics 等通用命名空间
+        # 极易撞车；对齐 api_lazy 的既有设计意图，统一挂 /service 前缀
+        api_router.include_router(service_router, prefix="/service", tags=["service"])
         print("✓ 服务工单模块加载成功")
     except Exception as e:
         print(f"✗ 服务工单模块加载失败：{e}")

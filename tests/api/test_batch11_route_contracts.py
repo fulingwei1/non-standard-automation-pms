@@ -45,7 +45,7 @@ def test_service_knowledge_base_tolerates_legacy_null_status(
     db_session.commit()
 
     response = client.get(
-        f"{settings.API_V1_PREFIX}/knowledge-base",
+        f"{settings.API_V1_PREFIX}/service/knowledge-base",
         params={"page": 1, "page_size": 100},
         headers=_auth_headers(admin_token),
         follow_redirects=False,

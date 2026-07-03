@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.models.assembly_kit import KitRateSnapshot
 from app.models.material import BomHeader, BomItem
 from app.models.project import Machine, Project
-from app.models.purchase import PurchaseOrderItem
+from app.services.purchase.in_transit import get_purchase_in_transit_qty
 from app.utils.db_helpers import get_or_404
 
 
@@ -59,18 +59,7 @@ class KitRateService:
         return all_items
 
     def _get_in_transit_qty(self, material_id: Optional[int]) -> Decimal:
-        if not material_id:
-            return Decimal(0)
-        in_transit_qty = Decimal(0)
-        po_items = (
-            self.db.query(PurchaseOrderItem)
-            .filter(PurchaseOrderItem.material_id == material_id)
-            .filter(PurchaseOrderItem.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]))
-            .all()
-        )
-        for po_item in po_items:
-            in_transit_qty += (po_item.quantity or 0) - (po_item.received_qty or 0)
-        return in_transit_qty
+        return get_purchase_in_transit_qty(self.db, material_id)
 
     def calculate_kit_rate(
         self,

@@ -10,6 +10,12 @@
   = 问题复现；4 passed 为取证/守卫用例；1 skipped 为当时受限项（P0-5）。
 - 2026-07-03 补充：P0-5/APPR-03 已改为稳定的内存审批引擎动态复现与回归用例，
   覆盖会签汇总失败、或签等待其他审批人、终态 REJECTED 禁止复活。
+- 2026-07-03 补充：P0-7/PROD-02 已修复智能缺料预警扫描字段错配，`test_p0_07`
+  从 HTTP 500 红灯转为回归通过；库存/在途数据真实性仍依赖 PROD-03/04。
+- 2026-07-03 补充：P0-6/PROD-03 已接通采购收货质检合格后的入库链路，
+  `test_p0_06` 从源码接线红灯转为回归通过；PO/POI 状态流转已由 PROD-11 补齐。
+- 2026-07-03 补充：P0-6/PROD-11/PROD-22 已补齐采购收货创建后的
+  PO/POI `PARTIAL_RECEIVED/RECEIVED` 状态流转、收货明细金额和订单已收金额；在途读侧口径仍归 PROD-04。
 
 ---
 
@@ -43,8 +49,8 @@
 | 3c | 成本汇总漏乘 qty | API：`GET /quotes/{id}/cost-breakdown`，比对 total_cost 与 Σ(qty×cost) | 返回 6773243.39 = Σ(cost)，应为 Σ(qty×cost)=19040825.62 → 毛利虚高 | **已复现** | `test_p0_03_quote_fund_trio.py::test_cost_breakdown_multiplies_by_quantity` |
 | 4 | 回款无勾稽 | API：对有 ISSUED 发票的合同 `POST 回款`，金额远超发票额 | 回款 9,999,999 记入 474,000 的发票，paid=9,999,999、unpaid=-9,525,999，HTTP 200 | **已复现（部分偏差）** | `test_p0_04_payment_no_reconciliation.py::test_overpayment_beyond_invoice_amount_is_rejected` |
 | 5 | 会签驳回可翻转 APPROVED | 内存审批引擎构造两人 AND_SIGN/OR_SIGN 节点 + 终态实例待办 | 修复前：会签/或签一票拒立即 REJECTED，终态 REJECTED 可被 pending 任务 approve 翻成 APPROVED；修复后 3 用例通过 | **已复现并回归** | `test_p0_05_cosign_reject_flip.py`（3 用例） |
-| 6 | 收货不入库 | 源码接线：`purchase/receipts.py` 是否调 InboundService / 写库存 | receipts 全文无库存入库接线；`receive_goods/purchase_in` 无业务调用方 | **已复现** | `test_p0_06_receipt_no_stock.py`（2 用例） |
-| 7 | 缺料引擎崩溃 | API：`POST /shortage/smart-alerts/scan` | HTTP 500，`AttributeError: WorkOrder.is_critical_path` | **已复现** | `test_p0_07_shortage_scan_500.py::test_smart_alert_scan_does_not_500` |
+| 6 | 收货不入库 | 源码接线 + API 契约：`purchase/receipts.py` 是否调 InboundService / 写库存/写收货进度 | 修复前 receipts 全文无库存入库接线且 PO/POI 状态不流转；修复后质检合格量写 MaterialStock、MaterialTransaction 与 material.current_stock，创建收货单写 PO/POI 收货状态、明细金额和订单已收金额 | **已复现并回归** | `test_p0_06_receipt_no_stock.py`（2 用例）+ `test_purchase_receipts_workflow_contracts.py::test_goods_receipt_creates_purchase_in_stock_transaction` + `test_purchase_receipts_workflow_contracts.py::test_goods_receipt_updates_order_item_status_and_amounts` |
+| 7 | 缺料引擎崩溃 | API：`POST /shortage/smart-alerts/scan` | 修复前 HTTP 500，`AttributeError: WorkOrder.is_critical_path`；修复后扫描端点不再 5xx | **已复现并回归** | `test_p0_07_shortage_scan_500.py::test_smart_alert_scan_does_not_500` |
 | 8a | 结项无门禁 | API：对 readiness=False 的项目 `POST closure` | readiness 明确 ready=false（0/8 阶段、缺验收），仍 HTTP 201 建结项，项目 status 不变 | **已复现** | `test_p0_08_closure_gate_and_change_baseline.py::test_closure_blocked_when_not_ready` |
 | 8b | 变更不回基线 | 源码：`approve_change_request` 是否写 Project 基线 | 函数体无 `planned_end_date/budget_amount/execute_linkage` 任何写入 | **已复现** | `test_p0_08_…::test_change_approval_writes_project_baseline` |
 | 9 | 现场调试假实现 | API：`POST /field/tasks/1/checkin` 后查 `field_checkins` | 返回「签到已记录」HTTP 200，但行数 3→3 无新增 | **已复现** | `test_p0_09_field_checkin_fake.py::test_field_checkin_persists_a_row` |

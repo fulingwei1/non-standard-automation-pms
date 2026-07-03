@@ -1,5 +1,67 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：功能审计 PROD-11/22 修复（收货状态与金额流转）
+
+- 修复项：`PROD-11` + `PROD-22`，创建采购收货单后只累加 `PurchaseOrderItem.received_qty`，不刷新 PO/POI 状态，也不计算收货明细金额和订单已收金额。
+- 根因：
+  - `purchase/receipts.py` 创建 `GoodsReceiptItem` 时没有写 `amount`。
+  - 收货后没有任何写入点把 PO/POI 状态推进到 `PARTIAL_RECEIVED` / `RECEIVED`。
+  - `PurchaseOrder.received_amount` 未随收货累计，后续对账缺基础。
+- 改动：
+  - `app/api/v1/endpoints/purchase/receipts.py`：新增 `_refresh_order_receipt_progress()`，按所有订单行 `received_qty / quantity` 刷新 PO/POI 状态，并累计 `received_amount`。
+  - 创建收货明细时写入 `amount = received_qty * unit_price`。
+  - `tests/api/test_purchase_receipts_workflow_contracts.py`：新增 API 契约，覆盖部分收货变 `PARTIAL_RECEIVED`、补齐后变 `RECEIVED`、收货明细金额和订单已收金额同步。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/api/test_purchase_receipts_workflow_contracts.py::test_goods_receipt_updates_order_item_status_and_amounts -q` -> failed（`GoodsReceiptItem.amount == 0.00`）。
+  - 绿灯：同命令 -> 1 passed。
+  - 相邻回归：`.venv/bin/python -m pytest tests/audit_p0/test_p0_06_receipt_no_stock.py tests/api/test_purchase_workflow_contracts.py tests/api/test_purchase_receipts_workflow_contracts.py tests/unit/test_inbound_service_coverage.py -q` -> 10 passed。
+  - 静态检查：`py_compile` passed；`ruff check app/api/v1/endpoints/purchase/receipts.py tests/api/test_purchase_receipts_workflow_contracts.py` -> All checks passed；`git diff --check` passed。
+- 残留：
+  - `PROD-04` 仍待修：读侧在途口径/状态字典还没对齐，需确认哪些服务读 `ORDERED/PARTIAL_RECEIVED/RECEIVED`。
+  - `PROD-12/PROD-14` 仍待修：生产领料扣库、调拨真实库存变动还没打通。
+  - 存量数据仍需清洗：已有 PO/POI 空状态、历史收货金额空值不会被本次代码自动回填。
+
+## 2026-07-03 继续：功能审计 PROD-03 修复（采购收货入库断链）
+
+- 修复项：`PROD-03`，采购收货只回写 `PurchaseOrderItem.received_qty`，不写库存台账、库存交易或 `Material.current_stock`。
+- 根因：
+  - `purchase/receipts.py` 创建收货单/质检时没有调用 `InboundService`。
+  - `InboundService.purchase_in()` 只在库存 facade 内部可达，收货流没有业务调用方。
+  - 库存更新服务只维护 `material_stock`，没有同步旧读侧常用的 `materials.current_stock`。
+- 改动：
+  - `app/api/v1/endpoints/purchase/receipts.py`：质检确认时按“合格数量 - 已入库数量”增量调用 `InboundService.purchase_in()`；写回 `warehoused_qty`、默认库位、入库时间/人员，避免重复质检重复入库。
+  - `app/services/inventory/stock_update_service.py`：库存增减同步维护 `Material.current_stock`。
+  - `app/services/inventory/inbound_service.py`：保留 `tenant_id=1` 默认值，兼容旧调用/测试。
+  - `tests/api/test_purchase_receipts_workflow_contracts.py`：新增 API 契约，覆盖收货质检合格后写 `MaterialStock`、`MaterialTransaction(PURCHASE_IN)`、`Material.current_stock`。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_06_receipt_no_stock.py -q` -> 2 failed；新增 API 契约 -> failed（`MaterialStock` 不存在）。
+  - 绿灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_06_receipt_no_stock.py tests/api/test_purchase_receipts_workflow_contracts.py tests/unit/test_inbound_service_coverage.py -q` -> 7 passed。
+  - 相邻回归：`.venv/bin/python -m pytest tests/api/test_purchase_workflow_contracts.py tests/api/test_purchase_receipts_workflow_contracts.py tests/audit_p0/test_p0_06_receipt_no_stock.py -q` -> 8 passed。
+  - 静态检查：`py_compile` passed；`ruff check` 本轮触达 Python/测试文件 -> All checks passed；`git diff --check` passed。
+- 残留：
+  - `PROD-11/22` 已在后续补齐：收货后 PO/POI 状态、收货明细金额和订单已收金额已回归。
+  - `PROD-04/PROD-12/PROD-14` 仍待修：在途读侧状态字典、生产领料扣库、调拨真实库存变动还没打通。
+  - `tests/test_inventory_management.py` 当前因既有 fixture `test_tenant` 缺失无法作为回归包运行，未计入本轮验证。
+
+## 2026-07-03 继续：功能审计 PROD-02 修复（智能缺料扫描字段错配 500）
+
+- 修复项：`PROD-02`，智能缺料预警扫描引用不存在字段，`POST /shortage/smart-alerts/scan` 返回 500。
+- 根因：
+  - `WorkOrder` 模型只有 `plan_start_date`，服务引用了不存在的 `planned_start_date`。
+  - `WorkOrder` 模型没有 `is_critical_path`，服务把它放进查询列并读取。
+  - `MaterialStock` 模型字段是 `available_quantity`，服务引用了不存在的 `available_qty`。
+- 改动：
+  - `app/services/shortage/smart_alert_engine.py`：需求扫描改用 `WorkOrder.plan_start_date`，并排除无计划开始日期的工单；库存汇总改用 `MaterialStock.available_quantity`；工单缺少关键路径来源时先以 `False` 进入预警等级计算。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`、`P0_REPRO_REPORT.md`、`tests/audit_p0/README.md`：`PROD-02/P0-7` 标为已动态复现并回归。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_07_shortage_scan_500.py -q` -> failed（HTTP 500）。
+  - 绿灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_07_shortage_scan_500.py -q` -> 1 passed。
+  - 相邻回归：`.venv/bin/python -m pytest tests/unit/test_smart_alert_engine.py tests/unit/test_smart_alert_engine_coverage.py tests/audit_p0/test_p0_07_shortage_scan_500.py -q` -> 50 passed, 11 skipped。
+  - 静态检查：`py_compile app/services/shortage/smart_alert_engine.py` passed；`ruff check app/services/shortage/smart_alert_engine.py tests/audit_p0/test_p0_07_shortage_scan_500.py` -> All checks passed；`git diff --check` passed。
+- 残留：
+  - 该修复只解决扫描入口字段错配 500，不证明库存/在途数据已经真实；真数据仍依赖 `PROD-03/PROD-11` 收货入库/状态流转与 `PROD-04` 在途读侧口径。
+  - 深覆盖相邻包 `tests/unit/test_smart_alert_n2.py` 仍有 2 个既有失败：测试 helper 把 `Decimal("0")` 当默认值覆盖、以及成本影响为 0 时评分期望与现行实现不一致；未并入本次字段修复。
+
 ## 2026-07-03 继续：功能审计 APPR-03 修复（会签/或签驳回汇总与终态防复活）
 
 - 修复项：`APPR-03`，会签/或签驳回语义破坏，`REJECTED` 审批实例可被剩余待办继续 `approve` 翻回 `APPROVED`。
@@ -936,3 +998,9 @@
 - **acceptance 双挂载收敛**：acceptance 包原被挂两次（/acceptance 前缀 + 裸挂 legacy），产生 32 对双生路径（/acceptance/acceptance-orders 与 /acceptance-orders 同函数）。前端只用裸路径；已去前缀挂载（api.py+api_lazy），32 对双生清零、裸 32 条保留。测试 3 个文件 8 处路径迁移，71 过。
 - 排查无恙：installation-dispatch(9)/after-sales(10)/field(7) 均单挂载；售后域前端无孤儿页。
 - **记录（命名空间设计问题，非重复）**：客服 service 包裸挂顶层，喷出 /tickets、/records、/communications、/surveys、/statistics 等通用命名空间（前端 service.js 在调），极易与其他域撞车——建议后续统一迁 /service/* 前缀（涉及 service.js 全量调用点，独立一刀）。
+
+## 2026-07-03 继续：客服 service 包命名空间迁移 /service/*
+
+- 客服包原裸挂顶层，喷出 /tickets、/records、/communications、/surveys、/survey-templates、/knowledge-base、/knowledge-features、/statistics 八个通用命名空间——api_lazy 备用注册表早就用 prefix="/service"，活动注册表漏了；本轮对齐设计意图。
+- 迁移面：api.py 挂载加前缀；前端 service.js(44处)+customerCommunication.js(6处)；后端 5 个测试文件 22 处。前端 /knowledge-base 的页面路由（浏览器 URL）不受影响。
+- 验证：openapi /service/* 38 条、八个裸命名空间清零；后端 27 测试过；前端 API 测试 17/18 文件过（debug.test.js 为 stash 对照确认的既有失败）；build 通过；实机 /service/tickets/statistics 等 200、旧裸路径 404。

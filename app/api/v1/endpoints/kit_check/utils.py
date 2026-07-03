@@ -13,8 +13,8 @@ from app.common.query_filters import apply_like_filter
 from app.models.material import BomHeader, BomItem
 from app.models.production import WorkOrder
 from app.models.project import Machine
-from app.models.purchase import PurchaseOrderItem
 from app.models.shortage import KitCheck
+from app.services.purchase.in_transit import get_purchase_in_transit_qty
 
 
 def generate_check_no(db: Session) -> str:
@@ -86,15 +86,7 @@ def calculate_work_order_kit_rate(
         available_qty = Decimal(material.current_stock or 0)
 
         # 计算在途数量 = 已采购但未到货的数量
-        in_transit_qty = Decimal(0)
-        po_items = (
-            db.query(PurchaseOrderItem)
-            .filter(PurchaseOrderItem.material_id == item.material_id)
-            .filter(PurchaseOrderItem.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]))
-            .all()
-        )
-        for po_item in po_items:
-            in_transit_qty += Decimal(po_item.quantity or 0) - Decimal(po_item.received_qty or 0)
+        in_transit_qty = get_purchase_in_transit_qty(db, item.material_id)
 
         # 总可用数量 = 可用数量 + 在途数量
         total_available = available_qty + in_transit_qty

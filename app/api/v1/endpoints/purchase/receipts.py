@@ -21,12 +21,14 @@ from app.models.purchase import (
     PurchaseOrderItem,
 )
 from app.models.user import User
+from app.services.inventory.inbound_service import InboundService
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404
 
 from .utils import decimal_value, generate_receipt_no
 
 router = APIRouter()
+DEFAULT_WAREHOUSE_LOCATION = "默认仓库"
 
 
 def _date_value(value: Any) -> Optional[str]:
@@ -54,6 +56,78 @@ def _empty_receipt(receipt_id: int) -> dict[str, Any]:
         "items": [],
         "not_found": True,
     }
+
+
+def _inventory_tenant_id(user: User) -> int:
+    return int(getattr(user, "tenant_id", None) or 1)
+
+
+def _warehouse_qualified_receipt_item(
+    db: Session,
+    receipt_item: GoodsReceiptItem,
+    qualified_qty: Decimal,
+    current_user: User,
+) -> None:
+    order_item = receipt_item.order_item
+    material_id = getattr(order_item, "material_id", None)
+    if not material_id:
+        return
+
+    already_warehoused = receipt_item.warehoused_qty or Decimal("0")
+    if qualified_qty < already_warehoused:
+        raise HTTPException(status_code=400, detail="合格数量不能小于已入库数量")
+
+    inbound_qty = qualified_qty - already_warehoused
+    if inbound_qty <= Decimal("0"):
+        return
+
+    receipt = receipt_item.receipt
+    order = receipt.order
+    location = receipt_item.warehouse_location or DEFAULT_WAREHOUSE_LOCATION
+
+    receipt_item.warehoused_qty = already_warehoused + inbound_qty
+    receipt_item.warehouse_location = location
+    receipt.warehoused_at = datetime.now()
+    receipt.warehoused_by = current_user.id
+
+    InboundService(db, tenant_id=_inventory_tenant_id(current_user)).purchase_in(
+        material_id=material_id,
+        quantity=inbound_qty,
+        unit_price=order_item.unit_price or Decimal("0"),
+        location=location,
+        purchase_order_id=receipt.order_id,
+        purchase_order_no=getattr(order, "order_no", None),
+        operator_id=current_user.id,
+        remark=f"收货单 {receipt.receipt_no} 质检合格入库",
+    )
+
+
+def _refresh_order_receipt_progress(order: PurchaseOrder) -> None:
+    order_items = order.items.all()
+    total_order_qty = Decimal("0")
+    total_received_qty = Decimal("0")
+    received_amount = Decimal("0")
+
+    for item in order_items:
+        order_qty = item.quantity or Decimal("0")
+        received_qty = item.received_qty or Decimal("0")
+        unit_price = item.unit_price or Decimal("0")
+        total_order_qty += order_qty
+        total_received_qty += received_qty
+        received_amount += received_qty * unit_price
+
+        if received_qty <= Decimal("0"):
+            item.status = "PENDING"
+        elif order_qty > Decimal("0") and received_qty >= order_qty:
+            item.status = "RECEIVED"
+        else:
+            item.status = "PARTIAL_RECEIVED"
+
+    order.received_amount = received_amount
+    if total_order_qty > Decimal("0") and total_received_qty >= total_order_qty:
+        order.status = "RECEIVED"
+    elif total_received_qty > Decimal("0"):
+        order.status = "PARTIAL_RECEIVED"
 
 
 def _serialize_receipt_item(item: GoodsReceiptItem) -> dict[str, Any]:
@@ -225,6 +299,7 @@ def create_goods_receipt(
     db.flush()
 
     for order_item, delivery_qty, received_qty in validated_items:
+        receipt_amount = received_qty * (order_item.unit_price or Decimal("0"))
         receipt_item = GoodsReceiptItem(
             receipt_id=receipt.id,
             order_item_id=order_item.id,
@@ -232,11 +307,13 @@ def create_goods_receipt(
             material_name=order_item.material_name,
             delivery_qty=delivery_qty,
             received_qty=received_qty,
+            amount=receipt_amount,
         )
         db.add(receipt_item)
 
         order_item.received_qty = (order_item.received_qty or Decimal("0")) + received_qty
 
+    _refresh_order_receipt_progress(order)
     db.commit()
     return ResponseModel(code=200, message="收货单创建成功", data={"id": receipt.id})
 
@@ -327,5 +404,6 @@ def inspect_receipt_item(
     receipt_item.receipt.inspect_status = computed_result
     receipt_item.receipt.inspected_at = datetime.now()
     receipt_item.receipt.inspected_by = current_user.id
+    _warehouse_qualified_receipt_item(db, receipt_item, qualified_qty_value, current_user)
     db.commit()
     return ResponseModel(code=200, message="质检结果已更新", data=None)

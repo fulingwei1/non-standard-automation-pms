@@ -169,19 +169,19 @@ const normalizeSurvey = (item = {}) => ({
 export const serviceApi = {
   tickets: {
     list: (params) =>
-      api.get("/tickets", { params }).then((response) => mapPaginatedItems(response, normalizeServiceTicket)),
+      api.get("/service/tickets", { params }).then((response) => mapPaginatedItems(response, normalizeServiceTicket)),
     get: (id) =>
-      api.get(`/tickets/${id}`).then((response) => wrapResponseData(response, normalizeServiceTicket(unwrap(response)))),
+      api.get(`/service/tickets/${id}`).then((response) => wrapResponseData(response, normalizeServiceTicket(unwrap(response)))),
     create: (data) =>
-      api.post("/tickets", data).then((response) => wrapResponseData(response, normalizeServiceTicket(unwrap(response)))),
+      api.post("/service/tickets", data).then((response) => wrapResponseData(response, normalizeServiceTicket(unwrap(response)))),
     update: (id, data) =>
-      api.put(`/tickets/${id}`, data).then((response) => wrapResponseData(response, normalizeServiceTicket(unwrap(response)))),
+      api.put(`/service/tickets/${id}`, data).then((response) => wrapResponseData(response, normalizeServiceTicket(unwrap(response)))),
     assign: (id, data) =>
-      api.put(`/tickets/${id}/assign`, data).then((response) => wrapResponseData(response, normalizeServiceTicket(unwrap(response)))),
+      api.put(`/service/tickets/${id}/assign`, data).then((response) => wrapResponseData(response, normalizeServiceTicket(unwrap(response)))),
     batchAssign: async ({ ticket_ids = [], assignee_id, cc_user_ids = [] }) => {
       await Promise.all(
         ticket_ids.map((ticketId) =>
-          api.put(`/tickets/${ticketId}/assign`, { assignee_id, cc_user_ids }),
+          api.put(`/service/tickets/${ticketId}/assign`, { assignee_id, cc_user_ids }),
         ),
       );
       return { data: { success: true, updated: ticket_ids.length } };
@@ -190,74 +190,74 @@ export const serviceApi = {
       throw new Error("当前后端未提供服务工单批量删除接口");
     },
     close: (id, data) =>
-      api.put(`/tickets/${id}/close`, data).then((response) => wrapResponseData(response, normalizeServiceTicket(unwrap(response)))),
+      api.put(`/service/tickets/${id}/close`, data).then((response) => wrapResponseData(response, normalizeServiceTicket(unwrap(response)))),
     getStatistics: () =>
-      api.get("/tickets/statistics").then((response) => wrapResponseData(response, normalizeTicketStatistics(unwrap(response)))),
-    getProjectMembers: (params) => api.get("/tickets/project-members", { params }),
-    getRelatedProjects: (id) => api.get(`/tickets/${id}/projects`),
+      api.get("/service/tickets/statistics").then((response) => wrapResponseData(response, normalizeTicketStatistics(unwrap(response)))),
+    getProjectMembers: (params) => api.get("/service/tickets/project-members", { params }),
+    getRelatedProjects: (id) => api.get(`/service/tickets/${id}/projects`),
   },
   records: {
     list: (params) =>
-      api.get("/records", { params }).then((response) => mapPaginatedItems(response, normalizeServiceRecord)),
+      api.get("/service/records", { params }).then((response) => mapPaginatedItems(response, normalizeServiceRecord)),
     get: (id) =>
-      api.get(`/records/${id}`).then((response) => wrapResponseData(response, normalizeServiceRecord(unwrap(response)))),
-    create: (data) => api.post("/records", data),
-    update: (id, data) => api.put(`/records/${id}`, data),
+      api.get(`/service/records/${id}`).then((response) => wrapResponseData(response, normalizeServiceRecord(unwrap(response)))),
+    create: (data) => api.post("/service/records", data),
+    update: (id, data) => api.put(`/service/records/${id}`, data),
     uploadPhoto: (recordId, file, description) => {
       const formData = new FormData();
       formData.append("file", file);
       if (description) {
         formData.append("description", description);
       }
-      return api.post(`/records/${recordId}/photos`, formData, {
+      return api.post(`/service/records/${recordId}/photos`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
     },
-    deletePhoto: (recordId, photoIndex) => api.delete(`/records/${recordId}/photos/${photoIndex}`),
-    getStatistics: () => api.get("/records/statistics"),
+    deletePhoto: (recordId, photoIndex) => api.delete(`/service/records/${recordId}/photos/${photoIndex}`),
+    getStatistics: () => api.get("/service/records/statistics"),
   },
   communications: {
     list: (params) =>
-      api.get("/communications", { params }).then((response) => mapPaginatedItems(response, normalizeCommunication)),
+      api.get("/service/communications", { params }).then((response) => mapPaginatedItems(response, normalizeCommunication)),
     get: (id) =>
-      api.get(`/communications/${id}`).then((response) => wrapResponseData(response, normalizeCommunication(unwrap(response)))),
-    create: (data) => api.post("/communications", data),
-    update: (id, data) => api.put(`/communications/${id}`, data),
-    statistics: () => api.get("/communications/statistics"),
+      api.get(`/service/communications/${id}`).then((response) => wrapResponseData(response, normalizeCommunication(unwrap(response)))),
+    create: (data) => api.post("/service/communications", data),
+    update: (id, data) => api.put(`/service/communications/${id}`, data),
+    statistics: () => api.get("/service/communications/statistics"),
   },
   satisfaction: {
     list: (params) =>
-      api.get("/surveys", { params }).then((response) => mapPaginatedItems(response, normalizeSurvey)),
+      api.get("/service/surveys", { params }).then((response) => mapPaginatedItems(response, normalizeSurvey)),
     get: (id) =>
-      api.get(`/surveys/${id}`).then((response) => wrapResponseData(response, normalizeSurvey(unwrap(response)))),
-    create: (data) => api.post("/surveys", data),
-    update: (id, data) => api.put(`/surveys/${id}`, data),
-    send: (id, data) => api.post(`/surveys/${id}/send`, data),
-    submit: (id, data) => api.post(`/surveys/${id}/submit`, data),
-    statistics: () => api.get("/surveys/statistics"),
+      api.get(`/service/surveys/${id}`).then((response) => wrapResponseData(response, normalizeSurvey(unwrap(response)))),
+    create: (data) => api.post("/service/surveys", data),
+    update: (id, data) => api.put(`/service/surveys/${id}`, data),
+    send: (id, data) => api.post(`/service/surveys/${id}/send`, data),
+    submit: (id, data) => api.post(`/service/surveys/${id}/submit`, data),
+    statistics: () => api.get("/service/surveys/statistics"),
     templates: {
-      list: (params) => api.get("/survey-templates", { params }),
-      get: (id) => api.get(`/survey-templates/${id}`),
+      list: (params) => api.get("/service/survey-templates", { params }),
+      get: (id) => api.get(`/service/survey-templates/${id}`),
     },
   },
-  dashboardStatistics: () => api.get("/statistics/dashboard-statistics"),
+  dashboardStatistics: () => api.get("/service/statistics/dashboard-statistics"),
   knowledgeBase: {
-    list: (params) => api.get("/knowledge-base", { params }),
-    get: (id) => api.get(`/knowledge-base/${id}`),
-    create: (data) => api.post("/knowledge-base", data),
-    update: (id, data) => api.put(`/knowledge-base/${id}`, data),
-    delete: (id) => api.delete(`/knowledge-base/${id}`),
-    publish: (id) => api.put(`/knowledge-base/${id}/publish`),
-    archive: (id) => api.put(`/knowledge-base/${id}/archive`),
-    statistics: () => api.get("/knowledge-base/statistics"),
+    list: (params) => api.get("/service/knowledge-base", { params }),
+    get: (id) => api.get(`/service/knowledge-base/${id}`),
+    create: (data) => api.post("/service/knowledge-base", data),
+    update: (id, data) => api.put(`/service/knowledge-base/${id}`, data),
+    delete: (id) => api.delete(`/service/knowledge-base/${id}`),
+    publish: (id) => api.put(`/service/knowledge-base/${id}/publish`),
+    archive: (id) => api.put(`/service/knowledge-base/${id}/archive`),
+    statistics: () => api.get("/service/knowledge-base/statistics"),
     upload: (formData) =>
-      api.post("/knowledge-base/upload", formData, {
+      api.post("/service/knowledge-base/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       }),
     downloadUrl: (id) => `${api.defaults.baseURL}/knowledge-base/${id}/download`,
-    getQuota: () => api.get("/knowledge-base/quota"),
-    like: (id) => api.post(`/knowledge-base/${id}/like`),
-    adopt: (id) => api.post(`/knowledge-base/${id}/adopt`),
+    getQuota: () => api.get("/service/knowledge-base/quota"),
+    like: (id) => api.post(`/service/knowledge-base/${id}/like`),
+    adopt: (id) => api.post(`/service/knowledge-base/${id}/adopt`),
   },
 };
 

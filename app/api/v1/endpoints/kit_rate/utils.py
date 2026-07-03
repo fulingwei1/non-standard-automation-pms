@@ -9,7 +9,7 @@ from typing import Any, Dict, List
 from sqlalchemy.orm import Session
 
 from app.models.material import BomItem
-from app.models.purchase import PurchaseOrderItem
+from app.services.purchase.in_transit import get_purchase_in_transit_qty
 
 
 def calculate_kit_rate(
@@ -50,17 +50,7 @@ def calculate_kit_rate(
         available_qty = (material.current_stock or 0) + (item.received_qty or 0)
 
         # 计算在途数量 = 已采购但未到货的数量
-        # 查询该物料的采购订单明细
-        in_transit_qty = Decimal(0)
-        if item.material_id:
-            po_items = (
-                db.query(PurchaseOrderItem)
-                .filter(PurchaseOrderItem.material_id == item.material_id)
-                .filter(PurchaseOrderItem.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]))
-                .all()
-            )
-            for po_item in po_items:
-                in_transit_qty += (po_item.quantity or 0) - (po_item.received_qty or 0)
+        in_transit_qty = get_purchase_in_transit_qty(db, item.material_id)
 
         # 总可用数量 = 可用数量 + 在途数量
         total_available = available_qty + in_transit_qty

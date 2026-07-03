@@ -160,13 +160,13 @@ const mapUpdatePayload = (data = {}) => ({
 
 export const customerCommunicationApi = {
   list: (params = {}) =>
-    api.get("/communications", { params: mapListParams(params) }).then(normalizeListResponse),
+    api.get("/service/communications", { params: mapListParams(params) }).then(normalizeListResponse),
   get: (id) =>
-    api.get(`/communications/${id}`).then((response) =>
+    api.get(`/service/communications/${id}`).then((response) =>
       wrapResponseData(response, normalizeCommunication(unwrap(response))),
     ),
-  create: (data) => api.post("/communications", mapCreatePayload(data)),
-  update: (id, data) => api.put(`/communications/${id}`, mapUpdatePayload(data)),
-  delete: (id) => safeDelete(`/communications/${id}`),
-  statistics: () => api.get("/communications/statistics"),
+  create: (data) => api.post("/service/communications", mapCreatePayload(data)),
+  update: (id, data) => api.put(`/service/communications/${id}`, mapUpdatePayload(data)),
+  delete: (id) => safeDelete(`/service/communications/${id}`),
+  statistics: () => api.get("/service/communications/statistics"),
 };
