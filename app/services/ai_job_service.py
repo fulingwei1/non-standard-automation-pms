@@ -6,6 +6,7 @@
 """
 import json
 import logging
+import os
 import re
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -20,6 +21,16 @@ logger = logging.getLogger("ai.jobs")
 
 # 进程内线程池（AI 生成为 IO 密集，等待大模型返回）
 _executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="ai-job")
+
+# 单个任务允许的最大运行时长（秒）；线程池不跨重启，超过即视为卡死
+_DEFAULT_MAX_RUNTIME_SECONDS = 1800
+
+
+def _max_runtime_seconds() -> int:
+    try:
+        return int(os.getenv("AI_JOB_MAX_RUNTIME_SECONDS", str(_DEFAULT_MAX_RUNTIME_SECONDS)))
+    except ValueError:
+        return _DEFAULT_MAX_RUNTIME_SECONDS
 
 # job_type -> handler(session, params, user_id) -> JSON安全的结果dict
 _HANDLERS: Dict[str, Callable[[Any, Dict[str, Any], Optional[int]], Dict[str, Any]]] = {}
@@ -83,8 +94,54 @@ def _run_job(job_id: int, job_type: str, params: Dict[str, Any], user_id: Option
         session.close()
 
 
+def recover_stale_jobs(db=None) -> int:
+    """进程启动时调用：线程池不跨重启，上一进程遗留的 PENDING/RUNNING 已无人推进，标记 FAILED。"""
+    from app.models import base as _base  # 运行时解析会话工厂，避免导入期绑定
+
+    owns_session = db is None
+    session = _base.get_session() if owns_session else db
+    try:
+        stale = (
+            session.query(AIGenerationJob)
+            .filter(AIGenerationJob.status.in_(("PENDING", "RUNNING")))
+            .all()
+        )
+        now = datetime.now()
+        for job in stale:
+            job.status = "FAILED"
+            job.error = "进程重启导致任务中断，请重新提交"
+            job.finished_at = now
+        session.commit()
+        if stale:
+            logger.warning("[AI任务] 启动恢复：%s 个遗留任务标记 FAILED ids=%s",
+                           len(stale), [j.id for j in stale])
+        return len(stale)
+    finally:
+        if owns_session:
+            session.close()
+
+
+def _mark_failed_if_overtime(db, job: Optional[AIGenerationJob]) -> None:
+    """惰性超时判定：轮询时发现任务超过最大运行时长仍未完成，标记 FAILED。"""
+    if not job or job.status not in ("PENDING", "RUNNING"):
+        return
+    anchor = job.started_at or job.created_at
+    if not anchor:
+        return
+    limit = _max_runtime_seconds()
+    if (datetime.now() - anchor).total_seconds() <= limit:
+        return
+    job.status = "FAILED"
+    job.error = f"任务超过最大运行时长 {limit} 秒未完成，已判定超时终止"
+    job.finished_at = datetime.now()
+    db.commit()
+    logger.warning("[AI任务] 超时终止 job_id=%s type=%s", job.id, job.job_type)
+
+
 def get(db, job_id: int) -> Optional[AIGenerationJob]:
-    return db.query(AIGenerationJob).filter(AIGenerationJob.id == job_id).first()
+    job = db.query(AIGenerationJob).filter(AIGenerationJob.id == job_id).first()
+    _mark_failed_if_overtime(db, job)
+    return job
 
 
 # ==================== 任务处理器注册 ====================

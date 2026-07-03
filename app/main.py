@@ -137,6 +137,16 @@ try:
 
             logging.getLogger(__name__).error(f"状态处理器注册失败: {e}")
 
+        # 恢复上一进程遗留的 AI 后台任务（线程池不跨重启，PENDING/RUNNING 标 FAILED）
+        try:
+            from app.services.ai_job_service import recover_stale_jobs
+
+            recover_stale_jobs()
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).error(f"AI任务启动恢复失败: {e}")
+
         enable_scheduler = os.getenv("ENABLE_SCHEDULER", "true").lower() == "true"
         if enable_scheduler:
             if start_progress_scheduler:
