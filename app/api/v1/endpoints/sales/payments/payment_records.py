@@ -18,7 +18,6 @@ from app.core import security
 from app.models.sales import Contract, Invoice
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.utils.db_helpers import get_or_404
 
 
 class PaymentRecordCreate(BaseModel):
@@ -46,6 +45,51 @@ class PaymentRecordUpdate(BaseModel):
 router = APIRouter()
 
 
+def _apply_invoice_scope(query, current_user: User, db: Session):
+    return security.filter_sales_finance_data_by_scope(
+        query.outerjoin(Contract, Invoice.contract_id == Contract.id),
+        current_user,
+        db,
+        Contract,
+        "sales_owner_id",
+    )
+
+
+def _invoice_total(invoice: Invoice) -> Decimal:
+    return invoice.total_amount or invoice.amount or Decimal("0")
+
+
+def _invoice_paid(invoice: Invoice) -> Decimal:
+    return invoice.paid_amount or Decimal("0")
+
+
+def _invoice_unpaid(invoice: Invoice) -> Decimal:
+    return _invoice_total(invoice) - _invoice_paid(invoice)
+
+
+def _sync_invoice_payment_status(invoice: Invoice) -> None:
+    paid = _invoice_paid(invoice)
+    total = _invoice_total(invoice)
+
+    if paid >= total and total > Decimal("0"):
+        invoice.payment_status = "PAID"
+    elif paid > Decimal("0"):
+        invoice.payment_status = "PARTIAL"
+    else:
+        invoice.payment_status = "PENDING"
+
+
+def _get_scoped_invoice(db: Session, invoice_id: int, current_user: User) -> Invoice:
+    invoice = _apply_invoice_scope(
+        db.query(Invoice).filter(Invoice.id == invoice_id),
+        current_user,
+        db,
+    ).first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="发票不存在或无权访问")
+    return invoice
+
+
 @router.get("/payments/overdue", response_model=PaginatedResponse)
 def get_overdue_payments(
     *,
@@ -66,9 +110,7 @@ def get_overdue_payments(
     )
 
     # Issue 7.1: 应用财务数据权限过滤
-    query = security.filter_sales_finance_data_by_scope(
-        query, current_user, db, Invoice, "owner_id"
-    )
+    query = _apply_invoice_scope(query, current_user, db)
 
     total = query.count()
     invoices = apply_pagination(
@@ -123,17 +165,13 @@ def get_payment_reconciliation(
     """
     获取付款对账数据（按合同汇总已开票、已收款、未收款）
     """
-    from app.models.sales import Contract as ContractModel
-
     query = db.query(Invoice).filter(Invoice.status == "ISSUED")
 
     if contract_id:
         query = query.filter(Invoice.contract_id == contract_id)
 
     # Issue 7.1: 应用财务数据权限过滤
-    query = security.filter_sales_finance_data_by_scope(
-        query, current_user, db, Invoice, "owner_id"
-    )
+    query = _apply_invoice_scope(query, current_user, db)
 
     invoices = query.all()
 
@@ -215,9 +253,7 @@ def get_payment_records(
     query = db.query(Invoice).filter(Invoice.status == "ISSUED")
 
     # Issue 7.1: 应用财务数据权限过滤（财务和销售总监可以看到所有收款数据）
-    query = security.filter_sales_finance_data_by_scope(
-        query, current_user, db, Invoice, "owner_id"
-    )
+    query = _apply_invoice_scope(query, current_user, db)
 
     if contract_id:
         query = query.filter(Invoice.contract_id == contract_id)
@@ -295,33 +331,37 @@ def create_payment_record(
     """
     登记回款
     """
-    # 根据合同 ID 查找发票
-    invoice = (
-        db.query(Invoice)
-        .filter(
-            Invoice.contract_id == record_data.contract_id,
-            Invoice.status == "ISSUED"
+    # 根据合同 ID 查找第一张仍有未收金额的已开票发票
+    invoices = (
+        _apply_invoice_scope(
+            db.query(Invoice).filter(
+                Invoice.contract_id == record_data.contract_id,
+                Invoice.status == "ISSUED",
+            ),
+            current_user,
+            db,
         )
-        .first()
+        .order_by(Invoice.due_date, Invoice.id)
+        .all()
     )
+    invoice = next((item for item in invoices if _invoice_unpaid(item) > Decimal("0")), None)
 
     if not invoice:
-        raise HTTPException(status_code=404, detail="发票不存在")
+        raise HTTPException(status_code=404, detail="发票不存在、无权访问或已全部收清")
 
     # 更新收款信息
-    current_paid = invoice.paid_amount or Decimal("0")
+    unpaid = _invoice_unpaid(invoice)
+    if record_data.amount > unpaid:
+        raise HTTPException(status_code=400, detail=f"回款金额不能超过未收金额 {unpaid}")
+
+    current_paid = _invoice_paid(invoice)
     new_paid = current_paid + record_data.amount
     invoice.paid_amount = new_paid
     invoice.paid_date = record_data.payment_date
 
     # 更新收款状态
-    total = invoice.total_amount or invoice.amount or Decimal("0")
-    if new_paid >= total:
-        invoice.payment_status = "PAID"
-    elif new_paid > Decimal("0"):
-        invoice.payment_status = "PARTIAL"
-    else:
-        invoice.payment_status = "PENDING"
+    total = _invoice_total(invoice)
+    _sync_invoice_payment_status(invoice)
 
     # 更新备注
     payment_note = f"收款记录：{record_data.payment_date}, 金额：{record_data.amount}"
@@ -358,15 +398,16 @@ def get_payment_detail(
     """
     获取回款详情（基于发票ID）
     """
-    invoice = (
+    invoice = _apply_invoice_scope(
         db.query(Invoice)
         .options(joinedload(Invoice.contract), joinedload(Invoice.project))
-        .filter(Invoice.id == payment_id)
-        .first()
+        .filter(Invoice.id == payment_id),
+        current_user,
+        db,
     )
-
+    invoice = invoice.first()
     if not invoice:
-        raise HTTPException(status_code=404, detail="发票不存在")
+        raise HTTPException(status_code=404, detail="发票不存在或无权访问")
 
     contract = invoice.contract
     project = invoice.project
@@ -419,19 +460,16 @@ def update_payment_record(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """更新回款记录（当前以发票收款字段承载）。"""
-    invoice = get_or_404(db, Invoice, payment_id, detail="发票不存在")
+    invoice = _get_scoped_invoice(db, payment_id, current_user)
 
     update_data = record_data.model_dump(exclude_unset=True)
     if "amount" in update_data and update_data["amount"] is not None:
+        total = _invoice_total(invoice)
+        if update_data["amount"] > total:
+            raise HTTPException(status_code=400, detail=f"已收款金额不能超过发票金额 {total}")
         invoice.paid_amount = update_data["amount"]
-        total = invoice.total_amount or invoice.amount or Decimal("0")
         if not update_data.get("payment_status"):
-            if invoice.paid_amount >= total:
-                invoice.payment_status = "PAID"
-            elif invoice.paid_amount > Decimal("0"):
-                invoice.payment_status = "PARTIAL"
-            else:
-                invoice.payment_status = "PENDING"
+            _sync_invoice_payment_status(invoice)
 
     if update_data.get("payment_date"):
         invoice.paid_date = update_data["payment_date"]
@@ -475,7 +513,7 @@ def delete_payment_record(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """删除回款记录（清空发票上的收款信息，不删除发票）。"""
-    invoice = get_or_404(db, Invoice, payment_id, detail="发票不存在")
+    invoice = _get_scoped_invoice(db, payment_id, current_user)
 
     invoice.paid_amount = Decimal("0")
     invoice.paid_date = None
@@ -503,16 +541,21 @@ def match_payment_to_invoice(
     核销发票（将回款记录与发票关联）
     注意：这里 payment_id 实际上是发票ID，用于保持API路径一致性
     """
-    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
+    if payment_id != invoice_id:
+        raise HTTPException(status_code=400, detail="回款记录与发票不匹配")
+
+    invoice = _get_scoped_invoice(db, invoice_id, current_user)
 
     if invoice.status != "ISSUED":
         raise HTTPException(status_code=400, detail="只有已开票的发票才能核销")
 
-    total = invoice.total_amount or invoice.amount or Decimal("0")
-    current_paid = invoice.paid_amount or Decimal("0")
+    total = _invoice_total(invoice)
+    current_paid = _invoice_paid(invoice)
     unpaid = total - current_paid
 
     if match_amount:
+        if match_amount <= Decimal("0"):
+            raise HTTPException(status_code=400, detail="核销金额必须大于0")
         if match_amount > unpaid:
             raise HTTPException(status_code=400, detail=f"核销金额不能超过未收金额 {unpaid}")
         new_paid = current_paid + match_amount
@@ -524,10 +567,7 @@ def match_payment_to_invoice(
     invoice.paid_date = date.today()
 
     # 更新收款状态
-    if new_paid >= total:
-        invoice.payment_status = "PAID"
-    elif new_paid > Decimal("0"):
-        invoice.payment_status = "PARTIAL"
+    _sync_invoice_payment_status(invoice)
 
     db.commit()
 

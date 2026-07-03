@@ -207,7 +207,27 @@ class TestProductionWriteSmoke:
             headers=headers,
         )
         assert work_order_detail_resp.status_code == 200, work_order_detail_resp.text
-        completed_order = work_order_detail_resp.json()
+        pending_complete_order = work_order_detail_resp.json()
+        assert pending_complete_order["status"] == "STARTED"
+        assert pending_complete_order["progress"] == 60
+        assert pending_complete_order["completed_qty"] == 0
+        assert pending_complete_order["qualified_qty"] == 0
+        assert pending_complete_order["defect_qty"] == 0
+        assert float(pending_complete_order["actual_hours"]) == 2.5
+
+        approve_resp = client.put(
+            f"{settings.API_V1_PREFIX}/production/work-reports/{complete_report['id']}/approve",
+            params={"approved": True, "approval_note": "数量确认"},
+            headers=headers,
+        )
+        assert approve_resp.status_code == 200, approve_resp.text
+
+        approved_work_order_resp = client.get(
+            f"{settings.API_V1_PREFIX}/production/work-orders/{work_order['id']}",
+            headers=headers,
+        )
+        assert approved_work_order_resp.status_code == 200, approved_work_order_resp.text
+        completed_order = approved_work_order_resp.json()
         assert completed_order["status"] == "COMPLETED"
         assert completed_order["progress"] == 100
         assert completed_order["completed_qty"] == 10
@@ -250,3 +270,104 @@ class TestProductionWriteSmoke:
         assert exception["project_name"] == project.project_name
         assert exception["workshop_name"] == workshop["workshop_name"]
         assert exception["work_order_id"] == work_order["id"]
+
+    def test_rejected_complete_report_does_not_update_work_order_output(
+        self, client: TestClient, admin_token: str, db
+    ):
+        headers = _auth_headers(admin_token)
+        suffix = uuid.uuid4().hex[:8]
+        project = _create_project(db, f"REJECT-{suffix}")
+
+        workshop_resp = client.post(
+            f"{settings.API_V1_PREFIX}/production/workshops",
+            json={
+                "workshop_code": f"WS-REJECT-{suffix}",
+                "workshop_name": f"驳回车间-{suffix}",
+                "workshop_type": "ASSEMBLY",
+                "capacity_hours": 8,
+            },
+            headers=headers,
+        )
+        assert workshop_resp.status_code == 200, workshop_resp.text
+        workshop = workshop_resp.json()
+
+        worker_resp = client.post(
+            f"{settings.API_V1_PREFIX}/workers",
+            json={
+                "worker_code": f"WK-REJECT-{suffix}",
+                "worker_name": "驳回工人",
+                "workshop_id": workshop["id"],
+                "position": "装配工",
+                "skill_level": "SENIOR",
+                "is_active": True,
+            },
+            headers=headers,
+        )
+        assert worker_resp.status_code == 200, worker_resp.text
+        worker = worker_resp.json()
+
+        work_order_resp = client.post(
+            f"{settings.API_V1_PREFIX}/production/work-orders",
+            json={
+                "task_name": f"驳回报工工单-{suffix}",
+                "task_type": "ASSEMBLY",
+                "project_id": project.id,
+                "workshop_id": workshop["id"],
+                "plan_qty": 8,
+                "plan_start_date": str(date.today()),
+                "plan_end_date": str(date.today() + timedelta(days=1)),
+                "priority": "NORMAL",
+            },
+            headers=headers,
+        )
+        assert work_order_resp.status_code == 200, work_order_resp.text
+        work_order = work_order_resp.json()
+
+        assign_resp = client.put(
+            f"{settings.API_V1_PREFIX}/production/work-orders/{work_order['id']}/assign",
+            json={"worker_id": worker["id"]},
+            headers=headers,
+        )
+        assert assign_resp.status_code == 200, assign_resp.text
+
+        start_resp = client.post(
+            f"{settings.API_V1_PREFIX}/production/work-reports/start",
+            json={"work_order_id": work_order["id"], "assigned_to": worker["id"]},
+            headers=headers,
+        )
+        assert start_resp.status_code == 200, start_resp.text
+
+        complete_resp = client.post(
+            f"{settings.API_V1_PREFIX}/production/work-reports/complete",
+            json={
+                "work_order_id": work_order["id"],
+                "assigned_to": worker["id"],
+                "completed_qty": 8,
+                "qualified_qty": 8,
+                "defect_qty": 0,
+                "work_hours": 1.5,
+            },
+            headers=headers,
+        )
+        assert complete_resp.status_code == 200, complete_resp.text
+        complete_report = complete_resp.json()
+
+        reject_resp = client.put(
+            f"{settings.API_V1_PREFIX}/production/work-reports/{complete_report['id']}/approve",
+            params={"approved": False, "approval_note": "数量不符"},
+            headers=headers,
+        )
+        assert reject_resp.status_code == 200, reject_resp.text
+
+        work_order_detail_resp = client.get(
+            f"{settings.API_V1_PREFIX}/production/work-orders/{work_order['id']}",
+            headers=headers,
+        )
+        assert work_order_detail_resp.status_code == 200, work_order_detail_resp.text
+        rejected_order = work_order_detail_resp.json()
+        assert rejected_order["status"] == "STARTED"
+        assert rejected_order["progress"] == 0
+        assert rejected_order["completed_qty"] == 0
+        assert rejected_order["qualified_qty"] == 0
+        assert rejected_order["defect_qty"] == 0
+        assert float(rejected_order["actual_hours"]) == 0.0

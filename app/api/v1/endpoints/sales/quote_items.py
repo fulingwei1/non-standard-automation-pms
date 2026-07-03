@@ -4,6 +4,7 @@
 从 sales/quotes.py 拆分
 """
 
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -15,7 +16,31 @@ from app.core import security
 from app.models.sales import Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.utils.db_helpers import delete_obj, get_or_404, save_obj
+from app.utils.db_helpers import get_or_404
+
+
+READONLY_QUOTE_STATUSES = {
+    "SUBMITTED",
+    "PENDING_APPROVAL",
+    "IN_REVIEW",
+    "APPROVED",
+    "SENT",
+    "ACCEPTED",
+    "CONVERTED",
+    "EXPIRED",
+    "CANCELLED",
+}
+READONLY_VERSION_STATUSES = {
+    "SUBMITTED",
+    "PENDING_APPROVAL",
+    "IN_REVIEW",
+    "APPROVED",
+    "SENT",
+    "ACCEPTED",
+    "CONVERTED",
+    "EXPIRED",
+    "CANCELLED",
+}
 
 
 def _check_version_scope(db: Session, quote_version_id: int, current_user: User) -> QuoteVersion:
@@ -34,6 +59,50 @@ def _check_item_scope(db: Session, item_id: int, current_user: User) -> QuoteIte
     item = get_or_404(db, QuoteItem, item_id, detail="报价明细不存在")
     _check_version_scope(db, item.quote_version_id, current_user)
     return item
+
+
+def _normalize_status(value) -> str:
+    return str(value or "").upper()
+
+
+def _ensure_version_editable(db: Session, version: QuoteVersion) -> None:
+    quote = db.query(Quote).filter(Quote.id == version.quote_id).first()
+    quote_status = _normalize_status(quote.status if quote else None)
+    version_status = _normalize_status(getattr(version, "status", None))
+
+    if quote_status in READONLY_QUOTE_STATUSES or version_status in READONLY_VERSION_STATUSES:
+        raise HTTPException(status_code=400, detail="已提交或已审批的报价版本不可修改明细")
+
+
+def _to_decimal(value, *, default: Decimal = Decimal("0")) -> Decimal:
+    if value is None:
+        return default
+    return Decimal(str(value))
+
+
+def _recalculate_version_totals(db: Session, version: QuoteVersion) -> None:
+    items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).all()
+    total_price = Decimal("0")
+    total_cost = Decimal("0")
+
+    for item in items:
+        qty = _to_decimal(item.qty, default=Decimal("1"))
+        unit_price = _to_decimal(item.unit_price)
+        unit_cost = _to_decimal(item.cost)
+        total_price += qty * unit_price
+        total_cost += qty * unit_cost
+
+    version.total_price = total_price.quantize(Decimal("0.01"))
+    version.cost_total = total_cost.quantize(Decimal("0.01"))
+    if total_price > 0:
+        version.gross_margin = (
+            (total_price - total_cost) / total_price * Decimal("100")
+        ).quantize(Decimal("0.01"))
+        version.margin_warning = version.gross_margin < Decimal("20")
+    else:
+        version.gross_margin = None
+        version.margin_warning = False
+
 
 router = APIRouter()
 
@@ -118,7 +187,8 @@ def create_quote_item(
     """
     try:
         # 验证报价版本存在 + 数据权限
-        _check_version_scope(db, quote_version_id, current_user)
+        version = _check_version_scope(db, quote_version_id, current_user)
+        _ensure_version_editable(db, version)
 
         # 创建明细
         item = QuoteItem(
@@ -135,7 +205,11 @@ def create_quote_item(
             specification=item_data.get("specification"),
             unit=item_data.get("unit"),
         )
-        save_obj(db, item)
+        db.add(item)
+        db.flush()
+        _recalculate_version_totals(db, version)
+        db.commit()
+        db.refresh(item)
 
         return ResponseModel(code=200, message="报价明细创建成功", data={"id": item.id})
     except HTTPException:
@@ -166,6 +240,10 @@ def update_quote_item(
     """
     try:
         item = _check_item_scope(db, item_id, current_user)
+        version = item.quote_version or db.query(QuoteVersion).filter(
+            QuoteVersion.id == item.quote_version_id
+        ).first()
+        _ensure_version_editable(db, version)
 
         # 更新字段
         for field in [
@@ -183,6 +261,8 @@ def update_quote_item(
             if field in item_data:
                 setattr(item, field, item_data[field])
 
+        db.flush()
+        _recalculate_version_totals(db, version)
         db.commit()
         return ResponseModel(code=200, message="报价明细更新成功")
     except HTTPException:
@@ -211,8 +291,15 @@ def delete_quote_item(
     """
     try:
         item = _check_item_scope(db, item_id, current_user)
+        version = item.quote_version or db.query(QuoteVersion).filter(
+            QuoteVersion.id == item.quote_version_id
+        ).first()
+        _ensure_version_editable(db, version)
 
-        delete_obj(db, item)
+        db.delete(item)
+        db.flush()
+        _recalculate_version_totals(db, version)
+        db.commit()
         return ResponseModel(code=200, message="报价明细删除成功")
     except HTTPException:
         raise

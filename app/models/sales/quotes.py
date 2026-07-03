@@ -140,6 +140,10 @@ class QuoteVersion(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
     quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")
     version_no = Column(String(10), nullable=False, comment="版本号")
+    quote_code = Column(String(50), comment="版本报价编码（兼容历史字段）")
+    status = Column(String(20), default=QuoteStatusEnum.DRAFT.value, comment="版本状态")
+    approval_instance_id = Column(Integer, comment="审批实例ID")
+    approval_status = Column(String(30), default="DRAFT", comment="审批状态")
 
     # === 【新增】三位一体绑定 ===
     solution_version_id = Column(
@@ -240,6 +244,7 @@ class QuoteVersion(Base, TimestampMixin):
         Index("idx_qv_presale_solution", "presale_solution_id"),
         Index("idx_qv_presale_ticket", "presale_ticket_id"),
         Index("idx_qv_binding_status", "binding_status"),
+        Index("idx_qv_status", "status"),
     )
 
     def __repr__(self):

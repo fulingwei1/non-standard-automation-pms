@@ -106,6 +106,18 @@ def _item_cost_from_meta(item: QuoteItem, tech_meta: dict) -> Decimal:
     return _to_decimal(item.cost)
 
 
+def _item_quantity(item: QuoteItem) -> Decimal:
+    return _to_decimal(item.qty)
+
+
+def _item_line_cost(item: QuoteItem, unit_cost: Decimal) -> Decimal:
+    return _item_quantity(item) * unit_cost
+
+
+def _line_component_cost(item: QuoteItem, tech_meta: dict, key: str) -> Decimal:
+    return _item_quantity(item) * _to_decimal(tech_meta.get(key))
+
+
 def _purchase_material_cost_to_dict(record: Optional[PurchaseMaterialCost]) -> Optional[dict]:
     if not record:
         return None
@@ -408,11 +420,12 @@ def get_cost_breakdown(
 
         clean_remark, tech_meta = _split_remark_meta(item.remark)
         item_cost = _item_cost_from_meta(item, tech_meta)
+        line_cost = _item_line_cost(item, item_cost)
         item_price = (item.qty or Decimal('0')) * (item.unit_price or Decimal('0'))
 
-        material_cost = _to_decimal(tech_meta.get("material_cost"))
-        labor_cost = _to_decimal(tech_meta.get("labor_cost"))
-        overhead_cost = _to_decimal(tech_meta.get("overhead_cost"))
+        material_cost = _line_component_cost(item, tech_meta, "material_cost")
+        labor_cost = _line_component_cost(item, tech_meta, "labor_cost")
+        overhead_cost = _line_component_cost(item, tech_meta, "overhead_cost")
 
         categories[cat]["items"].append({
             "id": item.id,
@@ -422,13 +435,14 @@ def get_cost_breakdown(
             "unit": item.unit,
             "unit_price": float(item.unit_price) if item.unit_price else 0,
             "cost": float(item_cost),
+            "line_cost": float(line_cost),
             "cost_source": item.cost_source,
             "remark": clean_remark,
             **tech_meta,
         })
-        categories[cat]["subtotal_cost"] += item_cost
+        categories[cat]["subtotal_cost"] += line_cost
         categories[cat]["subtotal_price"] += item_price
-        total_cost += item_cost
+        total_cost += line_cost
         total_price += item_price
 
         total_material_cost += material_cost
@@ -537,7 +551,7 @@ def recalculate_cost(
         item_cost = _item_cost_from_meta(item, tech_meta)
         item.cost = item_cost
 
-        total_cost += item_cost
+        total_cost += _item_line_cost(item, item_cost)
         if item.qty and item.unit_price:
             total_price += item.qty * item.unit_price
 

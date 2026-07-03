@@ -658,6 +658,106 @@
   - 前端回归：`npm run test:run -- src/pages/CustomerServiceDashboard/__tests__/dashboardContracts.test.js` -> 2 passed；`npm run build` -> passed（仅既有 chunk/dynamic import warning）。
   - `py_compile` passed；`ruff check app/schemas/service.py tests/schemas/test_service.py tests/api/test_service_ticket_crud_contracts.py` -> All checks passed；targeted `eslint` passed；`git diff --check` passed。
 
+## 2026-07-03 继续：功能审计 AS-16 修复（Header 通知铃铛）
+
+- 修复项：`AS-16`，Header 铃铛原本无点击动作、红点无条件显示，侧栏通知中心 badge 写死 `5`。
+- 改动：
+  - `frontend/src/components/layout/Header.jsx`：挂接 `notificationApi.getUnreadCount()`，按未读数显示角标（0 不显示，99+ 封顶），点击跳转 `/notifications`。
+  - `frontend/src/components/layout/sidebarConfig/default.js`：移除通知中心写死 badge。
+  - `frontend/src/components/layout/__tests__/Header.test.jsx`：新增未读数加载、无未读不显示角标、点击跳转通知中心回归用例。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`AS-16` 标为 `已验证`，Quick-win 视图同步。
+- 验证：
+  - 红灯：`npm run test:run -- src/components/layout/__tests__/Header.test.jsx` -> failed（无未读数、未调用 getUnreadCount）。
+  - 绿灯：`npm run test:run -- src/components/layout/__tests__/Header.test.jsx` -> 16 passed。
+  - `npx eslint src/components/layout/Header.jsx src/components/layout/sidebarConfig/default.js src/components/layout/__tests__/Header.test.jsx` -> passed。
+  - `npm run build` -> passed（仅既有 chunk/dynamic import warning 与 chunk size warning）。
+
+## 2026-07-03 继续：功能审计 PROD-13 修复（完工报工审批后回写）
+
+- 修复项：`PROD-13`，完工报工创建时立即回写工单产量/工时/完成状态，审批通过或驳回都只改报工状态，审批链变成装饰。
+- 改动：
+  - `app/api/v1/endpoints/production/work_reports.py`：完工报工提交阶段只创建 `PENDING` 报工，不再改工单产量、工时、进度、完成状态或释放工位。
+  - 审批通过分支新增 `_apply_complete_report_to_work_order()`，统一把完工报工数量、合格数、不良数、工时、100% 进度和完成状态回写到工单；审批驳回不回写。
+  - `tests/api/test_production_write_smoke.py`：把生产写入 smoke 改成“提交后待审批、审批后回写”，并新增“驳回完工报工不更新工单产量”API 回归。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`PROD-13` 标为 `已验证`，Quick-win 视图同步。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/api/test_production_write_smoke.py::TestProductionWriteSmoke::test_production_write_flow_smoke tests/api/test_production_write_smoke.py::TestProductionWriteSmoke::test_rejected_complete_report_does_not_update_work_order_output -q` -> 2 failed（提交即 `COMPLETED`）。
+  - 绿灯：同一命令 -> 2 passed。
+  - 回归：`.venv/bin/python -m pytest tests/api/test_production_write_smoke.py -q` -> 2 passed；`.venv/bin/python -m pytest tests/api/test_production.py::TestWorkReports -q` -> 1 passed；`.venv/bin/python -m pytest tests/api/test_production_compat_endpoints.py -k "work_report or report" -q` -> 3 passed；`.venv/bin/python -m pytest tests/unit/test_api_p6_coverage.py::TestWorkReports -q` -> 7 passed。
+  - `py_compile` passed；`ruff check app/api/v1/endpoints/production/work_reports.py tests/api/test_production_write_smoke.py` -> All checks passed。
+
+## 2026-07-03 继续：功能审计 SALES-03 修复（报价成本汇总乘数量）
+
+- 修复项：`SALES-03`，报价成本拆解 `total_cost/subtotal_cost/gross_margin` 漏乘明细数量，导致售价按 `qty*unit_price`、成本只按单件 `cost`，毛利率虚高。
+- 改动：
+  - `app/api/v1/endpoints/sales/quote_costs.py`：新增统一行成本口径，`unit_cost = item.cost/tech-meta 单件成本`，`line_cost = qty * unit_cost`；`cost-breakdown` 的总成本、分类小计、成本结构按行成本汇总；`recalculate` 持久化 `QuoteVersion.cost_total/gross_margin/margin_warning` 时按 `qty*unit_cost`。
+  - `tests/api/test_sales_quote_costs_quantity_contracts.py`：新增 API 合约测试，覆盖成本拆解展示和重算持久化两个入口。
+  - `data/app.db` 存量修复：先备份 `data/app.db.sales03-backup-20260703100245`；只更新有明细的版本，43 条 `quote_versions.cost_total` 按 `Σ(qty*cost)` 重算，`gross_margin/margin_warning` 按原 `total_price` 同步重算；57 条无明细但有总成本的历史版本未动，避免误清零。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`SALES-03` 标为 `已验证`，P0-0 资金正确性急救包同步。
+- 验证：
+  - 红灯1：`.venv/bin/python -m pytest tests/audit_p0/test_p0_03_quote_fund_trio.py::test_cost_breakdown_multiplies_by_quantity -q` -> failed，接口返回 `6773243.39`，应为 `19040825.62`。
+  - 红灯2：`.venv/bin/python -m pytest tests/api/test_sales_quote_costs_quantity_contracts.py -q` -> 2 failed，展示和重算均返回 `total_cost=100`，应为 `300`。
+  - 绿灯：`.venv/bin/python -m pytest tests/api/test_sales_quote_costs_quantity_contracts.py -q` -> 2 passed；`.venv/bin/python -m pytest tests/audit_p0/test_p0_03_quote_fund_trio.py::test_cost_breakdown_multiplies_by_quantity -q` -> passed。
+  - 回归：`.venv/bin/python -m pytest tests/unit/test_sales_scope_tail.py::TestQuoteCostBreakdownScope -q` -> 4 passed。
+  - 静态检查：`py_compile` passed；`ruff check app/api/v1/endpoints/sales/quote_costs.py tests/api/test_sales_quote_costs_quantity_contracts.py` -> All checks passed。
+  - 存量复核：`data/app.db` 有明细版本成本偏差从 `43 / 903046776.53` 降为 `0`。
+
+## 2026-07-03 继续：功能审计 SALES-01 修复（报价状态直改禁止审批结果）
+
+- 修复项：`SALES-01`，通用报价状态端点 `/sales/quotes/{id}/status` 允许 `PENDING_APPROVAL -> APPROVED`，任意登录用户可绕过报价审批工作流自助批准。
+- 根因：`app/api/v1/endpoints/sales/quote_status.py` 的 `STATUS_TRANSITIONS` 把 `PENDING_APPROVAL/IN_REVIEW -> APPROVED/REJECTED` 放进通用状态机；正式审批入口在 `quote_per_id_approval.py`，但状态端点没有审批任务/权限门禁。
+- 改动：
+  - `app/api/v1/endpoints/sales/quote_status.py`：从通用状态迁移表移除 `PENDING_APPROVAL/IN_REVIEW -> APPROVED/REJECTED`；审批结论只能走报价审批流程；保留 `DRAFT -> PENDING_APPROVAL` 与批准后的发送/接受等后续流转。
+  - `tests/api/test_sales_quote_status_contracts.py`：新增 API 合约测试，覆盖待审批报价不能经状态端点直接批准，且前端状态查询不再暴露 `APPROVED/REJECTED` 为待审批可选迁移。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`SALES-01` 标为 `已验证`，P0-0 资金正确性急救包同步。
+- 验证：
+  - 红灯1：`.venv/bin/python -m pytest tests/audit_p0/test_p0_03_quote_fund_trio.py::test_quote_status_endpoint_must_not_self_approve -q` -> failed，接口返回 HTTP 200 自助批准。
+  - 红灯2：`.venv/bin/python -m pytest tests/api/test_sales_quote_status_contracts.py -q` -> failed，直接批准返回 HTTP 200。
+  - 绿灯：`.venv/bin/python -m pytest tests/api/test_sales_quote_status_contracts.py -q` -> passed；`.venv/bin/python -m pytest tests/audit_p0/test_p0_03_quote_fund_trio.py::test_quote_status_endpoint_must_not_self_approve -q` -> passed。
+  - 回归：`.venv/bin/python -m pytest tests/api/test_sales_quotes_api.py::TestSalesQuotesAPI::test_approve_does_not_bypass_approval_workflow -q` -> passed。
+  - 静态检查：`py_compile` passed；`ruff check app/api/v1/endpoints/sales/quote_status.py tests/api/test_sales_quote_status_contracts.py` -> All checks passed。
+
+## 2026-07-03 继续：功能审计 SALES-02 修复（已审批报价明细冻结与金额重算）
+
+- 修复项：`SALES-02`，已审批报价版本仍可通过 `/sales/quotes/{version_id}/items`、`/sales/quotes/items/{item_id}` 增删改明细，且草稿明细变更后 `QuoteVersion.total_price/cost_total/gross_margin` 不重算。
+- 根因：
+  - `app/api/v1/endpoints/sales/quote_items.py` 只校验版本存在和销售数据权限，没有检查报价主状态或版本状态。
+  - create/update/delete 明细后直接 commit，不按明细行重新汇总版本金额。
+  - `quote_versions` 表已有 `status/approval_status/approval_instance_id`，但 `QuoteVersion` ORM 未映射，导致版本级冻结状态无法可靠读取。
+- 改动：
+  - `app/models/sales/quotes.py`：补齐 `QuoteVersion.quote_code/status/approval_instance_id/approval_status` 映射，并声明 `idx_qv_status`。
+  - `app/api/v1/endpoints/sales/quote_items.py`：三类写操作统一调用冻结门禁；父报价或版本处于 `SUBMITTED/PENDING_APPROVAL/IN_REVIEW/APPROVED/SENT/ACCEPTED/CONVERTED/EXPIRED/CANCELLED` 时拒绝改明细。
+  - `app/api/v1/endpoints/sales/quote_items.py`：可编辑版本写入后统一重算 `total_price=Σ(qty*unit_price)`、`cost_total=Σ(qty*cost)`、`gross_margin` 与 `margin_warning`。
+  - `tests/api/test_sales_quote_item_contracts.py`：新增 API 合约测试，覆盖已审批报价 create/update/delete 全拒绝、版本自身 `APPROVED` 时也冻结、草稿更新明细后版本金额重算。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`SALES-02` 标为 `已验证`，P0-0 资金正确性急救包同步。
+- 验证：
+  - 红灯1：`.venv/bin/python -m pytest tests/audit_p0/test_p0_03_quote_fund_trio.py::test_items_of_approved_quote_must_be_locked -q` -> failed，已 APPROVED 版本明细 PUT 返回 HTTP 200。
+  - 红灯2：`.venv/bin/python -m pytest tests/api/test_sales_quote_item_contracts.py -q` -> 2 failed，已审批报价仍可增删改，草稿明细更新后版本总价仍为 100 而非 150。
+  - 绿灯：`.venv/bin/python -m pytest tests/api/test_sales_quote_item_contracts.py -q` -> 3 passed；`.venv/bin/python -m pytest tests/audit_p0/test_p0_03_quote_fund_trio.py::test_items_of_approved_quote_must_be_locked -q` -> passed。
+  - 回归：`.venv/bin/python -m pytest tests/audit_p0/test_p0_03_quote_fund_trio.py -q` -> 3 passed；`.venv/bin/python -m pytest tests/api/test_sales.py::TestQuoteManagement::test_create_quote_version tests/api/test_sales.py::TestQuoteManagement::test_create_quote_version_inherits_presale_solution_cost_baseline -q` -> 2 passed；`.venv/bin/python -m pytest tests/api/test_sales_quotes_api.py::TestSalesQuotesAPI::test_quote_items_management -q` -> skipped（既有 smoke 对 `/quotes/1/items` 无数据时跳过）。
+  - 静态检查：`py_compile` passed；`ruff check app/models/sales/quotes.py app/api/v1/endpoints/sales/quote_items.py tests/api/test_sales_quote_item_contracts.py` -> All checks passed。
+
+## 2026-07-03 继续：功能审计 SALES-04 修复（回款登记勾稽上限与错配门禁）
+
+- 修复项：`SALES-04`，`/sales/payments/records` 以发票字段承载回款记录，但登记/更新回款无金额上限，且核销接口忽略路径上的 `payment_id`，可拿 A 记录核销 B 发票；写入口也未按合同负责人做权限过滤。
+- 根因：
+  - `create_payment_record()` 按合同取第一张 `ISSUED` 发票后直接 `new_paid = current_paid + amount`，没有校验 `amount <= unpaid`。
+  - `update_payment_record()` 可把发票 `paid_amount` 直接设置到超过发票总额。
+  - `match_payment_to_invoice()` 完全忽略路径 `payment_id`，只按 query `invoice_id` 改目标发票。
+  - 列表端原来按 `Invoice.owner_id` 过滤，但发票模型没有该字段；写入口没有复用财务数据权限过滤。
+- 改动：
+  - `app/api/v1/endpoints/sales/payments/payment_records.py`：新增 `_apply_invoice_scope()`，发票/回款统一按 `Contract.sales_owner_id` 走销售财务数据权限过滤。
+  - 登记回款时只选择仍有未收金额的已开票发票；`amount` 超过该发票未收金额时拒绝，避免 `unpaid_amount` 为负。
+  - 更新回款时拒绝把 `paid_amount` 设置到超过发票总额。
+  - 核销接口要求路径 `payment_id` 与 query `invoice_id` 一致，并保留 `match_amount <= unpaid` 校验。
+  - `tests/api/test_sales_payment_record_contracts.py`：新增 API 合约测试，覆盖登记超额、合法全额收清、更新超额、核销错配。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`SALES-04` 标为 `已验证`，P0-0 资金正确性急救包同步。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/api/test_sales_payment_record_contracts.py -q` -> 3 failed，登记超额/更新超额/核销错配均返回 HTTP 200。
+  - 绿灯：`.venv/bin/python -m pytest tests/api/test_sales_payment_record_contracts.py -q` -> 4 passed；`.venv/bin/python -m pytest tests/audit_p0/test_p0_04_payment_no_reconciliation.py -q` -> 2 passed。
+  - 回归：`.venv/bin/python -m pytest tests/api/test_sales_payments_api.py -q` -> 9 passed, 6 skipped（既有未实现/无数据 skip）；`.venv/bin/python -m pytest tests/api/test_collection_priority_api.py -q` -> 1 passed。
+  - 静态检查：`py_compile` passed；`ruff check app/api/v1/endpoints/sales/payments/payment_records.py tests/api/test_sales_payment_record_contracts.py` -> All checks passed。
+
 ## 2026-07-03 继续：售前技术支持模块去重清理
 
 - 排查结论：后端三代文件并存（api/presale_ai_* → api/v1/presale_ai_* → endpoints/presale包），存在双前缀重复挂载、方案/赢率两套栈、模板三套表、前端3个孤儿页。
@@ -671,3 +771,14 @@
 - 附带修复既有测试债：test_pmo.py 两个立项测试从未建技术评估、被售前评估关卡拦截 400——按业务规则补 COMPLETED 评估后通过。
 - 验证：pytest tests/api -k presale 全绿 + test_pmo.py/test_pmo_initiation_service 全绿 + win_rate 服务单测 77 绿；前端 build 通过；实机冒烟：保留路由 200/403(权限)、下线路由 404、启动日志无 presale 加载失败。
 - 未动（后续可评估）：presale_ai_solution/presale_solution_templates 两张表及模型（PresaleAiSolution 仍被 solution_version_service/export_service 引用）；presale/statistics 与 presale/analytics 与 presales 三个分析面属"分散"非"重复"。
+
+## 2026-07-03 继续：售前去重收尾——死服务/未挂载路由下线
+
+- 顺着 presale_ai_solution/presale_solution_templates 评估，确认并下线 4 个死文件（备份 scratchpad/deleted_presale）：
+  - `app/api/v1/solution_versions.py`——路由从未在任何注册表挂载（方案版本唯一活路径是 /presale/proposals/solutions/{id}/versions）。
+  - `app/services/sales/solution_version_service.py`——仅被上述死路由引用。
+  - `app/services/presale/presale_ai_export_service.py`——导出 TODO 桩（ROADMAP F10 提过），API 面已随老栈下线，零消费方。
+  - `app/services/presale/presale_ai_template_service.py`——复数模板表唯一用户，零消费方。
+  - 连带删 2 个 10 行 import 覆盖桩测试。
+- 表和模型保留（presale_ai_solution/presale_solution_templates 数据在库，模型导出链未动，仅代码面无人再写）。
+- 验证：后端重启 0 加载失败；tests/api -k 'presale or solution' 80 全绿；auto 覆盖测试对已删模块正确 skip（try/except ImportError）；test_ppt_generator_auto 的 2 个失败经 stash 对照确认为既有债（构造器签名，与本次无关）；test_services_p5_coverage 的模板服务用例引用本就不存在的顶层路径，属既有失败。

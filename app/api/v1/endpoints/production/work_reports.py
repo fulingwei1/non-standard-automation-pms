@@ -77,6 +77,36 @@ def _resolve_report_worker(
     raise HTTPException(status_code=400, detail="当前用户未关联工人信息，且工单未找到有效工人")
 
 
+def _apply_complete_report_to_work_order(db: Session, report: WorkReport) -> None:
+    work_order = get_or_404(db, WorkOrder, report.work_order_id, "工单不存在")
+
+    completed_qty = report.completed_qty or 0
+    qualified_qty = report.qualified_qty or 0
+    defect_qty = report.defect_qty or 0
+
+    work_order.completed_qty = completed_qty
+    work_order.qualified_qty = qualified_qty
+    work_order.defect_qty = defect_qty
+    work_order.progress = 100
+
+    if report.work_hours:
+        work_order.actual_hours = (work_order.actual_hours or 0) + report.work_hours
+
+    if completed_qty >= work_order.plan_qty:
+        work_order.status = "COMPLETED"
+        work_order.actual_end_time = datetime.now()
+
+        if work_order.workstation_id:
+            workstation = db.query(Workstation).filter(Workstation.id == work_order.workstation_id).first()
+            if workstation:
+                workstation.status = "IDLE"
+                workstation.current_work_order_id = None
+                workstation.current_worker_id = None
+                db.add(workstation)
+
+    db.add(work_order)
+
+
 # ==================== 报工系统 ====================
 
 @router.post("/work-reports", response_model=WorkReportResponse)
@@ -254,29 +284,6 @@ def complete_work_report(
     )
     db.add(report)
 
-    # 更新工单
-    work_order.completed_qty = report_in.completed_qty
-    work_order.qualified_qty = report_in.qualified_qty
-    work_order.defect_qty = report_in.defect_qty or 0
-    work_order.progress = 100
-
-    if report_in.work_hours:
-        work_order.actual_hours = (work_order.actual_hours or 0) + report_in.work_hours
-
-    # 如果完成数量达到计划数量，自动完成工单
-    if report_in.completed_qty >= work_order.plan_qty:
-        work_order.status = "COMPLETED"
-        work_order.actual_end_time = datetime.now()
-
-        # 更新工位状态
-        if work_order.workstation_id:
-            workstation = db.query(Workstation).filter(Workstation.id == work_order.workstation_id).first()
-            if workstation:
-                workstation.status = "IDLE"
-                workstation.current_work_order_id = None
-                workstation.current_worker_id = None
-                db.add(workstation)
-
     db.commit()
     db.refresh(report)
 
@@ -402,6 +409,8 @@ def approve_work_report(
         report.status = "APPROVED"
         report.approved_by = current_user.id
         report.approved_at = datetime.now()
+        if report.report_type == "COMPLETE":
+            _apply_complete_report_to_work_order(db, report)
     else:
         report.status = "REJECTED"
         report.approved_by = current_user.id
