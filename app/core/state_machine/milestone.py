@@ -111,6 +111,8 @@ class MilestoneStateMachine(StateMachine):
             import logging
 
             logging.warning("ProgressIntegrationService 不存在，跳过完成条件检查")
+        except HTTPException:
+            raise
         except Exception as e:
             import logging
 

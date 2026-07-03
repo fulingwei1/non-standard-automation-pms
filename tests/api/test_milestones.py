@@ -195,7 +195,15 @@ class TestMilestoneCRUD:
             pytest.skip("No milestones available for testing")
 
         # 查找未完成的里程碑
-        milestones = list_response.json()
+        list_payload = list_response.json()
+        milestones = (
+            list_payload.get("items", [])
+            if isinstance(list_payload, dict)
+            else list_payload
+        )
+        if not milestones:
+            pytest.skip("No milestones available for testing")
+
         pending_milestone = None
         for m in milestones:
             if m.get("status") in ["pending", "PENDING", None]:

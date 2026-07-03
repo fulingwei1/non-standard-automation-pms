@@ -218,7 +218,8 @@ def test_presale_required_period_routes_reject_invalid_period_without_500(
 ):
     headers = _auth_headers(admin_token)
 
-    for prefix in ("/presale-analytics", "/presales"):
+    # 2026-07-03 去重：/presale-analytics 重复前缀已下线，仅保留 /presales
+    for prefix in ("/presales",):
         resource_waste = client.get(
             f"{settings.API_V1_PREFIX}{prefix}/resource-waste-analysis",
             params={"period": "测试"},

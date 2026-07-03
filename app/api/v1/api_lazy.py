@@ -119,10 +119,8 @@ def create_api_router() -> APIRouter:
     try:
         from app.api.v1.endpoints.presale import router as presale_router
         from app.api.v1.presale_ai_quotation import router as presale_ai_quotation_router
-        from app.api.v1.presale_ai_win_rate import router as presale_ai_win_rate_router
 
         api_router.include_router(presale_ai_quotation_router, tags=["presale-ai"])
-        api_router.include_router(presale_ai_win_rate_router, tags=["presale-ai"])
         api_router.include_router(presale_router, prefix="/presale", tags=["presale"])
     except ImportError as e:
         print(f"⚠️  预售AI模块导入失败: {e}")

@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "../../lib/utils";
 import {
   Search,
@@ -18,8 +19,22 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { getRoleInfo } from "../../lib/roleConfig";
+import { notificationApi } from "../../services/api";
+
+const extractUnreadCount = (response) =>
+  Number(
+    response?.data?.data?.unread_count ??
+      response?.data?.unread_count ??
+      response?.data?.count ??
+      response?.unread_count ??
+      response?.count ??
+      0,
+  );
 
 export function Header({ sidebarCollapsed = false, user, onLogout }) {
+  const navigate = useNavigate();
+  const [unreadCount, setUnreadCount] = useState(0);
+
   // Get user from localStorage if not provided
   const currentUser = useMemo(() => {
     try {
@@ -70,6 +85,27 @@ export function Header({ sidebarCollapsed = false, user, onLogout }) {
   const displayName = currentUser?.real_name || currentUser?.name || currentUser?.username || "用户";
   const displayUsername = currentUser?.username || "";
   const displayRole = roleInfo?.name || "";
+  const unreadBadge = unreadCount > 99 ? "99+" : String(unreadCount);
+
+  useEffect(() => {
+    let active = true;
+
+    notificationApi.getUnreadCount()
+      .then((response) => {
+        if (active) {
+          setUnreadCount(extractUnreadCount(response));
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setUnreadCount(0);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <header
@@ -117,6 +153,8 @@ export function Header({ sidebarCollapsed = false, user, onLogout }) {
       <div className="flex items-center gap-3">
         {/* Notifications */}
         <button
+          aria-label="通知中心"
+          onClick={() => navigate("/notifications")}
           className={cn(
             "relative p-2.5 rounded-xl",
             "text-slate-400 hover:text-white",
@@ -125,7 +163,11 @@ export function Header({ sidebarCollapsed = false, user, onLogout }) {
           )}
         >
           <Bell className="h-5 w-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-[11px] font-semibold leading-5 text-white text-center">
+              {unreadBadge}
+            </span>
+          )}
         </button>
 
         {/* User Menu */}

@@ -5,6 +5,7 @@ PMO 项目管理部 API 测试
 """
 
 from datetime import date, datetime, timedelta
+from unittest.mock import patch
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
@@ -15,7 +16,15 @@ from app.models.pmo import PmoProjectInitiation, PmoProjectPhase
 from app.models.enums import OpenItemStatusEnum
 from app.models.presale import PresaleSolution, PresaleSupportTicket
 from app.models.project import Customer, Project
-from app.models.sales import Contract, Lead, OpenItem, Opportunity, Quote, QuoteVersion
+from app.models.sales import (
+    Contract,
+    Lead,
+    OpenItem,
+    Opportunity,
+    Quote,
+    QuoteVersion,
+    TechnicalAssessment,
+)
 from app.models.task_center import TaskUnified
 from app.models.user import User
 from app.services.pmo_initiation.service import PmoInitiationService
@@ -101,25 +110,36 @@ def _ensure_closure(client: TestClient, headers: dict, project_id: int) -> dict:
     response = client.get(
         f"{settings.API_V1_PREFIX}/pmo/projects/{project_id}/closure", headers=headers
     )
-    if response.status_code == 200:
+    if response.status_code == 200 and response.json() is not None:
         return response.json()
 
-    assert response.status_code == 404, response.text
-    response = client.post(
-        f"{settings.API_V1_PREFIX}/pmo/projects/{project_id}/closure",
-        json={
-            "acceptance_date": date.today().isoformat(),
-            "acceptance_result": "PASSED",
-            "acceptance_notes": "验收通过",
-            "project_summary": "PMO API 测试结项",
-            "achievement": "完成测试覆盖",
-            "lessons_learned": "接口测试需要显式准备数据",
-            "improvement_suggestions": "持续清理动态 skip",
-            "quality_score": 90,
-            "customer_satisfaction": 92,
-        },
-        headers=headers,
-    )
+    assert response.status_code in (200, 404), response.text
+    with patch(
+        "app.api.v1.endpoints.pmo.closure.ClosureReadinessService"
+    ) as readiness_service:
+        readiness_service.return_value.check_readiness.return_value = {
+            "ready": True,
+            "score": 100,
+            "project_id": project_id,
+            "checks": [],
+            "missing_items": [],
+            "recommendations": [],
+        }
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/pmo/projects/{project_id}/closure",
+            json={
+                "acceptance_date": date.today().isoformat(),
+                "acceptance_result": "PASSED",
+                "acceptance_notes": "验收通过",
+                "project_summary": "PMO API 测试结项",
+                "achievement": "完成测试覆盖",
+                "lessons_learned": "接口测试需要显式准备数据",
+                "improvement_suggestions": "持续清理动态 skip",
+                "quality_score": 90,
+                "customer_satisfaction": 92,
+            },
+            headers=headers,
+        )
     _assert_status(response, 201)
     return response.json()
 
@@ -349,7 +369,16 @@ class TestInitiations:
             status=OpenItemStatusEnum.PENDING.value,
             blocks_quotation=True,
         )
-        db_session.add_all([solution, open_item])
+        # 立项关卡要求售前技术评估已完成（COMPLETED）
+        assessment = TechnicalAssessment(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            evaluator_id=admin_user.id,
+            status="COMPLETED",
+            total_score=80,
+            evaluated_at=datetime.now(),
+        )
+        db_session.add_all([solution, open_item, assessment])
         db_session.commit()
 
         created = client.post(
@@ -650,7 +679,16 @@ class TestInitiations:
             status=OpenItemStatusEnum.PENDING.value,
             blocks_quotation=True,
         )
-        db_session.add_all([solution, open_item])
+        # 立项关卡要求售前技术评估已完成（COMPLETED）
+        assessment = TechnicalAssessment(
+            source_type="LEAD",
+            source_id=lead.id,
+            evaluator_id=admin_user.id,
+            status="COMPLETED",
+            total_score=80,
+            evaluated_at=datetime.now(),
+        )
+        db_session.add_all([solution, open_item, assessment])
         db_session.commit()
 
         created = client.post(
@@ -803,6 +841,38 @@ class TestProjectRisks:
 
 class TestProjectClosures:
     """项目结项测试"""
+
+    def test_create_closure_blocks_when_readiness_not_ready(
+        self, client: TestClient, admin_token: str, test_project
+    ):
+        """未达结项准备度时不得创建结项申请"""
+
+        headers = _auth_headers(admin_token)
+        with patch(
+            "app.api.v1.endpoints.pmo.closure.ClosureReadinessService"
+        ) as readiness_service:
+            readiness_service.return_value.check_readiness.return_value = {
+                "ready": False,
+                "score": 60,
+                "project_id": test_project.id,
+                "checks": [],
+                "missing_items": ["客户验收未签署"],
+                "recommendations": ["请先完成客户验收"],
+            }
+            response = client.post(
+                f"{settings.API_V1_PREFIX}/pmo/projects/{test_project.id}/closure",
+                json={
+                    "acceptance_date": date.today().isoformat(),
+                    "acceptance_result": "PASSED",
+                    "project_summary": "PMO API 测试结项",
+                },
+                headers=headers,
+            )
+
+        assert response.status_code == 400, response.text
+        detail = response.json()["detail"]
+        assert "结项准备度未达标" in detail
+        assert "客户验收未签署" in detail
 
     def test_create_and_read_closure(self, client: TestClient, admin_token: str, test_project):
         """测试创建并读取结项申请"""

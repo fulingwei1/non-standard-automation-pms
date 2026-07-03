@@ -8,7 +8,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import AliasChoices, BaseModel, Field, field_validator, model_validator
 
 from app.models.service.enums import (
     KnowledgeBaseStatusEnum,
@@ -55,7 +55,11 @@ class ServiceTicketAssign(BaseModel):
 
 class ServiceTicketClose(BaseModel):
     """关闭服务工单"""
-    solution: str = Field(..., description="解决方案")
+    solution: str = Field(
+        ...,
+        validation_alias=AliasChoices("solution", "resolution"),
+        description="解决方案",
+    )
     root_cause: Optional[str] = Field(None, description="根本原因")
     preventive_action: Optional[str] = Field(None, description="预防措施")
     satisfaction: Optional[int] = Field(None, ge=1, le=5, description="满意度1-5")

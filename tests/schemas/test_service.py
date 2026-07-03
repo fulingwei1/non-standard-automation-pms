@@ -85,6 +85,10 @@ class TestServiceTicketClose:
         c = ServiceTicketClose(solution="更换轴承")
         assert c.satisfaction is None
 
+    def test_accepts_legacy_resolution_alias(self):
+        c = ServiceTicketClose(resolution="远程复位后恢复正常")
+        assert c.solution == "远程复位后恢复正常"
+
     def test_satisfaction_bounds(self):
         ServiceTicketClose(solution="S", satisfaction=1)
         ServiceTicketClose(solution="S", satisfaction=5)

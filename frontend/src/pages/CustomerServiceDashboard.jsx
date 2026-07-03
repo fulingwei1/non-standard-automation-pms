@@ -64,6 +64,12 @@ import {
 '../lib/constants/service';
 
 import { serviceApi } from '@/services/api/service';
+import {
+  buildTicketClosePayload,
+  buildWarrantyProjects,
+  getTicketId,
+  normalizeDashboardTicket,
+} from './CustomerServiceDashboard/utils';
 
 const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
@@ -102,21 +108,7 @@ const CustomerServiceDashboard = () => {
         serviceApi.records.list(),
         serviceApi.dashboardStatistics().catch(() => ({ data: {} })),
       ]);
-      const ticketList = (ticketsRes.data?.items || ticketsRes.data?.items || ticketsRes.data || []).map((t) => ({
-        id: t.id,
-        title: t.title || t.subject || '',
-        customerName: t.customer_name || t.customerName || '',
-        description: t.description || '',
-        serviceType: t.service_type || t.serviceType || '',
-        status: t.status || '',
-        priority: t.priority || '',
-        engineer: t.engineer || t.assigned_to || '',
-        createdAt: t.created_at || t.createdAt || '',
-        updatedAt: t.updated_at || t.updatedAt || '',
-        responseTime: t.response_time ?? t.responseTime ?? 0,
-        resolvedDate: t.resolved_at || t.resolvedDate || null,
-        satisfaction: t.satisfaction ?? null,
-      }));
+      const ticketList = (ticketsRes.data?.items || ticketsRes.data || []).map(normalizeDashboardTicket);
       setTickets(ticketList);
 
       const recordList = (recordsRes.data?.items || recordsRes.data?.items || recordsRes.data || []).map((r) => ({
@@ -135,23 +127,16 @@ const CustomerServiceDashboard = () => {
 
       const db = dashRes.data || {};
       const warrantyList = db.warranty_projects || db.warrantyProjects || [];
-      setWarrantyProjects((warrantyList || []).map((w) => ({
-        id: w.id,
-        projectName: w.project_name || w.projectName || '',
-        customerName: w.customer_name || w.customerName || '',
-        warrantyType: w.warranty_type || w.warrantyType || 'standard',
-        startDate: w.start_date || w.startDate || '',
-        endDate: w.end_date || w.endDate || '',
-        status: w.status || 'active',
-        remainingDays: w.remaining_days ?? w.remainingDays ?? 0,
-        totalClaims: w.total_claims ?? w.totalClaims ?? 0,
-        resolvedClaims: w.resolved_claims ?? w.resolvedClaims ?? 0,
-      })));
+      const normalizedWarrantyProjects = buildWarrantyProjects({
+        dashboardWarrantyProjects: warrantyList,
+        tickets: ticketList,
+      });
+      setWarrantyProjects(normalizedWarrantyProjects);
 
       setOverviewData({
         tickets: ticketList,
         fieldServices: recordList,
-        warrantyProjects: warrantyList,
+        warrantyProjects: normalizedWarrantyProjects,
         metrics: {
           avgResponseTime: db.avg_response_time ?? db.avgResponseTime ?? 0,
           avgSatisfaction: db.avg_satisfaction ?? db.avgSatisfaction ?? 0,
@@ -193,16 +178,32 @@ const CustomerServiceDashboard = () => {
     setShowCreateModal(true);
   };
 
-  const handleResolveTicket = async (ticketId) => {
+  const handleResolveTicket = async (ticketOrId) => {
+    const ticketId = getTicketId(ticketOrId);
+    const ticket = typeof ticketOrId === "object" && ticketOrId !== null ?
+      ticketOrId :
+      (tickets || []).find((item) => String(item.id) === String(ticketId));
+
+    if (!ticketId) {
+      message.error('工单信息缺失');
+      return;
+    }
+
     try {
       setLoading(true);
-      await serviceApi.tickets.close(ticketId, { resolution: 'resolved' });
+      const payload = buildTicketClosePayload(ticket);
+      await serviceApi.tickets.close(ticketId, payload);
       setTickets((tickets || []).map((t) =>
-        t.id === ticketId ?
-        { ...t, status: 'resolved', resolvedDate: new Date().toISOString().split('T')[0] } :
+        String(t.id) === String(ticketId) ?
+        {
+          ...t,
+          status: 'CLOSED',
+          resolvedDate: new Date().toISOString().split('T')[0],
+          solution: payload.solution,
+        } :
         t
       ));
-      message.success('工单已标记为解决');
+      message.success('工单已关闭');
     } catch (_error) {
       message.error('操作失败');
     } finally {

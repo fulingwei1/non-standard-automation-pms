@@ -570,3 +570,104 @@
   - 真实浏览器 5/5（`.gstack/qa-scripts/ai-reqdoc-sweep.mjs`）：上传→抽取面板→自动缺口分析 80/100，0 错误。
   - PyMuPDF==1.28.0 已装并写入 requirements-dev.txt。测试数据/存档文件清理 0 残留。
 - 后续增量（未做）：三维 CAD 文件（STEP/STL）几何解析+多角度渲染截图喂视觉模型；扫描件 PDF OCR。
+
+## 2026-07-03 继续：功能审计 PRE-16 止血（知识库 qwen live AI 判断）
+
+- 修复项：`PRE-16`，售前知识库 `_has_live_ai()` 漏判阿里百炼/通义千问配置，导致已有 qwen key 时仍按无真实 AI 能力降级为规则模板。
+- 改动：
+  - `app/services/presale/presale_ai_knowledge_service.py`：`_has_live_ai()` 纳入 `ai_client.qwen_api_key`。
+  - `tests/unit/test_presale_ai_knowledge_service_coverage.py`：新增 qwen-only live AI 回归用例，并修正该测试文件既有 fixture 类名拼写，保证整文件可跑。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`PRE-16` 标为 `已验证`，Quick-win 视图同步。
+- 验证：
+  - 红灯：新增用例先失败，`_has_live_ai()` 返回 False。
+  - 绿灯：`.venv/bin/python -m pytest tests/unit/test_presale_ai_knowledge_service_coverage.py -q` -> 22 passed。
+  - `.venv/bin/python -m py_compile app/services/presale/presale_ai_knowledge_service.py tests/unit/test_presale_ai_knowledge_service_coverage.py` -> passed。
+  - `.venv/bin/python -m ruff check app/services/presale/presale_ai_knowledge_service.py tests/unit/test_presale_ai_knowledge_service_coverage.py` -> All checks passed。
+
+## 2026-07-03 继续：功能审计 RPT-16 验证（负荷瓶颈部门名）
+
+- 修复项：`RPT-16`，审计指出负荷瓶颈接口访问 `dept.name`，而部门模型只有 `dept_name`，超载部门分支会 500。
+- 当前状态：
+  - 当前工作树里的 `app/models/organization.py` 已有 `Department.name` 兼容属性，返回 `dept_name`。
+  - 本轮未改业务代码，只新增 API 合约测试覆盖真实超载部门分支，避免空数据 200 掩盖问题。
+- 验证：
+  - `.venv/bin/python -m pytest tests/api/test_batch4_route_contracts.py::test_workload_bottlenecks_serializes_department_dept_name -q` -> passed。
+  - `.venv/bin/python -m pytest tests/api/test_batch4_route_contracts.py -q` -> 3 passed。
+  - `FUNCTIONAL_AUDIT_TRACKER.md` 已将 `RPT-16` 标为 `已验证`。
+
+## 2026-07-03 继续：功能审计 PROJ-10 修复（里程碑完成门禁）
+
+- 修复项：`PROJ-10`，里程碑完成门禁在 `_ensure_can_complete()` 中自己抛 `HTTPException(400)` 后被 `except Exception` 吞掉；同时全局兼容端点 `/milestones/{id}/complete` 直接写 `status=COMPLETED`，绕开状态机。
+- 改动：
+  - `app/core/state_machine/milestone.py`：在宽泛异常前显式 `except HTTPException: raise`，不再吞掉业务门禁 400。
+  - `app/api/v1/endpoints/milestones.py`：全局兼容 complete 端点改走 `MilestoneStateMachine.transition_to("COMPLETED")`，统一权限、完成条件检查、自动开票触发和异常映射；失败时 rollback。
+  - 新增 `tests/unit/test_milestone_state_machine_completion.py`：覆盖交付物未审批时 `_ensure_can_complete()` 必须抛 400。
+  - 新增 `tests/api/test_milestone_completion_gate_contracts.py`：覆盖全局 complete 端点不得完成交付物未审批的 DELIVERY 里程碑。
+  - `tests/api/test_milestones.py`：适配全局里程碑列表分页响应，避免旧测试把 `"items"` 字符串当里程碑遍历。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`PROJ-10` 标为 `已验证`，Quick-win 视图同步。
+- 验证：
+  - 红灯1：状态机用例先失败，`HTTPException` 未抛出，仅记录日志。
+  - 红灯2：API 用例先失败，兼容端点返回 200 且状态变为 `COMPLETED`。
+  - 绿灯：`.venv/bin/python -m pytest tests/unit/test_milestone_state_machine_completion.py tests/api/test_milestone_completion_gate_contracts.py -q` -> 2 passed。
+  - 回归：`.venv/bin/python -m pytest tests/unit/test_progress_integration_service.py::TestCheckMilestoneCompletionRequirements tests/unit/test_milestone_state_machine_completion.py tests/api/test_milestone_completion_gate_contracts.py tests/unit/test_milestone_service.py -q` -> 10 passed。
+  - 相关旧 API：`.venv/bin/python -m pytest tests/api/test_milestones.py -k complete_milestone -q` -> 1 skipped（当前无可用里程碑）；`.venv/bin/python -m pytest tests/api/test_project_milestones_api.py -k complete_project_milestone -q` -> 1 skipped（门禁/状态校验返回 400）。
+  - `py_compile` passed；`ruff check` -> All checks passed。
+
+## 2026-07-03 继续：功能审计 PRE-23 修复（立项关卡异常不静默放行）
+
+- 修复项：`PRE-23`，立项提交时 `build_presale_handover_context()` 若异常，旧代码会 `missing=[]` 并继续提交，导致售前技术评估关卡失效。
+- 改动：
+  - `app/services/pmo_initiation/service.py`：售前交接/技术评估上下文构建异常 now raises `ValueError`，阻断提交，不再默认放行。
+  - `tests/unit/test_pmo_initiation_service.py`：新增红绿回归用例，确认异常时状态保持 `DRAFT` 且不会 `add/commit`。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`PRE-23` 标为 `已验证`，Quick-win 视图同步。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/unit/test_pmo_initiation_service.py::TestPmoInitiationServiceSubmit::test_submit_initiation_blocks_when_handover_context_fails -q` -> failed（ValueError not raised）。
+  - 绿灯：`.venv/bin/python -m pytest tests/unit/test_pmo_initiation_service.py::TestPmoInitiationServiceSubmit -q` -> 6 passed。
+  - 回归：`.venv/bin/python -m pytest tests/unit/test_pmo_initiation_service.py -q` -> 36 passed。
+  - `py_compile` passed；`ruff check app/services/pmo_initiation/service.py tests/unit/test_pmo_initiation_service.py` -> All checks passed；`git diff --check` passed。
+
+## 2026-07-03 继续：功能审计 PROJ-06 修复（结项 readiness 强制门禁）
+
+- 修复项：`PROJ-06`，`POST /pmo/projects/{project_id}/closure` 创建结项只查项目/查重，不调用现成 `ClosureReadinessService`，未验收/未达准备度的项目仍可落 `DRAFT` 结项。
+- 改动：
+  - `app/api/v1/endpoints/pmo/closure.py`：创建结项前调用 `ClosureReadinessService(db).check_readiness(project_id)`；`ready=False` 时返回 400，detail 带准备度分数和缺项。
+  - `tests/api/test_pmo.py`：新增未达 readiness 不得创建结项的 API 合约测试；旧 `_ensure_closure` helper 显式模拟 ready=True，并修正读结项接口 `200 null` 被误当已有记录的问题。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`PROJ-06` 标为 `已验证`；全局 P0#8 标清 `PROJ-20` 仍待修，避免把变更审批回基线一起误判完成。
+- 验证：
+  - 红灯1：`.venv/bin/python -m pytest tests/audit_p0/test_p0_08_closure_gate_and_change_baseline.py::test_closure_blocked_when_not_ready -q` -> failed，未达 readiness 项目仍 HTTP 201。
+  - 红灯2：`.venv/bin/python -m pytest tests/api/test_pmo.py::TestProjectClosures::test_create_closure_blocks_when_readiness_not_ready -q` -> failed，返回 201。
+  - 绿灯：`.venv/bin/python -m pytest tests/api/test_pmo.py::TestProjectClosures -q` -> 3 passed。
+  - 原始 P0 回归：`.venv/bin/python -m pytest tests/audit_p0/test_p0_08_closure_gate_and_change_baseline.py::test_closure_blocked_when_not_ready -q` -> passed。
+  - 服务回归：`.venv/bin/python -m pytest tests/services/test_closure_readiness_service.py -q` -> 7 passed。
+  - `py_compile` passed；`ruff check app/api/v1/endpoints/pmo/closure.py tests/api/test_pmo.py` -> All checks passed；`git diff --check` passed。
+
+## 2026-07-03 继续：功能审计 AS-19 修复（客服关单 payload 与质保列表）
+
+- 修复项：`AS-19`，客服工作台关闭工单时前端发 `{ resolution: "resolved" }`，后端 `ServiceTicketClose` 要求 `solution`，导致 422；同时“解决”按钮从子组件传 record、父组件按 id 用，可能拼出 `/tickets/[object Object]/close`；质保页签只读 dashboard 的 `warranty_projects`，当前统计接口不返回该字段，页面恒空。
+- 改动：
+  - `app/schemas/service.py`：`ServiceTicketClose.solution` 兼容历史 `resolution` alias，避免旧客户端直接 422。
+  - `frontend/src/pages/CustomerServiceDashboard/utils.js`：新增纯工具，统一工单归一化、关单 payload、record/id 兼容、质保项目归一化与质保工单兜底。
+  - `frontend/src/pages/CustomerServiceDashboard.jsx`：关闭工单 now sends `{ solution: ... }`，状态本地更新为 `CLOSED`；质保页签优先用 dashboard 明细，缺失时从真实质保类服务工单生成列表。
+  - 新增/更新测试：`tests/schemas/test_service.py`、`tests/api/test_service_ticket_crud_contracts.py`、`frontend/src/pages/CustomerServiceDashboard/__tests__/dashboardContracts.test.js`。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`AS-19` 标为 `已验证`；备注注明 `AS-09` 售后质保表缺失仍待修。
+- 验证：
+  - 红灯1：`.venv/bin/python -m pytest tests/schemas/test_service.py::TestServiceTicketClose::test_accepts_legacy_resolution_alias -q` -> failed，`solution` required。
+  - 红灯2：`npm run test:run -- src/pages/CustomerServiceDashboard/__tests__/dashboardContracts.test.js` -> failed，`../utils` 尚不存在。
+  - 绿灯：`.venv/bin/python -m pytest tests/schemas/test_service.py::TestServiceTicketClose -q` -> 5 passed。
+  - API 回归：`.venv/bin/python -m pytest tests/api/test_service_ticket_crud_contracts.py -q` -> 2 passed（含 resolution payload 关闭工单）。
+  - 前端回归：`npm run test:run -- src/pages/CustomerServiceDashboard/__tests__/dashboardContracts.test.js` -> 2 passed；`npm run build` -> passed（仅既有 chunk/dynamic import warning）。
+  - `py_compile` passed；`ruff check app/schemas/service.py tests/schemas/test_service.py tests/api/test_service_ticket_crud_contracts.py` -> All checks passed；targeted `eslint` passed；`git diff --check` passed。
+
+## 2026-07-03 继续：售前技术支持模块去重清理
+
+- 排查结论：后端三代文件并存（api/presale_ai_* → api/v1/presale_ai_* → endpoints/presale包），存在双前缀重复挂载、方案/赢率两套栈、模板三套表、前端3个孤儿页。
+- 本轮清理（presale 路径 143 → 119）：
+  - **双前缀**：presale_analytics 原挂 /presale-analytics + /presales 两处；保留前端与契约测试在用的 /presales，删无消费方的 /presale-analytics。
+  - **老AI方案栈下线**：app/api/presale_ai_routes.py（generate-solution/solution/{id}/template*/match-templates，写 presale_ai_solution 表）——前端唯一消费方是孤儿页；方案统一走 /presale/proposals/solutions。
+  - **异步赢率栈下线**：app/api/v1/presale_ai_win_rate.py（AsyncSession 与同步栈不符）及 api.py/api_lazy.py/api_medium.py 三处挂载；赢率统一走 /presales/predict-win-rate。win_rate_prediction_service 服务层与其单测保留（77 用例仍绿）。
+  - **shim 收敛**：删 endpoints/presale_ai_requirement.py、endpoints/presale_mobile.py 两个9行转发壳，api.py 改为直接从 presale 包挂载（路径不变，实测 presale-mobile 9 路径完好）。
+  - **前端孤儿页**：删 pages/PresaleAI/(AIWorkbench/AIDashboard)、components/PresaleAI/、services/presaleAIService.js、pages/PresaleBids.jsx（备份在 scratchpad/deleted_presale）。
+- 契约测试同步更新：test_presales_contract_api（摘除已下线路由，方案契约改指 /presale/proposals）、test_path_param_route_contracts（去 solution/win-rate 腿）、test_required_query_route_contracts（去 /presale-analytics 前缀腿）。
+- 附带修复既有测试债：test_pmo.py 两个立项测试从未建技术评估、被售前评估关卡拦截 400——按业务规则补 COMPLETED 评估后通过。
+- 验证：pytest tests/api -k presale 全绿 + test_pmo.py/test_pmo_initiation_service 全绿 + win_rate 服务单测 77 绿；前端 build 通过；实机冒烟：保留路由 200/403(权限)、下线路由 404、启动日志无 presale 加载失败。
+- 未动（后续可评估）：presale_ai_solution/presale_solution_templates 两张表及模型（PresaleAiSolution 仍被 solution_version_service/export_service 引用）；presale/statistics 与 presale/analytics 与 presales 三个分析面属"分散"非"重复"。

@@ -3,8 +3,23 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Header } from '../Header';
+
+const mocks = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  getUnreadCount: vi.fn(),
+}));
+
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mocks.navigate,
+}));
+
+vi.mock('../../../services/api', () => ({
+  notificationApi: {
+    getUnreadCount: mocks.getUnreadCount,
+  },
+}));
 
 vi.mock('lucide-react', () => ({
   Search: () => <div data-testid="search-icon">Search</div>,
@@ -46,6 +61,7 @@ describe('Header 组件', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+    mocks.getUnreadCount.mockResolvedValue({ data: { data: { unread_count: 0 } } });
   });
 
   describe('渲染测试', () => {
@@ -163,11 +179,23 @@ describe('Header 组件', () => {
       expect(() => fireEvent.click(searchButton)).not.toThrow();
     });
 
-    it('通知按钮和未读标记存在', () => {
-      const { container } = render(<Header sidebarCollapsed={false} onLogout={mockOnLogout} />);
+    it('通知按钮加载未读数并跳转通知中心', async () => {
+      mocks.getUnreadCount.mockResolvedValueOnce({ data: { data: { unread_count: 3 } } });
 
+      render(<Header sidebarCollapsed={false} onLogout={mockOnLogout} />);
+
+      expect(await screen.findByText('3')).toBeInTheDocument();
       expect(screen.getByTestId('bell-icon')).toBeInTheDocument();
-      expect(container.querySelector('.bg-red-500')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: '通知中心' }));
+      expect(mocks.navigate).toHaveBeenCalledWith('/notifications');
+    });
+
+    it('没有未读通知时不显示角标', async () => {
+      render(<Header sidebarCollapsed={false} onLogout={mockOnLogout} />);
+
+      await waitFor(() => expect(mocks.getUnreadCount).toHaveBeenCalledTimes(1));
+      expect(screen.queryByText('0')).not.toBeInTheDocument();
     });
 
     it('点击退出登录应该调用onLogout', () => {

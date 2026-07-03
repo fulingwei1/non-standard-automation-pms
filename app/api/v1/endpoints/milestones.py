@@ -13,6 +13,12 @@ from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
+from app.core.state_machine.exceptions import (
+    InvalidStateTransitionError,
+    PermissionDeniedError,
+    StateMachineValidationError,
+)
+from app.core.state_machine.milestone import MilestoneStateMachine
 from app.models.project import Project, ProjectMilestone
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -191,14 +197,39 @@ def complete_milestone(
     if not milestone:
         raise HTTPException(status_code=404, detail="里程碑不存在")
 
-    milestone.status = "COMPLETED"
-    milestone.actual_date = _parse_date(data.get("actual_date")) or date.today()
-    if data.get("completion_note"):
-        milestone.remark = data["completion_note"]
+    if milestone.status == "COMPLETED":
+        return _serialize_milestone(milestone)
 
-    db.commit()
-    db.refresh(milestone)
-    return _serialize_milestone(milestone)
+    actual_date = _parse_date(data.get("actual_date")) or date.today()
+    completion_note = data.get("completion_note")
+    auto_trigger_invoice = data.get("auto_trigger_invoice", True)
+    state_machine = MilestoneStateMachine(milestone, db)
+
+    try:
+        state_machine.transition_to(
+            "COMPLETED",
+            current_user=current_user,
+            comment=completion_note or f"完成里程碑：{milestone.milestone_name}",
+            actual_date=actual_date,
+            auto_trigger_invoice=auto_trigger_invoice,
+        )
+        if completion_note:
+            milestone.remark = completion_note
+        db.commit()
+        db.refresh(milestone)
+        return _serialize_milestone(milestone)
+    except InvalidStateTransitionError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except PermissionDeniedError as exc:
+        db.rollback()
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except StateMachineValidationError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except HTTPException:
+        db.rollback()
+        raise
 
 
 @router.delete("/{milestone_id}", response_model=ResponseModel)

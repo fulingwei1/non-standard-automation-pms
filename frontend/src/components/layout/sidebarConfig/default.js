@@ -14,7 +14,7 @@ export const defaultNavGroups = [
     items: [
       { name: "工作台", path: "/dashboard", icon: "LayoutDashboard", badge: null },
       { name: "运营大屏", path: "/operation", icon: "BarChart3", permission: "operation:dashboard:read", permissionLabel: "运营大屏" },
-      { name: "通知中心", path: "/notifications", icon: "Bell", badge: "5" },
+      { name: "通知中心", path: "/notifications", icon: "Bell", badge: null },
       { name: "审批中心", path: "/approvals", icon: "ClipboardCheck", badge: "2", permission: "approval:read", permissionLabel: "审批查看" },
       { name: "知识库", path: "/knowledge-base", icon: "BookOpen" }
     ]

@@ -82,6 +82,19 @@ def create_closure(
     if existing:
         raise HTTPException(status_code=400, detail="该项目已有结项记录")
 
+    readiness = ClosureReadinessService(db).check_readiness(project_id)
+    if not readiness.get("ready"):
+        missing_items = readiness.get("missing_items") or []
+        missing_text = (
+            "；".join(str(item) for item in missing_items[:5])
+            if missing_items
+            else "结项条件未全部满足"
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=f"结项准备度未达标（{readiness.get('score', 0)}%）：{missing_text}",
+        )
+
     # 计算成本偏差
     cost_variance = None
     if project.budget_amount and project.actual_cost:

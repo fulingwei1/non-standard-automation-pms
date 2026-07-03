@@ -441,6 +441,28 @@ class TestPmoInitiationServiceSubmit(unittest.TestCase):
         self.assertIn("尚未完成", str(context.exception))
         self.assertEqual(mock_initiation.status, "DRAFT")
 
+    def test_submit_initiation_blocks_when_handover_context_fails(self):
+        """售前交接/技术评估上下文构建失败时不能静默放行"""
+        mock_initiation = MagicMock(id=1, status="DRAFT")
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = mock_initiation
+        self.db.query.return_value = mock_query
+
+        with patch.object(
+            self.service,
+            "build_presale_handover_context",
+            side_effect=RuntimeError("handover source unavailable"),
+        ):
+            with self.assertRaises(ValueError) as context:
+                self.service.submit_initiation(initiation_id=1)
+
+        self.assertIn("售前技术评估检查失败", str(context.exception))
+        self.assertEqual(mock_initiation.status, "DRAFT")
+        self.db.add.assert_not_called()
+        self.db.commit.assert_not_called()
+
     def test_submit_initiation_not_found(self):
         """测试提交不存在的立项"""
         mock_query = MagicMock()

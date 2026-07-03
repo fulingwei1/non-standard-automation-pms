@@ -366,9 +366,10 @@ class PmoInitiationService:
                 current_assessment = (
                     handover.get("technical_assessment") or {}
                 ).get("current") or {}
-            except Exception:
-                missing = []
-                current_assessment = {}
+            except Exception as exc:
+                raise ValueError(
+                    "售前技术评估检查失败，无法提交立项。请确认售前交接信息完整后重试。"
+                ) from exc
             if "technical_assessment" in missing:
                 raise ValueError(
                     "缺少售前技术评估，无法提交立项。请先向售前技术支持部申请技术支持并完成技术初评后再提交立项。"

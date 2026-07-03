@@ -29,7 +29,6 @@ from app.models.performance import (
 )
 from app.models.presale_ai_emotion_analysis import PresaleAIEmotionAnalysis
 from app.models.presale_ai_requirement_analysis import PresaleAIRequirementAnalysis
-from app.models.presale_ai_solution import PresaleAISolution
 from app.models.presale_emotion_trend import PresaleEmotionTrend
 from app.models.presale import PresaleSupportTicket
 from app.models.presale.technical_parameter_template import TechnicalParameterTemplate
@@ -45,7 +44,6 @@ from app.models.purchase import GoodsReceipt, GoodsReceiptItem, PurchaseOrder, P
 from app.models.project_risk import ProjectRisk
 from app.models.qualification import EmployeeQualification, QualificationLevel
 from app.models.sales.presale_ai_cost import PresaleAICostEstimation
-from app.models.sales.presale_ai_win_rate import PresaleAIWinRate
 from app.models.sales import (
     Contract,
     ContractTemplate,
@@ -1265,14 +1263,8 @@ def test_presale_templates_and_ai_routes_tolerate_legacy_nulls(
         total_cost=Decimal("0"),
         created_by=admin.id,
     )
-    solution = PresaleAISolution(
-        presale_ticket_id=1,
-        status=None,
-        created_by=admin.id,
-        created_at=None,
-        updated_at=None,
-    )
-    db_session.add_all([ticket, template, cost, solution])
+    # 2026-07-03 去重：老AI方案栈 /presale/ai/solution/{id} 已下线（方案统一走 /presale/proposals）
+    db_session.add_all([ticket, template, cost])
     db_session.flush()
     analysis = PresaleAIEmotionAnalysis(
         presale_ticket_id=ticket.id,
@@ -1303,11 +1295,6 @@ def test_presale_templates_and_ai_routes_tolerate_legacy_nulls(
         headers=headers,
         follow_redirects=False,
     )
-    solution_response = client.get(
-        f"{settings.API_V1_PREFIX}/presale/ai/solution/{solution.id}",
-        headers=headers,
-        follow_redirects=False,
-    )
     emotion_response = client.get(
         f"{settings.API_V1_PREFIX}/presale/ai/emotion-analysis/{ticket.id}",
         headers=headers,
@@ -1323,8 +1310,6 @@ def test_presale_templates_and_ai_routes_tolerate_legacy_nulls(
     assert template_response.json()["reference_docs"][0]["type"] == "checklist"
     assert cost_response.status_code == 200, cost_response.text
     assert cost_response.json()["cost_breakdown"]["hardware_cost"] == "0"
-    assert solution_response.status_code == 200, solution_response.text
-    assert solution_response.json()["status"] == "draft"
     assert emotion_response.status_code == 200, emotion_response.text
     assert emotion_response.json()["sentiment"] == "neutral"
     assert trend_response.status_code == 200, trend_response.text
@@ -1378,29 +1363,10 @@ def test_presale_quotation_and_win_rate_routes_handle_legacy_records(
         },
     )
     quotation_id = db_session.execute(text("SELECT last_insert_rowid()")).scalar_one()
-    prediction = PresaleAIWinRate(
-        presale_ticket_id=991002,
-        win_rate_score=Decimal("66"),
-        confidence_interval="60-70%",
-        influencing_factors=[{"factor": "需求明确", "score": 8}],
-        competitor_analysis={},
-        improvement_suggestions={"short_term": ["跟进决策人"]},
-        predicted_at=datetime.now(),
-        created_by=admin.id,
-    )
-    null_prediction = PresaleAIWinRate(
-        presale_ticket_id=991004,
-        win_rate_score=None,
-        confidence_interval=None,
-        influencing_factors=None,
-        competitor_analysis=None,
-        improvement_suggestions=None,
-        predicted_at=None,
-        created_by=admin.id,
-    )
-    db_session.add_all([prediction, null_prediction])
     db_session.commit()
 
+    # 2026-07-03 去重：/presale/ai/win-rate|influencing-factors|improvement-suggestions
+    # 随异步老栈 presale_ai_win_rate.py 下线，赢率统一走 /presales/predict-win-rate
     headers = _auth_headers(admin_token)
     quotation = client.get(
         f"{settings.API_V1_PREFIX}/presale/ai/quotation/{quotation_id}",
@@ -1412,37 +1378,12 @@ def test_presale_quotation_and_win_rate_routes_handle_legacy_records(
         headers=headers,
         follow_redirects=False,
     )
-    win_rate = client.get(
-        f"{settings.API_V1_PREFIX}/presale/ai/win-rate/{prediction.id}",
-        headers=headers,
-        follow_redirects=False,
-    )
-    null_win_rate = client.get(
-        f"{settings.API_V1_PREFIX}/presale/ai/win-rate/{null_prediction.id}",
-        headers=headers,
-        follow_redirects=False,
-    )
-    factors = client.get(
-        f"{settings.API_V1_PREFIX}/presale/ai/influencing-factors/{prediction.presale_ticket_id}",
-        headers=headers,
-        follow_redirects=False,
-    )
-    suggestions = client.get(
-        f"{settings.API_V1_PREFIX}/presale/ai/improvement-suggestions/{prediction.presale_ticket_id}",
-        headers=headers,
-        follow_redirects=False,
-    )
 
     assert quotation.status_code == 200, quotation.text
     assert quotation.json()["quotation_type"] == "standard"
     assert quotation.json()["items"] == []
     assert empty_history.status_code == 200, empty_history.text
     assert empty_history.json()["quotation_id"] is None
-    assert win_rate.status_code == 200, win_rate.text
-    assert null_win_rate.status_code == 200, null_win_rate.text
-    assert Decimal(str(null_win_rate.json()["win_rate_score"])) == Decimal("0")
-    assert factors.status_code == 200, factors.text
-    assert suggestions.status_code == 200, suggestions.text
 
 
 def test_acceptance_and_node_task_routes_tolerate_legacy_nulls(

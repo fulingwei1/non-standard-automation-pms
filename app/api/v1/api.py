@@ -276,20 +276,19 @@ def create_api_router() -> APIRouter:
     
     # ==================== 预售AI ====================
     try:
+        # 2026-07-03 去重：老AI方案栈 presale_ai_routes（generate-solution/solution/template*，写
+        # presale_ai_solution 表，前端仅孤儿页调用）与异步栈 presale_ai_win_rate（AsyncSession 与同步
+        # 栈不兼容）已下线；方案统一走 /presale/proposals，赢率统一走 /presales/predict-win-rate
         from app.api.presale_ai_emotion import router as presale_ai_emotion_router
-        from app.api.presale_ai_routes import router as presale_ai_solution_router
         from app.api.v1.presale_ai_cost import router as presale_ai_cost_router
         from app.api.v1.presale_ai_knowledge import router as presale_ai_knowledge_router
         from app.api.v1.presale_ai_integration import router as presale_ai_integration_router
         from app.api.v1.presale_ai_quotation import router as presale_ai_quotation_router
-        from app.api.v1.presale_ai_win_rate import router as presale_ai_win_rate_router
         api_router.include_router(presale_ai_integration_router, prefix="/presale/ai", tags=["presale-ai"])
         api_router.include_router(presale_ai_cost_router, tags=["presale-ai-cost"])
-        api_router.include_router(presale_ai_solution_router, tags=["presale-ai-solution"])
         api_router.include_router(presale_ai_knowledge_router, tags=["presale-ai-knowledge"])
         api_router.include_router(presale_ai_emotion_router, tags=["presale-ai-emotion"])
         api_router.include_router(presale_ai_quotation_router, tags=["presale-ai"])
-        api_router.include_router(presale_ai_win_rate_router, tags=["presale-ai"])
         from app.api.v1.endpoints.ai_jobs import router as ai_jobs_router
         api_router.include_router(ai_jobs_router)
         from app.api.v1.endpoints.sales.activity_minutes import router as sales_minutes_router
@@ -937,8 +936,9 @@ def create_api_router() -> APIRouter:
     # ==================== 预售分析 ====================
     try:
         from app.api.v1.endpoints.presale_analytics import router as presale_analytics_router
-        api_router.include_router(presale_analytics_router, prefix="/presale-analytics", tags=["presale-analytics"])
-        api_router.include_router(presale_analytics_router, prefix="/presales", tags=["presales-compat"])
+        # 2026-07-03 去重：原同时挂 /presale-analytics 与 /presales 两前缀；前端与契约测试均用
+        # /presales，故保留 /presales、去掉无消费方的 /presale-analytics
+        api_router.include_router(presale_analytics_router, prefix="/presales", tags=["presales"])
         print("✓ 预售分析模块加载成功")
     except Exception as e:
         print(f"✗ 预售分析模块加载失败：{e}")
@@ -1098,7 +1098,7 @@ def create_api_router() -> APIRouter:
 
     # ==================== 预售AI需求 ====================
     try:
-        from app.api.v1.endpoints.presale_ai_requirement import router as presale_ai_requirement_router
+        from app.api.v1.endpoints.presale.ai_requirement import router as presale_ai_requirement_router
         api_router.include_router(presale_ai_requirement_router, tags=["presale-ai-requirement"])
         print("✓ 预售AI需求模块加载成功")
     except Exception as e:
@@ -1108,7 +1108,7 @@ def create_api_router() -> APIRouter:
 
     # ==================== 预售移动端 ====================
     try:
-        from app.api.v1.endpoints.presale_mobile import router as presale_mobile_router
+        from app.api.v1.endpoints.presale.mobile import router as presale_mobile_router
         api_router.include_router(presale_mobile_router, prefix="/presale-mobile", tags=["presale-mobile"])
         print("✓ 预售移动端模块加载成功")
     except Exception as e:

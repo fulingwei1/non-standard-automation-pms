@@ -137,7 +137,8 @@ class TestPresalesFrontendContractRoutes:
             ("POST", f"{prefix}/presale/ai/update-actual-cost"),
             ("POST", f"{prefix}/presale/ai/workflow/start"),
             ("GET", f"{prefix}/presale/ai/health-check"),
-            ("POST", f"{prefix}/presale/ai/predict-win-rate"),
+            # 2026-07-03 去重：/presale/ai/predict-win-rate（异步老栈）已下线，
+            # 赢率统一走 /presales/predict-win-rate（见 test_presales_analytics_routes_exist）
         }
 
         missing = sorted(expected_routes - routes)
@@ -171,16 +172,17 @@ class TestPresalesFrontendContractRoutes:
         routes = _route_map(client.app)
         prefix = settings.API_V1_PREFIX
 
+        # 2026-07-03 去重：老AI方案栈 generate-solution / solution/{id}（presale_ai_routes.py，
+        # 写 presale_ai_solution 表）已下线，方案统一走 /presale/proposals/solutions
         expected_routes = {
-            ("POST", f"{prefix}/presale/ai/generate-solution"),
-            ("GET", f"{prefix}/presale/ai/solution/{{solution_id}}"),
             ("GET", f"{prefix}/presale/ai/knowledge-base/search"),
             ("POST", f"{prefix}/presale/ai/search-similar-cases"),
             ("POST", f"{prefix}/presale/ai/analyze-emotion"),
             ("POST", f"{prefix}/presale/ai/recommend-follow-up"),
+            ("POST", f"{prefix}/presale/proposals/solutions"),
         }
         forbidden_routes = {
-            ("POST", f"{prefix}{prefix}/presale/ai/generate-solution"),
+            ("POST", f"{prefix}/presale/ai/generate-solution"),
             ("GET", f"{prefix}{prefix}/presale/ai/knowledge-base/search"),
             ("POST", f"{prefix}{prefix}/presale/ai/analyze-emotion"),
         }
