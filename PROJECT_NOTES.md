@@ -1209,3 +1209,43 @@
 - 前端断链修复：progress.js updateProgress/complete 接任务中心真实端点；update/delete/updateAssignee（后端从不存在、零消费方）移除。
 - 验证：任务域 sweep（progress/task/workload/milestone/gantt）100 过；实测门面读（旧契约输出+状态翻译）、门面写（新任务落 task_unified）、**旧 tasks 表冻结 131 行**；大面 sweep 的其余失败经逐类甄别为另一会话在改的销售/报价面在途状态与既有债（404/422 路由类、405、mock 路径类、schema 缺字段类——与 Task/状态面零交集）。
 - ⚠️ 运维教训：并行会话下**禁止 git stash 对照**（对方 mid-edit 会被卷进 stash、pop 冲突）——本轮已用"从 stash 精准 checkout 我的文件"恢复，改用 HEAD worktree 做对照（但 worktree 缺测试库数据时结论也不可靠，最终以失败签名与改动面的交集判断）。stash@{0} 保留未 drop（内含对方过程态快照，勿动）。
+
+## 2026-07-03 继续：SALES-22 销售记录级权限函数去重
+
+- 修复目标：`app/core/sales_permissions.py` 中 `check_sales_data_permission` 只能有一个定义，避免后置同名函数覆盖前置实现；`FINANCE_ONLY` 不应通过普通销售记录的单条访问检查。
+- 红测：
+  - `tests/unit/test_sales_scope_expansion.py::test_sales_permissions_defines_single_check_sales_data_permission` 先失败，AST 数到两个同名函数，`__all__` 中也重复导出。
+  - `tests/unit/test_sales_scope_expansion.py::TestCheckSalesDataPermission::test_finance_only_blocks` 先失败，当前覆盖版在 `owner_id == user.id` 时对 `FINANCE_ONLY` 返回 True。
+- 代码面：
+  - 删除后置重复的 `check_sales_data_permission` 定义，保留单一记录级权限入口。
+  - 清理 `__all__` 中重复的 `check_sales_data_permission`。
+  - 将合同 PDF 导出 scope 测试调整为检查 endpoint 委托与 helper 内真实权限校验，避免薄代理函数被源码字符串断言误判。
+- 验证：
+  - `.venv/bin/python -m pytest tests/unit/test_sales_scope_expansion.py::test_sales_permissions_defines_single_check_sales_data_permission tests/unit/test_sales_scope_expansion.py::TestCheckSalesDataPermission::test_finance_only_blocks -q` 先红后绿。
+  - `.venv/bin/python -m pytest tests/unit/test_sales_scope_expansion.py tests/unit/test_sales_scope_tail.py tests/integration/test_sales_scope_integration.py -q` 通过（59 个用例；integration 仍有既有 SQLAlchemy sorted_tables cycle warnings）。
+  - `.venv/bin/python -m pytest tests/unit/test_sales_permissions.py -q` 通过（既有权限重构 skip 保持原状）。
+  - `.venv/bin/python -m compileall app/core/sales_permissions.py tests/unit/test_sales_scope_expansion.py` 通过。
+
+## 2026-07-03 继续：SALES-18 报价当前版本口径统一
+
+- 修复目标：报价成本分析不能把最新创建的版本当作当前版本；必须优先使用 `Quote.current_version_id`，与报价详情、统计和下游合同链路口径一致。
+- 红测：
+  - `tests/api/test_sales_quote_costs_quantity_contracts.py::TestQuoteCostQuantityContracts::test_cost_analysis_uses_quote_current_version_not_latest_created_version` 先失败：V1 仍是 `current_version_id`，但后创建的 V2-DRAFT 被成本分析返回为 `current_version`。
+- 代码面：
+  - `app/api/v1/endpoints/sales/quote_costs.py` 新增 `_select_current_quote_version()`，优先按 `quote.current_version_id` 选择版本。
+  - 无 `current_version_id` 或指向缺失时，才显式回退到最新创建版本，保留老数据兼容。
+  - 成本分析版本趋势排序补 `id` 作为同时间戳稳定排序。
+- 验证：
+  - `.venv/bin/python -m pytest tests/api/test_sales_quote_costs_quantity_contracts.py -q` 通过（3 个用例）。
+  - `.venv/bin/python -m pytest tests/api/test_sales_quote_costs_quantity_contracts.py tests/api/test_sales_quote_cost_batch_update_contracts.py tests/api/test_sales_quote_item_contracts.py -q` 通过（9 个用例）。
+  - `.venv/bin/python -m pytest tests/api/test_sales.py::TestQuoteManagement tests/api/test_sales_contracts_api.py::TestSalesContractsAPI::test_create_contract tests/api/test_sales_contracts_api.py::TestSalesContractsAPI::test_create_contract_accepts_legacy_quote_payload_and_infers_context -q` 通过（14 个用例）。
+  - `rg -n "versions\\[-1\\]|order_by\\(QuoteVersion\\.created_at\\)" app/api/v1/endpoints/sales/quote_costs.py app/api/v1/endpoints/sales/quote_quotes_crud.py app/api/v1/endpoints/sales/quotes.py` 无命中。
+  - `.venv/bin/python -m compileall app/api/v1/endpoints/sales/quote_costs.py tests/api/test_sales_quote_costs_quantity_contracts.py` 通过。
+
+## 2026-07-03 继续：双任务表整合 P4 收官
+
+- 旧 tasks 物理表改名 **tasks_deprecated**（131 行冻结保留一个版本周期后删；task_id_map 保留作 ID 追溯）；改名经 PRAGMA legacy_alter_table 绕过既有坏视图。
+- 前置扫尾确认：测试/alembic/DB 视图触发器零引用（唯一命中为历史迁移 SQL，按惯例不动）。
+- scripts/migrate_tasks_to_unified.py 支持 P4 后优雅退化：迁移判定"生命周期结束"，--check 自动对账 tasks_deprecated（仍全绿）。
+- 验证：后端重启 0 加载失败；项目任务列表/任务中心总览/项目进度汇总实测 200；任务域回归 **100 passed / 0 failed**。
+- 至此双任务表整合 P1-P4 全部完成：单一事实源 task_unified，旧表仅剩改名后的备份躯壳。

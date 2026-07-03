@@ -28,7 +28,19 @@ REF_TABLES = {  # 表名 -> 引用列
 }
 
 
+def _legacy_table(conn) -> str | None:
+    """P4 后旧表改名 tasks_deprecated；两名都不存在则迁移生命周期已结束。"""
+    for name in ("tasks", "tasks_deprecated"):
+        if conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (name,)).fetchone():
+            return name
+    return None
+
+
 def migrate(conn: sqlite3.Connection) -> None:
+    legacy = _legacy_table(conn)
+    if legacy != "tasks":
+        print(f"P4 已下线旧表（当前={legacy or '无'}），迁移阶段结束，无需执行")
+        return
     cur = conn.cursor()
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     admin_id = cur.execute("SELECT id FROM users WHERE username='admin'").fetchone()
@@ -112,13 +124,18 @@ def migrate(conn: sqlite3.Connection) -> None:
 
 
 def check(conn: sqlite3.Connection) -> bool:
+    legacy = _legacy_table(conn)
+    if not legacy:
+        n = conn.execute("SELECT COUNT(*) FROM task_unified WHERE task_type='PROJECT'").fetchone()[0]
+        print(f"旧表已删除；task_unified(PROJECT)={n}，迁移生命周期结束 ✅")
+        return True
     ok = True
-    old_n = conn.execute("SELECT COUNT(*) FROM tasks").fetchone()[0]
+    old_n = conn.execute(f"SELECT COUNT(*) FROM {legacy}").fetchone()[0]
     new_n = conn.execute("SELECT COUNT(*) FROM task_unified WHERE task_type='PROJECT'").fetchone()[0]
-    print(f"行数对账: tasks={old_n} vs task_unified(PROJECT)={new_n}", "✅" if old_n == new_n else "❌")
+    print(f"行数对账: {legacy}={old_n} vs task_unified(PROJECT)={new_n}", "✅" if old_n == new_n else "❌")
     ok &= old_n == new_n
 
-    old_by = dict(conn.execute("SELECT project_id, COUNT(*) FROM tasks GROUP BY 1"))
+    old_by = dict(conn.execute(f"SELECT project_id, COUNT(*) FROM {legacy} GROUP BY 1"))
     new_by = dict(conn.execute(
         "SELECT project_id, COUNT(*) FROM task_unified WHERE task_type='PROJECT' GROUP BY 1"))
     diff = {k: (old_by.get(k, 0), new_by.get(k, 0))
@@ -127,7 +144,7 @@ def check(conn: sqlite3.Connection) -> bool:
     ok &= not diff
 
     old_status = {}
-    for k, v in conn.execute("SELECT status, COUNT(*) FROM tasks GROUP BY 1"):
+    for k, v in conn.execute(f"SELECT status, COUNT(*) FROM {legacy} GROUP BY 1"):
         m = STATUS_MAP.get(k, "PENDING")
         old_status[m] = old_status.get(m, 0) + v
     new_status = dict(conn.execute(
