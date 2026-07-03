@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Input } from '../input';
+import { Input, Textarea } from '../input';
 import { Search } from 'lucide-react';
 
 describe('Input', () => {
@@ -120,6 +120,31 @@ describe('Input', () => {
   });
 
   describe('User Interactions', () => {
+    it('keeps fields uncontrolled when value is not provided', () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      render(
+        <>
+          <Input placeholder="自由输入" />
+          <Textarea placeholder="自由文本" />
+        </>
+      );
+
+      const input = screen.getByPlaceholderText('自由输入');
+      const textarea = screen.getByPlaceholderText('自由文本');
+
+      fireEvent.change(input, { target: { value: 'abc' } });
+      fireEvent.change(textarea, { target: { value: 'def' } });
+
+      expect(input.value).toBe('abc');
+      expect(textarea.value).toBe('def');
+      expect(errorSpy.mock.calls.flat().join('\n')).not.toContain(
+        'You provided a `value` prop to a form field without an `onChange` handler'
+      );
+
+      errorSpy.mockRestore();
+    });
+
     it('calls onChange when value changes', () => {
       const handleChange = vi.fn();
       render(<Input onChange={handleChange} />);

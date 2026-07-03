@@ -29,6 +29,16 @@ import { statusConfig } from "./constants";
 import MaterialRow from "./MaterialRow";
 import CreateMaterialDialog from "./CreateMaterialDialog";
 
+const PURCHASE_ORDER_ITEM_LOOKUP_LIMIT = 8;
+
+const toFiniteNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
+const getReceivedQuantity = (item) =>
+  toFiniteNumber(item.received_quantity ?? item.received_qty);
+
 export default function MaterialTracking() {
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,11 +60,11 @@ export default function MaterialTracking() {
     }
 
     const totalQty = (relatedItems || []).reduce(
-      (sum, item) => sum + (item.quantity || 0),
+      (sum, item) => sum + toFiniteNumber(item.quantity),
       0
     );
     const receivedQty = (relatedItems || []).reduce(
-      (sum, item) => sum + (item.received_quantity || 0),
+      (sum, item) => sum + getReceivedQuantity(item),
       0
     );
 
@@ -86,20 +96,26 @@ export default function MaterialTracking() {
       // Load purchase order items to get arrival status
       const purchaseResponse = await purchaseApi.orders.list({
         page: 1,
-        page_size: 100
+        page_size: PURCHASE_ORDER_ITEM_LOOKUP_LIMIT
       });
       const purchaseOrders =
       purchaseResponse.data?.items || purchaseResponse.data?.items || purchaseResponse.data || [];
 
-      // Get all purchase order items
+      // Get a bounded set of recent purchase order items. Loading every order
+      // detail on page open can trip API rate limits in live smoke runs.
       const allPurchaseItems = [];
-      for (const order of purchaseOrders) {
+      for (const order of (purchaseOrders || []).slice(0, PURCHASE_ORDER_ITEM_LOOKUP_LIMIT)) {
         try {
           const itemsResponse = await purchaseApi.orders.getItems(order.id);
           const items = itemsResponse.data?.items || itemsResponse.data || [];
-          allPurchaseItems.push(...items);
-        } catch (err) {
-          console.error(`Failed to load items for order ${order.id}:`, err);
+          allPurchaseItems.push(
+            ...(items || []).map((item) => ({
+              ...item,
+              order_no: item.order_no || order.order_no || ""
+            }))
+          );
+        } catch (_err) {
+          // Arrival status is advisory; keep the page usable if one detail call fails.
         }
       }
 
@@ -111,14 +127,14 @@ export default function MaterialTracking() {
         );
 
         const totalQuantity = (relatedItems || []).reduce(
-          (sum, item) => sum + (item.quantity || 0),
+          (sum, item) => sum + toFiniteNumber(item.quantity),
           0
         );
         const arrivedQuantity = (relatedItems || []).reduce(
-          (sum, item) => sum + (item.received_quantity || 0),
+          (sum, item) => sum + getReceivedQuantity(item),
           0
         );
-        const unitPrice = material.last_price || material.standard_price || 0;
+        const unitPrice = toFiniteNumber(material.last_price || material.standard_price);
 
         return {
           id: material.id?.toString(),
@@ -197,13 +213,22 @@ export default function MaterialTracking() {
   }, [materials, searchText, filterStatus]);
 
   const stats = useMemo(() => {
+    const total = materials?.length || 0;
+    const fullArrived = (materials || []).filter((m) => m.status === "fully-arrived").length;
+    const notArrived = (materials || []).filter((m) => m.status === "not-arrived").length;
+    const totalValue = (materials || []).reduce((sum, m) => sum + toFiniteNumber(m.totalValue), 0);
+    const arrivedValue = (materials || []).reduce((sum, m) => sum + toFiniteNumber(m.arrivedValue), 0);
+    const usedValue = (materials || []).reduce((sum, m) => sum + toFiniteNumber(m.usedValue), 0);
+
     return {
-      total: materials?.length,
-      fullArrived: (materials || []).filter((m) => m.status === "fully-arrived").length,
-      notArrived: (materials || []).filter((m) => m.status === "not-arrived").length,
-      totalValue: (materials || []).reduce((sum, m) => sum + m.totalValue, 0),
-      arrivedValue: (materials || []).reduce((sum, m) => sum + m.arrivedValue, 0),
-      usedValue: (materials || []).reduce((sum, m) => sum + m.usedValue, 0)
+      total,
+      fullArrived,
+      notArrived,
+      totalValue,
+      arrivedValue,
+      usedValue,
+      fullArrivedRate: total > 0 ? fullArrived / total * 100 : 0,
+      arrivedValueRate: totalValue > 0 ? arrivedValue / totalValue * 100 : 0
     };
   }, [materials]);
 
@@ -280,7 +305,7 @@ export default function MaterialTracking() {
                 {stats.fullArrived}
               </p>
               <p className="text-xs text-slate-500 mt-1">
-                {(stats.fullArrived / stats.total * 100).toFixed(0)}%
+                {stats.fullArrivedRate.toFixed(0)}%
               </p>
             </CardContent>
           </Card>
@@ -316,7 +341,7 @@ export default function MaterialTracking() {
                 {formatCurrency(stats.arrivedValue)}
               </p>
               <p className="text-xs text-slate-500 mt-1">
-                {(stats.arrivedValue / stats.totalValue * 100).toFixed(1)}%
+                {stats.arrivedValueRate.toFixed(1)}%
               </p>
             </CardContent>
           </Card>
@@ -331,7 +356,7 @@ export default function MaterialTracking() {
               <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
               <Input
                 placeholder="搜索物料名、物料码、供应商..."
-                value={searchText || "unknown"}
+                value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 className="pl-10" />
 

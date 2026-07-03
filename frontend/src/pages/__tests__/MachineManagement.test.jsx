@@ -43,16 +43,6 @@ vi.mock('react-router-dom', async (importOriginal) => {
 });
 
 describe('MachineManagement', () => {
-  // 包装组件以提供路由参数 (带 projectId)
-  const renderWithRouter = (ui, projectId = '1') =>
-    render(
-      <MemoryRouter initialEntries={[`/projects/${projectId}/machines`]}>
-        <Routes>
-          <Route path="/projects/:id/machines" element={ui} />
-        </Routes>
-      </MemoryRouter>
-    );
-
   const mockMachines = {
     items: [
       {

@@ -99,7 +99,7 @@ export default function AlertCenter() {
         {
           label: "新建规则",
           icon: Settings,
-          onClick: () => navigate('/alerts/rules/create'),
+          onClick: () => navigate('/alert-rules'),
           variant: "default"
         }]
         } />

@@ -24,6 +24,8 @@ export default function WorkOrderFilters({
   setFilterPriority,
   projects,
 }) {
+  const clearable = (setter) => (value) => setter(value === "all" ? "" : value);
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -32,12 +34,12 @@ export default function WorkOrderFilters({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
             <Input
               placeholder="搜索工单号、任务名称..."
-              value={searchKeyword || "unknown"}
+              value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               className="pl-10"
             />
           </div>
-          <Select value={filterProject || "unknown"} onValueChange={setFilterProject}>
+          <Select value={filterProject || "all"} onValueChange={clearable(setFilterProject)}>
             <SelectTrigger>
               <SelectValue placeholder="选择项目" />
             </SelectTrigger>
@@ -50,7 +52,7 @@ export default function WorkOrderFilters({
               ))}
             </SelectContent>
           </Select>
-          <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+          <Select value={filterStatus || "all"} onValueChange={clearable(setFilterStatus)}>
             <SelectTrigger>
               <SelectValue placeholder="选择状态" />
             </SelectTrigger>
@@ -63,7 +65,7 @@ export default function WorkOrderFilters({
               ))}
             </SelectContent>
           </Select>
-          <Select value={filterPriority || "unknown"} onValueChange={setFilterPriority}>
+          <Select value={filterPriority || "all"} onValueChange={clearable(setFilterPriority)}>
             <SelectTrigger>
               <SelectValue placeholder="选择优先级" />
             </SelectTrigger>

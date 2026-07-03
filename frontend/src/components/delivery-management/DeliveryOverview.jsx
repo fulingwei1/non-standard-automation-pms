@@ -111,7 +111,7 @@ const DeliveryOverview = ({ data, _loading, statistics }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={PackageCheck}
-          title="总发货单"
+          title="总发货计划"
           value={total || 0}
           iconBgClass="bg-blue-500/20"
           _textClass="text-blue-400"
@@ -133,7 +133,7 @@ const DeliveryOverview = ({ data, _loading, statistics }) => {
         <StatCard
           icon={PackageCheck}
           title="已送达"
-          value={deliveredCount || "unknown"}
+          value={deliveredCount}
           iconBgClass="bg-slate-500/20"
           _textClass="text-slate-400"
         />
@@ -197,7 +197,7 @@ const DeliveryOverview = ({ data, _loading, statistics }) => {
         <Card className="bg-surface-100/50">
           <CardContent className="p-4 space-y-3">
             <h3 className="text-sm font-medium text-slate-400">完成率</h3>
-            <Progress value={completionRate || "unknown"} className="h-2" />
+            <Progress value={completionRate} className="h-2" />
             <p className="text-xs text-slate-500">
               已送达 {deliveredCount} / {total}（取消 {cancelledCount}）
             </p>
@@ -248,7 +248,7 @@ const DeliveryOverview = ({ data, _loading, statistics }) => {
             <EmptyState
               icon={BarChart3}
               title="暂无发货金额数据"
-              message="有发货日期与金额的发货单将在此按月份汇总展示"
+              message="有计划发货日期与金额的发货计划将在此按月份汇总展示"
             />
           ) : (
             <MonthlyTrendChart

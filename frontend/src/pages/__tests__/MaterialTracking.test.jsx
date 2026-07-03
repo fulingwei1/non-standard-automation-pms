@@ -166,7 +166,7 @@ describe('MaterialTracking', () => {
         keyword: undefined,
         is_active: true,
       });
-      expect(purchaseApiMock.orders.list).toHaveBeenCalledWith({ page: 1, page_size: 100 });
+      expect(purchaseApiMock.orders.list).toHaveBeenCalledWith({ page: 1, page_size: 8 });
       expect(purchaseApiMock.orders.getItems).toHaveBeenCalledWith(11);
       expect(purchaseApiMock.orders.getItems).toHaveBeenCalledWith(12);
       expect(materialApiMock.categories.list).toHaveBeenCalled();
@@ -203,6 +203,26 @@ describe('MaterialTracking', () => {
         is_active: true,
       });
     });
+  });
+
+  it('只探测最近少量采购单明细，避免页面加载时触发接口限流', async () => {
+    const orders = Array.from({ length: 12 }, (_, index) => ({
+      id: index + 1,
+      order_no: `PO-${index + 1}`,
+    }));
+    purchaseApiMock.orders.list.mockResolvedValueOnce({
+      data: { items: orders },
+    });
+    purchaseApiMock.orders.getItems.mockResolvedValue({
+      data: { items: [] },
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(purchaseApiMock.orders.getItems).toHaveBeenCalledTimes(8);
+    });
+    expect(purchaseApiMock.orders.getItems).not.toHaveBeenCalledWith(9);
   });
 
   it('状态按钮会切换前端过滤结果', async () => {

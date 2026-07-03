@@ -7,7 +7,7 @@
  * - 成本预警
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Card,
@@ -32,7 +32,6 @@ export default function ECNCostImpact() {
   const [costImpact, setCostImpact] = useState(null);
   const [costTracking, setCostTracking] = useState(null);
   const [costRecords, setCostRecords] = useState([]);
-  const [alerts, setAlerts] = useState([]);
 
   // 加载成本影响分析
   useEffect(() => {
@@ -66,16 +65,6 @@ export default function ECNCostImpact() {
       setCostRecords(response.data);
     } catch (error) {
       console.error('加载成本记录失败:', error);
-    }
-  };
-
-  const handleAddCostRecord = async (recordData) => {
-    try {
-      await ecnApi.createCostRecord(ecnId, recordData);
-      loadCostRecords();
-      loadCostTracking();
-    } catch (error) {
-      console.error('添加成本记录失败:', error);
     }
   };
 

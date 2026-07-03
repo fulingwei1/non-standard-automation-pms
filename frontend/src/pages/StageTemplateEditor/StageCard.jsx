@@ -66,7 +66,6 @@ function NodeRow({ stage, node, onEdit, onDelete }) {
 
 export default function StageCard({
   stage,
-  stageIndex,
   isExpanded,
   onToggleExpanded,
   onAddNode,

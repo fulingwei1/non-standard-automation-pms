@@ -12,13 +12,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('Engineering API', () => {
-  let api, mock;
+  let mock;
   let projectReviewApi, technicalReviewApi, technicalAssessmentApi;
   let rdProjectApi, rdReportApi, engineersApi;
 
   beforeEach(async () => {
     const setup = await setupApiTest();
-    api = setup.api;
     mock = setup.mock;
 
     const engineeringModule = await import('../engineering.js');
@@ -37,7 +36,7 @@ describe('Engineering API', () => {
 
   describe('projectReviewApi - 项目复盘API', () => {
     it('list() - 应该获取复盘报告列表', async () => {
-      mock.onGet('/api/v1/project-reviews').reply(200, {
+      mock.onGet('/api/v1/project-reviews/').reply(200, {
         success: true,
         data: [{ id: 1, title: 'Review 1' }],
       });
@@ -71,7 +70,7 @@ describe('Engineering API', () => {
     });
 
     it('getLessons() - 应该获取经验教训', async () => {
-      mock.onGet('/api/v1/project-reviews').reply(200, {
+      mock.onGet('/api/v1/project-reviews/lessons').reply(200, {
         success: true,
         data: [{ id: 1, content: 'Lesson learned' }],
       });
@@ -383,7 +382,7 @@ describe('Engineering API', () => {
 
     it('create() - 应该创建研发项目', async () => {
       const project = { name: 'New R&D Project', category_id: 1 };
-      mock.onPost('/api/v1/rd-projects').reply(201, {
+      mock.onPost('/api/v1/rd-projects/').reply(201, {
         success: true,
         data: { id: 1, ...project },
       });
@@ -535,7 +534,7 @@ describe('Engineering API', () => {
     });
 
     it('应该处理验证错误', async () => {
-      mock.onPost('/api/v1/rd-projects').reply(422, {
+      mock.onPost('/api/v1/rd-projects/').reply(422, {
         success: false,
         message: 'Validation failed',
         errors: { name: ['Name is required'] },

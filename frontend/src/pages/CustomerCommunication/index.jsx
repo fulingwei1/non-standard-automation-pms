@@ -20,9 +20,6 @@ import { customerCommunicationApi, customerApi, userApi } from "../../services/a
 import { toast } from "../../components/ui/toast";
 import {
   CustomerCommunicationOverview,
-  COMMUNICATION_TYPE,
-  COMMUNICATION_TOPIC,
-  COMMUNICATION_PRIORITY,
   COMMUNICATION_STATUS,
   validateCommunicationData } from
 "../../components/customer-communication";
@@ -85,7 +82,7 @@ export default function CustomerCommunication() {
       const [commRes, customerRes, userRes] = await Promise.all([
       customerCommunicationApi.list(params),
       customerApi.list({ page_size: 1000 }),
-      userApi.list({ page_size: 1000 })]
+      userApi.options({ page_size: 1000, is_active: true })]
       );
 
       const commData = commRes.data?.items || commRes.data?.items || commRes.data || [];

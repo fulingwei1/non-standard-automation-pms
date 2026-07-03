@@ -4,6 +4,7 @@ import { Label } from "../../components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -29,6 +30,9 @@ export default function CreateSupplierDialog({
       <DialogContent className="sm:max-w-[600px] bg-slate-900 border-slate-700">
         <DialogHeader>
           <DialogTitle className="text-slate-200">新增供应商</DialogTitle>
+          <DialogDescription>
+            新增供应商档案后可用于采购申请、采购订单和收货业务。
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">

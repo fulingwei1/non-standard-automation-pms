@@ -103,4 +103,16 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText('自定义错误：unknown')).toBeInTheDocument();
     expect(screen.queryByText('页面出了点问题')).not.toBeInTheDocument();
   });
+
+  it('renders custom fallback element instead of calling it as a function', () => {
+    render(
+      <ErrorBoundary fallback={<div data-testid="custom-fallback-node">组件错误</div>}>
+        <ThrowError message="widget boom" />
+      </ErrorBoundary>
+    );
+
+    expect(screen.getByTestId('custom-fallback-node')).toBeInTheDocument();
+    expect(screen.getByText('组件错误')).toBeInTheDocument();
+    expect(screen.queryByText('页面出了点问题')).not.toBeInTheDocument();
+  });
 });

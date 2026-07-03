@@ -43,7 +43,7 @@ export function ServiceTicketBatchActions({
       try {
         setLoadingUsers(true);
         const res = await fetch(
-          '/api/v1/users/?is_active=true&page=1&page_size=100',
+          '/api/v1/users/options?is_active=true&page=1&page_size=100',
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -58,8 +58,8 @@ export function ServiceTicketBatchActions({
         setUsers(
           userList.map((u) => ({
             id: u.id,
-            name: u.real_name || u.username,
-            role: u.position || u.roles?.[0] || '工程师',
+            name: u.name || u.real_name || u.username,
+            role: u.position || '工程师',
           }))
         );
       } catch (err) {

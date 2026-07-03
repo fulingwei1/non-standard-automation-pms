@@ -22,7 +22,6 @@ import {
   Edit2,
   Trash2,
   Plus,
-  UserPlus,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import { staggerContainer } from "../lib/animations";
@@ -52,6 +51,10 @@ import {
 } from "../components/ui";
 import { teamGenerationApi } from "../services/api";
 
+function unwrapResponse(response) {
+  return response?.formatted ?? response?.data?.data ?? response?.data ?? response;
+}
+
 export default function TeamGeneration() {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -66,7 +69,7 @@ export default function TeamGeneration() {
     setLoading(true);
     try {
       const res = await teamGenerationApi.generateTeam(projectId);
-      const data = res.data || res;
+      const data = unwrapResponse(res);
       
       setTeamPlan(data);
       setMembers(
@@ -117,7 +120,8 @@ export default function TeamGeneration() {
         role_assignments: roleAssignments,
       });
       
-      await teamGenerationApi.submitTeamPlan(saved.plan_id);
+      const savedPlan = unwrapResponse(saved);
+      await teamGenerationApi.submitTeamPlan(savedPlan.plan_id || savedPlan.id);
       alert("方案已提交审批");
       navigate("/team-plans");
     } catch (error) {

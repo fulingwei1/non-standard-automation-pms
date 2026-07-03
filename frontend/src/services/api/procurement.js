@@ -8,6 +8,32 @@ export const purchaseApi = {
   get: (id) => api.get(`/purchase-orders/${id}`),
   create: (data) => api.post("/purchase-orders/", data),
   update: (id, data) => api.put(`/purchase-orders/${id}`, data),
+  delete: (id) => api.delete(`/purchase-orders/${id}`),
+  submitApproval: (id) => api.put(`/purchase-orders/${id}/submit`),
+  approve: (id, data) => api.put(`/purchase-orders/${id}/approve`, null, { params: data }),
+  receiveGoods: async (orderId, data = {}) => {
+    const itemsResponse = await api.get(`/purchase-orders/${orderId}/items`);
+    const items = itemsResponse.data?.data || itemsResponse.data?.items || itemsResponse.data || [];
+    const receivableItems = (items || [])
+      .map((item) => {
+        const quantity = Number(item.quantity || 0);
+        const receivedQty = Number(item.received_qty || 0);
+        const remainingQty = Math.max(quantity - receivedQty, 0);
+        return {
+          order_item_id: item.id,
+          delivery_qty: remainingQty,
+          received_qty: remainingQty,
+        };
+      })
+      .filter((item) => item.delivery_qty > 0);
+    return api.post("/purchase-orders/goods-receipts/", {
+      order_id: orderId,
+      receipt_date: data.received_date || new Date().toISOString().slice(0, 10),
+      receipt_type: "NORMAL",
+      remark: data.notes || null,
+      items: receivableItems,
+    });
+  },
 
   orders: {
     list: (params) => api.get("/purchase-orders/", { params }),
@@ -15,7 +41,8 @@ export const purchaseApi = {
     create: (data) => api.post("/purchase-orders/", data),
     update: (id, data) => api.put(`/purchase-orders/${id}`, data),
     submit: (id) => api.put(`/purchase-orders/${id}/submit`),
-    approve: (id, data) => api.put(`/purchase-orders/${id}/approve`, data),
+    approve: (id, data) => api.put(`/purchase-orders/${id}/approve`, null, { params: data }),
+    delete: (id) => api.delete(`/purchase-orders/${id}`),
     getItems: (id) => api.get(`/purchase-orders/${id}/items`),
     createFromBOM: (params) =>
       api.post("/purchase-orders/from-bom", null, { params }),
@@ -28,7 +55,7 @@ export const purchaseApi = {
     update: (id, data) => api.put(`/purchase-orders/requests/${id}`, data),
     submit: (id) => api.put(`/purchase-orders/requests/${id}/submit`),
     approve: (id, data) =>
-      api.put(`/purchase-orders/requests/${id}/approve`, { params: data }),
+      api.put(`/purchase-orders/requests/${id}/approve`, null, { params: data }),
     generateOrders: (id, params) =>
       api.post(`/purchase-orders/requests/${id}/generate-orders`, null, {
         params,

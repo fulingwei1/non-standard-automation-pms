@@ -57,6 +57,17 @@ const getLevelText = (level) => {
   return texts[level] || level;
 };
 
+const toFiniteNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
+const formatShare = (value, total) => {
+  const denominator = toFiniteNumber(total);
+  if (denominator <= 0) {return "0.0";}
+  return (toFiniteNumber(value) / denominator * 100).toFixed(1);
+};
+
 export default function PerformanceManagement() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -68,6 +79,12 @@ export default function PerformanceManagement() {
   const [pendingTasks, setPendingTasks] = useState([]);
   const [recentResults, setRecentResults] = useState([]);
   const [departmentPerformance, setDepartmentPerformance] = useState([]);
+
+  const periodProgress = toFiniteNumber(currentPeriod.progress);
+  const daysRemaining = toFiniteNumber(currentPeriod.days_remaining);
+  const evaluatedCount = toFiniteNumber(stats.evaluated);
+  const totalEmployees = toFiniteNumber(stats.total_employees);
+  const completionRate = toFiniteNumber(stats.completion_rate);
 
   // Fetch data from API
   useEffect(() => {
@@ -190,7 +207,7 @@ export default function PerformanceManagement() {
                     <Calendar className="h-6 w-6 text-violet-400" />
                     <div>
                       <h3 className="text-xl font-bold text-white">
-                        {currentPeriod.period_name}
+                        {currentPeriod.period_name || "当前考核周期"}
                       </h3>
                       <p className="text-sm text-slate-400">
                         {formatDate(currentPeriod.start_date)} 至{" "}
@@ -202,17 +219,17 @@ export default function PerformanceManagement() {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-400">考核进度</span>
                       <span className="text-white font-medium">
-                        {currentPeriod.progress}%
+                        {periodProgress}%
                       </span>
                     </div>
                     <Progress
-                    value={currentPeriod.progress}
+                    value={periodProgress}
                     className="h-2 bg-slate-700/50" />
 
                     <div className="flex items-center justify-between text-xs text-slate-500">
-                      <span>剩余 {currentPeriod.days_remaining} 天</span>
+                      <span>剩余 {daysRemaining} 天</span>
                       <span>
-                        已评价: {stats.evaluated} / {stats.total_employees}
+                        已评价: {evaluatedCount} / {totalEmployees}
                       </span>
                     </div>
                   </div>
@@ -235,7 +252,7 @@ export default function PerformanceManagement() {
 
         <StatCard
           title="平均分数"
-          value={stats.avg_score}
+          value={toFiniteNumber(stats.avg_score)}
           subtitle="全员平均绩效分数"
           icon={BarChart3}
           color="text-cyan-400"
@@ -247,8 +264,8 @@ export default function PerformanceManagement() {
 
         <StatCard
           title="优秀人数"
-          value={stats.excellent}
-          subtitle={`占比 ${(stats.excellent / stats.total_employees * 100).toFixed(1)}%`}
+          value={toFiniteNumber(stats.excellent)}
+          subtitle={`占比 ${formatShare(stats.excellent, stats.total_employees)}%`}
           icon={Award}
           color="text-emerald-400"
           bg="bg-emerald-500/20"
@@ -259,8 +276,8 @@ export default function PerformanceManagement() {
 
         <StatCard
           title="良好人数"
-          value={stats.good}
-          subtitle={`占比 ${(stats.good / stats.total_employees * 100).toFixed(1)}%`}
+          value={toFiniteNumber(stats.good)}
+          subtitle={`占比 ${formatShare(stats.good, stats.total_employees)}%`}
           icon={CheckCircle2}
           color="text-blue-400"
           bg="bg-blue-500/20"
@@ -269,8 +286,8 @@ export default function PerformanceManagement() {
 
         <StatCard
           title="完成率"
-          value={`${stats.completion_rate}%`}
-          subtitle={`${stats.evaluated} / ${stats.total_employees} 人已评价`}
+          value={`${completionRate}%`}
+          subtitle={`${evaluatedCount} / ${totalEmployees} 人已评价`}
           icon={Target}
           color="text-purple-400"
           bg="bg-purple-500/20"

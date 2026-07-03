@@ -60,6 +60,17 @@ const getValidationBadge = (status) => {
   return badges[status] || badges.PENDING;
 };
 
+const unwrapApiData = (response) =>
+  response?.formatted ?? response?.data?.data ?? response?.data ?? response;
+
+const asList = (payload) => {
+  if (Array.isArray(payload)) {return payload;}
+  if (Array.isArray(payload?.items)) {return payload.items;}
+  if (Array.isArray(payload?.data?.items)) {return payload.data.items;}
+  if (Array.isArray(payload?.data)) {return payload.data;}
+  return [];
+};
+
 export default function BestPracticeRecommendations() {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -94,7 +105,7 @@ export default function BestPracticeRecommendations() {
   const fetchProject = async () => {
     try {
       const res = await projectApi.get(projectId);
-      const data = res.data || res;
+      const data = unwrapApiData(res);
       setProject(data);
       setProjectType(data.project_type || "");
       setCurrentStage(data.stage || "");
@@ -111,8 +122,8 @@ export default function BestPracticeRecommendations() {
         projectId,
         20,
       );
-      const data = res.data || res;
-      setRecommendations(data.recommendations || []);
+      const data = unwrapApiData(res);
+      setRecommendations(data.recommendations || asList(data));
     } catch (err) {
       console.error("Failed to fetch recommendations:", err);
       setRecommendations([]);
@@ -130,8 +141,8 @@ export default function BestPracticeRecommendations() {
         category: category || undefined,
         limit: 20,
       });
-      const data = res.data || res;
-      setRecommendations(data.recommendations || []);
+      const data = unwrapApiData(res);
+      setRecommendations(data.recommendations || asList(data));
     } catch (err) {
       console.error("Failed to fetch recommendations:", err);
       setRecommendations([]);
@@ -146,8 +157,8 @@ export default function BestPracticeRecommendations() {
         page: 1,
         page_size: 10,
       });
-      const data = res.data || res;
-      setPopularPractices(data.items || data || []);
+      const data = unwrapApiData(res);
+      setPopularPractices(asList(data));
     } catch (err) {
       console.error("Failed to fetch popular practices:", err);
       setPopularPractices([]);
@@ -198,7 +209,7 @@ export default function BestPracticeRecommendations() {
       />
 
       <Tabs
-        value={activeTab || "unknown"}
+        value={activeTab || "recommend"}
         onValueChange={setActiveTab}
         className="space-y-6"
       >
@@ -219,7 +230,7 @@ export default function BestPracticeRecommendations() {
                     </label>
                     <Input
                       placeholder="输入项目类型..."
-                      value={projectType || "unknown"}
+                      value={projectType || ""}
                       onChange={(e) => setProjectType(e.target.value)}
                     />
                   </div>
@@ -228,7 +239,7 @@ export default function BestPracticeRecommendations() {
                       当前阶段
                     </label>
                     <select
-                      value={currentStage || "unknown"}
+                      value={currentStage || ""}
                       onChange={(e) => setCurrentStage(e.target.value)}
                       className="h-10 w-full rounded-md border border-border bg-surface-1 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-ring"
                     >
@@ -250,7 +261,7 @@ export default function BestPracticeRecommendations() {
                     </label>
                     <Input
                       placeholder="输入分类..."
-                      value={category || "unknown"}
+                      value={category || ""}
                       onChange={(e) => setCategory(e.target.value)}
                     />
                   </div>

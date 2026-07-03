@@ -1,4 +1,3 @@
-import React from "react";
 import { GitBranch, AlertTriangle, Link2, AlertOctagon } from "lucide-react";
 import { Card, CardContent } from "../../components/ui/card";
 

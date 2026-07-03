@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -31,6 +32,9 @@ export default function CreatePlanDialog({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>新建生产计划</DialogTitle>
+          <DialogDescription>
+            录入生产计划名称、范围和计划日期。
+          </DialogDescription>
         </DialogHeader>
         <DialogBody>
           <div className="space-y-4">

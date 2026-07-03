@@ -2,7 +2,7 @@
  * Acceptance Management — create new acceptance record dialog
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Button,
@@ -20,13 +20,23 @@ import {
   DialogDescription,
   toast,
 } from "../../components/ui";
+import { acceptanceApi } from "../../services/api/acceptance";
+import { projectApi } from "../../services/api/projects";
+
+const unwrapItems = (response) => {
+  const data = response?.data?.data ?? response?.data ?? response;
+  if (Array.isArray(data)) return data;
+  return data?.items || [];
+};
 
 // ── Inner form ───────────────────────────────────────────────────────────────
 
 const CreateForm = ({ projects, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     project_id: "",
+    machine_id: "",
     acceptance_type: "FAT",
+    template_id: "",
     title: "",
     scheduled_date: "",
     location: "",
@@ -34,23 +44,91 @@ const CreateForm = ({ projects, onSubmit, onCancel }) => {
     our_representative: "",
     notes: "",
   });
+  const [machines, setMachines] = useState([]);
+  const [templates, setTemplates] = useState([]);
+  const [loadingMachines, setLoadingMachines] = useState(false);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const set = (key, value) => setFormData((prev) => ({ ...prev, [key]: value }));
+  const machineRequired = formData.acceptance_type !== "FINAL";
+
+  useEffect(() => {
+    setFormData((prev) => ({ ...prev, machine_id: "" }));
+    setMachines([]);
+
+    if (!formData.project_id || !machineRequired) {
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingMachines(true);
+    projectApi
+      .getMachines(formData.project_id)
+      .then((response) => {
+        if (!cancelled) setMachines(unwrapItems(response));
+      })
+      .catch(() => {
+        if (!cancelled) setMachines([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingMachines(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [formData.project_id, machineRequired]);
+
+  useEffect(() => {
+    setFormData((prev) => ({ ...prev, template_id: "" }));
+    setTemplates([]);
+
+    let cancelled = false;
+    setLoadingTemplates(true);
+    acceptanceApi.templates
+      .list({ acceptance_type: formData.acceptance_type, page_size: 200 })
+      .then((response) => {
+        if (!cancelled) setTemplates(unwrapItems(response));
+      })
+      .catch(() => {
+        if (!cancelled) setTemplates([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingTemplates(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [formData.acceptance_type]);
 
   const handleSubmit = async () => {
     if (!formData.project_id) {
-      toast({ title: "警告", description: "请选择项目", variant: "destructive" });
+      toast.warning("请选择项目");
+      return;
+    }
+    if (machineRequired && !formData.machine_id) {
+      toast.warning("请选择关联设备");
+      return;
+    }
+    if (!formData.template_id) {
+      toast.warning("请选择检查模板");
       return;
     }
     if (!formData.title) {
-      toast({ title: "警告", description: "请填写验收标题", variant: "destructive" });
+      toast.warning("请填写验收标题");
       return;
     }
 
     setSubmitting(true);
-    await onSubmit(formData);
-    setSubmitting(false);
+    try {
+      await onSubmit(formData);
+    } catch (_err) {
+      toast.error("创建失败");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -60,7 +138,7 @@ const CreateForm = ({ projects, onSubmit, onCancel }) => {
         <div className="space-y-2">
           <label className="text-sm text-slate-400">选择项目 *</label>
           <Select value={formData.project_id} onValueChange={(v) => set("project_id", v)}>
-            <SelectTrigger className="bg-surface-100 border-white/10">
+            <SelectTrigger aria-label="选择项目" className="bg-surface-100 border-white/10">
               <SelectValue placeholder="选择项目" />
             </SelectTrigger>
             <SelectContent>
@@ -77,20 +155,87 @@ const CreateForm = ({ projects, onSubmit, onCancel }) => {
         <div className="space-y-2">
           <label className="text-sm text-slate-400">验收类型 *</label>
           <Select value={formData.acceptance_type} onValueChange={(v) => set("acceptance_type", v)}>
-            <SelectTrigger className="bg-surface-100 border-white/10">
+            <SelectTrigger aria-label="验收类型" className="bg-surface-100 border-white/10">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="FAT">FAT - 工厂验收测试</SelectItem>
               <SelectItem value="SAT">SAT - 现场验收测试</SelectItem>
+              <SelectItem value="FINAL">终验收</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* 设备选择 */}
+        {machineRequired && (
+          <div className="space-y-2">
+            <label className="text-sm text-slate-400">关联设备 *</label>
+            <Select
+              value={formData.machine_id}
+              onValueChange={(v) => set("machine_id", v)}
+              disabled={!formData.project_id || loadingMachines || machines.length === 0}
+            >
+              <SelectTrigger aria-label="关联设备" className="bg-surface-100 border-white/10">
+                <SelectValue
+                  placeholder={
+                    !formData.project_id
+                      ? "先选择项目"
+                      : loadingMachines
+                        ? "加载设备..."
+                        : machines.length === 0
+                          ? "暂无设备"
+                          : "选择设备"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {machines.map((machine) => (
+                  <SelectItem key={machine.id} value={String(machine.id)}>
+                    {machine.machine_name || machine.name || machine.machine_code || `设备${machine.id}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* 检查模板 */}
+        <div className="space-y-2">
+          <label className="text-sm text-slate-400">检查模板 *</label>
+          <Select
+            value={formData.template_id}
+            onValueChange={(v) => set("template_id", v)}
+            disabled={loadingTemplates || templates.length === 0}
+          >
+            <SelectTrigger aria-label="检查模板" className="bg-surface-100 border-white/10">
+              <SelectValue
+                placeholder={
+                  loadingTemplates
+                    ? "加载模板..."
+                    : templates.length === 0
+                      ? "暂无模板"
+                      : "选择模板"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {templates.map((template) => (
+                <SelectItem key={template.id} value={String(template.id)}>
+                  {template.template_name || template.name || template.template_code}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
         {/* 验收标题 */}
         <div className="col-span-2 space-y-2">
-          <label className="text-sm text-slate-400">验收标题 *</label>
+          <label className="text-sm text-slate-400" htmlFor="acceptance-title">
+            验收标题 *
+          </label>
           <Input
+            id="acceptance-title"
+            aria-label="验收标题"
             value={formData.title}
             onChange={(e) => set("title", e.target.value)}
             placeholder="例如：XX 项目 FAT 验收"
@@ -100,8 +245,12 @@ const CreateForm = ({ projects, onSubmit, onCancel }) => {
 
         {/* 计划日期 */}
         <div className="space-y-2">
-          <label className="text-sm text-slate-400">计划日期</label>
+          <label className="text-sm text-slate-400" htmlFor="acceptance-scheduled-date">
+            计划日期
+          </label>
           <Input
+            id="acceptance-scheduled-date"
+            aria-label="计划日期"
             type="date"
             value={formData.scheduled_date}
             onChange={(e) => set("scheduled_date", e.target.value)}

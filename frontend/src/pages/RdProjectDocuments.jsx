@@ -20,6 +20,7 @@ import {
   Input,
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -277,7 +278,10 @@ export default function RdProjectDocuments() {
       <Card className="mb-6">
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
-            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+            <Select
+              value={filterType || "all"}
+              onValueChange={(value) => setFilterType(value === "all" ? "" : value)}
+            >
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="文档类型" />
               </SelectTrigger>
@@ -414,6 +418,7 @@ export default function RdProjectDocuments() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>上传文档</DialogTitle>
+            <DialogDescription>上传研发项目的需求、设计、测试或报告类过程文档。</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <DialogBody className="space-y-4">

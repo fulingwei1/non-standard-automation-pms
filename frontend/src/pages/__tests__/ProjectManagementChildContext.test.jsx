@@ -190,6 +190,26 @@ describe("Project management child pages context handoff", () => {
     });
   });
 
+  it("does not hydrate milestones for large schedule overviews", async () => {
+    projectApi.list.mockResolvedValueOnce({
+      data: {
+        items: Array.from({ length: 13 }, (_, index) => ({
+          ...mockProject,
+          id: index + 1,
+          project_code: `PRJ-${index + 1}`,
+        })),
+        total: 13,
+      },
+    });
+
+    renderAt(<ScheduleBoard />, "/schedule");
+
+    await waitFor(() => {
+      expect(projectApi.list).toHaveBeenCalledWith({ page_size: 100 });
+    });
+    expect(milestoneApi.list).not.toHaveBeenCalled();
+  });
+
   it("scopes global milestone project and milestone loading to upstream project context", async () => {
     renderAt(<MilestoneManagement />, "/project/management-center?tab=tracking&trackingTab=milestones&project_id=42&contract_id=9&opportunity_id=2");
 

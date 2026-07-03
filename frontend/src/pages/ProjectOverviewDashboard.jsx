@@ -2,10 +2,14 @@
  * 项目总览仪表盘 - 完整版
  * 功能：生产/采购/交付/售后各模块状态卡片（含完整售后数据）
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Progress } from '@/components/ui';
 import { projectApi } from '../services/api';
+
+function unwrapResponse(response) {
+  return response?.formatted ?? response?.data?.data ?? response?.data ?? response;
+}
 
 export default function ProjectOverviewDashboard() {
   const { projectId } = useParams();
@@ -19,8 +23,8 @@ export default function ProjectOverviewDashboard() {
   const loadOverview = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/v1/projects/${projectId}/overview`);
-      setOverview(await res.json());
+      const res = await projectApi.getOverview(projectId);
+      setOverview(unwrapResponse(res));
     } catch (error) { console.error('加载失败:', error); }
     finally { setLoading(false); }
   };

@@ -59,6 +59,31 @@ const STATUS_CONFIG = {
   CLOSED: { label: "已关闭", color: "bg-slate-500", icon: Package },
 };
 
+const getApiErrorMessage = (err, fallback) => {
+  const data = err?.response?.data;
+  const detail = data?.detail;
+  if (typeof detail === "string") {
+    return detail;
+  }
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (typeof item === "string") {
+          return item;
+        }
+        if (item?.field && item?.message) {
+          return `${item.field}: ${item.message}`;
+        }
+        return item?.message || JSON.stringify(item);
+      })
+      .join("; ");
+  }
+  if (typeof data?.message === "string") {
+    return data.message;
+  }
+  return fallback;
+};
+
 export default function PurchaseRequestDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -107,7 +132,7 @@ export default function PurchaseRequestDetail() {
       navigate("/purchase-requests");
     } catch (err) {
       console.error("Failed to delete request:", err);
-      toast.error(err.response?.data?.detail || "删除失败");
+      toast.error(getApiErrorMessage(err, "删除失败"));
     }
   };
 
@@ -125,21 +150,27 @@ export default function PurchaseRequestDetail() {
       setRequest(res.data?.data || res.data);
     } catch (err) {
       console.error("Failed to submit request:", err);
-      toast.error(err.response?.data?.detail || "提交失败");
+      toast.error(getApiErrorMessage(err, "提交失败"));
     }
   };
 
   const handleGenerateOrders = async () => {
     if (!id) {return;}
+    if (!request?.supplier_id) {
+      toast.error("请先指定供应商，再生成采购订单");
+      return;
+    }
     try {
       setGenerating(true);
-      await purchaseApi.requests.generateOrders(id);
+      await purchaseApi.requests.generateOrders(id, {
+        supplier_id: request.supplier_id,
+      });
       toast.success("已生成采购订单");
       const res = await purchaseApi.requests.get(id);
       setRequest(res.data?.data || res.data);
     } catch (err) {
       console.error("Failed to generate orders:", err);
-      toast.error(err.response?.data?.detail || "生成采购订单失败");
+      toast.error(getApiErrorMessage(err, "生成采购订单失败"));
     } finally {
       setGenerating(false);
     }
@@ -163,7 +194,7 @@ export default function PurchaseRequestDetail() {
       setRequest(res.data?.data || res.data);
     } catch (err) {
       console.error("Failed to approve request:", err);
-      toast.error(err.response?.data?.detail || "审批失败");
+      toast.error(getApiErrorMessage(err, "审批失败"));
     }
   };
 
@@ -258,7 +289,7 @@ export default function PurchaseRequestDetail() {
                 <Button
                   variant="outline"
                   onClick={handleGenerateOrders}
-                  disabled={generating}
+                  disabled={generating || !request.supplier_id}
                   className="border-amber-400/40 text-amber-300 hover:bg-amber-500/10"
                 >
                   {generating ? (
@@ -266,7 +297,11 @@ export default function PurchaseRequestDetail() {
                   ) : (
                     <ShoppingCart className="w-4 h-4 mr-2" />
                   )}
-                  {generating ? "生成中..." : "生成采购订单"}
+                  {generating
+                    ? "生成中..."
+                    : request.supplier_id
+                      ? "生成采购订单"
+                      : "未指定供应商"}
                 </Button>
               )}
             </div>

@@ -5,6 +5,7 @@ import { Progress } from "../../components/ui/progress";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -26,6 +27,7 @@ export default function OrderDetailDialog({
           <DialogTitle>
             {selectedOrder?.task_name} - {selectedOrder?.work_order_no}
           </DialogTitle>
+          <DialogDescription>查看工单状态、数量、进度和计划信息。</DialogDescription>
         </DialogHeader>
         <DialogBody>
           {selectedOrder && (

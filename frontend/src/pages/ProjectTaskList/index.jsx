@@ -45,6 +45,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogBody,
     DialogFooter
 } from "../../components/ui/dialog";
@@ -356,6 +357,9 @@ export default function ProjectTaskList() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>新建任务</DialogTitle>
+                        <DialogDescription className="sr-only">
+                            为当前项目创建新的执行任务。
+                        </DialogDescription>
                     </DialogHeader>
                     <DialogBody>
                         <div className="space-y-4">
@@ -473,6 +477,9 @@ export default function ProjectTaskList() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>任务详情</DialogTitle>
+                        <DialogDescription className="sr-only">
+                            查看项目任务的状态、阶段、负责人、计划日期和进度。
+                        </DialogDescription>
                     </DialogHeader>
                     <DialogBody>
                         {selectedTask && (

@@ -10,38 +10,13 @@ const PRODUCTION_EXCEPTION_STATUS_MAP = {
   CLOSED: "CLOSED",
 };
 
-const PRODUCTION_EXCEPTION_STATUS_REVERSE_MAP = {
-  OPEN: "REPORTED",
-  IN_PROGRESS: "IN_PROGRESS",
-  RESOLVED: "RESOLVED",
-  CLOSED: "CLOSED",
-};
-
 const unwrapProductionResponse = (response) => response?.data?.data ?? response?.data ?? response;
 
-const pickLatestActionContent = (actions = [], actionType) => {
-  const matched = [...actions].find((action) => action?.action_type === actionType);
-  return matched?.action_content || "";
-};
-
-const normalizeProductionException = (item = {}) => ({
-  ...item,
-  exception_no: item.exception_no || item.event_no,
-  title: item.title || item.event_title,
-  description: item.description || item.event_description,
-  exception_type: item.exception_type || item.event_type,
-  exception_level: item.exception_level || item.severity,
-  report_time: item.report_time || item.discovered_at,
-  reporter_name: item.reporter_name || item.discovered_by_name,
-  impact_hours: item.impact_hours ?? item.schedule_impact ?? 0,
-  impact_cost: item.impact_cost ?? item.cost_impact ?? 0,
-  handle_plan: item.handle_plan || item.solution || pickLatestActionContent(item.actions, "PLAN"),
-  handle_result:
-    item.handle_result ||
-    item.resolution_note ||
-    pickLatestActionContent(item.actions, "RESULT"),
-  status: PRODUCTION_EXCEPTION_STATUS_REVERSE_MAP[item.status] || item.status,
-});
+const withUnwrappedData = (request) =>
+  request.then((response) => ({
+    ...response,
+    data: unwrapProductionResponse(response),
+  }));
 
 const toIntegerOrNull = (value) => {
   if (value === undefined || value === null || value === "") {
@@ -214,10 +189,10 @@ export const productionApi = {
       }),
   },
   workers: {
-    list: (params) => api.get("/workers", { params }),
-    get: (id) => api.get(`/workers/${id}`),
-    create: (data) => api.post("/workers", data),
-    update: (id, data) => api.put(`/workers/${id}`, data),
+    list: (params) => api.get("/production/workers", { params }),
+    get: (id) => api.get(`/production/workers/${id}`),
+    create: (data) => api.post("/production/workers", data),
+    update: (id, data) => api.put(`/production/workers/${id}`, data),
   },
   workReports: {
     list: (params) => api.get("/production/work-reports", { params }),
@@ -233,19 +208,19 @@ export const productionApi = {
     my: (params) => api.get("/production/work-reports/my", { params }),
   },
   materialRequisitions: {
-    list: (params) => api.get("/material-requisitions", { params }),
-    get: (id) => api.get(`/material-requisitions/${id}`),
-    create: (data) => api.post("/material-requisitions", data),
+    list: (params) => api.get("/production/material-requisitions", { params }),
+    get: (id) => api.get(`/production/material-requisitions/${id}`),
+    create: (data) => api.post("/production/material-requisitions", data),
     approve: (id, data) =>
-      api.put(`/material-requisitions/${id}/approve`, data),
-    issue: (id, data) => api.put(`/material-requisitions/${id}/issue`, data),
+      api.put(`/production/material-requisitions/${id}/approve`, data),
+    issue: (id, data) => api.put(`/production/material-requisitions/${id}/issue`, data),
   },
   exceptions: {
-    list: (params) => api.get("/production-exceptions", { params }),
-    get: (id) => api.get(`/production-exceptions/${id}`),
-    create: (data) => api.post("/production-exceptions", data),
-    handle: (id, data) => api.put(`/production-exceptions/${id}/handle`, data),
-    close: (id) => api.put(`/production-exceptions/${id}/close`),
+    list: (params) => api.get("/production/exceptions", { params }),
+    get: (id) => api.get(`/production/exceptions/${id}`),
+    create: (data) => api.post("/production/exceptions", data),
+    handle: (id, data) => api.put(`/production/exceptions/${id}/handle`, data),
+    close: (id) => api.put(`/production/exceptions/${id}/close`),
   },
   taskBoard: (workshopId) => api.get(`/production/workshops/${workshopId}/task-board`),
   reports: {
@@ -277,7 +252,7 @@ export const materialApi = {
 };
 
 export const materialDemandApi = {
-  list: (params) => api.get("/material-demands", { params }),
+  list: (params) => api.get("/material-demands/", { params }),
   getVsStock: (materialId, params) =>
     api.get(`/material-demands/vs-stock`, {
       params: { material_id: materialId, ...params },
@@ -290,6 +265,7 @@ export const materialDemandApi = {
 export const shortageAlertApi = {
   // 缺料预警检测 - /shortage/detection/alerts
   list: (params) => api.get("/shortage/detection/alerts", { params }),
+  getSummary: () => api.get("/shortage/detection/alerts/summary"),
   get: (id) => api.get(`/shortage/detection/alerts/${id}`),
   acknowledge: (id) => api.put(`/shortage/detection/alerts/${id}/acknowledge`),
   update: (id, data) => api.patch(`/shortage/detection/alerts/${id}`, data),
@@ -354,6 +330,12 @@ export const kitCheckApi = {
   update: (id, data) => api.put(`/kit-checks/${id}`, data),
   delete: (id) => api.delete(`/kit-checks/${id}`),
   getStatistics: (params) => api.get("/kit-checks/statistics", { params }),
+  workOrders: {
+    list: (params) => api.get("/kit-check/work-orders", { params }),
+    get: (id) => api.get(`/kit-check/work-orders/${id}`),
+    check: (id) => api.post(`/kit-check/work-orders/${id}/check`),
+    confirm: (id, data) => api.post(`/kit-check/work-orders/${id}/confirm`, data),
+  },
 };
 
 export const assemblyKitApi = {
@@ -364,12 +346,14 @@ export const assemblyKitApi = {
       machine_id: machineId,
     }),
   // 基于时间的齐套率预警
-  getTimeBasedKitRate: (projectId, params) => api.get(`/assembly/kit-rate/project/${projectId}/time-based-kit-rate`, { params }),
+  getTimeBasedKitRate: (projectId, params) => api.get(`/kit-rate/project/${projectId}/time-based-kit-rate`, { params }),
   // 看板数据
-  dashboard: (params) => api.get("/assembly/dashboard", { params }),
+  dashboard: (params) =>
+    withUnwrappedData(api.get("/assembly-kit/dashboard/dashboard", { params })),
 
   // 装配阶段
-  getStages: (params) => api.get("/assembly/stages", { params }),
+  getStages: (params) =>
+    withUnwrappedData(api.get("/assembly-kit/stages/stages", { params })),
   updateStage: (stageCode, data) =>
     api.put(`/assembly/stages/${stageCode}`, data),
 
@@ -410,7 +394,7 @@ export const assemblyKitApi = {
 
   // 排产建议
   generateSuggestions: (params) =>
-    api.post("/assembly/suggestions/generate", null, { params }),
+    api.post("/assembly-kit/scheduling/suggestions/generate", null, { params }),
 
   // 优化建议
   getOptimizationSuggestions: (readinessId) =>
@@ -418,7 +402,7 @@ export const assemblyKitApi = {
 
   // 缺料预警
   getShortageAlerts: (params) =>
-    api.get("/assembly/shortage-alerts", { params }),
+    withUnwrappedData(api.get("/assembly-kit/shortage-alerts/shortage-alerts", { params })),
 
   // 预警规则
   getAlertRules: (params) => api.get("/assembly/alert-rules", { params }),
@@ -426,15 +410,18 @@ export const assemblyKitApi = {
   updateAlertRule: (id, data) => api.put(`/assembly/alert-rules/${id}`, data),
 
   // 排产建议
-  getSuggestions: (params) => api.get("/assembly/suggestions", { params }),
+  getSuggestions: (params) =>
+    api.get("/assembly-kit/scheduling/suggestions", { params }),
   acceptSuggestion: (id, data) =>
-    api.post(`/assembly/suggestions/${id}/accept`, data),
+    api.post(`/assembly-kit/scheduling/suggestions/${id}/accept`, data),
   rejectSuggestion: (id, data) =>
-    api.post(`/assembly/suggestions/${id}/reject`, data),
+    api.post(`/assembly-kit/scheduling/suggestions/${id}/reject`, data),
 
   // 装配模板
-  getTemplates: (params) => api.get("/assembly/templates", { params }),
-  createTemplate: (data) => api.post("/assembly/templates", data),
-  updateTemplate: (id, data) => api.put(`/assembly/templates/${id}`, data),
-  deleteTemplate: (id) => api.delete(`/assembly/templates/${id}`),
+  getTemplates: (params) =>
+    withUnwrappedData(api.get("/assembly-kit/templates/templates", { params })),
+  createTemplate: (data) => api.post("/assembly-kit/templates/templates", data),
+  updateTemplate: (id, data) =>
+    api.put(`/assembly-kit/templates/templates/${id}`, data),
+  deleteTemplate: (id) => api.delete(`/assembly-kit/templates/templates/${id}`),
 };

@@ -56,7 +56,7 @@ export default function QuoteItemsTable({ items, onAddItem, onRemoveItem, onItem
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>
                       <Input
-                        value={item.item_code}
+                        value={item.item_code || ""}
                         onChange={(e) =>
                           onItemChange(index, "item_code", e.target.value)
                         }
@@ -66,7 +66,7 @@ export default function QuoteItemsTable({ items, onAddItem, onRemoveItem, onItem
                     </TableCell>
                     <TableCell>
                       <Input
-                        value={item.item_name}
+                        value={item.item_name || ""}
                         onChange={(e) =>
                           onItemChange(index, "item_name", e.target.value)
                         }
@@ -76,7 +76,7 @@ export default function QuoteItemsTable({ items, onAddItem, onRemoveItem, onItem
                     </TableCell>
                     <TableCell>
                       <Input
-                        value={item.specification}
+                        value={item.specification || ""}
                         onChange={(e) =>
                           onItemChange(index, "specification", e.target.value)
                         }
@@ -87,7 +87,7 @@ export default function QuoteItemsTable({ items, onAddItem, onRemoveItem, onItem
                     <TableCell>
                       <Input
                         type="number"
-                        value={item.qty}
+                        value={item.qty ?? ""}
                         onChange={(e) =>
                           onItemChange(index, "qty", parseFloat(e.target.value) || 0)
                         }
@@ -96,7 +96,7 @@ export default function QuoteItemsTable({ items, onAddItem, onRemoveItem, onItem
                     </TableCell>
                     <TableCell>
                       <Input
-                        value={item.unit}
+                        value={item.unit || ""}
                         onChange={(e) =>
                           onItemChange(index, "unit", e.target.value)
                         }
@@ -107,7 +107,7 @@ export default function QuoteItemsTable({ items, onAddItem, onRemoveItem, onItem
                     <TableCell>
                       <Input
                         type="number"
-                        value={item.unit_price}
+                        value={item.unit_price ?? ""}
                         onChange={(e) =>
                           onItemChange(index, "unit_price", parseFloat(e.target.value) || 0)
                         }
@@ -120,7 +120,7 @@ export default function QuoteItemsTable({ items, onAddItem, onRemoveItem, onItem
                     <TableCell>
                       <Input
                         type="number"
-                        value={item.cost}
+                        value={item.cost ?? ""}
                         onChange={(e) =>
                           onItemChange(index, "cost", parseFloat(e.target.value) || 0)
                         }
@@ -162,7 +162,7 @@ export default function QuoteItemsTable({ items, onAddItem, onRemoveItem, onItem
                     </TableCell>
                     <TableCell>
                       <Input
-                        value={item.remark}
+                        value={item.remark || ""}
                         onChange={(e) =>
                           onItemChange(index, "remark", e.target.value)
                         }

@@ -36,6 +36,22 @@ const TAG_TYPE_CONFIG = {
   SPECIAL: { label: "特殊", color: "red", icon: Zap }
 };
 
+const unwrapApiData = (response) =>
+  response?.formatted ?? response?.data?.data ?? response?.data ?? response;
+
+const asList = (payload) => {
+  const data = unwrapApiData(payload);
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.results)) return data.results;
+  return [];
+};
+
+const toFiniteNumber = (value, fallback = 0) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+};
+
 export default function EmployeeProfileDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -53,9 +69,9 @@ export default function EmployeeProfileDetail() {
         staffMatchingApi.getEvaluations({ employee_id: id }),
         staffMatchingApi.getPerformance({ employee_id: id })]
         );
-        if (profileRes.data) {setProfile(profileRes.data);}
-        if (evalRes.data?.items) {setEvaluations(evalRes.data.items);}
-        if (perfRes.data?.items) {setPerformance(perfRes.data.items);}
+        setProfile(unwrapApiData(profileRes) || null);
+        setEvaluations(asList(evalRes));
+        setPerformance(asList(perfRes));
       } catch (error) {
         console.error("加载数据失败:", error);
       } finally {
@@ -64,6 +80,23 @@ export default function EmployeeProfileDetail() {
     };
     loadData();
   }, [id]);
+
+  if (!profile) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="员工档案详情"
+          description="暂无员工画像数据"
+          actions={
+            <Button variant="outline" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              返回
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
 
   // 按标签类型分组评价
   const groupedEvaluations = (evaluations || []).reduce((acc, eval_) => {
@@ -78,37 +111,37 @@ export default function EmployeeProfileDetail() {
   {
     key: "skill",
     label: "技能匹配",
-    score: profile.skill_score_avg,
+    score: toFiniteNumber(profile.skill_score_avg),
     weight: 30
   },
   {
     key: "domain",
     label: "领域经验",
-    score: profile.domain_score_avg,
+    score: toFiniteNumber(profile.domain_score_avg),
     weight: 15
   },
   {
     key: "attitude",
     label: "工作态度",
-    score: profile.attitude_score_avg,
+    score: toFiniteNumber(profile.attitude_score_avg),
     weight: 20
   },
   {
     key: "quality",
     label: "历史质量",
-    score: profile.quality_score_avg,
+    score: toFiniteNumber(profile.quality_score_avg),
     weight: 15
   },
   {
     key: "workload",
     label: "工作负载",
-    score: 100 - profile.current_workload_pct,
+    score: 100 - toFiniteNumber(profile.current_workload_pct),
     weight: 15
   },
   {
     key: "special",
     label: "特殊能力",
-    score: profile.special_score_avg || 75,
+    score: toFiniteNumber(profile.special_score_avg, 75),
     weight: 5
   }];
 

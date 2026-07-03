@@ -29,7 +29,7 @@ vi.mock("../../../../services/api", () => ({
     list: vi.fn(),
   },
   userApi: {
-    list: vi.fn(),
+    options: vi.fn(),
   },
 }));
 
@@ -39,7 +39,7 @@ describe("useTechnicalReviewForm", () => {
     navigateSpy.mockClear();
     useSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
     projectApi.list.mockResolvedValue({ data: { items: [] } });
-    userApi.list.mockResolvedValue({ data: { items: [] } });
+    userApi.options.mockResolvedValue({ data: { items: [] } });
     technicalReviewApi.create.mockResolvedValue({ data: { id: 7 } });
     technicalReviewApi.get.mockResolvedValue({
       data: {
@@ -71,7 +71,7 @@ describe("useTechnicalReviewForm", () => {
 
     await waitFor(() => {
       expect(projectApi.list).toHaveBeenCalled();
-      expect(userApi.list).toHaveBeenCalled();
+      expect(userApi.options).toHaveBeenCalledWith({ page: 1, page_size: 100, is_active: true });
     });
 
     expect(result.current.isNew).toBe(true);
@@ -89,12 +89,40 @@ describe("useTechnicalReviewForm", () => {
 
     await waitFor(() => {
       expect(projectApi.list).toHaveBeenCalled();
-      expect(userApi.list).toHaveBeenCalled();
+      expect(userApi.options).toHaveBeenCalledWith({ page: 1, page_size: 100, is_active: true });
     });
 
     expect(result.current.isNew).toBe(true);
     expect(result.current.formData.project_id).toBe("42");
     expect(technicalReviewApi.get).not.toHaveBeenCalled();
+  });
+
+  it("normalizes date-only review schedules for datetime-local inputs", async () => {
+    technicalReviewApi.get.mockResolvedValueOnce({
+      data: {
+        id: 7,
+        review_type: "PDR",
+        review_name: "合同转项目 PDR",
+        project_id: 42,
+        equipment_id: null,
+        scheduled_date: "2024-01-01",
+        location: "会议室",
+        meeting_type: "ONSITE",
+        host_id: 1,
+        presenter_id: 1,
+        recorder_id: 1,
+        participants: [],
+        materials: [],
+        checklist_records: [],
+        issues: [],
+      },
+    });
+
+    const { result } = renderHook(() => useTechnicalReviewForm("7"));
+
+    await waitFor(() => {
+      expect(result.current.formData.scheduled_date).toBe("2024-01-01T00:00");
+    });
   });
 
   it("returns to the scoped technical review list after creating from project presale context", async () => {
@@ -107,7 +135,7 @@ describe("useTechnicalReviewForm", () => {
 
     await waitFor(() => {
       expect(projectApi.list).toHaveBeenCalled();
-      expect(userApi.list).toHaveBeenCalled();
+      expect(userApi.options).toHaveBeenCalledWith({ page: 1, page_size: 100, is_active: true });
     });
 
     await act(async () => {
@@ -115,7 +143,7 @@ describe("useTechnicalReviewForm", () => {
     });
 
     expect(technicalReviewApi.create).toHaveBeenCalledWith(
-      expect.objectContaining({ project_id: "42" }),
+      expect.objectContaining({ project_id: 42 }),
     );
     expect(navigateSpy).toHaveBeenCalledWith(
       "/technical-reviews?project_id=42&ticket_id=91&opportunity_id=2",

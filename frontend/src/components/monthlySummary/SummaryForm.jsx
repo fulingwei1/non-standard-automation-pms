@@ -25,6 +25,8 @@ export const SummaryForm = ({
   onSaveDraft,
   onSubmit,
 }) => {
+  const displayName = currentUser?.name || "用户";
+
   return (
     <motion.div {...fadeIn} transition={{ delay: 0.2 }}>
       <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">
@@ -33,13 +35,14 @@ export const SummaryForm = ({
           <div className="flex items-center gap-4 pb-4 border-b border-slate-700/50">
             <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
               <span className="text-white font-bold text-lg">
-                {currentUser.name.charAt(0)}
+                {displayName.charAt(0)}
               </span>
             </div>
             <div>
-              <p className="text-white font-medium">{currentUser.name}</p>
+              <p className="text-white font-medium">{displayName}</p>
               <p className="text-sm text-slate-400">
-                {currentUser.department} · {currentUser.position}
+                {currentUser?.department || "未知部门"} ·{" "}
+                {currentUser?.position || "未知职位"}
               </p>
             </div>
           </div>

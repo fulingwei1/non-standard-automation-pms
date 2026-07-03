@@ -22,13 +22,13 @@ export default function SupplierFilters({
     <div className="flex items-center space-x-2">
       <Input
         placeholder="搜索供应商名称/编码..."
-        value={searchKeyword || "unknown"}
+        value={searchKeyword}
         onChange={(e) => onSearchChange(e.target.value)}
         className="max-w-sm bg-slate-900/50 border-slate-700 text-slate-200"
         icon={Search}
       />
 
-      <Select value={filterType || "unknown"} onValueChange={onFilterTypeChange}>
+      <Select value={filterType || "all"} onValueChange={onFilterTypeChange}>
         <SelectTrigger className="w-[150px] bg-slate-900/50 border-slate-700">
           <SelectValue placeholder="供应商类型" />
         </SelectTrigger>
@@ -39,7 +39,7 @@ export default function SupplierFilters({
           <SelectItem value="BOTH">两者兼有</SelectItem>
         </SelectContent>
       </Select>
-      <Select value={filterStatus || "unknown"} onValueChange={onFilterStatusChange}>
+      <Select value={filterStatus || "all"} onValueChange={onFilterStatusChange}>
         <SelectTrigger className="w-[150px] bg-slate-900/50 border-slate-700">
           <SelectValue placeholder="状态" />
         </SelectTrigger>
@@ -50,7 +50,7 @@ export default function SupplierFilters({
           <SelectItem value="BLACKLIST">黑名单</SelectItem>
         </SelectContent>
       </Select>
-      <Select value={filterLevel || "unknown"} onValueChange={onFilterLevelChange}>
+      <Select value={filterLevel || "all"} onValueChange={onFilterLevelChange}>
         <SelectTrigger className="w-[120px] bg-slate-900/50 border-slate-700">
           <SelectValue placeholder="等级" />
         </SelectTrigger>

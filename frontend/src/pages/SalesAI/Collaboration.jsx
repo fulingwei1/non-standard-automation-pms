@@ -9,7 +9,6 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   MessageSquare,
   HelpCircle,
@@ -24,7 +23,6 @@ import {
   Clock,
   Play,
   CheckCircle,
-  AlertCircle,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import {

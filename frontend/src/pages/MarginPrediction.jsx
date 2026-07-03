@@ -17,7 +17,6 @@ import {
   Percent,
   ArrowUpRight,
   ArrowDownRight,
-  Minus,
   Zap,
   RefreshCw,
 } from "lucide-react";

@@ -8,6 +8,7 @@ import { CheckCircle2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -53,13 +54,16 @@ export default function ReceiveGoodsDialog({
       <DialogContent className="sm:max-w-[600px] bg-slate-800/50 border border-slate-700/50">
         <DialogHeader>
           <DialogTitle className="text-white">确认收货</DialogTitle>
+          <DialogDescription className="text-slate-400">
+            按采购订单未收数量生成收货单，收货后可进入质检流程。
+          </DialogDescription>
         </DialogHeader>
 
         <DialogBody className="space-y-4">
           {/* 订单信息摘要 */}
           <div className="p-4 rounded-lg bg-slate-900/50 border border-slate-700/50">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-mono text-white">{order.id}</span>
+              <span className="font-mono text-white">{order.orderNo || order.id}</span>
               <Badge className="bg-blue-500/20 text-blue-300 border border-blue-500/30">
                 {receivedItems}/{totalItems} 项已收货
               </Badge>

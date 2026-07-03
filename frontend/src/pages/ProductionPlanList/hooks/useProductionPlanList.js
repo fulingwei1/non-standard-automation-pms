@@ -152,6 +152,35 @@ export function useProductionPlanList() {
     }
   };
 
+  const handleSubmitPlan = async (planId) => {
+    if (!await confirmAction("确认提交此生产计划审批？")) return;
+    try {
+      await productionApi.productionPlans.submit(planId);
+      fetchPlans();
+      if (showDetailDialog) {
+        handleViewDetail(planId);
+      }
+    } catch (error) {
+      console.error("Failed to submit plan:", error);
+      alert("提交审批失败: " + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleApprovePlan = async (planId, approved) => {
+    const message = approved ? "确认审批通过此生产计划？" : "确认驳回此生产计划？";
+    if (!await confirmAction(message)) return;
+    try {
+      await productionApi.productionPlans.approve(planId, { approved });
+      fetchPlans();
+      if (showDetailDialog) {
+        handleViewDetail(planId);
+      }
+    } catch (error) {
+      console.error("Failed to approve plan:", error);
+      alert("审批失败: " + (error.response?.data?.detail || error.message));
+    }
+  };
+
   return {
     // data
     loading,
@@ -173,6 +202,8 @@ export function useProductionPlanList() {
     // actions
     handleCreatePlan,
     handleViewDetail,
+    handleSubmitPlan,
+    handleApprovePlan,
     handlePublish,
   };
 }

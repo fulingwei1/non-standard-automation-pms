@@ -263,7 +263,12 @@ export const serviceApi = {
 
 export const installationDispatchApi = {
   orders: {
-    list: (params) => api.get("/installation-dispatch/orders", { params }),
+    list: (params = {}) => {
+      const { search, ...rest } = params;
+      return api.get("/installation-dispatch/orders", {
+        params: { ...rest, keyword: rest.keyword || search || undefined },
+      });
+    },
     get: (id) => api.get(`/installation-dispatch/orders/${id}`),
     create: (data) => api.post("/installation-dispatch/orders", data),
     update: (id, data) => api.put(`/installation-dispatch/orders/${id}`, data),

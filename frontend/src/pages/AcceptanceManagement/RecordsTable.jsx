@@ -2,7 +2,7 @@
  * Acceptance Management — records data table
  */
 
-import { Eye, Edit, ClipboardCheck } from "lucide-react";
+import { Eye, Edit, ClipboardCheck, Play } from "lucide-react";
 
 import {
   Card,
@@ -39,9 +39,11 @@ const getTypeBadge = (type) => {
   );
 };
 
+const normalizeStatus = (status) => String(status || "").toLowerCase();
+
 // ── Component ────────────────────────────────────────────────────────────────
 
-const RecordsTable = ({ loading, filteredRecords, onViewDetail }) => {
+const RecordsTable = ({ loading, filteredRecords, onViewDetail, onStart, onExecute }) => {
   return (
     <Card className="bg-surface-100/50">
       <CardContent className="p-0">
@@ -70,43 +72,67 @@ const RecordsTable = ({ loading, filteredRecords, onViewDetail }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredRecords.map((record) => (
-                <TableRow key={record.id}>
-                  <TableCell className="font-mono text-sm">
-                    {record.acceptance_code}
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="text-white">{record.project_name || "-"}</p>
-                      <p className="text-xs text-slate-400">{record.project_code}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>{getTypeBadge(record.acceptance_type)}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">{record.title}</TableCell>
-                  <TableCell>{getStatusBadge(record.status)}</TableCell>
-                  <TableCell className="text-sm">{record.scheduled_date || "-"}</TableCell>
-                  <TableCell className="text-sm">
-                    {record.customer_representative || "-"}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {record.our_representative || "-"}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onViewDetail(record.id)}
-                      >
-                        <Eye size={16} />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Edit size={16} />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filteredRecords.map((record) => {
+                const status = normalizeStatus(record.status);
+                const canStart = ["draft", "pending"].includes(status);
+                const canExecute = status === "in_progress";
+
+                return (
+                  <TableRow key={record.id}>
+                    <TableCell className="font-mono text-sm">
+                      {record.acceptance_code}
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="text-white">{record.project_name || "-"}</p>
+                        <p className="text-xs text-slate-400">{record.project_code}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>{getTypeBadge(record.acceptance_type)}</TableCell>
+                    <TableCell className="max-w-[200px] truncate">{record.title}</TableCell>
+                    <TableCell>{getStatusBadge(status)}</TableCell>
+                    <TableCell className="text-sm">{record.scheduled_date || "-"}</TableCell>
+                    <TableCell className="text-sm">
+                      {record.customer_representative || "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {record.our_representative || "-"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          aria-label={`查看验收记录 ${record.acceptance_code}`}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onViewDetail(record.id)}
+                        >
+                          <Eye size={16} />
+                        </Button>
+                        {canStart && (
+                          <Button
+                            aria-label={`开始验收 ${record.acceptance_code}`}
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onStart?.(record.id)}
+                          >
+                            <Play size={16} />
+                          </Button>
+                        )}
+                        {canExecute && (
+                          <Button
+                            aria-label={`执行验收 ${record.acceptance_code}`}
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onExecute?.(record.id)}
+                          >
+                            <Edit size={16} />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}

@@ -38,6 +38,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -290,6 +291,7 @@ export default function WorkerManagement() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>新建工人</DialogTitle>
+            <DialogDescription>录入生产工人的编码、姓名和技能信息。</DialogDescription>
           </DialogHeader>
           <DialogBody>
             <div className="space-y-4">
@@ -407,6 +409,7 @@ export default function WorkerManagement() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>编辑工人</DialogTitle>
+            <DialogDescription>修改生产工人的联系方式、技能等级和启用状态。</DialogDescription>
           </DialogHeader>
           <DialogBody>
             <div className="space-y-4">
@@ -536,6 +539,7 @@ export default function WorkerManagement() {
         <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>{selectedWorker?.worker_name} - 工人详情</DialogTitle>
+            <DialogDescription>查看工人档案和当前状态。</DialogDescription>
           </DialogHeader>
           <DialogBody>
             {selectedWorker && (

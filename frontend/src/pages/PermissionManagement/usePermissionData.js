@@ -61,19 +61,22 @@ export function usePermissionData() {
       const permData = response.formatted || response.data?.data || response.data;
       setPermissions(Array.isArray(permData) ? permData : []);
     } catch (error) {
-      console.error("[权限管理] 加载权限列表失败:", error);
       const errorDetail = error.response?.data?.detail || error.message;
       const statusCode = error.response?.status;
-      console.error("[权限管理] 错误详情:", {
+      const log = statusCode === 403 ? console.warn : console.error;
+      log("[权限管理] 加载权限列表失败:", error);
+      log("[权限管理] 错误详情:", {
         status: statusCode,
         detail: errorDetail,
         message: error.message,
         response: error.response?.data
       });
 
-      if (
+      if (statusCode === 403) {
+        console.warn("[权限管理] 当前账号无权限访问权限列表");
+        setPermissions([]);
+      } else if (
         statusCode === 401 ||
-        statusCode === 403 ||
         errorDetail?.includes("Not authenticated") ||
         errorDetail?.includes("认证") ||
         errorDetail?.includes("无效的认证凭据"))
@@ -103,7 +106,12 @@ export function usePermissionData() {
       const roleItems = listData?.items || listData;
       setRoles(Array.isArray(roleItems) ? roleItems : []);
     } catch (error) {
-      console.error("加载角色列表失败:", error);
+      if (error?.response?.status === 403) {
+        console.warn("加载角色列表失败:", error);
+      } else {
+        console.error("加载角色列表失败:", error);
+      }
+      setRoles([]);
     }
   };
 

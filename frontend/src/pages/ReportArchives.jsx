@@ -28,7 +28,8 @@ export default function ReportArchives() {
 
       const response = await reportCenterApi.getArchives(params);
       const data = response.data;
-      setArchives(data?.items || data || []);
+      const items = data?.data?.items || data?.items || data;
+      setArchives(Array.isArray(items) ? items : []);
     } catch (error) {
       console.error('获取归档列表失败:', error);
     } finally {

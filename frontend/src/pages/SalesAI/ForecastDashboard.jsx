@@ -9,7 +9,6 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
 import {
   TrendingUp,
   TrendingDown,
@@ -92,7 +91,7 @@ function CompanyOverview({ targets }) {
     };
   }, [targets]);
 
-  const [forecast, setForecast] = useState({
+  const [forecast] = useState({
     prediction: {
       predicted_revenue: 52800000,
       predicted_completion_rate: 105.6,
@@ -115,17 +114,7 @@ function CompanyOverview({ targets }) {
   }, [targetSummary, forecast]);
 
   // 计算差距
-  const gap = targetSummary.quarterly_target - targetSummary.actual_revenue;
   const predictedGap = forecast.prediction.predicted_revenue - targetSummary.quarterly_target;
-
-  const getRiskColor = (level) => {
-    switch (level) {
-      case "LOW": return "text-green-500 bg-green-500/10";
-      case "MEDIUM": return "text-orange-500 bg-orange-500/10";
-      case "HIGH": return "text-red-500 bg-red-500/10";
-      default: return "text-slate-400";
-    }
-  };
 
   return (
     <div className="space-y-6">

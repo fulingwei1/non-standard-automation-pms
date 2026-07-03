@@ -1,10 +1,57 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { technicalReviewApi, projectApi, userApi } from "../../../services/api";
-import { formatDate } from "../../../lib/utils";
 import { DEFAULT_FORM_DATA } from "../constants";
 import { getProjectContextFilters } from "../../../lib/projectContext";
 import { buildTechnicalReviewListPath } from "../navigation";
+
+function toDateTimeLocalValue(value) {
+    if (!value) {
+        return "";
+    }
+    if (typeof value === "string") {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            return `${value}T00:00`;
+        }
+        const normalized = value.replace(" ", "T");
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(normalized)) {
+            return normalized.slice(0, 16);
+        }
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return "";
+    }
+    const pad = (part) => String(part).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function toRequiredNumber(value) {
+    if (value === "" || value === null || value === undefined) {
+        return value;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : value;
+}
+
+function toOptionalNumber(value) {
+    if (value === "" || value === null || value === undefined) {
+        return null;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : value;
+}
+
+function buildReviewPayload(formData) {
+    return {
+        ...formData,
+        project_id: toRequiredNumber(formData.project_id),
+        equipment_id: toOptionalNumber(formData.equipment_id),
+        host_id: toRequiredNumber(formData.host_id),
+        presenter_id: toRequiredNumber(formData.presenter_id),
+        recorder_id: toRequiredNumber(formData.recorder_id),
+    };
+}
 
 /**
  * Manages all create/edit form state for TechnicalReviewDetail.
@@ -51,7 +98,7 @@ export function useTechnicalReviewForm(reviewId) {
         }
         fetchProjects();
         fetchUsers();
-    }, [reviewId, contextProjectId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [reviewId, contextProjectId]);
 
     const fetchProjects = async () => {
         try {
@@ -65,7 +112,7 @@ export function useTechnicalReviewForm(reviewId) {
 
     const fetchUsers = async () => {
         try {
-            const response = await userApi.list({ page: 1, page_size: 100 });
+            const response = await userApi.options({ page: 1, page_size: 100, is_active: true });
             const data = response.data || response;
             setUsers(data.items || []);
         } catch (error) {
@@ -84,7 +131,7 @@ export function useTechnicalReviewForm(reviewId) {
                 review_name: data.review_name,
                 project_id: data.project_id,
                 equipment_id: data.equipment_id || "",
-                scheduled_date: formatDate(data.scheduled_date, "YYYY-MM-DDTHH:mm"),
+                scheduled_date: toDateTimeLocalValue(data.scheduled_date),
                 location: data.location || "",
                 meeting_type: data.meeting_type,
                 host_id: data.host_id,
@@ -106,11 +153,12 @@ export function useTechnicalReviewForm(reviewId) {
     const handleSave = async () => {
         try {
             setSaving(true);
+            const payload = buildReviewPayload(formData);
             if (isNew) {
-                await technicalReviewApi.create(formData);
+                await technicalReviewApi.create(payload);
                 navigate(buildTechnicalReviewListPath(searchParams));
             } else {
-                await technicalReviewApi.update(reviewId, formData);
+                await technicalReviewApi.update(reviewId, payload);
                 await fetchReview();
             }
         } catch (error) {

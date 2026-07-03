@@ -16,7 +16,7 @@ export default function AdditionalInfoCard({ formData, setFormData, versionData,
             <label className="text-sm font-medium mb-2 block">交期(天)</label>
             <Input
               type="number"
-              value={versionData.lead_time_days}
+              value={versionData.lead_time_days ?? ""}
               onChange={(e) =>
                 setVersionData({
                   ...versionData,
@@ -28,7 +28,7 @@ export default function AdditionalInfoCard({ formData, setFormData, versionData,
           <div>
             <label className="text-sm font-medium mb-2 block">付款条件</label>
             <Input
-              value={formData.payment_terms}
+              value={formData.payment_terms || ""}
               onChange={(e) =>
                 setFormData({ ...formData, payment_terms: e.target.value })
               }
@@ -38,7 +38,7 @@ export default function AdditionalInfoCard({ formData, setFormData, versionData,
           <div>
             <label className="text-sm font-medium mb-2 block">交付条件</label>
             <Input
-              value={formData.delivery_terms}
+              value={formData.delivery_terms || ""}
               onChange={(e) =>
                 setFormData({ ...formData, delivery_terms: e.target.value })
               }
@@ -48,7 +48,7 @@ export default function AdditionalInfoCard({ formData, setFormData, versionData,
           <div>
             <label className="text-sm font-medium mb-2 block">风险条款</label>
             <Input
-              value={versionData.risk_terms}
+              value={versionData.risk_terms || ""}
               onChange={(e) =>
                 setVersionData({ ...versionData, risk_terms: e.target.value })
               }
@@ -59,7 +59,7 @@ export default function AdditionalInfoCard({ formData, setFormData, versionData,
             <label className="text-sm font-medium mb-2 block">备注</label>
             <textarea
               className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent"
-              value={formData.note}
+              value={formData.note || ""}
               onChange={(e) =>
                 setFormData({ ...formData, note: e.target.value })
               }

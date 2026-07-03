@@ -24,7 +24,7 @@ export function useIssueStatisticsSnapshot() {
 
   useEffect(() => {
     loadSnapshots();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [startDate, endDate, page]);
 
   const loadSnapshots = async () => {

@@ -133,10 +133,33 @@ const buildFollowUpAssessmentPath = (record = {}) => {
   );
 };
 
+const buildFollowUpRowKey = (record = {}, index = 0) =>
+  [
+    record.entity_type ?? "entity",
+    record.entity_id ?? "unknown",
+    record.reminder_type ?? "reminder",
+    record.next_follow_date ?? "no-date",
+    index,
+  ]
+    .map(String)
+    .join("-");
+
 const buildOpportunityHealthPath = (record = {}) =>
   record.opportunity_id
     ? `/sales/opportunities/${record.opportunity_id}`
     : SALES_OPPORTUNITY_LIST_PATH;
+
+const buildOpportunityHealthRowKey = (record = {}, index = 0) =>
+  [
+    record.opportunity_id ?? "opportunity",
+    record.opportunity_code ?? "no-code",
+    record.stage ?? "no-stage",
+    record.days_in_stage ?? "no-days",
+    record.total_score ?? "no-score",
+    index,
+  ]
+    .map(String)
+    .join("-");
 
 const buildContractMilestonePath = (record = {}) =>
   record.contract_id ? `/sales/contracts/${record.contract_id}` : "/sales/contracts";
@@ -455,6 +478,10 @@ function SummaryCards({ data, loading }) {
 function FollowUpList() {
   const navigate = useNavigate();
   const { data, loading, error } = useFollowUpReminders();
+  const rows = (data?.items || []).map((item, index) => ({
+    ...item,
+    _followUpRowKey: buildFollowUpRowKey(item, index),
+  }));
 
   const columns = [
     {
@@ -559,9 +586,9 @@ function FollowUpList() {
   return (
     <Table
       columns={columns}
-      dataSource={data?.items || []}
+      dataSource={rows}
       loading={loading}
-      rowKey={(record) => `${record.entity_type}-${record.entity_id}`}
+      rowKey="_followUpRowKey"
       pagination={{ pageSize: 10 }}
       size="small"
       locale={{ emptyText: <Empty description="暂无跟进提醒" /> }}
@@ -687,6 +714,10 @@ function CollectionList() {
 function HealthList() {
   const navigate = useNavigate();
   const { data, loading, error } = useOpportunityHealthList();
+  const rows = (data?.items || []).map((item, index) => ({
+    ...item,
+    _healthRowKey: buildOpportunityHealthRowKey(item, index),
+  }));
 
   const columns = [
     {
@@ -787,9 +818,9 @@ function HealthList() {
   return (
     <Table
       columns={columns}
-      dataSource={data?.items || []}
+      dataSource={rows}
       loading={loading}
-      rowKey="opportunity_id"
+      rowKey="_healthRowKey"
       pagination={{ pageSize: 10 }}
       size="small"
       locale={{ emptyText: <Empty description="暂无商机数据" /> }}

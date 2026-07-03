@@ -21,6 +21,17 @@ import {
   revenueTypes } from
 "@/lib/constants/finance";
 
+const DEFAULT_REVENUE_DATA = {
+  totalRevenue: 0,
+  targetRevenue: 0,
+  achievementRate: 0,
+  customerCount: 0,
+  newCustomers: 0,
+  byMonth: [],
+  byType: [],
+  byCustomer: [],
+};
+
 // 收入概览卡片组件
 const RevenueOverviewCard = ({ revenueData, loading }) => {
   if (loading) {
@@ -402,6 +413,11 @@ export function RevenueChart({
   timeRange = "3m",
   loading = false
 }) {
+  const safeRevenueData = {
+    ...DEFAULT_REVENUE_DATA,
+    ...(revenueData || {}),
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -410,7 +426,7 @@ export function RevenueChart({
       className="space-y-6">
 
       {/* 收入概览 */}
-      <RevenueOverviewCard revenueData={revenueData} loading={loading} />
+      <RevenueOverviewCard revenueData={safeRevenueData} loading={loading} />
 
       {/* 图表选项卡 */}
       <Tabs defaultValue="trend" className="w-full">
@@ -423,7 +439,7 @@ export function RevenueChart({
 
         <TabsContent value="trend" className="mt-4">
           <RevenueTrendChart
-            revenueByMonth={revenueData.byMonth}
+            revenueByMonth={safeRevenueData.byMonth}
             loading={loading}
             timeRange={timeRange} />
 
@@ -431,14 +447,14 @@ export function RevenueChart({
 
         <TabsContent value="type" className="mt-4">
           <RevenueTypeDistribution
-            revenueByType={revenueData.byType}
+            revenueByType={safeRevenueData.byType}
             loading={loading} />
 
         </TabsContent>
 
         <TabsContent value="customer" className="mt-4">
           <CustomerRevenueAnalysis
-            revenueByCustomer={revenueData.byCustomer}
+            revenueByCustomer={safeRevenueData.byCustomer}
             loading={loading} />
 
         </TabsContent>

@@ -45,6 +45,17 @@ import { toast } from "../components/ui/toast";
 import { LoadingCard } from "../components/common";
 import { ErrorMessage } from "../components/common";
 
+const unwrapResponse = (response) =>
+  response?.formatted ?? response?.data?.data ?? response?.data ?? response;
+
+const unwrapList = (response) => {
+  const data = unwrapResponse(response);
+  if (Array.isArray(data)) {
+    return data;
+  }
+  return data?.items || [];
+};
+
 export default function GoodsReceiptNew() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -89,8 +100,8 @@ export default function GoodsReceiptNew() {
       purchaseApi.orders.get(orderIdToLoad),
       purchaseApi.orders.getItems(orderIdToLoad)]
       );
-      setOrder(orderRes.data || orderRes);
-      setOrderItems(itemsRes.data || itemsRes || []);
+      setOrder(unwrapResponse(orderRes));
+      setOrderItems(unwrapList(itemsRes));
     } catch (err) {
       console.error("Failed to load order:", err);
       setError(err.response?.data?.detail || "加载采购订单失败");
@@ -193,8 +204,12 @@ export default function GoodsReceiptNew() {
       };
 
       const res = await purchaseApi.receipts.create(receiptData);
+      const receiptId = res.formatted?.id || res.data?.data?.id || res.data?.id || res.id;
+      if (!receiptId) {
+        throw new Error("创建收货单成功，但响应中缺少收货单 ID");
+      }
       toast.success("收货单创建成功");
-      navigate(`/purchases/receipts/${res.data?.id || res.id}`);
+      navigate(`/purchases/receipts/${receiptId}`);
     } catch (err) {
       console.error("Failed to create receipt:", err);
       setError(err.response?.data?.detail || "创建收货单失败");
@@ -620,7 +635,7 @@ function OrderSelectionForm({ onSelect }) {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <Input
           placeholder="搜索订单号、供应商、项目..."
-          value={searchQuery || "unknown"}
+          value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-9 bg-slate-900/50 border-slate-700 text-slate-200" />
 

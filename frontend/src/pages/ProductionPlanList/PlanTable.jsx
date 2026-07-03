@@ -1,4 +1,4 @@
-import { Eye, CheckCircle2 } from "lucide-react";
+import { Eye, CheckCircle2, Send, XCircle } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -20,7 +20,14 @@ import {
 import { formatDate } from "../../lib/utils";
 import { statusConfigs, typeConfigs } from "./constants";
 
-export default function PlanTable({ loading, filteredPlans, onViewDetail, onPublish }) {
+export default function PlanTable({
+  loading,
+  filteredPlans,
+  onViewDetail,
+  onSubmitPlan,
+  onApprovePlan,
+  onPublish,
+}) {
   return (
     <Card>
       <CardHeader>
@@ -86,14 +93,51 @@ export default function PlanTable({ loading, filteredPlans, onViewDetail, onPubl
                       <Button
                         variant="ghost"
                         size="sm"
+                        title="查看详情"
+                        aria-label="查看详情"
                         onClick={() => onViewDetail(plan.id)}
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
+                      {plan.status === "DRAFT" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          title="提交审批"
+                          aria-label="提交审批"
+                          onClick={() => onSubmitPlan(plan.id)}
+                        >
+                          <Send className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {plan.status === "SUBMITTED" && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title="审批通过"
+                            aria-label="审批通过"
+                            onClick={() => onApprovePlan(plan.id, true)}
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title="审批驳回"
+                            aria-label="审批驳回"
+                            onClick={() => onApprovePlan(plan.id, false)}
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
                       {plan.status === "APPROVED" && (
                         <Button
                           variant="ghost"
                           size="sm"
+                          title="发布计划"
+                          aria-label="发布计划"
                           onClick={() => onPublish(plan.id)}
                         >
                           <CheckCircle2 className="w-4 h-4" />

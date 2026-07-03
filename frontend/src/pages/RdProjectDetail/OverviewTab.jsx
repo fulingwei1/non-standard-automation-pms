@@ -200,7 +200,7 @@ export default function OverviewTab({
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => navigate(`/rd-projects/${id}/costs/entry`)}
+                onClick={() => navigate(`/rd-projects/${id}/cost-entry`)}
               >
                 <DollarSign className="h-4 w-4 mr-2" />
                 录入费用
@@ -209,7 +209,7 @@ export default function OverviewTab({
                 variant="outline"
                 className="w-full justify-start"
                 onClick={() =>
-                  navigate(`/rd-projects/${id}/costs/summary`)
+                  navigate(`/rd-projects/${id}/cost-summary`)
                 }
               >
                 <Calculator className="h-4 w-4 mr-2" />

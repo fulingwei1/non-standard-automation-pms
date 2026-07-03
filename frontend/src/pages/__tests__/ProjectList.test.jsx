@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import ProjectList from '../ProjectList';
-import api, { projectApi } from '../../services/api';
+import { projectApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', async (importOriginal) => {
@@ -286,8 +286,6 @@ describe('ProjectList', () => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
       });
 
-      // Since the actual component doesn't have explicit sort headers, we'll test the functionality differently
-      const sortButtons = screen.getAllByRole('button');
       // There's no explicit sorting UI in the actual component, so we'll skip these tests
     });
 

@@ -329,22 +329,6 @@ export default function ServiceTicketManagement() {
     setShowDetailDialog(true);
   };
 
-  const handleSelectTicket = (ticketId) => {
-    setSelectedTickets((prev) =>
-    prev.includes(ticketId) ?
-    (prev || []).filter((id) => id !== ticketId) :
-    [...prev, ticketId]
-    );
-  };
-
-  const handleSelectAll = () => {
-    if (selectedTickets.length === filteredTickets.length) {
-      setSelectedTickets([]);
-    } else {
-      setSelectedTickets((filteredTickets || []).map((ticket) => ticket.id));
-    }
-  };
-
   const handleClearSelection = () => {
     setSelectedTickets([]);
   };

@@ -16,9 +16,17 @@ const EditInvoiceDialog = ({
   onOpenChange,
   formData,
   setFormData,
+  onFormChange,
   contracts,
-  onConfirm
+  onConfirm,
+  onSubmit
 }) => {
+  const updateFormData = onFormChange || setFormData;
+  const handleSubmit = onConfirm || onSubmit;
+  const updateField = (patch) => {
+    updateFormData?.({ ...formData, ...patch });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -33,7 +41,7 @@ const EditInvoiceDialog = ({
               <select
                 value={formData.contract_id}
                 onChange={(e) =>
-                  setFormData({ ...formData, contract_id: e.target.value })
+                  updateField({ contract_id: e.target.value })
                 }
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
               >
@@ -50,7 +58,7 @@ const EditInvoiceDialog = ({
               <select
                 value={formData.invoice_type}
                 onChange={(e) =>
-                  setFormData({ ...formData, invoice_type: e.target.value })
+                  updateField({ invoice_type: e.target.value })
                 }
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
               >
@@ -64,7 +72,7 @@ const EditInvoiceDialog = ({
                 type="number"
                 value={formData.amount}
                 onChange={(e) =>
-                  setFormData({ ...formData, amount: e.target.value })
+                  updateField({ amount: e.target.value })
                 }
                 placeholder="请输入金额"
               />
@@ -75,7 +83,7 @@ const EditInvoiceDialog = ({
                 type="number"
                 value={formData.tax_rate}
                 onChange={(e) =>
-                  setFormData({ ...formData, tax_rate: e.target.value })
+                  updateField({ tax_rate: e.target.value })
                 }
                 placeholder="13"
               />
@@ -86,7 +94,7 @@ const EditInvoiceDialog = ({
                 type="date"
                 value={formData.issue_date}
                 onChange={(e) =>
-                  setFormData({ ...formData, issue_date: e.target.value })
+                  updateField({ issue_date: e.target.value })
                 }
               />
             </div>
@@ -96,7 +104,7 @@ const EditInvoiceDialog = ({
                 type="date"
                 value={formData.due_date}
                 onChange={(e) =>
-                  setFormData({ ...formData, due_date: e.target.value })
+                  updateField({ due_date: e.target.value })
                 }
               />
             </div>
@@ -106,7 +114,7 @@ const EditInvoiceDialog = ({
             <Textarea
               value={formData.remark}
               onChange={(e) =>
-                setFormData({ ...formData, remark: e.target.value })
+                updateField({ remark: e.target.value })
               }
               placeholder="请输入备注"
               rows={3}
@@ -117,7 +125,7 @@ const EditInvoiceDialog = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             取消
           </Button>
-          <Button onClick={onConfirm}>保存</Button>
+          <Button onClick={handleSubmit}>保存</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

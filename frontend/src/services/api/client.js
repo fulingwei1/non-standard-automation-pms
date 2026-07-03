@@ -20,6 +20,24 @@ const PUBLIC_ENDPOINTS = [
 
 let refreshPromise = null;
 
+const API_PREFIX = "/api/v1";
+
+const normalizeApiPath = (url = "") => {
+  if (typeof url !== "string") {
+    return url;
+  }
+
+  if (url === API_PREFIX) {
+    return "/";
+  }
+
+  if (url.startsWith(`${API_PREFIX}/`)) {
+    return url.slice(API_PREFIX.length);
+  }
+
+  return url;
+};
+
 // 判断是否为公开 API（精确匹配路径，避免 /report-center/bi/health-distribution 被误判为 /health）
 const isPublicEndpoint = (url) => {
   if (!url) {return false;}
@@ -104,6 +122,7 @@ const refreshAccessToken = async () => {
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
+    config.url = normalizeApiPath(config.url || "");
     const url = config.url || "";
     const isPublic = isPublicEndpoint(url);
 

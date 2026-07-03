@@ -9,6 +9,7 @@ import {
   Edit3,
   Trash2,
   CheckCircle2,
+  XCircle,
   AlertTriangle,
 } from "lucide-react";
 import { Badge, Button } from "../../ui";
@@ -22,6 +23,9 @@ import {
   getProgressColor,
   canEditOrder,
   canDeleteOrder,
+  canReceiveOrder,
+  canSubmitOrder,
+  canApproveOrder,
 } from "@/lib/constants/procurement";
 
 export default function OrderCard({
@@ -31,6 +35,8 @@ export default function OrderCard({
   onDelete,
   onSubmit,
   onApprove,
+  onSubmitApproval,
+  onApprovalDecision,
 }) {
   const statusKey = (order.status || "").toString().toLowerCase();
   const urgencyKey = (order.urgency || "").toString().toLowerCase();
@@ -58,7 +64,7 @@ export default function OrderCard({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="font-mono font-semibold text-white">
-              {order.id}
+              {order.orderNo || order.id}
             </span>
             {order.urgency !== "normal" && (
               <Badge
@@ -133,6 +139,7 @@ export default function OrderCard({
       <div className="flex items-center justify-between pt-3 border-t border-slate-700/50">
         <span className="text-xs text-slate-500">
           采购员：{order.buyer}
+          {order.approvedBy ? ` · 审批人：${order.approvedBy}` : ""}
         </span>
         <div className="flex gap-1">
           <Button
@@ -169,7 +176,7 @@ export default function OrderCard({
             </Button>
           )}
 
-          {["pending", "partial_received"].includes(statusKey) && onSubmit && (
+          {canReceiveOrder(statusKey) && onSubmit && (
             <Button
               variant="ghost"
               size="sm"
@@ -181,16 +188,44 @@ export default function OrderCard({
             </Button>
           )}
 
-          {["pending", "partial_received"].includes(statusKey) && onApprove && (
+          {canSubmitOrder(statusKey) && (onSubmitApproval || onApprove) && (
             <Button
               variant="ghost"
               size="sm"
               className="h-7 px-2 text-emerald-400 hover:text-emerald-300"
-              onClick={() => onApprove(order)}
+              onClick={() => (onSubmitApproval || onApprove)(order)}
+              aria-label="提交审批"
               title="提交审批"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
             </Button>
+          )}
+
+          {canApproveOrder(statusKey) && onApprovalDecision && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-emerald-400 hover:text-emerald-300"
+                onClick={() => onApprovalDecision(order, true)}
+                aria-label="审批通过"
+                title="审批通过"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span className="text-xs">通过</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-red-400 hover:text-red-300"
+                onClick={() => onApprovalDecision(order, false)}
+                aria-label="审批驳回"
+                title="审批驳回"
+              >
+                <XCircle className="w-3.5 h-3.5" />
+                <span className="text-xs">驳回</span>
+              </Button>
+            </>
           )}
         </div>
       </div>

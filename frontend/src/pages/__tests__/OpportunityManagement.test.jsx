@@ -71,6 +71,7 @@ vi.mock('../../services/api', async (importOriginal) => {
     userApi: {
       ...actual.userApi,
       list: vi.fn(),
+      options: vi.fn(),
     },
     presaleApi: {
       ...actual.presaleApi,
@@ -192,7 +193,7 @@ describe('OpportunityManagement', () => {
         ],
       },
     });
-    userApi.list.mockResolvedValue({
+    userApi.options.mockResolvedValue({
       data: {
         items: [
           { id: 201, real_name: '张三' },

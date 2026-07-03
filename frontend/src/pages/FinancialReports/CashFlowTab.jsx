@@ -1,6 +1,7 @@
 import { TabsContent, Progress } from "../../components/ui";
 import { cn, formatCurrency } from "../../lib/utils";
 import { AreaChart as AreaChartComponent } from "../../components/charts";
+import { safePercent, toFiniteNumber } from "./numberUtils";
 
 export default function CashFlowTab({ cashFlowData }) {
   return (
@@ -15,14 +16,14 @@ export default function CashFlowTab({ cashFlowData }) {
           {
             month: item.month,
             type: "现金流入",
-            value: item.inflow
+            value: toFiniteNumber(item.inflow)
           },
           {
             month: item.month,
             type: "现金流出",
-            value: -item.outflow
+            value: -toFiniteNumber(item.outflow)
           },
-          { month: item.month, type: "净现金流", value: item.net }]
+          { month: item.month, type: "净现金流", value: toFiniteNumber(item.net) }]
           )}
           xField="month"
           yField="value"
@@ -40,9 +41,10 @@ export default function CashFlowTab({ cashFlowData }) {
         <div className="space-y-4">
           {(cashFlowData || []).map((item, index) => {
             const maxFlow = Math.max(
-              ...(cashFlowData || []).map((c) => Math.abs(c.net))
+              ...(cashFlowData || []).map((c) => Math.abs(toFiniteNumber(c.net)))
             );
-            const percentage = Math.abs(item.net) / maxFlow * 100;
+            const net = toFiniteNumber(item.net);
+            const percentage = safePercent(Math.abs(net), maxFlow);
             return (
               <div
                 key={index}
@@ -73,20 +75,20 @@ export default function CashFlowTab({ cashFlowData }) {
                       <div
                         className={cn(
                           "text-lg font-bold",
-                          item.net > 0 ?
+                          net > 0 ?
                           "text-emerald-400" :
                           "text-red-400"
                         )}>
-                        {formatCurrency(item.net)}
+                        {formatCurrency(net)}
                       </div>
                     </div>
                   </div>
                 </div>
                 <Progress
-                  value={percentage || "unknown"}
+                  value={percentage}
                   className={cn(
                     "h-2",
-                    item.net > 0 ?
+                    net > 0 ?
                     "bg-emerald-500/20" :
                     "bg-red-500/20"
                   )} />

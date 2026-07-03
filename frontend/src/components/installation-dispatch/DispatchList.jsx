@@ -9,16 +9,16 @@ import {
 } from "../ui/table";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { CheckSquare, Square, Eye, Users, Clock, CheckCircle2 } from "lucide-react";
+import { CheckSquare, Square, Eye, Users, Clock, CheckCircle2, PlayCircle } from "lucide-react";
 import { cn, formatDate } from "../../lib/utils";
 import {
   DISPATCH_STATUS,
-  DISPATCH_STATUS_LABELS,
-  DISPATCH_STATUS_COLORS,
   DISPATCH_PRIORITY,
-  DISPATCH_PRIORITY_LABELS,
   INSTALLATION_TYPE,
-  INSTALLATION_TYPE_LABELS,
+  getDispatchPriorityLabel,
+  getDispatchStatusLabel,
+  getInstallationTypeLabel,
+  normalizeDispatchOrder,
 } from "@/lib/constants/installationDispatch";
 
 export default function DispatchList({
@@ -29,35 +29,35 @@ export default function DispatchList({
   onSelectAll,
   onViewDetail,
   onAssign,
+  onStart,
   onUpdateProgress,
   onComplete,
 }) {
   const getStatusBadge = (status) => {
     const config = {
       [DISPATCH_STATUS.PENDING]: {
-        label: DISPATCH_STATUS_LABELS[DISPATCH_STATUS.PENDING],
-        color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.PENDING],
+        label: getDispatchStatusLabel(DISPATCH_STATUS.PENDING),
         className: "bg-slate-500 text-white"
       },
       [DISPATCH_STATUS.ASSIGNED]: {
-        label: DISPATCH_STATUS_LABELS[DISPATCH_STATUS.ASSIGNED],
-        color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.ASSIGNED],
+        label: getDispatchStatusLabel(DISPATCH_STATUS.ASSIGNED),
         className: "bg-blue-500 text-white"
       },
       [DISPATCH_STATUS.IN_PROGRESS]: {
-        label: DISPATCH_STATUS_LABELS[DISPATCH_STATUS.IN_PROGRESS],
-        color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.IN_PROGRESS],
+        label: getDispatchStatusLabel(DISPATCH_STATUS.IN_PROGRESS),
         className: "bg-amber-500 text-white"
       },
       [DISPATCH_STATUS.COMPLETED]: {
-        label: DISPATCH_STATUS_LABELS[DISPATCH_STATUS.COMPLETED],
-        color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.COMPLETED],
+        label: getDispatchStatusLabel(DISPATCH_STATUS.COMPLETED),
         className: "bg-emerald-500 text-white"
       },
       [DISPATCH_STATUS.CANCELLED]: {
-        label: DISPATCH_STATUS_LABELS[DISPATCH_STATUS.CANCELLED],
-        color: DISPATCH_STATUS_COLORS[DISPATCH_STATUS.CANCELLED],
+        label: getDispatchStatusLabel(DISPATCH_STATUS.CANCELLED),
         className: "bg-red-500 text-white"
+      },
+      [DISPATCH_STATUS.DELAYED]: {
+        label: getDispatchStatusLabel(DISPATCH_STATUS.DELAYED),
+        className: "bg-orange-500 text-white"
       },
     }[status];
 
@@ -76,19 +76,29 @@ export default function DispatchList({
   const getPriorityBadge = (priority) => {
     const config = {
       [DISPATCH_PRIORITY.LOW]: {
-        label: DISPATCH_PRIORITY_LABELS[DISPATCH_PRIORITY.LOW],
+        label: getDispatchPriorityLabel(DISPATCH_PRIORITY.LOW),
         bg: "bg-slate-500/20",
         text: "text-slate-400",
       },
+      [DISPATCH_PRIORITY.NORMAL]: {
+        label: getDispatchPriorityLabel(DISPATCH_PRIORITY.NORMAL),
+        bg: "bg-gray-500/20",
+        text: "text-gray-500",
+      },
       [DISPATCH_PRIORITY.MEDIUM]: {
-        label: DISPATCH_PRIORITY_LABELS[DISPATCH_PRIORITY.MEDIUM],
+        label: getDispatchPriorityLabel(DISPATCH_PRIORITY.MEDIUM),
         bg: "bg-blue-500/20",
         text: "text-blue-400",
       },
       [DISPATCH_PRIORITY.HIGH]: {
-        label: DISPATCH_PRIORITY_LABELS[DISPATCH_PRIORITY.HIGH],
+        label: getDispatchPriorityLabel(DISPATCH_PRIORITY.HIGH),
         bg: "bg-amber-500/20",
         text: "text-amber-400",
+      },
+      [DISPATCH_PRIORITY.URGENT]: {
+        label: getDispatchPriorityLabel(DISPATCH_PRIORITY.URGENT),
+        bg: "bg-red-500/20",
+        text: "text-red-500",
       },
     }[priority];
 
@@ -106,30 +116,28 @@ export default function DispatchList({
 
   const getTaskTypeDisplay = (type) => {
     const config = {
-      [INSTALLATION_TYPE.NEW]: {
-        label: INSTALLATION_TYPE_LABELS[INSTALLATION_TYPE.NEW],
-        icon: "🔧",
+      [INSTALLATION_TYPE.INSTALLATION]: {
+        label: getInstallationTypeLabel(INSTALLATION_TYPE.INSTALLATION),
+      },
+      [INSTALLATION_TYPE.DEBUGGING]: {
+        label: getInstallationTypeLabel(INSTALLATION_TYPE.DEBUGGING),
+      },
+      [INSTALLATION_TYPE.TRAINING]: {
+        label: getInstallationTypeLabel(INSTALLATION_TYPE.TRAINING),
       },
       [INSTALLATION_TYPE.MAINTENANCE]: {
-        label: INSTALLATION_TYPE_LABELS[INSTALLATION_TYPE.MAINTENANCE],
-        icon: "🔨",
+        label: getInstallationTypeLabel(INSTALLATION_TYPE.MAINTENANCE),
       },
       [INSTALLATION_TYPE.REPAIR]: {
-        label: INSTALLATION_TYPE_LABELS[INSTALLATION_TYPE.REPAIR],
-        icon: "🛠️",
+        label: getInstallationTypeLabel(INSTALLATION_TYPE.REPAIR),
       },
-      [INSTALLATION_TYPE.UPGRADE]: {
-        label: INSTALLATION_TYPE_LABELS[INSTALLATION_TYPE.UPGRADE],
-        icon: "⚙️",
-      },
-      [INSTALLATION_TYPE.INSPECTION]: {
-        label: INSTALLATION_TYPE_LABELS[INSTALLATION_TYPE.INSPECTION],
-        icon: "👥",
+      [INSTALLATION_TYPE.OTHER]: {
+        label: getInstallationTypeLabel(INSTALLATION_TYPE.OTHER),
       },
     }[type];
 
-    if (!config) return type;
-    return `${config.icon} ${config.label}`;
+    if (!config) return getInstallationTypeLabel(type);
+    return config.label;
   };
 
   return (
@@ -168,59 +176,81 @@ export default function DispatchList({
               </TableCell>
             </TableRow>
           ) : (
-            (orders || []).map((order) => (
-              <TableRow key={order.id}>
+            (orders || []).map((order) => {
+              const displayOrder = normalizeDispatchOrder(order);
+
+              return (
+              <TableRow key={displayOrder.id}>
                 <TableCell>
                   <Square
                     className={cn(
                       "h-4 w-4 cursor-pointer",
-                      selectedOrders.has(order.id) && "text-blue-500"
+                      selectedOrders.has(displayOrder.id) && "text-blue-500"
                     )}
-                    onClick={() => onSelectOrder(order.id)}
+                    onClick={() => onSelectOrder(displayOrder.id)}
                   />
                 </TableCell>
                 <TableCell className="font-medium">
-                  {order.order_number}
+                  {displayOrder.order_no}
                 </TableCell>
-                <TableCell>{order.task_title}</TableCell>
-                <TableCell>{order.project?.name}</TableCell>
-                <TableCell>{getTaskTypeDisplay(order.task_type)}</TableCell>
-                <TableCell>{getPriorityBadge(order.priority)}</TableCell>
-                <TableCell>{getStatusBadge(order.status)}</TableCell>
-                <TableCell>{order.assigned_to?.name}</TableCell>
-                <TableCell>{formatDate(order.scheduled_date)}</TableCell>
+                <TableCell>{displayOrder.task_title}</TableCell>
+                <TableCell>{displayOrder.project_name}</TableCell>
+                <TableCell>{getTaskTypeDisplay(displayOrder.task_type)}</TableCell>
+                <TableCell>{getPriorityBadge(displayOrder.priority)}</TableCell>
+                <TableCell>{getStatusBadge(displayOrder.status)}</TableCell>
+                <TableCell>{displayOrder.assigned_to_name || "未分配"}</TableCell>
+                <TableCell>{formatDate(displayOrder.scheduled_date)}</TableCell>
                 <TableCell>
                   <div className="flex space-x-1">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onViewDetail(order)}
+                      aria-label="查看派工单"
+                      title="查看派工单"
+                      onClick={() => onViewDetail(displayOrder)}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    {order.status === DISPATCH_STATUS.PENDING && (
+                    {displayOrder.status === DISPATCH_STATUS.PENDING && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onAssign(order)}
+                        aria-label="指派派工单"
+                        title="指派派工单"
+                        onClick={() => onAssign(displayOrder)}
                       >
                         <Users className="h-4 w-4" />
                       </Button>
                     )}
-                    {order.status === DISPATCH_STATUS.IN_PROGRESS && (
+                    {displayOrder.status === DISPATCH_STATUS.ASSIGNED && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onUpdateProgress(order)}
+                        aria-label="开始执行"
+                        title="开始执行"
+                        onClick={() => onStart(displayOrder)}
+                      >
+                        <PlayCircle className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {displayOrder.status === DISPATCH_STATUS.IN_PROGRESS && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label="更新进度"
+                        title="更新进度"
+                        onClick={() => onUpdateProgress(displayOrder)}
                       >
                         <Clock className="h-4 w-4" />
                       </Button>
                     )}
-                    {order.status === DISPATCH_STATUS.IN_PROGRESS && (
+                    {displayOrder.status === DISPATCH_STATUS.IN_PROGRESS && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onComplete(order)}
+                        aria-label="完成派工单"
+                        title="完成派工单"
+                        onClick={() => onComplete(displayOrder)}
                       >
                         <CheckCircle2 className="h-4 w-4" />
                       </Button>
@@ -228,7 +258,8 @@ export default function DispatchList({
                   </div>
                 </TableCell>
               </TableRow>
-            ))
+              );
+            })
           )}
         </TableBody>
       </Table>

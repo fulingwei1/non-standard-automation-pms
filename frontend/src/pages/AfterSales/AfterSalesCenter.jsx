@@ -2,9 +2,26 @@
  * 售后服务中心
  * 功能：客户反馈/维修保养/技术支持工单
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, Button, Table, Badge, Tabs, TabsContent, TabsList, TabsTrigger, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
+import { Card, CardContent, CardHeader, CardTitle, Table, Badge, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
+import { api } from '../../services/api';
+
+const asList = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.data?.items)) return payload.data.items;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.formatted?.items)) return payload.formatted.items;
+  if (Array.isArray(payload?.formatted)) return payload.formatted;
+  return [];
+};
+
+const formatDateCell = (value) => {
+  if (!value) return '-';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString();
+};
 
 export default function AfterSalesCenter() {
   const { projectId } = useParams();
@@ -19,15 +36,19 @@ export default function AfterSalesCenter() {
     try {
       setLoading(true);
       const [fbRes, mtRes, tkRes] = await Promise.all([
-        fetch(`/api/v1/after-sales/projects/${projectId}/feedback`).then(r => r.json()),
-        fetch(`/api/v1/after-sales/projects/${projectId}/maintenance`).then(r => r.json()),
-        fetch(`/api/v1/after-sales/projects/${projectId}/support-tickets`).then(r => r.json()),
+        api.get(`/after-sales/projects/${projectId}/feedback`),
+        api.get(`/after-sales/projects/${projectId}/maintenance`),
+        api.get(`/after-sales/projects/${projectId}/support-tickets`),
       ]);
-      setFeedbacks(fbRes || []);
-      setMaintenance(mtRes || []);
-      setTickets(tkRes || []);
-    } catch (error) { console.error('加载失败:', error); }
-    finally { setLoading(false); }
+      setFeedbacks(asList(fbRes));
+      setMaintenance(asList(mtRes));
+      setTickets(asList(tkRes));
+    } catch (error) {
+      console.error('加载失败:', error);
+      setFeedbacks([]);
+      setMaintenance([]);
+      setTickets([]);
+    } finally { setLoading(false); }
   };
 
   const getStatusBadge = (status) => {
@@ -57,7 +78,7 @@ export default function AfterSalesCenter() {
             {feedbacks.length === 0 ? <div className="text-center py-8 text-gray-500">暂无反馈</div> : (
               <Table><thead><tr><th>类型</th><th>内容</th><th>优先级</th><th>状态</th><th>处理人</th><th>创建时间</th></tr></thead>
                 <tbody>{feedbacks.map(f => (
-                  <tr key={f.id}><td>{f.feedback_type}</td><td>{f.feedback_content?.substring(0, 50)}</td><td>{f.priority}</td><td>{getStatusBadge(f.status)}</td><td>{f.assignee_name || '-'}</td><td>{new Date(f.created_at).toLocaleDateString()}</td></tr>
+                  <tr key={f.id}><td>{f.feedback_type}</td><td>{f.feedback_content?.substring(0, 50)}</td><td>{f.priority}</td><td>{getStatusBadge(f.status)}</td><td>{f.assignee_name || '-'}</td><td>{formatDateCell(f.created_at)}</td></tr>
                 ))}</tbody></Table>
             )}
           </CardContent></Card>
@@ -79,7 +100,7 @@ export default function AfterSalesCenter() {
             {tickets.length === 0 ? <div className="text-center py-8 text-gray-500">暂无工单</div> : (
               <Table><thead><tr><th>工单号</th><th>主题</th><th>分类</th><th>优先级</th><th>状态</th><th>处理人</th><th>创建时间</th></tr></thead>
                 <tbody>{tickets.map(t => (
-                  <tr key={t.id}><td>{t.ticket_no}</td><td>{t.subject}</td><td>{t.category}</td><td>{t.priority}</td><td>{getStatusBadge(t.status)}</td><td>{t.assignee_name || '-'}</td><td>{new Date(t.created_at).toLocaleDateString()}</td></tr>
+                  <tr key={t.id}><td>{t.ticket_no}</td><td>{t.subject}</td><td>{t.category}</td><td>{t.priority}</td><td>{getStatusBadge(t.status)}</td><td>{t.assignee_name || '-'}</td><td>{formatDateCell(t.created_at)}</td></tr>
                 ))}</tbody></Table>
             )}
           </CardContent></Card>

@@ -12,11 +12,10 @@ import {
   CardHeader,
   CardTitle,
   Progress,
-  Badge,
 } from "../ui";
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
-import { CHART_COLORS, SATISFACTION_LEVELS } from "@/lib/constants/customer";
+import { SATISFACTION_LEVELS } from "@/lib/constants/customer";
 
 const SatisfactionAnalytics = ({
   surveys = [],

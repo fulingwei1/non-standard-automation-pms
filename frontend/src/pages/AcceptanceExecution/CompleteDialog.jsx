@@ -3,6 +3,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogBody,
     DialogFooter,
 } from '../../components/ui/dialog';
@@ -32,6 +33,9 @@ export function CompleteDialog({
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>完成验收</DialogTitle>
+                    <DialogDescription className="sr-only">
+                        填写验收结论并提交最终验收结果。
+                    </DialogDescription>
                 </DialogHeader>
 
                 <DialogBody>

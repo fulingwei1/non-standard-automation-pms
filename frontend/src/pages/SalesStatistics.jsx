@@ -480,7 +480,7 @@ export default function SalesStatistics() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {(opportunitiesByStage || []).map((item) => {
+                {(opportunitiesByStage || []).map((item, index) => {
                 const total = (opportunitiesByStage || []).reduce(
                   (sum, i) => sum + (parseFloat(i.count) || 0),
                   0
@@ -489,7 +489,7 @@ export default function SalesStatistics() {
                 total > 0 ? (item.count / total * 100).toFixed(1) : 0;
 
                 return (
-                  <div key={item.stage} className="space-y-1">
+                  <div key={`${item.stage || "stage"}-${index}`} className="space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-slate-300">
                           {item.stage_label || item.stage}
@@ -551,7 +551,7 @@ export default function SalesStatistics() {
                           按阶段分解:
                         </p>
                         <div className="space-y-2">
-                          {(revenueForecast.breakdown || []).map((item) => {
+                          {(revenueForecast.breakdown || []).map((item, index) => {
                     const total = (revenueForecast.breakdown || []).reduce(
                       (sum, i) => sum + (parseFloat(i.amount) || 0),
                       0
@@ -561,7 +561,7 @@ export default function SalesStatistics() {
                     (item.amount || 0) / total * 100 :
                     0;
                     return (
-                      <div key={item.stage} className="space-y-1">
+                      <div key={`${item.stage || item.month || "forecast"}-${index}`} className="space-y-1">
                                 <div className="flex items-center justify-between text-sm">
                                   <span className="text-slate-300">
                                     {item.stage_label || item.stage}

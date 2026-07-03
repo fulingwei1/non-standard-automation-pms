@@ -40,16 +40,29 @@ import {
 "../components/ui";
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
-import { projectApi, costApi } from "../services/api";
+import { projectApi } from "../services/api";
 import { mergeProjectContextFilters } from "../lib/projectContext";
 
 // Mock data - 已移除，使用真实API
+const toFiniteAmount = (value) => {
+  const amount = Number(value);
+  return Number.isFinite(amount) ? amount : 0;
+};
+
+const getProjectUsedAmount = (project) =>
+  toFiniteAmount(
+    project.actual_cost ??
+      project.used_amount ??
+      project.total_cost ??
+      project.cost_amount ??
+      project.cost_summary?.total_cost
+  );
 
 export default function BudgetManagement({ embedded = false }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const projectListParams = useMemo(
-    () => mergeProjectContextFilters(searchParams, { page: 1, page_size: 100 }),
+    () => mergeProjectContextFilters(searchParams, { page: 1, page_size: 8 }),
     [searchParams]
   );
   const [loading, setLoading] = useState(true);
@@ -65,14 +78,11 @@ export default function BudgetManagement({ embedded = false }) {
       const res = await projectApi.list(projectListParams);
       const projects = res.data?.items || res.data?.items || res.data || [];
 
-      // Transform projects to budget format
-      const budgetsData = await Promise.all(
-        (projects || []).map(async (project) => {
-          try {
-            const costSummary = await costApi.getProjectSummary(project.id);
-            const summary = costSummary.data || {};
-            const usedAmount = summary.total_cost || 0;
-            const budgetAmount = project.budget_amount || 0;
+      // Transform projects to budget format. The project list already carries
+      // budget/cost fields, so avoid N extra cost-summary calls on page load.
+      const budgetsData = (projects || []).map((project) => {
+            const usedAmount = getProjectUsedAmount(project);
+            const budgetAmount = toFiniteAmount(project.budget_amount);
             const usageRate =
             budgetAmount > 0 ? usedAmount / budgetAmount * 100 : 0;
 
@@ -92,15 +102,7 @@ export default function BudgetManagement({ embedded = false }) {
               start_date: project.planned_start_date,
               end_date: project.planned_end_date
             };
-          } catch (err) {
-            console.error(
-              `Failed to load budget for project ${project.id}:`,
-              err
-            );
-            return null;
-          }
-        })
-      );
+      });
 
       setBudgets((budgetsData || []).filter(Boolean));
     } catch (error) {
@@ -146,9 +148,9 @@ export default function BudgetManagement({ embedded = false }) {
   }, [budgets, searchKeyword, filterStatus, filterUsageRate]);
 
   const stats = useMemo(() => {
-    const total = (budgets || []).reduce((sum, b) => sum + b.budget_amount, 0);
-    const used = (budgets || []).reduce((sum, b) => sum + b.used_amount, 0);
-    const remaining = (budgets || []).reduce((sum, b) => sum + b.remaining_amount, 0);
+    const total = (budgets || []).reduce((sum, b) => sum + toFiniteAmount(b.budget_amount), 0);
+    const used = (budgets || []).reduce((sum, b) => sum + toFiniteAmount(b.used_amount), 0);
+    const remaining = (budgets || []).reduce((sum, b) => sum + toFiniteAmount(b.remaining_amount), 0);
     const critical = (budgets || []).filter((b) => b.status === "CRITICAL").length;
     const warning = (budgets || []).filter((b) => b.status === "WARNING").length;
 
@@ -271,7 +273,7 @@ export default function BudgetManagement({ embedded = false }) {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
                   placeholder="搜索项目编码、名称..."
-                  value={searchKeyword || "unknown"}
+                  value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   className="pl-10 bg-slate-900/50 border-slate-700" />
 

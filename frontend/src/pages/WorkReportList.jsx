@@ -33,6 +33,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -272,6 +273,7 @@ export default function WorkReportList() {
         <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>{selectedReport?.report_no} - 报工详情</DialogTitle>
+            <DialogDescription>查看报工数量、工时和审批状态。</DialogDescription>
           </DialogHeader>
           <DialogBody>
             {selectedReport && (

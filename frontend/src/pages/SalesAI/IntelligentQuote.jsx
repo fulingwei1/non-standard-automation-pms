@@ -10,15 +10,12 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   TrendingUp,
   DollarSign,
   Target,
-  Percent,
   Award,
   BarChart3,
-  AlertCircle,
   CheckCircle,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
@@ -27,7 +24,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
   Button,
   Badge,
   Tabs,
@@ -51,6 +47,32 @@ import {
 } from "../../components/ui";
 import { intelligentQuoteApi } from "../../services/api";
 
+function unwrapApiPayload(response) {
+  return (
+    response?.formatted ??
+    response?.data?.data ??
+    response?.data ??
+    response ??
+    {}
+  );
+}
+
+function normalizeHistoricalPricePayload(response) {
+  const payload = unwrapApiPayload(response);
+  const priceRange = payload.price_range || {};
+  return {
+    average_price: Number(payload.average_price || 0),
+    matched_count: Number(payload.matched_count || 0),
+    price_range: {
+      min: Number(priceRange.min || 0),
+      max: Number(priceRange.max || 0),
+    },
+    historical_prices: Array.isArray(payload.historical_prices)
+      ? payload.historical_prices
+      : [],
+  };
+}
+
 // 历史价格参考
 function HistoricalPrices() {
   const [productCategory, setProductCategory] = useState("FCT");
@@ -59,7 +81,7 @@ function HistoricalPrices() {
   const fetchData = async () => {
     try {
       const res = await intelligentQuoteApi.getHistoricalPrices(productCategory);
-      setData(res);
+      setData(normalizeHistoricalPricePayload(res));
     } catch (error) {
       console.error("获取历史价格失败:", error);
     }

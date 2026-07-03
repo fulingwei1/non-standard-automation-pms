@@ -16,6 +16,7 @@ import { Badge } from "../components/ui/badge";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "../components/ui/dialog";
@@ -33,7 +34,6 @@ import {
   FileText,
   Plus,
   Search,
-  Filter,
   TrendingUp,
   AlertCircle,
   CheckCircle,
@@ -103,6 +103,45 @@ const normalizeEcnItem = (ecn = {}) => {
     priority: normalizePriorityKey(ecn.priority),
     affected_projects: projectIds,
     affected_projects_count: ecn.affected_projects_count ?? projectIds.length,
+  };
+};
+
+const normalizeImpactData = (payload = {}, ecn = {}) => {
+  if (payload.impact_summary && payload.impact_details) {
+    return payload;
+  }
+
+  const affectedProjects = ecn.affected_projects?.length
+    ? ecn.affected_projects
+    : ecn.project_id
+      ? [ecn.project_id]
+      : [];
+  const totalCostImpact = Number(payload.total_cost_impact || 0);
+  const totalAffectedItems = Number(payload.total_affected_items || 0);
+
+  return {
+    impact_summary: {
+      affected_projects_count: affectedProjects.length,
+      affected_bom_items_count: totalAffectedItems,
+      estimated_cost_impact: totalCostImpact,
+    },
+    impact_details: {
+      projects: affectedProjects.map((projectId) => ({
+        project_id: projectId,
+        bom_changes_count: totalAffectedItems,
+      })),
+      cost_breakdown: {
+        material_replacement: 0,
+        design_change: totalCostImpact,
+        process_optimization: 0,
+        labor: 0,
+        overhead: 0,
+      },
+    },
+    recommendations:
+      payload.has_impact === false
+        ? ["暂无已生成的 BOM 影响分析结果，可先补充 BOM 明细或执行 BOM 影响分析。"]
+        : [],
   };
 };
 
@@ -232,7 +271,8 @@ export default function ECNManagement({ embedded = false }) {
     try {
       setSelectedEcn(ecn);
       const response = await ecnBomApi.getImpact(ecn.id);
-      setImpactData(response.data);
+      const payload = response.formatted ?? response.data?.data ?? response.data ?? {};
+      setImpactData(normalizeImpactData(payload, ecn));
       setShowImpactDialog(true);
     } catch (error) {
       console.error("Failed to load impact:", error);
@@ -456,6 +496,9 @@ export default function ECNManagement({ embedded = false }) {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-800">
           <DialogHeader>
             <DialogTitle className="text-white">新建 ECN 工程变更</DialogTitle>
+            <DialogDescription>
+              记录工程变更内容、优先级和受影响项目，作为后续 BOM、成本与采购联动依据。
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
@@ -570,6 +613,9 @@ export default function ECNManagement({ embedded = false }) {
             <DialogTitle className="text-white">
               变更影响分析 - {selectedEcn?.ecn_no}
             </DialogTitle>
+            <DialogDescription>
+              查看该 ECN 对项目、BOM、成本和工期的当前影响汇总。
+            </DialogDescription>
           </DialogHeader>
           {impactData && (
             <div className="space-y-6 py-4">

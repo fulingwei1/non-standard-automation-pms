@@ -58,8 +58,13 @@ const DeliveryTracking = ({ deliveries = [], loading }) => {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-3">
                       <div>
-                        <p className="font-medium text-white">{item.orderNumber}</p>
-                        <p className="text-sm text-slate-400">{item.customerName}</p>
+                        <p className="font-medium text-white">{item.deliveryNo || item.orderNumber}</p>
+                        <p className="text-sm text-slate-400">
+                          {item.orderNumber ? `销售订单：${item.orderNumber}` : item.customerName}
+                        </p>
+                        {item.orderNumber && (
+                          <p className="text-sm text-slate-400">{item.customerName}</p>
+                        )}
                       </div>
 
                       <div className="flex flex-wrap gap-2">
@@ -72,12 +77,12 @@ const DeliveryTracking = ({ deliveries = [], loading }) => {
                         </Badge>
                         {item.scheduledDate && (
                           <Badge variant="outline" className="border-slate-500/30 text-slate-400">
-                            计划 {item.scheduledDate}
+                            计划发货 {item.scheduledDate}
                           </Badge>
                         )}
                         {item.actualDate && (
                           <Badge variant="outline" className="border-slate-500/30 text-slate-400">
-                            发货 {item.actualDate}
+                            实际发货 {item.actualDate}
                           </Badge>
                         )}
                       </div>

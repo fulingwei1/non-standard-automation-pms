@@ -75,6 +75,7 @@ vi.mock('../../services/api', async (importOriginal) => {
     },
     userApi: {
       list: vi.fn().mockResolvedValue({data: { items: [] }}),
+      options: vi.fn().mockResolvedValue({data: { items: [] }}),
       get: vi.fn().mockResolvedValue({data: { items: [] }}),
       create: vi.fn().mockResolvedValue({data: { items: [] }}),
       update: vi.fn().mockResolvedValue({data: { items: [] }}),
@@ -241,7 +242,7 @@ describe('SalesFunnel', () => {
     });
     
     // Mock userApi and customerApi for filter options
-    userApi.list.mockResolvedValue({ data: { items: [] } });
+    userApi.options.mockResolvedValue({ data: { items: [] } });
     customerApi.list.mockResolvedValue({ data: { items: [] } });
   });
 
@@ -336,8 +337,8 @@ describe('SalesFunnel', () => {
     });
 
     it('should handle filter options API error gracefully', async () => {
-      // Mock userApi.list and customerApi.list to reject
-      userApi.list.mockRejectedValueOnce(new Error('Failed to load users'));
+      // Mock userApi.options and customerApi.list to reject
+      userApi.options.mockRejectedValueOnce(new Error('Failed to load users'));
       customerApi.list.mockRejectedValueOnce(new Error('Failed to load customers'));
 
       render(
@@ -746,8 +747,6 @@ describe('SalesFunnel', () => {
       await waitFor(() => {
         expect(salesStatisticsApi.funnel).toHaveBeenCalled();
       });
-
-      const initialCallCount = salesStatisticsApi.funnel.mock.calls.length;
 
       // Change owner filter
       // Find combobox by its associated label

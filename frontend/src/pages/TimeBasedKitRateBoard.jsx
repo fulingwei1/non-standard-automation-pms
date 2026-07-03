@@ -16,7 +16,6 @@ import {
   AlertOctagon,
   CheckCircle,
   Clock,
-  Calendar,
   Truck,
   Package,
   RefreshCw,
@@ -105,6 +104,18 @@ export default function TimeBasedKitRateBoard() {
       const res = await assemblyKitApi.getTimeBasedKitRate(projectId, params);
       setData(res.data || res);
     } catch (error) {
+      if (error.response?.status === 404) {
+        setData({
+          summary: {
+            total_shortage_items: 0,
+            total_urgent_items: 0,
+            l1_count: 0,
+            l2_count: 0,
+          },
+          stages: [],
+        });
+        return;
+      }
       console.error("加载失败:", error);
     } finally {
       setLoading(false);
@@ -152,7 +163,7 @@ export default function TimeBasedKitRateBoard() {
                   <Label className="text-xs text-slate-400">计划开工日期</Label>
                   <Input
                     type="date"
-                    value={plannedStartDate || "unknown"}
+                    value={plannedStartDate || ""}
                     onChange={(e) => setPlannedStartDate(e.target.value)}
                     className="w-40"
                   />

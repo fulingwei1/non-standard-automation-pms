@@ -89,6 +89,7 @@ export default function CustomerManagement() {
                             onView360={handleView360}
                             onEdit={prepareEdit}
                             onDelete={handleDelete}
+                            onCreate={() => setShowCreateDialog(true)}
                         />
                     </CardContent>
                 </Card>

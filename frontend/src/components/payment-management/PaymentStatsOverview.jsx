@@ -21,12 +21,38 @@ import {
   getPaymentType,
   getAgingPeriod,
   getCollectionLevel,
+  AGING_PERIOD_OPTIONS,
   calculateCollectionRate,
   calculateDSO,
   formatCurrency,
   formatPercentage } from
 "@/lib/constants/finance";
 import { cn } from "../../lib/utils";
+
+const CHART_COLOR_BY_NAME = {
+  amber: "#f59e0b",
+  blue: "#3b82f6",
+  emerald: "#10b981",
+  orange: "#f97316",
+  red: "#ef4444",
+  slate: "#64748b",
+};
+
+const COLLECTION_COLOR_BY_LEVEL = {
+  critical: "bg-red-500",
+  normal: "bg-blue-500",
+  urgent: "bg-orange-500",
+  warning: "bg-amber-500",
+};
+
+const toChartColor = (className, fallback = "bg-slate-500") => {
+  const source = String(className || fallback);
+  const match = source.match(/(?:bg|border|text)-([a-z]+)-\d+/);
+  return CHART_COLOR_BY_NAME[match?.[1]] || CHART_COLOR_BY_NAME.slate;
+};
+
+const getAgingPeriodByKey = (periodKey) =>
+AGING_PERIOD_OPTIONS.find((period) => period.key === periodKey) || getAgingPeriod(999);
 
 const calculateAging = (dueDate) => {
   if (!dueDate) {return 0;}
@@ -125,7 +151,7 @@ export function PaymentStatsOverview({
       return {
         name: status.label,
         value: count,
-        color: status.color.replace('bg-', '#').replace('500', '')
+        color: toChartColor(status.color)
       };
     });
   }, [payments]);
@@ -142,7 +168,7 @@ export function PaymentStatsOverview({
     return Object.entries(typeCount).map(([typeLabel, count]) => ({
       name: typeLabel,
       value: count,
-      color: getPaymentType(typeLabel).color.replace('bg-', '#').replace('500', '')
+      color: toChartColor(getPaymentType(typeLabel).color)
     }));
   }, [payments]);
 
@@ -161,11 +187,11 @@ export function PaymentStatsOverview({
     });
 
     return Object.entries(agingData).map(([periodKey, amount]) => {
-      const period = getAgingPeriod(periodKey);
+      const period = getAgingPeriodByKey(periodKey);
       return {
         name: period.label,
         value: amount,
-        color: period.color.replace('bg-', '#').replace('500', ''),
+        color: toChartColor(period.color),
         riskLevel: period.riskLevel
       };
     });
@@ -190,7 +216,7 @@ export function PaymentStatsOverview({
         level,
         count,
         label: config.label,
-        color: config.color.replace('bg-', '#').replace('500', ''),
+        color: toChartColor(config.color, COLLECTION_COLOR_BY_LEVEL[level]),
         priority: config.priority
       };
     }).sort((a, b) => {

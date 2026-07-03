@@ -4,6 +4,7 @@ import {
   BarChart as BarChartComponent,
   PieChart as PieChartComponent,
 } from "../../components/charts";
+import { safePercent, toFiniteNumber } from "./numberUtils";
 
 export default function CostAnalysisTab({ costBreakdown }) {
   return (
@@ -17,7 +18,7 @@ export default function CostAnalysisTab({ costBreakdown }) {
           <PieChartComponent
             data={(costBreakdown || []).map((item) => ({
               category: item.category,
-              value: item.amount
+              value: toFiniteNumber(item.amount)
             }))}
             angleField="value"
             colorField="category"
@@ -38,10 +39,10 @@ export default function CostAnalysisTab({ costBreakdown }) {
           <div className="space-y-3">
             {(costBreakdown || []).map((item, index) => {
               const total = (costBreakdown || []).reduce(
-                (sum, c) => sum + c.amount,
+                (sum, c) => sum + toFiniteNumber(c.amount),
                 0
               );
-              const percentage = item.amount / total * 100;
+              const percentage = safePercent(item.amount, total);
               const colors = [
               "bg-blue-500",
               "bg-purple-500",
@@ -73,7 +74,7 @@ export default function CostAnalysisTab({ costBreakdown }) {
                     </div>
                   </div>
                   <Progress
-                    value={percentage || "unknown"}
+                    value={percentage}
                     className="h-2 bg-slate-700/50" />
                 </div>);
             })}
@@ -91,12 +92,12 @@ export default function CostAnalysisTab({ costBreakdown }) {
           {
             category: item.category,
             type: "预算",
-            value: item.budget
+            value: toFiniteNumber(item.budget)
           },
           {
             category: item.category,
             type: "实际",
-            value: item.amount
+            value: toFiniteNumber(item.amount)
           }]
           )}
           xField="category"

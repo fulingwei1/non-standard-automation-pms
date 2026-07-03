@@ -57,9 +57,10 @@ export const projectApi = {
     api.get("/projects/my-projects", { params: { page: 1, ...params } }),
   getBoard: (params) => api.get("/projects/board", { params }),
   get: (id) => api.get(`/projects/${id}`),
+  getOverview: (id) => api.get(`/projects/${id}/overview`),
   create: (data) => api.post("/projects/", data),
   update: (id, data) => api.put(`/projects/${id}`, data),
-  getMachines: (id) => api.get(`/projects/${id}/machines`),
+  getMachines: (id) => api.get(`/projects/${id}/machines/`),
   getInProductionSummary: (params) =>
     api.get("/projects/in-production-summary", { params }),
   // Sprint 3 & 4: 模板和阶段门校验相关API
@@ -100,6 +101,19 @@ export const projectApi = {
   // 项目工时汇总
   getTimesheetSummary: (projectId, params) =>
     api.get(`/projects/${projectId}/timesheet/summary`, { params }),
+  // 项目物料进度
+  getMaterialProgress: (projectId) =>
+    api.get(`/projects/${projectId}/material-progress`),
+  getBomProgress: (projectId) =>
+    api.get(`/projects/${projectId}/bom-progress`),
+  getShortageTracker: (projectId) =>
+    api.get(`/projects/${projectId}/shortage-tracker`),
+  subscribeMaterialProgress: (projectId, data) =>
+    api.post(`/projects/${projectId}/material-progress/subscribe`, data),
+  syncKittingRate: (projectIds) =>
+    api.post("/assembly/material-readiness/batch-kit-rate", {
+      project_ids: projectIds,
+    }),
   createWorkOrdersFromWbs: (projectId) =>
     api.post(`/projects/${projectId}/data-flow/wbs-work-orders`),
   createPurchaseRequestsFromBom: (projectId) =>
@@ -112,11 +126,11 @@ export const projectApi = {
 
 export const machineApi = {
   list: (projectId, params) =>
-    api.get(`/projects/${projectId}/machines`, { params }),
+    api.get(`/projects/${projectId}/machines/`, { params }),
   get: (projectId, machineId) =>
     api.get(`/projects/${projectId}/machines/${machineId}`),
   create: (projectId, data) =>
-    api.post(`/projects/${projectId}/machines`, data),
+    api.post(`/projects/${projectId}/machines/`, data),
   update: (projectId, machineId, data) =>
     api.put(`/projects/${projectId}/machines/${machineId}`, data),
   delete: (projectId, machineId) =>
@@ -162,7 +176,7 @@ export const machineApi = {
 
 export const stageApi = {
   list: (params) => {
-    const projectId = params?.project_id;
+    const projectId = typeof params === "object" ? params?.project_id : params;
     if (projectId) {
       return api.get(`/stages/projects/${projectId}/stages`);
     }
@@ -175,7 +189,7 @@ export const stageApi = {
 
 export const milestoneApi = {
   list: (params) => {
-    const projectId = params?.project_id;
+    const projectId = typeof params === "object" ? params?.project_id : params;
     if (projectId) {
       return api.get(`/milestones/projects/${projectId}/milestones`);
     }
@@ -195,7 +209,18 @@ export const memberApi = {
     }
     return api.get("/members/", { params });
   },
-  add: (data) => api.post("/members/", data),
+  add: (projectIdOrData, maybeData) => {
+    const source =
+      typeof projectIdOrData === "object" ? projectIdOrData : maybeData || {};
+    const projectId =
+      typeof projectIdOrData === "object" ? source.project_id : projectIdOrData;
+    const { project_id: _projectId, role, status: _status, ...rest } = source;
+    const payload = {
+      ...rest,
+      role_code: rest.role_code || role || "member",
+    };
+    return api.post(`/projects/${projectId}/members/`, payload);
+  },
   remove: (id) => api.delete(`/members/${id}`),
   batchAdd: (projectId, data) =>
     api.post(`/projects/${projectId}/members/batch`, data),
@@ -213,11 +238,11 @@ export const memberApi = {
 export const costApi = {
   // 项目成本管理 - 使用项目中心路由
   list: (projectId, params) =>
-    api.get(`/projects/${projectId}/costs`, { params }),
+    api.get(`/projects/${projectId}/costs/`, { params }),
   get: (projectId, costId) =>
     api.get(`/projects/${projectId}/costs/${costId}`),
   create: (projectId, data) =>
-    api.post(`/projects/${projectId}/costs`, data),
+    api.post(`/projects/${projectId}/costs/`, data),
   update: (projectId, costId, data) =>
     api.put(`/projects/${projectId}/costs/${costId}`, data),
   delete: (projectId, costId) =>
@@ -237,7 +262,7 @@ export const costApi = {
     api.get(`/projects/${projectId}/costs/low-profit-root-cause`, { params }),
   // 兼容旧接口（已废弃，请使用上面的接口）
   getProjectCosts: (projectId, params) =>
-    api.get(`/projects/${projectId}/costs`, { params }),
+    api.get(`/projects/${projectId}/costs/`, { params }),
   getProjectSummary: (projectId) =>
     api.get(`/projects/${projectId}/costs/summary`),
   // 成本分析

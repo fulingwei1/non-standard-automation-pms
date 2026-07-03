@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui";
-import { Calendar, Package, Truck, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, Package, Truck, ChevronLeft, ChevronRight, Eye, Pencil } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 import { DELIVERY_STATUS, DELIVERY_PRIORITY, SHIPPING_METHODS, PACKAGE_TYPES } from "@/lib/constants/service";
@@ -17,7 +17,7 @@ const getConfigByValue = (configs, value, fallbackLabel = "-") => {
   return { label: fallbackLabel, color: "#8c8c8c" };
 };
 
-const DeliveryPlan = ({ deliveries = [], loading }) => {
+const DeliveryPlan = ({ deliveries = [], loading, onView, onEdit }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -90,21 +90,23 @@ const DeliveryPlan = ({ deliveries = [], loading }) => {
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-white/5">
-                  <TableHead className="text-left p-4 text-sm font-medium text-slate-400 w-[160px]">订单号</TableHead>
+                  <TableHead className="text-left p-4 text-sm font-medium text-slate-400 w-[160px]">发货单号</TableHead>
+                  <TableHead className="text-left p-4 text-sm font-medium text-slate-400 w-[160px]">销售订单</TableHead>
                   <TableHead className="text-left p-4 text-sm font-medium text-slate-400 w-[220px]">客户</TableHead>
                   <TableHead className="text-left p-4 text-sm font-medium text-slate-400 w-[120px]">状态</TableHead>
                   <TableHead className="text-left p-4 text-sm font-medium text-slate-400 w-[100px]">优先级</TableHead>
                   <TableHead className="text-left p-4 text-sm font-medium text-slate-400 w-[130px]">运输方式</TableHead>
                   <TableHead className="text-left p-4 text-sm font-medium text-slate-400 w-[130px]">包装类型</TableHead>
-                  <TableHead className="text-left p-4 text-sm font-medium text-slate-400 w-[120px]">计划日期</TableHead>
+                  <TableHead className="text-left p-4 text-sm font-medium text-slate-400 w-[130px]">计划发货日期</TableHead>
                   <TableHead className="text-right p-4 text-sm font-medium text-slate-400 w-[80px]">件数</TableHead>
                   <TableHead className="text-right p-4 text-sm font-medium text-slate-400 w-[100px]">重量 (kg)</TableHead>
+                  <TableHead className="text-right p-4 text-sm font-medium text-slate-400 w-[120px]">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {currentData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="p-8 text-center text-slate-400">
+                    <TableCell colSpan={11} className="p-8 text-center text-slate-400">
                       暂无数据
                     </TableCell>
                   </TableRow>
@@ -118,7 +120,10 @@ const DeliveryPlan = ({ deliveries = [], loading }) => {
                     return (
                       <TableRow key={row.id ?? row.orderNumber} className="border-b border-white/5 hover:bg-surface-100 transition-colors">
                         <TableCell className="p-4">
-                          <span className="font-medium text-white">{row.orderNumber}</span>
+                          <span className="font-medium text-white">{row.deliveryNo || "-"}</span>
+                        </TableCell>
+                        <TableCell className="p-4">
+                          <span className="text-sm text-slate-300">{row.orderNumber || "-"}</span>
                         </TableCell>
                         <TableCell className="p-4 text-sm text-slate-400 truncate max-w-[220px]">
                           {row.customerName}
@@ -155,6 +160,34 @@ const DeliveryPlan = ({ deliveries = [], loading }) => {
                         </TableCell>
                         <TableCell className="p-4 text-right text-sm text-white">
                           {row.totalWeight ?? "-"}
+                        </TableCell>
+                        <TableCell className="p-4">
+                          <div className="flex justify-end gap-2">
+                            {onView && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                title="查看发货计划"
+                                aria-label="查看发货计划"
+                                onClick={() => onView(row.id)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Eye size={15} />
+                              </Button>
+                            )}
+                            {onEdit && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                title="编辑发货计划"
+                                aria-label="编辑发货计划"
+                                onClick={() => onEdit(row.id)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Pencil size={15} />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );

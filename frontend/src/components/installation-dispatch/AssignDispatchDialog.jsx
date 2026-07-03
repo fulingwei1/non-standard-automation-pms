@@ -12,7 +12,7 @@ export default function AssignDispatchDialog({
   onAssign,
   loading = false,
 }) {
-  const technicians = (users || []).filter((user) => user.role === "technician");
+  const technicians = (users || []).filter((user) => user.is_active !== false);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -24,7 +24,7 @@ export default function AssignDispatchDialog({
           <div>
             <label className="text-sm font-medium">派工人员</label>
             <Select
-              value={assignData.assigned_to_id}
+              value={assignData.assigned_to_id ? String(assignData.assigned_to_id) : ""}
               onValueChange={(value) =>
                 onDataChange({ ...assignData, assigned_to_id: value })
               }
@@ -34,8 +34,8 @@ export default function AssignDispatchDialog({
               </SelectTrigger>
               <SelectContent>
                 {(technicians || []).map((user) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.name}
+                  <SelectItem key={user.id} value={String(user.id)}>
+                    {user.name || user.real_name || user.username}
                   </SelectItem>
                 ))}
               </SelectContent>

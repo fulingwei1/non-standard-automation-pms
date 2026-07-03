@@ -83,7 +83,7 @@ export default function ProjectRoles() {
 
   const loadUsers = async () => {
     try {
-      const response = await userApi.list({
+      const response = await userApi.options({
         page: 1,
         page_size: 100,
         is_active: true

@@ -8,6 +8,7 @@ import { Button } from "../../components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -32,6 +33,7 @@ export function ExceptionDetailDialog({
           <DialogTitle>
             {exc?.title} - {exc?.exception_no}
           </DialogTitle>
+          <DialogDescription>查看生产异常详情、处理记录和关闭动作。</DialogDescription>
         </DialogHeader>
         <DialogBody>
           {exc && (

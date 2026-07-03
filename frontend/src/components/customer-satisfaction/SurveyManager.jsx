@@ -4,7 +4,7 @@
  */
 
 import { motion } from "framer-motion";
-import { MoreHorizontal, Eye, FileText, XCircle, Edit } from "lucide-react";
+import { FileText, XCircle, Edit } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -13,17 +13,6 @@ import {
   Button,
   Badge,
   Progress,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "../ui";
 import { fadeIn } from "../../lib/animations";
 import { SURVEY_STATUS, SURVEY_TYPES } from "@/lib/constants/customer";

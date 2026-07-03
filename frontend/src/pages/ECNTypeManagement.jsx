@@ -40,6 +40,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -206,7 +207,7 @@ export default function ECNTypeManagement({ embedded = false }) {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索类型编码、名称..."
-                value={searchKeyword || "unknown"}
+                value={searchKeyword || ""}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-10" />
 
@@ -329,6 +330,9 @@ export default function ECNTypeManagement({ embedded = false }) {
             <DialogTitle>
               {editingType ? "编辑ECN类型" : "新建ECN类型"}
             </DialogTitle>
+            <DialogDescription>
+              配置 ECN 类型、评估部门和审批矩阵，用于后续工程变更分派。
+            </DialogDescription>
           </DialogHeader>
           <DialogBody>
             <div className="space-y-4">

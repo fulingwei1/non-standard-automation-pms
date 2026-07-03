@@ -5,7 +5,6 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   Heart,
   Cpu,
@@ -15,8 +14,6 @@ import {
   AlertTriangle,
   CheckCircle,
   Target,
-  ArrowUp,
-  ArrowDown,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import {
@@ -25,7 +22,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  Button,
   Badge,
   Progress,
   Table,
@@ -34,7 +30,6 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  Alert,
   Tabs,
   TabsContent,
   TabsList,

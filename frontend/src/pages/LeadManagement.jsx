@@ -100,7 +100,7 @@ export default function LeadManagement({ embedded = false }) {
   // 加载客户列表
   const loadCustomers = async () => {
     try {
-      const response = await customerApi.list({ page: 1, page_size: 100 });
+      const response = await customerApi.list({ page: 1, page_size: 1000 });
       if (response.data && response.data.items) {
         setCustomers(response.data.items);
       }
@@ -306,15 +306,26 @@ export default function LeadManagement({ embedded = false }) {
   // 线索转商机
   const handleConvert = async (customerId) => {
     if (!selectedLead) return;
+    const confirmed = await confirmAction({
+      title: "确认快速转商机",
+      description:
+        "当前入口不会填写完整 G1 需求模板，转换后阶段门状态为待补充。是否跳过 G1 验证继续转换？",
+      confirmText: "跳过并转换",
+    });
+    if (!confirmed) {
+      return;
+    }
+
     try {
-      await leadApi.convert(selectedLead.id, customerId);
+      await leadApi.convert(selectedLead.id, customerId, undefined, true);
       setShowConvertDialog(false);
       setSelectedLead(null);
       loadLeads();
-      alert("线索已成功转为商机");
+      alert("线索已跳过 G1 验证并成功转为商机");
     } catch (error) {
       console.error("转商机失败:", error);
-      alert("转商机失败: " + (error.response?.data?.detail || error.message));
+      const errorMsg = error.response?.data?.detail || error.message;
+      alert("转商机失败: " + errorMsg);
     }
   };
 
@@ -330,7 +341,13 @@ export default function LeadManagement({ embedded = false }) {
     if (!selectedLead || followUpSaving) return;
     try {
       setFollowUpSaving(true);
-      await leadApi.createFollowUp(selectedLead.id, followUpData);
+      const payload = {
+        follow_up_type: followUpData.follow_up_type,
+        content: followUpData.content,
+        next_action: followUpData.next_action || undefined,
+        next_action_at: followUpData.next_action_at || undefined,
+      };
+      await leadApi.createFollowUp(selectedLead.id, payload);
 
       await loadFollowUps(selectedLead.id);
       await loadLeads(); // 刷新列表

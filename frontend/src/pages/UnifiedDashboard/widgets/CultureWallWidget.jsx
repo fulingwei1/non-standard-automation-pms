@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { Award, Megaphone, Users, Heart, Star, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { cn } from '../../../lib/utils';
+import { cultureWallApi } from '../../../services/api/admin';
 
 // 值观图标映射
 const valueIcons = {
@@ -32,18 +33,18 @@ export default function CultureWallWidget() {
     const loadCultureData = async () => {
       setLoading(true);
       try {
-        const res = await fetch('/api/v1/culture-wall');
-        if (res.ok) {
-          const data = await res.json();
-          setCultureData({
-            coreValues: data?.coreValues || [],
-            announcements: data?.announcements || [],
-            honors: data?.honors || [],
-            employeeHighlights: data?.employeeHighlights || [],
-          });
-        } else {
-          setCultureData(emptyCultureData);
-        }
+        const response = await cultureWallApi.summary.get();
+        const data = response.data || response;
+        setCultureData({
+          coreValues: (data?.cultures || []).map((item) => ({
+            title: item.title,
+            desc: item.summary || item.content || "",
+            icon: "star",
+          })),
+          announcements: [...(data?.important_items || []), ...(data?.notices || []), ...(data?.notifications || [])],
+          honors: data?.rewards || [],
+          employeeHighlights: data?.personal_goals || [],
+        });
       } catch {
         setCultureData(emptyCultureData);
       } finally {

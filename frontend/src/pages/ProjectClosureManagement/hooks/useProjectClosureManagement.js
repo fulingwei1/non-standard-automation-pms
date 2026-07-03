@@ -49,8 +49,8 @@ export function useProjectClosureManagement() {
         try {
             setLoading(true);
             const res = await pmoApi.closures.get(selectedProjectId);
-            const data = res.data || res;
-            setClosure(data);
+            const data = res.formatted !== undefined ? res.formatted : res.data;
+            setClosure(data ?? null);
         } catch (err) {
             if (err.response?.status === 404) {
                 setClosure(null);

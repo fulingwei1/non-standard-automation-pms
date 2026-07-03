@@ -23,7 +23,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../components/ui/dialog";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
@@ -37,7 +36,6 @@ import {
   AlertTriangle,
   CheckCircle,
   Lightbulb,
-  BarChart3,
   X,
 } from "lucide-react";
 
@@ -282,7 +280,7 @@ export default function LessonsLearned() {
                   <div className="relative">
                     <Input
                       placeholder="搜索标题、描述、建议..."
-                      value={searchKeyword || "unknown"}
+                      value={searchKeyword || ""}
                       onChange={(e) => setSearchKeyword(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                       className="bg-gray-800 border-gray-700 text-white pl-10"

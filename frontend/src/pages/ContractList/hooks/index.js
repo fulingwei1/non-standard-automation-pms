@@ -1,1 +1,0 @@
-export { useContractList } from './useContractList';

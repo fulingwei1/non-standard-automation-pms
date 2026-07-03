@@ -127,12 +127,13 @@ describe("Project management downstream context", () => {
     await waitFor(() => {
       expect(projectApi.list).toHaveBeenCalledWith({
         page: 1,
-        page_size: 100,
+        page_size: 8,
         project_id: "42",
         contract_id: "9",
         opportunity_id: "2",
       });
     });
+    expect(costApi.getProjectSummary).not.toHaveBeenCalled();
   });
 
   it("passes upstream context to time-cost-margin project loading", async () => {

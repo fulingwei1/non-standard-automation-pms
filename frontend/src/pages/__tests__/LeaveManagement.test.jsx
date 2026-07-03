@@ -67,22 +67,22 @@ vi.mock('../../components/ui', async (importOriginal) => {
 
 // Mock the components used in LeaveManagement
 vi.mock('../LeaveManagement/components', () => ({
-  LeaveStatsCards: ({ stats }) => (
+  LeaveStatsCards: () => (
     <div data-testid="leave-stats-cards">
       <span>Stats Cards Rendered</span>
     </div>
   ),
-  LeaveOverview: ({ leaveApplications, stats, monthlyLeaveTrend }) => (
+  LeaveOverview: () => (
     <div data-testid="leave-overview">
       <span>Overview Rendered</span>
     </div>
   ),
-  LeaveStatistics: ({ leaveTypeChart, leaveStatusChart, monthlyLeaveTrend }) => (
+  LeaveStatistics: () => (
     <div data-testid="leave-statistics">
       <span>Statistics Rendered</span>
     </div>
   ),
-  LeaveApplicationList: ({ applications }) => (
+  LeaveApplicationList: () => (
     <div data-testid="leave-application-list">
       <span>Application List Rendered</span>
     </div>
@@ -117,7 +117,7 @@ vi.mock('../LeaveManagement/components', () => ({
       </select>
     </div>
   ),
-  LeaveBalanceTable: ({ balanceRows }) => (
+  LeaveBalanceTable: () => (
     <div data-testid="leave-balance-table">
       <span>Balance Table Rendered</span>
     </div>

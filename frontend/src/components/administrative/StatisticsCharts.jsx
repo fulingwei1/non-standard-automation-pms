@@ -44,13 +44,29 @@ export function SimpleLineChart({
   data,
   height = 200,
   color = "text-blue-400",
+  valueKey = "value",
+  xKey = "label",
+  yKeys,
 }) {
-  const maxValue = useMemo(() => {
-    return Math.max(...(data || []).map((d) => d.value), 1);
-  }, [data]);
+  const primaryValueKey = yKeys?.[0] || valueKey;
 
-  const points = (data || []).map((item, index) => ({
-    x: (index / (data?.length - 1 || 1)) * 100,
+  const chartData = useMemo(() => {
+    return (data || []).map((item) => {
+      const rawValue = item?.[valueKey] ?? item?.[primaryValueKey] ?? 0;
+      const value = Number(rawValue);
+      return {
+        value: Number.isFinite(value) ? value : 0,
+        label: item?.label ?? item?.[xKey] ?? "",
+      };
+    });
+  }, [data, primaryValueKey, valueKey, xKey]);
+
+  const maxValue = useMemo(() => {
+    return Math.max(...(chartData || []).map((d) => d.value), 1);
+  }, [chartData]);
+
+  const points = (chartData || []).map((item, index) => ({
+    x: (index / Math.max(chartData.length - 1, 1)) * 100,
     y: 100 - (item.value / maxValue) * 80,
     value: item.value,
     label: item.label,
@@ -82,11 +98,11 @@ export function SimpleLineChart({
         ))}
       </svg>
       <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-slate-500">
-        {(data || []).map((item, index) => (
+        {(chartData || []).map((item, index) => (
           <span
             key={index}
             className="truncate"
-            style={{ width: `${100 / data?.length}%` }}
+            style={{ width: `${chartData.length ? 100 / chartData.length : 100}%` }}
           >
             {item.label}
           </span>
@@ -100,17 +116,32 @@ export function SimpleLineChart({
  * Pie Chart Component (Donut Chart)
  */
 export function SimplePieChart({ data, size = 200 }) {
-  const total = useMemo(() => {
-    return (data || []).reduce((sum, item) => sum + item.value, 0);
+  const chartData = useMemo(() => {
+    return (data || []).map((item, index) => {
+      const rawValue = Number(item?.value ?? 0);
+      return {
+        label: item?.label ?? item?.name ?? "",
+        value: Number.isFinite(rawValue) && rawValue > 0 ? rawValue : 0,
+        color: item?.color || `hsl(${index * 60}, 70%, 50%)`,
+      };
+    });
   }, [data]);
+
+  const total = useMemo(() => {
+    return chartData.reduce((sum, item) => sum + item.value, 0);
+  }, [chartData]);
 
   const radius = size / 2 - 10;
   const centerX = size / 2;
   const centerY = size / 2;
 
   const segments = useMemo(() => {
+    if (total <= 0) {
+      return [];
+    }
+
     // Calculate cumulative angles using reduce to avoid mutation
-    const angles = (data || []).reduce((acc, item, index) => {
+    const angles = chartData.filter((item) => item.value > 0).reduce((acc, item, index) => {
       const prevAngle = index === 0 ? -90 : acc[index - 1].endAngle;
       const angle = (item.value / total) * 360;
       acc.push({
@@ -118,12 +149,11 @@ export function SimplePieChart({ data, size = 200 }) {
         endAngle: prevAngle + angle,
         angle,
         item,
-        index,
       });
       return acc;
     }, []);
 
-    return (angles || []).map(({ startAngle, endAngle, angle, item, index }) => {
+    return (angles || []).map(({ startAngle, endAngle, angle, item }) => {
       const percentage = (item.value / total) * 100;
       const startAngleRad = (startAngle * Math.PI) / 180;
       const endAngleRad = (endAngle * Math.PI) / 180;
@@ -145,12 +175,12 @@ export function SimplePieChart({ data, size = 200 }) {
       return {
         pathData,
         percentage,
-        color: item.color || `hsl(${index * 60}, 70%, 50%)`,
+        color: item.color,
         label: item.label,
         value: item.value,
       };
     });
-  }, [data, total, radius, centerX, centerY]);
+  }, [chartData, total, radius, centerX, centerY]);
 
   return (
     <div className="flex items-center gap-6">
@@ -178,7 +208,7 @@ export function SimplePieChart({ data, size = 200 }) {
         </div>
       </div>
       <div className="flex-1 space-y-2">
-        {(segments || []).map((segment, index) => (
+        {(total > 0 ? segments : chartData).map((segment, index) => (
           <div key={index} className="flex items-center gap-3">
             <div
               className="w-4 h-4 rounded"
@@ -190,7 +220,7 @@ export function SimplePieChart({ data, size = 200 }) {
                 <span className="text-white font-medium">{segment.value}</span>
               </div>
               <div className="text-xs text-slate-500">
-                {segment.percentage.toFixed(1)}%
+                {(segment.percentage || 0).toFixed(1)}%
               </div>
             </div>
           </div>

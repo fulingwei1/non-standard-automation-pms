@@ -14,8 +14,7 @@ import {
   Target,
   TrendingUp,
   Eye,
-  Search,
-  Filter } from
+  Search } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -39,6 +38,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogBody,
   DialogFooter } from
 "../components/ui/dialog";
@@ -46,6 +46,15 @@ import { cn, formatDate } from "../lib/utils";
 import { getProjectContextFilters, mergeProjectContextFilters } from "../lib/projectContext";
 import { milestoneApi, projectApi } from "../services/api";
 import { confirmAction } from "@/lib/confirmAction";
+
+const asList = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.data?.items)) return payload.data.items;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
+};
+
 const statusConfigs = {
   PENDING: { label: "待开始", color: "bg-slate-500", icon: Clock },
   IN_PROGRESS: { label: "进行中", color: "bg-blue-500", icon: TrendingUp },
@@ -134,8 +143,7 @@ export default function MilestoneManagement() {
       if (scopedProjectId && scopedProjectId !== "all") params.project_id = scopedProjectId;
       // 假设 milestoneApi.listAll 存在，否则需要调用 /milestones 接口
       const res = await milestoneApi.listAll ? milestoneApi.listAll(params) : milestoneApi.list(params);
-      const milestoneList = res?.data?.items ?? res?.data ?? res ?? [];
-      setMilestones(Array.isArray(milestoneList) ? milestoneList : []);
+      setMilestones(asList(res));
     } catch (error) {
       console.error("Failed to fetch all milestones:", error);
       setMilestones([]);
@@ -149,10 +157,10 @@ export default function MilestoneManagement() {
       const params = { project_id: id };
       if (filterStatus) {params.status = filterStatus;}
       const res = await milestoneApi.list(id);
-      const milestoneList = res.data || res || [];
-      setMilestones(milestoneList);
+      setMilestones(asList(res));
     } catch (error) {
       console.error("Failed to fetch milestones:", error);
+      setMilestones([]);
     } finally {
       setLoading(false);
     }
@@ -423,6 +431,9 @@ export default function MilestoneManagement() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>新建里程碑</DialogTitle>
+            <DialogDescription className="sr-only">
+              为当前项目创建新的里程碑节点。
+            </DialogDescription>
           </DialogHeader>
           <DialogBody>
             <div className="space-y-4">
@@ -548,6 +559,9 @@ export default function MilestoneManagement() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>里程碑详情</DialogTitle>
+            <DialogDescription className="sr-only">
+              查看里程碑状态、类型、计划日期和完成信息。
+            </DialogDescription>
           </DialogHeader>
           <DialogBody>
             {selectedMilestone &&

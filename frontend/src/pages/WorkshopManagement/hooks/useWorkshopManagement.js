@@ -22,7 +22,7 @@ export function useWorkshopManagement() {
   const {
     filteredData: filteredWorkshops,
     loading,
-    reload: fetchWorkshops,
+    reload: _fetchWorkshops,
     mutate,
   } = useDataManagement(
     // fetchFn: called by useDataManagement on mount and whenever filters change.
@@ -54,7 +54,7 @@ export function useWorkshopManagement() {
 
   // ── Secondary data: managers list ─────────────────────────────────────────
   const { filteredData: managers, reload: _fetchManagers } = useDataManagement(
-    () => userApi.list({ page_size: 1000 }),
+    () => userApi.options({ page_size: 1000, is_active: true }),
     { autoLoad: true },
   );
 

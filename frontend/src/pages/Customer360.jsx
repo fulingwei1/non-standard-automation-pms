@@ -57,7 +57,8 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 const Customer360 = () => {
-  const { customerId } = useParams();
+  const { customerId, id: routeId } = useParams();
+  const resolvedCustomerId = customerId || routeId;
   const navigate = useNavigate();
 
   // 状态管理
@@ -68,13 +69,23 @@ const Customer360 = () => {
 
   // 数据加载
   useEffect(() => {
+    if (!resolvedCustomerId) {
+      setCustomer(null);
+      setLoading(false);
+      return;
+    }
     loadCustomerData();
-  }, [customerId]);
+  }, [resolvedCustomerId]);
 
   const loadCustomerData = async () => {
+    if (!resolvedCustomerId) {
+      setCustomer(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const response = await customerApi.get360(customerId);
+      const response = await customerApi.get360(resolvedCustomerId);
       setCustomer(response.data || response);
     } catch (_error) {
       message.error('加载客户数据失败');
@@ -88,6 +99,7 @@ const Customer360 = () => {
   };
 
   const handleRefresh = () => {
+    if (!resolvedCustomerId) {return;}
     loadCustomerData();
   };
 
@@ -96,12 +108,54 @@ const Customer360 = () => {
   };
 
   const handleCreateQuote = () => {
-    navigate(`/quotes/create?customerId=${customerId}`);
+    if (!resolvedCustomerId) {return;}
+    navigate(`/quotes/create?customerId=${resolvedCustomerId}`);
   };
 
   const handleCreateOrder = () => {
-    navigate(`/orders/create?customerId=${customerId}`);
+    if (!resolvedCustomerId) {return;}
+    navigate(`/orders/create?customerId=${resolvedCustomerId}`);
   };
+
+  if (!resolvedCustomerId) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="customer-360-container"
+        style={{ padding: '24px', background: '#f5f5f5', minHeight: '100vh' }}>
+        <div className="page-header" style={{ marginBottom: '24px' }}>
+          <div className="header-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <Button
+                icon={<ArrowLeft size={16} />}
+                onClick={handleBack}
+                style={{ marginRight: 16 }}>
+                返回客户列表
+              </Button>
+              <div>
+                <Title level={2} style={{ margin: 0 }}>
+                  <Building2 className="inline-block mr-2" />
+                  客户360度视图
+                </Title>
+                <Text type="secondary">请选择客户后查看详情</Text>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Card>
+          <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+            <Building2 size={48} style={{ color: '#94a3b8', marginBottom: 16 }} />
+            <Title level={4}>暂未选择客户</Title>
+            <Text type="secondary">从客户列表进入后，可查看订单、报价、合同、回款和服务记录。</Text>
+            <div style={{ marginTop: 24 }}>
+              <Button type="primary" onClick={handleBack}>前往客户列表</Button>
+            </div>
+          </div>
+        </Card>
+      </motion.div>);
+  }
 
   const tabItems = [
   {

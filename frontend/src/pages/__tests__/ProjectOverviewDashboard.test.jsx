@@ -17,6 +17,7 @@ vi.mock("react-router-dom", async () => {
 
 vi.mock("../../services/api", () => ({
   projectApi: {
+    getOverview: vi.fn(),
     createWorkOrdersFromWbs: vi.fn(),
     createPurchaseRequestsFromBom: vi.fn(),
     createDeliverySchedule: vi.fn(),
@@ -28,8 +29,8 @@ describe("ProjectOverviewDashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(window, "alert").mockImplementation(() => {});
-    global.fetch = vi.fn().mockResolvedValue({
-      json: vi.fn().mockResolvedValue({
+    projectApi.getOverview.mockResolvedValue({
+      data: {
         production: {},
         procurement: {},
         delivery: {},
@@ -42,7 +43,7 @@ describe("ProjectOverviewDashboard", () => {
           sla: {},
           maintenance: {},
         },
-      }),
+      },
     });
   });
 
@@ -113,7 +114,7 @@ describe("ProjectOverviewDashboard", () => {
     });
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(5);
+      expect(projectApi.getOverview).toHaveBeenCalledTimes(5);
     });
   });
 });

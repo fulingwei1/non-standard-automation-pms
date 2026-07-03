@@ -7,7 +7,7 @@
  * - 物料处置决策
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Card,
@@ -31,7 +31,7 @@ export default function ECNMaterialImpact() {
   const [loading, setLoading] = useState(true);
   const [materialImpact, setMaterialImpact] = useState(null);
   const [executionProgress, setExecutionProgress] = useState(null);
-  const [stakeholders, setStakeholders] = useState([]);
+  const [stakeholders] = useState([]);
 
   useEffect(() => {
     loadMaterialImpact();
@@ -55,15 +55,6 @@ export default function ECNMaterialImpact() {
       setExecutionProgress(response.data);
     } catch (error) {
       console.error('加载执行进度失败:', error);
-    }
-  };
-
-  const handleMaterialDisposition = async (materialId, dispositionData) => {
-    try {
-      await ecnApi.updateMaterialDisposition(ecnId, materialId, dispositionData);
-      loadExecutionProgress();
-    } catch (error) {
-      console.error('更新物料处置失败:', error);
     }
   };
 

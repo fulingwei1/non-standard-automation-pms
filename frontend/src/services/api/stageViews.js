@@ -83,7 +83,7 @@ export const stageViewsApi = {
 
   // ==================== 模板管理 ====================
   templates: {
-    list: (params) => api.get("/stage-templates", { params }),
+    list: (params) => api.get("/stage-templates/", { params }),
     get: (templateId) => api.get(`/stage-templates/${templateId}`),
     initializeProject: (projectId, data) =>
       api.post(`/projects/${projectId}/stages/initialize`, data),

@@ -14,7 +14,7 @@ export default function CostsTab({ id, costs, costSummary }) {
     <>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white">费用归集</h3>
-        <Button onClick={() => navigate(`/rd-projects/${id}/costs/entry`)}>
+        <Button onClick={() => navigate(`/rd-projects/${id}/cost-entry`)}>
           录入费用
         </Button>
       </div>

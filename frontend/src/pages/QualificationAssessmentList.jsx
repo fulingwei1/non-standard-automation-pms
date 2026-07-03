@@ -66,22 +66,20 @@ export default function QualificationAssessmentList() {
   const loadAssessments = async () => {
     setLoading(true);
     try {
-      const params = {
-        page: pagination.page,
-        page_size: pagination.page_size,
-        ...filters
-      };
+      const params = Object.fromEntries(
+        Object.entries({
+          page: pagination.page,
+          page_size: pagination.page_size,
+          ...filters
+        }).filter(([, value]) => value !== "" && value !== null && value !== undefined)
+      );
       if (searchKeyword) {
         params.keyword = searchKeyword;
       }
 
       // 这里需要调用评估记录列表API
       // 由于后端可能没有统一的评估记录列表接口，我们可以通过员工任职资格接口获取
-      const response = await qualificationApi.getEmployeeQualifications({
-        page: pagination.page,
-        page_size: pagination.page_size,
-        ...filters
-      });
+      const response = await qualificationApi.getEmployeeQualifications(params);
 
       if (response.data?.code === 200) {
         // 获取每个员工的评估记录

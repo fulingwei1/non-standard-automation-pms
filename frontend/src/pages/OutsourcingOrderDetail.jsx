@@ -52,6 +52,20 @@ const inspectResultConfigs = {
   FAILED: { label: "不合格", color: "bg-red-500" },
   CONDITIONAL: { label: "有条件合格", color: "bg-amber-500" },
 };
+
+const asList = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.data?.items)) return payload.data.items;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
+};
+
+const toFiniteNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
 export default function OutsourcingOrderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -82,8 +96,7 @@ export default function OutsourcingOrderDetail() {
   const fetchDeliveries = async () => {
     try {
       const res = await outsourcingApi.orders.getDeliveries(id);
-      const deliveryList = res.data?.items || res.data?.items || res.data || [];
-      setDeliveries(deliveryList);
+      setDeliveries(asList(res));
     } catch (error) {
       console.error("Failed to fetch deliveries:", error);
     }
@@ -91,8 +104,7 @@ export default function OutsourcingOrderDetail() {
   const fetchInspections = async () => {
     try {
       const res = await outsourcingApi.orders.getInspections(id);
-      const inspectionList = res.data?.items || res.data?.items || res.data || [];
-      setInspections(inspectionList);
+      setInspections(asList(res));
     } catch (error) {
       console.error("Failed to fetch inspections:", error);
     }
@@ -100,8 +112,7 @@ export default function OutsourcingOrderDetail() {
   const fetchProgressLogs = async () => {
     try {
       const res = await outsourcingApi.orders.getProgress(id);
-      const progressList = res.data || res || [];
-      setProgressLogs(progressList);
+      setProgressLogs(asList(res));
     } catch (error) {
       console.error("Failed to fetch progress logs:", error);
     }
@@ -121,24 +132,25 @@ export default function OutsourcingOrderDetail() {
     );
   }
   // Calculate statistics
+  const orderItems = asList(order.items);
   const totalQuantity =
-    order.items?.reduce(
-      (sum, item) => sum + (parseFloat(item.quantity) || 0),
+    orderItems.reduce(
+      (sum, item) => sum + toFiniteNumber(item.quantity),
       0,
     ) || 0;
   const deliveredQuantity =
-    order.items?.reduce(
-      (sum, item) => sum + (parseFloat(item.delivered_quantity) || 0),
+    orderItems.reduce(
+      (sum, item) => sum + toFiniteNumber(item.delivered_quantity),
       0,
     ) || 0;
   const qualifiedQuantity =
-    order.items?.reduce(
-      (sum, item) => sum + (parseFloat(item.qualified_quantity) || 0),
+    orderItems.reduce(
+      (sum, item) => sum + toFiniteNumber(item.qualified_quantity),
       0,
     ) || 0;
   const rejectedQuantity =
-    order.items?.reduce(
-      (sum, item) => sum + (parseFloat(item.rejected_quantity) || 0),
+    orderItems.reduce(
+      (sum, item) => sum + toFiniteNumber(item.rejected_quantity),
       0,
     ) || 0;
   const deliveryRate =
@@ -457,7 +469,11 @@ export default function OutsourcingOrderDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {(inspections || []).map((inspection) => (
+                    {(inspections || []).map((inspection) => {
+                      const passRateValue = toFiniteNumber(
+                        inspection.pass_rate,
+                      );
+                      return (
                       <TableRow key={inspection.id}>
                         <TableCell className="font-mono text-sm">
                           {inspection.inspection_no}
@@ -481,14 +497,14 @@ export default function OutsourcingOrderDetail() {
                         <TableCell>
                           <span
                             className={
-                              inspection.pass_rate >= 95
+                              passRateValue >= 95
                                 ? "text-emerald-600"
-                                : inspection.pass_rate >= 80
+                                : passRateValue >= 80
                                   ? "text-amber-600"
                                   : "text-red-600"
                             }
                           >
-                            {inspection.pass_rate?.toFixed(1) || 0}%
+                            {passRateValue.toFixed(1)}%
                           </span>
                         </TableCell>
                         <TableCell>
@@ -504,7 +520,8 @@ export default function OutsourcingOrderDetail() {
                         </TableCell>
                         <TableCell>{inspection.disposition || "-"}</TableCell>
                       </TableRow>
-                    ))}
+                      );
+                    })}
                   </TableBody>
                 </Table>
               )}

@@ -6,6 +6,14 @@ import {
   PresalesWorkbenchRedirect,
 } from "./presalesRedirects";
 
+// 会议纪要 AI 解读
+const MeetingMinutesAI = lazyLoad(() => import("../../pages/MeetingMinutesAI"));
+// 标准模块库 / 故障诊断
+const ModuleLibrary = lazyLoad(() => import("../../pages/ModuleLibrary"));
+const FaultDiagnosis = lazyLoad(() => import("../../pages/FaultDiagnosis"));
+const AIAssistant = lazyLoad(() => import("../../pages/AIAssistant"));
+const AdminAIConfig = lazyLoad(() => import("../../pages/AdminAIConfig"));
+
 // 客户管理
 const CustomerList = lazyLoad(() => import("../../pages/CustomerList"));
 const CustomerDetail = lazyLoad(() => import("../../pages/CustomerManagement/CustomerDetail"));
@@ -24,7 +32,7 @@ const OpportunityManagement = lazyLoad(() => import("../../pages/OpportunityMana
 const OpportunityDetail = lazyLoad(() => import("../../pages/OpportunityDetail"));
 
 // 报价管理
-const QuotationList = lazyLoad(() => import("../../pages/QuotationList"));
+// 已去重：QuotationList 页面废弃，/quotations 重定向到 /cost-quotes/quotes
 const QuoteManagementCenter = lazyLoad(() => import("../../pages/QuoteManagementCenter"));
 const QuoteManagement = lazyLoad(() => import("../../pages/QuoteManagement"));
 const QuoteCreateEdit = lazyLoad(() => import("../../pages/QuoteCreateEdit"));
@@ -36,7 +44,7 @@ const FinancialCostUpload = lazyLoad(() => import("../../pages/FinancialCostUplo
 const CpqConfigurator = lazyLoad(() => import("../../pages/CpqConfigurator"));
 
 // 合同管理
-const ContractList = lazyLoad(() => import("../../pages/ContractList"));
+// 已去重：ContractList 页面废弃，/contracts 重定向到 /sales/contracts
 const ContractDetail = lazyLoad(() => import("../../pages/ContractDetail"));
 const ContractManagement = lazyLoad(() => import("../../pages/ContractManagement"));
 const ContractApproval = lazyLoad(() => import("../../pages/ContractApproval"));
@@ -51,7 +59,7 @@ const SalesTeam = lazyLoad(() => import("../../pages/SalesTeam"));
 const SalesTeamCenter = lazyLoad(() => import("../../pages/SalesTeamCenter"));
 const SalesReports = lazyLoad(() => import("../../pages/SalesReports"));
 const SalesStatistics = lazyLoad(() => import("../../pages/SalesStatistics"));
-const SalesOrganization = lazyLoad(() => import("../../pages/SalesAI/SalesOrganization"));
+// 已去重：SalesOrganization 页面废弃，/sales/organization 重定向到 /sales/team
 const SalesOpportunityCenter = lazyLoad(() => import("../../pages/SalesOpportunityCenter"));
 
 // 销售漏斗
@@ -118,11 +126,17 @@ export function SalesRoutes() {
       <Route path="/sales/contracts/approval" element={<ContractApproval />} />
       <Route path="/customers" element={<Navigate to="/sales/customers" replace />} />
       <Route path="/sales/customers" element={<CustomerList />} />
+      <Route path="/sales/meeting-minutes-ai" element={<MeetingMinutesAI />} />
+      <Route path="/engineering/module-library" element={<ModuleLibrary />} />
+      <Route path="/service/fault-diagnosis" element={<FaultDiagnosis />} />
+      <Route path="/ai/assistant" element={<AIAssistant />} />
+      <Route path="/admin/ai-config" element={<AdminAIConfig />} />
       <Route path="/sales/customers/:id" element={<CustomerDetail />} />
       <Route path="/opportunities" element={<OpportunityBoard />} />
       <Route path="/lead-assessment" element={<LeadAssessment />} />
-      <Route path="/quotations" element={<QuotationList />} />
-      <Route path="/contracts" element={<ContractList />} />
+      {/* 去重：孤儿备用页重定向到菜单规范页（原 QuotationList/ContractList 已并入） */}
+      <Route path="/quotations" element={<Navigate to="/cost-quotes/quotes" replace />} />
+      <Route path="/contracts" element={<Navigate to="/sales/contracts" replace />} />
       <Route path="/contracts/:id" element={<ContractDetail />} />
       <Route path="/sales/contracts/:id" element={<ContractDetail />} />
       <Route
@@ -178,7 +192,8 @@ export function SalesRoutes() {
       <Route path="/cost-quotes/templates" element={<QuoteManagementCenter />} />
       <Route path="/sales/quotes" element={<QuoteManagementCenter />} />
       <Route path="/sales/quotes/margin" element={<QuoteManagementCenter />} />
-      <Route path="/sales/quotes/management" element={<QuoteManagement />} />
+      {/* 去重：QuoteManagement 已内嵌于 QuoteManagementCenter，独立路由重定向到规范页 */}
+      <Route path="/sales/quotes/management" element={<Navigate to="/cost-quotes/quotes" replace />} />
       <Route path="/sales/quotes/create" element={<QuoteCreateEdit />} />
       <Route path="/sales/quotes/:id/edit" element={<QuoteCreateEdit />} />
       <Route path="/sales/quotes/:id/cost" element={<QuoteCostManagement />} />
@@ -216,7 +231,8 @@ export function SalesRoutes() {
       <Route path="/sales/win-rate-prediction" element={<WinRatePrediction />} />
       <Route path="/sales/win-rate-prediction/:id" element={<WinRatePrediction />} />
       <Route path="/sales/competitor-analysis" element={<CompetitorAnalysis />} />
-      <Route path="/sales/organization" element={<SalesOrganization />} />
+      {/* 去重：组织架构已并入"销售团队"统一入口(SalesTeam 的组织架构Tab)，重定向 */}
+      <Route path="/sales/organization" element={<Navigate to="/sales/team" replace />} />
       <Route path="/sales/data-quality" element={<DataQuality />} />
       <Route path="/sales/role-based-view" element={<RoleBasedView />} />
     </>

@@ -3,6 +3,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogBody,
     DialogFooter,
 } from '../../components/ui/dialog';
@@ -33,6 +34,9 @@ export function CreateIssueDialog({
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>上报问题</DialogTitle>
+                    <DialogDescription className="sr-only">
+                        记录当前验收单的问题、严重程度和关联检查项。
+                    </DialogDescription>
                 </DialogHeader>
 
                 <DialogBody>

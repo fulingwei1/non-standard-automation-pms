@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -16,6 +17,12 @@ import {
 } from "../../components/ui";
 import { DEFAULT_FORM_DATA } from "./constants";
 
+const toOptionalNumber = (value) => {
+  if (value === "" || value === null || value === undefined) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : value;
+};
+
 export function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) {
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
   const [loading, setLoading] = useState(false);
@@ -26,11 +33,12 @@ export function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories =
     try {
       const submitData = {
         ...formData,
+        category_id: toOptionalNumber(formData.category_id),
         budget_amount: formData.budget_amount
           ? parseFloat(formData.budget_amount)
           : null,
-        project_manager_id: formData.project_manager_id || null,
-        linked_project_id: formData.linked_project_id || null,
+        project_manager_id: toOptionalNumber(formData.project_manager_id),
+        linked_project_id: toOptionalNumber(formData.linked_project_id),
         initiation_date: formData.initiation_date || null,
         planned_start_date: formData.planned_start_date || null,
         planned_end_date: formData.planned_end_date || null,
@@ -53,6 +61,7 @@ export function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories =
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>创建研发项目</DialogTitle>
+          <DialogDescription>录入研发立项、预算和研究目标，用于后续费用归集与报表。</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <DialogBody className="space-y-4">

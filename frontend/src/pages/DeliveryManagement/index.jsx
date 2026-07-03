@@ -53,7 +53,11 @@ const DeliveryManagement = () => {
     setSearchText,
     loadData,
     handleBack,
+    handleView,
+    handleEdit,
+    handleExport,
     buildDeliveryPath,
+    canCreateDeliveryPlan,
     navigate,
   } = useDeliveryManagement();
 
@@ -66,7 +70,11 @@ const DeliveryManagement = () => {
         animate={{ opacity: 1 }}
         className="p-6 bg-slate-900 min-h-screen"
       >
-        <DeliveryDetail id={params.id} onBack={handleBack} />
+        <DeliveryDetail
+          id={params.id}
+          onBack={handleBack}
+          onEdit={() => handleEdit(params.id)}
+        />
       </motion.div>
     );
   }
@@ -105,8 +113,10 @@ const DeliveryManagement = () => {
       className="delivery-management-container p-6 bg-slate-900 min-h-screen"
     >
       <PageHeader
+        canCreateFromProject={canCreateDeliveryPlan}
         onNew={() => navigate(buildDeliveryPath("/pmc/delivery-orders/new"))}
         onRefresh={loadData}
+        onExport={handleExport}
       />
 
       <SearchBar value={searchText} onChange={setSearchText} />
@@ -143,14 +153,19 @@ const DeliveryManagement = () => {
 
           <TabsContent value="overview" className="mt-4">
             <DeliveryOverview
-              data={deliveries}
+              data={filteredDeliveries}
               loading={loading}
               statistics={deliveryStatistics}
             />
           </TabsContent>
 
           <TabsContent value="plan" className="mt-4">
-            <DeliveryPlan deliveries={filteredDeliveries} loading={loading} />
+            <DeliveryPlan
+              deliveries={filteredDeliveries}
+              loading={loading}
+              onView={handleView}
+              onEdit={handleEdit}
+            />
           </TabsContent>
 
           <TabsContent value="tracking" className="mt-4">

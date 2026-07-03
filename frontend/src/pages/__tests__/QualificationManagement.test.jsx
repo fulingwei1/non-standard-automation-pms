@@ -234,14 +234,12 @@ describe("QualificationManagement", () => {
   it("切到能力模型页后加载模型列表并支持新建入口", async () => {
     renderPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "能力模型" }));
+    fireEvent.click(screen.getByRole("tab", { name: "能力模型" }));
 
     await waitFor(() => {
       expect(qualificationApi.getModels).toHaveBeenCalledWith({
         page: 1,
         page_size: 10,
-        position_type: "",
-        level_id: "",
       });
     });
 
@@ -257,14 +255,12 @@ describe("QualificationManagement", () => {
   it("切到员工认证页后加载员工列表、图表和分页", async () => {
     renderPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "员工认证" }));
+    fireEvent.click(screen.getByRole("tab", { name: "员工认证" }));
 
     await waitFor(() => {
       expect(qualificationApi.getEmployeeQualifications).toHaveBeenCalledWith({
         page: 1,
         page_size: 10,
-        position_type: "",
-        status: "",
       });
     });
 

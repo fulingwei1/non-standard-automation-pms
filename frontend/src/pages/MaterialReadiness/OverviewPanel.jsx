@@ -17,7 +17,6 @@ import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import {
   MATERIAL_STATUS,
-  MATERIAL_TYPE,
   getMaterialStatusColor,
   getMaterialStatusLabel,
   getMaterialTypeLabel,

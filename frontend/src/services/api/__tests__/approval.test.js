@@ -11,7 +11,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('Approval API', () => {
-  let api, mock;
+  let mock;
   let submitApproval, approveApproval, rejectApproval, delegateApproval, withdrawApproval;
   let getApprovalHistory, getApprovalDetail, getMyApprovalTasks;
   let submitEcnApproval, submitQuoteApproval, submitContractApproval, submitInvoiceApproval;
@@ -19,7 +19,6 @@ describe('Approval API', () => {
 
   beforeEach(async () => {
     const setup = await setupApiTest();
-    api = setup.api;
     mock = setup.mock;
 
     const approvalModule = await import('../approval.js');

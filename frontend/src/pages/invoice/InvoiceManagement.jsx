@@ -129,7 +129,7 @@ export default function InvoiceManagement() {
 
  const loadContracts = async () => {
  try {
-  const response = await contractApi.list({ page: 1, page_size: 100 });
+  const response = await contractApi.list({ page: 1, page_size: 1000 });
   if (response.data && response.data.items) {
   setContracts(response.data.items);
  }
@@ -229,7 +229,7 @@ export default function InvoiceManagement() {
   alert("只能删除草稿状态的发票");
  return;
   }
-  await invoiceApi.update(selectedInvoice.raw.id, { status: "VOID" });
+  await invoiceApi.delete(selectedInvoice.raw.id);
   setShowDeleteDialog(false);
  setSelectedInvoice(null);
   loadInvoices();

@@ -1,13 +1,13 @@
-describe.skip("/**
+/**
  * ApprovalCenter 组件测试
  * 测试覆盖：审批中心主页、四个标签页、数据加载、筛选功能
  */
 
-describe.skip("
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-describe.skip("
+
 import { render, screen } from '@testing-library/react';
-describe.skip("
+
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock all the components used in ApprovalCenter
@@ -71,14 +71,126 @@ vi.mock('../../components/ui', async (importOriginal) => {
   };
 });
 
-// Mock the components used in ApprovalCenter
-vi.mock('../ApprovalCenter/components', () => ({
-  StatCards: ({ counts }) => (
+vi.mock('../../components/ui/button', () => ({
+  Button: ({ children, variant, onClick, ...props }) => (
+    <button
+      data-testid="button"
+      data-button-text={typeof children === 'string' ? children : ''}
+      data-variant={variant}
+      onClick={onClick}
+      {...props}
+    >
+      {children}
+    </button>
+  ),
+}));
+
+vi.mock('../../components/ui/badge', () => ({
+  Badge: ({ children, ...props }) => (
+    <span data-testid="badge" {...props}>{children}</span>
+  ),
+}));
+
+vi.mock('../../components/ui/tabs', () => ({
+  Tabs: ({ children, value, onValueChange }) => (
+    <div data-testid="tabs" data-value={value}>
+      <input
+        type="hidden"
+        value={value}
+        onChange={(e) => onValueChange?.(e.target.value)}
+        data-testid="tabs-input"
+      />
+      {children}
+    </div>
+  ),
+  TabsContent: ({ children, value }) => (
+    <div data-testid="tabs-content" data-value={value}>
+      {children}
+    </div>
+  ),
+  TabsList: ({ children }) => (
+    <div data-testid="tabs-list">{children}</div>
+  ),
+  TabsTrigger: ({ children, value, onClick }) => (
+    <button
+      data-testid="tabs-trigger"
+      data-value={value}
+      onClick={() => onClick?.()}
+    >
+      {children}
+    </button>
+  ),
+}));
+
+vi.mock('../ApprovalCenter/StatCards', () => ({
+  default: () => (
     <div data-testid="stat-cards">
       <span>Stat Cards Rendered</span>
     </div>
   ),
-  FilterBar: ({ searchText, setSearchText, filters, updateFilters, refresh, loading }) => (
+}));
+
+vi.mock('../ApprovalCenter/FilterBar', () => ({
+  default: ({ searchText, setSearchText }) => (
+    <div data-testid="filter-bar">
+      <input
+        placeholder="Search"
+        value={searchText}
+        onChange={(e) => setSearchText(e.target.value)}
+        data-testid="search-input"
+      />
+    </div>
+  ),
+}));
+
+vi.mock('../ApprovalCenter/PendingList', () => ({
+  default: () => (
+    <div data-testid="pending-list">
+      <span>Pending List Rendered</span>
+    </div>
+  ),
+}));
+
+vi.mock('../ApprovalCenter/InitiatedList', () => ({
+  default: () => (
+    <div data-testid="initiated-list">
+      <span>Initiated List Rendered</span>
+    </div>
+  ),
+}));
+
+vi.mock('../ApprovalCenter/CcList', () => ({
+  default: () => (
+    <div data-testid="cc-list">
+      <span>Cc List Rendered</span>
+    </div>
+  ),
+}));
+
+vi.mock('../ApprovalCenter/ProcessedList', () => ({
+  default: () => (
+    <div data-testid="processed-list">
+      <span>Processed List Rendered</span>
+    </div>
+  ),
+}));
+
+vi.mock('../ApprovalCenter/QuickApprovalDialog', () => ({
+  default: () => (
+    <div data-testid="quick-approval-dialog">
+      <span>Quick Approval Dialog Rendered</span>
+    </div>
+  ),
+}));
+
+// Mock the components used in ApprovalCenter
+vi.mock('../ApprovalCenter/components', () => ({
+  StatCards: () => (
+    <div data-testid="stat-cards">
+      <span>Stat Cards Rendered</span>
+    </div>
+  ),
+  FilterBar: ({ searchText, setSearchText }) => (
     <div data-testid="filter-bar">
       <input 
         placeholder="Search" 
@@ -88,27 +200,27 @@ vi.mock('../ApprovalCenter/components', () => ({
       />
     </div>
   ),
-  PendingList: ({ items, loading, goToDetail, openQuickApproval }) => (
+  PendingList: () => (
     <div data-testid="pending-list">
       <span>Pending List Rendered</span>
     </div>
   ),
-  InitiatedList: ({ items, loading, goToDetail }) => (
+  InitiatedList: () => (
     <div data-testid="initiated-list">
       <span>Initiated List Rendered</span>
     </div>
   ),
-  CcList: ({ items, loading, goToDetail, handleMarkRead }) => (
+  CcList: () => (
     <div data-testid="cc-list">
       <span>Cc List Rendered</span>
     </div>
   ),
-  ProcessedList: ({ items, loading, goToDetail }) => (
+  ProcessedList: () => (
     <div data-testid="processed-list">
       <span>Processed List Rendered</span>
     </div>
   ),
-  QuickApprovalDialog: ({ dialogState, onClose, onSubmit }) => (
+  QuickApprovalDialog: () => (
     <div data-testid="quick-approval-dialog">
       <span>Quick Approval Dialog Rendered</span>
     </div>
@@ -117,6 +229,74 @@ vi.mock('../ApprovalCenter/components', () => ({
 
 // Mock the hook
 vi.mock('../ApprovalCenter/hooks', () => ({
+  useApprovalCenter: () => ({
+    items: [
+      {
+        id: 1,
+        approvalNo: 'APR-2024-001',
+        title: '项目立项审批',
+        type: 'project_initiation',
+        applicant: '张三',
+        status: 'pending',
+        currentApprover: '李四',
+        submittedAt: '2024-02-15',
+        priority: 'high'
+      },
+      {
+        id: 2,
+        approvalNo: 'APR-2024-002',
+        title: '合同签订审批',
+        type: 'contract',
+        applicant: '王五',
+        status: 'approved',
+        currentApprover: null,
+        submittedAt: '2024-02-10',
+        priority: 'medium'
+      }
+    ],
+    loading: false,
+    error: null,
+    pagination: {
+      page: 1,
+      pageSize: 20,
+      total: 2,
+      pages: 1,
+    },
+    counts: {
+      pending: 1,
+      initiated_pending: 1,
+      unread_cc: 0,
+      urgent: 0,
+      total: 2,
+    },
+    tabBadges: {
+      pending: 1,
+      initiated: 1,
+      cc: 0,
+      processed: 0,
+    },
+    activeTab: 'pending',
+    filters: {
+      urgency: 'all',
+      templateId: null,
+      keyword: '',
+    },
+    switchTab: vi.fn(),
+    updateFilters: vi.fn(),
+    refresh: vi.fn(),
+    approve: vi.fn(),
+    reject: vi.fn(),
+    markCcAsRead: vi.fn(),
+  }),
+  APPROVAL_TABS: {
+    PENDING: 'pending',
+    INITIATED: 'initiated',
+    CC: 'cc',
+    PROCESSED: 'processed',
+  }
+}));
+
+vi.mock('../ApprovalCenter/hooks/useApprovalCenter', () => ({
   useApprovalCenter: () => ({
     items: [
       {
@@ -208,7 +388,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-describe.skip("
+
 import ApprovalCenter from '../ApprovalCenter';
 
 describe('ApprovalCenter', () => {
@@ -242,7 +422,7 @@ describe('ApprovalCenter', () => {
     expect(buttons).toHaveLength(1); // Only refresh button
     
     const refreshBtn = buttons[0];
-    expect(refreshBtn).toHaveAttribute('data-button-text', '刷新');
+    expect(refreshBtn).toHaveTextContent('刷新');
     expect(refreshBtn.getAttribute('data-variant')).toBe('outline');
   });
 

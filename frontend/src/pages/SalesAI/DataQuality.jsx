@@ -8,11 +8,9 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   CheckCircle,
   AlertCircle,
-  AlertTriangle,
   TrendingUp,
   TrendingDown,
   Award,
@@ -30,7 +28,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  Button,
   Badge,
   Progress,
   Tabs,

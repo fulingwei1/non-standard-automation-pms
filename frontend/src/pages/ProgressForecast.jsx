@@ -33,7 +33,7 @@ import {
 "../components/ui/dialog";
 import { Switch } from "../components/ui/switch";
 import { formatDate } from "../lib/utils";
-import { progressApi } from "../services/api";
+import { progressApi, projectApi } from "../services/api";
 
 export default function ProgressForecast({ projectId }) {
   const { id: routeId } = useParams();
@@ -72,8 +72,8 @@ export default function ProgressForecast({ projectId }) {
 
   const fetchProject = async () => {
     try {
-      const res = await fetch(`/api/v1/projects/${id}`).then((r) => r.json());
-      setProject(res.data?.data || res.data);
+      const res = await projectApi.get(id);
+      setProject(res.data?.data || res.data || res);
     } catch (error) {
       console.error("Failed to fetch project:", error);
     }
@@ -259,7 +259,7 @@ export default function ProgressForecast({ projectId }) {
             </Button>
           </div>
         </div>
-        
+
         {/* 消息提示 */}
         {errorMessage &&
         <div className="mb-4 rounded-md bg-red-50 border border-red-200 text-red-700 px-4 py-3 flex items-start">
@@ -267,14 +267,14 @@ export default function ProgressForecast({ projectId }) {
             <div>{errorMessage}</div>
         </div>
         }
-        
+
         {successMessage &&
         <div className="mb-4 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 flex items-start">
             <CheckCircle2 className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
             <div>{successMessage}</div>
         </div>
         }
-        
+
         {/* 自动处理选项 */}
         <Card className="mb-6">
           <CardContent className="pt-6">
@@ -292,7 +292,7 @@ export default function ProgressForecast({ projectId }) {
                     (超过阈值时自动标记为BLOCKED)
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
                   <label className="text-sm text-slate-700">延迟阈值:</label>
                   <input
@@ -306,7 +306,7 @@ export default function ProgressForecast({ projectId }) {
                   <span className="text-sm text-slate-700">天</span>
                 </div>
               </div>
-              
+
               <div className="text-sm text-slate-500">
                 预测准确性: {forecastData?.confidence || "N/A"}
               </div>
@@ -314,7 +314,7 @@ export default function ProgressForecast({ projectId }) {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* 概览卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         {/* 当前进度 */}
@@ -330,7 +330,7 @@ export default function ProgressForecast({ projectId }) {
             <Progress value={forecastData?.current_progress || 0} className="h-2" />
           </CardContent>
         </Card>
-        
+
         {/* 预测完成日期 */}
         <Card>
           <CardContent className="pt-6">
@@ -346,7 +346,7 @@ export default function ProgressForecast({ projectId }) {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* 预测延期 */}
         <Card>
           <CardContent className="pt-6">
@@ -364,7 +364,7 @@ export default function ProgressForecast({ projectId }) {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* 高风险任务 */}
         <Card>
           <CardContent className="pt-6">
@@ -382,7 +382,7 @@ export default function ProgressForecast({ projectId }) {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* 未来进度预期 */}
       <Card className="mb-6">
         <CardHeader>
@@ -413,7 +413,7 @@ export default function ProgressForecast({ projectId }) {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* 延迟任务列表 */}
       <Card className="mb-6">
         <CardHeader>
@@ -455,7 +455,7 @@ export default function ProgressForecast({ projectId }) {
                       延迟 {task.delay_days} 天
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4 text-sm text-slate-600">
                     <div>
                       <span className="text-slate-500">计划完成:</span>{" "}
@@ -476,7 +476,7 @@ export default function ProgressForecast({ projectId }) {
                   </div>
             </div>
             )}
-              
+
               {delayedTasks.length > 10 &&
             <div className="text-center pt-4">
                   <div className="text-sm text-slate-500">
@@ -488,7 +488,7 @@ export default function ProgressForecast({ projectId }) {
           }
         </CardContent>
       </Card>
-      
+
       {/* 预览对话框 */}
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -519,7 +519,7 @@ export default function ProgressForecast({ projectId }) {
                         </ul>
                   </div>
                   }
-                    
+
                     {previewData.preview_actions?.will_fix_timing > 0 &&
                   <div className="rounded-md bg-amber-50 border border-amber-200 p-3">
                         <div className="font-medium text-amber-900 mb-2">
@@ -527,7 +527,7 @@ export default function ProgressForecast({ projectId }) {
                         </div>
                   </div>
                   }
-                    
+
                     {previewData.preview_actions?.will_remove_missing > 0 &&
                   <div className="rounded-md bg-blue-50 border border-blue-200 p-3">
                         <div className="font-medium text-blue-900 mb-2">
@@ -535,7 +535,7 @@ export default function ProgressForecast({ projectId }) {
                         </div>
                   </div>
                   }
-                    
+
                     {previewData.preview_actions?.will_send_notifications &&
                   <div className="rounded-md bg-emerald-50 border border-emerald-200 p-3">
                         <div className="font-medium text-emerald-900 mb-2">
@@ -560,7 +560,7 @@ export default function ProgressForecast({ projectId }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* 确认执行对话框 */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent>
@@ -575,7 +575,7 @@ export default function ProgressForecast({ projectId }) {
               <p className="text-slate-700">
                 确定要执行以下自动处理操作吗？
               </p>
-              
+
               <div className="rounded-md bg-slate-50 p-4 space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-blue-500" />
@@ -592,7 +592,7 @@ export default function ProgressForecast({ projectId }) {
                   <span>记录所有操作到进度日志</span>
                 </div>
               </div>
-              
+
               <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm">
                 <strong className="text-amber-900">注意:</strong>
                 此操作将自动更新任务状态和创建通知，请确认后执行。

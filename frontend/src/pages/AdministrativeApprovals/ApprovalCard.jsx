@@ -1,4 +1,4 @@
-import { Eye, CheckCircle2, XCircle } from "lucide-react";
+import { Eye } from "lucide-react";
 import {
   Card,
   CardContent,

@@ -142,7 +142,7 @@ export default function ProjectLeadsPanel({ projectId, editable = true }) {
   // 加载用户列表
   const loadUsers = async () => {
     try {
-      const response = await userApi.list({
+      const response = await userApi.options({
         page: 1,
         page_size: 100,
         is_active: true,

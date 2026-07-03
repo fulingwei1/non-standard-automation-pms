@@ -58,11 +58,7 @@ const useAcceptanceManagement = () => {
 
       setStats({ total, passed, failed, pending });
     } catch (_err) {
-      toast({
-        title: "错误",
-        description: "加载验收记录失败",
-        variant: "destructive",
-      });
+      toast.error("加载验收记录失败");
       setRecords([]);
       setStats({ total: 0, passed: 0, failed: 0, pending: 0 });
     } finally {
@@ -88,11 +84,11 @@ const useAcceptanceManagement = () => {
   const handleCreate = async (formData) => {
     try {
       await acceptanceApi.create(formData);
-      toast({ title: "成功", description: "创建成功" });
+      toast.success("创建成功");
       setShowCreateDialog(false);
       loadRecords();
     } catch (_err) {
-      toast({ title: "错误", description: "创建失败", variant: "destructive" });
+      toast.error("创建失败");
     }
   };
 
@@ -102,7 +98,17 @@ const useAcceptanceManagement = () => {
       setSelectedRecord(res?.data || res);
       setShowDetailDialog(true);
     } catch (_err) {
-      toast({ title: "错误", description: "加载详情失败", variant: "destructive" });
+      toast.error("加载详情失败");
+    }
+  };
+
+  const handleStart = async (id) => {
+    try {
+      await acceptanceApi.orders.start(id, { location: "" });
+      toast.success("验收已开始");
+      loadRecords();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "开始验收失败");
     }
   };
 
@@ -122,6 +128,7 @@ const useAcceptanceManagement = () => {
     setShowDetailDialog,
     handleCreate,
     handleViewDetail,
+    handleStart,
     loadRecords,
   };
 };

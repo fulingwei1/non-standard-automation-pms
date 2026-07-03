@@ -31,16 +31,23 @@ export const businessSupportApi = {
       api.put(`/business-support/payment-reminder/${id}`, data),
   },
   deliveryOrders: {
-    list: (params) => api.get("/business-support/delivery-orders", { params }),
-    get: (id) => api.get(`/business-support/delivery-orders/${id}`),
-    create: (data) => api.post("/business-support/delivery-orders", data),
+    list: (params) => api.get("/business-support-orders/delivery-orders", { params }),
+    get: (id) => api.get(`/business-support-orders/delivery-orders/${id}`),
+    create: (data) => api.post("/business-support-orders/delivery-orders", data),
     update: (id, data) =>
-      api.put(`/business-support/delivery-orders/${id}`, data),
-    statistics: (params) => api.get("/business-support/delivery-orders/statistics", { params }),
+      api.put(`/business-support-orders/delivery-orders/${id}`, data),
+    approve: (id, data) =>
+      api.post(`/business-support-orders/delivery-orders/${id}/approve`, data),
+    print: (id) => api.post(`/business-support-orders/delivery-orders/${id}/print`),
+    ship: (id) => api.post(`/business-support-orders/delivery-orders/${id}/ship`),
+    receive: (id) => api.post(`/business-support-orders/delivery-orders/${id}/receive`),
+    pendingApproval: (params) =>
+      api.get("/business-support-orders/delivery-orders/pending-approval", { params }),
+    statistics: (params) => api.get("/business-support-orders/delivery-orders/statistics", { params }),
   },
   salesOrders: {
-    list: (params) => api.get("/business-support/sales-orders", { params }),
-    get: (id) => api.get(`/business-support/sales-orders/${id}`),
+    list: (params) => api.get("/business-support-orders/sales-orders", { params }),
+    get: (id) => api.get(`/business-support-orders/sales-orders/${id}`),
   },
 };
 

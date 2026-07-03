@@ -6,6 +6,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -32,6 +33,9 @@ export default function OrderDetailDialog({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-800/50 border border-slate-700/50">
         <DialogHeader>
           <DialogTitle className="text-white">采购订单详情</DialogTitle>
+          <DialogDescription className="text-slate-400">
+            查看采购订单基本信息、明细和审批状态。
+          </DialogDescription>
         </DialogHeader>
 
         <DialogBody className="space-y-6">
@@ -39,7 +43,7 @@ export default function OrderDetailDialog({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-slate-400">订单编号</Label>
-              <p className="text-white font-mono">{order.id}</p>
+              <p className="text-white font-mono">{order.orderNo || order.id}</p>
             </div>
             <div>
               <Label className="text-slate-400">供应商</Label>
@@ -58,6 +62,10 @@ export default function OrderDetailDialog({
             <div>
               <Label className="text-slate-400">采购员</Label>
               <p className="text-white">{order.buyer}</p>
+            </div>
+            <div>
+              <Label className="text-slate-400">审批人</Label>
+              <p className="text-white">{order.approvedBy || "-"}</p>
             </div>
             <div>
               <Label className="text-slate-400">创建日期</Label>

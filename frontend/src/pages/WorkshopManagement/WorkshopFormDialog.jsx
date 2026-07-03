@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -41,6 +42,9 @@ export function WorkshopFormDialog({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEdit ? "编辑车间" : "新建车间"}</DialogTitle>
+          <DialogDescription>
+            {isEdit ? "修改车间基础信息和启用状态。" : "录入车间编码、名称、类型和产能信息。"}
+          </DialogDescription>
         </DialogHeader>
         <DialogBody>
           <div className="space-y-4">

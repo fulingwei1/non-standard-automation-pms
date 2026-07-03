@@ -26,14 +26,32 @@ export const ORDER_STATUS = {
   icon: FileText,
   value: "DRAFT",
  },
-  pending: {
+ pending: {
   label: "待收货",
  color: "bg-blue-500",
   textColor: "text-blue-400",
  bgColor: "bg-blue-500/10",
  borderColor: "border-blue-500/30",
   icon: Clock,
- value: "PENDING",
+  value: "PENDING",
+ },
+ submitted: {
+ label: "待审批",
+ color: "bg-blue-500",
+ textColor: "text-blue-400",
+ bgColor: "bg-blue-500/10",
+ borderColor: "border-blue-500/30",
+ icon: Clock,
+ value: "SUBMITTED",
+ },
+ approved: {
+ label: "已审批",
+ color: "bg-emerald-500",
+ textColor: "text-emerald-400",
+ bgColor: "bg-emerald-500/10",
+ borderColor: "border-emerald-500/30",
+ icon: CheckCircle2,
+ value: "APPROVED",
  },
  partial_received: {
  label: "部分到货",
@@ -52,6 +70,24 @@ export const ORDER_STATUS = {
  borderColor: "border-emerald-500/30",
   icon: CheckCircle2,
   value: "COMPLETED",
+ },
+ received: {
+ label: "已收货",
+ color: "bg-emerald-500",
+ textColor: "text-emerald-400",
+ bgColor: "bg-emerald-500/10",
+ borderColor: "border-emerald-500/30",
+ icon: CheckCircle2,
+ value: "RECEIVED",
+ },
+ rejected: {
+ label: "已驳回",
+ color: "bg-red-500",
+ textColor: "text-red-400",
+ bgColor: "bg-red-500/10",
+ borderColor: "border-red-500/30",
+ icon: AlertTriangle,
+ value: "REJECTED",
  },
  delayed: {
  label: "延期",
@@ -80,8 +116,12 @@ export const PURCHASE_ORDER_STATUS = ORDER_STATUS;
 export const ORDER_STATUS_CONFIGS = {
  draft: { label: "草稿", color: "bg-slate-500", icon: "FileText" },
  pending: { label: "待收货", color: "bg-blue-500", icon: "Clock" },
+ submitted: { label: "待审批", color: "bg-blue-500", icon: "Clock" },
+ approved: { label: "已审批", color: "bg-emerald-500", icon: "CheckCircle2" },
  partial_received: { label: "部分到货", color: "bg-amber-500", icon: "Truck" },
  completed: { label: "已完成", color: "bg-emerald-500", icon: "CheckCircle2" },
+ received: { label: "已收货", color: "bg-emerald-500", icon: "CheckCircle2" },
+ rejected: { label: "已驳回", color: "bg-red-500", icon: "AlertTriangle" },
   delayed: { label: "延期", color: "bg-red-500", icon: "AlertTriangle" },
  cancelled: { label: "已取消", color: "bg-slate-400", icon: "Trash2" },
 };
@@ -295,7 +335,7 @@ export const getUrgencyLabel = (urgency) => {
  * 判断订单是否可编辑
  */
 export const canEditOrder = (status) => {
-  return ["draft", "pending"].includes(status);
+  return ["draft"].includes(status);
 };
 
 /**
@@ -316,14 +356,14 @@ export const canSubmitOrder = (status) => {
  * 判断订单是否可审批
  */
 export const canApproveOrder = (status) => {
- return status === "pending";
+ return status === "submitted";
 };
 
 /**
  * 判断订单是否可收货
  */
 export const canReceiveOrder = (status) => {
- return ["pending", "partial_received"].includes(status);
+ return ["approved", "pending", "partial_received"].includes(status);
 };
 
 /**
@@ -398,7 +438,7 @@ export const PurchaseOrderUtils = {
  calculateOrderTotal(items) {
  if (!items || !Array.isArray(items)) {return 0;}
   return items.reduce((total, item) => {
-  return total + (parseFloat(item.price || 0) * parseFloat(item.qty || 0));
+  return total + (parseFloat(item.unit_price ?? item.price ?? 0) * parseFloat(item.quantity ?? item.qty ?? 0));
  }, 0);
  },
 
@@ -484,16 +524,18 @@ export const PurchaseOrderUtils = {
    if (!item.material_code) {
    errors.push(`第${index + 1}项：请选择物料`);
    }
-   if (!item.qty || item.qty <= 0) {
+   const quantity = Number(item.quantity ?? item.qty ?? 0);
+   if (!quantity || quantity <= 0) {
   errors.push(`第${index + 1}项：请输入有效数量`);
   }
-  if (!item.unit_price || item.unit_price <= 0) {
+  const unitPrice = Number(item.unit_price ?? item.price ?? 0);
+  if (!unitPrice || unitPrice <= 0) {
   errors.push(`第${index + 1}项：请输入有效单价`);
   }
  });
  }
 
-  if (!order.expected_date) {
+  if (!order.expected_date && !order.required_date) {
  errors.push("请选择预期到货日期");
  }
 

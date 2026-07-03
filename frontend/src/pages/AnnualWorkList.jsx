@@ -8,12 +8,10 @@ import {
   Plus,
   Edit2,
   Trash2,
-  ChevronRight,
   TrendingUp,
   DollarSign,
   Target,
   Calendar,
-  X,
   Save,
   Sliders,
 } from "lucide-react";

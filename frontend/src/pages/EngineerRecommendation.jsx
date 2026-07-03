@@ -13,14 +13,9 @@ import {
   Target,
   Users,
   CheckCircle,
-  AlertCircle,
-  TrendingUp,
   RefreshCw,
   Zap,
   Award,
-  Clock,
-  MapPin,
-  Star,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import { staggerContainer } from "../lib/animations";

@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ArrowRight,
   AlertTriangle,
@@ -12,10 +12,7 @@ import {
   Clock,
   User,
   Calendar,
-  ChevronDown,
-  ChevronRight,
   RefreshCw,
-  X,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";

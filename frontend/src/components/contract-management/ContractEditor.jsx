@@ -14,7 +14,7 @@ import {
   InputNumber,
   Space,
   Button,
-  message,
+  App,
   Spin,
 } from 'antd';
 import {
@@ -24,6 +24,7 @@ import {
 import { contractApi, customerApi, opportunityApi } from '@/services/api';
 
 const ContractEditor = ({ contract, onSave, onCancel }) => {
+  const { message: messageApi } = App.useApp();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
   const [loadingOptions, setLoadingOptions] = useState(false);
@@ -46,7 +47,7 @@ const ContractEditor = ({ contract, onSave, onCancel }) => {
         setCustomers(Array.isArray(customerItems) ? customerItems : []);
         setOpportunities(Array.isArray(oppItems) ? oppItems : []);
       } catch (_err) {
-        message.warning('客户/商机选项加载失败，可手动填写后重试');
+        messageApi.warning('客户/商机选项加载失败，可手动填写后重试');
         setCustomers([]);
         setOpportunities([]);
       } finally {
@@ -92,7 +93,7 @@ const ContractEditor = ({ contract, onSave, onCancel }) => {
 
   const handleFinish = async (values) => {
     if (!values.opportunity_id || !values.customer_id) {
-      message.error('商机和客户为必填项');
+      messageApi.error('商机和客户为必填项');
       return;
     }
 
@@ -116,12 +117,12 @@ const ContractEditor = ({ contract, onSave, onCancel }) => {
         ? await contractApi.update(contract.id, payload)
         : await contractApi.create(payload);
 
-      message.success(contract ? '合同更新成功' : '合同创建成功');
+      messageApi.success(contract ? '合同更新成功' : '合同创建成功');
       onSave?.(response?.data || response || payload);
     } catch (error) {
       const detail =
         error?.response?.data?.detail || error?.response?.data?.message || error?.message;
-      message.error(`保存失败：${detail || '未知错误'}`);
+      messageApi.error(`保存失败：${detail || '未知错误'}`);
     } finally {
       setSubmitting(false);
     }

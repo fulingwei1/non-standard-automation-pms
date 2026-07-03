@@ -6,6 +6,7 @@ import { Button } from "../../components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -27,6 +28,7 @@ export function HandleExceptionDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>处理生产异常</DialogTitle>
+          <DialogDescription>填写异常处理方案和处理结果。</DialogDescription>
         </DialogHeader>
         <DialogBody>
           {selectedException && (

@@ -16,8 +16,16 @@ const IssueInvoiceDialog = ({
   onOpenChange,
   issueData,
   setIssueData,
-  onConfirm
+  onIssueDataChange,
+  onConfirm,
+  onSubmit
 }) => {
+  const updateIssueData = onIssueDataChange || setIssueData;
+  const handleSubmit = onConfirm || onSubmit;
+  const updateField = (patch) => {
+    updateIssueData?.({ ...issueData, ...patch });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -31,7 +39,7 @@ const IssueInvoiceDialog = ({
             <Input
               value={issueData.invoice_no}
               onChange={(e) =>
-                setIssueData({ ...issueData, invoice_no: e.target.value })
+                updateField({ invoice_no: e.target.value })
               }
               placeholder="请输入发票号码"
             />
@@ -42,7 +50,7 @@ const IssueInvoiceDialog = ({
               type="date"
               value={issueData.issue_date}
               onChange={(e) =>
-                setIssueData({ ...issueData, issue_date: e.target.value })
+                updateField({ issue_date: e.target.value })
               }
             />
           </div>
@@ -51,7 +59,7 @@ const IssueInvoiceDialog = ({
             <Textarea
               value={issueData.remark}
               onChange={(e) =>
-                setIssueData({ ...issueData, remark: e.target.value })
+                updateField({ remark: e.target.value })
               }
               placeholder="请输入备注"
               rows={3}
@@ -62,7 +70,7 @@ const IssueInvoiceDialog = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             取消
           </Button>
-          <Button onClick={onConfirm}>确认开票</Button>
+          <Button onClick={handleSubmit}>确认开票</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -6,16 +6,13 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronRight,
-  ChevronDown,
   Target,
   Users,
   User,
-  TrendingUp,
   Award,
   Star,
   RefreshCw,
   Plus,
-  Edit2,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout";
 import {

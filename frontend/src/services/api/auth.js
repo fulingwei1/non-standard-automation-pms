@@ -40,11 +40,12 @@ export const authApi = {
 
 export const userApi = {
   list: (params) => api.get("/users/", { params }),
+  options: (params) => api.get("/users/options", { params }),
   get: (id) => api.get(`/users/${id}`),
   create: (data) => api.post("/users/", data),
   update: (id, data) => api.put(`/users/${id}`, data),
   delete: (id) => api.delete(`/users/${id}`),
-  assignRoles: (id, roleIds) => api.put(`/users/${id}/roles`, roleIds),
+  assignRoles: (id, roleIds) => api.put(`/users/${id}/roles`, { role_ids: roleIds }),
   // 用户同步相关
   syncFromEmployees: (params = {}) =>
     api.post("/users/sync-from-employees", params),

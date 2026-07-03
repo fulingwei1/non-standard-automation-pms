@@ -26,7 +26,7 @@ const FilterBar = ({ searchText, setSearchText, filters, setFilters, onCreate, o
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               placeholder="搜索验收编号、项目名称、客户代表..."
-              value={searchText || "unknown"}
+              value={searchText || ""}
               onChange={(e) => setSearchText(e.target.value)}
               className="pl-10 bg-surface-100 border-white/10"
             />

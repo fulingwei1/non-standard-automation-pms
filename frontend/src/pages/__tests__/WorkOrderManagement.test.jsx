@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import WorkOrderManagement from "../WorkOrderManagement";
 import { productionApi, projectApi } from "../../services/api";
@@ -157,7 +157,6 @@ describe("WorkOrderManagement", () => {
   });
 
   it("should handle creating work order failure", async () => {
-    const mockCreateResponse = { success: false, error: 'Create failed' };
     productionApi.workOrders.create.mockRejectedValueOnce(new Error('Create failed'));
 
     render(

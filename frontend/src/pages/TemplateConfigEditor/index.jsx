@@ -12,15 +12,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion, Reorder } from "framer-motion";
 import {
   Save,
-  Plus,
-  Trash2,
-  Edit2,
   ChevronDown,
   ChevronRight,
   GripVertical,
-  CheckCircle,
-  XCircle,
-  Copy,
   Info,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
@@ -42,7 +36,6 @@ import {
   DialogTitle,
   DialogFooter,
   Textarea,
-  Tooltip,
 } from "../../components/ui";
 import { templateConfigApi } from "../../services/api/templateConfig";
 

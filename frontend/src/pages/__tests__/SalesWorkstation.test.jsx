@@ -3,8 +3,57 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SalesWorkstation from '../SalesWorkstation';
 
-const mockNavigate = vi.fn();
-const mockRefetch = vi.fn();
+const mocks = vi.hoisted(() => {
+  const defaultFollowUpItems = [
+    {
+      entity_type: 'lead',
+      entity_id: 21,
+      entity_name: '华东线索A',
+      entity_code: 'L-2026-001',
+      reminder_type: 'overdue',
+      urgency: 'overdue',
+      next_follow_date: '2026-06-05',
+      days_overdue: 2,
+      suggestion: '补充需求并安排拜访',
+    },
+    {
+      entity_type: 'opportunity',
+      entity_id: 32,
+      entity_name: '视觉检测商机',
+      entity_code: 'OP-2026-032',
+      reminder_type: 'stage_push',
+      urgency: 'urgent',
+      next_follow_date: '2026-06-08',
+      days_until: 1,
+      suggestion: '推动技术方案确认',
+    },
+  ];
+  const defaultOpportunityHealthItems = [
+    {
+      opportunity_id: 55,
+      opportunity_name: '装配线商机',
+      opportunity_code: 'OP-2026-055',
+      customer_name: '蓝海科技',
+      stage: '方案确认',
+      total_score: 48,
+      health_level: 'warning',
+      est_amount: 1260000,
+      key_issues: ['超过 14 天未更新报价'],
+      top_suggestions: ['尽快确认报价版本'],
+    },
+  ];
+
+  return {
+    mockNavigate: vi.fn(),
+    mockRefetch: vi.fn(),
+    defaultFollowUpItems,
+    followUpItems: [...defaultFollowUpItems],
+    defaultOpportunityHealthItems,
+    opportunityHealthItems: [...defaultOpportunityHealthItems],
+  };
+});
+
+const { mockNavigate, mockRefetch } = mocks;
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
@@ -49,30 +98,7 @@ vi.mock('../../hooks/useSalesWorkstation', () => ({
   }),
   useFollowUpReminders: () => ({
     data: {
-      items: [
-        {
-          entity_type: 'lead',
-          entity_id: 21,
-          entity_name: '华东线索A',
-          entity_code: 'L-2026-001',
-          reminder_type: 'overdue',
-          urgency: 'overdue',
-          next_follow_date: '2026-06-05',
-          days_overdue: 2,
-          suggestion: '补充需求并安排拜访',
-        },
-        {
-          entity_type: 'opportunity',
-          entity_id: 32,
-          entity_name: '视觉检测商机',
-          entity_code: 'OP-2026-032',
-          reminder_type: 'stage_push',
-          urgency: 'urgent',
-          next_follow_date: '2026-06-08',
-          days_until: 1,
-          suggestion: '推动技术方案确认',
-        },
-      ],
+      items: mocks.followUpItems,
     },
     loading: false,
     error: null,
@@ -101,20 +127,7 @@ vi.mock('../../hooks/useSalesWorkstation', () => ({
   }),
   useOpportunityHealthList: () => ({
     data: {
-      items: [
-        {
-          opportunity_id: 55,
-          opportunity_name: '装配线商机',
-          opportunity_code: 'OP-2026-055',
-          customer_name: '蓝海科技',
-          stage: '方案确认',
-          total_score: 48,
-          health_level: 'warning',
-          est_amount: 1260000,
-          key_issues: ['超过 14 天未更新报价'],
-          top_suggestions: ['尽快确认报价版本'],
-        },
-      ],
+      items: mocks.opportunityHealthItems,
     },
     loading: false,
     error: null,
@@ -147,6 +160,8 @@ vi.mock('../../hooks/useSalesWorkstation', () => ({
 describe('SalesWorkstation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.followUpItems = [...mocks.defaultFollowUpItems];
+    mocks.opportunityHealthItems = [...mocks.defaultOpportunityHealthItems];
     window.getComputedStyle = vi.fn(() => ({
       getPropertyValue: () => '',
     }));
@@ -252,5 +267,72 @@ describe('SalesWorkstation', () => {
     );
 
     expect(mockNavigate).toHaveBeenCalledWith('/sales/contracts/77');
+  });
+
+  it('跟进提醒同一商机多条记录时不会触发重复 key 警告', async () => {
+    mocks.followUpItems = [
+      {
+        ...mocks.defaultFollowUpItems[1],
+        entity_id: 78,
+        entity_name: '重复跟进商机',
+        entity_code: 'OP-2026-078',
+      },
+      {
+        ...mocks.defaultFollowUpItems[1],
+        entity_id: 78,
+        entity_name: '重复跟进商机',
+        entity_code: 'OP-2026-078',
+      },
+    ];
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      render(<SalesWorkstation />);
+
+      expect(await screen.findAllByText('重复跟进商机')).toHaveLength(2);
+      expect(
+        consoleErrorSpy.mock.calls.some((call) =>
+          call.map(String).join(' ').includes('Encountered two children with the same key')
+        )
+      ).toBe(false);
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
+  it('商机健康列表同一商机多条记录时不会触发重复 key 警告', async () => {
+    const user = userEvent.setup();
+    mocks.opportunityHealthItems = [
+      {
+        ...mocks.defaultOpportunityHealthItems[0],
+        opportunity_id: 78,
+        opportunity_name: '装配线商机',
+        opportunity_code: 'OP-2026-078',
+        stage: '方案确认',
+      },
+      {
+        ...mocks.defaultOpportunityHealthItems[0],
+        opportunity_id: 78,
+        opportunity_name: '装配线商机',
+        opportunity_code: 'OP-2026-078',
+        stage: '方案确认',
+      },
+    ];
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      render(<SalesWorkstation />);
+
+      await user.click(screen.getByRole('tab', { name: /商机健康/ }));
+
+      expect(await screen.findAllByText('装配线商机')).toHaveLength(2);
+      expect(
+        consoleErrorSpy.mock.calls.some((call) =>
+          call.map(String).join(' ').includes('Encountered two children with the same key')
+        )
+      ).toBe(false);
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
   });
 });

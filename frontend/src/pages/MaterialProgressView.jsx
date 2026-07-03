@@ -7,7 +7,7 @@
  * - 通知订阅管理
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Card,
@@ -22,10 +22,27 @@ import {
   TabsList,
   TabsTrigger,
   Progress,
-  Alert,
   Switch,
 } from '@/components/ui';
 import { projectApi } from '@/services/api';
+
+const unwrapApiData = (response) =>
+  response?.formatted ?? response?.data?.data ?? response?.data ?? response;
+
+const asList = (payload) => {
+  const data = unwrapApiData(payload);
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.materials)) return data.materials;
+  if (Array.isArray(data?.boms)) return data.boms;
+  if (Array.isArray(data?.shortage_items)) return data.shortage_items;
+  return [];
+};
+
+const toFiniteNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
 
 export default function MaterialProgressView() {
   const { projectId } = useParams();
@@ -47,7 +64,7 @@ export default function MaterialProgressView() {
     try {
       setLoading(true);
       const response = await projectApi.getMaterialProgress(projectId);
-      setMaterialProgress(response.data);
+      setMaterialProgress(unwrapApiData(response) || null);
     } catch (error) {
       console.error('加载物料进度失败:', error);
     } finally {
@@ -58,7 +75,7 @@ export default function MaterialProgressView() {
   const loadBomProgress = async () => {
     try {
       const response = await projectApi.getBomProgress(projectId);
-      setBomProgress(response.data);
+      setBomProgress(asList(response));
     } catch (error) {
       console.error('加载 BOM 进度失败:', error);
     }
@@ -67,7 +84,7 @@ export default function MaterialProgressView() {
   const loadShortageTracker = async () => {
     try {
       const response = await projectApi.getShortageTracker(projectId);
-      setShortageTracker(response.data);
+      setShortageTracker(asList(response));
     } catch (error) {
       console.error('加载缺料跟踪失败:', error);
     }
@@ -117,6 +134,11 @@ export default function MaterialProgressView() {
     return <div className="p-6">加载中...</div>;
   }
 
+  const kittingRate = toFiniteNumber(materialProgress?.kitting_rate);
+  const criticalMaterials = asList(
+    materialProgress?.critical_materials ?? materialProgress?.key_materials,
+  );
+
   return (
     <div className="p-6">
       <div className="mb-6 flex justify-between items-center">
@@ -154,9 +176,9 @@ export default function MaterialProgressView() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">
-                  {materialProgress?.kitting_rate?.toFixed(1) || '0'}%
+                  {kittingRate.toFixed(1)}%
                 </div>
-                <Progress value={materialProgress?.kitting_rate || 0} className="mt-2" />
+                <Progress value={kittingRate} className="mt-2" />
               </CardContent>
             </Card>
 
@@ -225,7 +247,7 @@ export default function MaterialProgressView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {materialProgress?.critical_materials?.map((material) => (
+                  {criticalMaterials.map((material) => (
                     <tr key={material.id}>
                       <td>{material.material_code}</td>
                       <td>{material.material_name}</td>
@@ -262,7 +284,9 @@ export default function MaterialProgressView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {bomProgress.map((bom) => (
+                  {bomProgress.map((bom) => {
+                    const bomRate = toFiniteNumber(bom.kitting_rate);
+                    return (
                     <tr key={bom.id}>
                       <td>{bom.bom_name}</td>
                       <td>
@@ -274,8 +298,8 @@ export default function MaterialProgressView() {
                       <td>{bom.arrived_qty}</td>
                       <td className="text-red-600">{bom.shortage_qty}</td>
                       <td>
-                        <Progress value={bom.kitting_rate} className="w-24" />
-                        {bom.kitting_rate?.toFixed(1)}%
+                        <Progress value={bomRate} className="w-24" />
+                        {bomRate.toFixed(1)}%
                       </td>
                       <td>
                         <Button size="sm" variant="outline">
@@ -283,7 +307,8 @@ export default function MaterialProgressView() {
                         </Button>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </Table>
             </CardContent>
@@ -311,7 +336,9 @@ export default function MaterialProgressView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {shortageTracker.map((item) => (
+                  {shortageTracker.map((item) => {
+                    const progress = toFiniteNumber(item.progress);
+                    return (
                     <tr key={item.id}>
                       <td>{item.material_code}</td>
                       <td>{item.material_name}</td>
@@ -323,15 +350,16 @@ export default function MaterialProgressView() {
                       </td>
                       <td>{item.impact_days} 天</td>
                       <td>
-                        <Progress value={item.progress} className="w-24" />
-                        {item.progress}%
+                        <Progress value={progress} className="w-24" />
+                        {progress}%
                       </td>
                       <td>{item.owner}</td>
                       <td>
                         <Button size="sm">催货</Button>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </Table>
             </CardContent>

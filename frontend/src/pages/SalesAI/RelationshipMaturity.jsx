@@ -5,14 +5,10 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   Users,
-  TrendingUp,
   Target,
   Heart,
-  MessageSquare,
-  Award,
   AlertTriangle,
   CheckCircle,
   ArrowUp,
@@ -26,7 +22,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  Button,
   Badge,
   Progress,
   Table,
@@ -35,7 +30,6 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  Alert,
   Tabs,
   TabsContent,
   TabsList,

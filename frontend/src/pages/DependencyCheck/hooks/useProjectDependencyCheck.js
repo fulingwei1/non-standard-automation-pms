@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { progressApi } from "../../../services/api";
+import { progressApi, projectApi } from "../../../services/api";
 import { ISSUE_TYPES } from "../constants";
 
 /**
@@ -34,13 +34,13 @@ export function useProjectDependencyCheck(id) {
     }
     fetchProject();
     fetchDependencyCheck();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [id]);
 
   const fetchProject = async () => {
     try {
-      const res = await fetch(`/api/v1/projects/${id}`).then((r) => r.json());
-      setProject(res.data?.data || res.data);
+      const res = await projectApi.get(id);
+      setProject(res.data?.data || res.data || res);
     } catch (error) {
       console.error("Failed to fetch project:", error);
     }

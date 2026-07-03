@@ -175,34 +175,36 @@ export const managementRhythmApi = {
 
   // 战略会议
   meetings: {
-    list: (params) => api.get("/strategic-meetings", { params }),
-    get: (id) => api.get(`/strategic-meetings/${id}`),
-    create: (data) => api.post("/strategic-meetings", data),
-    update: (id, data) => api.put(`/strategic-meetings/${id}`, data),
+    list: (params) => api.get("/management-rhythm/meetings/strategic-meetings", { params }),
+    get: (id) => api.get(`/management-rhythm/meetings/strategic-meetings/${id}`),
+    create: (data) => api.post("/management-rhythm/meetings/strategic-meetings", data),
+    update: (id, data) => api.put(`/management-rhythm/meetings/strategic-meetings/${id}`, data),
     updateMinutes: (id, data) =>
-      api.put(`/strategic-meetings/${id}/minutes`, data),
+      api.put(`/management-rhythm/meetings/strategic-meetings/${id}/minutes`, data),
   },
 
   // 会议行动项
   actionItems: {
     list: (meetingId, params) =>
-      api.get(`/strategic-meetings/${meetingId}/action-items`, { params }),
+      api.get(`/management-rhythm/action-items/strategic-meetings/${meetingId}/action-items`, { params }),
     create: (meetingId, data) =>
-      api.post(`/strategic-meetings/${meetingId}/action-items`, data),
+      api.post(`/management-rhythm/action-items/strategic-meetings/${meetingId}/action-items`, data),
     update: (meetingId, itemId, data) =>
-      api.put(`/strategic-meetings/${meetingId}/action-items/${itemId}`, data),
+      api.put(`/management-rhythm/action-items/strategic-meetings/${meetingId}/action-items/${itemId}`, data),
   },
 
   // 节律仪表盘
   dashboard: {
-    get: () => api.get("/management-rhythm/dashboard"),
+    get: () => api.get("/management-rhythm/dashboard/"),
   },
 
   // 会议地图
   meetingMap: {
-    get: (params) => api.get("/meeting-map", { params }),
-    calendar: (params) => api.get("/meeting-map/calendar", { params }),
-    statistics: (params) => api.get("/meeting-map/statistics", { params }),
+    get: (params) => api.get("/management-rhythm/meeting-map/", { params }),
+    calendar: (params) =>
+      api.get("/management-rhythm/meeting-map/calendar", { params }),
+    statistics: (params) =>
+      api.get("/management-rhythm/meeting-map/statistics", { params }),
   },
 
   // 战略结构模板
@@ -211,11 +213,14 @@ export const managementRhythmApi = {
 
   // 会议报告
   reports: {
-    list: (params) => api.get("/meeting-reports", { params }),
-    get: (id) => api.get(`/meeting-reports/${id}`),
-    generate: (data) => api.post("/meeting-reports/generate", data),
+    list: (params) => api.get("/management-rhythm/meeting-reports", { params }),
+    get: (id) => api.get(`/management-rhythm/meeting-reports/${id}`),
+    generate: (data) =>
+      api.post("/management-rhythm/meeting-reports/generate", data),
     exportDocx: (id) =>
-      api.get(`/meeting-reports/${id}/export-docx`, { responseType: "blob" }),
+      api.get(`/management-rhythm/meeting-reports/${id}/export-docx`, {
+        responseType: "blob",
+      }),
   },
 };
 
@@ -265,46 +270,53 @@ export const financialReportApi = {
 
 export const workLogApi = {
   list: (params) => api.get("/my/work-logs", { params }),
+  create: (data) => api.post("/my/work-logs", data),
+  update: (id, data) => api.put(`/my/work-logs/${id}`, data),
+  fieldServiceContext: (params) =>
+    api.get("/my/work-logs/field-service-context", { params }),
+  createFromDispatch: (data) => api.post("/my/work-logs/from-dispatch", data),
 };
 
 export const auditApi = {
-  list: (params) => api.get("/audits", { params }),
+  list: (params) => api.get("/audits/", { params }),
   get: (id) => api.get(`/audits/${id}`),
 };
 
+const DATA_IMPORT_EXPORT_BASE = "/data-import-export";
+
 export const dataImportExportApi = {
   // 导入相关
-  getTemplateTypes: () => api.get("/import/templates"),
+  getTemplateTypes: () => api.get(`${DATA_IMPORT_EXPORT_BASE}/templates`),
   downloadTemplate: (templateType) =>
-    api.get(`/import/templates/${templateType}`, { responseType: "blob" }),
+    api.get(`${DATA_IMPORT_EXPORT_BASE}/templates/${templateType}`, { responseType: "blob" }),
   previewImport: (file, templateType) => {
     const formData = new FormData();
     formData.append("file", file);
-    return api.post("/import/preview", formData, {
+    return api.post(`${DATA_IMPORT_EXPORT_BASE}/preview`, formData, {
       params: { template_type: templateType },
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
-  validateImport: (data) => api.post("/import/validate", data),
+  validateImport: (data) => api.post(`${DATA_IMPORT_EXPORT_BASE}/validate`, data),
   uploadImport: (file, templateType, updateExisting = false) => {
     const formData = new FormData();
     formData.append("file", file);
-    return api.post("/import/upload", formData, {
+    return api.post(`${DATA_IMPORT_EXPORT_BASE}/upload`, formData, {
       params: { template_type: templateType, update_existing: updateExisting },
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
   // 导出相关
   exportProjectList: (data) =>
-    api.post("/import/export/project_list", data, { responseType: "blob" }),
+    api.post(`${DATA_IMPORT_EXPORT_BASE}/export/project_list`, data, { responseType: "blob" }),
   exportProjectDetail: (data) =>
-    api.post("/import/export/project_detail", data, { responseType: "blob" }),
+    api.post(`${DATA_IMPORT_EXPORT_BASE}/export/project_detail`, data, { responseType: "blob" }),
   exportTaskList: (data) =>
-    api.post("/import/export/task_list", data, { responseType: "blob" }),
+    api.post(`${DATA_IMPORT_EXPORT_BASE}/export/task_list`, data, { responseType: "blob" }),
   exportTimesheet: (data) =>
-    api.post("/import/export/timesheet", data, { responseType: "blob" }),
+    api.post(`${DATA_IMPORT_EXPORT_BASE}/export/timesheet`, data, { responseType: "blob" }),
   exportWorkload: (data) =>
-    api.post("/import/export/workload", data, { responseType: "blob" }),
+    api.post(`${DATA_IMPORT_EXPORT_BASE}/export/workload`, data, { responseType: "blob" }),
 };
 
 export const reportCenterApi = {
@@ -331,9 +343,9 @@ export const reportCenterApi = {
   deleteTemplate: (id) => api.delete(`/report-center/templates/${id}`),
   applyTemplate: (data) => api.post("/report-center/templates/apply", data),
   // 报表归档
-  getArchives: (params) => api.get("/reports/archives", { params }),
+  getArchives: (params) => api.get("/report/archives", { params }),
   downloadArchive: (id) =>
-    api.get(`/reports/archives/${id}/download`, { responseType: "blob" }),
+    api.get(`/report/archives/${id}/download`, { responseType: "blob" }),
   // BI 报表
   getDeliveryRate: (params) => api.get("/report-center/bi/delivery-rate", { params }),
   getHealthDistribution: () => api.get("/report-center/bi/health-distribution"),

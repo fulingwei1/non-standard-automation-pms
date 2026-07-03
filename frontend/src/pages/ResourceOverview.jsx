@@ -14,11 +14,8 @@ import {
   Filter,
   ChevronDown,
   ChevronRight,
-  Calendar,
   Activity,
-  TrendingUp,
   Flame,
-  Shield,
   X,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";

@@ -12,14 +12,11 @@ import {
   Award,
   Briefcase,
   Clock,
-  X,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
   Button,
   Badge,
   Select,

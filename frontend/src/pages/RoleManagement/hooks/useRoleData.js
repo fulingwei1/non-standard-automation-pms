@@ -1,6 +1,14 @@
 import { useState, useCallback, useEffect } from 'react';
 import { roleApi, permissionApi } from '../../../services/api';
 
+function logLoadError(message, error) {
+    if (error?.response?.status === 403) {
+        console.warn(message, error);
+        return;
+    }
+    console.error(message, error);
+}
+
 /**
  * 角色数据管理 Hook
  *
@@ -34,7 +42,7 @@ export function useRoleData() {
             const items = listData?.items || listData;
             setRoles(Array.isArray(items) ? items : []);
         } catch (error) {
-            console.error('Failed to load roles:', error);
+            logLoadError('Failed to load roles:', error);
             setRoles([]);
         } finally {
             setLoading(false);
@@ -50,7 +58,7 @@ export function useRoleData() {
             const items = listData?.items || listData;
             setPermissions(Array.isArray(items) ? items : []);
         } catch (error) {
-            console.error('Failed to load permissions:', error);
+            logLoadError('Failed to load permissions:', error);
             setPermissions([]);
         }
     }, []);
@@ -62,7 +70,7 @@ export function useRoleData() {
             const data = response.data || response;
             setPermissionMatrix(data.data || data);
         } catch (error) {
-            console.error('Failed to load permission matrix:', error);
+            logLoadError('Failed to load permission matrix:', error);
         }
     }, []);
 
@@ -73,7 +81,7 @@ export function useRoleData() {
             const data = response.data || response;
             setInheritanceTree(data.data?.tree || []);
         } catch (error) {
-            console.error('Failed to load inheritance tree:', error);
+            logLoadError('Failed to load inheritance tree:', error);
         }
     }, []);
 
@@ -86,7 +94,7 @@ export function useRoleData() {
             const items = listData?.items || listData;
             setTemplates(Array.isArray(items) ? items : []);
         } catch (error) {
-            console.error('Failed to load templates:', error);
+            logLoadError('Failed to load templates:', error);
             setTemplates([]);
         }
     }, []);

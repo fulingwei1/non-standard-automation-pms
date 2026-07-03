@@ -1,10 +1,10 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCostAccounting } from '../useCostAccounting';
-import { costApi } from '../../../../services/api';
+import { costApi } from '../../../../services/api/projects.js';
 
 // Mock API
-vi.mock('../../../../services/api', async (importOriginal) => {
+vi.mock('../../../../services/api/projects.js', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
@@ -39,7 +39,7 @@ vi.mock('../../../../services/api', async (importOriginal) => {
   };
 });
 
-describe.skip('useCostAccounting Hook', () => {
+describe('useCostAccounting Hook', () => {
   // Setup common mock data
   const mockItems = [{ id: 1, name: 'Test 1' }, { id: 2, name: 'Test 2' }];
   const mockDetail = { id: 1, name: 'Test Detail' };
@@ -72,5 +72,20 @@ describe.skip('useCostAccounting Hook', () => {
 
     // Basic assertion
     expect(result.current).toBeDefined();
+  });
+
+  it('does not warn or call costs API before a project is selected', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const { result } = renderHook(() => useCostAccounting());
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(costApi.list).not.toHaveBeenCalled();
+    expect(warnSpy).not.toHaveBeenCalledWith(
+      '成本查询需要指定项目ID，请先选择项目',
+    );
+
+    warnSpy.mockRestore();
   });
 });

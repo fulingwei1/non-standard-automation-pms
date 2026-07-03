@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Search,
   Filter,
@@ -198,6 +198,18 @@ export default function OpportunityManagement({ embedded = false }) {
   const pageSize = 20;
   const navigate = useNavigate();
 
+  // 命令栏"新建商机"动作：带 ai_hint 进来时自动打开新建对话框并 AI 预填
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [autofillHint, setAutofillHint] = useState("");
+  useEffect(() => {
+    const hint = searchParams.get("ai_hint");
+    if (hint) {
+      setAutofillHint(hint);
+      setShowCreateDialog(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   const [formData, setFormData] = useState({
     customer_id: "",
     opp_name: "",
@@ -261,7 +273,7 @@ export default function OpportunityManagement({ embedded = false }) {
 
   const loadCustomers = async () => {
     try {
-      const response = await customerApi.list({ page: 1, page_size: 100 });
+      const response = await customerApi.list({ page: 1, page_size: 1000 });
       if (response.data && response.data.items) {
         setCustomers(response.data.items);
       }
@@ -272,7 +284,7 @@ export default function OpportunityManagement({ embedded = false }) {
 
   const loadOwners = async () => {
     try {
-      const response = await userApi.list({ page: 1, page_size: 100 });
+      const response = await userApi.options({ page: 1, page_size: 100, is_active: true });
       // 使用统一响应格式处理
       const paginatedData = response.formatted || response.data;
       if (paginatedData?.items) {
@@ -894,11 +906,15 @@ export default function OpportunityManagement({ embedded = false }) {
       {/* 创建商机对话框 */}
       <CreateDialog
         open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
+        onOpenChange={(open) => {
+          setShowCreateDialog(open);
+          if (!open) setAutofillHint("");
+        }}
         formData={formData}
         setFormData={setFormData}
         customers={customers}
         onCreate={handleCreate}
+        autofillHint={autofillHint}
       />
 
       {/* 阶段门对话框 */}

@@ -14,13 +14,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('HR API', () => {
-  let api, mock;
+  let mock;
   let employeeApi, departmentApi, hrApi, performanceApi, bonusApi;
   let timesheetApi, qualificationApi, staffMatchingApi, hourlyRateApi;
 
   beforeEach(async () => {
     const setup = await setupApiTest();
-    api = setup.api;
     mock = setup.mock;
 
     const hrModule = await import('../hr.js');
@@ -313,7 +312,7 @@ describe('HR API', () => {
 
   describe('timesheetApi - 工时API', () => {
     it('list() - 应该获取工时记录列表', async () => {
-      mock.onGet('/api/v1/timesheets').reply(200, {
+      mock.onGet('/api/v1/timesheet/records').reply(200, {
         success: true,
         data: [{ id: 1, hours: 8 }],
       });
@@ -325,7 +324,7 @@ describe('HR API', () => {
 
     it('create() - 应该创建工时记录', async () => {
       const timesheet = { project_id: 1, hours: 8, date: '2024-01-01' };
-      mock.onPost('/api/v1/timesheets').reply(201, {
+      mock.onPost('/api/v1/timesheet/records').reply(201, {
         success: true,
         data: { id: 1, ...timesheet },
       });
@@ -583,7 +582,7 @@ describe('HR API', () => {
     });
 
     it('应该处理网络错误', async () => {
-      mock.onGet('/api/v1/timesheets').networkError();
+      mock.onGet('/api/v1/timesheet/records').networkError();
 
       await expect(timesheetApi.list()).rejects.toThrow();
     });

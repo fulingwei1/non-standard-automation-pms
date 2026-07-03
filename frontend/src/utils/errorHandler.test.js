@@ -46,6 +46,20 @@ describe("errorHandler", () => {
       expect(getErrorMessage(error)).toBe("详细错误");
     });
 
+    it("should return a string when validation detail is an array", () => {
+      const error = {
+        response: {
+          status: 422,
+          data: {
+            message: "请求参数验证失败",
+            detail: [{ field: "query", message: "Field required" }],
+          },
+        },
+      };
+
+      expect(getErrorMessage(error)).toBe("请求参数验证失败");
+    });
+
     it("should return appropriate message for 400 error", () => {
       const error = { response: { status: 400, data: {} } };
       expect(getErrorMessage(error)).toBe("请求参数错误");

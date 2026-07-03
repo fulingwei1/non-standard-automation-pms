@@ -65,6 +65,11 @@ export const defaultNavGroups = [
       { name: "立项管理", path: "/pmo/initiations", icon: "FileText", permission: "project:initiation:read", permissionLabel: "立项管理" },
       // 客户关系层
       { name: "客户管理", path: "/sales/customers", icon: "Building2", permission: "customer:read", permissionLabel: "客户查看" },
+      { name: "会议纪要AI", path: "/sales/meeting-minutes-ai", icon: "Sparkles", permission: "customer:read", permissionLabel: "会议纪要AI解读" },
+      { name: "标准模块库", path: "/engineering/module-library", icon: "Boxes", permission: "customer:read", permissionLabel: "标准模块库" },
+      { name: "AI故障诊断", path: "/service/fault-diagnosis", icon: "Wrench", permission: "customer:read", permissionLabel: "AI故障诊断" },
+      { name: "AI助手(图纸/问答)", path: "/ai/assistant", icon: "Sparkles", permission: "customer:read", permissionLabel: "AI助手" },
+      { name: "AI接入配置", path: "/admin/ai-config", icon: "Settings", permission: "customer:read", permissionLabel: "AI接入配置(管理员)" },
       { name: "对手分析", path: "/sales/competitor-analysis", icon: "BarChart3", permission: "sales:opportunity:read", permissionLabel: "对手分析" },
       // 财务回收层
       { name: "应收账款", path: "/sales/receivables", icon: "CreditCard", permission: "finance:receivable:read", permissionLabel: "应收账款" },

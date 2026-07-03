@@ -21,7 +21,7 @@ import {
 import { cn } from "../../lib/utils"
 import { gradeColors, statusConfig } from "./constants"
 
-export function CustomerTable({ customers, onCustomerClick }) {
+export function CustomerTable({ customers, onCustomerClick, onDeleteCustomer }) {
   return (
     <Card>
       <CardContent className="p-0">
@@ -133,7 +133,7 @@ export function CustomerTable({ customers, onCustomerClick }) {
                       ¥{(customer.pendingAmount / 10000).toFixed(0)}万
                     </span>
                   </td>
-                  <td className="p-4">
+                  <td className="p-4" onClick={(event) => event.stopPropagation()}>
                     <div className="flex justify-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -159,7 +159,10 @@ export function CustomerTable({ customers, onCustomerClick }) {
                             <Edit className="w-4 h-4 mr-2" />
                             编辑
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-400">
+                          <DropdownMenuItem
+                            className="text-red-400"
+                            onSelect={() => onDeleteCustomer?.(customer)}
+                          >
                             <Trash2 className="w-4 h-4 mr-2" />
                             删除
                           </DropdownMenuItem>

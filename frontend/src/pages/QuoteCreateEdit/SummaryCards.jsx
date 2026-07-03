@@ -27,7 +27,7 @@ export default function SummaryCards({ versionData, setVersionData, costStructur
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
-                  value={versionData.tax_rate}
+                  value={versionData.tax_rate ?? ""}
                   onChange={(e) => {
                     const rate = parseFloat(e.target.value) || 0;
                     setVersionData({

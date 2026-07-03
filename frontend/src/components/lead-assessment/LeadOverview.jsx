@@ -4,7 +4,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Card, Row, Col, Statistic, Progress, Tag, List, Timeline, Alert, Button, Avatar } from 'antd';
+import { Card, Row, Col, Statistic, Progress, Tag, Timeline, Alert, Button, Avatar } from 'antd';
 import {
   Target,
   TrendingUp,
@@ -104,6 +104,27 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
     sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).
     slice(0, 5);
   }, [data]);
+
+  const followUpTimelineItems = useMemo(
+    () =>
+      (upcomingFollowUps || []).map((followUp) => ({
+        key: followUp.id,
+        color: '#1890ff',
+        dot: <Clock />,
+        children: (
+          <div>
+            <div style={{ fontWeight: 'bold' }}>{followUp.leadCompany}</div>
+            <div style={{ fontSize: 12, color: '#666' }}>
+              {followUp.type} - {followUp.description}
+            </div>
+            <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
+              <Calendar size={10} /> {followUp.dueDate}
+            </div>
+          </div>
+        )
+      })),
+    [upcomingFollowUps]
+  );
 
   const renderSourceCard = (sourceKey, count) => {
     const config = LEAD_SOURCES.find((source) => source.value === sourceKey);
@@ -256,32 +277,25 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
             </Button>
             }>
 
-            <List
-              dataSource={hotLeads}
-              renderItem={(lead) =>
-              <List.Item>
-                  <List.Item.Meta
-                  avatar={<Avatar icon={<Users />} />}
-                  title={
-                  <div>
-                        <span>{lead.companyName}</span>
-                        <Tag color={getScoreColor(lead.score)} style={{ marginLeft: 8 }}>
-                          {lead.score}分
-                        </Tag>
+            <div className="space-y-3">
+              {(hotLeads || []).map((lead) => (
+                <div key={lead.id} className="flex items-start gap-3 rounded-lg border border-slate-700/50 p-3">
+                  <Avatar icon={<Users />} />
+                  <div className="min-w-0 flex-1">
+                    <div>
+                      <span>{lead.companyName}</span>
+                      <Tag color={getScoreColor(lead.score)} style={{ marginLeft: 8 }}>
+                        {lead.score}分
+                      </Tag>
+                    </div>
+                    <div>{lead.contactPerson} · {lead.industry}</div>
+                    <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
+                      <Phone size={10} /> {lead.phone}
+                    </div>
                   </div>
-                  }
-                  description={
-                  <div>
-                        <div>{lead.contactPerson} · {lead.industry}</div>
-                        <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
-                          <Phone size={10} /> {lead.phone}
-                        </div>
-                  </div>
-                  } />
-
-              </List.Item>
-              }
-              size="small" />
+                </div>
+              ))}
+            </div>
 
           </Card>
         </Col>
@@ -297,25 +311,7 @@ const LeadOverview = ({ data, loading, onNavigate }) => {
             </Button>
             }>
 
-            <Timeline>
-              {(upcomingFollowUps || []).map((followUp) =>
-              <Timeline.Item
-                key={followUp.id}
-                color="#1890ff"
-                dot={<Clock />}>
-
-                  <div>
-                    <div style={{ fontWeight: 'bold' }}>{followUp.leadCompany}</div>
-                    <div style={{ fontSize: 12, color: '#666' }}>
-                      {followUp.type} - {followUp.description}
-                    </div>
-                    <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
-                      <Calendar size={10} /> {followUp.dueDate}
-                    </div>
-                  </div>
-              </Timeline.Item>
-              )}
-            </Timeline>
+            <Timeline items={followUpTimelineItems} />
           </Card>
         </Col>
       </Row>

@@ -301,21 +301,21 @@ const AlertOverview = ({ data, loading, onNavigate }) => {
             <Space orientation="vertical" style={{ width: '100%' }}>
               <Button
                 type="primary"
-                block
+                className="w-full"
                 icon={<Shield />}
                 onClick={() => onNavigate && onNavigate('alert-rules')}>
 
                 配置告警规则
               </Button>
               <Button
-                block
+                className="w-full"
                 icon={<BarChart3 />}
                 onClick={() => onNavigate && onNavigate('trend-analysis')}>
 
                 趋势分析
               </Button>
               <Button
-                block
+                className="w-full"
                 icon={<Activity />}
                 onClick={() => onNavigate && onNavigate('performance-metrics')}>
 

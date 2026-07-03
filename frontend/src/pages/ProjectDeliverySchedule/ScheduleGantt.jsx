@@ -1,7 +1,7 @@
 /**
  * 项目交付排产计划 - 甘特图页面
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tabs, TabsContent, TabsList, TabsTrigger, Alert } from '@/components/ui';
 import { projectDeliveryApi } from '@/services/api/projectDelivery';
@@ -61,9 +61,14 @@ export default function ProjectDeliveryScheduleGantt() {
     return (
       <div className="p-6">
         <Alert className="mb-6">当前项目暂无排产计划</Alert>
-        <Button onClick={() => navigate(`/projects/${projectId}/delivery/create`)}>
-          创建排产计划
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate(`/projects/${projectId}/delivery/create`)}>
+            创建排产计划
+          </Button>
+          <Button variant="outline" onClick={() => navigate(`/pmc/delivery-orders/new?project_id=${projectId}`)}>
+            生成发货计划
+          </Button>
+        </div>
       </div>
     );
   }
@@ -75,6 +80,11 @@ export default function ProjectDeliveryScheduleGantt() {
         <div><h1 className="text-2xl font-bold mb-2">{ganttData.schedule_name} - 甘特图</h1><p className="text-gray-500">版本：{ganttData.version}</p></div>
         <div className="space-x-2">
           <Button variant="outline" onClick={() => navigate(-1)}>返回</Button>
+          {projectId && (
+            <Button variant="outline" onClick={() => navigate(`/pmc/delivery-orders/new?project_id=${projectId}`)}>
+              生成发货计划
+            </Button>
+          )}
           <Button>导出 Excel</Button><Button>导出 PDF</Button>
         </div>
       </div>

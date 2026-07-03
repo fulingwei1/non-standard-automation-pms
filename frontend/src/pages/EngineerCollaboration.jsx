@@ -1,10 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Card, Table, Button, Modal, Form, Rate, Input, Select, Tag, Space, message, Tabs } from 'antd';
-import { TeamOutlined, StarOutlined, CommentOutlined } from '@ant-design/icons';
+import { TeamOutlined } from '@ant-design/icons';
 import api from '../services/api';
 
 const { TextArea } = Input;
 const { Option } = Select;
+
+const readCurrentUserId = () => {
+  try {
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    return currentUser?.id || null;
+  } catch (_error) {
+    return null;
+  }
+};
+
 const EngineerCollaboration = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -30,8 +40,13 @@ const EngineerCollaboration = () => {
   const fetchReceivedRatings = async () => {
     setLoading(true);
     try {
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      const response = await api.get(`/api/v1/engineer-performance/collaboration/received/${currentUser.id}`);
+      const currentUserId = readCurrentUserId();
+      if (!currentUserId) {
+        setReceivedRatings([]);
+        return;
+      }
+
+      const response = await api.get(`/api/v1/engineer-performance/collaboration/received/${currentUserId}`);
       if (response.data.code === 200) {
         setReceivedRatings(response.data.data.items);
       }
@@ -46,8 +61,13 @@ const EngineerCollaboration = () => {
   const fetchGivenRatings = async () => {
     setLoading(true);
     try {
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      const response = await api.get(`/api/v1/engineer-performance/collaboration/given/${currentUser.id}`);
+      const currentUserId = readCurrentUserId();
+      if (!currentUserId) {
+        setGivenRatings([]);
+        return;
+      }
+
+      const response = await api.get(`/api/v1/engineer-performance/collaboration/given/${currentUserId}`);
       if (response.data.code === 200) {
         setGivenRatings(response.data.data.items);
       }
@@ -175,28 +195,28 @@ const EngineerCollaboration = () => {
       dataIndex: 'communication_score',
       key: 'communication_score',
       width: 100,
-      render: (score) => <Rate disabled value={score || "unknown"} count={5} />
+      render: (score) => <Rate disabled value={score || 0} count={5} />
     },
     {
       title: '响应速度',
       dataIndex: 'response_score',
       key: 'response_score',
       width: 100,
-      render: (score) => <Rate disabled value={score || "unknown"} count={5} />
+      render: (score) => <Rate disabled value={score || 0} count={5} />
     },
     {
       title: '交付质量',
       dataIndex: 'delivery_score',
       key: 'delivery_score',
       width: 100,
-      render: (score) => <Rate disabled value={score || "unknown"} count={5} />
+      render: (score) => <Rate disabled value={score || 0} count={5} />
     },
     {
       title: '接口规范',
       dataIndex: 'interface_score',
       key: 'interface_score',
       width: 100,
-      render: (score) => <Rate disabled value={score || "unknown"} count={5} />
+      render: (score) => <Rate disabled value={score || 0} count={5} />
     },
     {
       title: '总分',

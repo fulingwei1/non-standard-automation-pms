@@ -388,7 +388,7 @@ const AlertStatistics = () => {
             <Input
               placeholder="搜索告警标题、描述..."
               prefix={<Filter size={16} />}
-              value={searchText || "unknown"}
+              value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear />
 
@@ -397,39 +397,39 @@ const AlertStatistics = () => {
             <Space>
               <Select
                 placeholder="告警类型"
-                value={filters.type}
+                value={filters.type || undefined}
                 onChange={(value) => setFilters({ ...filters, type: value })}
                 style={{ width: 120 }}
                 allowClear>
 
-                {Object.values(ALERT_TYPES).map((type) =>
-                <Select.Option key={type.value} value={type.value}>
+                {Object.entries(ALERT_TYPES).map(([key, type]) =>
+                <Select.Option key={key} value={key}>
                     {type.icon} {type.label}
                 </Select.Option>
                 )}
               </Select>
               <Select
                 placeholder="告警级别"
-                value={filters.level}
+                value={filters.level || undefined}
                 onChange={(value) => setFilters({ ...filters, level: value })}
                 style={{ width: 100 }}
                 allowClear>
 
-                {Object.values(ALERT_LEVELS).map((level) =>
-                <Select.Option key={level.value} value={level.value}>
+                {Object.entries(ALERT_LEVELS).map(([key, level]) =>
+                <Select.Option key={key} value={key}>
                     <Tag color={level.color}>{level.label}</Tag>
                 </Select.Option>
                 )}
               </Select>
               <Select
                 placeholder="状态"
-                value={filters.status}
+                value={filters.status || undefined}
                 onChange={(value) => setFilters({ ...filters, status: value })}
                 style={{ width: 100 }}
                 allowClear>
 
-                {Object.values(ALERT_STATUS).map((status) =>
-                <Select.Option key={status.value} value={status.value}>
+                {Object.entries(ALERT_STATUS).map(([key, status]) =>
+                <Select.Option key={key} value={key}>
                     <Tag color={status.color}>{status.label}</Tag>
                 </Select.Option>
                 )}
@@ -461,7 +461,7 @@ const AlertStatistics = () => {
         onOk={handleEditSubmit}
         onCancel={() => { setEditModalVisible(false); setEditingAlert(null); editForm.resetFields(); }}
         confirmLoading={editLoading}
-        destroyOnClose>
+        destroyOnHidden>
         <Form form={editForm} layout="vertical">
           <Form.Item name="title" label="告警标题" rules={[{ required: true, message: '请输入告警标题' }]}>
             <Input placeholder="请输入告警标题" />
@@ -471,8 +471,8 @@ const AlertStatistics = () => {
           </Form.Item>
           <Form.Item name="type" label="告警类型">
             <Select placeholder="选择告警类型">
-              {Object.values(ALERT_TYPES).map((type) =>
-                <Select.Option key={type.value} value={type.value}>
+              {Object.entries(ALERT_TYPES).map(([key, type]) =>
+                <Select.Option key={key} value={key}>
                   {type.icon} {type.label}
                 </Select.Option>
               )}
@@ -480,8 +480,8 @@ const AlertStatistics = () => {
           </Form.Item>
           <Form.Item name="level" label="告警级别">
             <Select placeholder="选择告警级别">
-              {Object.values(ALERT_LEVELS).map((level) =>
-                <Select.Option key={level.value} value={level.value}>
+              {Object.entries(ALERT_LEVELS).map(([key, level]) =>
+                <Select.Option key={key} value={key}>
                   <Tag color={level.color}>{level.label}</Tag>
                 </Select.Option>
               )}
@@ -489,8 +489,8 @@ const AlertStatistics = () => {
           </Form.Item>
           <Form.Item name="status" label="状态">
             <Select placeholder="选择状态">
-              {Object.values(ALERT_STATUS).map((status) =>
-                <Select.Option key={status.value} value={status.value}>
+              {Object.entries(ALERT_STATUS).map(([key, status]) =>
+                <Select.Option key={key} value={key}>
                   <Tag color={status.color}>{status.label}</Tag>
                 </Select.Option>
               )}

@@ -5,6 +5,7 @@ import { cn } from "../lib/utils";
 import { pmoApi } from "../services/api";
 import { formatCurrency } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
+import DeliveryRiskCard from "../components/sales/DeliveryRiskCard";
 import {
   Card,
   CardContent,
@@ -217,6 +218,11 @@ export default function PMODashboard({ embedded = false }) {
           />
         </motion.div>
       ) : null}
+
+      {/* AI 交付风险预警 */}
+      <motion.div variants={staggerChild} className="mb-6">
+        <DeliveryRiskCard />
+      </motion.div>
 
       {/* Stats Grid */}
       <motion.div

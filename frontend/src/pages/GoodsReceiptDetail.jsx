@@ -31,6 +31,7 @@ import { Badge } from "../components/ui/badge";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -75,10 +76,6 @@ export default function GoodsReceiptDetail() {
     inspect_result: "QUALIFIED",
   });
 
-  useEffect(() => {
-    loadReceipt();
-  }, [loadReceipt]);
-
   const loadReceipt = useCallback(async () => {
     try {
       setLoading(true);
@@ -97,6 +94,10 @@ export default function GoodsReceiptDetail() {
       setLoading(false);
     }
   }, [id]);
+
+  useEffect(() => {
+    loadReceipt();
+  }, [loadReceipt]);
 
   const handleOpenInspect = (item) => {
     setInspectingItem(item);
@@ -376,6 +377,9 @@ export default function GoodsReceiptDetail() {
           <DialogContent className="max-w-md bg-slate-900 border-slate-700">
             <DialogHeader>
               <DialogTitle className="text-slate-200">质检</DialogTitle>
+              <DialogDescription>
+                录入本次收货明细的送检、合格和不合格数量。
+              </DialogDescription>
             </DialogHeader>
             <DialogBody>
               {inspectingItem && (

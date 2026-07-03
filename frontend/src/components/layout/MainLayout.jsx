@@ -4,6 +4,7 @@ import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { ToastContainer, useToast } from "../ui";
 import { AnimatedPage } from "../common/AnimatedPage";
+import CommandBar from "../ai/CommandBar";
 
 /**
  * 主布局组件
@@ -54,6 +55,8 @@ export function MainLayout({ children, onLogout }) {
   return (
     <div className="min-h-screen bg-surface-0">
       <ToastContainer toasts={toasts} onClose={removeToast} />
+      {/* 全局 AI 命令栏 Cmd/Ctrl+K */}
+      <CommandBar />
       {/* Sidebar */}
       <Sidebar
         collapsed={sidebarCollapsed}

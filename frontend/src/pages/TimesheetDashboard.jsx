@@ -33,6 +33,13 @@ import {
   ProjectDistributionChart } from
 "../components/timesheet/TimesheetCharts";
 
+const toNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
+const formatHours = (value) => toNumber(value).toFixed(1);
+
 export default function TimesheetDashboard() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
@@ -68,7 +75,12 @@ export default function TimesheetDashboard() {
 
       setStats(statsRes.data?.data || statsRes.data);
       setMonthSummary(summaryRes.data?.data || summaryRes.data);
-      setAnomalies(anomaliesRes.data?.data || anomaliesRes.data?.items || anomaliesRes.data || []);
+      const anomalyItems = anomaliesRes.data?.data || anomaliesRes.data?.items || anomaliesRes.data || [];
+      setAnomalies((Array.isArray(anomalyItems) ? anomalyItems : []).map((item) => ({
+        ...item,
+        anomaly_type: item.anomaly_type || item.type,
+        description: item.description || item.message
+      })));
 
       // 加载部门统计
       if (summaryRes.data?.data?.departments) {
@@ -237,7 +249,7 @@ export default function TimesheetDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">
-                {stats?.total_hours?.toFixed(1) || 0}
+                {formatHours(stats?.total_hours)}
               </div>
               <p className="text-xs text-slate-400 mt-1">小时</p>
             </CardContent>
@@ -312,25 +324,25 @@ export default function TimesheetDashboard() {
                     <div>
                       <p className="text-sm text-slate-400">正常工时</p>
                       <p className="text-xl font-bold text-white">
-                        {monthSummary.normal_hours?.toFixed(1) || 0}h
+                        {formatHours(monthSummary.normal_hours)}h
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-400">加班工时</p>
                       <p className="text-xl font-bold text-orange-500">
-                        {monthSummary.overtime_hours?.toFixed(1) || 0}h
+                        {formatHours(monthSummary.overtime_hours)}h
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-400">周末工时</p>
                       <p className="text-xl font-bold text-yellow-500">
-                        {monthSummary.weekend_hours?.toFixed(1) || 0}h
+                        {formatHours(monthSummary.weekend_hours)}h
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-400">节假日工时</p>
                       <p className="text-xl font-bold text-red-500">
-                        {monthSummary.holiday_hours?.toFixed(1) || 0}h
+                        {formatHours(monthSummary.holiday_hours)}h
                       </p>
                     </div>
                 </div>
@@ -381,7 +393,7 @@ export default function TimesheetDashboard() {
                       <span className="text-white">{dept.department_name}</span>
                       <div className="flex items-center gap-4">
                         <span className="text-slate-400">
-                          {dept.total_hours?.toFixed(1) || 0}h
+                          {formatHours(dept.total_hours)}h
                         </span>
                         <span className="text-slate-400">
                           {dept.user_count || 0}人
@@ -416,7 +428,7 @@ export default function TimesheetDashboard() {
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="text-slate-400">
-                          {project.total_hours?.toFixed(1) || 0}h
+                          {formatHours(project.total_hours)}h
                         </span>
                         <span className="text-slate-400">
                           {project.user_count || 0}人

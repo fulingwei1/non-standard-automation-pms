@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Table, Tag, Tabs, Select, DatePicker } from 'antd';
+import { Card, Row, Col, Statistic, Table, Tag, Select, DatePicker } from 'antd';
 import { TrophyOutlined, RiseOutlined, TeamOutlined, BulbOutlined, FireOutlined } from '@ant-design/icons';
 import api from '../services/api';
 

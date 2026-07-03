@@ -10,10 +10,8 @@
 
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Users,
-  TrendingUp,
   Heart,
   ShoppingCart,
   Calendar,
@@ -25,7 +23,6 @@ import {
   AlertCircle,
   AlertTriangle,
   Target,
-  Star,
   Clock,
   ArrowRight,
   Building2,
@@ -36,7 +33,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
   Button,
   Badge,
   Tabs,

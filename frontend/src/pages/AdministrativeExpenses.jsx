@@ -43,11 +43,46 @@ import {
 "../components/administrative/StatisticsCharts";
 import { adminApi } from "../services/api";
 
+const categoryIcons = [Package, Car, Building2, Coffee, Printer];
+const categoryColors = [
+  "text-blue-400",
+  "text-cyan-400",
+  "text-purple-400",
+  "text-emerald-400",
+  "text-amber-400",
+];
+
+const defaultExpenseStats = {
+  monthlyBudget: 0,
+  monthlySpent: 0,
+  remainingBudget: 0,
+  budgetUtilization: 0,
+  trend: 0,
+  lastMonthSpent: 0,
+};
+
+const toNumber = (value) => {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const normalizeCategories = (items = []) => {
+  const total = items.reduce((sum, item) => sum + toNumber(item.amount), 0);
+  return items.map((item, index) => ({
+    ...item,
+    amount: toNumber(item.amount),
+    icon: item.icon || categoryIcons[index % categoryIcons.length],
+    color: item.color || categoryColors[index % categoryColors.length],
+    percentage:
+      item.percentage ?? (total > 0 ? Math.round((toNumber(item.amount) / total) * 100) : 0),
+  }));
+};
+
 export default function AdministrativeExpenses() {
   const [_loading, setLoading] = useState(true);
-  const [expenseStats, setExpenseStats] = useState(null);
-  const [categoryExpenses, _setCategoryExpenses] = useState([]);
-  const [monthlyTrend, _setMonthlyTrend] = useState([]);
+  const [expenseStats, setExpenseStats] = useState(defaultExpenseStats);
+  const [categoryExpenses, setCategoryExpenses] = useState([]);
+  const [monthlyTrend, setMonthlyTrend] = useState([]);
   const [periodFilter, setPeriodFilter] = useState("month");
 
   // Load data from API with fallback to mock data
@@ -58,11 +93,17 @@ export default function AdministrativeExpenses() {
         const statsRes = await adminApi.expenses.getStatistics({
           period: periodFilter
         });
-        if (statsRes.data) {
-          setExpenseStats(statsRes.data);
+        const stats = statsRes.data?.data || statsRes.data;
+        if (stats) {
+          setExpenseStats({ ...defaultExpenseStats, ...stats });
+          setCategoryExpenses(normalizeCategories(stats.categories || []));
+          setMonthlyTrend(stats.monthlyTrend || []);
         }
       } catch (_err) {
         console.log("Expense statistics API unavailable, using mock data");
+        setExpenseStats(defaultExpenseStats);
+        setCategoryExpenses([]);
+        setMonthlyTrend([]);
       }
       setLoading(false);
     };
@@ -70,7 +111,7 @@ export default function AdministrativeExpenses() {
   }, [periodFilter]);
 
   const totalExpenses = useMemo(() => {
-    return (categoryExpenses || []).reduce((sum, item) => sum + item.amount, 0);
+    return (categoryExpenses || []).reduce((sum, item) => sum + toNumber(item.amount), 0);
   }, [categoryExpenses]);
 
   return (

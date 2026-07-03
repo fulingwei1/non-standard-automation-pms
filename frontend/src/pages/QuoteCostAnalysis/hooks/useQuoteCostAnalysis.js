@@ -1,6 +1,14 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { quoteApi } from "../../../services/api";
 
+const asList = (payload) => {
+  const data = payload?.formatted ?? payload?.data?.data ?? payload?.data ?? payload;
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.results)) return data.results;
+  return [];
+};
+
 /**
  * Custom hook encapsulating all data-fetching and state logic for
  * the Quote Cost Analysis page.
@@ -24,11 +32,7 @@ export function useQuoteCostAnalysis(quoteId) {
 
       // Load versions
       const versionsRes = await quoteApi.getVersions(quoteId);
-      const versionsList =
-        versionsRes.data?.data ||
-        versionsRes.data?.items ||
-        versionsRes.data ||
-        [];
+      const versionsList = asList(versionsRes);
       setVersions(versionsList);
 
       // Set default selected versions (latest two)

@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import {
   Card,
@@ -16,12 +17,16 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Alert,
   toast,
 } from "../../components/ui";
 import { businessSupportApi } from "../../services/api";
+import { getItemsCompat, getResponseData } from "../../utils/apiResponse";
+import { notifyDelivery } from "./notify";
 
 const EMPTY_FORM = {
   order_id: "",
+  order_label: "",
   delivery_date: "",
   delivery_type: "",
   logistics_company: "",
@@ -33,12 +38,79 @@ const EMPTY_FORM = {
   remark: "",
 };
 
+const getFirstParam = (searchParams, names) => {
+  for (const name of names) {
+    const value = searchParams.get(name);
+    if (value) return value;
+  }
+  return "";
+};
+
 const DeliveryForm = ({ id, onBack }) => {
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const [salesOrdersLoading, setSalesOrdersLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
+  const [salesOrders, setSalesOrders] = useState([]);
 
   const isEdit = Boolean(id);
+  const projectId = getFirstParam(searchParams, ["project_id", "projectId"]);
+  const orderId = getFirstParam(searchParams, ["order_id", "orderId"]);
+  const hasCreateContext = Boolean(projectId || orderId);
+  const notify = (options) => notifyDelivery(toast, options);
+
+  useEffect(() => {
+    if (isEdit || !hasCreateContext) return;
+
+    setSalesOrdersLoading(true);
+    const params = { page: 1, page_size: 100 };
+    if (projectId) {
+      params.project_id = projectId;
+    }
+
+    businessSupportApi.salesOrders
+      .list(params)
+      .then(async (res) => {
+        let items = getItemsCompat(res);
+        items = Array.isArray(items) ? items : [];
+        let selectedOrder = orderId
+          ? items.find((order) => String(order.id) === String(orderId))
+          : null;
+
+        if (!selectedOrder && orderId && businessSupportApi.salesOrders.get) {
+          const detailRes = await businessSupportApi.salesOrders.get(orderId);
+          selectedOrder = getResponseData(detailRes);
+          if (selectedOrder?.id) {
+            items = [
+              selectedOrder,
+              ...items.filter((order) => String(order.id) !== String(selectedOrder.id)),
+            ];
+          }
+        }
+
+        if (!selectedOrder && items.length === 1) {
+          selectedOrder = items[0];
+        }
+
+        setSalesOrders(items);
+        if (selectedOrder?.id) {
+          setFormData((prev) => ({
+            ...prev,
+            order_id: String(selectedOrder.id),
+            order_label: selectedOrder.order_no || String(selectedOrder.id),
+            delivery_amount: prev.delivery_amount || selectedOrder.order_amount || "",
+          }));
+        }
+      })
+      .catch(() =>
+        notify({
+          title: "提示",
+          description: "销售订单列表加载失败，可稍后刷新重试",
+        })
+      )
+      .finally(() => setSalesOrdersLoading(false));
+  }, [hasCreateContext, isEdit, orderId, projectId]);
 
   useEffect(() => {
     if (!id) return;
@@ -46,9 +118,10 @@ const DeliveryForm = ({ id, onBack }) => {
     businessSupportApi.deliveryOrders
       .get(id)
       .then((res) => {
-        const data = res?.data?.data || res?.data || {};
+        const data = getResponseData(res) || {};
         setFormData({
-          order_id: data.order_id || "",
+          order_id: data.order_id ? String(data.order_id) : "",
+          order_label: data.order_no || (data.order_id ? String(data.order_id) : ""),
           delivery_date: data.delivery_date || "",
           delivery_type: data.delivery_type || "",
           logistics_company: data.logistics_company || "",
@@ -61,7 +134,7 @@ const DeliveryForm = ({ id, onBack }) => {
         });
       })
       .catch(() =>
-        toast({
+        notify({
           title: "错误",
           description: "加载发货单数据失败",
           variant: "destructive",
@@ -73,29 +146,75 @@ const DeliveryForm = ({ id, onBack }) => {
   const updateField = (field, value) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
 
-  const handleSubmit = async () => {
+  const getErrorMessage = (error) => {
+    const detail = error?.response?.data?.detail || error?.response?.data?.message;
+    if (Array.isArray(detail)) {
+      return detail.map((item) => item.msg || JSON.stringify(item)).join("；");
+    }
+    if (typeof detail === "string") return detail;
+    return isEdit ? "更新失败" : "创建失败";
+  };
+
+  const validateForm = () => {
     if (!formData.order_id) {
-      toast({
+      notify({
         title: "警告",
-        description: "请填写销售订单 ID",
+        description: "请选择项目销售订单",
         variant: "destructive",
       });
-      return;
+      return false;
     }
+    if (!formData.delivery_date) {
+      notify({
+        title: "警告",
+        description: "请选择计划发货日期",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!formData.delivery_type) {
+      notify({
+        title: "警告",
+        description: "请选择发货类型",
+        variant: "destructive",
+      });
+      return false;
+    }
+    const amount = Number(formData.delivery_amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      notify({
+        title: "警告",
+        description: "请填写有效的发货金额",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
     setSubmitting(true);
     try {
+      const payload = {
+        ...formData,
+        order_id: Number(formData.order_id),
+        delivery_amount: Number(formData.delivery_amount),
+      };
       if (isEdit) {
-        await businessSupportApi.deliveryOrders.update(id, formData);
-        toast({ title: "成功", description: "更新成功" });
+        const { order_id: _orderId, order_label: _orderLabel, ...updatePayload } = payload;
+        await businessSupportApi.deliveryOrders.update(id, updatePayload);
+        notify({ title: "成功", description: "更新成功" });
       } else {
-        await businessSupportApi.deliveryOrders.create(formData);
-        toast({ title: "成功", description: "创建成功" });
+        await businessSupportApi.deliveryOrders.create(payload);
+        notify({ title: "成功", description: "生成成功" });
       }
       onBack();
-    } catch (_err) {
-      toast({
+    } catch (err) {
+      notify({
         title: "错误",
-        description: isEdit ? "更新失败" : "创建失败",
+        description: getErrorMessage(err),
         variant: "destructive",
       });
     } finally {
@@ -111,12 +230,30 @@ const DeliveryForm = ({ id, onBack }) => {
     );
   }
 
+  if (!isEdit && !hasCreateContext) {
+    return (
+      <Card className="bg-surface-100/50">
+        <CardHeader className="border-b border-white/10">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-white">生成发货计划</CardTitle>
+            <Button variant="outline" onClick={onBack}>
+              返回列表
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6">
+          <Alert variant="warning">请从项目交付页发起发货计划</Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="bg-surface-100/50">
       <CardHeader className="border-b border-white/10">
         <div className="flex items-center justify-between">
           <CardTitle className="text-white">
-            {isEdit ? "编辑发货单" : "新建发货单"}
+            {isEdit ? "编辑发货计划" : "生成发货计划"}
           </CardTitle>
           <div className="flex gap-2">
             <Button variant="outline" onClick={onBack}>
@@ -131,16 +268,43 @@ const DeliveryForm = ({ id, onBack }) => {
       <CardContent className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
-            <label className="text-sm text-slate-400">销售订单 ID *</label>
-            <Input
-              value={formData.order_id}
-              onChange={(e) => updateField("order_id", e.target.value)}
-              placeholder="输入销售订单 ID"
-              className="bg-surface-100 border-white/10"
-            />
+            <label className="text-sm text-slate-400">项目销售订单 *</label>
+            {isEdit ? (
+              <Input
+                value={formData.order_label || formData.order_id}
+                readOnly
+                className="bg-surface-100 border-white/10"
+              />
+            ) : (
+              <>
+                <Select
+                  value={formData.order_id ? String(formData.order_id) : ""}
+                  onValueChange={(v) => updateField("order_id", v)}
+                  disabled={salesOrdersLoading || Boolean(orderId)}
+                >
+                  <SelectTrigger className="bg-surface-100 border-white/10">
+                    <SelectValue
+                      placeholder={salesOrdersLoading ? "加载销售订单..." : "选择项目销售订单"}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {salesOrders.map((order) => (
+                      <SelectItem key={order.id} value={String(order.id)}>
+                        {order.order_no} - {order.customer_name || "未命名客户"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {salesOrders.length === 0 && !salesOrdersLoading && (
+                  <p className="text-xs text-amber-400">
+                    当前项目暂无可生成发货计划的销售订单
+                  </p>
+                )}
+              </>
+            )}
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-400">发货日期</label>
+            <label className="text-sm text-slate-400">计划发货日期</label>
             <Input
               type="date"
               value={formData.delivery_date}

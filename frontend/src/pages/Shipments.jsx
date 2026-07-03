@@ -29,7 +29,6 @@ import {
   Progress,
   message,
   Empty,
-  List,
 } from "antd";
 
 import { businessSupportApi } from "../services/api";
@@ -37,25 +36,60 @@ import { quoteDeliveryApi } from "../services/api/sales";
 
 const { Title, Text } = Typography;
 
-const StatCard = ({ title, value, icon, color, suffix, loading }) => (
-  <Card loading={loading} hoverable>
-    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+const StatCard = ({ title, value, icon, color, suffix, loading }) => {
+  const displayValue = value ?? "-";
+
+  return (
+    <Card loading={loading} hoverable>
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 12,
+            background: `${color}15`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {icon}
+        </div>
+        <Statistic title={title} value={displayValue} suffix={suffix} />
+      </div>
+    </Card>
+  );
+};
+
+const DeliveryRows = ({ items, overdue = false }) => (
+  <div role="list" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    {items.slice(0, 8).map((item) => (
       <div
+        key={item.id || item.quote_id || item.quote_no}
+        role="listitem"
         style={{
-          width: 48,
-          height: 48,
-          borderRadius: 12,
-          background: `${color}15`,
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          padding: "8px 0",
+          borderBottom: "1px solid #f0f0f0",
         }}
       >
-        {icon}
+        <div style={{ minWidth: 0 }}>
+          <Text strong>{item.quote_no || `报价#${item.quote_id}`}</Text>
+          <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+            <Text type="secondary">{item.title}</Text>
+            {item.delivery_date && (
+              <Text type="secondary">| {item.delivery_date}</Text>
+            )}
+          </div>
+        </div>
+        <Tag color={overdue ? "red" : item.days_remaining <= 2 ? "orange" : "blue"}>
+          {overdue ? `逾期${item.days_overdue}天` : `${item.days_remaining}天后`}
+        </Tag>
       </div>
-      <Statistic title={title} value={value || "unknown"} suffix={suffix} />
-    </div>
-  </Card>
+    ))}
+  </div>
 );
 
 export default function Shipments() {
@@ -233,31 +267,7 @@ export default function Shipments() {
             {upcomingDeliveries.length === 0 ? (
               <Empty description="暂无即将交付的报价" />
             ) : (
-              <List
-                size="small"
-                dataSource={upcomingDeliveries.slice(0, 8)}
-                renderItem={(item) => (
-                  <List.Item
-                    extra={
-                      <Tag color={item.days_remaining <= 2 ? "orange" : "blue"}>
-                        {item.days_remaining}天后
-                      </Tag>
-                    }
-                  >
-                    <List.Item.Meta
-                      title={item.quote_no || `报价#${item.quote_id}`}
-                      description={
-                        <Space size={4}>
-                          <Text type="secondary">{item.title}</Text>
-                          {item.delivery_date && (
-                            <Text type="secondary">| {item.delivery_date}</Text>
-                          )}
-                        </Space>
-                      }
-                    />
-                  </List.Item>
-                )}
-              />
+              <DeliveryRows items={upcomingDeliveries} />
             )}
           </Card>
         </Col>
@@ -277,29 +287,7 @@ export default function Shipments() {
             {overdueDeliveries.length === 0 ? (
               <Empty description="暂无逾期交付" />
             ) : (
-              <List
-                size="small"
-                dataSource={overdueDeliveries.slice(0, 8)}
-                renderItem={(item) => (
-                  <List.Item
-                    extra={
-                      <Tag color="red">逾期{item.days_overdue}天</Tag>
-                    }
-                  >
-                    <List.Item.Meta
-                      title={item.quote_no || `报价#${item.quote_id}`}
-                      description={
-                        <Space size={4}>
-                          <Text type="secondary">{item.title}</Text>
-                          {item.delivery_date && (
-                            <Text type="secondary">| {item.delivery_date}</Text>
-                          )}
-                        </Space>
-                      }
-                    />
-                  </List.Item>
-                )}
-              />
+              <DeliveryRows items={overdueDeliveries} overdue />
             )}
           </Card>
         </Col>

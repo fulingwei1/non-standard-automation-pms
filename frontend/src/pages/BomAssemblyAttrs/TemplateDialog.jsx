@@ -33,6 +33,10 @@ export function TemplateDialog({
   loading,
   onApplyTemplate,
 }) {
+  const templateItems = Array.isArray(templates)
+    ? templates
+    : templates?.items || templates?.data?.items || [];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -53,7 +57,7 @@ export function TemplateDialog({
                 <SelectValue placeholder="选择模板" />
               </SelectTrigger>
               <SelectContent>
-                {(templates || []).map((tpl) => (
+                {(templateItems || []).map((tpl) => (
                   <SelectItem key={tpl.id} value={tpl.id.toString()}>
                     <div>
                       <span className="font-medium">{tpl.template_name}</span>

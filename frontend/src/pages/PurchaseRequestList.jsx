@@ -27,6 +27,7 @@ import { Badge } from "../components/ui/badge";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -436,13 +437,13 @@ export default function PurchaseRequestList() {
               <div className="flex-1">
                 <Input
                   placeholder="搜索申请单号..."
-                  value={searchQuery || "unknown"}
+                  value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   icon={Search}
                   className="bg-slate-900/50 border-slate-700" />
 
               </div>
-              <Select value={statusFilter || "unknown"} onValueChange={setStatusFilter}>
+              <Select value={statusFilter || "all"} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full md:w-[180px] bg-slate-900/50 border-slate-700">
                   <SelectValue placeholder="状态筛选" />
                 </SelectTrigger>
@@ -454,7 +455,7 @@ export default function PurchaseRequestList() {
                   <SelectItem value="REJECTED">已驳回</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={projectFilter || "unknown"} onValueChange={setProjectFilter}>
+              <Select value={projectFilter || "all"} onValueChange={setProjectFilter}>
                 <SelectTrigger className="w-full md:w-[180px] bg-slate-900/50 border-slate-700">
                   <SelectValue placeholder="项目筛选" />
                 </SelectTrigger>
@@ -523,6 +524,9 @@ export default function PurchaseRequestList() {
                 <DialogTitle className="text-slate-200">
                   审批采购申请
                 </DialogTitle>
+                <DialogDescription>
+                  审批后采购申请状态会变更为已审批或已驳回。
+                </DialogDescription>
               </DialogHeader>
               <DialogBody>
                 <div className="space-y-4">

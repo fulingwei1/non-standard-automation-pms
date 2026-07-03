@@ -3,7 +3,7 @@
  * Features: 显示任务延期原因统计（Top N），支持按原因/负责人分组
  */
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,

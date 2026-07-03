@@ -113,7 +113,7 @@ export function useProjectDetail() {
   const loadAvailableUsers = async () => {
     setLoadingUsers(true);
     try {
-      const res = await userApi.list({ page: 1, page_size: 200, is_active: true });
+      const res = await userApi.options({ page: 1, page_size: 200, is_active: true });
       const users = res.data?.items || res.data || [];
       // 过滤掉已在项目中的成员
       const memberIds = new Set((members || []).map((m) => m.user_id));

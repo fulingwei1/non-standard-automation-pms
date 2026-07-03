@@ -285,6 +285,36 @@ describe('Sales API', () => {
       expect(response.status).toBe(200);
     });
 
+    it('calculateCost() - 应该调用报价重新计算接口', async () => {
+      mock.onPost('/api/v1/sales/quotes/1/recalculate').reply(200, {
+        success: true,
+        data: { total_cost: 10000 },
+      });
+
+      const response = await quoteApi.calculateCost(1, 2);
+
+      expect(response.status).toBe(200);
+      expect(mock.history.post[0].url).toBe('/sales/quotes/1/recalculate');
+      expect(mock.history.post[0].params).toEqual({ version_id: 2 });
+      expect(mock.history.post[0].data).toBe('null');
+    });
+
+    it('getCostMatchSuggestions() - 应该调用报价成本匹配建议接口', async () => {
+      mock.onPost('/api/v1/sales/quotes/1/cost-match-suggestions').reply(200, {
+        success: true,
+        data: { suggestions: [] },
+      });
+
+      const response = await quoteApi.getCostMatchSuggestions(1, 2);
+
+      expect(response.status).toBe(200);
+      expect(mock.history.post[0].url).toBe(
+        '/sales/quotes/1/cost-match-suggestions'
+      );
+      expect(mock.history.post[0].params).toEqual({ version_id: 2 });
+      expect(mock.history.post[0].data).toBe('null');
+    });
+
     it('startApproval() - 应该启动审批流程', async () => {
       mock.onPost('/api/v1/sales/quotes/approval/submit').reply(200, {
         success: true,
@@ -394,11 +424,43 @@ describe('Sales API', () => {
 
       expect(response.status).toBe(200);
     });
+
+    it('approve() - 应该把布尔审批结果转换为后端 action 契约', async () => {
+      mock.onPost('/api/v1/sales/invoices/1/approval/action').reply(200, {
+        success: true,
+        data: { status: 'REJECTED' },
+      });
+
+      const response = await invoiceApi.approve(1, {
+        approved: false,
+        remark: '资料不完整',
+      });
+
+      expect(response.status).toBe(200);
+      expect(JSON.parse(mock.history.post[0].data)).toEqual({
+        invoice_id: 1,
+        action: 'REJECT',
+        comment: '资料不完整',
+      });
+    });
+
+    it('approveApproval()/rejectApproval() - 应该使用大写审批动作', async () => {
+      mock.onPost('/api/v1/sales/invoices/1/approval/action').reply(200, {
+        success: true,
+        data: { status: 'PENDING' },
+      });
+
+      await invoiceApi.approveApproval(1, { comment: '同意' });
+      await invoiceApi.rejectApproval(1, { comment: '驳回' });
+
+      expect(JSON.parse(mock.history.post[0].data).action).toBe('APPROVE');
+      expect(JSON.parse(mock.history.post[1].data).action).toBe('REJECT');
+    });
   });
 
   describe('paymentApi - 付款API', () => {
     it('list() - 应该获取付款列表', async () => {
-      mock.onGet('/api/v1/sales/payments').reply(200, {
+      mock.onGet('/api/v1/sales/payments/records').reply(200, {
         success: true,
         data: [{ id: 1, amount: 5000 }],
       });

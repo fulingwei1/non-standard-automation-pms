@@ -1,4 +1,3 @@
-import React from "react";
 import { Wrench, Network, Link2, CheckCircle2 } from "lucide-react";
 import {
   Dialog,

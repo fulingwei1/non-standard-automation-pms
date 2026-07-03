@@ -15,8 +15,13 @@
  * @returns {*} 提取的数据对象
  */
 export function extractData(responseData) {
-  // 如果是新格式（有success字段）
-  if (responseData && typeof responseData === 'object' && 'success' in responseData && 'data' in responseData) {
+  // 如果是统一响应格式（success/data 或 code/data）
+  if (
+    responseData &&
+    typeof responseData === 'object' &&
+    ('success' in responseData || 'code' in responseData) &&
+    'data' in responseData
+  ) {
     return responseData.data;
   }
   // 如果是旧格式，直接返回
@@ -48,8 +53,8 @@ export function extractItems(responseData) {
       return Array.isArray(responseData.items) ? responseData.items : [];
     }
 
-    // 如果响应是SuccessResponse包装的ListResponse
-    if ('success' in responseData && 'data' in responseData) {
+    // 如果响应是统一响应包装的ListResponse
+    if (('success' in responseData || 'code' in responseData) && 'data' in responseData) {
       const data = responseData.data;
       if (Array.isArray(data)) {
         return data;
@@ -70,8 +75,13 @@ export function extractItems(responseData) {
  * @returns {Object} 包含items、total、page、page_size的对象
  */
 export function extractPaginatedData(responseData) {
-  // 如果是SuccessResponse包装的PaginatedResponse
-  if (responseData && typeof responseData === 'object' && 'success' in responseData && 'data' in responseData) {
+  // 如果是统一响应包装的PaginatedResponse
+  if (
+    responseData &&
+    typeof responseData === 'object' &&
+    ('success' in responseData || 'code' in responseData) &&
+    'data' in responseData
+  ) {
     const data = responseData.data;
     if (data && typeof data === 'object' && 'items' in data) {
       return {
@@ -131,8 +141,13 @@ export function extractListData(responseData) {
     };
   }
 
-  // 如果是SuccessResponse包装的ListResponse
-  if (responseData && typeof responseData === 'object' && 'success' in responseData && 'data' in responseData) {
+  // 如果是统一响应包装的ListResponse
+  if (
+    responseData &&
+    typeof responseData === 'object' &&
+    ('success' in responseData || 'code' in responseData) &&
+    'data' in responseData
+  ) {
     const data = responseData.data;
     if (Array.isArray(data)) {
       return {

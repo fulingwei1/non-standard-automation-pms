@@ -1,7 +1,8 @@
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Send, XCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -17,6 +18,8 @@ export default function PlanDetailDialog({
   open,
   onOpenChange,
   selectedPlan,
+  onSubmitPlan,
+  onApprovePlan,
   onPublish,
 }) {
   return (
@@ -26,6 +29,9 @@ export default function PlanDetailDialog({
           <DialogTitle>
             {selectedPlan?.plan_name} - {selectedPlan?.plan_no}
           </DialogTitle>
+          <DialogDescription>
+            查看生产计划详情并按当前状态推进审批或发布。
+          </DialogDescription>
         </DialogHeader>
         <DialogBody>
           {selectedPlan && (
@@ -94,6 +100,24 @@ export default function PlanDetailDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             关闭
           </Button>
+          {selectedPlan && selectedPlan.status === "DRAFT" && (
+            <Button onClick={() => onSubmitPlan(selectedPlan.id)}>
+              <Send className="w-4 h-4 mr-2" />
+              提交审批
+            </Button>
+          )}
+          {selectedPlan && selectedPlan.status === "SUBMITTED" && (
+            <>
+              <Button onClick={() => onApprovePlan(selectedPlan.id, true)}>
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                审批通过
+              </Button>
+              <Button variant="outline" onClick={() => onApprovePlan(selectedPlan.id, false)}>
+                <XCircle className="w-4 h-4 mr-2" />
+                审批驳回
+              </Button>
+            </>
+          )}
           {selectedPlan && selectedPlan.status === "APPROVED" && (
             <Button onClick={() => onPublish(selectedPlan.id)}>
               <CheckCircle2 className="w-4 h-4 mr-2" />

@@ -69,6 +69,7 @@ export default function RdCostReports() {
   const [reportType, setReportType] = useState("auxiliary-ledger");
   const [reportData, setReportData] = useState(null);
   const [filters, setFilters] = useState({
+    year: new Date().getFullYear(),
     start_date: "",
     end_date: "",
     project_id: id || ""
@@ -109,9 +110,13 @@ export default function RdCostReports() {
     try {
       setLoading(true);
       const params = {
-        rd_project_id: id,
+        year: filters.year || new Date().getFullYear(),
+        project_id: id,
         ...filters
       };
+      if (!params.start_date) delete params.start_date;
+      if (!params.end_date) delete params.end_date;
+      delete params.rd_project_id;
 
       let response;
       switch (reportType) {

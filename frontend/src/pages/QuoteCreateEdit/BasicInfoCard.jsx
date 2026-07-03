@@ -40,7 +40,7 @@ export default function BasicInfoCard({ formData, setFormData, opportunities, is
           <div>
             <label className="text-sm font-medium mb-2 block">报价编码</label>
             <Input
-              value={formData.quote_code}
+              value={formData.quote_code || ""}
               onChange={(e) =>
                 setFormData({ ...formData, quote_code: e.target.value })
               }
@@ -51,7 +51,7 @@ export default function BasicInfoCard({ formData, setFormData, opportunities, is
           <div>
             <label className="text-sm font-medium mb-2 block">报价名称</label>
             <Input
-              value={formData.quote_name}
+              value={formData.quote_name || ""}
               onChange={(e) =>
                 setFormData({ ...formData, quote_name: e.target.value })
               }
@@ -64,7 +64,7 @@ export default function BasicInfoCard({ formData, setFormData, opportunities, is
             </label>
             <Input
               type="number"
-              value={formData.valid_days}
+              value={formData.valid_days ?? ""}
               onChange={(e) =>
                 setFormData({
                   ...formData,

@@ -5,28 +5,6 @@
 
 import { vi } from 'vitest';
 
-// Helper to create a mock API module
-const createApiMock = (methods = {}) => {
-  const mock = {};
-  Object.keys(methods).forEach(key => {
-    mock[key] = vi.fn();
-  });
-  return mock;
-};
-
-// Helper to create nested API mock
-const createNestedApiMock = (structure) => {
-  const mock = {};
-  Object.keys(structure).forEach(key => {
-    if (typeof structure[key] === 'object' && structure[key] !== null) {
-      mock[key] = createNestedApiMock(structure[key]);
-    } else {
-      mock[key] = vi.fn();
-    }
-  });
-  return mock;
-};
-
 // Payment API mock
 export const paymentApi = {
   list: vi.fn(),

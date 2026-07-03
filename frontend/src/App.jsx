@@ -6,7 +6,7 @@ import {
   Navigate,
   useLocation } from
 "react-router-dom";
-import { ConfigProvider, theme } from "antd";
+import { App as AntdApp, ConfigProvider, theme } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
 import { MainLayout } from "./components/layout/MainLayout";
@@ -160,41 +160,43 @@ function App() {
   return (
     <ErrorBoundary>
       <ConfigProvider theme={antdDarkTheme} locale={zhCN}>
-        <Router>
-          <Routes>
-            {/* 登录路由 */}
-            <Route
-              path="/login"
-              element={
-              <LoginRoute
-                onLoginSuccess={handleLoginSuccess}
-                isAuthenticated={isAuthenticated} />
-
-              } />
-
-            {/* 未认证时，所有其他路径都重定向到登录页 */}
-            {!isAuthenticated ?
-            <Route path="*" element={<Navigate to="/login" replace />} /> : (
-
-            /* 已认证时，显示主应用 */
-            <>
+        <AntdApp>
+          <Router>
+            <Routes>
+              {/* 登录路由 */}
               <Route
-                path="*"
+                path="/login"
                 element={
-                <AuthProvider>
-                  <PermissionProvider>
-                    <MainLayout onLogout={handleLogout}>
-                        <AppRoutes />
-                    </MainLayout>
-                  </PermissionProvider>
-                </AuthProvider>
-                }
-              />
-            </>)
+                <LoginRoute
+                  onLoginSuccess={handleLoginSuccess}
+                  isAuthenticated={isAuthenticated} />
 
-            }
-          </Routes>
-        </Router>
+                } />
+
+              {/* 未认证时，所有其他路径都重定向到登录页 */}
+              {!isAuthenticated ?
+              <Route path="*" element={<Navigate to="/login" replace />} /> : (
+
+              /* 已认证时，显示主应用 */
+              <>
+                <Route
+                  path="*"
+                  element={
+                  <AuthProvider>
+                    <PermissionProvider>
+                      <MainLayout onLogout={handleLogout}>
+                          <AppRoutes />
+                      </MainLayout>
+                    </PermissionProvider>
+                  </AuthProvider>
+                  }
+                />
+              </>)
+
+              }
+            </Routes>
+          </Router>
+        </AntdApp>
       </ConfigProvider>
     </ErrorBoundary>);
 

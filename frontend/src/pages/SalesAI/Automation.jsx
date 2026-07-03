@@ -9,19 +9,12 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   Zap,
   Bell,
-  Mail,
   CheckSquare,
   FileText,
-  Play,
-  Pause,
   Settings,
-  Clock,
-  AlertCircle,
-  CheckCircle,
   ChevronRight,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
@@ -30,7 +23,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
   Button,
   Badge,
   Tabs,

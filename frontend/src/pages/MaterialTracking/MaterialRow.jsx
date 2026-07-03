@@ -10,14 +10,22 @@ import { cn, formatDate } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import { statusConfig, qualityStatusConfig } from "./constants";
 
+const toFiniteNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
 const MaterialRow = ({ material, onView }) => {
   const statusCfg = statusConfig[material.status];
   const StatusIcon = statusCfg.icon;
+  const totalQuantity = toFiniteNumber(material.totalQuantity);
+  const arrivedQuantity = toFiniteNumber(material.arrivedQuantity);
+  const usedQuantity = toFiniteNumber(material.usedQuantity);
   const arrivalProgress =
-  material.arrivedQuantity / material.totalQuantity * 100;
+  totalQuantity > 0 ? arrivedQuantity / totalQuantity * 100 : 0;
   const usageProgress =
-  material.arrivedQuantity > 0
-    ? material.usedQuantity / material.arrivedQuantity * 100
+  arrivedQuantity > 0
+    ? usedQuantity / arrivedQuantity * 100
     : 0;
 
   return (
@@ -77,9 +85,9 @@ const MaterialRow = ({ material, onView }) => {
                 {arrivalProgress.toFixed(0)}%
               </span>
             </div>
-            <Progress value={arrivalProgress || "unknown"} className="h-1.5" />
+            <Progress value={arrivalProgress} className="h-1.5" />
           </div>
-          {material.arrivedQuantity > 0 &&
+          {arrivedQuantity > 0 &&
           <div>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-slate-400">使用进度</span>
@@ -87,7 +95,7 @@ const MaterialRow = ({ material, onView }) => {
                   {usageProgress.toFixed(0)}%
                 </span>
               </div>
-              <Progress value={usageProgress || "unknown"} className="h-1.5" />
+              <Progress value={usageProgress} className="h-1.5" />
           </div>
           }
         </div>

@@ -3,8 +3,9 @@ import {
   Button,
   Input,
   Dialog,
-  DialogContent,
-  DialogHeader,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
   DialogTitle,
   DialogBody,
   DialogFooter,
@@ -68,6 +69,9 @@ function CreateSupplierDialog({ onClose, onSuccess }) {
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700">
         <DialogHeader>
           <DialogTitle>新建供应商</DialogTitle>
+          <DialogDescription>
+            创建供应商基础档案，用于采购订单、采购申请和收货流程。
+          </DialogDescription>
         </DialogHeader>
         <DialogBody className="space-y-4">
           <div className="grid grid-cols-2 gap-4">

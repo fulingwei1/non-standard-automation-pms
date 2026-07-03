@@ -38,7 +38,6 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  Progress,
   Dialog,
   DialogContent,
   DialogHeader,

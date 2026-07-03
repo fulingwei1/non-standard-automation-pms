@@ -27,9 +27,24 @@ export default function GaugeChart({
   style,
   ...rest
 }) {
-  const percent = useMemo(() => {
-    return (value - min) / (max - min);
+  const normalized = useMemo(() => {
+    const numericMin = Number.isFinite(Number(min)) ? Number(min) : 0;
+    const rawMax = Number.isFinite(Number(max)) ? Number(max) : 100;
+    const numericMax = rawMax === numericMin ? numericMin + 1 : rawMax;
+    const numericValue = Number.isFinite(Number(value)) ? Number(value) : numericMin;
+    const clampedValue = Math.min(Math.max(numericValue, numericMin), numericMax);
+    const percent = (clampedValue - numericMin) / (numericMax - numericMin);
+
+    return {
+      value: clampedValue,
+      percent: Math.min(Math.max(percent, 0), 1),
+    };
   }, [value, min, max]);
+
+  const displayValue = useMemo(() => {
+    const rounded = Math.round(normalized.value * 10) / 10;
+    return Number.isInteger(rounded) ? String(rounded) : String(rounded);
+  }, [normalized.value]);
 
   const config = useMemo(() => {
     const defaultThresholds = [
@@ -39,69 +54,52 @@ export default function GaugeChart({
     ];
 
     const rangeColors = thresholds || defaultThresholds;
+    const thresholdValues = rangeColors.map((t) =>
+      Math.min(Math.max(Number(t.value) || 0, 0), 1)
+    );
+    const thresholdColors = rangeColors.map((t) => t.color);
+    const { children: _children, ...rootOptions } = rest;
 
     return {
-      percent,
       height,
-      range: {
-        ticks: (rangeColors || []).map((t) => t.value),
-        color: (rangeColors || []).map((t) => t.color),
-      },
-      indicator: {
-        pointer: {
-          style: {
-            stroke: "#64748b",
+      ...rootOptions,
+      children: [
+        {
+          type: "gauge",
+          data: {
+            target: normalized.percent,
+            total: 1,
+            thresholds: thresholdValues,
           },
-        },
-        pin: {
-          style: {
-            stroke: "#64748b",
-          },
-        },
-      },
-      axis: {
-        label: {
-          formatter(v) {
-            return Math.round(Number(v) * (max - min) + min);
+          scale: {
+            color: {
+              range: thresholdColors,
+            },
           },
           style: {
-            fill: "#64748b",
-            fontSize: 10,
+            pointerStroke: "#64748b",
+            pinStroke: "#64748b",
+            textContent: () => `${displayValue}${unit}`,
+            textFontSize: 24,
+            textFontWeight: "bold",
+            textFill: "#e2e8f0",
+          },
+          animate: {
+            enter: {
+              type: "fadeIn",
+              duration: 800,
+            },
           },
         },
-        subTickLine: {
-          count: 3,
-        },
-      },
-      statistic: {
-        title: {
-          content: title || "",
-          style: {
-            fontSize: "14px",
-            color: "#94a3b8",
-          },
-        },
-        content: {
-          formatter: () => `${value}${unit}`,
-          style: {
-            fontSize: "24px",
-            fontWeight: "bold",
-            color: "#e2e8f0",
-          },
-        },
-      },
-      animation: {
-        appear: {
-          animation: "fade-in",
-          duration: 800,
-        },
-      },
-      ...rest,
+      ],
     };
-  }, [percent, height, max, min, value, unit, title, thresholds, rest]);
+  }, [height, normalized.percent, displayValue, unit, thresholds, rest]);
 
   return (
     <div style={style}>
+      {title && (
+        <div className="text-center text-sm text-slate-400 mb-2">{title}</div>
+      )}
       <Gauge {...config} />
     </div>
   );

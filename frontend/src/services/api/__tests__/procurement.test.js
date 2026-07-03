@@ -10,12 +10,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setupApiTest, teardownApiTest } from './_test-setup.js';
 
 describe('Procurement API', () => {
-  let api, mock;
+  let mock;
   let purchaseApi, outsourcingApi, procurementAnalysisApi;
 
   beforeEach(async () => {
     const setup = await setupApiTest();
-    api = setup.api;
     mock = setup.mock;
     
     const procurementModule = await import('../procurement.js');

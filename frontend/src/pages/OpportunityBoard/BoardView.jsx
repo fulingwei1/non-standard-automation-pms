@@ -11,9 +11,9 @@ export default function BoardView({
 }) {
   return (
     <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
-      {Object.values(OPPORTUNITY_STAGE_CONFIGS).
-        filter((s) => !hideLost || s.frontendKey !== "lost").
-        map((stage) => {
+      {Object.entries(OPPORTUNITY_STAGE_CONFIGS).
+        filter(([, stage]) => !hideLost || stage.frontendKey !== "lost").
+        map(([stageCode, stage]) => {
           const stageOpps = groupedOpportunities[stage.frontendKey] || [];
           const stageTotal = (stageOpps || []).reduce(
             (sum, o) => sum + (o.expectedAmount || 0),
@@ -21,7 +21,7 @@ export default function BoardView({
           );
 
           return (
-            <div key={stage.key} className="flex-shrink-0 w-80">
+            <div key={`${stageCode}-${stage.frontendKey}`} className="flex-shrink-0 w-80">
                   {/* Column Header */}
                   <div className="flex items-center justify-between mb-3 p-3 bg-surface-1 rounded-lg">
                     <div className="flex items-center gap-2">
@@ -42,9 +42,9 @@ export default function BoardView({
 
                   {/* Column Content */}
                   <div className="space-y-3 min-h-[200px]">
-                    {(stageOpps || []).map((opportunity) =>
+                    {(stageOpps || []).map((opportunity, index) =>
                 <OpportunityCard
-                  key={opportunity.id}
+                  key={`${stage.frontendKey}-${opportunity.id ?? opportunity.opp_code ?? index}`}
                   opportunity={opportunity}
                   onClick={onOpportunityClick}
                   draggable

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { costApi } from '../../../services/api';
+import { costApi } from '../../../services/api/projects.js';
 
 export function useCostAccounting() {
     const [costs, setCosts] = useState([]);
@@ -17,8 +17,7 @@ export function useCostAccounting() {
                 const response = await costApi.list(project_id, otherParams);
                 setCosts(response.data?.items || response.data?.items || response.data || []);
             } else {
-                // 如果没有指定项目ID，返回空数组或提示用户选择项目
-                console.warn('成本查询需要指定项目ID，请先选择项目');
+                // 未选择项目时保持空态，不在页面初始化阶段刷 console。
                 setCosts([]);
             }
         } catch (err) { 

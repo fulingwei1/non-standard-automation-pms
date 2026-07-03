@@ -11,7 +11,7 @@ const SearchBar = ({ value, onChange }) => (
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <Input
-          placeholder="搜索订单号、客户名称..."
+          placeholder="搜索发货单号、订单号、客户名称、物流单号..."
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           className="pl-10 bg-surface-100 border-white/10 max-w-md"

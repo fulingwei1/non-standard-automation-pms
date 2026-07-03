@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Edit2, Trash2, Copy, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Edit2, Trash2, CheckCircle, XCircle } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import { staggerContainer } from "../lib/animations";
 import {

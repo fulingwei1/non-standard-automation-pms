@@ -17,6 +17,8 @@ export default function PurchaseOrderList({
   onDelete,
   onSubmit,
   onApprove,
+  onSubmitApproval,
+  onApprovalDecision,
   onCreateNew,
 }) {
   // 加载状态
@@ -79,6 +81,8 @@ export default function PurchaseOrderList({
               onDelete={onDelete}
               onSubmit={onSubmit}
               onApprove={onApprove}
+              onSubmitApproval={onSubmitApproval}
+              onApprovalDecision={onApprovalDecision}
             />
           </motion.div>
         ))}

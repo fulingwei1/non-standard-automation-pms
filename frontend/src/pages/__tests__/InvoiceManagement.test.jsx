@@ -7,6 +7,7 @@ const {
   mockInvoiceCreate,
   mockInvoiceGet,
   mockInvoiceUpdate,
+  mockInvoiceDelete,
   mockInvoiceIssue,
   mockInvoiceReceivePayment,
   mockContractList,
@@ -17,6 +18,7 @@ const {
   mockInvoiceCreate: vi.fn(),
   mockInvoiceGet: vi.fn(),
   mockInvoiceUpdate: vi.fn(),
+  mockInvoiceDelete: vi.fn(),
   mockInvoiceIssue: vi.fn(),
   mockInvoiceReceivePayment: vi.fn(),
   mockContractList: vi.fn(),
@@ -30,6 +32,7 @@ vi.mock('../../services/api', () => ({
     create: mockInvoiceCreate,
     get: mockInvoiceGet,
     update: mockInvoiceUpdate,
+    delete: mockInvoiceDelete,
     issue: mockInvoiceIssue,
     receivePayment: mockInvoiceReceivePayment,
   },
@@ -323,6 +326,7 @@ describe('InvoiceManagement', () => {
     mockInvoiceCreate.mockResolvedValue({ data: { success: true } });
     mockInvoiceGet.mockResolvedValue({ data: invoiceDetail });
     mockInvoiceUpdate.mockResolvedValue({ data: { success: true } });
+    mockInvoiceDelete.mockResolvedValue({ data: { success: true } });
     mockInvoiceIssue.mockResolvedValue({ data: { success: true } });
     mockInvoiceReceivePayment.mockResolvedValue({ data: { success: true } });
   });
@@ -348,7 +352,7 @@ describe('InvoiceManagement', () => {
       });
     });
 
-    expect(mockContractList).toHaveBeenCalledWith({ page: 1, page_size: 100 });
+    expect(mockContractList).toHaveBeenCalledWith({ page: 1, page_size: 1000 });
     expect(screen.getByText('对账开票管理')).toBeInTheDocument();
     expect(screen.getByText('发票申请、开票、收款跟踪')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /新建发票/i })).toBeInTheDocument();
@@ -447,7 +451,7 @@ describe('InvoiceManagement', () => {
     });
   });
 
-  it('支持删除草稿发票并调用作废更新接口', async () => {
+  it('支持删除草稿发票并调用删除接口', async () => {
     renderPage();
 
     await screen.findByText('INV-001');
@@ -460,7 +464,7 @@ describe('InvoiceManagement', () => {
     fireEvent.click(screen.getByRole('button', { name: '确认删除发票' }));
 
     await waitFor(() => {
-      expect(mockInvoiceUpdate).toHaveBeenCalledWith(101, { status: 'VOID' });
+      expect(mockInvoiceDelete).toHaveBeenCalledWith(101);
     });
 
     expect(alertMock).toHaveBeenCalledWith('发票已删除');
@@ -545,7 +549,7 @@ describe('InvoiceManagement', () => {
   });
 
   it('应该处理删除发票失败的情况', async () => {
-    mockInvoiceUpdate.mockRejectedValueOnce(new Error('Delete failed'));
+    mockInvoiceDelete.mockRejectedValueOnce(new Error('Delete failed'));
     
     renderPage();
 

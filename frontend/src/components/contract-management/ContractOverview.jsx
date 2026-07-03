@@ -3,7 +3,7 @@
  * 合同概览组件
  */
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Card, Row, Col, Statistic, Progress, Tag, Timeline, Alert, Button } from 'antd';
 import {
   FileCheck,

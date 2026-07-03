@@ -21,7 +21,7 @@ describe('Projects API', () => {
     // 设置测试环境
     const setup = await setupApiTest();
     mock = setup.mock;
-    
+
     // 导入项目模块
     const projectsModule = await import('../projects.js');
     projectApi = projectsModule.projectApi;
@@ -70,6 +70,20 @@ describe('Projects API', () => {
       expect(mock.history.get).toHaveLength(1);
     });
 
+    it('getOverview() - 应该使用带认证拦截器的项目总览接口', async () => {
+      mock.onGet('/api/v1/projects/1/overview').reply(200, {
+        production: {},
+        procurement: {},
+        delivery: {},
+        after_sales: {},
+      });
+
+      const response = await projectApi.getOverview(1);
+
+      expect(response.status).toBe(200);
+      expect(mock.history.get[0].url).toBe('/projects/1/overview');
+    });
+
     it('create() - 应该创建新项目', async () => {
       const newProject = { name: 'New Project', customer_id: 1 };
       mock.onPost('/api/v1/projects/').reply(201, {
@@ -97,8 +111,8 @@ describe('Projects API', () => {
       expect(mock.history.put).toHaveLength(1);
     });
 
-    it('getMachines() - 应该获取项目的机器设备', async () => {
-      mock.onGet('/api/v1/projects/1/machines').reply(200, {
+    it('getMachines() - 应该使用后端集合路由获取项目机器设备', async () => {
+      mock.onGet('/api/v1/projects/1/machines/').reply(200, {
         success: true,
         data: [{ id: 1, name: 'Machine 1' }],
       });
@@ -106,6 +120,7 @@ describe('Projects API', () => {
       const response = await projectApi.getMachines(1);
 
       expect(response.status).toBe(200);
+      expect(mock.history.get[0].url).toBe('/projects/1/machines/');
     });
 
     it('getBoard() - 应该获取项目看板数据', async () => {
@@ -164,8 +179,8 @@ describe('Projects API', () => {
   });
 
   describe('machineApi - 机器设备API', () => {
-    it('list() - 应该获取机器列表', async () => {
-      mock.onGet('/api/v1/projects/1/machines').reply(200, {
+    it('list() - 应该使用后端集合路由获取机器列表', async () => {
+      mock.onGet('/api/v1/projects/1/machines/').reply(200, {
         success: true,
         data: [{ id: 1, name: 'Machine 1' }],
       });
@@ -173,12 +188,13 @@ describe('Projects API', () => {
       const response = await machineApi.list(1, { page: 1 });
 
       expect(response.status).toBe(200);
+      expect(mock.history.get[0].url).toBe('/projects/1/machines/');
       expect(mock.history.get[0].params).toEqual({ page: 1 });
     });
 
-    it('create() - 应该创建机器设备', async () => {
+    it('create() - 应该使用后端集合路由创建机器设备', async () => {
       const machineData = { name: 'New Machine', model: 'ABC-123' };
-      mock.onPost('/api/v1/projects/1/machines').reply(201, {
+      mock.onPost('/api/v1/projects/1/machines/').reply(201, {
         success: true,
         data: { id: 1, ...machineData },
       });
@@ -186,6 +202,7 @@ describe('Projects API', () => {
       const response = await machineApi.create(1, machineData);
 
       expect(response.status).toBe(201);
+      expect(mock.history.post[0].url).toBe('/projects/1/machines/');
     });
 
     it('updateProgress() - 应该更新机器进度', async () => {
@@ -249,6 +266,18 @@ describe('Projects API', () => {
       expect(response.status).toBe(200);
     });
 
+    it('list() - 应该兼容纯项目ID获取阶段', async () => {
+      mock.onGet('/api/v1/stages/projects/1/stages').reply(200, {
+        success: true,
+        data: [{ id: 1, name: 'Stage 1' }],
+      });
+
+      const response = await stageApi.list(1);
+
+      expect(response.status).toBe(200);
+      expect(mock.history.get[0].params).toBeUndefined();
+    });
+
     it('statuses() - 应该获取阶段状态', async () => {
       mock.onGet('/api/v1/stages/statuses').reply(200, {
         success: true,
@@ -262,6 +291,18 @@ describe('Projects API', () => {
   });
 
   describe('milestoneApi - 里程碑API', () => {
+    it('list() - 应该兼容纯项目ID获取项目里程碑', async () => {
+      mock.onGet('/api/v1/milestones/projects/1/milestones').reply(200, {
+        success: true,
+        data: [{ id: 1, milestone_name: 'Milestone 1' }],
+      });
+
+      const response = await milestoneApi.list(1);
+
+      expect(response.status).toBe(200);
+      expect(mock.history.get[0].params).toBeUndefined();
+    });
+
     it('create() - 应该创建里程碑', async () => {
       const milestone = { name: 'Milestone 1', project_id: 1 };
       mock.onPost('/api/v1/milestones/').reply(201, {
@@ -291,14 +332,18 @@ describe('Projects API', () => {
   describe('memberApi - 成员API', () => {
     it('add() - 应该添加成员', async () => {
       const member = { project_id: 1, user_id: 1, role: 'DEVELOPER' };
-      mock.onPost('/api/v1/members/').reply(201, {
+      mock.onPost('/api/v1/projects/1/members/').reply(201, {
         success: true,
-        data: { id: 1, ...member },
+        data: { id: 1, project_id: 1, user_id: 1, role_code: 'DEVELOPER' },
       });
 
       const response = await memberApi.add(member);
 
       expect(response.status).toBe(201);
+      expect(JSON.parse(mock.history.post[0].data)).toEqual({
+        user_id: 1,
+        role_code: 'DEVELOPER',
+      });
     });
 
     it('remove() - 应该移除成员', async () => {
@@ -342,8 +387,8 @@ describe('Projects API', () => {
   });
 
   describe('costApi - 成本API', () => {
-    it('list() - 应该获取成本列表', async () => {
-      mock.onGet('/api/v1/projects/1/costs').reply(200, {
+    it('list() - 应该使用后端集合路由获取成本列表', async () => {
+      mock.onGet('/api/v1/projects/1/costs/').reply(200, {
         success: true,
         data: [{ id: 1, amount: 1000 }],
       });
@@ -351,11 +396,12 @@ describe('Projects API', () => {
       const response = await costApi.list(1, { page: 1 });
 
       expect(response.status).toBe(200);
+      expect(mock.history.get[0].url).toBe('/projects/1/costs/');
     });
 
-    it('create() - 应该创建成本记录', async () => {
+    it('create() - 应该使用后端集合路由创建成本记录', async () => {
       const cost = { category: 'MATERIAL', amount: 1000 };
-      mock.onPost('/api/v1/projects/1/costs').reply(201, {
+      mock.onPost('/api/v1/projects/1/costs/').reply(201, {
         success: true,
         data: { id: 1, ...cost },
       });
@@ -363,6 +409,20 @@ describe('Projects API', () => {
       const response = await costApi.create(1, cost);
 
       expect(response.status).toBe(201);
+      expect(mock.history.post[0].url).toBe('/projects/1/costs/');
+    });
+
+    it('getProjectCosts() - 应该复用带尾斜杠的成本集合路由', async () => {
+      mock.onGet('/api/v1/projects/1/costs/').reply(200, {
+        success: true,
+        data: { items: [{ id: 1, amount: 1000 }] },
+      });
+
+      const response = await costApi.getProjectCosts(1, { page_size: 20 });
+
+      expect(response.status).toBe(200);
+      expect(mock.history.get[0].url).toBe('/projects/1/costs/');
+      expect(mock.history.get[0].params).toEqual({ page_size: 20 });
     });
 
     it('getCostAnalysis() - 应该获取成本分析', async () => {

@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import UserManagement from '../UserManagement';
-import _api, { userApi, roleApi } from '../../services/api';
+import { userApi, roleApi } from '../../services/api';
 import { toast } from "../../components/ui/toast";
 import { confirmAction } from "@/lib/confirmAction";
 
@@ -354,9 +354,6 @@ describe('UserManagement', () => {
       
       // Reset mock to track future calls
       userApi.list.mockClear();
-      
-      // Check that the initial call didn't have department filter
-      const initialCall = userApi.list.mock.calls[0];
       
       // Try a different approach to trigger the filter
       // Since the UI interaction isn't working reliably in tests, we'll verify
@@ -768,11 +765,7 @@ describe('UserManagement', () => {
 
       // 等待页面加载完成
       await waitFor(() => {
-        // 在无权限的情况下，我们仍然可能看到Overview中的按钮
-        // 所以我们检查是否有适当的权限控制实现
-        const allCreateButtons = screen.queryAllByRole('button', { name: /新建用户|Create User/i });
-        // 检查是否正确应用了权限控制逻辑
-        // 通过检查API调用或其他权限相关的UI变化
+        expect(userApi.list).toHaveBeenCalled();
       }, { timeout: 3000 });
     });
 

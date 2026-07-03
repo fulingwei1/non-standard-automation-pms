@@ -1,4 +1,4 @@
-import { BarChart3, Eye, Edit3, Trash2 } from "lucide-react";
+import { BarChart3, Building2, Eye, Edit3, Trash2 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
 
@@ -12,12 +12,23 @@ export function CustomerTable({
     onViewDetail,
     onView360,
     onEdit,
-    onDelete
+    onDelete,
+    onCreate
 }) {
     return (
         <div className="p-6 pt-0">
             {loading ? (
-                <div className="p-4 text-center text-muted-foreground">Loading...</div>
+                <div className="space-y-3 py-2" aria-label="加载中">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="flex items-center gap-4 animate-pulse">
+                            <div className="h-4 w-24 rounded bg-muted" />
+                            <div className="h-4 flex-1 rounded bg-muted" />
+                            <div className="h-4 w-20 rounded bg-muted" />
+                            <div className="h-4 w-16 rounded bg-muted" />
+                            <div className="h-4 w-24 rounded bg-muted" />
+                        </div>
+                    ))}
+                </div>
             ) : (
                 <>
                     <div className="overflow-x-auto">
@@ -116,9 +127,17 @@ export function CustomerTable({
                         </table>
                     </div>
                     {customers.length === 0 && (
-                        <p className="p-4 text-center text-muted-foreground">
-                            没有找到符合条件的客户。
-                        </p>
+                        <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                            <Building2 className="h-10 w-10 text-muted-foreground/40" />
+                            <p className="text-muted-foreground">暂无客户数据</p>
+                            {onCreate ? (
+                                <Button size="sm" onClick={onCreate}>+ 新增客户</Button>
+                            ) : (
+                                <p className="text-xs text-muted-foreground/70">
+                                    点击右上角「新增客户」开始录入
+                                </p>
+                            )}
+                        </div>
                     )}
                     {total > pageSize && (
                         <div className="mt-4 flex items-center justify-between">

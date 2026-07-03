@@ -8,18 +8,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Activity,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
   TrendingUp,
-  TrendingDown,
   Package,
   RefreshCw,
   Search,
   Eye,
   ChevronDown,
   ChevronRight,
-  Filter,
   BarChart3,
   DollarSign,
 } from "lucide-react";
@@ -51,11 +46,11 @@ import {
 } from "../components/ui/table";
 import { Skeleton } from "../components/ui/skeleton";
 import { toast } from "../components/ui/toast";
-import { projectApi, marginPredictionApi } from "../services/api";
+import { projectApi } from "../services/api";
 import { materialReadinessApi } from "../services/api/materialReadiness";
-import { PROJECT_STAGES, HEALTH_CONFIG, getHealthConfig } from "../lib/constants/common";
+import { PROJECT_STAGES, getHealthConfig } from "../lib/constants/common";
 import { mergeProjectContextFilters } from "../lib/projectContext";
-import { formatDate, formatCurrency, cn } from "../lib/utils";
+import { formatDate, cn } from "../lib/utils";
 
 // 健康度筛选选项
 const HEALTH_FILTER_OPTIONS = [

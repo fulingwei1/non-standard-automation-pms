@@ -16,7 +16,6 @@ import {
   MoreHorizontal,
   MessageSquare,
   DollarSign,
-  TrendingUp,
   Star,
 } from "lucide-react";
 import { Badge } from "../ui/badge";

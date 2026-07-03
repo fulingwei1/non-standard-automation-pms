@@ -16,7 +16,6 @@ import {
   ShieldAlert,
   Truck,
   TrendingUp,
-  XCircle,
 } from "lucide-react";
 import {
   Bar,
@@ -348,8 +347,8 @@ export default function ShortageManagementBoard() {
             {trendSeries.length === 0 ? (
               <SectionEmpty text="暂无趋势数据" />
             ) : (
-              <div className="h-[320px]">
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="min-h-[320px]">
+                <ResponsiveContainer width="100%" height={320} minWidth={1} minHeight={320}>
                   <LineChart data={trendSeries}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.12)" />
                     <XAxis dataKey="label" stroke="#94a3b8" fontSize={12} />
@@ -450,8 +449,8 @@ export default function ShortageManagementBoard() {
               <SectionEmpty text="暂无原因分析数据" />
             ) : (
               <div className="space-y-6">
-                <div className="h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="min-h-[280px]">
+                  <ResponsiveContainer width="100%" height={280} minWidth={1} minHeight={280}>
                     <BarChart data={solutionChartData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.12)" />
                       <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} />

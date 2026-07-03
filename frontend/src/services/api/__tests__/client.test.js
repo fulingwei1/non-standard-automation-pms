@@ -42,6 +42,22 @@ describe('API Client', () => {
       expect(mock.history.get[0].headers.Authorization).toBe(`Bearer ${token}`);
     });
 
+    it('应该规整重复的/api/v1前缀，避免工程师绩效接口拼成/api/v1/api/v1', async () => {
+      const token = 'test-token-12345';
+      localStorage.setItem('token', token);
+
+      mock.onGet('/api/v1/engineer-performance/summary/company').reply(200, {
+        success: true,
+        data: { total: 3 },
+      });
+
+      const response = await api.get('/api/v1/engineer-performance/summary/company');
+
+      expect(response.formatted).toEqual({ total: 3 });
+      expect(mock.history.get[0].url).toBe('/engineer-performance/summary/company');
+      expect(mock.history.get[0].headers.Authorization).toBe(`Bearer ${token}`);
+    });
+
     it('应该跳过公开API的token验证', async () => {
       mock.onPost('/api/v1/auth/login').reply(200, { success: true, data: {} });
 

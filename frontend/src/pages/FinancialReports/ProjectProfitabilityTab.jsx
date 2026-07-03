@@ -1,6 +1,7 @@
 import { TabsContent, Progress } from "../../components/ui";
 import { cn, formatCurrency } from "../../lib/utils";
 import { BarChart as BarChartComponent } from "../../components/charts";
+import { toFiniteNumber } from "./numberUtils";
 
 export default function ProjectProfitabilityTab({ projectProfitability }) {
   return (
@@ -16,15 +17,15 @@ export default function ProjectProfitabilityTab({ projectProfitability }) {
             p.project?.length > 8 ?
             p.project.slice(0, 8) + "..." :
             p.project,
-            margin: p.margin
+            margin: toFiniteNumber(p.margin)
           }))}
           xField="project"
           yField="margin"
           height={250}
           colors={(projectProfitability || []).map((p) =>
-          p.margin >= 30 ?
+          toFiniteNumber(p.margin) >= 30 ?
           "#10b981" :
-          p.margin >= 20 ?
+          toFiniteNumber(p.margin) >= 20 ?
           "#f59e0b" :
           "#ef4444"
           )}
@@ -49,7 +50,7 @@ export default function ProjectProfitabilityTab({ projectProfitability }) {
             p.project.slice(0, 8) + "..." :
             p.project,
             type: "收入",
-            value: p.revenue
+            value: toFiniteNumber(p.revenue)
           },
           {
             project:
@@ -57,7 +58,7 @@ export default function ProjectProfitabilityTab({ projectProfitability }) {
             p.project.slice(0, 8) + "..." :
             p.project,
             type: "成本",
-            value: p.cost
+            value: toFiniteNumber(p.cost)
           }]
           )}
           xField="project"
@@ -81,6 +82,7 @@ export default function ProjectProfitabilityTab({ projectProfitability }) {
               warning: "bg-amber-500",
               critical: "bg-red-500"
             };
+            const margin = toFiniteNumber(project.margin);
             return (
               <div
                 key={index}
@@ -119,22 +121,22 @@ export default function ProjectProfitabilityTab({ projectProfitability }) {
                     <span
                       className={cn(
                         "font-medium",
-                        project.margin >= 30 ?
+                        margin >= 30 ?
                         "text-emerald-400" :
-                        project.margin >= 20 ?
+                        margin >= 20 ?
                         "text-amber-400" :
                         "text-red-400"
                       )}>
-                      {project.margin.toFixed(1)}%
+                      {margin.toFixed(1)}%
                     </span>
                   </div>
                   <Progress
-                    value={project.margin}
+                    value={margin}
                     className={cn(
                       "h-2",
-                      project.margin >= 30 ?
+                      margin >= 30 ?
                       "bg-emerald-500/20" :
-                      project.margin >= 20 ?
+                      margin >= 20 ?
                       "bg-amber-500/20" :
                       "bg-red-500/20"
                     )} />

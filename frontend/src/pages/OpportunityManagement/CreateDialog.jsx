@@ -11,6 +11,7 @@ import {
   Textarea
 } from "../../components/ui";
 import { stageConfig } from "./constants";
+import AutofillBar, { mergeAutofill } from "../../components/ai/AutofillBar";
 
 export default function CreateDialog({
   open,
@@ -18,7 +19,8 @@ export default function CreateDialog({
   formData,
   setFormData,
   customers,
-  onCreate
+  onCreate,
+  autofillHint
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -28,6 +30,12 @@ export default function CreateDialog({
           <DialogDescription>创建新的销售商机</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          <AutofillBar
+            formType="opportunity"
+            placeholder="如：给宁德时代做电池模组视觉检测，节拍18秒，预算120万，Q3交付"
+            defaultHint={autofillHint}
+            onFill={(fields) => setFormData(mergeAutofill(formData, fields))}
+          />
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>客户 *</Label>

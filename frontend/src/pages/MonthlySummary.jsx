@@ -13,10 +13,17 @@ const MonthlySummary = () => {
   const navigate = useNavigate();
 
   // 获取当前用户信息
-  const currentUser = JSON.parse(
-    localStorage.getItem("user") ||
-      '{"name":"用户","department":"未知部门","position":"未知职位"}',
-  );
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const currentUser = {
+    ...storedUser,
+    name:
+      storedUser.name ||
+      storedUser.real_name ||
+      storedUser.username ||
+      "用户",
+    department: storedUser.department || "未知部门",
+    position: storedUser.position || "未知职位",
+  };
 
   const {
     currentPeriod,

@@ -6,7 +6,6 @@ import { staggerContainer, fadeIn } from "../lib/animations";
 import {
   projectApi,
   milestoneApi,
-  progressApi
 } from "../services/api";
 import {
   StatsCards,
@@ -17,6 +16,8 @@ import {
   ResourceHeatMap
 } from "../components/schedule-board";
 import { mergeProjectContextFilters } from "../lib/projectContext";
+
+const MILESTONE_HYDRATION_PROJECT_LIMIT = 12;
 
 export default function ScheduleBoard() {
   const location = useLocation();
@@ -58,6 +59,9 @@ export default function ScheduleBoard() {
         // Handle PaginatedResponse format
         const data = response.data || response;
         const projectList = data.items || data || [];
+        const shouldLoadMilestones =
+          Array.isArray(projectList) &&
+          projectList.length <= MILESTONE_HYDRATION_PROJECT_LIMIT;
 
         // Transform backend project format to frontend format and load milestones/resources
         const transformedProjects = await Promise.all(
@@ -66,44 +70,33 @@ export default function ScheduleBoard() {
 
             // Load milestones for this project
             let milestones = [];
-            try {
-              const milestonesRes = await milestoneApi.list(projectId);
-              const milestonesData = milestonesRes.data || milestonesRes || [];
-              milestones = (milestonesData || []).map((m) => ({
-                name: m.milestone_name || m.name || "",
-                date: m.plan_date || m.planned_date || "",
-                status:
-                  m.status === "COMPLETED"
-                    ? "completed"
-                    : m.status === "IN_PROGRESS"
-                    ? "in_progress"
-                    : "pending"
-              }));
-            } catch (err) {
-              console.error(
-                `Failed to load milestones for project ${projectId}:`,
-                err
-              );
+            if (shouldLoadMilestones) {
+              try {
+                const milestonesRes = await milestoneApi.list(projectId);
+                const milestonesPayload = milestonesRes.data || milestonesRes || [];
+                const milestonesData = Array.isArray(milestonesPayload)
+                  ? milestonesPayload
+                  : milestonesPayload.items || [];
+                milestones = (milestonesData || []).map((m) => ({
+                  name: m.milestone_name || m.name || "",
+                  date: m.plan_date || m.planned_date || "",
+                  status:
+                    m.status === "COMPLETED"
+                      ? "completed"
+                      : m.status === "IN_PROGRESS"
+                      ? "in_progress"
+                      : "pending"
+                }));
+              } catch (err) {
+                console.error(
+                  `Failed to load milestones for project ${projectId}:`,
+                  err
+                );
+              }
             }
 
             // Load resources/workload for this project
             let resources = [];
-            try {
-              // Try to get project progress summary which may include resource info
-              const progressRes = await progressApi.reports
-                .getSummary(projectId)
-                .catch(() => null);
-              if (progressRes?.data) {
-                // Extract resource info if available
-                // This is a placeholder - adjust based on actual API response structure
-                resources = [];
-              }
-            } catch (err) {
-              console.error(
-                `Failed to load resources for project ${projectId}:`,
-                err
-              );
-            }
 
             return {
               id: p.project_code || p.id,

@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -18,6 +18,7 @@ import { Button } from "../components/ui/button";
 import { toast } from "../components/ui/toast";
 import {
   installationDispatchApi,
+  workLogApi,
   userApi,
   projectApi,
   machineApi,
@@ -32,11 +33,42 @@ import {
   DispatchDetailDialog,
   UpdateProgressDialog,
   CompleteDispatchDialog,
+  FieldServiceWorkLogDialog,
   DISPATCH_STATUS,
   DISPATCH_PRIORITY,
   INSTALLATION_TYPE,
+  normalizeDispatchOrder,
   validateDispatchData,
 } from "../components/installation-dispatch";
+
+const getLocalDateInputValue = (date = new Date()) => {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+};
+
+const getInitialCreateData = () => ({
+  project_id: "",
+  machine_id: "",
+  customer_id: "",
+  task_type: INSTALLATION_TYPE.INSTALLATION,
+  task_title: "",
+  task_description: "",
+  location: "",
+  scheduled_date: "",
+  estimated_hours: "",
+  priority: DISPATCH_PRIORITY.NORMAL,
+  customer_contact: "",
+  customer_phone: "",
+  customer_address: "",
+  remark: "",
+});
+
+const getInitialWorkLogData = () => ({
+  today_progress: "",
+  issues_found: "",
+  next_plan: "",
+  work_hours: "",
+});
 
 export default function InstallationDispatchManagement() {
   const navigate = useNavigate();
@@ -69,7 +101,13 @@ export default function InstallationDispatchManagement() {
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showProgressDialog, setShowProgressDialog] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+  const [showWorkLogDialog, setShowWorkLogDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [workLogDate, setWorkLogDate] = useState(getLocalDateInputValue());
+  const [workLogContext, setWorkLogContext] = useState(null);
+  const [workLogLoading, setWorkLogLoading] = useState(false);
+  const [workLogSubmitting, setWorkLogSubmitting] = useState(false);
+  const [workLogData, setWorkLogData] = useState(getInitialWorkLogData());
   const [progressData, setProgressData] = useState({
     progress: 0,
     execution_notes: "",
@@ -87,22 +125,7 @@ export default function InstallationDispatchManagement() {
     remark: "",
   });
 
-  const [createData, setCreateData] = useState({
-    project_id: "",
-    machine_id: "",
-    customer_id: "",
-    task_type: INSTALLATION_TYPE.NEW,
-    task_title: "",
-    task_description: "",
-    location: "",
-    scheduled_date: "",
-    estimated_hours: "",
-    priority: DISPATCH_PRIORITY.MEDIUM,
-    customer_contact: "",
-    customer_phone: "",
-    customer_address: "",
-    remark: "",
-  });
+  const [createData, setCreateData] = useState(getInitialCreateData());
 
   useEffect(() => {
     fetchUsers();
@@ -125,10 +148,16 @@ export default function InstallationDispatchManagement() {
     }
   }, [createData.project_id]);
 
+  useEffect(() => {
+    if (showWorkLogDialog && workLogDate) {
+      fetchFieldServiceWorkLogContext(workLogDate);
+    }
+  }, [showWorkLogDialog, workLogDate]);
+
   // API Functions
   const fetchUsers = async () => {
     try {
-      const res = await userApi.list({ page_size: 1000 });
+      const res = await userApi.options({ page_size: 1000, is_active: true });
       const data = res.data || res;
       setUsers(data.items || data || []);
     } catch (error) {
@@ -173,7 +202,7 @@ export default function InstallationDispatchManagement() {
       if (searchQuery) params.search = searchQuery;
 
       const res = await installationDispatchApi.orders.list(params);
-      setOrders(res.data?.items || res.data || []);
+      setOrders((res.data?.items || res.data || []).map(normalizeDispatchOrder));
     } catch (error) {
       console.error("Failed to fetch orders:", error);
       toast.error("获取派工单列表失败");
@@ -191,6 +220,19 @@ export default function InstallationDispatchManagement() {
     }
   };
 
+  const fetchFieldServiceWorkLogContext = async (dateValue = workLogDate) => {
+    setWorkLogLoading(true);
+    try {
+      const res = await workLogApi.fieldServiceContext({ work_date: dateValue });
+      setWorkLogContext(res.data?.data || res.data || null);
+    } catch (error) {
+      console.error("Failed to fetch field service work log context:", error);
+      toast.error("获取外出日志上下文失败");
+    } finally {
+      setWorkLogLoading(false);
+    }
+  };
+
   // CRUD Operations
   const handleCreateOrder = async () => {
     const validation = validateDispatchData(createData);
@@ -200,25 +242,19 @@ export default function InstallationDispatchManagement() {
     }
 
     try {
-      await installationDispatchApi.orders.create(createData);
+      const payload = {
+        ...createData,
+        project_id: Number(createData.project_id),
+        customer_id: Number(createData.customer_id),
+        machine_id: createData.machine_id ? Number(createData.machine_id) : null,
+        estimated_hours: createData.estimated_hours
+          ? Number(createData.estimated_hours)
+          : null,
+      };
+      await installationDispatchApi.orders.create(payload);
       toast.success("派工单创建成功");
       setShowCreateDialog(false);
-      setCreateData({
-        project_id: "",
-        machine_id: "",
-        customer_id: "",
-        task_type: INSTALLATION_TYPE.NEW,
-        task_title: "",
-        task_description: "",
-        location: "",
-        scheduled_date: "",
-        estimated_hours: "",
-        priority: DISPATCH_PRIORITY.MEDIUM,
-        customer_contact: "",
-        customer_phone: "",
-        customer_address: "",
-        remark: "",
-      });
+      setCreateData(getInitialCreateData());
       fetchOrders();
       fetchStatistics();
     } catch (error) {
@@ -229,7 +265,10 @@ export default function InstallationDispatchManagement() {
 
   const handleAssignOrder = async (orderId) => {
     try {
-      await installationDispatchApi.orders.assign(orderId, assignData);
+      await installationDispatchApi.orders.assign(orderId, {
+        assigned_to_id: Number(assignData.assigned_to_id),
+        remark: assignData.remark,
+      });
       toast.success("派工成功");
       setShowAssignDialog(false);
       setAssignData({ assigned_to_id: null, remark: "" });
@@ -254,6 +293,18 @@ export default function InstallationDispatchManagement() {
     } catch (error) {
       console.error("Failed to update progress:", error);
       toast.error("更新进度失败");
+    }
+  };
+
+  const handleStartOrder = async (orderId) => {
+    try {
+      await installationDispatchApi.orders.start(orderId, {});
+      toast.success("已开始执行");
+      fetchOrders();
+      fetchStatistics();
+    } catch (error) {
+      console.error("Failed to start order:", error);
+      toast.error("开始执行失败");
     }
   };
 
@@ -290,7 +341,7 @@ export default function InstallationDispatchManagement() {
     try {
       await installationDispatchApi.orders.batchAssign({
         order_ids: Array.from(selectedOrders),
-        assigned_to_id: assignData.assigned_to_id,
+        assigned_to_id: Number(assignData.assigned_to_id),
         remark: assignData.remark,
       });
       toast.success("批量派工成功");
@@ -302,6 +353,41 @@ export default function InstallationDispatchManagement() {
     } catch (error) {
       console.error("Failed to batch assign:", error);
       toast.error("批量派工失败");
+    }
+  };
+
+  const handleOpenWorkLogDialog = () => {
+    const today = getLocalDateInputValue();
+    setWorkLogDate(today);
+    setWorkLogData(getInitialWorkLogData());
+    setShowWorkLogDialog(true);
+  };
+
+  const handleSubmitFieldServiceWorkLog = async () => {
+    const dispatchOrderIds = (workLogContext?.items || []).map((item) => item.dispatch_order_id);
+    if (dispatchOrderIds.length === 0) {
+      toast.error("当天没有可提交的外出派工单");
+      return;
+    }
+
+    setWorkLogSubmitting(true);
+    try {
+      await workLogApi.createFromDispatch({
+        work_date: workLogDate,
+        dispatch_order_ids: dispatchOrderIds,
+        today_progress: workLogData.today_progress,
+        issues_found: workLogData.issues_found,
+        next_plan: workLogData.next_plan,
+        work_hours: workLogData.work_hours ? Number(workLogData.work_hours) : undefined,
+      });
+      toast.success("工作日志已提交");
+      setShowWorkLogDialog(false);
+      setWorkLogData(getInitialWorkLogData());
+    } catch (error) {
+      console.error("Failed to submit field service work log:", error);
+      toast.error("提交工作日志失败");
+    } finally {
+      setWorkLogSubmitting(false);
     }
   };
 
@@ -355,10 +441,16 @@ export default function InstallationDispatchManagement() {
         title="安装调试派工管理"
         description="管理安装调试派工单、批量派工、进度跟踪"
         actions={
-          <Button onClick={() => setShowCreateDialog(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            新建派工单
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={handleOpenWorkLogDialog}>
+              <FileText className="mr-2 h-4 w-4" />
+              今日外出日志
+            </Button>
+            <Button onClick={() => setShowCreateDialog(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              新建派工单
+            </Button>
+          </div>
         }
       />
 
@@ -410,8 +502,13 @@ export default function InstallationDispatchManagement() {
               setSelectedOrder(order);
               setShowAssignDialog(true);
             }}
+            onStart={(order) => handleStartOrder(order.id)}
             onUpdateProgress={(order) => {
               setSelectedOrder(order);
+              setProgressData({
+                progress: order.progress || 0,
+                execution_notes: "",
+              });
               setShowProgressDialog(true);
             }}
             onComplete={(order) => {
@@ -471,6 +568,19 @@ export default function InstallationDispatchManagement() {
         completeData={completeData}
         onDataChange={setCompleteData}
         onComplete={handleCompleteOrder}
+      />
+
+      <FieldServiceWorkLogDialog
+        open={showWorkLogDialog}
+        onOpenChange={setShowWorkLogDialog}
+        workLogDate={workLogDate}
+        onWorkLogDateChange={setWorkLogDate}
+        context={workLogContext}
+        contextLoading={workLogLoading}
+        logData={workLogData}
+        onLogDataChange={setWorkLogData}
+        onSubmit={handleSubmitFieldServiceWorkLog}
+        submitting={workLogSubmitting}
       />
     </div>
   );

@@ -18,8 +18,11 @@ import { fadeIn } from "../../lib/animations";
 import { levelConfig, statusConfig } from "./pageConstants";
 
 const SupplierCard = ({ supplier, onView }) => {
-  const levelCfg = levelConfig[supplier.level];
-  const statusCfg = statusConfig[supplier.status];
+  const levelCfg = levelConfig[supplier.level] || levelConfig["B级"];
+  const statusCfg = statusConfig[supplier.status] || {
+    label: supplier.status || "未知",
+    color: "bg-slate-500/20 text-slate-400",
+  };
 
   return (
     <motion.div

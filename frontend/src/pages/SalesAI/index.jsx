@@ -10,7 +10,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   Sparkles,
   MessageSquare,
@@ -21,7 +20,6 @@ import {
   Copy,
   RefreshCw,
   ChevronRight,
-  Users,
   Lightbulb,
   ShieldAlert,
 } from "lucide-react";
@@ -44,7 +42,6 @@ import {
   SelectTrigger,
   SelectValue,
   Alert,
-  AlertTitle,
   AlertDescription,
   Progress,
 } from "../../components/ui";

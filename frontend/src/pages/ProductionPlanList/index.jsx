@@ -33,6 +33,8 @@ export default function ProductionPlanList() {
     // actions
     handleCreatePlan,
     handleViewDetail,
+    handleSubmitPlan,
+    handleApprovePlan,
     handlePublish,
   } = useProductionPlanList();
 
@@ -70,6 +72,8 @@ export default function ProductionPlanList() {
         loading={loading}
         filteredPlans={filteredPlans}
         onViewDetail={handleViewDetail}
+        onSubmitPlan={handleSubmitPlan}
+        onApprovePlan={handleApprovePlan}
         onPublish={handlePublish}
       />
 
@@ -87,6 +91,8 @@ export default function ProductionPlanList() {
         open={showDetailDialog}
         onOpenChange={setShowDetailDialog}
         selectedPlan={selectedPlan}
+        onSubmitPlan={handleSubmitPlan}
+        onApprovePlan={handleApprovePlan}
         onPublish={handlePublish}
       />
     </div>

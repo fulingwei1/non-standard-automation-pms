@@ -1,4 +1,4 @@
-import { Route, Navigate } from "react-router-dom";
+import { Route } from "react-router-dom";
 import { ProjectReviewProtectedRoute } from "../../components/common/ProtectedRoute";
 import { PresalesCenterRedirect } from "./presalesRedirects";
 import { ProjectManagementCenterRedirect } from "./projectRedirects";

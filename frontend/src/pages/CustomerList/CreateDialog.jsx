@@ -8,6 +8,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "../../components/ui"
+import AutofillBar, { mergeAutofill } from "../../components/ai/AutofillBar"
 
 export function CreateDialog({
   open,
@@ -17,6 +18,7 @@ export function CreateDialog({
   onSubmit,
   creating,
   onReset,
+  autofillHint,
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -27,6 +29,14 @@ export function CreateDialog({
             创建新的客户档案，填写基本信息
           </DialogDescription>
         </DialogHeader>
+        <div className="pt-4">
+          <AutofillBar
+            formType="customer"
+            placeholder="如：深圳做锂电池PACK的比克动力，联系人王工"
+            defaultHint={autofillHint}
+            onFill={(fields) => setCreateForm((prev) => mergeAutofill(prev, fields))}
+          />
+        </div>
         <div className="grid grid-cols-2 gap-4 py-4">
           <div className="space-y-2">
             <label className="text-sm text-slate-400">公司全称 *</label>

@@ -18,6 +18,20 @@ export default function CreateDispatchDialog({
   onCreate,
   loading = false,
 }) {
+  const updateProjectContext = (value) => {
+    const selectedProject = (projects || []).find((project) => String(project.id) === String(value));
+    onDataChange({
+      ...createData,
+      project_id: value,
+      machine_id: "",
+      customer_id: selectedProject?.customer_id || "",
+      customer_contact: selectedProject?.customer_contact || selectedProject?.contact_person || createData.customer_contact || "",
+      customer_phone: selectedProject?.customer_phone || selectedProject?.contact_phone || createData.customer_phone || "",
+      customer_address: selectedProject?.customer_address || selectedProject?.address || createData.customer_address || "",
+      location: createData.location || selectedProject?.customer_address || selectedProject?.implementation_address || "",
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -28,18 +42,16 @@ export default function CreateDispatchDialog({
           <div>
             <label className="text-sm font-medium">项目</label>
             <Select
-              value={createData.project_id}
-              onValueChange={(value) =>
-                onDataChange({ ...createData, project_id: value })
-              }
+              value={createData.project_id ? String(createData.project_id) : ""}
+              onValueChange={updateProjectContext}
             >
               <SelectTrigger>
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
               <SelectContent>
                 {(projects || []).map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
+                  <SelectItem key={project.id} value={String(project.id)}>
+                    {project.project_name || project.name || project.project_code}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -48,7 +60,7 @@ export default function CreateDispatchDialog({
           <div>
             <label className="text-sm font-medium">设备</label>
             <Select
-              value={createData.machine_id}
+              value={createData.machine_id ? String(createData.machine_id) : ""}
               onValueChange={(value) =>
                 onDataChange({ ...createData, machine_id: value })
               }
@@ -58,8 +70,8 @@ export default function CreateDispatchDialog({
               </SelectTrigger>
               <SelectContent>
                 {(machines || []).map((machine) => (
-                  <SelectItem key={machine.id} value={machine.id}>
-                    {machine.name}
+                  <SelectItem key={machine.id} value={String(machine.id)}>
+                    {machine.machine_name || machine.name || machine.machine_code || machine.machine_no}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -78,7 +90,7 @@ export default function CreateDispatchDialog({
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(INSTALLATION_TYPE).map(([_key, value]) => (
-                  <SelectItem key={value} value={value || "unknown"}>
+                  <SelectItem key={value} value={value}>
                     {INSTALLATION_TYPE_LABELS[value]}
                   </SelectItem>
                 ))}
@@ -98,7 +110,7 @@ export default function CreateDispatchDialog({
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(DISPATCH_PRIORITY).map(([_key, value]) => (
-                  <SelectItem key={value} value={value || "unknown"}>
+                  <SelectItem key={value} value={value}>
                     {DISPATCH_PRIORITY_LABELS[value]}
                   </SelectItem>
                 ))}

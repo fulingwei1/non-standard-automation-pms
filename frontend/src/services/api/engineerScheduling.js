@@ -5,6 +5,14 @@ export const engineerSchedulingApi = {
   // 获取工程师负载看板
   getWorkloadBoard: () =>
     api.get('/engineer-scheduling/workload-board'),
+
+  // 获取项目排产决策报告
+  getSchedulingReport: (projectId) =>
+    api.get(`/engineer-scheduling/projects/${projectId}/scheduling-report`),
+
+  // 生成工程师工作量预警
+  generateWarnings: (params) =>
+    api.post('/engineer-scheduling/warnings/generate', null, { params }),
   
   // 获取工程师可用时间
   getEngineerAvailability: (engineerId, startDate, endDate) =>

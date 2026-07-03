@@ -163,13 +163,13 @@ export default function ArrivalManagement() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
                   placeholder="搜索收货单号、采购单号..."
-                  value={searchKeyword || "unknown"}
+                  value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   className="pl-10 bg-slate-900/50 border-slate-700 text-slate-200"
                   icon={Search}
                 />
               </div>
-              <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+              <Select value={filterStatus || "all"} onValueChange={setFilterStatus}>
                 <SelectTrigger className="bg-slate-900/50 border-slate-700">
                   <SelectValue placeholder="选择状态" />
                 </SelectTrigger>
@@ -184,7 +184,7 @@ export default function ArrivalManagement() {
                     ))}
                 </SelectContent>
               </Select>
-              <Select value={filterProject || "unknown"} onValueChange={setFilterProject}>
+              <Select value={filterProject || "all"} onValueChange={setFilterProject}>
                 <SelectTrigger className="bg-slate-900/50 border-slate-700">
                   <SelectValue placeholder="选择项目" />
                 </SelectTrigger>

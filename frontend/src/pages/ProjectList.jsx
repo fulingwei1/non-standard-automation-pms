@@ -33,7 +33,6 @@ import {
   X,
   Trash2,
   Download,
-  Tag,
 } from "lucide-react";
 import { useSelection } from "../hooks/useSelection";
 // Sprint 3: 使用优化的分步骤表单组件
@@ -256,7 +255,6 @@ export default function ProjectList() {
     clear: clearSelection,
     isAllSelected,
     isPartialSelected,
-    selectedItems,
   } = useSelection(filteredProjects);
 
   const handleBatchExport = () => {

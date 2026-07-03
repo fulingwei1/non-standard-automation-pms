@@ -47,6 +47,26 @@ import { adminApi } from "../services/api";
 
 // Mock data - 已移除，使用真实API
 
+const toNumber = (value) => {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const normalizeSupply = (item = {}) => {
+  const currentStock = toNumber(item.currentStock ?? item.quantity);
+  const minStock = toNumber(item.minStock);
+  const unitPrice = toNumber(item.unitPrice);
+  const totalValue = toNumber(item.totalValue ?? currentStock * unitPrice);
+  return {
+    ...item,
+    currentStock,
+    minStock,
+    unitPrice,
+    totalValue,
+    lastPurchase: item.lastPurchase || item.lastPurchaseDate || "-",
+  };
+};
+
 export default function OfficeSuppliesManagement() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [showItemDetail, setShowItemDetail] = useState(false);
@@ -65,9 +85,9 @@ export default function OfficeSuppliesManagement() {
       try {
         const res = await adminApi.supplies.list();
         if (res.data?.items) {
-          setSupplies(res.data.items);
+          setSupplies(res.data.items.map(normalizeSupply));
         } else if (Array.isArray(res.data)) {
-          setSupplies(res.data);
+          setSupplies(res.data.map(normalizeSupply));
         }
       } catch (_err) {
         console.log("Office supplies API unavailable, using mock data");
@@ -93,7 +113,7 @@ export default function OfficeSuppliesManagement() {
   const stats = useMemo(() => {
     const totalItems = supplies.length;
     const lowStockItems = (supplies || []).filter((s) => s.status === "low").length;
-    const totalValue = (supplies || []).reduce((sum, s) => sum + s.totalValue, 0);
+    const totalValue = (supplies || []).reduce((sum, s) => sum + toNumber(s.totalValue), 0);
     return { totalItems, lowStockItems, totalValue };
   }, [supplies]);
 
@@ -326,14 +346,14 @@ export default function OfficeSuppliesManagement() {
                           <span className="text-slate-400">库存率</span>
                           <span className="text-slate-300">
                             {(
-                          item.currentStock / item.minStock *
-                          100).
+                          item.minStock > 0 ? item.currentStock / item.minStock *
+                          100 : 0).
                           toFixed(0)}
                             %
                           </span>
                         </div>
                         <Progress
-                        value={item.currentStock / item.minStock * 100}
+                        value={item.minStock > 0 ? item.currentStock / item.minStock * 100 : 0}
                         className={cn(
                           "h-2",
                           item.status === "low" && "bg-red-500/20"

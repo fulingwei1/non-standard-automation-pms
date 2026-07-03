@@ -94,6 +94,23 @@ describe('Tabs Component', () => {
       );
       expect(container.querySelector('.custom-list')).toBeInTheDocument();
     });
+
+    it('passes layout styles through to tabs list', () => {
+      const { container } = render(
+        <Tabs value="test" onValueChange={() => {}}>
+          <TabsList
+            className="grid w-full"
+            style={{ marginTop: '12px' }}
+          >
+            <TabsTrigger value="test">测试</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      );
+      expect(container.querySelector('[role="tablist"]')).toHaveAttribute(
+        'style',
+        expect.stringContaining('margin-top: 12px')
+      );
+    });
   });
 
   describe('TabsTrigger', () => {

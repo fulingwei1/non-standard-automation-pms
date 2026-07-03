@@ -1,10 +1,18 @@
 import { api } from "./client.js";
 
+const reviewScopedParams = (params = {}) => {
+  const { review, ...rest } = params;
+  return {
+    ...rest,
+    review_id: params.review_id ?? review,
+  };
+};
+
 
 
 export const projectReviewApi = {
   // 复盘报告
-  list: (params) => api.get("/project-reviews", { params }),
+  list: (params) => api.get("/project-reviews/", { params }),
   get: (id) => api.get(`/project-reviews/${id}`),
   create: (data) => api.post("/project-reviews", data),
   update: (id, data) => api.put(`/project-reviews/${id}`, data),
@@ -12,8 +20,16 @@ export const projectReviewApi = {
   publish: (id) => api.post(`/projects/reviews/${id}/publish`),
 
   // 经验教训
+  lessons: {
+    list: (params = {}) =>
+      api.get("/project-reviews/lessons", {
+        params: reviewScopedParams(params),
+      }),
+    update: (lessonId, data) =>
+      api.patch(`/project-reviews/lessons/${lessonId}`, data),
+  },
   getLessons: (reviewId, params) =>
-    api.get("/project-reviews", { params: { review_id: reviewId, ...params } }),
+    api.get("/project-reviews/lessons", { params: { review_id: reviewId, ...params } }),
   createLesson: (reviewId, data) =>
     api.post("/project-reviews/extract", { review_id: reviewId, ...data }),
   getLesson: (lessonId) =>
@@ -24,6 +40,13 @@ export const projectReviewApi = {
     api.delete(`/project-reviews/${lessonId}`),
 
   // 最佳实践
+  practices: {
+    list: (params = {}) =>
+      api.get("/projects/best-practices", {
+        params: reviewScopedParams(params),
+      }),
+    create: (data) => api.post("/projects/best-practices", data),
+  },
   getBestPractices: (reviewId, params) =>
     api.get("/projects/best-practices", { params: { review_id: reviewId, ...params } }),
   createBestPractice: (reviewId, data) =>
@@ -37,6 +60,12 @@ export const projectReviewApi = {
 
   // 最佳实践库
   searchBestPractices: (params) =>
+    api.get("/projects/best-practices", { params }),
+  getProjectBestPracticeRecommendations: (projectId, limit = 20) =>
+    api.get("/projects/best-practices", {
+      params: { project_id: projectId, page_size: limit },
+    }),
+  recommendBestPractices: (params) =>
     api.get("/projects/best-practices", { params }),
 
   // 项目经验教训（从结项记录提取）
@@ -252,7 +281,7 @@ export const rdProjectApi = {
   // 研发项目管理
   list: (params) => api.get("/rd-projects", { params }),
   get: (id) => api.get(`/rd-projects/${id}`),
-  create: (data) => api.post("/rd-projects", data),
+  create: (data) => api.post("/rd-projects/", data),
   update: (id, data) => api.put(`/rd-projects/${id}`, data),
   approve: (id, data) => api.put(`/rd-projects/${id}/approve`, data),
   close: (id, data) => api.put(`/rd-projects/${id}/close`, data),

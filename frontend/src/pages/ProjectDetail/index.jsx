@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import { Button, SkeletonProjectDetail } from "../../components/ui";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";

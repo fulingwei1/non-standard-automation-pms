@@ -11,11 +11,9 @@ import { motion } from "framer-motion";
 import {
   Save,
   Plus,
-  Trash2,
   Edit2,
   Settings,
   Layers,
-  AlertTriangle,
   CheckCircle,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -28,7 +26,6 @@ import {
   Button,
   Input,
   Label,
-  Switch,
   Badge,
   Dialog,
   DialogContent,
@@ -85,13 +82,9 @@ export default function AssemblyTemplateManagement() {
   const loadTemplates = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/v1/assembly-templates");
-      if (response.ok) {
-        const data = await response.json();
-        setTemplates(data?.items || data || []);
-      } else {
-        setTemplates([]);
-      }
+      const response = await assemblyKitApi.getTemplates();
+      const data = response?.data ?? response;
+      setTemplates(data?.items || data || []);
     } catch (error) {
       console.error("加载模板失败:", error);
       setTemplates([]);

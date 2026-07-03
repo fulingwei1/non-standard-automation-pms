@@ -3,6 +3,7 @@ import { Input } from "../../components/ui/input";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -21,12 +22,15 @@ export default function MaterialDialog({
       <DialogContent className="max-w-2xl bg-slate-900 border-slate-700">
         <DialogHeader>
           <DialogTitle className="text-slate-200">选择物料</DialogTitle>
+          <DialogDescription>
+            从物料档案中选择一项带入当前采购申请明细。
+          </DialogDescription>
         </DialogHeader>
         <DialogBody>
           <div className="space-y-4">
             <Input
               placeholder="搜索物料编码或名称..."
-              value={searchQuery || "unknown"}
+              value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               icon={Search}
               className="bg-slate-800 border-slate-700"

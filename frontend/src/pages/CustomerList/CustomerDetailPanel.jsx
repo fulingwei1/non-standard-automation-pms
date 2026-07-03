@@ -6,7 +6,6 @@ import {
   Phone,
   Mail,
   Calendar,
-  Star,
   Tag,
   Edit,
   UserPlus,
@@ -20,7 +19,7 @@ import { cn } from "../../lib/utils"
 import { gradeColors, statusConfig } from "./constants"
 
 // Interaction Timeline Component
-function InteractionTimeline({ customerId }) {
+function InteractionTimeline() {
   const timelineItems = [
     { type: "call", label: "电话沟通", desc: "讨论Q2项目需求", date: "3天前", icon: Phone, color: "text-blue-400" },
     { type: "visit", label: "客户拜访", desc: "现场技术交流", date: "1周前", icon: Building2, color: "text-emerald-400" },
@@ -207,7 +206,7 @@ export function CustomerDetailPanel({ customer, onClose }) {
         {/* Interaction Timeline */}
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-slate-400">交互历史</h3>
-          <InteractionTimeline customerId={customer.id} />
+          <InteractionTimeline />
         </div>
       </div>
 

@@ -20,6 +20,8 @@ import {
     Eye,
     GitBranch,
     FileText,
+    LayoutGrid,
+    Copy,
 } from 'lucide-react';
 import { PageHeader } from '../../components/layout';
 import {
@@ -40,6 +42,15 @@ import {
     TableHeader,
     TableRow,
 } from '../../components/ui/table';
+import {
+    Dialog,
+    DialogBody,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '../../components/ui/dialog';
 import { fadeIn, staggerContainer } from '../../lib/animations';
 import { confirmAction } from "@/lib/confirmAction";
 
@@ -309,16 +320,6 @@ export default function RoleManagement() {
         }
     };
 
-    // 渲染数据权限标签
-    const renderDataScopeBadge = (scope) => {
-        const config = DATA_SCOPE_MAP[scope] || DATA_SCOPE_MAP['OWN'];
-        return (
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${config.color}`}>
-                {config.label}
-            </span>
-        );
-    };
-
     return (
         <motion.div
             variants={staggerContainer}
@@ -522,6 +523,93 @@ export default function RoleManagement() {
                 form={templateForm} onFormChange={setTemplateForm}
                 onSubmit={handleTemplateCreate} templates={templates}
             />
+
+            <Dialog open={showSaveAsTemplateDialog} onOpenChange={setShowSaveAsTemplateDialog}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>另存为角色模板</DialogTitle>
+                        <DialogDescription>
+                            将当前角色的权限与配置保存为可复用模板。
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogBody>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-sm font-medium mb-2 block">来源角色</label>
+                                <Input value={saveAsTemplateForm.role_name} readOnly />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium mb-2 block">模板编码 *</label>
+                                <Input
+                                    value={saveAsTemplateForm.template_code}
+                                    onChange={(e) => setSaveAsTemplateForm({ ...saveAsTemplateForm, template_code: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium mb-2 block">模板名称 *</label>
+                                <Input
+                                    value={saveAsTemplateForm.template_name}
+                                    onChange={(e) => setSaveAsTemplateForm({ ...saveAsTemplateForm, template_name: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium mb-2 block">描述</label>
+                                <Input
+                                    value={saveAsTemplateForm.description}
+                                    onChange={(e) => setSaveAsTemplateForm({ ...saveAsTemplateForm, description: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                    </DialogBody>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowSaveAsTemplateDialog(false)}>取消</Button>
+                        <Button onClick={handleSaveAsTemplateSubmit}>保存模板</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={showTemplateCenterDialog} onOpenChange={setShowTemplateCenterDialog}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>角色模板中心</DialogTitle>
+                        <DialogDescription>
+                            查看和维护可用于快速创建角色的模板。
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogBody>
+                        {templates.length === 0 ? (
+                            <div className="py-8 text-center text-slate-400">暂无角色模板</div>
+                        ) : (
+                            <div className="space-y-3">
+                                {templates.map((template) => (
+                                    <div
+                                        key={template.id}
+                                        className="flex items-center justify-between rounded border border-slate-200 p-3"
+                                    >
+                                        <div>
+                                            <div className="font-medium">{template.template_name}</div>
+                                            <div className="text-sm text-slate-500">
+                                                {template.template_code}
+                                                {template.description ? ` · ${template.description}` : ''}
+                                            </div>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDeleteTemplate(template.id)}
+                                        >
+                                            <Trash2 className="w-4 h-4 text-red-500" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </DialogBody>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowTemplateCenterDialog(false)}>关闭</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </motion.div>
     );
 }

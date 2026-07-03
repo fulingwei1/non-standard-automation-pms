@@ -3,7 +3,7 @@
  * Supplier evaluation, performance tracking, and relationship management
  */
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Building2,
@@ -37,25 +37,40 @@ const toNumber = (value, fallback = 0) => {
 
 const normalizeSupplier = (supplier = {}) => {
   const performance = supplier.performance || supplier.ratingDetails || {};
-  const rawLevel = supplier.level || (supplier.rating ? `${supplier.rating}级` : "B级");
+  const rawLevel =
+    supplier.level ||
+    supplier.supplier_level ||
+    (supplier.rating ? `${supplier.rating}级` : "B级");
   const level = levelConfig[rawLevel] ? rawLevel : "B级";
+  const backendStatus = (supplier.status || "").toString().toUpperCase();
   const purchaseOrders = Array.isArray(supplier.purchaseOrders)
     ? supplier.purchaseOrders
     : [];
 
   return {
     ...supplier,
-    code: supplier.code || supplier.supplierCode || "",
+    name: supplier.name || supplier.supplier_name || "",
+    code: supplier.code || supplier.supplierCode || supplier.supplier_code || "",
+    category: supplier.category || supplier.supplier_type || "",
+    phone: supplier.phone || supplier.contact_phone || "",
+    email: supplier.email || supplier.contact_email || "",
+    status:
+      supplier.status === "active" || backendStatus === "ACTIVE"
+        ? "active"
+        : supplier.status || "inactive",
     level,
-    contactPerson: supplier.contactPerson || supplier.contact || "",
+    contactPerson: supplier.contactPerson || supplier.contact || supplier.contact_person || "",
     overallRating: toNumber(
-      supplier.overallRating ?? performance.overall ?? performance.score,
+      supplier.overallRating ??
+        supplier.overall_rating ??
+        performance.overall ??
+        performance.score,
       0
     ),
     ratingDetails: {
-      quality: toNumber(performance.quality, 0),
-      delivery: toNumber(performance.delivery, 0),
-      service: toNumber(performance.service, 0),
+      quality: toNumber(performance.quality ?? supplier.quality_rating, 0),
+      delivery: toNumber(performance.delivery ?? supplier.delivery_rating, 0),
+      service: toNumber(performance.service ?? supplier.service_rating, 0),
       price: toNumber(
         performance.price ?? performance.cost ?? performance.overall,
         0
@@ -101,28 +116,28 @@ export default function SupplierManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchSuppliers = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await supplierApi.list();
-        const items = response?.data?.items ?? response?.data ?? response ?? [];
-        const normalized = Array.isArray(items)
-          ? items.map((item) => normalizeSupplier(item))
-          : [];
-        setSuppliers(normalized);
-      } catch (err) {
-        console.error("Failed to load suppliers:", err);
-        setError("加载供应商数据失败");
-        setSuppliers([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSuppliers();
+  const fetchSuppliers = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await supplierApi.list({ page_size: 1000 });
+      const items = response?.data?.items ?? response?.data ?? response ?? [];
+      const normalized = Array.isArray(items)
+        ? items.map((item) => normalizeSupplier(item))
+        : [];
+      setSuppliers(normalized);
+    } catch (err) {
+      console.error("Failed to load suppliers:", err);
+      setError("加载供应商数据失败");
+      setSuppliers([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchSuppliers();
+  }, [fetchSuppliers]);
 
   const filteredSuppliers = useMemo(() => {
     const searchLower = searchText.trim().toLowerCase();
@@ -344,6 +359,7 @@ export default function SupplierManagement() {
           onSuccess={() => {
             setShowCreateDialog(false);
             toast.success("供应商创建成功");
+            fetchSuppliers();
           }}
         />
       )}

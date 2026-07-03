@@ -19,7 +19,9 @@ import { cn, formatCurrency, formatDate } from "../../lib/utils";
 import { CostTrendChart } from "../../components/cost/CostTrendChart";
 
 export function CostTrendTab({ versions }) {
-  if (!versions || versions.length === 0) {
+  const versionList = Array.isArray(versions) ? versions : [];
+
+  if (versionList.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -33,7 +35,7 @@ export function CostTrendTab({ versions }) {
     );
   }
 
-  const chartData = (versions || []).map((v) => ({
+  const chartData = versionList.map((v) => ({
     version_no: v.version_no,
     created_at: v.created_at,
     total_price: v.total_price || 0,
@@ -72,8 +74,8 @@ export function CostTrendTab({ versions }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(versions || []).map((version, index) => {
-                const prevVersion = index > 0 ? versions[index - 1] : null;
+              {versionList.map((version, index) => {
+                const prevVersion = index > 0 ? versionList[index - 1] : null;
                 const priceChange = prevVersion
                   ? (version.total_price || 0) - (prevVersion.total_price || 0)
                   : 0;

@@ -66,7 +66,7 @@ export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {
 
         // Load users
         const userResponse = await fetch(
-          '/api/v1/users/?is_active=true&page=1&page_size=100',
+          '/api/v1/users/options?is_active=true&page=1&page_size=100',
           { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
         );
         const userData = await userResponse.json();

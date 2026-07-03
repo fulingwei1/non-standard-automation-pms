@@ -2,10 +2,10 @@
  * PageHeader — title bar with action buttons for the delivery list view
  */
 
-import { Truck, Plus, RefreshCw, Download } from "lucide-react";
+import { Truck, CalendarPlus, RefreshCw, Download } from "lucide-react";
 import { Button } from "../../components/ui";
 
-const PageHeader = ({ onNew, onRefresh }) => (
+const PageHeader = ({ canCreateFromProject = false, onNew, onRefresh, onExport }) => (
   <div className="mb-6">
     <div className="flex items-center justify-between">
       <div>
@@ -18,10 +18,12 @@ const PageHeader = ({ onNew, onRefresh }) => (
         </p>
       </div>
       <div className="flex gap-2">
-        <Button className="flex items-center gap-2" onClick={onNew}>
-          <Plus size={16} />
-          创建发货单
-        </Button>
+        {canCreateFromProject && (
+          <Button className="flex items-center gap-2" onClick={onNew}>
+            <CalendarPlus size={16} />
+            生成发货计划
+          </Button>
+        )}
         <Button
           variant="outline"
           className="flex items-center gap-2"
@@ -30,7 +32,7 @@ const PageHeader = ({ onNew, onRefresh }) => (
           <RefreshCw size={16} />
           刷新
         </Button>
-        <Button variant="outline" className="flex items-center gap-2">
+        <Button variant="outline" className="flex items-center gap-2" onClick={onExport}>
           <Download size={16} />
           导出报表
         </Button>

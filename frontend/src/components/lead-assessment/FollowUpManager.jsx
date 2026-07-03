@@ -3,7 +3,7 @@
  * 跟进管理组件：展示待跟进/逾期等跟进任务（简化版）
  */
 
-import { Card, Empty, List, Space, Tag, Typography, Button } from "antd";
+import { Card, Empty, Space, Tag, Typography, Button } from "antd";
 import { RefreshCw } from "lucide-react";
 
 import { FOLLOW_UP_STATUS, TASK_TYPES } from "@/lib/constants/leadAssessment";
@@ -32,15 +32,14 @@ const FollowUpManager = ({ followUps = [], leads = [], loading, onRefresh }) => 
       {followUps.length === 0 ? (
         <Empty description="暂无跟进任务" />
       ) : (
-        <List
-          dataSource={followUps}
-          renderItem={(item) => {
+        <div className="space-y-3">
+          {followUps.map((item) => {
             const status = getConfigByValue(FOLLOW_UP_STATUS, item.status, item.status);
             const taskType = getConfigByValue(TASK_TYPES, item.type, item.type);
             const lead = leadMap.get(item.leadId);
 
             return (
-              <List.Item key={item.id}>
+              <div key={item.id} className="rounded-lg border border-slate-700/50 p-3">
                 <Space orientation="vertical" size={4} style={{ width: "100%" }}>
                   <Space wrap>
                     <Text strong>{item.leadCompany || lead?.companyName || "未知客户"}</Text>
@@ -50,14 +49,13 @@ const FollowUpManager = ({ followUps = [], leads = [], loading, onRefresh }) => 
                   <Text type="secondary">{item.description}</Text>
                   <Text type="secondary">截止日期：{item.dueDate || "-"}</Text>
                 </Space>
-              </List.Item>
+              </div>
             );
-          }}
-        />
+          })}
+        </div>
       )}
     </Card>
   );
 };
 
 export default FollowUpManager;
-

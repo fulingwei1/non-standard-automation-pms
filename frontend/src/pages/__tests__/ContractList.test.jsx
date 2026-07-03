@@ -6,11 +6,9 @@ import ContractList from '../ContractList';
 const {
   mockUseContractList,
   consoleErrorMock,
-  alertMock,
 } = vi.hoisted(() => ({
   mockUseContractList: vi.fn(),
   consoleErrorMock: vi.fn(),
-  alertMock: vi.fn(),
 }));
 
 vi.mock('framer-motion', () => ({

@@ -127,6 +127,45 @@ describe('SupplierManagement', () => {
     });
   });
 
+  it('renders suppliers with unknown status without crashing', async () => {
+    supplierApi.list.mockResolvedValueOnce({
+      data: {
+        items: [
+          {
+            id: 3,
+            code: 'SUP-003',
+            name: '苏州试制供应商',
+            category: '精密加工',
+            rating: 'C',
+            status: 'pending_review',
+            contact: '王经理',
+            phone: '13700137000',
+            email: 'contact@supplier3.com',
+            address: '苏州市工业园区',
+            performance: {
+              quality: 78,
+              delivery: 74,
+              service: 80,
+              overall: 77,
+            },
+          },
+        ],
+        total: 1,
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <SupplierManagement />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('苏州试制供应商')).toBeInTheDocument();
+      expect(screen.getByText('pending_review')).toBeInTheDocument();
+    });
+  });
+
   it('shows stats cards based on loaded suppliers', async () => {
     render(
       <MemoryRouter>

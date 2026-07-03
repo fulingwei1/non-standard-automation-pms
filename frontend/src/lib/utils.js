@@ -17,11 +17,19 @@ export { formatDate } from './formatters';
  */
 export function formatCurrency(value, currency = "CNY") {
   if (value === null || value === undefined) {return "";}
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) {
+    return new Intl.NumberFormat("zh-CN", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+    }).format(0);
+  }
   return new Intl.NumberFormat("zh-CN", {
     style: "currency",
     currency,
     minimumFractionDigits: 2,
-  }).format(value);
+  }).format(amount);
 }
 
 /**

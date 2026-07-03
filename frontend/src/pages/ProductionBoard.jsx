@@ -6,11 +6,11 @@ import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Factory, ClipboardList, Play, CheckCircle2, AlertTriangle,
-  RefreshCw, Clock, Users, Wrench, BarChart3, Calendar
+  RefreshCw, Clock, BarChart3, Calendar
 } from "lucide-react";
 import { productionApi } from "../services/api";
 import { PageHeader } from "../components/layout";
-import { Card, CardContent, CardHeader, CardTitle, Badge } from "../components/ui";
+import { Card, CardContent, Badge } from "../components/ui";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 

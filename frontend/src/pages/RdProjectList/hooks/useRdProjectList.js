@@ -2,6 +2,18 @@ import { useState, useCallback, useEffect } from "react";
 import { rdProjectApi } from "../../../services/api";
 import { DEFAULT_PAGINATION } from "../constants";
 
+const getErrorMessage = (err) => {
+  const detail = err.response?.data?.detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => item?.msg || item?.message || JSON.stringify(item))
+      .join("; ");
+  }
+  if (typeof detail === "string") return detail;
+  if (detail?.message) return detail.message;
+  return err.response?.data?.message || err.message;
+};
+
 export function useRdProjectList() {
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState([]);
@@ -76,9 +88,7 @@ export function useRdProjectList() {
         throw new Error(response.data?.message || "创建失败");
       }
     } catch (err) {
-      alert(
-        "创建研发项目失败: " + (err.response?.data?.detail || err.message)
-      );
+      alert("创建研发项目失败: " + getErrorMessage(err));
       throw err;
     }
   };

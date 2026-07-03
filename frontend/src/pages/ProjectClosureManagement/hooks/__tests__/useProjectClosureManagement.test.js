@@ -62,6 +62,17 @@ describe('useProjectClosureManagement Hook', () => {
         expect(result.current.closure).toEqual(mockClosure);
     });
 
+    it('should keep closure empty when API returns null for project without closure', async () => {
+        pmoApi.closures.get.mockResolvedValue({ data: null });
+
+        const { result } = renderHook(() => useProjectClosureManagement());
+
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        expect(pmoApi.closures.get).toHaveBeenCalledWith(1);
+        expect(result.current.closure).toBeNull();
+    });
+
     it('should handle search projects', async () => {
         useParams.mockReturnValue({});
         projectApi.list.mockResolvedValue({ data: { items: [mockProject] } });

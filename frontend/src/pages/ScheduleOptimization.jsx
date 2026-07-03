@@ -11,15 +11,12 @@ import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Sparkles,
-  TrendingDown,
   Clock,
   CheckCircle,
-  AlertCircle,
   Zap,
   Copy,
   RefreshCw,
   ArrowRight,
-  Package,
   FileText,
   ShoppingCart,
 } from "lucide-react";

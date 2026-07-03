@@ -30,6 +30,7 @@ import CashFlowTab from "./CashFlowTab";
 import BudgetTab from "./BudgetTab";
 import CostAnalysisTab from "./CostAnalysisTab";
 import ProjectProfitabilityTab from "./ProjectProfitabilityTab";
+import { safePercent, toFiniteNumber } from "./numberUtils";
 
 export default function FinancialReports() {
   const [selectedPeriod, setSelectedPeriod] = useState("month"); // month, quarter, year
@@ -88,10 +89,10 @@ export default function FinancialReports() {
   }, [selectedPeriod, dateRange]);
 
   const currentData = monthlyFinancials[monthlyFinancials.length - 1] || { cashFlow: 0, revenue: 0, cost: 0, profit: 0 };
-  const totalRevenue = (monthlyFinancials || []).reduce((sum, m) => sum + m.revenue, 0);
-  const totalCost = (monthlyFinancials || []).reduce((sum, m) => sum + m.cost, 0);
-  const totalProfit = (monthlyFinancials || []).reduce((sum, m) => sum + m.profit, 0);
-  const avgMargin = totalProfit / totalRevenue * 100;
+  const totalRevenue = (monthlyFinancials || []).reduce((sum, m) => sum + toFiniteNumber(m.revenue), 0);
+  const totalCost = (monthlyFinancials || []).reduce((sum, m) => sum + toFiniteNumber(m.cost), 0);
+  const totalProfit = (monthlyFinancials || []).reduce((sum, m) => sum + toFiniteNumber(m.profit), 0);
+  const avgMargin = safePercent(totalProfit, totalRevenue);
 
   return (
     <motion.div

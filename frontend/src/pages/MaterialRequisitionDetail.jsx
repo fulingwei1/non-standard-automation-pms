@@ -78,7 +78,9 @@ export default function MaterialRequisitionDetail() {
     try {
       setLoading(true);
       const res = await productionApi.materialRequisitions.get(id);
-      setRequisition(res.data || res);
+      const payload = res.formatted || res.data?.data || res.data || res;
+      setRequisition(payload);
+      setItems(Array.isArray(payload.items) ? payload.items : []);
     } catch (error) {
       console.error("Failed to fetch requisition:", error);
     } finally {
@@ -88,7 +90,6 @@ export default function MaterialRequisitionDetail() {
 
   const fetchItems = async () => {
     try {
-      // Assuming there's a getItems endpoint, otherwise use the items from requisition
       if (requisition && requisition.items) {
         setItems(requisition.items);
       }

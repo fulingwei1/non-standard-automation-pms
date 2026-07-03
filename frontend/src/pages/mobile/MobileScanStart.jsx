@@ -191,7 +191,7 @@ export default function MobileScanStart() {
                 <div className="space-y-3">
                   <div className="flex gap-2">
                     <Input
-                    value={scanInput || "unknown"}
+                    value={scanInput}
                     onChange={(e) => setScanInput(e.target.value)}
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {

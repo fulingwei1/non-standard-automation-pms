@@ -6,6 +6,7 @@ import { Button } from "../../components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -35,6 +36,7 @@ export function CreateExceptionDialog({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>上报生产异常</DialogTitle>
+          <DialogDescription>记录生产异常的类型、级别、影响和描述。</DialogDescription>
         </DialogHeader>
         <DialogBody>
           <div className="space-y-4">

@@ -53,16 +53,16 @@ export const progressApi = {
     applyForecast: (projectId, params) =>
       api.post(`/progress/projects/${projectId}/auto-apply-forecast`, null, {
         params: {
-          auto_block: params?.autoBlock,
-          delay_threshold: params?.delayThreshold || 7
+          auto_block: params?.auto_block ?? params?.autoBlock ?? false,
+          delay_threshold: params?.delay_threshold ?? params?.delayThreshold ?? 7
         }
       }),
     
     fixDependencies: (projectId, params) =>
       api.post(`/progress/projects/${projectId}/auto-fix-dependencies`, null, {
         params: {
-          auto_fix_timing: params?.autoFixTiming,
-          auto_fix_missing: params?.autoFixMissing !== false // 默认为true
+          auto_fix_timing: params?.auto_fix_timing ?? params?.autoFixTiming ?? false,
+          auto_fix_missing: params?.auto_fix_missing ?? params?.autoFixMissing ?? true
         }
       }),
     
@@ -72,8 +72,8 @@ export const progressApi = {
     preview: (projectId, params) =>
       api.get(`/progress/projects/${projectId}/auto-preview`, {
         params: {
-          auto_block: params?.autoBlock || false,
-          delay_threshold: params?.delayThreshold || 7
+          auto_block: params?.auto_block ?? params?.autoBlock ?? false,
+          delay_threshold: params?.delay_threshold ?? params?.delayThreshold ?? 7
         }
       }),
     

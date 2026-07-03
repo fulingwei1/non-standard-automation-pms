@@ -11,6 +11,7 @@ import {
   Input,
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -315,6 +316,7 @@ export default function RdProjectWorklogs() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>记录工作日志</DialogTitle>
+            <DialogDescription>登记研发人员在该项目上的工作日期、工时和工作内容。</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <DialogBody className="space-y-4">

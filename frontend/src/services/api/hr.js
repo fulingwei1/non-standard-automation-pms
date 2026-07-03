@@ -160,12 +160,12 @@ export const qualificationApi = {
 
 export const timesheetApi = {
   // ========== 工时记录管理 ==========
-  list: (params) => api.get("/timesheets", { params }),
-  get: (id) => api.get(`/timesheets/${id}`),
-  create: (data) => api.post("/timesheets", data),
+  list: (params) => api.get("/timesheet/records", { params }),
+  get: (id) => api.get(`/timesheet/records/${id}`),
+  create: (data) => api.post("/timesheet/records", data),
   batchCreate: (data) => api.post("/timesheet/records/batch", data),
-  update: (id, data) => api.put(`/timesheets/${id}`, data),
-  delete: (id) => api.delete(`/timesheets/${id}`),
+  update: (id, data) => api.put(`/timesheet/records/${id}`, data),
+  delete: (id) => api.delete(`/timesheet/records/${id}`),
 
   // ========== 周工时表 ==========
   getWeek: (params) => api.get("/timesheet/weekly/week", { params }),

@@ -111,14 +111,15 @@ export function VersionComparison({
   comparison,
 }) {
   const [v1, v2] = selectedVersions;
+  const versionList = Array.isArray(versions) ? versions : [];
 
   const handleV1Change = (value) => {
-    const version = (versions || []).find((v) => v.id.toString() === value);
+    const version = versionList.find((v) => v.id.toString() === value);
     setSelectedVersions([version, v2]);
   };
 
   const handleV2Change = (value) => {
-    const version = (versions || []).find((v) => v.id.toString() === value);
+    const version = versionList.find((v) => v.id.toString() === value);
     setSelectedVersions([v1, version]);
   };
 
@@ -141,7 +142,7 @@ export function VersionComparison({
                 <SelectValue placeholder="选择版本" />
               </SelectTrigger>
               <SelectContent>
-                {(versions || []).map((v) => (
+                {versionList.map((v) => (
                   <SelectItem key={v.id} value={v.id.toString()}>
                     {v.version_no} - {formatDate(v.created_at)}
                   </SelectItem>
@@ -159,7 +160,7 @@ export function VersionComparison({
                 <SelectValue placeholder="选择版本" />
               </SelectTrigger>
               <SelectContent>
-                {(versions || []).map((v) => (
+                {versionList.map((v) => (
                   <SelectItem key={v.id} value={v.id.toString()}>
                     {v.version_no} - {formatDate(v.created_at)}
                   </SelectItem>

@@ -6,6 +6,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import QuickActivityLog from "../../components/sales/QuickActivityLog";
 import {
   ArrowLeft, Building2, Users, Activity, Target, TrendingUp,
   Clock, Phone, Mail, MapPin, RefreshCw, AlertTriangle,
@@ -36,7 +37,6 @@ import {
 } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import api from "../../services/api";
-import { toast } from "sonner";
 
 const ROLE_COLORS = {
   EB: "bg-red-500",
@@ -59,6 +59,22 @@ const MATURITY_COLORS = {
   L4: "text-blue-500",
   L5: "text-purple-500",
 };
+
+const CUSTOMER_360_BASE = "/sales/customer-360/customers";
+
+function responseData(response) {
+  return response?.formatted ?? response?.data?.data ?? response?.data ?? response ?? null;
+}
+
+async function optionalCustomerRequest(url, fallback) {
+  try {
+    const response = await api.get(url);
+    return responseData(response) ?? fallback;
+  } catch (error) {
+    console.warn("客户 360 可选数据加载失败:", url, error?.response?.status || error.message);
+    return fallback;
+  }
+}
 
 // 基本信息组件
 function BasicInfoTab({ customer, decisionChain }) {
@@ -111,6 +127,16 @@ function BasicInfoTab({ customer, decisionChain }) {
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 销售活动（AI智能记录 + 时间线，自动挂本客户） */}
+      <Card>
+        <CardHeader>
+          <CardTitle>销售活动</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <QuickActivityLog customerId={customer.id} />
         </CardContent>
       </Card>
 
@@ -491,24 +517,20 @@ const CustomerDetail = () => {
 
   const loadAllData = async () => {
     setLoading(true);
-    try {
-      const [customerRes, chainRes, healthRes, timelineRes, prefRes] = await Promise.all([
-        api.get(`/api/v1/customer-360/customers/${customerId}/360-view`),
-        api.get(`/api/v1/customer-360/customers/${customerId}/decision-chain`),
-        api.get(`/api/v1/customer-360/customers/${customerId}/health-score`),
-        api.get(`/api/v1/customer-360/customers/${customerId}/timeline`),
-        api.get(`/api/v1/customer-360/customers/${customerId}/buying-preferences`),
-      ]);
-      setCustomer(customerRes.data);
-      setDecisionChain(chainRes.data);
-      setHealthScore(healthRes.data);
-      setTimeline(timelineRes.data);
-      setBuyingPreferences(prefRes.data);
-    } catch (error) {
-      toast.error("加载客户数据失败");
-    } finally {
-      setLoading(false);
-    }
+    const base = `${CUSTOMER_360_BASE}/${customerId}`;
+    const [customerData, chainData, healthData, timelineData, prefData] = await Promise.all([
+      optionalCustomerRequest(`${base}/360-view`, null),
+      optionalCustomerRequest(`${base}/decision-chain`, { contacts: [] }),
+      optionalCustomerRequest(`${base}/health-score`, null),
+      optionalCustomerRequest(`${base}/timeline`, { timeline: [], total_interactions: 0 }),
+      optionalCustomerRequest(`${base}/buying-preferences`, { historical_insights: {} }),
+    ]);
+    setCustomer(customerData);
+    setDecisionChain(chainData);
+    setHealthScore(healthData);
+    setTimeline(timelineData);
+    setBuyingPreferences(prefData);
+    setLoading(false);
   };
 
   const handleBack = () => navigate("/sales/customers");

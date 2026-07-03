@@ -2,6 +2,7 @@ import { Edit } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -24,6 +25,7 @@ export function WorkshopDetailDialog({
           <DialogTitle>
             {selectedWorkshop?.workshop_name} - 车间详情
           </DialogTitle>
+          <DialogDescription>查看车间基础资料、产能和启用状态。</DialogDescription>
         </DialogHeader>
         <DialogBody>
           {selectedWorkshop && (

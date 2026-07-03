@@ -8,7 +8,6 @@ import {
   ChevronRight,
   CheckCircle2,
   Flag,
-  Clock,
 } from "lucide-react";
 import { Card, CardContent, Badge, Progress } from "../../components/ui";
 import { cn } from "../../lib/utils";

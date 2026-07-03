@@ -2,7 +2,7 @@
  * Opportunity Detail Page - 商机详情页面
  * Features: 商机详情、阶段流转、阶段门管理
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -36,8 +36,9 @@ import {
   SelectValue
 } from "../components/ui/select";
 import { cn, formatDate } from "../lib/utils";
-import { opportunityApi } from "../services/api";
+import api, { opportunityApi } from "../services/api";
 import WinRateAnalysisCard from "../components/opportunity/WinRateAnalysisCard";
+import QuickActivityLog from "../components/sales/QuickActivityLog";
 
 const stageConfigs = {
   DISCOVERY: { label: "发现", color: "bg-blue-500", order: 1 },
@@ -79,6 +80,140 @@ export default function OpportunityDetail() {
     } finally {
       setLoading(false);
     }
+  };
+  const [enriching, setEnriching] = useState(false);
+  const handleEnrichRequirement = async () => {
+    setEnriching(true);
+    try {
+      const { data } = await api.post(`/sales/opportunities/${id}/ai-enrich-requirement`);
+      await fetchOpportunityDetail();
+      const d = data?.data || data;
+      alert(`AI 已完善需求：${d?.equipment_type || ""} · 成熟度${d?.requirement_maturity || ""}`);
+    } catch (e) {
+      alert(e?.response?.data?.detail || "AI 完善需求失败，请先记录一些活动");
+    } finally {
+      setEnriching(false);
+    }
+  };
+  const [quoting, setQuoting] = useState(false);
+  const [quoteEst, setQuoteEst] = useState(null);
+  const handleQuoteEstimate = async () => {
+    setQuoting(true);
+    try {
+      const { data } = await api.post(`/sales/opportunities/${id}/ai-quote-estimate`);
+      setQuoteEst(data?.data || data);
+    } catch (e) {
+      alert(e?.response?.data?.detail || "AI 报价失败，请先完善需求");
+    } finally {
+      setQuoting(false);
+    }
+  };
+  const [acLoading, setAcLoading] = useState(false);
+  const [acCriteria, setAcCriteria] = useState(null);
+  const handleAcceptanceCriteria = async () => {
+    setAcLoading(true);
+    try {
+      const { data } = await api.post(`/sales/opportunities/${id}/ai-acceptance-criteria`);
+      setAcCriteria((data?.data || data)?.acceptance_criteria || []);
+    } catch (e) {
+      alert(e?.response?.data?.detail || "AI 生成验收标准失败，请先完善需求");
+    } finally {
+      setAcLoading(false);
+    }
+  };
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviews, setReviews] = useState(null);
+  const handleSolutionReview = async () => {
+    setReviewLoading(true);
+    try {
+      const { data } = await api.post(`/sales/opportunities/${id}/ai-solution-review`);
+      setReviews((data?.data || data)?.reviews || []);
+    } catch (e) {
+      alert(e?.response?.data?.detail || "AI 方案评审失败，请先完善需求");
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+  const [similar, setSimilar] = useState(null);
+  const handleSimilar = async () => {
+    try {
+      const { data } = await api.get(`/sales/opportunities/${id}/similar-cases`);
+      setSimilar(data?.data || data);
+    } catch (e) { alert("检索失败"); }
+  };
+  const [nextAct, setNextAct] = useState(null);
+  const [naLoading, setNaLoading] = useState(false);
+  const handleNextAction = async () => {
+    setNaLoading(true);
+    try {
+      const { data } = await api.post(`/sales/opportunities/${id}/ai-next-action`);
+      setNextAct(data?.data || data);
+    } catch (e) { alert("生成失败"); } finally { setNaLoading(false); }
+  };
+  const [bomSel, setBomSel] = useState(null);
+  const [bomLoading, setBomLoading] = useState(false);
+  const handleBomSelection = async () => {
+    setBomLoading(true);
+    try { const { data } = await api.post(`/ai-eng/bom-selection`, { opportunity_id: Number(id) }); setBomSel((data?.data || data)?.selection || []); }
+    catch (e) { alert(e?.response?.data?.detail || "选型失败，请先完善需求"); } finally { setBomLoading(false); }
+  };
+  const [design, setDesign] = useState(null);
+  const [designLoading, setDesignLoading] = useState(false);
+  const [coverage, setCoverage] = useState(null);
+  const handleConfigDesign = async () => {
+    setDesignLoading(true);
+    setCoverage(null);
+    try {
+      // persist=true：方案落库（版本链），随后自动核对需求覆盖
+      const { data } = await api.post(`/ai-eng/config-design`, { opportunity_id: Number(id), persist: true });
+      const d = data?.data || data;
+      setDesign(d);
+      if (d?.solution_id) {
+        try {
+          const cov = await api.post(`/ai-eng/requirement-coverage`, {
+            opportunity_id: Number(id), solution_id: d.solution_id,
+          });
+          setCoverage(cov.data?.data || cov.data);
+        } catch (e) { /* 覆盖核对失败不阻断设计结果展示 */ }
+      }
+    }
+    catch (e) { alert(e?.response?.data?.detail || "配置设计失败"); } finally { setDesignLoading(false); }
+  };
+  const docInputRef = useRef(null);
+  const [docUploading, setDocUploading] = useState(false);
+  const [docResult, setDocResult] = useState(null);
+  const handleRequirementDoc = async (e) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    setDocUploading(true);
+    setDocResult(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", f);
+      const { data } = await api.post(`/sales/opportunities/${id}/requirement-document`, fd, {
+        headers: { "Content-Type": "multipart/form-data" }, timeout: 180000,
+      });
+      const d = data?.data || data;
+      setDocResult({ ...d, message: data?.message });
+      await fetchOpportunityDetail();
+      // 一步式：抽取成功后自动做需求缺口分析
+      if (d?.enrichment) await handleRequirementGaps();
+    } catch (err) {
+      alert(err?.response?.data?.detail || "需求文档上传失败");
+    } finally { setDocUploading(false); }
+  };
+  const [gaps, setGaps] = useState(null);
+  const [gapsLoading, setGapsLoading] = useState(false);
+  const handleRequirementGaps = async () => {
+    setGapsLoading(true);
+    try {
+      const { data } = await api.post(`/sales/opportunities/${id}/ai-requirement-gaps`);
+      setGaps(data?.data || data);
+      await fetchOpportunityDetail(); // 成熟度已按 rubric 回写
+    } catch (e) {
+      alert(e?.response?.data?.detail || "需求缺口分析失败，请先记录一些活动");
+    } finally { setGapsLoading(false); }
   };
   const handleSubmitGate = async () => {
     try {
@@ -364,6 +499,219 @@ export default function OpportunityDetail() {
 
       {/* 赢单率分析 */}
       <WinRateAnalysisCard opportunity={opportunity} />
+
+      {/* 销售活动（AI智能记录 + 时间线，自动挂本商机/客户） */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>销售活动</CardTitle>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={handleEnrichRequirement} disabled={enriching}>
+              {enriching ? "AI 完善中…" : "✨ AI 完善需求"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleRequirementGaps} disabled={gapsLoading}>
+              {gapsLoading ? "AI 分析中…" : "🧭 需求缺口追问"}
+            </Button>
+            <input ref={docInputRef} type="file" accept=".pdf,.docx,.txt,.md" className="hidden" onChange={handleRequirementDoc} />
+            <Button size="sm" variant="outline" onClick={() => docInputRef.current?.click()} disabled={docUploading}>
+              {docUploading ? "解析抽取中…" : "📄 传需求文档"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleQuoteEstimate} disabled={quoting}>
+              {quoting ? "AI 估价中…" : "💰 AI 报价估算"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleAcceptanceCriteria} disabled={acLoading}>
+              {acLoading ? "AI 生成中…" : "📋 AI 验收标准"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleSolutionReview} disabled={reviewLoading}>
+              {reviewLoading ? "AI 评审中…" : "🔍 AI 方案评审"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleSimilar}>📚 相似案例</Button>
+            <Button size="sm" variant="outline" onClick={handleNextAction} disabled={naLoading}>
+              {naLoading ? "AI 中…" : "🎯 推进建议"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleConfigDesign} disabled={designLoading}>
+              {designLoading ? "AI 中…" : "🧩 配置式设计"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleBomSelection} disabled={bomLoading}>
+              {bomLoading ? "AI 中…" : "🔧 BOM 选型"}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {quoteEst && (
+            <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm">
+              <div className="font-medium mb-1">💰 AI 报价估算（模块累加+风险加成，可微调）</div>
+              <div className="text-xs text-muted-foreground mb-2">{quoteEst.basis}</div>
+              <div className="space-y-0.5">
+                {(quoteEst.recommended_modules || []).map((m, i) => (
+                  <div key={i} className="text-xs">· {m.module_name} ×{m.qty} = ¥{m.subtotal}</div>
+                ))}
+                {(quoteEst.custom_items || []).map((c, i) => (
+                  <div key={`c${i}`} className="text-xs text-amber-600">· [定制] {c.name} = ¥{c.cost}</div>
+                ))}
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs">
+                <div>材料成本：¥{quoteEst.material_cost}</div>
+                <div>风险加成：{quoteEst.risk_factor}%</div>
+                <div>含风险成本：¥{quoteEst.suggested_cost}</div>
+                <div>建议毛利：{quoteEst.suggested_gross_margin}%</div>
+                <div className="col-span-2 text-base font-bold text-emerald-600">建议报价：¥{quoteEst.suggested_price}</div>
+              </div>
+              {quoteEst.risk_reason && <div className="text-xs text-muted-foreground mt-1">风险原因：{quoteEst.risk_reason}</div>}
+            </div>
+          )}
+          {docResult && (
+            <div className="mb-4 rounded-lg border border-sky-500/30 bg-sky-500/5 p-3 text-sm">
+              <div className="font-medium mb-1">📄 {docResult.message}</div>
+              <div className="text-xs text-muted-foreground">
+                {docResult.filename} · 提取 {docResult.extracted_chars} 字 · 活动 {docResult.communication_no} · 累计附件 {docResult.attachment_count} 份
+              </div>
+              {docResult.enrichment && (
+                <div className="text-xs mt-1">
+                  抽取回填：设备={docResult.enrichment.equipment_type || "-"} · 预算={docResult.enrichment.budget_range || "-"} ·
+                  对象={docResult.enrichment.requirement?.product_object || "-"} · 节拍={docResult.enrichment.requirement?.ct_seconds ?? "-"}s ·
+                  验收={docResult.enrichment.requirement?.acceptance_criteria?.slice(0, 40) || "-"}
+                </div>
+              )}
+            </div>
+          )}
+          {gaps && (
+            <div className="mb-4 rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-3 text-sm">
+              <div className="font-medium mb-1">
+                🧭 需求完备度 {gaps.score}/100
+                <span className={`ml-2 text-xs ${gaps.maturity === "HIGH" ? "text-emerald-600" : gaps.maturity === "MEDIUM" ? "text-amber-600" : "text-red-500"}`}>
+                  {gaps.maturity}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mb-2">
+                {(gaps.elements || []).map((e, i) => (
+                  <div key={i} className="text-xs" title={e.evidence || ""}>
+                    {e.status === "filled" ? "✅" : e.status === "partial" ? "🟡" : "❌"} {e.label}
+                  </div>
+                ))}
+              </div>
+              {(gaps.questions || []).length > 0 && (
+                <div className="border-t border-cyan-500/20 pt-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium">📝 下次拜访追问清单</span>
+                    <button
+                      className="text-[10px] border rounded px-1.5 py-0.5 hover:bg-muted"
+                      onClick={() => navigator.clipboard?.writeText((gaps.questions || []).map((q, i) => `${i + 1}. ${q}`).join("\n"))}>
+                      复制清单
+                    </button>
+                  </div>
+                  {(gaps.questions || []).map((q, i) => (
+                    <div key={i} className="text-xs text-muted-foreground">{i + 1}. {q}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {design && (
+            <div className="mb-4 rounded-lg border border-teal-500/30 bg-teal-500/5 p-3 text-sm">
+              <div className="font-medium mb-1">
+                🧩 AI 配置式设计（复用率 {design.reuse_rate}）
+                {design.solution_no && (
+                  <span className="ml-2 text-xs text-emerald-600">已落库 {design.solution_no} {design.solution_version}</span>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground mb-1">{design.architecture}</div>
+              {(design.modules || []).map((m, i) => <div key={i} className="text-xs">· {m.module_name} ×{m.qty} — {m.role}</div>)}
+              {(design.custom_parts || []).map((c, i) => <div key={`c${i}`} className="text-xs text-amber-600">· [定制] {c.name}（{c.reason}）</div>)}
+              {(design.risk_reminders || []).length > 0 && (
+                <div className="mt-2 border-t border-teal-500/20 pt-1.5">
+                  <div className="text-xs font-medium mb-0.5">⚠️ 历史坑提醒</div>
+                  {(design.risk_reminders || []).map((rr, i) => (
+                    <div key={i} className="text-xs text-amber-600">· {rr.reminder} <span className="text-muted-foreground">（{rr.source}）</span></div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {coverage && (
+            <div className="mb-4 rounded-lg border border-lime-500/30 bg-lime-500/5 p-3 text-sm">
+              <div className="font-medium mb-1">
+                ✅ 需求-方案符合性矩阵（覆盖率 {coverage.coverage_rate}）
+                {(coverage.uncovered || []).length > 0 && (
+                  <span className="ml-2 text-xs text-red-500">未覆盖 {(coverage.uncovered || []).length} 项</span>
+                )}
+              </div>
+              <div className="space-y-0.5">
+                {(coverage.matrix || []).map((m, i) => (
+                  <div key={i} className="text-xs">
+                    {m.coverage === "满足" ? "✅" : m.coverage === "部分" ? "🟡" : "❌"} {m.requirement}
+                    {m.covered_by && <span className="text-muted-foreground"> ← {m.covered_by}</span>}
+                    {m.note && m.coverage !== "满足" && <span className="text-amber-600">（{m.note}）</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {bomSel && (
+            <div className="mb-4 rounded-lg border p-3 text-sm">
+              <div className="font-medium mb-1">🔧 AI BOM 选型</div>
+              {bomSel.map((x, i) => (
+                <div key={i} className="text-xs"><b>{x.part}</b>：{x.brand_model} <span className="text-emerald-600">¥{x.est_price}</span> <span className="text-muted-foreground">（{x.reason}）</span></div>
+              ))}
+            </div>
+          )}
+          {similar && (
+            <div className="mb-4 rounded-lg border p-3 text-sm">
+              <div className="font-medium mb-1">📚 相似案例（同类『{similar.equipment_type}』）</div>
+              {similar.reference && <div className="text-xs text-emerald-600 mb-1">{similar.reference}</div>}
+              <div className="space-y-0.5">
+                {(similar.cases || []).map((c, i) => (
+                  <div key={i} className="text-xs flex justify-between cursor-pointer hover:underline"
+                       onClick={() => navigate(`/sales/opportunities/${c.opportunity_id}`)}>
+                    <span>· {c.name} <span className={c.stage === "WON" ? "text-emerald-600" : "text-muted-foreground"}>[{c.stage}]</span></span>
+                    <span>¥{c.quote_amount || c.est_amount}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {nextAct && (
+            <div className="mb-4 rounded-lg border border-indigo-500/30 bg-indigo-500/5 p-3 text-sm">
+              <div className="font-medium mb-1">🎯 AI 推进建议</div>
+              <div className="text-xs"><b>下一步：</b>{(nextAct.next_actions || []).join("；")}</div>
+              <div className="text-xs text-amber-600"><b>短板：</b>{(nextAct.gaps || []).join("；")}</div>
+              <div className="text-xs text-muted-foreground"><b>阶段：</b>{nextAct.stage_advice}</div>
+            </div>
+          )}
+          {reviews && (
+            <div className="mb-4 rounded-lg border border-purple-500/30 bg-purple-500/5 p-3 text-sm">
+              <div className="font-medium mb-2">🔍 AI 方案评审（定稿前抓返工点）</div>
+              <div className="space-y-1.5">
+                {reviews.map((r, i) => {
+                  const lv = String(r.risk_level).toUpperCase();
+                  const color = lv === "HIGH" ? "text-red-500" : lv === "MEDIUM" ? "text-amber-600" : "text-slate-400";
+                  return (
+                    <div key={i} className="text-xs">
+                      <span className={`font-medium ${color}`}>[{lv}] {r.aspect}</span>：{r.finding}
+                      <div className="text-muted-foreground">→ {r.suggestion}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {acCriteria && (
+            <div className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 text-sm">
+              <div className="font-medium mb-2">📋 AI 可测量验收标准（与客户/售前对齐，减少验收扯皮）</div>
+              <div className="space-y-1">
+                {acCriteria.map((c, i) => (
+                  <div key={i} className="text-xs border-l-2 border-blue-500/40 pl-2">
+                    <b>{c.item}</b>：{c.target} <span className="text-muted-foreground">（{c.method}；判定：{c.criteria}）</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <QuickActivityLog
+            opportunityId={opportunity.id}
+            customerId={opportunity.customer_id}
+          />
+        </CardContent>
+      </Card>
 
       {/* Gate Dialog */}
       <Dialog open={showGateDialog} onOpenChange={setShowGateDialog}>

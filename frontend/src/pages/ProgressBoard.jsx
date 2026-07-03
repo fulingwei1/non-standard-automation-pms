@@ -13,8 +13,7 @@ import {
   BarChart3,
   Activity,
   TrendingUp,
-  ShieldAlert,
-  Link2, Zap } from
+  ShieldAlert, Zap } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {

@@ -28,6 +28,11 @@ import WorklogsTab from "./WorklogsTab";
 import DocumentsTab from "./DocumentsTab";
 import ReportsTab from "./ReportsTab";
 
+const toFiniteNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
 export default function RdProjectDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -137,6 +142,7 @@ export default function RdProjectDetail() {
   const status = statusMap[project.status] || statusMap.DRAFT;
   const categoryType =
     categoryTypeMap[project.category_type] || categoryTypeMap.SELF;
+  const totalHours = toFiniteNumber(project.total_hours);
 
   // Stat cards for overview
   const statCards = [
@@ -157,9 +163,7 @@ export default function RdProjectDetail() {
     },
     {
       label: "总工时",
-      value: project.total_hours
-        ? `${project.total_hours.toFixed(1)} 小时`
-        : "0 小时",
+      value: `${totalHours.toFixed(1)} 小时`,
       icon: Clock,
       color: "indigo",
       subtext: timesheetSummary

@@ -1,5 +1,17 @@
 import { api } from "./client.js";
 
+const toFiniteNumber = (value) => {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : 0;
+};
+
+const unwrapData = (response) => response?.data?.data ?? response?.data ?? {};
+
+const withData = (response, data) => ({
+  ...response,
+  data,
+});
+
 
 
 export const leadApi = {
@@ -86,7 +98,7 @@ export const quoteApi = {
   applyCostTemplate: (templateId, data) =>
     api.post(`/sales/quote-templates/${templateId}/apply`, data || {}),
   calculateCost: (id, versionId) =>
-    api.post(`/sales/quotes/${id}/cost-calculations/batch-update`, null, {
+    api.post(`/sales/quotes/${id}/recalculate`, null, {
       params: { version_id: versionId },
     }),
   checkCost: (id) =>
@@ -106,11 +118,11 @@ export const quoteApi = {
   getCostStructure: (id) =>
     api.get(`/sales/quotes/${id}/cost-breakdown`),
   getCostMatchSuggestions: (id, versionId) =>
-    api.post(`/sales/quotes/${id}/cost-calculations/batch-update`, null, {
+    api.post(`/sales/quotes/${id}/cost-match-suggestions`, null, {
       params: { version_id: versionId },
     }),
   applyCostSuggestions: (id, versionId, data) =>
-    api.post(`/sales/quotes/${id}/cost-calculations/batch-update`, data, {
+    api.post(`/sales/quotes/${id}/cost-match-suggestions/apply`, data, {
       params: { version_id: versionId },
     }),
 };
@@ -191,35 +203,58 @@ export const contractApi = {
     api.get("/sales/contracts/approval/history", { params: { contract_id: id } }),
 };
 
+const normalizeInvoiceApprovalPayload = (data = {}) => {
+  const { approved, remark, comments, ...rest } = data || {};
+  const explicitAction = rest.action;
+  const action =
+    explicitAction ||
+    (approved === false ? "REJECT" : "APPROVE");
+  return {
+    ...rest,
+    action: typeof action === "string" ? action.toUpperCase() : action,
+    comment: rest.comment ?? remark ?? comments,
+  };
+};
+
 export const invoiceApi = {
   list: (params) => api.get("/sales/invoices", { params }),
   get: (id) => api.get(`/sales/invoices/${id}`),
   create: (data) => api.post("/sales/invoices", data),
   update: (id, data) => api.put(`/sales/invoices/${id}`, data),
+  delete: (id) => api.delete(`/sales/invoices/${id}`),
   issue: (id, data) => api.post(`/sales/invoices/${id}/issue`, data),
   receivePayment: (id, data) =>
     api.post(`/sales/invoices/${id}/receive-payment`, null, { params: data }),
   approve: (id, data) =>
-    api.post(`/sales/invoices/${id}/approval/action`, { ...data, invoice_id: id }),
+    api.post(`/sales/invoices/${id}/approval/action`, {
+      ...normalizeInvoiceApprovalPayload(data),
+      invoice_id: id,
+    }),
   getApprovals: (id) => api.get(`/sales/invoices/${id}/approval-history`),
   approveApproval: (invoiceId, data) =>
-    api.post(`/sales/invoices/${invoiceId}/approval/action`, { ...data, action: "approve" }),
+    api.post(`/sales/invoices/${invoiceId}/approval/action`, {
+      ...normalizeInvoiceApprovalPayload(data),
+      action: "APPROVE",
+    }),
   rejectApproval: (invoiceId, data) =>
-    api.post(`/sales/invoices/${invoiceId}/approval/action`, { ...data, action: "reject" }),
+    api.post(`/sales/invoices/${invoiceId}/approval/action`, {
+      ...normalizeInvoiceApprovalPayload(data),
+      action: "REJECT",
+    }),
   // Approval Workflow APIs (Sprint 2)
   startApproval: (id) => api.post(`/sales/invoices/${id}/approval/start`),
   getApprovalStatus: (id) => api.get(`/sales/invoices/${id}/approval-status`),
   approvalAction: (id, data) =>
-    api.post(`/sales/invoices/${id}/approval/action`, data),
+    api.post(`/sales/invoices/${id}/approval/action`, normalizeInvoiceApprovalPayload(data)),
   getApprovalHistory: (id) => api.get(`/sales/invoices/${id}/approval-history`),
 };
 
 export const paymentApi = {
-  list: (params) => api.get("/sales/payments", { params }),
-  get: (id) => api.get(`/sales/payments/${id}`),
-  create: (params) => api.post("/sales/payments", null, { params }),
+  list: (params) => api.get("/sales/payments/records", { params }),
+  get: (id) => api.get(`/sales/payments/records/${id}`),
+  create: (params) => api.post("/sales/payments/records", null, { params }),
   matchInvoice: (id, params) =>
-    api.put(`/sales/payments/${id}/match-invoice`, null, { params }),
+    api.put(`/sales/payments/records/${id}/match-invoice`, null, { params }),
   // 新增API端点
   getReminders: (params) => api.get("/sales/payments/reminders", { params }),
   getStatistics: (params) => api.get("/sales/payments/statistics", { params }),
@@ -298,6 +333,82 @@ export const salesStatisticsApi = {
   performance: (params) => api.get("/sales/reports/sales-performance", { params }),
   // 销售仪表盘
   getDashboard: (params) => api.get("/sales/dashboard", { params }),
+  getPipelineStats: async (params) => {
+    const response = await api.get("/sales/statistics/funnel", { params });
+    return withData(response, unwrapData(response));
+  },
+  getMonthlyTrend: async (params = {}) => {
+    const response = await api.get("/sales/statistics/overview", {
+      params: { ...params, period: "year" },
+    });
+    const data = unwrapData(response);
+    let previousAchieved = 0;
+    const monthly = (data.time_series || []).map((item) => {
+      const achieved = toFiniteNumber(item.won_amount ?? item.total_amount);
+      const target = Math.max(toFiniteNumber(item.target), achieved * 1.1, 1);
+      const growth =
+        previousAchieved > 0
+          ? Math.round(((achieved - previousAchieved) / previousAchieved) * 100)
+          : 0;
+      previousAchieved = achieved;
+      return {
+        month: item.label,
+        target,
+        achieved,
+        growth,
+      };
+    });
+    return withData(response, monthly);
+  },
+  getByCustomer: async (params = {}) => {
+    const { limit, ...rest } = params;
+    const response = await api.get("/sales/reports/customer-contribution", {
+      params: { ...rest, top_n: limit || 10 },
+    });
+    const data = unwrapData(response);
+    const customers = (data.customers || []).map((item) => ({
+      name: item.customer_name || "未命名客户",
+      projects: toFiniteNumber(item.contract_count),
+      amount: toFiniteNumber(item.total_amount),
+      growth: 0,
+    }));
+    return withData(response, customers);
+  },
+  getByProduct: async (params = {}) => {
+    const response = await api.get("/sales/statistics/overview", {
+      params: { ...params, period: "year" },
+    });
+    const data = unwrapData(response);
+    const totalAmount = (data.by_product || []).reduce(
+      (sum, item) => sum + toFiniteNumber(item.amount),
+      0
+    );
+    const products = (data.by_product || []).map((item) => {
+      const amount = toFiniteNumber(item.amount);
+      const count = toFiniteNumber(item.count);
+      return {
+        name: item.product_type || "未分类",
+        count,
+        amount,
+        avgPrice: count > 0 ? amount / count : 0,
+        ratio: totalAmount > 0 ? Math.round((amount / totalAmount) * 100) : 0,
+      };
+    });
+    return withData(response, products);
+  },
+  getByRegion: async (params = {}) => {
+    const response = await api.get("/sales/statistics/overview", {
+      params: { ...params, period: "year" },
+    });
+    const data = unwrapData(response);
+    const regions = (data.by_customer_type || []).map((item) => ({
+      region: item.customer_type || "未分类",
+      customers: toFiniteNumber(item.count),
+      amount: toFiniteNumber(item.amount),
+      growth: 0,
+    }));
+    return withData(response, regions);
+  },
 };
 
 export const salesApi = {
@@ -436,6 +547,9 @@ export const followUpReminderApi = {
   getSummary: () => api.get("/sales/follow-up/reminders/summary"),
   // 获取紧急提醒
   getUrgent: () => api.get("/sales/follow-up/reminders/urgent"),
+  // 获取行动看板
+  getActionBoard: (params) =>
+    api.get("/sales/follow-up/reminders/action-board", { params }),
 };
 
 // 催款优先级排序 API

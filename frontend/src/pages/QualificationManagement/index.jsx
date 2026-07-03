@@ -34,6 +34,7 @@ import { ModelsTab } from "./ModelsTab";
 import { EmployeesTab } from "./EmployeesTab";
 import { EmployeeCharts } from "./EmployeeCharts";
 import { PaginationControls } from "./PaginationControls";
+import { compactQueryParams } from "./queryParams";
 
 export default function QualificationManagement() {
   const [pagination, setPagination] = useState({
@@ -123,11 +124,11 @@ export default function QualificationManagement() {
 
   const loadModels = async () => {
     try {
-      const params = {
+      const params = compactQueryParams({
         page: pagination.page,
         page_size: pagination.page_size,
         ...modelFilter
-      };
+      });
       if (modelSearch) {
         params.keyword = modelSearch;
       }
@@ -146,11 +147,11 @@ export default function QualificationManagement() {
 
   const loadQualifications = async () => {
     try {
-      const params = {
+      const params = compactQueryParams({
         page: pagination.page,
         page_size: pagination.page_size,
         ...qualificationFilter
-      };
+      });
       if (qualificationSearch) {
         params.keyword = qualificationSearch;
       }

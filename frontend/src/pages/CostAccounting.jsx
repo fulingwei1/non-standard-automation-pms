@@ -41,6 +41,7 @@ import {
 import { cn, formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { useCostAccounting } from "./CostAccounting/hooks";
+import { costApi } from "../services/api/projects.js";
 
 // Cost type configuration
 const costTypeConfig = {
@@ -122,8 +123,16 @@ const normalizeCost = (cost = {}) => {
   };
 };
 
+const defaultCostForm = (projectId = "") => ({
+  project_id: projectId,
+  cost_type: "",
+  amount: "",
+  cost_date: "",
+  description: "",
+});
+
 export default function CostAccounting() {
-  const { costs: rawCosts, setFilters } = useCostAccounting();
+  const { costs: rawCosts, setFilters, loadCosts } = useCostAccounting();
   const [searchParams, _setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProject, setSelectedProject] = useState("all");
@@ -131,6 +140,11 @@ export default function CostAccounting() {
   const [selectedDateRange, setSelectedDateRange] = useState("month");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedCost, setSelectedCost] = useState(null);
+  const [costForm, setCostForm] = useState(() =>
+    defaultCostForm(searchParams.get("project_id") || "")
+  );
+  const [savingCost, setSavingCost] = useState(false);
+  const [costFormError, setCostFormError] = useState("");
 
   // 从 URL 查询参数读取筛选条件
   useEffect(() => {
@@ -139,6 +153,7 @@ export default function CostAccounting() {
 
     if (projectId) {
       setSelectedProject(projectId);
+      setCostForm((prev) => ({ ...prev, project_id: projectId }));
     }
 
     if (costType) {
@@ -197,15 +212,61 @@ export default function CostAccounting() {
 
   // Projects list
   const projects = useMemo(() => {
-    const projectSet = new Set();
+    const projectMap = new Map();
     (normalizedCosts || []).forEach((cost) => {
       if (!cost.projectId || !cost.projectName) {return;}
-      projectSet.add(
-        JSON.stringify({ id: cost.projectId, name: cost.projectName })
-      );
+      projectMap.set(String(cost.projectId), {
+        id: cost.projectId,
+        name: cost.projectName,
+      });
     });
-    return Array.from(projectSet).map((p) => JSON.parse(p));
-  }, [normalizedCosts]);
+    if (selectedProject !== "all" && selectedProject && !projectMap.has(String(selectedProject))) {
+      projectMap.set(String(selectedProject), {
+        id: selectedProject,
+        name: `项目 #${selectedProject}`,
+      });
+    }
+    return Array.from(projectMap.values());
+  }, [normalizedCosts, selectedProject]);
+
+  const openAddCostDialog = () => {
+    setCostForm(defaultCostForm(selectedProject === "all" ? "" : selectedProject));
+    setCostFormError("");
+    setShowAddDialog(true);
+  };
+
+  const handleSaveCost = async () => {
+    const projectId = Number(costForm.project_id);
+    const amount = Number(costForm.amount);
+
+    if (!projectId || !costForm.cost_type || !Number.isFinite(amount) || amount <= 0 || !costForm.cost_date) {
+      setCostFormError("请完整填写项目、成本类型、金额和发生日期");
+      return;
+    }
+
+    setSavingCost(true);
+    setCostFormError("");
+    try {
+      await costApi.create(projectId, {
+        project_id: projectId,
+        cost_type: costForm.cost_type,
+        cost_category: "OTHER",
+        amount,
+        tax_amount: 0,
+        description: costForm.description,
+        cost_date: costForm.cost_date,
+      });
+      setShowAddDialog(false);
+      setSelectedProject(String(projectId));
+      setFilters((prev) => ({ ...prev, project_id: String(projectId) }));
+      await loadCosts?.();
+    } catch (error) {
+      console.error("保存成本失败:", error);
+      setCostFormError("保存成本失败，请稍后重试");
+    } finally {
+      setSavingCost(false);
+    }
+  };
 
   return (
     <motion.div
@@ -227,7 +288,7 @@ export default function CostAccounting() {
             </Button>
             <Button
             className="flex items-center gap-2"
-            onClick={() => setShowAddDialog(true)}>
+            onClick={openAddCostDialog}>
 
               <Plus className="w-4 h-4" />
               录入成本
@@ -564,7 +625,11 @@ export default function CostAccounting() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm text-slate-400">项目 *</label>
-                <select className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white">
+                <select
+                  className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white"
+                  value={costForm.project_id || ""}
+                  onChange={(e) => setCostForm({ ...costForm, project_id: e.target.value })}
+                >
                   <option value="">请选择项目</option>
                   {(projects || []).map((p) =>
                   <option key={p.id} value={p.id}>
@@ -575,7 +640,11 @@ export default function CostAccounting() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm text-slate-400">成本类型 *</label>
-                <select className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white">
+                <select
+                  className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white"
+                  value={costForm.cost_type || ""}
+                  onChange={(e) => setCostForm({ ...costForm, cost_type: e.target.value })}
+                >
                   <option value="">请选择类型</option>
                   {Object.entries(costTypeConfig).map(([key, val]) =>
                   <option key={key} value={key || "unknown"}>
@@ -588,26 +657,42 @@ export default function CostAccounting() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm text-slate-400">金额 *</label>
-                <Input type="number" placeholder="请输入金额" />
+                <Input
+                  type="number"
+                  placeholder="请输入金额"
+                  value={costForm.amount || ""}
+                  onChange={(e) => setCostForm({ ...costForm, amount: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm text-slate-400">发生日期 *</label>
-                <Input type="date" />
+                <Input
+                  type="date"
+                  value={costForm.cost_date || ""}
+                  onChange={(e) => setCostForm({ ...costForm, cost_date: e.target.value })}
+                />
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm text-slate-400">描述</label>
               <textarea
                 placeholder="请输入成本描述..."
+                value={costForm.description || ""}
+                onChange={(e) => setCostForm({ ...costForm, description: e.target.value })}
                 className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white resize-none h-20" />
 
             </div>
+            {costFormError &&
+              <p className="text-sm text-red-400">{costFormError}</p>
+            }
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>
               取消
             </Button>
-            <Button onClick={() => setShowAddDialog(false)}>保存</Button>
+            <Button onClick={handleSaveCost} disabled={savingCost}>
+              {savingCost ? "保存中..." : "保存"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

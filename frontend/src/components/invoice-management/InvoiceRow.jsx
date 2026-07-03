@@ -92,6 +92,7 @@ const InvoiceRow = ({
  variant="ghost"
  className="h-8 w-8 p-0"
  onClick={() => onView(invoice)}
+ title="查看"
  >
  <FileText className="h-4 w-4 text-blue-400" />
  </Button>
@@ -123,6 +124,7 @@ const InvoiceRow = ({
  variant="ghost"
  className="h-8 w-8 p-0"
  onClick={() => onIssue(invoice)}
+ title="开票"
  >
  <Send className="h-4 w-4 text-purple-400" />
  </Button>

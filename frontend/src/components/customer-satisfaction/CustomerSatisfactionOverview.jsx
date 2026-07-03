@@ -23,16 +23,12 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  Badge,
   Progress,
-  Button,
 } from "../ui";
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import {
   SATISFACTION_LEVELS,
-  SURVEY_STATUS,
-  CHART_COLORS,
 } from "@/lib/constants/customer";
 
 const CustomerSatisfactionOverview = ({ data, loading: _loading, onRefresh: _onRefresh }) => {

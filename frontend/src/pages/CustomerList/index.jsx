@@ -3,7 +3,7 @@
  */
 
 import { useState, useMemo, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Building2,
@@ -18,6 +18,7 @@ import { CustomerCard } from "../../components/sales"
 import { useCustomerList } from "./hooks"
 import { customerApi } from "../../services/api"
 import { toast } from "sonner"
+import { confirmAction } from "../../lib/confirmAction"
 
 import { normalizeCustomer } from "./utils"
 import { StatsRow } from "./StatsRow"
@@ -28,7 +29,7 @@ import { CustomerDetailPanel } from "./CustomerDetailPanel"
 
 export default function CustomerList() {
   const navigate = useNavigate();
-  const { customers: rawCustomers, setPagination, loadCustomers } = useCustomerList()
+  const { customers: rawCustomers, setPagination, loadCustomers, deleteCustomer } = useCustomerList()
   const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("all");
@@ -37,6 +38,17 @@ export default function CustomerList() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [creating, setCreating] = useState(false);
+  // 命令栏"新建客户"动作：带 ai_hint 进来时自动打开新建对话框并 AI 预填
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [autofillHint, setAutofillHint] = useState("");
+  useEffect(() => {
+    const hint = searchParams.get("ai_hint");
+    if (hint) {
+      setAutofillHint(hint);
+      setShowCreateDialog(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
   const [createForm, setCreateForm] = useState({
     customer_name: "",
     short_name: "",
@@ -144,6 +156,31 @@ export default function CustomerList() {
     }
   };
 
+  const handleDeleteCustomer = async (customer) => {
+    if (!customer?.id) {
+      return;
+    }
+
+    const confirmed = await confirmAction({
+      title: "确认删除客户",
+      description: `确定要删除客户「${customer.name || customer.shortName || customer.id}」吗？此操作不可撤销。`,
+      confirmText: "删除",
+      variant: "destructive",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    const result = await deleteCustomer(customer.id);
+    if (result.success) {
+      toast.success("客户删除成功");
+      return;
+    }
+
+    toast.error(result.error || "删除客户失败");
+  };
+
   return (
     <motion.div
       variants={staggerContainer}
@@ -210,6 +247,7 @@ export default function CustomerList() {
           <CustomerTable
             customers={filteredCustomers}
             onCustomerClick={handleCustomerClick}
+            onDeleteCustomer={handleDeleteCustomer}
           />
         )}
 
@@ -239,12 +277,16 @@ export default function CustomerList() {
       {/* Create Customer Dialog */}
       <CreateDialog
         open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
+        onOpenChange={(open) => {
+          setShowCreateDialog(open);
+          if (!open) setAutofillHint("");
+        }}
         createForm={createForm}
         setCreateForm={setCreateForm}
         onSubmit={handleCreateCustomer}
         creating={creating}
         onReset={resetCreateForm}
+        autofillHint={autofillHint}
       />
     </motion.div>
   );

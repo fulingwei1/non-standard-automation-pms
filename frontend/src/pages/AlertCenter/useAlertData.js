@@ -366,13 +366,13 @@ export default function useAlertData() {
   const handleQuickAction = useCallback((action) => {
     switch (action) {
       case 'createAlert':
-        navigate('/alerts/create');
+        navigate('/alerts');
         break;
       case 'manageRules':
-        navigate('/alerts/rules');
+        navigate('/alert-rules');
         break;
       case 'notificationSettings':
-        navigate('/alerts/notifications');
+        navigate('/alert-subscription');
         break;
       case 'exportReport':
         handleExportExcel();

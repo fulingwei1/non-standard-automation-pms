@@ -10,6 +10,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -30,6 +31,7 @@ export default function CreateOrderDialog({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>新建工单</DialogTitle>
+          <DialogDescription>录入工单任务、项目、物料、数量和计划日期。</DialogDescription>
         </DialogHeader>
         <DialogBody>
           <div className="space-y-4">

@@ -148,11 +148,15 @@ export default function CreateTeamDialog({
               }
             >
               <option value="">不指定</option>
-              {(teamMembers || []).map((member) => (
-                <option key={member.user_id} value={member.user_id}>
-                  {member.user_name || member.name || `用户${member.user_id}`}
-                </option>
-              ))}
+              {(teamMembers || []).map((member, index) => {
+                const memberId = member.user_id ?? member.id;
+                if (!memberId) {return null;}
+                return (
+                  <option key={`${memberId}-${index}`} value={memberId}>
+                    {member.user_name || member.name || `用户${memberId}`}
+                  </option>
+                );
+              })}
             </select>
           </div>
 

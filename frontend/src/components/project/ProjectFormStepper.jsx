@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogBody,
   DialogFooter,
 } from "../ui";
@@ -26,8 +27,6 @@ import {
   DollarSign,
   Calendar,
   FileText,
-  Loader2,
-  CloudOff,
   Cloud,
   CheckCircle2,
 } from "lucide-react";
@@ -69,6 +68,45 @@ const STEPS = [
 ];
 
 // 项目类型选项已移至 BasicInfoStep 组件
+
+const nullableNumberFields = [
+  "customer_id",
+  "pm_id",
+  "template_id",
+  "stage_template_id",
+];
+
+const nullableDateFields = [
+  "contract_date",
+  "planned_start_date",
+  "planned_end_date",
+];
+
+const moneyFields = ["contract_amount", "budget_amount"];
+
+export const normalizeProjectFormData = (data) => {
+  const normalized = { ...data };
+
+  nullableNumberFields.forEach((field) => {
+    const value = normalized[field];
+    normalized[field] = value === "" || value === undefined || value === null
+      ? null
+      : Number(value);
+  });
+
+  nullableDateFields.forEach((field) => {
+    normalized[field] = normalized[field] || null;
+  });
+
+  moneyFields.forEach((field) => {
+    const value = normalized[field];
+    normalized[field] = value === "" || value === undefined || value === null
+      ? 0
+      : Number(value);
+  });
+
+  return normalized;
+};
 
 export default function ProjectFormStepper({
   open,
@@ -215,7 +253,8 @@ export default function ProjectFormStepper({
 
   // 项目编码唯一性检查
   const handleCodeBlur = async () => {
-    if (!formData.project_code || initialData.id) {return;}
+    const projectCode = formData.project_code?.trim();
+    if (!projectCode || initialData.id) {return;}
 
     setValidatingCode(true);
     setCodeError("");
@@ -223,9 +262,13 @@ export default function ProjectFormStepper({
     try {
       // 检查编码是否已存在
       const response = await projectApi.list({
-        project_code: formData.project_code,
+        keyword: projectCode,
       });
-      if (response.data?.items?.length > 0) {
+      const projects = response.data?.items || response.data || [];
+      const hasExactCode = (projects || []).some(
+        (project) => project.project_code === projectCode,
+      );
+      if (hasExactCode) {
         setCodeError("项目编码已存在，请使用其他编码");
       }
     } catch (err) {
@@ -332,7 +375,7 @@ export default function ProjectFormStepper({
 
     setLoading(true);
     try {
-      await onSubmit(formData);
+      await onSubmit(normalizeProjectFormData(formData));
       clearDraft();
       onOpenChange(false);
     } catch (err) {
@@ -405,6 +448,9 @@ export default function ProjectFormStepper({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{initialData.id ? "编辑项目" : "新建项目"}</DialogTitle>
+          <DialogDescription className="sr-only">
+            分步骤填写项目基础信息、客户信息、财务信息和时间节点。
+          </DialogDescription>
         </DialogHeader>
 
         {/* 步骤指示器 */}

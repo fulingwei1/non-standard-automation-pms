@@ -36,10 +36,8 @@ import {
   TrendingUp,
   Calendar,
   User,
-  FileText,
   Camera,
   Signature,
-  X,
   RefreshCw,
 } from "lucide-react";
 

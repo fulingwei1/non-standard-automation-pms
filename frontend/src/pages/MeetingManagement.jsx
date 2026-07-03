@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
+import dayjs from "dayjs";
 import {
   Calendar,
   Users,
@@ -24,7 +25,6 @@ import {
   Form,
   DatePicker,
   Typography,
-  Tabs,
   message,
 } from "antd";
 
@@ -36,6 +36,18 @@ import { pmoApi } from "../services/api";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
+
+const toDayjsValue = (value) => {
+  if (!value) return undefined;
+  if (dayjs.isDayjs(value)) return value;
+  const parsed = dayjs(value);
+  return parsed.isValid() ? parsed : undefined;
+};
+
+const formatMeetingDate = (value) => {
+  if (!value) return value;
+  return typeof value.format === "function" ? value.format("YYYY-MM-DD HH:mm") : value;
+};
 
 const MeetingManagement = () => {
   const [loading, setLoading] = useState(false);
@@ -89,10 +101,10 @@ const MeetingManagement = () => {
     try {
       const values = await createForm.validateFields();
       setSubmitting(true);
-      if (values.meeting_date) {
-        values.meeting_date = values.meeting_date.format("YYYY-MM-DD HH:mm");
-      }
-      await pmoApi.meetings.create(values);
+      await pmoApi.meetings.create({
+        ...values,
+        meeting_date: formatMeetingDate(values.meeting_date),
+      });
       message.success("会议创建成功");
       setCreateModalOpen(false);
       createForm.resetFields();
@@ -119,7 +131,10 @@ const MeetingManagement = () => {
   // 编辑会议
   const handleEdit = (record) => {
     setSelectedMeeting(record);
-    editForm.setFieldsValue(record);
+    editForm.setFieldsValue({
+      ...record,
+      meeting_date: toDayjsValue(record.meeting_date),
+    });
     setEditModalOpen(true);
   };
 
@@ -127,10 +142,10 @@ const MeetingManagement = () => {
     try {
       const values = await editForm.validateFields();
       setSubmitting(true);
-      if (values.meeting_date?.format) {
-        values.meeting_date = values.meeting_date.format("YYYY-MM-DD HH:mm");
-      }
-      await pmoApi.meetings.update(selectedMeeting.id, values);
+      await pmoApi.meetings.update(selectedMeeting.id, {
+        ...values,
+        meeting_date: formatMeetingDate(values.meeting_date),
+      });
       message.success("会议更新成功");
       setEditModalOpen(false);
       editForm.resetFields();

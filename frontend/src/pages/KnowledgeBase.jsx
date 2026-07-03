@@ -74,6 +74,7 @@ const { TextArea } = Input;
 
 const KnowledgeBase = () => {
   const [createForm] = Form.useForm();
+  const [messageApi, messageContextHolder] = message.useMessage();
 
   // 状态管理
   const [loading, setLoading] = useState(false);
@@ -169,7 +170,7 @@ const KnowledgeBase = () => {
       setCategories(defaultCategories);
     } catch (error) {
       console.error('加载知识库数据失败:', error);
-      message.error('加载数据失败');
+      messageApi.error('加载数据失败');
     } finally {
       setLoading(false);
     }
@@ -195,7 +196,7 @@ const KnowledgeBase = () => {
 
   // 事件处理
   const _handleUploadDocument = () => {
-    message.info('当前页面暂未接入附件上传，请先使用“创建文档”录入文本内容。');
+    messageApi.info('当前页面暂未接入附件上传，请先使用“创建文档”录入文本内容。');
   };
 
   const handleCreateDocument = () => {
@@ -265,14 +266,14 @@ const KnowledgeBase = () => {
         return [savedDocument, ...(prev || [])];
       });
 
-      message.success(editingDocument?.id ? '文档更新成功' : '文档创建成功');
+      messageApi.success(editingDocument?.id ? '文档更新成功' : '文档创建成功');
       handleCloseCreateModal();
     } catch (error) {
       if (error?.errorFields) {
         return;
       }
       console.error('保存知识库文档失败:', error);
-      message.error(error?.response?.data?.detail || error?.message || '保存失败');
+      messageApi.error(error?.response?.data?.detail || error?.message || '保存失败');
     } finally {
       setSubmitting(false);
     }
@@ -284,10 +285,10 @@ const KnowledgeBase = () => {
       // 调用真实删除API
       await serviceApi.knowledgeBase.delete(docId);
       setDocuments((documents || []).filter((d) => d.id !== docId));
-      message.success('删除成功');
+      messageApi.success('删除成功');
     } catch (error) {
       console.error('删除文档失败:', error);
-      message.error('删除失败');
+      messageApi.error('删除失败');
     } finally {
       setLoading(false);
     }
@@ -299,7 +300,7 @@ const KnowledgeBase = () => {
     { ...doc, isFavorite: !doc.isFavorite } :
     doc
     ));
-    message.success('收藏状态更新成功');
+    messageApi.success('收藏状态更新成功');
   };
 
   const handleDocumentView = (doc) => {
@@ -313,7 +314,7 @@ const KnowledgeBase = () => {
   };
 
   const handleDownload = (doc) => {
-    message.success(`正在下载: ${doc.title}`);
+    messageApi.success(`正在下载: ${doc.title}`);
     // 更新下载次数
     setDocuments((documents || []).map((d) =>
     d.id === doc.id ?
@@ -502,6 +503,7 @@ const KnowledgeBase = () => {
       transition={{ duration: 0.5 }}
       className="knowledge-base-container"
       style={{ padding: '24px', minHeight: '100vh' }}>
+      {messageContextHolder}
 
       {/* 页面头部 */}
       <div className="page-header" style={{ marginBottom: '24px' }}>
@@ -628,7 +630,7 @@ const KnowledgeBase = () => {
                 return;
               }
               if (type === 'export') {
-                message.info('批量导出功能开发中');
+                messageApi.info('批量导出功能开发中');
                 return;
               }
               if (type === 'favorites') {
@@ -721,7 +723,7 @@ const KnowledgeBase = () => {
         onCancel={handleCloseCreateModal}
         onOk={handleSubmitDocument}
         confirmLoading={submitting}
-        destroyOnHidden
+        forceRender
         okText={editingDocument ? '保存' : '创建'}
         cancelText="取消"
         width={720}>

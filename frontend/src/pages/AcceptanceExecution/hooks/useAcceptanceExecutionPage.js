@@ -77,14 +77,19 @@ export function useAcceptanceExecutionPage(id) {
             fetchItems();
             fetchIssues();
         }
-    }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [id]);
 
     // ── Actions ─────────────────────────────────────────────────────────────
 
     const openItemDialog = (item) => {
+        const resultStatus =
+            !item.result_status || item.result_status === 'PENDING'
+                ? 'PASSED'
+                : item.result_status;
+
         setSelectedItem(item);
         setItemResult({
-            result_status: item.result_status || 'PASSED',
+            result_status: resultStatus,
             actual_value: item.actual_value || '',
             deviation: item.deviation || '',
             remark: item.remark || '',

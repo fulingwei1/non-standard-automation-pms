@@ -1,17 +1,17 @@
-describe.skip("/**
+/**
  * PurchaseOrders 组件测试
  * 测试覆盖：采购订单列表、订单状态管理、筛选搜索、订单操作、统计数据
  */
 
-describe.skip("
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-describe.skip("
+
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-describe.skip("
+
 import { MemoryRouter } from 'react-router-dom';
-describe.skip("
+
 import PurchaseOrders from '../PurchaseOrders/index';
-describe.skip("
+
 import api from '../../services/api';
 
 // Mock API

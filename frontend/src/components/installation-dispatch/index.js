@@ -8,6 +8,7 @@ export { default as AssignDispatchDialog } from './AssignDispatchDialog';
 export { default as DispatchDetailDialog } from './DispatchDetailDialog';
 export { default as UpdateProgressDialog } from './UpdateProgressDialog';
 export { default as CompleteDispatchDialog } from './CompleteDispatchDialog';
+export { default as FieldServiceWorkLogDialog } from './FieldServiceWorkLogDialog';
 export * from '@/lib/constants/installationDispatch';
 
 // 主导出

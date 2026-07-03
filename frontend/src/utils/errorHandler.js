@@ -28,8 +28,21 @@ export function getErrorMessage(error) {
   // Axios error with response
   if (error.response) {
     const { data, status } = error.response;
-    if (data?.detail) return data.detail;
+    if (typeof data?.detail === 'string') return data.detail;
     if (data?.message) return data.message;
+    if (Array.isArray(data?.detail)) {
+      return data.detail
+        .map((item) => {
+          if (typeof item === 'string') return item;
+          if (item?.field && item?.message) return `${item.field}: ${item.message}`;
+          if (item?.message) return item.message;
+          return JSON.stringify(item);
+        })
+        .join('; ');
+    }
+    if (data?.detail && typeof data.detail === 'object') {
+      return JSON.stringify(data.detail);
+    }
 
     const statusMessages = {
       400: '请求参数错误',
@@ -163,11 +176,12 @@ export const getApiErrorMessage = (error) => {
 
   if (error.response) {
     const { status, data } = error.response;
+    if (typeof data?.detail === 'string') return data.detail;
     if (data?.message) return formatErrorMessage(ERROR_TYPES.SERVER, data.message);
     if (status === 401) return formatErrorMessage(ERROR_TYPES.AUTH, '未授权，请重新登录');
     if (status === 403) return formatErrorMessage(ERROR_TYPES.PERMISSION, '权限不足');
     if (status === 404) return formatErrorMessage(ERROR_TYPES.NOT_FOUND, '资源未找到');
-    if (status === 422) return formatErrorMessage(ERROR_TYPES.VALIDATION, data?.detail || '请求参数错误');
+    if (status === 422) return formatErrorMessage(ERROR_TYPES.VALIDATION, getErrorMessage(error) || '请求参数错误');
     if (status >= 500) return formatErrorMessage(ERROR_TYPES.SERVER, '服务器内部错误');
   }
 

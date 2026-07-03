@@ -65,8 +65,8 @@ export default function VehicleManagement() {
   const filteredVehicles = useMemo(() => {
     return (vehicles || []).filter((vehicle) => {
       const matchSearch =
-      vehicle.plateNumber.includes(searchText) ||
-      vehicle.brand.includes(searchText) ||
+      (vehicle.plateNumber || "").includes(searchText) ||
+      (vehicle.brand || "").includes(searchText) ||
       vehicle.driver && vehicle.driver.includes(searchText);
       const matchStatus =
       statusFilter === "all" || vehicle.status === statusFilter;
@@ -81,7 +81,8 @@ export default function VehicleManagement() {
     const maintenance = (vehicles || []).filter(
       (v) => v.status === "maintenance"
     ).length;
-    return { total, inUse, available, maintenance };
+    const usageRate = total > 0 ? inUse / total * 100 : 0;
+    return { total, inUse, available, maintenance, usageRate };
   }, [vehicles]);
 
   return (
@@ -201,7 +202,7 @@ export default function VehicleManagement() {
                   { month: "2024-12", amount: 72 },
                   {
                     month: "2025-01",
-                    amount: stats.inUse / stats.total * 100
+                    amount: stats.usageRate
                   }]
                   }
                   valueKey="amount"
@@ -216,7 +217,7 @@ export default function VehicleManagement() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <TrendComparisonCard
               title="车辆使用率"
-              current={stats.inUse / stats.total * 100}
+              current={stats.usageRate}
               previous={72}
               unit="%" />
 
@@ -295,7 +296,7 @@ export default function VehicleManagement() {
                         <div>
                           <p className="text-slate-400">里程数</p>
                           <p className="text-white font-medium">
-                            {vehicle.mileage.toLocaleString()} km
+                            {(vehicle.mileage || 0).toLocaleString()} km
                           </p>
                         </div>
                         <div>
@@ -327,7 +328,7 @@ export default function VehicleManagement() {
                       {vehicle.nextMaintenance &&
                     <div className="text-xs text-amber-400 mt-2">
                           下次保养: {vehicle.nextMaintenance} (里程:{" "}
-                          {vehicle.nextMaintenanceMileage.toLocaleString()} km)
+                          {(vehicle.nextMaintenanceMileage || 0).toLocaleString()} km)
                     </div>
                     }
                       {vehicle.maintenanceReason &&

@@ -1,17 +1,17 @@
-describe.skip("/**
+/**
  * PaymentManagement 组件测试
  * 测试覆盖：回款记录显示、筛选功能、回款状态管理、统计数据、导出功能
  */
 
-describe.skip("
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-describe.skip("
+
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-describe.skip("
+
 import { MemoryRouter } from 'react-router-dom';
-describe.skip("
+
 import PaymentManagement from '../PaymentManagement/index';
-describe.skip("
+
 import api from '../../services/api';
 
 // Mock API

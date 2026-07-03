@@ -26,7 +26,7 @@ export default function ReportsTab({ id }) {
             variant="outline"
             className="h-auto p-4 flex flex-col items-start"
             onClick={() =>
-              navigate(`/rd-projects/${id}/reports/auxiliary-ledger`)
+              navigate(`/rd-projects/${id}/reports?type=auxiliary-ledger`)
             }
           >
             <FileText className="h-5 w-5 mb-2" />
@@ -39,7 +39,7 @@ export default function ReportsTab({ id }) {
             variant="outline"
             className="h-auto p-4 flex flex-col items-start"
             onClick={() =>
-              navigate(`/rd-projects/${id}/reports/deduction-detail`)
+              navigate(`/rd-projects/${id}/reports?type=deduction-detail`)
             }
           >
             <Calculator className="h-5 w-5 mb-2" />
@@ -52,7 +52,7 @@ export default function ReportsTab({ id }) {
             variant="outline"
             className="h-auto p-4 flex flex-col items-start"
             onClick={() =>
-              navigate(`/rd-projects/${id}/reports/high-tech`)
+              navigate(`/rd-projects/${id}/reports?type=high-tech`)
             }
           >
             <TrendingUp className="h-5 w-5 mb-2" />
@@ -65,7 +65,7 @@ export default function ReportsTab({ id }) {
             variant="outline"
             className="h-auto p-4 flex flex-col items-start"
             onClick={() =>
-              navigate(`/rd-projects/${id}/reports/intensity`)
+              navigate(`/rd-projects/${id}/reports?type=intensity`)
             }
           >
             <BarChart3 className="h-5 w-5 mb-2" />
@@ -78,7 +78,7 @@ export default function ReportsTab({ id }) {
             variant="outline"
             className="h-auto p-4 flex flex-col items-start"
             onClick={() =>
-              navigate(`/rd-projects/${id}/reports/personnel`)
+              navigate(`/rd-projects/${id}/reports?type=personnel`)
             }
           >
             <Users className="h-5 w-5 mb-2" />

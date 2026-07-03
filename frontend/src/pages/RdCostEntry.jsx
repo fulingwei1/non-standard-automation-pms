@@ -16,6 +16,7 @@ import {
   SelectItem,
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -38,6 +39,9 @@ const _costTypeMap = {
   AMORTIZATION: { label: "摊销费用", color: "pink" },
   OTHER: { label: "其他费用", color: "gray" }
 };
+
+const getCostTypeCode = (type) => type?.cost_type_code || type?.type_code || type?.category;
+const getCostTypeName = (type) => type?.cost_type_name || type?.type_name || type?.type_code || "未知类型";
 
 export default function RdCostEntry() {
   const { id } = useParams();
@@ -190,7 +194,7 @@ export default function RdCostEntry() {
   const selectedCostType = (costTypes || []).find(
     (t) => t.id === parseInt(formData.cost_type_id)
   );
-  const isLaborType = selectedCostType?.cost_type_code === "LABOR";
+  const isLaborType = getCostTypeCode(selectedCostType) === "LABOR";
 
   return (
     <motion.div initial="hidden" animate="visible">
@@ -270,7 +274,7 @@ export default function RdCostEntry() {
                           {cost.cost_no || `费用-${cost.id}`}
                         </p>
                         <Badge variant="outline" className="text-xs">
-                          {costType?.cost_type_name || "未知类型"}
+                          {getCostTypeName(costType)}
                         </Badge>
                         {cost.cost_date &&
                       <Badge variant="secondary" className="text-xs">
@@ -323,6 +327,7 @@ export default function RdCostEntry() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>录入研发费用</DialogTitle>
+            <DialogDescription>登记研发项目的人工、材料、折旧或其他费用。</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <DialogBody className="space-y-4">
@@ -344,7 +349,7 @@ export default function RdCostEntry() {
                       <SelectItem value="__empty__">请选择费用类型</SelectItem>
                       {(costTypes || []).map((type) =>
                       <SelectItem key={type.id} value={type.id.toString()}>
-                          {type.cost_type_name}
+                          {getCostTypeName(type)}
                       </SelectItem>
                       )}
                     </SelectContent>

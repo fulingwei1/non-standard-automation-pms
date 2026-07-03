@@ -147,7 +147,7 @@ export default function RealTimeMarginPanel({ project, onRefresh }) {
       console.error("获取成本汇总失败:", error);
       // 备选方案：从成本列表计算
       try {
-        const costsRes = await api.get(`/projects/${project.id}/costs`, {
+        const costsRes = await api.get(`/projects/${project.id}/costs/`, {
           params: { page_size: 1000 },
         });
         const costs = costsRes.data?.data?.items || costsRes.data?.items || [];

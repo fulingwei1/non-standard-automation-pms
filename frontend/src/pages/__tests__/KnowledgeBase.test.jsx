@@ -21,6 +21,7 @@ const { knowledgeBaseApi, serviceApiMock, antMessage } = vi.hoisted(() => ({
     success: vi.fn(),
     error: vi.fn(),
     info: vi.fn(),
+    useMessage: vi.fn(),
   },
 }));
 
@@ -200,6 +201,7 @@ describe("KnowledgeBase", () => {
     knowledgeBaseApi.create.mockResolvedValue({ data: { id: 3 } });
     knowledgeBaseApi.update.mockResolvedValue({ data: { id: 1 } });
     knowledgeBaseApi.delete.mockResolvedValue({ data: { success: true } });
+    antMessage.useMessage.mockReturnValue([antMessage, <div key="message-holder" data-testid="message-holder" />]);
   });
 
   afterEach(() => {

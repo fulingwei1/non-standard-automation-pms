@@ -24,6 +24,8 @@ export default function PlanFilters({
   projects,
   workshops,
 }) {
+  const clearable = (setter) => (value) => setter(value === "all" ? "" : value);
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -33,14 +35,14 @@ export default function PlanFilters({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
             <Input
               placeholder="搜索计划编号、名称..."
-              value={searchKeyword || "unknown"}
+              value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               className="pl-10"
             />
           </div>
 
           {/* Type filter */}
-          <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+          <Select value={filterType || "all"} onValueChange={clearable(setFilterType)}>
             <SelectTrigger>
               <SelectValue placeholder="选择类型" />
             </SelectTrigger>
@@ -55,7 +57,7 @@ export default function PlanFilters({
           </Select>
 
           {/* Project filter */}
-          <Select value={filterProject || "unknown"} onValueChange={setFilterProject}>
+          <Select value={filterProject || "all"} onValueChange={clearable(setFilterProject)}>
             <SelectTrigger>
               <SelectValue placeholder="选择项目" />
             </SelectTrigger>
@@ -70,7 +72,7 @@ export default function PlanFilters({
           </Select>
 
           {/* Workshop filter */}
-          <Select value={filterWorkshop || "unknown"} onValueChange={setFilterWorkshop}>
+          <Select value={filterWorkshop || "all"} onValueChange={clearable(setFilterWorkshop)}>
             <SelectTrigger>
               <SelectValue placeholder="选择车间" />
             </SelectTrigger>
@@ -85,7 +87,7 @@ export default function PlanFilters({
           </Select>
 
           {/* Status filter */}
-          <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+          <Select value={filterStatus || "all"} onValueChange={clearable(setFilterStatus)}>
             <SelectTrigger>
               <SelectValue placeholder="选择状态" />
             </SelectTrigger>

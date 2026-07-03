@@ -2,6 +2,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Package, Plus } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import { Button } from "../../components/ui/button";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import {
+    Dialog,
+    DialogBody,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "../../components/ui/dialog";
 import { fadeIn } from "../../lib/animations";
 import { ApiIntegrationError } from "../../components/ui";
 import { PurchaseOrdersOverview, PAYMENT_TERMS, SHIPPING_METHODS } from "../../components/purchase-orders";
@@ -38,6 +49,8 @@ export default function PurchaseOrders() {
         setShowDeleteModal,
         showReceiveModal,
         setShowReceiveModal,
+        showApprovalModal,
+        setShowApprovalModal,
         selectedOrder,
         setSelectedOrder,
         suppliers,
@@ -48,10 +61,13 @@ export default function PurchaseOrders() {
         setEditOrder,
         receiveData,
         setReceiveData,
+        approvalData,
+        setApprovalData,
         handleCreateOrder,
         handleEditOrder,
         handleDeleteOrder,
         handleSubmitApproval,
+        handleApproveOrder,
         handleReceiveGoods,
         handleExportData,
         refresh
@@ -132,6 +148,8 @@ export default function PurchaseOrders() {
                                             supplier_id: order.supplierId || original.supplier_id || "",
                                             project_id: order.projectId || original.project_id || "",
                                             items: order.items || original.items || [],
+                                            expected_date: order.expectedDate || original.required_date || "",
+                                            required_date: order.expectedDate || original.required_date || "",
                                             payment_terms: order.paymentTerms || original.payment_terms || PAYMENT_TERMS.NET30,
                                             shipping_method: order.shippingMethod || original.shipping_method || SHIPPING_METHODS.STANDARD,
                                             notes: order.notes || original.notes || original.remark || "",
@@ -147,7 +165,15 @@ export default function PurchaseOrders() {
                                         setSelectedOrder(order);
                                         setShowReceiveModal(true);
                                     }}
-                                    onApprove={(order) => handleSubmitApproval(order)}
+                                    onSubmitApproval={(order) => handleSubmitApproval(order)}
+                                    onApprovalDecision={(order, approved) => {
+                                        setSelectedOrder(order);
+                                        setApprovalData({
+                                            approved,
+                                            note: approved ? "同意采购订单执行" : ""
+                                        });
+                                        setShowApprovalModal(true);
+                                    }}
                                 />
                             </motion.div>
                         ))}
@@ -219,6 +245,78 @@ export default function PurchaseOrders() {
                     onChangeReceiveData={setReceiveData}
                     onConfirm={handleReceiveGoods}
                 />
+
+                <Dialog
+                    open={showApprovalModal}
+                    onOpenChange={(open) => {
+                        setShowApprovalModal(open);
+                        if (!open) {
+                            setSelectedOrder(null);
+                            setApprovalData({ approved: true, note: "" });
+                        }
+                    }}
+                >
+                    <DialogContent className="sm:max-w-[520px] bg-slate-800/95 border border-slate-700/50">
+                        <DialogHeader>
+                            <DialogTitle className="text-white">审批采购订单</DialogTitle>
+                            <DialogDescription className="text-slate-400">
+                                通过后订单进入可收货状态；驳回后订单退回为已驳回状态。
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogBody className="space-y-4">
+                            <div className="rounded-lg border border-slate-700/60 bg-slate-900/50 p-4 text-sm">
+                                <div className="flex items-center justify-between gap-3">
+                                    <span className="text-slate-400">订单编号</span>
+                                    <span className="font-mono text-white">
+                                        {selectedOrder?.orderNo || selectedOrder?.id || "-"}
+                                    </span>
+                                </div>
+                                <div className="mt-2 flex items-center justify-between gap-3">
+                                    <span className="text-slate-400">供应商</span>
+                                    <span className="text-white">{selectedOrder?.supplierName || "-"}</span>
+                                </div>
+                                <div className="mt-2 flex items-center justify-between gap-3">
+                                    <span className="text-slate-400">审批动作</span>
+                                    <span className={approvalData.approved ? "text-emerald-300" : "text-red-300"}>
+                                        {approvalData.approved ? "审批通过" : "审批驳回"}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-slate-300">审批意见</Label>
+                                <Textarea
+                                    value={approvalData.note}
+                                    onChange={(event) =>
+                                        setApprovalData((prev) => ({ ...prev, note: event.target.value }))
+                                    }
+                                    placeholder={approvalData.approved ? "填写通过意见（可选）" : "请填写驳回原因"}
+                                    className="bg-slate-900 border-slate-700 text-white"
+                                    rows={4}
+                                />
+                            </div>
+                        </DialogBody>
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => setShowApprovalModal(false)}
+                            >
+                                取消
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleApproveOrder}
+                                className={
+                                    approvalData.approved
+                                        ? "bg-emerald-600 hover:bg-emerald-700"
+                                        : "bg-red-600 hover:bg-red-700"
+                                }
+                            >
+                                {approvalData.approved ? "审批通过" : "审批驳回"}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
                 {selectedOrder && (
                     <PurchaseOrderDeleteConfirmDialog

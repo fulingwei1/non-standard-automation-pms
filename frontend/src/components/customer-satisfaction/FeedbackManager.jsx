@@ -12,16 +12,10 @@ import {
   CardTitle,
   Button,
   Badge,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
 } from "../ui";
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
-import { FEEDBACK_CATEGORIES, SATISFACTION_LEVELS } from "@/lib/constants/customer";
+import { FEEDBACK_CATEGORIES } from "@/lib/constants/customer";
 
 const FeedbackManager = ({
   responses = [],

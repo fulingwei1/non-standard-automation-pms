@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter, useParams, useSearchParams } from "react-router-dom";
+import { MemoryRouter, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import PurchaseRequestNew from "../PurchaseRequestNew";
 import ProjectDeliveryScheduleCreate from "../ProjectDeliverySchedule/ScheduleCreate";
@@ -66,9 +66,12 @@ function renderWithRouteContext(element, { params = {}, search = "" } = {}) {
 }
 
 describe("execution tail project context", () => {
+  const navigateMock = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
     useParams.mockReturnValue({});
+    useNavigate.mockReturnValue(navigateMock);
     useSearchParams.mockReturnValue([new URLSearchParams(), vi.fn()]);
     vi.spyOn(window, "alert").mockImplementation(() => {});
     projectApi.list.mockResolvedValue({
@@ -147,6 +150,20 @@ describe("execution tail project context", () => {
     await waitFor(() => {
       expect(projectDeliveryApi.getGanttData).toHaveBeenCalledWith(7);
     });
+  });
+
+  it("starts a delivery plan from the project delivery page context", async () => {
+    renderWithRouteContext(
+      <ProjectDeliveryScheduleGantt />,
+      { params: { projectId: "42" } }
+    );
+
+    const generateButton = await screen.findByRole("button", { name: "生成发货计划" });
+    fireEvent.click(generateButton);
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      "/pmc/delivery-orders/new?project_id=42"
+    );
   });
 
   it("defaults material reservation creation to the project context", async () => {

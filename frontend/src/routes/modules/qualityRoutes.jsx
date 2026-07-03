@@ -65,6 +65,14 @@ export function QualityRoutes() {
         }
       />
       <Route
+        path="/quality/issues/new"
+        element={
+          <QualityProtectedRoute>
+            <QualityIssues />
+          </QualityProtectedRoute>
+        }
+      />
+      <Route
         path="/quality/issues/:id"
         element={
           <QualityProtectedRoute>
@@ -84,6 +92,14 @@ export function QualityRoutes() {
       {/* 验收管理 */}
       <Route
         path="/quality/acceptance"
+        element={
+          <QualityProtectedRoute>
+            <AcceptanceList />
+          </QualityProtectedRoute>
+        }
+      />
+      <Route
+        path="/quality/acceptance/new"
         element={
           <QualityProtectedRoute>
             <AcceptanceList />

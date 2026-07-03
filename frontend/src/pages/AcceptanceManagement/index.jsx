@@ -7,6 +7,7 @@
 
 import { motion } from "framer-motion";
 import { ClipboardCheck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { PageHeader } from "../../components/layout";
 
@@ -18,6 +19,7 @@ import CreateFormDialog from "./CreateFormDialog";
 import DetailDialog from "./DetailDialog";
 
 const AcceptanceManagement = () => {
+  const navigate = useNavigate();
   const {
     loading,
     projects,
@@ -34,6 +36,7 @@ const AcceptanceManagement = () => {
     setShowDetailDialog,
     handleCreate,
     handleViewDetail,
+    handleStart,
     loadRecords,
   } = useAcceptanceManagement();
 
@@ -69,6 +72,8 @@ const AcceptanceManagement = () => {
         loading={loading}
         filteredRecords={filteredRecords}
         onViewDetail={handleViewDetail}
+        onStart={handleStart}
+        onExecute={(id) => navigate(`/acceptance-orders/${id}/execute`)}
       />
 
       {/* 创建对话框 */}

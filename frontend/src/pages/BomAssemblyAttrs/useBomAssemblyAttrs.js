@@ -72,7 +72,8 @@ export function useBomAssemblyAttrs() {
   const fetchStages = async () => {
     try {
       const res = await assemblyKitApi.getStages();
-      setStages(res.data || res || []);
+      const data = res.data || res || [];
+      setStages(Array.isArray(data) ? data : data.items || []);
     } catch (error) {
       console.error("Failed to fetch stages:", error);
     }
@@ -81,7 +82,8 @@ export function useBomAssemblyAttrs() {
   const fetchTemplates = async () => {
     try {
       const res = await assemblyKitApi.getTemplates();
-      setTemplates(res.data || res || []);
+      const data = res.data || res || [];
+      setTemplates(Array.isArray(data) ? data : data.items || []);
     } catch (error) {
       console.error("Failed to fetch templates:", error);
     }

@@ -4,6 +4,7 @@ import {
   BarChart as BarChartComponent,
   DualAxesChart,
 } from "../../components/charts";
+import { safePercent, toFiniteNumber } from "./numberUtils";
 
 export default function ProfitLossTab({ currentData, monthlyFinancials }) {
   return (
@@ -40,10 +41,7 @@ export default function ProfitLossTab({ currentData, monthlyFinancials }) {
               </div>
               <div className="text-sm text-slate-400 mt-2">
                 利润率:{" "}
-                {(
-                currentData.profit / currentData.revenue *
-                100).
-                toFixed(1)}
+                {safePercent(currentData.profit, currentData.revenue).toFixed(1)}
                 %
               </div>
             </div>
@@ -58,9 +56,9 @@ export default function ProfitLossTab({ currentData, monthlyFinancials }) {
           <DualAxesChart
             data={(monthlyFinancials || []).map((item) => ({
               month: item.month,
-              revenue: item.revenue,
-              profit: item.profit,
-              margin: (item.profit / item.revenue * 100).toFixed(1)
+              revenue: toFiniteNumber(item.revenue),
+              profit: toFiniteNumber(item.profit),
+              margin: safePercent(item.profit, item.revenue).toFixed(1)
             }))}
             xField="month"
             yField={["revenue", "margin"]}
@@ -104,9 +102,14 @@ export default function ProfitLossTab({ currentData, monthlyFinancials }) {
         <div className="space-y-3">
           {(monthlyFinancials || []).map((item, index) => {
             const maxRevenue = Math.max(
-              ...(monthlyFinancials || []).map((m) => m.revenue)
+              ...(monthlyFinancials || []).map((m) => toFiniteNumber(m.revenue))
             );
-            const percentage = item.revenue / maxRevenue * 100;
+            const revenue = toFiniteNumber(item.revenue);
+            const previousRevenue = toFiniteNumber(monthlyFinancials[index - 1]?.revenue);
+            const percentage = safePercent(revenue, maxRevenue);
+            const growthRate = previousRevenue > 0
+              ? Math.abs((revenue - previousRevenue) / previousRevenue * 100)
+              : 0;
             return (
               <div key={index} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
@@ -119,28 +122,23 @@ export default function ProfitLossTab({ currentData, monthlyFinancials }) {
                     <span
                       className={cn(
                         "text-xs",
-                        item.revenue >
-                        monthlyFinancials[index - 1].revenue ?
+                        revenue >
+                        previousRevenue ?
                         "text-emerald-400" :
                         "text-red-400"
                       )}>
-                        {item.revenue >
-                      monthlyFinancials[index - 1].revenue ?
+                        {revenue >
+                      previousRevenue ?
                       "↑" :
                       "↓"}
-                        {Math.abs(
-                        (item.revenue -
-                        monthlyFinancials[index - 1].revenue) /
-                        monthlyFinancials[index - 1].revenue *
-                        100
-                      ).toFixed(1)}
+                        {growthRate.toFixed(1)}
                         %
                     </span>
                     }
                   </div>
                 </div>
                 <Progress
-                  value={percentage || "unknown"}
+                  value={percentage}
                   className="h-2 bg-slate-700/50" />
               </div>);
           })}

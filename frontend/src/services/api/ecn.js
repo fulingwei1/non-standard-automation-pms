@@ -1,10 +1,16 @@
 import { api } from "./client.js";
 
+const emptyItemsResponse = () =>
+  Promise.resolve({
+    data: { items: [] },
+    formatted: { items: [] },
+  });
 
 
 export const ecnApi = {
   list: (params) => api.get("/ecns", { params }),
   get: (id) => api.get(`/ecns/${id}`),
+  getDetail: (id) => api.get(`/ecns/${id}`),
   create: (data) => api.post("/ecns", data),
   update: (id, data) => api.put(`/ecns/${id}`, data),
   submit: (id, data) => api.put(`/ecns/${id}/submit`, data || {}),
@@ -51,6 +57,21 @@ export const ecnApi = {
     api.put(`/ecns/${id}/start-execution`, data || {}),
   verify: (id, data) => api.put(`/ecns/${id}/verify`, data),
   close: (id, data) => api.put(`/ecns/${id}/close`, data || {}),
+  // Cost/material impact tracking
+  analyzeCostImpact: (id) => api.post(`/ecns/${id}/cost-impact-analysis`),
+  getCostTracking: (id) => api.get(`/ecns/${id}/cost-tracking`),
+  getCostRecords: (id, params) =>
+    api.get(`/ecns/${id}/cost-records`, { params }),
+  createCostRecord: (id, data) =>
+    api.post(`/ecns/${id}/cost-records`, { ...data, ecn_id: Number(id) }),
+  checkCostAlerts: (id, data) =>
+    api.post(`/ecns/${id}/cost-alerts`, { ...data, ecn_id: Number(id) }),
+  analyzeMaterialImpact: (id) =>
+    api.post(`/ecns/${id}/material-impact-analysis`),
+  getExecutionProgress: (id) => api.get(`/ecns/${id}/execution-progress`),
+  getStakeholders: (id) => api.get(`/ecns/${id}/stakeholders`),
+  notifyStakeholders: (id, data) =>
+    api.post(`/ecns/${id}/notify-stakeholders`, data),
   // BOM Analysis
   analyzeBomImpact: (id, params) =>
     api.post(`/ecns/${id}/analyze-bom-impact`, null, { params }),
@@ -72,6 +93,9 @@ export const ecnApi = {
     api.get(`/ecns/${id}/similar-ecns`, { params }),
   recommendSolutions: (id, params) =>
     api.get(`/ecns/${id}/recommend-solutions`, { params }),
+  getKnowledge: (id, params) =>
+    api.get(`/ecns/${id}/recommend-solutions`, { params: { top_n: 10, ...params } }),
+  getIntegrations: () => emptyItemsResponse(),
   createSolutionTemplate: (id, data) =>
     api.post(`/ecns/${id}/create-solution-template`, data),
   applySolutionTemplate: (id, templateId) =>

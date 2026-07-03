@@ -202,8 +202,8 @@ export default function AnalyticsDashboard() {
                     <CardTitle>月度立项/结项对比</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
+                    <div className="h-[300px] w-full min-w-0">
+                      <ResponsiveContainer width="100%" height={300} minWidth={0}>
                         <BarChart data={monthlyStats}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
                           <XAxis 
@@ -240,8 +240,8 @@ export default function AnalyticsDashboard() {
                     <CardTitle>项目阶段分布</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-[300px] flex items-center justify-center relative">
-                      <ResponsiveContainer width="100%" height="100%">
+                    <div className="h-[300px] w-full min-w-0 flex items-center justify-center relative">
+                      <ResponsiveContainer width="100%" height={300} minWidth={0}>
                         <PieChart>
                           <Pie
                             data={statusDistribution}
@@ -293,7 +293,7 @@ export default function AnalyticsDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="h-[250px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height={250} minWidth={0}>
                       <AreaChart data={resourceData}
                         margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                         <defs>

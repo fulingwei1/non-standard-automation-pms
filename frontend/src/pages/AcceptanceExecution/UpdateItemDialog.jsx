@@ -3,6 +3,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogBody,
     DialogFooter,
 } from '../../components/ui/dialog';
@@ -35,6 +36,9 @@ export function UpdateItemDialog({
                     <DialogTitle>
                         {selectedItem?.item_name} - 检查结果
                     </DialogTitle>
+                    <DialogDescription className="sr-only">
+                        记录检查项结果、实际值、偏差和备注。
+                    </DialogDescription>
                 </DialogHeader>
 
                 <DialogBody>

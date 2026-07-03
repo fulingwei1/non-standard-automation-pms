@@ -124,6 +124,8 @@ const emptyContractOperations = {
   collectionRate: 0,
 };
 
+const CONTRACT_OPERATION_LOOKUP_LIMIT = 10;
+
 const toNumber = (value) => Number(value || 0);
 
 const ContractManagement = () => {
@@ -226,12 +228,20 @@ const ContractManagement = () => {
 
       const shouldLoadOperations = activeTab === 'contracts';
       const transformedContracts = shouldLoadOperations
-        ? await Promise.all(
-          baseContracts.map(async (contract) => {
-            const operations = await loadContractOperations(contract.id);
-            return { ...contract, operations };
-          })
-        )
+        ? await (async () => {
+          const operationTargets = baseContracts.slice(0, CONTRACT_OPERATION_LOOKUP_LIMIT);
+          const operationEntries = await Promise.all(
+            operationTargets.map(async (contract) => [
+              contract.id,
+              await loadContractOperations(contract.id),
+            ])
+          );
+          const operationsByContractId = new Map(operationEntries);
+          return baseContracts.map((contract) => ({
+            ...contract,
+            operations: operationsByContractId.get(contract.id) || emptyContractOperations,
+          }));
+        })()
         : baseContracts;
 
       setContracts(transformedContracts);

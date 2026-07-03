@@ -2,14 +2,30 @@ import * as React from "react";
 import { cn } from "../../lib/utils";
 
 const Input = React.forwardRef(
-  ({ className, type, icon: Icon, error, value, ...props }, ref) => {
+  (
+    {
+      className,
+      type,
+      icon: Icon,
+      error,
+      value,
+      onChange,
+      readOnly,
+      defaultValue,
+      ...props
+    },
+    ref,
+  ) => {
     // Avoid passing "unknown" to date/number inputs — browsers reject it
+    const hasValue = value !== undefined && value !== null;
     const safeValue =
       value === "unknown" || value == null
         ? ""
         : type === "date" && typeof value === "string" && !/^\d{4}-\d{2}-\d{2}$/.test(value)
           ? ""
           : value;
+    const inferredReadOnly =
+      hasValue && onChange === undefined && readOnly === undefined && defaultValue === undefined;
 
     return (
       <div className="relative">
@@ -20,7 +36,10 @@ const Input = React.forwardRef(
         )}
         <input
           type={type}
-          value={safeValue}
+          {...(hasValue ? { value: safeValue } : {})}
+          onChange={onChange}
+          readOnly={inferredReadOnly ? true : readOnly}
+          defaultValue={defaultValue}
           className={cn(
             // Base styles
             "flex w-full h-11 rounded-xl text-sm",
@@ -72,10 +91,25 @@ const InputWithLabel = React.forwardRef(
 );
 InputWithLabel.displayName = "InputWithLabel";
 
-const Textarea = React.forwardRef(({ className, error, value, ...props }, ref) => {
+const Textarea = React.forwardRef(({
+  className,
+  error,
+  value,
+  onChange,
+  readOnly,
+  defaultValue,
+  ...props
+}, ref) => {
+  const hasValue = value !== undefined && value !== null;
+  const inferredReadOnly =
+    hasValue && onChange === undefined && readOnly === undefined && defaultValue === undefined;
+
   return (
     <textarea
-      value={value ?? ""}
+      {...(hasValue ? { value } : {})}
+      onChange={onChange}
+      readOnly={inferredReadOnly ? true : readOnly}
+      defaultValue={defaultValue}
       className={cn(
         "flex w-full min-h-[100px] rounded-xl text-sm",
         "bg-white/[0.03] border border-white/10",

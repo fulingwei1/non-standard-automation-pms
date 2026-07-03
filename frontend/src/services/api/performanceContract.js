@@ -8,10 +8,10 @@ import { api } from "./client.js";
 // ============================================
 export const performanceContractApi = {
   // 创建合约
-  create: (data) => api.post("/performance-contract/", null, { params: data }),
+  create: (data) => api.post("/performance-contract", null, { params: data }),
 
   // 列表查询
-  list: (params) => api.get("/performance-contract/", { params }),
+  list: (params) => api.get("/performance-contract", { params }),
 
   // 详情（含指标条目）
   get: (id) => api.get(`/performance-contract/${id}`),

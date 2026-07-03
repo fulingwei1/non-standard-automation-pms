@@ -1,7 +1,6 @@
 import { AlertCircle, RefreshCw, XCircle, Lightbulb } from "lucide-react";
 import { Card, CardContent } from "./card";
 import { Button } from "./button";
-import { Badge } from "./badge";
 import { cn } from "../../lib/utils";
 import { getFriendlyError } from "../../utils/friendlyErrors";
 
@@ -95,7 +94,6 @@ export function EmptyState({
 
 export function ApiIntegrationError({
   error,
-  apiEndpoint,
   onRetry,
   className,
 }) {

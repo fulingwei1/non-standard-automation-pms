@@ -40,10 +40,10 @@ describe("useDeliveryManagement", () => {
     routeState.params = {};
     routeState.search = "project_id=42";
     businessSupportApi.deliveryOrders.list.mockResolvedValue({
-      data: { items: [] },
+      data: { code: 200, data: { items: [] } },
     });
     businessSupportApi.deliveryOrders.statistics.mockResolvedValue({
-      data: {},
+      data: { code: 200, data: {} },
     });
   });
 
@@ -69,5 +69,50 @@ describe("useDeliveryManagement", () => {
     });
 
     expect(navigateSpy).toHaveBeenCalledWith("/pmc/delivery-orders?project_id=42");
+  });
+
+  it("opens the plan tab for the delivery plan menu route", async () => {
+    routeState.pathname = "/pmc/delivery-plan";
+    routeState.search = "";
+
+    const { result } = renderHook(() => useDeliveryManagement());
+
+    expect(result.current.activeTab).toBe("plan");
+    await waitFor(() => {
+      expect(businessSupportApi.deliveryOrders.list).toHaveBeenCalled();
+    });
+  });
+
+  it("filters in-transit menu route to shipped or in-transit deliveries", async () => {
+    routeState.search = "status=in_transit";
+    businessSupportApi.deliveryOrders.list.mockResolvedValue({
+      data: {
+        code: 200,
+        data: {
+          items: [
+            {
+              id: 1,
+              delivery_no: "DO-SHIP",
+              order_no: "SO-SHIP",
+              delivery_status: "shipped",
+            },
+            {
+              id: 2,
+              delivery_no: "DO-RECEIVED",
+              order_no: "SO-RECEIVED",
+              delivery_status: "received",
+            },
+          ],
+        },
+      },
+    });
+
+    const { result } = renderHook(() => useDeliveryManagement());
+
+    await waitFor(() => {
+      expect(result.current.filteredDeliveries).toHaveLength(1);
+    });
+    expect(result.current.filteredDeliveries[0].deliveryNo).toBe("DO-SHIP");
+    expect(result.current.activeTab).toBe("tracking");
   });
 });

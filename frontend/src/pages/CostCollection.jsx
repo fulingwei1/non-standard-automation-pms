@@ -8,13 +8,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
-  ArrowDownToLine,
   Package,
   Wrench,
   CheckCircle2,
   Clock,
   RefreshCw,
-  DollarSign,
   FolderOpen,
   Zap,
 } from "lucide-react";

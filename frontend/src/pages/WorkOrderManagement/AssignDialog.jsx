@@ -3,6 +3,7 @@ import { Input } from "../../components/ui/input";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogBody,
@@ -22,6 +23,7 @@ export default function AssignDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>派工</DialogTitle>
+          <DialogDescription>为当前工单指定生产人员和可选工位。</DialogDescription>
         </DialogHeader>
         <DialogBody>
           {selectedOrder && (

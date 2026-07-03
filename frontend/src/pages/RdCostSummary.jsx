@@ -39,6 +39,8 @@ export default function RdCostSummary() {
       fetchProject();
       fetchCostSummary();
       fetchTimesheetSummary();
+    } else {
+      setLoading(false);
     }
   }, [id]);
 
@@ -81,7 +83,7 @@ export default function RdCostSummary() {
   if (!project) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-400">研发项目不存在</p>
+        <p className="text-slate-400">{id ? "研发项目不存在" : "请选择研发项目查看研发费用汇总"}</p>
         <Button
           variant="outline"
           className="mt-4"

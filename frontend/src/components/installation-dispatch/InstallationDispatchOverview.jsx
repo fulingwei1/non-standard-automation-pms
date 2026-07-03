@@ -16,11 +16,22 @@ import {
   DISPATCH_STATUS,
   DISPATCH_STATUS_LABELS,
   DISPATCH_STATUS_COLORS,
+  DISPATCH_PRIORITY,
   calculateCompletionRate,
   calculateDelayRate,
   getDispatchStatusStats,
-  getTechnicianStatusStats
+  getTechnicianStatusStats,
+  normalizeDispatchOrder,
 } from '@/lib/constants/installationDispatch';
+
+const STATUS_STAT_KEYS = {
+  [DISPATCH_STATUS.PENDING]: "pendingDispatches",
+  [DISPATCH_STATUS.ASSIGNED]: "assignedDispatches",
+  [DISPATCH_STATUS.IN_PROGRESS]: "inProgressDispatches",
+  [DISPATCH_STATUS.COMPLETED]: "completedDispatches",
+  [DISPATCH_STATUS.CANCELLED]: "cancelledDispatches",
+  [DISPATCH_STATUS.DELAYED]: "delayedDispatches",
+};
 
 const InstallationDispatchOverview = ({ 
   dispatches = [], 
@@ -30,8 +41,10 @@ const InstallationDispatchOverview = ({
   const [stats, setStats] = useState({
     totalDispatches: 0,
     pendingDispatches: 0,
+    assignedDispatches: 0,
     inProgressDispatches: 0,
     completedDispatches: 0,
+    cancelledDispatches: 0,
     delayedDispatches: 0,
     availableTechnicians: 0
   });
@@ -40,38 +53,43 @@ const InstallationDispatchOverview = ({
   const [delayRate, setDelayRate] = useState(0);
 
   useEffect(() => {
-    if (dispatches.length > 0) {
-      const dispatchStats = getDispatchStatusStats(dispatches);
-      const technicianStats = getTechnicianStatusStats(technicians);
-      
-      setStats({
-        totalDispatches: dispatchStats.total,
-        pendingDispatches: dispatchStats.pending,
-        inProgressDispatches: dispatchStats.inProgress,
-        completedDispatches: dispatchStats.completed,
-        delayedDispatches: dispatchStats.delayed,
-        availableTechnicians: technicianStats.available
-      });
+    const normalizedItems = dispatches.map(normalizeDispatchOrder);
+    const dispatchStats = getDispatchStatusStats(normalizedItems);
+    const technicianStats = getTechnicianStatusStats(technicians);
 
-      setCompletionRate(calculateCompletionRate(dispatchStats.completed, dispatchStats.total));
-      setDelayRate(calculateDelayRate(dispatchStats.delayed, dispatchStats.total));
-    }
+    setStats({
+      totalDispatches: dispatchStats.total,
+      pendingDispatches: dispatchStats.pending,
+      assignedDispatches: dispatchStats.assigned,
+      inProgressDispatches: dispatchStats.inProgress,
+      completedDispatches: dispatchStats.completed,
+      cancelledDispatches: dispatchStats.cancelled,
+      delayedDispatches: dispatchStats.delayed,
+      availableTechnicians: technicianStats.available
+    });
+
+    setCompletionRate(calculateCompletionRate(dispatchStats.completed, dispatchStats.total));
+    setDelayRate(calculateDelayRate(dispatchStats.delayed, dispatchStats.total));
   }, [dispatches, technicians]);
 
-  const pendingToday = (dispatches || []).filter(dispatch => 
-    dispatch.status === DISPATCH_STATUS.PENDING &&
-    new Date(dispatch.scheduledDate).toDateString() === new Date().toDateString()
-  ).length;
+  const normalizedDispatches = (dispatches || []).map(normalizeDispatchOrder);
 
-  const urgentTasks = (dispatches || []).filter(dispatch => 
-    dispatch.priority === 'high' && 
+  const pendingToday = normalizedDispatches.filter(dispatch => {
+    const scheduledDate = dispatch.scheduled_date ? new Date(dispatch.scheduled_date) : null;
+    return dispatch.status === DISPATCH_STATUS.PENDING &&
+      scheduledDate &&
+      scheduledDate.toDateString() === new Date().toDateString();
+  }).length;
+
+  const urgentTasks = normalizedDispatches.filter(dispatch =>
+    [DISPATCH_PRIORITY.HIGH, DISPATCH_PRIORITY.URGENT].includes(dispatch.priority) &&
     dispatch.status !== DISPATCH_STATUS.COMPLETED
   ).length;
 
-  const overdueTasks = (dispatches || []).filter(dispatch => {
-    const scheduledDate = new Date(dispatch.scheduledDate);
+  const overdueTasks = normalizedDispatches.filter(dispatch => {
+    const scheduledDate = dispatch.scheduled_date ? new Date(dispatch.scheduled_date) : null;
     const now = new Date();
-    return scheduledDate < now && dispatch.status !== DISPATCH_STATUS.COMPLETED;
+    return scheduledDate && scheduledDate < now && dispatch.status !== DISPATCH_STATUS.COMPLETED;
   }).length;
 
   return (
@@ -140,7 +158,7 @@ const InstallationDispatchOverview = ({
           <CardContent>
             <div className="space-y-3">
               {Object.entries(DISPATCH_STATUS).map(([key, value]) => {
-                const count = stats[`${key.toLowerCase()}Dispatches`] || 0;
+                const count = stats[STATUS_STAT_KEYS[value]] || 0;
                 const percentage = stats.totalDispatches > 0 ? (count / stats.totalDispatches * 100).toFixed(1) : 0;
                 
                 return (

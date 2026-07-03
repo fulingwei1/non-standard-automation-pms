@@ -46,7 +46,6 @@ const LeadAssessment = () => {
     handleDeleteLead,
     handleSaveLead,
     handleConvertLead,
-    handleExportLeads,
   } = useLeadData();
 
   const [activeTab, setActiveTab] = useState(TAB_KEYS.OVERVIEW);
@@ -167,7 +166,7 @@ const LeadAssessment = () => {
         <ScoringEngine
           leads={leads}
           criteria={ASSESSMENT_CRITERIA}
-          onReScore={(updatedLeads) => {
+          onReScore={() => {
             // Surface updated leads back through the hook's setter indirectly
             // by calling loadData; parent state is managed by useLeadData.
             loadData();

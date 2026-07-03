@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { describe, it, vi, beforeEach, afterEach } from 'vitest';
+import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import SupplierManagementData from '../SupplierManagementData';
 import { supplierApi } from '../../services/api';
@@ -16,7 +16,7 @@ vi.mock('../../services/api', () => ({
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
-    get: (_, tag) => ({ children, ...props }) => {
+    get: (_, _tag) => ({ children, ...props }) => {
       const filtered = Object.fromEntries(
         Object.entries(props).filter(
           ([key]) =>

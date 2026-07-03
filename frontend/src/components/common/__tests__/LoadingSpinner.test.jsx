@@ -8,7 +8,7 @@ import {
 
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, animate, transition, ...props }) => <div {...props}>{children}</div>,
+    div: ({ children, ...props }) => <div {...props}>{children}</div>,
   },
 }));
 
