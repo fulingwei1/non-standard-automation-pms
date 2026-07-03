@@ -1,5 +1,16 @@
 # PROJECT_NOTES
 
+## 2026-07-04 继续：功能审计 SALES-13 修复（智能报价假实现收口）
+
+- 修复项：`SALES-13`，intelligent_quote.py 整文件硬编码（历史价"宁德时代320万"、竞品、最优价、自动折扣、赢单率全常量）；唯一真实消费方是报价编辑器侧栏的 historical-prices。
+- 后端：
+  - `historical-prices` 做实：WON 商机 × 已签合同真实成交价（equipment_type/商机名模糊匹配 + 行业/±30% 金额过滤），查无匹配空列表宁缺毋假；响应兼容侧栏旧结构（historical_prices/matched_count/average_price）。
+  - 其余 5 端点（竞品录入/对比、最优价、自动折扣、赢单率单个+批量——赢单率原实现所有商机同分）501 下架，detail 指引真实替代（商机页 AI 报价估算/三档报价）。
+- 前端：
+  - `/sales/intelligent-quote`（整页假）与 `/sales/win-rate-prediction`（整页本地常量、零 API 调用）路由摘除；SalesFunnel 赢单率表的眼睛按钮改跳商机详情（有真实 AI 赢单分析卡）。
+  - 旧页面组件文件保留但无路由入口（同 MISC-01 处理惯例）。
+- 验证：红灯 3 项 → 绿灯 `tests/unit/test_intelligent_quote_stopgap.py` 3 passed（真数据/空态/501×6）；前端 sidebar+路由回归 35 passed；`npm run build`、`import app.main` 通过。
+
 ## 2026-07-04 继续：功能审计 SALES-12 修复（报价转合同前端入口）
 
 - 修复项：`SALES-12`（北极星项），后端 `POST /sales/contracts/from-quote`（自动带出客户/商机/金额/当前版本 + G3 验证）一直齐备，前端零入口——销售建合同要手抄金额和版本 ID。

@@ -80,13 +80,11 @@ const SalesProjectTrack = lazyLoad(() => import("../../pages/SalesProjectTrack")
 const SalesTemplateCenter = lazyLoad(() => import("../../pages/SalesTemplateCenter"));
 
 // AI 销售助手
-const IntelligentQuote = lazyLoad(() => import("../../pages/SalesAI/IntelligentQuote"));
 const SalesAutomation = lazyLoad(() => import("../../pages/SalesAI/Automation"));
 const ForecastDashboard = lazyLoad(() => import("../../pages/SalesAI/ForecastDashboard"));
 const PerformanceIncentive = lazyLoad(() => import("../../pages/SalesAI/PerformanceIncentive"));
 const Collaboration = lazyLoad(() => import("../../pages/SalesAI/Collaboration"));
 const RelationshipMaturity = lazyLoad(() => import("../../pages/SalesAI/RelationshipMaturity"));
-const WinRatePrediction = lazyLoad(() => import("../../pages/SalesAI/WinRatePrediction"));
 const DataQuality = lazyLoad(() => import("../../pages/SalesAI/DataQuality"));
 const RoleBasedView = lazyLoad(() => import("../../pages/SalesAI/RoleBasedView"));
 
@@ -220,7 +218,6 @@ export function SalesRoutes() {
       {/* 销售工作站 */}
       <Route path="/sales/workstation" element={<SalesWorkstation />} />
       {/* AI 销售助手相关路由 */}
-      <Route path="/sales/intelligent-quote" element={<IntelligentQuote />} />
       <Route path="/sales/automation" element={<SalesAutomation />} />
       <Route path="/sales/forecast-dashboard" element={<ForecastDashboard />} />
       <Route path="/sales/funnel-optimization" element={<Navigate to="/sales/funnel" replace />} />
@@ -229,8 +226,6 @@ export function SalesRoutes() {
       <Route path="/sales/performance-incentive" element={<PerformanceIncentive />} />
       <Route path="/sales/collaboration" element={<Collaboration />} />
       <Route path="/sales/relationship-maturity" element={<RelationshipMaturity />} />
-      <Route path="/sales/win-rate-prediction" element={<WinRatePrediction />} />
-      <Route path="/sales/win-rate-prediction/:id" element={<WinRatePrediction />} />
       {/* 去重：组织架构已并入"销售团队"统一入口(SalesTeam 的组织架构Tab)，重定向 */}
       <Route path="/sales/organization" element={<Navigate to="/sales/team" replace />} />
       <Route path="/sales/data-quality" element={<DataQuality />} />

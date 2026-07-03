@@ -278,8 +278,9 @@ export default function OpportunityWinRate() {
                   <TableCell className="text-sm text-slate-400">{opp.close_date}</TableCell>
                   <TableCell>
                     <button
-                      onClick={() => navigate(`/sales/win-rate-prediction?opp=${opp.id}`)}
+                      onClick={() => navigate(`/sales/opportunities/${opp.id}`)}
                       className="text-blue-400 hover:text-blue-300"
+                      title="查看商机详情（含真实 AI 赢单分析）"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
