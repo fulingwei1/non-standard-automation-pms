@@ -36,7 +36,7 @@ router.include_router(stages_router)
 router.include_router(material_mapping_router)
 router.include_router(bom_attributes_router)
 router.include_router(
-    kit_analysis_router, prefix="/assembly-kit/kit-analysis", tags=["kit_analysis"]
+    kit_analysis_router, prefix="/assembly-kit", tags=["kit_analysis"]
 )
 router.include_router(shortage_alerts_router)
 router.include_router(alert_rules_router)

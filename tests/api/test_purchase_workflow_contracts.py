@@ -185,10 +185,10 @@ def test_purchase_workflow_submit_pending_approve_and_duplicate_guard(
         json={"order_ids": [order_id], "urgency": "NORMAL", "comment": "重复提交"},
         follow_redirects=False,
     )
-    assert duplicate_response.status_code == 200, duplicate_response.text
-    duplicate_data = duplicate_response.json()["data"]
-    assert duplicate_data["success"] == []
-    assert duplicate_data["errors"]
+    assert duplicate_response.status_code == 400, duplicate_response.text
+    duplicate_detail = duplicate_response.json()["detail"]
+    assert duplicate_detail["message"] == "审批提交失败"
+    assert duplicate_detail["errors"]
 
 
 def test_purchase_workflow_withdraw_restores_draft_order(

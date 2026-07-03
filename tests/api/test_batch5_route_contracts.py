@@ -96,8 +96,8 @@ def test_assembly_and_kit_check_routes_return_200(
 ):
     headers = _headers(admin_token)
     endpoints = [
-        "/assembly-kit/dashboard/dashboard",
-        "/assembly-kit/templates/templates",
+        "/assembly-kit/dashboard",
+        "/assembly-kit/templates",
         "/kit-check/work-orders",
     ]
 

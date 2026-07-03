@@ -1935,7 +1935,7 @@ def test_assembly_kit_path_routes_tolerate_legacy_nulls(
     headers = _auth_headers(admin_token)
     routes = [
         f"/assembly-kit/bom-attributes/bom/{bom.id}/assembly-attrs",
-        f"/assembly-kit/kit-analysis/analysis/{readiness.id}",
+        f"/assembly-kit/analysis/{readiness.id}",
     ]
     for route in routes:
         response = client.get(

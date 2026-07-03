@@ -1,5 +1,28 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：功能审计 APPR-01 修复（审批链模板 code 与 200 掩盖）
+
+- 修复项：`APPR-01`，采购/外协/验收/立项 4 条审批链引用的 `template_code` 与库里 `approval_templates` 错位；提交失败时部分接口仍返回 HTTP 200，前端和调用方会误判成功。同步消除 `SALES-10` 的同型 200 掩盖问题，种子缺口仍留给 `APPR-02`。
+- 根因：
+  - 业务代码仍引用 `PURCHASE_ORDER_APPROVAL`、`OUTSOURCING_ORDER_APPROVAL`、`ACCEPTANCE_ORDER_APPROVAL`、`PROJECT_TEMPLATE` 等旧别名，当前初始化数据实际是 `TPL_PURCHASE/TPL_OUTSOURCING/TPL_ACCEPTANCE/TPL_PROJECT`。
+  - 采购/外协/验收/合同提交端点在 `success=[]` 且 `errors!=[]` 时仍继续 commit 并包装 200。
+- 改动：
+  - `app/services/purchase_workflow/service.py`、`app/services/outsourcing_workflow/outsourcing_workflow_service.py`、`app/services/acceptance_approval/service.py`、`app/api/v1/endpoints/projects/approvals/submit_new.py`：统一改用现有 `TPL_*` 模板 code，并显式暴露验收/立项模板常量给测试锁定。
+  - 新增 `app/api/v1/endpoints/approval_submit_guard.py`：提交批次如果 0 成功且存在错误，先 `rollback()`，再返回 HTTP 400。
+  - `purchase/workflow.py`、`outsourcing/workflow.py`、`acceptance/order_approval.py`、`sales/contracts/approval.py`：提交端点接入全失败 guard。
+  - 更新旧测试契约：采购 contract duplicate guard 改为 400；验收/采购/项目相关测试种子和断言改为 `TPL_*`。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`APPR-01` 标为 `已验证`；`SALES-10` 标为 `修复中`（200 掩盖已消除，种子待 `APPR-02`）。
+- 验证：
+  - 红灯：旧 `tests/audit_p0/test_p0_01_approval_template_mismatch.py -q` -> 4 failed（4 个业务模板 code 不在 DB）。
+  - 红灯：新增 `tests/api/test_approval_submit_error_contracts.py -q` -> 4 failed（全失败提交未抛 HTTPException，仍会 200）。
+  - 绿灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_01_approval_template_mismatch.py tests/api/test_approval_submit_error_contracts.py -q` -> 8 passed。
+  - 回归：`.venv/bin/python -m pytest tests/audit_p0/test_p0_01_approval_template_mismatch.py tests/api/test_approval_submit_error_contracts.py tests/unit/test_acceptance_approval_service.py tests/api/test_purchase_workflow_contracts.py tests/unit/test_api_p7_coverage.py app/tests/services/purchase_workflow/test_purchase_workflow.py -q` -> 70 passed。
+  - 静态检查：`py_compile` passed；`ruff check` 本轮触达 Python/测试文件 -> All checks passed。
+- 残留：
+  - `tests/integration/test_project_approval_smoke.py` 当前提交路径仍 404，归入 `APPR-03`/项目审批路由收口，不计入 `APPR-01` 已修范围。
+  - `tests/unit/test_outsourcing_workflow_service.py` 当前有 9 个旧失败，集中在成本归集私有方法/撤回参数/Mock 结构，不是本轮模板码或 200 掩盖改动引入；后续另项处理。
+  - `tests/unit/test_contract_approval_service.py` 当前有 1 个旧断言失败，服务实际调用已带 `page/page_size`。
+
 ## 2026-07-03 继续：功能审计 APPR-15 修复（发货款回款计划触发器）
 
 - 修复项：`APPR-15`，发货款（默认 40%）回款计划生成后没有任何业务触发器，设备已发货也不会进入开票申请流程，财务只能人工盯。
@@ -843,3 +866,11 @@
 - 测试同步：test_production_write_smoke / test_production_compat_endpoints 路径迁到 /production/*；batch5 kit-check 断言直接过（真实现同 200）。
 - 验证：openapi 双挂载清零、kit-check 5 条自然路径；实机 /kit-check/work-orders 真数据 200（空列表=演示库无未来7天工单，比假数据诚实）、history 200；Duplicate Operation 警告 0；两测试文件全绿；-k sweep 中 2 例失败为跨文件隔离债（单跑/同文件跑均绿）；前端 build 通过。
 - 遗留（下一刀）：**assembly-kit 双段路径**——8 个子路由 /dashboard/dashboard、/stages/stages、/templates/templates、/alert-rules/alert-rules、/shortage-alerts/shortage-alerts 等同病根，batch5 当时让前端将就了双段路径；修复涉及包内前缀+前端 assemblyKit.js+batch5/6 测试，面较大单独做。kit-rate/kit-rates 分散、tasks/task_unified 双表维持记录。
+
+## 2026-07-03 继续：assembly-kit 双段路径修复（生产域去重第二刀）
+
+- 病根：各子文件先 `router = APIRouter()` 又重新赋值带前缀的 router（死代码残迹），且装饰器路径重复自身前缀段——/assembly-kit/dashboard/dashboard、/stages/stages、/templates/templates、/alert-rules/alert-rules、/shortage-alerts/shortage-alerts；kit_analysis 挂载前缀 kit-analysis 与内部 /analysis 冗余。batch5 当时让前端将就了双段路径。
+- 修复：5 个子文件装饰器去重复段（"" 或 /{param}）；kit_analysis 挂载前缀改 /assembly-kit（新路径 /assembly-kit/analysis*、/assembly-kit/projects/{id}/assembly-readiness）。
+- 同步：前端 assemblyKit.js TEMPLATE_BASE + production.js 8 处调用改单段；tests/api/test_batch5、test_path_param（kit-analysis 路径）、frontend routeContracts.test.js 更新。
+- 顺带清断链：production.js assemblyKitApi 的 listKits(/assembly/projects/readiness)、analyzeKit(/assembly/analysis) 指向从不存在的路径且无消费方，移除。
+- 验证：openapi 双段/冗余清零（assembly 28 条全部单段）；实机 5 个自然路径 200、旧双段 404；batch5+path_param 36 绿；前端 routeContracts 24 绿；build 通过。

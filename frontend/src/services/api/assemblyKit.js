@@ -1,6 +1,6 @@
 import api from "./client.js";
 
-const TEMPLATE_BASE = "/assembly-kit/templates/templates";
+const TEMPLATE_BASE = "/assembly-kit/templates";
 
 // 装配套件 API
 export const assemblyKitApi = {

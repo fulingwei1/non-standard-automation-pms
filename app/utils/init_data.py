@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.models.base import SessionLocal
 from app.models.stage_template import StageTemplate
+from app.utils.init_approval_data import init_approval_workflow_seeds
 from app.services.preset_stage_templates import PRESET_TEMPLATES
 from app.services.stage_template import StageTemplateService
 
@@ -118,6 +119,17 @@ def init_all_data():
             logger.info(f"API权限初始化完成，新建 {perm_count} 条权限")
         else:
             logger.info("API权限已存在或无需初始化")
+
+        # 初始化统一审批模板/流程/节点/路由规则
+        approval_seed_count = init_approval_workflow_seeds(db)
+        db.commit()
+        logger.info(
+            "统一审批种子初始化完成: templates=%s flows=%s nodes=%s routing_rules=%s",
+            approval_seed_count["templates"],
+            approval_seed_count["flows"],
+            approval_seed_count["nodes"],
+            approval_seed_count["routing_rules"],
+        )
 
     except Exception as e:
         db.rollback()

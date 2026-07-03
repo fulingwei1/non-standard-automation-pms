@@ -49,7 +49,7 @@ router = APIRouter(prefix="/assembly-kit/shortage-alerts", tags=["shortage_alert
 # ==================== 缺料预警 ====================
 
 
-@router.get("/shortage-alerts", response_model=ResponseModel)
+@router.get("", response_model=ResponseModel)
 async def get_shortage_alerts(
     db: Session = Depends(deps.get_db),
     alert_level: Optional[str] = Query(None, description="预警级别(L1/L2/L3/L4)"),

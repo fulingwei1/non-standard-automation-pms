@@ -15,9 +15,14 @@ from __future__ import annotations
 import argparse
 import shutil
 import sqlite3
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Iterable, Tuple
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 IGNORABLE_ERROR_SNIPPETS = (
     "already exists",
@@ -211,6 +216,20 @@ def seed_default_accounts() -> None:
                 db.add(UserRole(user_id=user.id, role_id=role.id))
 
 
+def seed_default_approval_workflows() -> None:
+    """初始化默认统一审批模板/流程/节点/路由规则。"""
+    from app.models.base import get_db_session
+    from app.utils.init_approval_data import init_approval_workflow_seeds
+
+    with get_db_session() as db:
+        summary = init_approval_workflow_seeds(db)
+    print(
+        "默认审批流初始化完成："
+        f"templates={summary['templates']} flows={summary['flows']} "
+        f"nodes={summary['nodes']} routing_rules={summary['routing_rules']}"
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="初始化本地 SQLite 数据库")
     parser.add_argument(
@@ -253,6 +272,7 @@ def main() -> None:
 
     seed_default_accounts()
     print("默认账号初始化完成：admin / pm001 / sales001 / eng001")
+    seed_default_approval_workflows()
     print("数据库初始化完成。")
 
 

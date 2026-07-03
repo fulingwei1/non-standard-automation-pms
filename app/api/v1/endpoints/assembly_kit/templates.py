@@ -47,7 +47,7 @@ router = APIRouter(prefix="/assembly-kit/templates", tags=["templates"])
 # ==================== 装配模板管理 ====================
 
 
-@router.get("/templates", response_model=ResponseModel)
+@router.get("", response_model=ResponseModel)
 async def get_assembly_templates(
     db: Session = Depends(deps.get_db),
     equipment_type: Optional[str] = Query(None, description="设备类型筛选"),
@@ -71,7 +71,7 @@ async def get_assembly_templates(
     )
 
 
-@router.post("/templates", response_model=ResponseModel)
+@router.post("", response_model=ResponseModel)
 async def create_assembly_template(
     template_data: AssemblyTemplateCreate,
     db: Session = Depends(deps.get_db),
@@ -96,7 +96,7 @@ async def create_assembly_template(
     )
 
 
-@router.put("/templates/{template_id}", response_model=ResponseModel)
+@router.put("/{template_id}", response_model=ResponseModel)
 async def update_assembly_template(
     template_id: int,
     template_data: AssemblyTemplateUpdate,
@@ -119,7 +119,7 @@ async def update_assembly_template(
     )
 
 
-@router.delete("/templates/{template_id}", response_model=MessageResponse)
+@router.delete("/{template_id}", response_model=MessageResponse)
 async def delete_assembly_template(
     template_id: int,
     db: Session = Depends(deps.get_db),

@@ -175,7 +175,7 @@ class AssemblyKitDashboardEndpoint(BaseDashboardEndpoint):
 
         # 主dashboard端点（保持原有路径）
         self.router.add_api_route(
-            "/dashboard",
+            "",
             dashboard_endpoint,
             methods=["GET"],
             summary="获取装配齐套看板数据",

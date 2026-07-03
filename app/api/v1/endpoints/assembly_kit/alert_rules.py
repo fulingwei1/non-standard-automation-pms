@@ -46,7 +46,7 @@ router = APIRouter(prefix="/assembly-kit/alert-rules", tags=["alert_rules"])
 # ==================== 预警规则 ====================
 
 
-@router.get("/alert-rules", response_model=ResponseModel)
+@router.get("", response_model=ResponseModel)
 async def get_alert_rules(
     db: Session = Depends(deps.get_db), include_inactive: bool = Query(False)
 ):
@@ -64,7 +64,7 @@ async def get_alert_rules(
     )
 
 
-@router.post("/alert-rules", response_model=ResponseModel)
+@router.post("", response_model=ResponseModel)
 async def create_alert_rule(
     rule_data: ShortageAlertRuleCreate,
     db: Session = Depends(deps.get_db),
@@ -89,7 +89,7 @@ async def create_alert_rule(
     )
 
 
-@router.put("/alert-rules/{rule_id}", response_model=ResponseModel)
+@router.put("/{rule_id}", response_model=ResponseModel)
 async def update_alert_rule(
     rule_id: int,
     rule_data: ShortageAlertRuleUpdate,

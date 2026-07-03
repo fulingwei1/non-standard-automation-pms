@@ -335,21 +335,17 @@ export const kitCheckApi = {
 };
 
 export const assemblyKitApi = {
-  // 兼容旧页面/Hook 的齐套列表与分析接口
-  listKits: (params) => api.get("/assembly/projects/readiness", { params }),
-  analyzeKit: (machineId) =>
-    api.post("/assembly/analysis", {
-      machine_id: machineId,
-    }),
+  // 2026-07-03 去重：原 listKits(/assembly/projects/readiness)、analyzeKit(/assembly/analysis)
+  // 指向从不存在的路径（断链）已移除；齐套分析真实路径为 /assembly-kit/analysis*
   // 基于时间的齐套率预警
   getTimeBasedKitRate: (projectId, params) => api.get(`/kit-rate/project/${projectId}/time-based-kit-rate`, { params }),
   // 看板数据
   dashboard: (params) =>
-    withUnwrappedData(api.get("/assembly-kit/dashboard/dashboard", { params })),
+    withUnwrappedData(api.get("/assembly-kit/dashboard", { params })),
 
   // 装配阶段
   getStages: (params) =>
-    withUnwrappedData(api.get("/assembly-kit/stages/stages", { params })),
+    withUnwrappedData(api.get("/assembly-kit/stages", { params })),
   updateStage: (stageCode, data) =>
     api.put(`/assembly/stages/${stageCode}`, data),
 
@@ -398,7 +394,7 @@ export const assemblyKitApi = {
 
   // 缺料预警
   getShortageAlerts: (params) =>
-    withUnwrappedData(api.get("/assembly-kit/shortage-alerts/shortage-alerts", { params })),
+    withUnwrappedData(api.get("/assembly-kit/shortage-alerts", { params })),
 
   // 预警规则
   getAlertRules: (params) => api.get("/assembly/alert-rules", { params }),
@@ -415,9 +411,9 @@ export const assemblyKitApi = {
 
   // 装配模板
   getTemplates: (params) =>
-    withUnwrappedData(api.get("/assembly-kit/templates/templates", { params })),
-  createTemplate: (data) => api.post("/assembly-kit/templates/templates", data),
+    withUnwrappedData(api.get("/assembly-kit/templates", { params })),
+  createTemplate: (data) => api.post("/assembly-kit/templates", data),
   updateTemplate: (id, data) =>
-    api.put(`/assembly-kit/templates/templates/${id}`, data),
-  deleteTemplate: (id) => api.delete(`/assembly-kit/templates/templates/${id}`),
+    api.put(`/assembly-kit/templates/${id}`, data),
+  deleteTemplate: (id) => api.delete(`/assembly-kit/templates/${id}`),
 };

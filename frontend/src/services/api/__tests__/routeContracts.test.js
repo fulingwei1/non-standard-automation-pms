@@ -246,12 +246,12 @@ describe("frontend API route contracts", () => {
 
   it("uses assembly-kit routes registered by the backend", async () => {
     const { assemblyKitApi, kitCheckApi } = await import("../production.js");
-    mock.onGet("/api/v1/assembly-kit/dashboard/dashboard").reply(200, { data: {} });
-    mock.onGet("/api/v1/assembly-kit/stages/stages").reply(200, { data: [] });
-    mock.onGet("/api/v1/assembly-kit/shortage-alerts/shortage-alerts").reply(200, {
+    mock.onGet("/api/v1/assembly-kit/dashboard").reply(200, { data: {} });
+    mock.onGet("/api/v1/assembly-kit/stages").reply(200, { data: [] });
+    mock.onGet("/api/v1/assembly-kit/shortage-alerts").reply(200, {
       data: { items: [] },
     });
-    mock.onGet("/api/v1/assembly-kit/templates/templates").reply(200, { data: [] });
+    mock.onGet("/api/v1/assembly-kit/templates").reply(200, { data: [] });
     mock.onPost("/api/v1/assembly-kit/scheduling/suggestions/generate").reply(200, {
       data: { suggestions: [] },
     });
@@ -279,10 +279,10 @@ describe("frontend API route contracts", () => {
     await assemblyKitApi.rejectSuggestion(7, { reason: "测试" });
     await kitCheckApi.workOrders.list({ page: 1 });
 
-    expect(mock.history.get[0].url).toBe("/assembly-kit/dashboard/dashboard");
-    expect(mock.history.get[1].url).toBe("/assembly-kit/stages/stages");
-    expect(mock.history.get[2].url).toBe("/assembly-kit/shortage-alerts/shortage-alerts");
-    expect(mock.history.get[3].url).toBe("/assembly-kit/templates/templates");
+    expect(mock.history.get[0].url).toBe("/assembly-kit/dashboard");
+    expect(mock.history.get[1].url).toBe("/assembly-kit/stages");
+    expect(mock.history.get[2].url).toBe("/assembly-kit/shortage-alerts");
+    expect(mock.history.get[3].url).toBe("/assembly-kit/templates");
     expect(mock.history.post[0].url).toBe("/assembly-kit/scheduling/suggestions/generate");
     expect(mock.history.get[4].url).toBe("/assembly-kit/scheduling/suggestions");
     expect(mock.history.post[1].url).toBe("/assembly-kit/scheduling/suggestions/7/accept");

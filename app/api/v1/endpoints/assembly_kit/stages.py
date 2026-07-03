@@ -43,7 +43,7 @@ router = APIRouter(prefix="/assembly-kit/stages", tags=["stages"])
 # ==================== 装配阶段管理 ====================
 
 
-@router.get("/stages", response_model=ResponseModel)
+@router.get("", response_model=ResponseModel)
 async def get_assembly_stages(
     db: Session = Depends(deps.get_db),
     include_inactive: bool = Query(False, description="是否包含已禁用阶段"),
@@ -59,7 +59,7 @@ async def get_assembly_stages(
     )
 
 
-@router.put("/stages/{stage_code}", response_model=ResponseModel)
+@router.put("/{stage_code}", response_model=ResponseModel)
 async def update_assembly_stage(
     stage_code: str,
     stage_data: AssemblyStageUpdate,
