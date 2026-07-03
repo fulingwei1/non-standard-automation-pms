@@ -303,29 +303,44 @@ export default function LeadManagement({ embedded = false }) {
     setShowEditDialog(true);
   };
 
-  // 线索转商机
+  // 线索转商机：默认走 G1 验证；未通过时由人决定是否带缺口跳过（SALES-11）
   const handleConvert = async (customerId) => {
     if (!selectedLead) return;
-    const confirmed = await confirmAction({
-      title: "确认快速转商机",
-      description:
-        "当前入口不会填写完整 G1 需求模板，转换后阶段门状态为待补充。是否跳过 G1 验证继续转换？",
-      confirmText: "跳过并转换",
-    });
-    if (!confirmed) {
+
+    const finish = () => {
+      setShowConvertDialog(false);
+      setSelectedLead(null);
+      loadLeads();
+    };
+
+    try {
+      await leadApi.convert(selectedLead.id, customerId, undefined, false);
+      finish();
+      alert("已通过 G1 验证并转为商机（线索需求详情已自动承接）");
       return;
+    } catch (error) {
+      const errorMsg = error.response?.data?.detail || error.message;
+      if (error.response?.status !== 400) {
+        console.error("转商机失败:", error);
+        alert("转商机失败: " + errorMsg);
+        return;
+      }
+      // G1 未通过：显示缺口，人工决定是否带缺口推进（阶段门状态记 PENDING 待补）
+      const confirmed = await confirmAction({
+        title: "G1 验证未通过",
+        description: `${errorMsg}\n\n是否带缺口转换？转换后阶段门状态为待补充，需尽快补齐需求信息。`,
+        confirmText: "带缺口转换",
+      });
+      if (!confirmed) return;
     }
 
     try {
       await leadApi.convert(selectedLead.id, customerId, undefined, true);
-      setShowConvertDialog(false);
-      setSelectedLead(null);
-      loadLeads();
-      alert("线索已跳过 G1 验证并成功转为商机");
+      finish();
+      alert("已带缺口转为商机（阶段门待补充，线索需求详情已自动承接）");
     } catch (error) {
       console.error("转商机失败:", error);
-      const errorMsg = error.response?.data?.detail || error.message;
-      alert("转商机失败: " + errorMsg);
+      alert("转商机失败: " + (error.response?.data?.detail || error.message));
     }
   };
 

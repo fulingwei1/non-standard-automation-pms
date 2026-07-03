@@ -27,6 +27,70 @@ from ..utils import (
 router = APIRouter()
 
 
+def _join_json_list(raw) -> str:
+    """'["MES","RS232"]' → 'MES、RS232'；非 JSON 原样返回。"""
+    import json as _json
+
+    if not raw:
+        return ""
+    try:
+        value = _json.loads(raw) if isinstance(raw, str) else raw
+    except (ValueError, TypeError):
+        return str(raw)
+    if isinstance(value, list):
+        return "、".join(str(v) for v in value if v not in (None, ""))
+    return str(raw)
+
+
+def _carry_over_lead_detail(db, lead, requirement):
+    """线索需求详情（G1 模板数据源）承接到商机需求：只补空位，不覆盖显式传入。"""
+    detail = getattr(lead, "requirement_detail", None)
+    if detail is None:
+        return requirement
+
+    from app.models.sales import OpportunityRequirement
+
+    if requirement is None:
+        requirement = OpportunityRequirement()
+
+    def _fill(field, value):
+        if value in (None, "") or getattr(requirement, field, None) not in (None, ""):
+            return
+        setattr(requirement, field, value)
+
+    _fill("product_object", detail.target_object_type)
+    if detail.cycle_time_seconds is not None:
+        try:
+            _fill("ct_seconds", int(detail.cycle_time_seconds))
+        except (TypeError, ValueError):
+            pass
+    interface_desc = "、".join(
+        part
+        for part in (
+            _join_json_list(detail.communication_protocols),
+            _join_json_list(detail.interface_types),
+        )
+        if part
+    )
+    _fill("interface_desc", interface_desc or None)
+    acceptance = "；".join(
+        part for part in (detail.acceptance_basis, detail.acceptance_method) if part
+    )
+    _fill("acceptance_criteria", acceptance or None)
+    _fill("safety_requirement", detail.safety_requirements)
+    site = "；".join(
+        part
+        for part in (
+            _join_json_list(detail.environment),
+            _join_json_list(detail.space_and_logistics),
+            _join_json_list(detail.customer_site_standards),
+        )
+        if part
+    )
+    _fill("site_constraints", site or None)
+    return requirement
+
+
 @router.post("/leads/{lead_id}/convert", response_model=Any, status_code=201)
 def convert_lead_to_opportunity(
     *,
@@ -53,6 +117,9 @@ def convert_lead_to_opportunity(
     if requirement_data:
         requirement = OpportunityRequirement(**requirement_data)
 
+    # 承接线索需求详情（SALES-11：转商机不丢字段；显式 requirement_data 优先，只补空位）
+    requirement = _carry_over_lead_detail(db, lead, requirement)
+
     if not skip_validation:
         is_valid, messages = validate_g1_lead_to_opportunity(lead, requirement, db)
         errors = [
@@ -66,6 +133,7 @@ def convert_lead_to_opportunity(
     # 生成商机编码
     opp_code = generate_opportunity_code(db)
 
+    detail = getattr(lead, "requirement_detail", None)
     opportunity = Opportunity(
         opp_code=opp_code,
         lead_id=lead_id,
@@ -75,6 +143,14 @@ def convert_lead_to_opportunity(
         stage="DISCOVERY",
         gate_status="PASS" if not skip_validation else "PENDING",
         gate_passed_at=datetime.now() if not skip_validation else None,
+        # 承接线索侧已录信息（SALES-11）
+        requirement_maturity=(detail.requirement_maturity if detail else None),
+        acceptance_basis=(detail.acceptance_basis if detail else None),
+        delivery_window=(
+            detail.expected_delivery_date.strftime("%Y-%m-%d")
+            if detail and detail.expected_delivery_date
+            else None
+        ),
     )
 
     db.add(opportunity)

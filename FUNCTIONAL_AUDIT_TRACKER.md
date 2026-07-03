@@ -15,7 +15,11 @@
 
 **P0 动态复现（17 项全局 P0）**：17/17 已动态复现；P0-5（会签驳回翻转 = APPR-03）已补稳定内存审批引擎复现并回归；P0-4（SALES-04）金额可负已被 pydantic Field(gt=0) 拦截（守卫 PASS），超额无勾稽仍成立，定级不变、危害描述删"可负"。详见 P0_REPRO_REPORT.md 与主表验证方式列。
 
-**2026-07-03 止血进展**：APPR-01/APPR-02 已修复审批模板 code、全失败 200 掩盖与新库审批种子；APPR-03 已补稳定复现并修复会签/或签驳回汇总与终态防复活；APPR-07 已修复并回归；PRE-16 已修复 qwen/百炼 live AI 判断；PRE-23 已修复立项关卡异常静默放行；PROJ-06 已修复结项 readiness 强制门禁；PROJ-10 已修复里程碑完成门禁异常吞掉和全局 complete 旁路；PROD-02/03/04/11/12/14/22 已完成库存入库、在途、领料扣库、调拨动库与缺料扫描 500 止血回归；MISC-01 已下架竞品分析假数据菜单/路由并让直链接口返回 501；SALES-01/02/03/04 已完成报价资金三连与回款勾稽止血回归；SALES-09/APPR-10/APPR-11/PEER-05 已完成发票资金门禁止血回归；SALES-14 已修复付款审批前端 404 断链；SALES-15 已修复销售团队统计/排名恒 0 桩；AS-02/AS-15 已修复邮件/短信触达假成功与工时提醒 SMTP 配置错位；AS-03 已修复通知队列默认同步止血与 worker 导入断裂；AS-06 已修复 SLA 历史 NULL 策略兼容与定时预警扫描；AS-25 已修复预警订阅默认接收人、双 notification resolver 兼容与通用 Webhook URL；APPR-16 已修复 ECN 超期检查调度模块路径；APPR-17 已修复预警通知状态流转和最老优先出队，历史积压需随调度/运维逐批处置；MISC-03 已修复预警超时升级查询短路和 OPEN 状态漏扫；AS-19 已修复客服关单 payload/id 与质保工单兜底列表；RPT-16 已验证负荷瓶颈部门名兼容；APPR-04 已完成 stub 标记、调度失败计数、stub-backed 任务默认禁用，业务回填仍待做；PERM-11 已先补组织员工/HR 档案权限小切口；奖金 payment 端点已补 bonus 权限，HR-17 主审批链仍待修；PRE-21 已修复 AI 后台任务重启恢复与轮询超时；PRE-10 已打通 AI 需求分析下游（方案/报价自动带出 + 确认回填商机需求）。
+**2026-07-03 止血进展**：APPR-01/APPR-02 已修复审批模板 code、全失败 200 掩盖与新库审批种子；APPR-03 已补稳定复现并修复会签/或签驳回汇总与终态防复活；APPR-07 已修复并回归；PRE-16 已修复 qwen/百炼 live AI 判断；PRE-23 已修复立项关卡异常静默放行；PROJ-06 已修复结项 readiness 强制门禁；PROJ-10 已修复里程碑完成门禁异常吞掉和全局 complete 旁路；PROD-02/03/04/11/12/14/22 已完成库存入库、在途、领料扣库、调拨动库与缺料扫描 500 止血回归；PROD-13 已修复完工报工审批后回写；MISC-01 已下架竞品分析假数据菜单/路由并让直链接口返回 501；SALES-01/02/03/04 已完成报价资金三连与回款勾稽止血回归；SALES-09/APPR-10/APPR-11/PEER-05 已完成发票资金门禁止血回归；SALES-14 已修复付款审批前端 404 断链；SALES-15 已修复销售团队统计/排名恒 0 桩；AS-02/AS-15 已修复邮件/短信触达假成功与工时提醒 SMTP 配置错位；AS-03 已修复通知队列默认同步止血与 worker 导入断裂；AS-06 已修复 SLA 历史 NULL 策略兼容与定时预警扫描；AS-16 已修复 Header 通知铃铛未读数与跳转；AS-25 已修复预警订阅默认接收人、双 notification resolver 兼容与通用 Webhook URL；APPR-16 已修复 ECN 超期检查调度模块路径；APPR-17 已修复预警通知状态流转和最老优先出队，历史积压需随调度/运维逐批处置；MISC-03 已修复预警超时升级查询短路和 OPEN 状态漏扫；AS-19 已修复客服关单 payload/id 与质保工单兜底列表；RPT-06 已修复报表中心 xlsx 明细导出；RPT-09 已修复统一工作台统计卡 label/title 契约断裂；RPT-11 已移除驾驶舱营收/毛利前端封顶和净利润误标；RPT-16 已验证负荷瓶颈部门名兼容；HR-01 已修复员工 Excel 导入运行时导入崩溃；APPR-04 已完成 stub 标记、调度失败计数、stub-backed 任务默认禁用，业务回填仍待做；PERM-11 已先补组织员工/HR 档案权限小切口；奖金 payment 端点已补 bonus 权限，HR-17 主审批链仍待修；PRE-21 已修复 AI 后台任务重启恢复与轮询超时；PRE-10 已打通 AI 需求分析下游（方案/报价自动带出 + 确认回填商机需求）。
+
+**2026-07-04 止血进展**：RPT-02 已修复 PROJECT_MONTHLY 项目月报成本恒 0；now 按报表期间汇总 `ProjectCost` ACTUAL 口径与 `FinancialProjectCost`。RPT-03 已修复 COST_ANALYSIS 人工成本按工时硬编码 ×100；now 旧 `report_data_generation` 与新 `report_framework` 成本分析均按工时人员+工作日期读取 `HourlyRateService` 配置。RPT-04 已修复财务报表空数据 demo 兜底和成本预算 ×1.08；now 四个报表端点无真实数据返回空列表，成本分析预算读取已审批启用预算明细。RPT-10 已修复决策驾驶舱活跃项目/交付准时率 KPI 绑定不存在字段恒 0；KPI now 优先使用 summary 显式字段，否则使用已拉取的 delivery-rate 数据和项目总数。RPT-12 已修复驾驶舱健康分布结果丢弃、成本/销售漏斗 state 无 setter 恒空；now 使用健康分布、summary 成本、销售漏斗真实接口。RPT-13 已修复采购看板“节省金额”后端硬编码 0；now 按来源采购申请预估金额与关联采购订单实际金额聚合正差。RPT-14 已修复成本看板图表配置保存/读取桩；now 配置落库、读取缺失返回 404，静态读取路由排在动态项目路由前。
+
+**2026-07-04 追加进展**：RPT-01 已修复报表中心“待实现”桩静默空 200；now 报表类型配置和角色权限矩阵只展示真实可生成的 6 类报表，绕过前端直调未实现类型时返回 error，不再生成空报表记录。RPT-08 已修复 PPT 生成器硬编码 demo；now 主生成入口必须显式传入 `deck_spec`，生成内容完全来自调用方数据，旧硬编码营销文案已移除，并补齐 builder 兼容路径。RPT-07 已收敛 template_report 三套实现；now adapter、旧根服务、数据服务都走 `TemplateReportCore`，断链 import 已移除。RPT-05/SALES-17 已补报价版本、合同和财务报表含税/不含税建模；now 报价/报价版本保存 `amount_without_tax/tax_rate/tax_amount/amount_with_tax`，合同从报价继承税口径，财务月趋势/成本分析/项目盈利/现金流显式返回不含税、税额和含税字段。ADMIN-18 已修复合同附件下载任意文件读取；now 新旧两个合同附件下载入口都把路径解析到 `UPLOAD_DIR` 内，绝对路径/路径穿越返回 403。
 
 ---
 
@@ -35,13 +39,13 @@
 | SALES-08 | 销售目标 actual_value 无自动回填，达成率口径未定义 | P1 | 已修待验 | sales/targets.py；sales_team_service.calculate_target_performance；tests/unit/test_sales_target_actuals.py | 2d | 静态已证；✅契约测试回归（2026-07-03） | 列表接口接线 calculate_target_performance 实时计算（LEAD/OPP 按 owner 计数、CONTRACT_AMOUNT 按合同负责人金额、COLLECTION 按发票实收；达成率=actual/target*100）；团队/部门级目标归集口径待定返回 0 |
 | SALES-09 | 发票写操作只挂 finance:read + 未签署（草稿）合同可开票 | P1 | 已验证 | sales/invoices/basic.py；sales/invoices/operations.py；models/sales/invoices.py；tests/api/test_sales_invoice_gate_contracts.py | 1d | 静态已证；✅已动态回归（2026-07-03） | 资金急救包；写入口改为 finance:create/update/delete，未签署合同禁止开票，金额上限与状态字段门禁已补 |
 | SALES-10 | 合同审批 F1 复核：模板数据已补，但 200 掩盖失败与种子缺口仍在 | P1 | 已验证 | sales/contracts/approval.py；api/v1/endpoints/approval_submit_guard.py；app/utils/init_approval_data.py；tests/api/test_approval_submit_error_contracts.py | 0.5-1d | 静态已证；✅已动态回归（2026-07-03） | 关联 APPR-01/APPR-02；合同审批全失败提交不再 200，新库审批模板种子已补 |
-| SALES-11 | 线索转商机丢字段 + 前端写死 skip_validation 绕 G1 | P1 | 待修 | leads/actions.py:56,69-78；LeadManagement.jsx:320 | 1-2d | 静态已证 | 北极星项 |
+| SALES-11 | 线索转商机丢字段 + 前端写死 skip_validation 绕 G1 | P1 | 已修待验 | leads/actions.py；LeadManagement.jsx；tests/unit/test_lead_convert_carryover.py | 1-2d | 静态已证；✅契约测试回归（2026-07-04） | 北极星项；转商机自动承接 LeadRequirementDetail（对象/节拍/接口/验收/安全/成熟度/交期，显式传入优先只补空位）；前端默认走 G1，未通过展示缺口由人决定"带缺口转换"（不再默认绕门） |
 | SALES-12 | 报价转合同前端断链（后端 from-quote 齐备、前端零入口，金额/版本ID手填） | P1 | 待修 | contracts/basic.py:380-；前端 grep from-quote 零命中 | 2d | 静态已证 | 北极星项；附注"报价明细不成交付物"=APPR-18（以 APPR-18 为主） |
 | SALES-13 | 智能报价整页假实现（历史价/竞品/折扣/赢单率全硬编码） | P1 | 待修 | sales/intelligent_quote.py:42-95,204,250,382 | 下架0.5d/做实5d+ | 静态已证 | 止损包；ROADMAP F5 |
 | SALES-14 | 付款审批页前端调不存在接口，必 404 | P1 | 已验证 | frontend/src/services/api/paymentApproval.js；frontend/src/pages/PaymentApproval/hooks/usePaymentApproval.js；frontend/src/services/api/__tests__/paymentApproval.test.js；frontend/src/pages/PaymentApproval/hooks/__tests__/usePaymentApproval.test.js | 1d | 静态已证；✅已动态复现并回归（2026-07-03） | 付款审批服务改走统一审批 `/approvals/pending/*` 与 `/approvals/tasks/*`，清除 `/sales/payments/approvals` 404 断链 |
 | SALES-15 | 销售团队统计/排名多维度恒 0 桩 | P1 | 已验证 | app/services/sales_team_service.py；app/services/sales_ranking_service.py；app/api/v1/endpoints/sales/team/utils.py；tests/services/test_sales_team_aggregation_contracts.py | 2-3d | 静态已证；✅已动态复现并回归（2026-07-03） | 个人目标、最近跟进、客户分布、跟进统计、线索质量、商机统计均改为真实聚合；/sales/team 与 /sales/team/ranking 消费同一真实 Session 数据 |
 | SALES-16 | AI 销售助手降级罐头文本无标注；流失清单从不调 AI | P2 | 已修待验 | sales_ai_assistant_service.py；tests/unit/test_sales_ai_degradation_marking.py；SalesAI/index.jsx | 1d | 静态已证；✅契约测试回归（2026-07-03） | mock 集群（集群2）；5 方法降级统一标 ai_generated/degraded/degraded_reason，真 AI 标 ai_generated=true；流失清单定口径为规则批量扫描（scoring_method=rule_scan+每项 analysis_source），单客户深评走 predict_churn_risk 真 AI；前端 4 卡片显示降级横幅 |
-| SALES-17 | 报价域无税率/含税建模 | P2 | 待修 | quotes.py:430；quote_versions.py:243 | 2-3d | 静态已证 | — |
+| SALES-17 | 报价域无税率/含税建模 | P2 | 已验证 | quotes.py；quote_versions.py；contracts/basic.py；models/sales；schemas/sales；migrations/versions/20260704_add_sales_tax_basis.py；tests/unit/test_finance_reports_rpt05.py | 2-3d | 静态已证；✅已动态回归（2026-07-04） | 报价版本 now 保存不含税/税率/税额/含税额；报价转合同继承税口径；旧 `total_price/total_amount` 继续兼容总价 |
 | SALES-18 | 报价"当前版本"口径不一致（versions[-1] vs current_version_id） | P2 | 已验证 | quote_costs.py；tests/api/test_sales_quote_costs_quantity_contracts.py | 0.5d | 静态已证；✅已动态复现并回归（2026-07-03） | 成本分析当前版本改为优先使用 Quote.current_version_id，与报价详情/统计一致；无 current_version_id 时才显式回退最新创建版本 |
 | SALES-19 | 发票作废无红冲（需先删回款，审计链断） | P2 | 待修 | invoices/operations.py:141-142 | 2d | 静态已证 | 关联 PEER-05 |
 | SALES-20 | 报价数量/单价无 0/负数校验 | P2 | 已验证 | sales/utils/quote_item_validation.py；quotes.py；quote_versions.py；quote_items.py；schemas/sales/quotes.py；QuoteItemsTable.jsx；tests/api/test_sales.py；QuoteCreateEdit.test.jsx | 0.5d | 静态已证；✅已动态复现并回归（2026-07-03） | 首版创建、版本创建、明细新增/更新均拒绝数量/单价 0 或负数；本地 data/app.db 发现 8 条历史空明细，价格无法无损推回，未自动改历史数据 |
@@ -124,7 +128,7 @@
 | PROD-10 | 采购申请→订单转换绕审批、可重复生成、不回写 ordered_qty | P1 | 待修 | purchase/purchase_service.py:226-264 | 1.5d | 静态已证 | 对比 BOM 路径实现完整 |
 | PROD-11 | 收货后 PO/POI 状态永不流转（PARTIAL_RECEIVED/RECEIVED 无写入点） | P1 | 已验证 | purchase/receipts.py；tests/api/test_purchase_receipts_workflow_contracts.py | 1d | 静态已证；✅已动态回归（2026-07-03） | F1 扩围；收货后刷新 PO/POI 到 PARTIAL_RECEIVED/RECEIVED，并累计订单已收金额 |
 | PROD-12 | 生产领料不扣库存、无创建入口（前端调用必 404；OutboundService 真实现零调用） | P1 | 已验证 | production/material_requisitions.py；inventory/outbound_service.py；tests/api/test_production_compat_endpoints.py | 3d | 静态已证；✅已动态回归（2026-07-03） | F1 扩围；新增领料创建入口，审批后发料扣减库存并写 ISSUE 流水 |
-| PROD-13 | 报工审批装饰性（未审批即回写产量，驳回不回滚） | P1 | 待修 | production/work_reports.py:257-280,384-420 | 2d | 静态已证 | Quick-win 闸门包（数量回写移到审批后） |
+| PROD-13 | 报工审批装饰性（未审批即回写产量，驳回不回滚） | P1 | 已验证 | production/work_reports.py；tests/api/test_production_write_smoke.py | 2d | 静态已证；✅已动态回归（2026-07-03） | Quick-win 闸门包；完工报工提交阶段只落 PENDING，审批通过后回写产量/工时/完成状态，驳回不回写 |
 | PROD-14 | 物料调拨假实现（ProjectMaterial NameError 被吞、执行不动库存） | P1 | 已验证 | shortage/handling/transfers.py；inventory/transfer_service.py；material_transfer_service.py；tests/api/test_shortage_transfers.py | 2d | 静态已证；✅已动态回归（2026-07-03） | F1 扩围；调拨执行 now 源库扣减、目标库增加，并写 ISSUE/TRANSFER_IN 流水 |
 | PROD-15 | 现场缺料→紧急采购断链（只建 DRAFT 申请即止，替代/调拨方案 return []） | P1 | 待修 | shortage/handling/reports.py:235-258；urgent_purchase_from_shortage_service.py:184-244 | 3-4d | 静态已证 | 关联 PROD-02/APPR-04 |
 | PROD-16 | 发货单无明细行、无齐套/质检门禁、不联动项目状态 | P1 | 待修 | models/business_support/delivery.py:23-102；delivery_orders/crud.py:142-209,326-388 | 5-7d | 静态已证 | 北极星项（手填总额）；关联 AS-10（发货→设备档案断链） |
@@ -156,7 +160,7 @@
 | AS-13 | 客户360 四页签绑定不存在字段恒空；售后工单不入 360 | P1 | 待修 | customer_360_service.py:102-112 vs Customer360.jsx:179-239 | 3d | 静态已证 | — |
 | AS-14 | 维保计划周期调度 pass 桩 + 幽灵表，生成靠手动、验收不联动 | P1 | 修复中 | stub_tasks.py:113-119；scheduler_config/production.py:59-68 | 3d | 静态已证；调度止血已回归（2026-07-03） | 调度项已默认禁用并统一 not_implemented；真实维保计划生成仍待做，随 APPR-04 回填 |
 | AS-15 | 短信渠道假发送（日志即 success），阿里云真实现是死代码 | P1 | 已验证 | notification/channels/sms_handler.py；tests/audit_p0/test_p0_11_notification_fake_success.py；tests/unit/test_notification_channels_sms.py | 1d | 静态已证；✅已动态回归（2026-07-03） | 全局P0#11；短信通道缺网关配置/SDK/网关成功响应时返回失败，不再 logger 即 success；APPR-17 预警积压另修 |
-| AS-16 | Header 铃铛纯装饰（无 onClick、红点无条件渲染、badge 写死 5） | P1 | 待修 | Header.jsx:119-129；sidebarConfig/default.js:17 | 0.5d | 静态已证 | Quick-win 闸门包；通知中心本体是真实现 |
+| AS-16 | Header 铃铛纯装饰（无 onClick、红点无条件渲染、badge 写死 5） | P1 | 已验证 | Header.jsx；sidebarConfig/default.js；Header.test.jsx | 0.5d | 静态已证；✅已动态回归（2026-07-03） | Quick-win 闸门包；Header 读取真实未读数，0 不显示角标，点击进入 `/notifications`，侧栏通知中心移除写死 badge |
 | AS-17 | 工程师调度前端 4 接口后端不存在必 404；模块请求时现场 DDL 建表 | P1 | 待修 | engineerScheduling.js:7,19,33,38；engineer_scheduling.py:44 | 2d | 静态已证 | 关联 AS-04 |
 | AS-18 | 售后现场服务记录孤立记事本（is_warranty 写死、无流转、不建派工单、表不存在） | P1 | 待修 | after_sales.py:267（表缺失见 AS-09） | 3d | 静态已证 | 建议改生成 InstallationDispatchOrder |
 | AS-19 | 客服工作台"关闭工单"按钮必 422（payload 字段名错）；质保页签恒空 | P1 | 已验证 | CustomerServiceDashboard.jsx；CustomerServiceDashboard/utils.js；schemas/service.py:56-63 | 0.5d | 静态已证；✅已修复并回归（2026-07-03） | Quick-win 闸门包；close payload now uses solution，后端兼容 resolution，质保页签用真实质保类工单兜底；AS-09 售后质保表缺失仍待修 |
@@ -192,7 +196,7 @@
 | APPR-19 | 大额审批路由规则挂孤儿模板：≥50 万报价不再经总经理 | P2 | 待修 | router.py:26-61；quote_approval_service.py:79 | 1d | 静态已证 | 附带 _advance_to_next_node 丢 entity_data（engine/core.py:174-180） |
 | APPR-20 | legacy 兼容端点创建的审批实例无节点无任务，永久 PENDING | P2 | 待修 | approvals/legacy_compat.py:27-70,86-112 | 0.5d | 静态已证 | 数据清洗（entity_type 空实例 3 条） |
 | APPR-21 | 角色型 SINGLE 节点审批人取"全库第一个"，与业务上下文无关 | P2 | 待修 | executor.py:50-57；router.py:267-294 | 1.5d | 静态已证 | 上下文有 project_id 未用 |
-| APPR-22 | 后台机制综合：①AI job 无重启恢复 ②备份 4 个月未自动执行 ③禁用任务重启复活 ④第二调度器不进监控 ⑤调度器 except ImportError 全静默 | P2 | 修复中 | scheduler.py；main.py startup；backup_service.py；scheduled_tasks/backup_tasks.py；scheduler_config/other.py；tests/unit/test_ai_job_recovery.py；tests/unit/test_scheduler_utils.py；tests/unit/test_backup_scheduler_appr22.py | 0.5d起（分项） | 静态已证；✅子项①/②/③/⑤已动态回归（2026-07-03） | F3 扩围；**①与 PRE-21 重复并已验证**；②已修：新增 enabled `daily_database_backup`，SQLite 环境直接生成压缩 SQL dump+md5；③已修：DB `is_enabled=false` 不再重启复活；⑤已修：任务解析/注册失败写入 scheduler failure metrics，`main.py` scheduler 整体导入失败记录错误日志；④第二调度器监控仍待做 |
+| APPR-22 | 后台机制综合：①AI job 无重启恢复 ②备份 4 个月未自动执行 ③禁用任务重启复活 ④第二调度器不进监控 ⑤调度器 except ImportError 全静默 | P2 | 已验证 | scheduler.py；main.py startup；backup_service.py；scheduled_tasks/backup_tasks.py；scheduler_config/other.py；scheduler_progress.py；scheduler/status.py；tests/unit/test_ai_job_recovery.py；tests/unit/test_scheduler_utils.py；tests/unit/test_backup_scheduler_appr22.py；tests/unit/test_scheduler_progress_metrics_appr22.py | 0.5d起（分项） | 静态已证；✅子项①/②/③/④/⑤已动态回归（2026-07-03） | F3 扩围；**①与 PRE-21 重复并已验证**；②已修：新增 enabled `daily_database_backup`，SQLite 环境直接生成压缩 SQL dump+md5；③已修：DB `is_enabled=false` 不再重启复活；④已修：`scheduler_progress` 注册 job 包统一 metrics，`/scheduler/status` 与 `/scheduler/jobs` 汇总主/进度两个 scheduler；⑤已修：任务解析/注册失败写入 scheduler failure metrics，`main.py` scheduler 整体导入失败记录错误日志 |
 
 ### 七、并行会话补充：合同+发票状态流（PEER，5 项）
 
@@ -214,7 +218,7 @@
 
 | ID | 功能/问题 | 等级 | 状态 | 证据位置 | 工作量 | 验证方式 | 备注/关联 |
 |---|---|---|---|---|---|---|---|
-| HR-01 | 员工 Excel 导入端点必崩（运行时 import 不存在的 validate_excel_file） | P1 | 待修 | organization/employee_import.py:41-46 | 0.1d(Quick-win) | 静态已证 | 前端 useEmployeeProfileList.js:106 直连坏端点；193 名员工只能手工录入 |
+| HR-01 | 员工 Excel 导入端点必崩（运行时 import 不存在的 validate_excel_file） | P1 | 已验证 | employee_import_service.py；organization/employee_import.py；tests/unit/test_employee_import_service.py；tests/api/test_organization.py | 0.1d(Quick-win) | 静态已证；✅已动态回归（2026-07-03） | 新增 `validate_excel_file()`，非 Excel 上传返回 400，不再运行时 ImportError；空姓名清洗恢复为 `None`，导入时跳过空姓名行 |
 | HR-02 | 离职处理仅置状态位，无交接不停账号（不联动 User.is_active） | P1 | 待修 | hr_management/transactions.py:175-179 | 3-4d | 静态已证 | 离职员工账号仍可登录 |
 | HR-03 | 数据权限绑部门名字符串，组织变动不随动 | P1 | 待修 | data_scope/generic_filter.py:121-135 | 2-3d+清洗0.5d | 静态已证 | 关联 PERM-15/17；调岗员工永远看旧部门数据 |
 | HR-04 | 部门/员工删除前端调不存在端点（405/404） | P2 | 待修 | services/api/hr.js:19；organization 目录无 delete | 1d | 静态已证 | — |
@@ -276,31 +280,31 @@
 
 | ID | 功能/问题 | 等级 | 状态 | 证据位置 | 工作量 | 验证方式 | 备注/关联 |
 |---|---|---|---|---|---|---|---|
-| ADMIN-01 | 备份 API 路由自 import 自己必 ImportError，落占位路由 | P0 | 待修 | endpoints/backup.py:7-25 | 备份三层合计 4-5d | 静态已证 | 备份三层皆虚集群（01/02/03）；将第一轮"备份三层齐备"降级 |
-| ADMIN-02 | 备份恢复 restore 产品内不存在（BackupService 无 restore 方法） | P0 | 待修 | backup_service.py 无 restore | 并入 ADMIN-01 | 静态已证 | 恢复只有需登录服务器的脚本 |
-| ADMIN-03 | 备份/校验脚本技术栈错位（MySQL vs 实际 SQLite） | P0 | 待修 | scripts/backup_database.sh:10-12；verify_backup.sh:118 | 并入 ADMIN-01 | 静态已证 | 即便跑起来备的也不是这份数据 |
+| ADMIN-01 | 备份 API 路由自 import 自己必 ImportError，落占位路由 | P0 | 已验证 | endpoints/backup.py；tests/unit/test_backup_admin01_03.py | 备份三层合计 4-5d | 静态已证；✅已动态回归（2026-07-04） | `backup.py` 改为真实 router，提供列表、创建、数据库备份、验证、恢复、清理、统计端点 |
+| ADMIN-02 | 备份恢复 restore 产品内不存在（BackupService 无 restore 方法） | P0 | 已验证 | backup_service.py；tests/unit/test_backup_admin01_03.py | 并入 ADMIN-01 | 静态已证；✅已动态回归（2026-07-04） | `BackupService.restore_backup()` 支持 SQLite gzip SQL dump 恢复，需 `confirm=True`，恢复前自动生成 `before_restore` 备份 |
+| ADMIN-03 | 备份/校验脚本技术栈错位（MySQL vs 实际 SQLite） | P0 | 已验证 | scripts/backup_database.sh；scripts/verify_backup.sh；scripts/restore_database.sh；tests/unit/test_backup_admin01_03.py | 并入 ADMIN-01 | 静态已证；✅已动态回归（2026-07-04） | 三个数据库脚本改为 `DATABASE_URL=sqlite:///...` 口径，测试覆盖脚本级备份、校验、恢复闭环 |
 | ADMIN-04 | 备份文件完整性校验部分实现可绕过 | P2 | 待修 | verify_backup.sh:80-104 | 0.5d | 静态已证 | — |
-| ADMIN-05 | admin_stats 路由死壳 fallback 占位 | P2 | 待修 | endpoints/admin_stats.py:7-22 | 0.5d | 静态已证 | **主项**：RPT-15 同一 admin_stats 占位，RPT-15 标重复-合并→ADMIN-05 |
-| ADMIN-06 | /admin/stats 系统指标关键指标全硬编码（99.9%/0 错误率/从未备份） | P1 | 待修 | admin_compat.py:215-224 | 1d | 静态已证 | — |
+| ADMIN-05 | admin_stats 路由死壳 fallback 占位 | P2 | 已验证 | endpoints/admin_stats.py；tests/unit/test_admin_stats_admin05_06.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | `admin_stats.py` now 提供真实 `/stats` route；RPT-15 同一 admin_stats 占位随本项消除 |
+| ADMIN-06 | /admin/stats 系统指标关键指标全硬编码（99.9%/0 错误率/从未备份） | P1 | 已验证 | admin_stats.py；admin_compat.py；tests/unit/test_admin_stats_admin05_06.py | 1d | 静态已证；✅已动态回归（2026-07-04） | `/admin/stats` now 聚合用户/角色/权限/登录/审计、备份元数据、数据库与存储体积；admin_compat 复用同一采集器 |
 | ADMIN-07 | 行政管理（用品/车辆/资产/费用）全硬编码+写端点缺失（404） | P1 | 待修 | admin_compat.py:18-186,254 | 2-3d | 静态已证 | 前端 admin.js:123-160 POST 必 404 |
 | ADMIN-08 | Prometheus/Grafana 监控栈装饰性（无 /metrics 端点） | P1 | 待修 | monitoring/prometheus.yml:17-20 | 2-3d | 静态已证 | 抓 mysql:3306/redis 架构错位 |
-| ADMIN-09 | 健康检查常量返回不查依赖 | P2 | 待修 | app/main.py:161-171 | 0.5d | 静态已证 | — |
+| ADMIN-09 | 健康检查常量返回不查依赖 | P2 | 已验证 | app/main.py；tests/unit/test_health_check_admin09.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | `/health` 与 `/api/health` 返回数据库、调度器、Redis 状态；数据库/配置 Redis 异常会降级为 `degraded` |
 | ADMIN-10 | 调度器指标/状态页真采集但内存态+不可抓取（重启清零） | P2 | 待修 | utils/scheduler_metrics.py:1-13 | 1d | 静态已证 | 关联 ADMIN-20 取证能力 |
 | ADMIN-11 | 项目缓存层安慰剂（内存模式零命中） | P2 | 待修 | projects/project_crud.py:150 | 1d | 静态已证 | — |
-| ADMIN-12 | 缓存管理端点调不存在的方法基本不可用（clear 会 flushdb 整库） | P1 | 待修 | projects/cache.py:85-91 | 1d | 静态已证 | 若与限流/Token 黑名单共库危险 |
-| ADMIN-13 | 数据导入执行字段与模型不符→假失败真入库 | P1 | 待修 | import_upload.py:56-66 | 0.5d | 静态已证 | 用户看到失败数据实际已导入；本周内处理 |
-| ADMIN-14 | 导入错误回执明细被丢弃任务表不落错误 | P2 | 待修 | import_upload.py:78-83 | 1d | 静态已证 | 修复并入 ADMIN-13 |
+| ADMIN-12 | 缓存管理端点调不存在的方法基本不可用（clear 会 flushdb 整库） | P1 | 已验证 | projects/cache.py；tests/unit/test_projects_cache_admin12.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | `/projects/cache/clear` now 只清 project 命名空间/白名单 pattern；不调用 `clear/flushdb`，前端 `pattern=project:detail:*` 已兼容 |
+| ADMIN-13 | 数据导入执行字段与模型不符→假失败真入库 | P1 | 已验证 | data_import_export/import_upload.py；tests/unit/test_data_import_upload_admin13_14.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 导入数据与 `DataImportTask` 改为同一事务提交；任务字段对齐真实模型字段 `task_no/import_type/file_name/imported_by` |
+| ADMIN-14 | 导入错误回执明细被丢弃任务表不落错误 | P2 | 已验证 | data_import_export/import_upload.py；schemas/data_import_export.py；tests/unit/test_data_import_upload_admin13_14.py | 并入 ADMIN-13 | 静态已证；✅已动态回归（2026-07-04） | `failed_rows` 同步写入 `validation_errors/error_message` 并随 `ImportUploadResponse` 返回 |
 | ADMIN-15 | 导入部分失败/幂等：逐行容错+工时查重符合设计 | P3 | 已验证 | timesheet_importer.py:169 | — | 静态已证（正面确认） | 无缺陷 |
 | ADMIN-16 | 导出水印 watermark_service 死代码全仓零调用 | P1 | 待修 | services/export/watermark_service.py | 1-2d | 静态已证 | 且中文渲染黑方块需注册 CID 字体 |
 | ADMIN-17 | 统一文件上传服务孤儿；无内容校验/AV | P2 | 待修 | services/file_upload_service.py | 1-2d | 静态已证 | — |
-| ADMIN-18 | 合同附件上传/下载任意文件读取漏洞 | P0(安全) | 待修 | sales/contracts/enhanced_attachments.py:31-41,67-84 | 1d | 静态已证 | 下载无目录白名单，可拖走整库/私钥；documents/operations.py:90-99 有正确范式；本周内处理 |
+| ADMIN-18 | 合同附件上传/下载任意文件读取漏洞 | P0(安全) | 已验证 | sales/contracts/enhanced_attachments.py；sales/contracts/enhanced.py；attachment_security.py；tests/unit/test_contract_attachment_security_admin18.py | 1d | 静态已证；✅已动态回归（2026-07-04） | 新旧两个下载入口 now 统一使用上传根目录路径校验；绝对路径/路径穿越返回 403，合法相对路径映射到 `UPLOAD_DIR` |
 | ADMIN-19 | 附件-单据串联删单不删文件 343 孤儿文件 | P2 | 待修 | documents/operations.py:148 | 1-2d | 静态已证 | project_documents file_path 全 /demo/ 假路径 |
 | ADMIN-20 | 日志管理/轮转不存在（仅 stdout，logs/ 空） | P2 | 待修 | core/logging_config.py:145 | 1d | 静态已证 | 配合 ADMIN-10 故障后几乎零取证能力 |
 | ADMIN-21 | debug_issue/design_review 两 sync 真实现 | P3 | 已验证 | debug_issue_sync_service.py | — | 静态已证（正面确认） | 无缺陷 |
 | ADMIN-22 | 编码规则生成器无统一功能，分散硬编码+并发撞号 | P2 | 待修 | business_support_utils/service.py:180-204 | 1-2d | 静态已证 | — |
 | ADMIN-23 | 运维自助度：多数运维操作必须进服务器/改库 | P1(汇总) | 待修 | 见 ADMIN-01/06/12/20/22 | 汇总 | 静态已证 | 正面项：调度热 reschedule/导入模板/excel_export |
 
-**ADMIN 域小结**：本域"真实现"比例各域最低。备份 API 整体占位、restore 产品内不存在且脚本技术栈错位；监控栈无 /metrics 纯装饰；行政管理前端有页后端硬编码演示数据且写端点缺失；缓存管理调不存在方法；发现 1 个 P0 安全漏洞（ADMIN-18 合同附件任意文件读取）。约 18-22 人日，ADMIN-18/ADMIN-13 建议本周内处理。
+**ADMIN 域小结**：本域"真实现"比例各域最低。备份 API / restore / SQLite 脚本口径已完成动态回归（ADMIN-01/02/03）；admin_stats 占位与系统统计硬编码已修复（ADMIN-05/06）；健康检查已接入依赖状态（ADMIN-09）；数据导入假失败与错误明细丢失已修复（ADMIN-13/14）；ADMIN-18 合同附件任意文件读取已修复。剩余重点仍包括监控栈无 /metrics、行政管理硬编码与写端点缺失、缓存管理调不存在方法、日志轮转缺失。约 11-14 人日，ADMIN-04/07/08/12 可作为下一批。
 
 ### 十、多租户域（TEN，8 项）
 
@@ -321,25 +325,25 @@
 
 | ID | 功能/问题 | 等级 | 状态 | 证据位置 | 工作量 | 验证方式 | 备注/关联 |
 |---|---|---|---|---|---|---|---|
-| RPT-01 | 报表中心 8+ 类型返回"待实现"桩但权限矩阵照常展示 | P1 | 待修 | router.py:83-90 兜底空 200 | 做实/下架 | 静态已证 | COMPANY_MONTHLY 在 template_report 有真实现（两套体系未打通） |
-| RPT-02 | PROJECT_MONTHLY 成本恒 0 | P2 | 待修 | project_reports.py:244 | 1d | 静态已证 | — |
-| RPT-03 | WORKLOAD/COST_ANALYSIS 人工成本=工时×硬编码 100 | P2 | 待修 | analysis_reports.py:190-191 | 0.5d | 静态已证 | 与 PROJ-13(100)/PROJ-11(200)、HR-21 同"时薪多口径"病灶第三处复制且数值矛盾 |
-| RPT-04 | 财务报表 4 端点无数据静默降级硬编码 demo，预算=成本×1.08 | P1 | 待修 | finance_reports.py:128-129,163,222 | 2-3d | 静态已证 | 与 SALES-06/13 同 mock 集群，响应无 is_demo 标记 |
-| RPT-05 | 财务报表含税/不含税口径不分 | P2 | 待修 | finance_reports | 与 SALES-17 打包 | 静态已证 | 同 SALES-17 根 |
-| RPT-06 | report_center xlsx 导出明细恒"无数据"（双键名+data 键不匹配） | P1 | 待修 | export.py:63 vs excel_renderer.py:182 | 0.5d(Quick-win) | 静态已证 | — |
-| RPT-07 | template_report 三套并存两 orphan+一断链 import | P2 | 待修 | template_report_service.py:196 | 1-2d | 静态已证 | — |
-| RPT-08 | PPT 生成器真产 pptx 但内容 100% 硬编码+0 调用方 | P3 | 待修 | generator.py:72-130 | 下架/做实 | 静态已证 | — |
-| RPT-09 | 8 个工作台适配器统计卡因 label= vs 必填 title= 全部恒空（~46 张卡） | P1 | 待修 | schemas/dashboard.py:13-25；unified.py:66 静默吞 | 1-1.5d | 静态已证 | 本轮最严重契约断裂，schema 契约断裂同 AS-13(客户360)型 |
-| RPT-10 | 决策驾驶舱 4 处 KPI 绑不存在字段恒 0 | P1 | 待修 | useExecutiveDashboard.js（project_growth/on_time_delivery_rate 等） | 1d | 静态已证 | schema 契约断裂同 AS-13 型 |
-| RPT-11 | 驾驶舱营收/利润前端 Math.min(×0.3) 封顶+目标写死+毛利冒充净利润 | P1 | 待修 | useExecutiveDashboard.js | 删封顶 0.5d | 静态已证 | 数据操纵；真实数据超 4800 万即被裁剪 |
-| RPT-12 | 驾驶舱成本页签/销售漏斗恒空（useState 无 setter），健康度结果丢弃 | P2 | 待修 | useExecutiveDashboard.js | 1d | 静态已证 | — |
-| RPT-13 | 采购看板"节省金额"写死 0 | P2 | 待修 | 采购看板 | 下架 0.5d | 静态已证 | — |
-| RPT-14 | 成本看板图表配置保存/读取为桩 | P3 | 待修 | 成本看板 | 1d | 静态已证 | — |
+| RPT-01 | 报表中心 8+ 类型返回"待实现"桩但权限矩阵照常展示 | P1 | 已验证 | report_data_generation/core.py；router.py；report_center/configs.py；tests/unit/test_report_center_rpt01.py | 做实/下架 | 静态已证；✅已动态回归（2026-07-04） | 报表中心 now 只展示/授权真实可生成的 6 类；未实现类型直调返回 error，不再空 200 |
+| RPT-02 | PROJECT_MONTHLY 成本恒 0 | P2 | 已验证 | project_reports.py；tests/unit/test_project_monthly_report_rpt02.py | 1d | 静态已证；✅已动态回归（2026-07-04） | 月报 now 汇总报表期间内 `ProjectCost` ACTUAL 口径 + `FinancialProjectCost`，并计算预算差额/差额率；不再 `actual_cost` 恒 0 |
+| RPT-03 | WORKLOAD/COST_ANALYSIS 人工成本=工时×硬编码 100 | P2 | 已验证 | report_labor_cost.py；analysis_reports.py；report_framework/generators/analysis.py；tests/unit/test_analysis_reports_rpt03.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | COST_ANALYSIS now 按每条工时的 `user_id + work_date` 读取 `HourlyRateService`；同一工程师跨日期变更时薪可正确分段，旧/新报表入口均覆盖 |
+| RPT-04 | 财务报表 4 端点无数据静默降级硬编码 demo，预算=成本×1.08 | P1 | 已验证 | finance_reports.py；tests/unit/test_finance_reports_rpt04.py | 2-3d | 静态已证；✅已动态回归（2026-07-04） | 月趋势/成本分析/项目盈利/现金流 no-data 不再返回 demo；成本预算 now 汇总 `ProjectBudgetItem`（APPROVED+active），预算-only 类目也返回 |
+| RPT-05 | 财务报表含税/不含税口径不分 | P2 | 已验证 | finance_reports.py；tests/unit/test_finance_reports_rpt05.py | 与 SALES-17 打包 | 静态已证；✅已动态回归（2026-07-04） | 月趋势/成本分析/项目盈利/现金流 now 显式输出不含税、税额、含税字段；成本旧键保留不含税，收入/现金旧总额键保持兼容 |
+| RPT-06 | report_center xlsx 导出明细恒"无数据"（双键名+data 键不匹配） | P1 | 已验证 | report_center/generate/export.py；excel_renderer.py；tests/unit/test_report_center_export_rpt06.py | 0.5d(Quick-win) | 静态已证；✅已动态回归（2026-07-03） | 旧导出分支 now 将 details 转为 renderer 需要的 `data + columns`；同时修复 CSV 分支局部 `datetime` 导入导致 xlsx 更新 exported_at 500 的作用域问题 |
+| RPT-07 | template_report 三套并存两 orphan+一断链 import | P2 | 已验证 | template_report/core.py；template_report_service.py；report_framework/adapters/template.py；tests/unit/test_template_report_rpt07.py | 1-2d | 静态已证；✅已动态回归（2026-07-04） | 旧根服务 now 仅兼容转发到 `TemplateReportCore`；adapter 不再 import 断链符号；package 旧路径保留懒加载代理 |
+| RPT-08 | PPT 生成器真产 pptx 但内容 100% 硬编码+0 调用方 | P3 | 已验证 | ppt_generator/generator.py；ppt_generator/builders/*；tests/unit/test_ppt_generator_rpt08.py；tests/unit/test_ppt_generator.py | 下架/做实 | 静态已证；✅已动态回归（2026-07-04） | 主入口 now 必须显式传入 `deck_spec`，内容来自调用方数据；硬编码营销 deck 已移除，builder 兼容路径补齐 |
+| RPT-09 | 8 个工作台适配器统计卡因 label= vs 必填 title= 全部恒空（~46 张卡） | P1 | 已验证 | schemas/dashboard.py；tests/unit/test_dashboard_stat_card_rpt09.py；unified.py:66 静默吞 | 1-1.5d | 静态已证；✅已动态回归（2026-07-03） | `DashboardStatCard.title` 已兼容旧 `label` 输入且输出仍为 `title`；保留旧 adapter 的 `icon/color`；8 个旧 `label=` adapter 空库 smoke 均能产出标题 |
+| RPT-10 | 决策驾驶舱 4 处 KPI 绑不存在字段恒 0 | P1 | 已验证 | useExecutiveDashboard.js；useExecutiveDashboard.test.js | 1d | 静态已证；✅已动态回归（2026-07-04） | 活跃项目无 `project_growth` 时显示项目总数，不再假写较上月 0%；交付准时率读取 `delivery-rate` 归一化后的 `rate/on_time_projects/total_projects`，memo 依赖补 `deliveryData` |
+| RPT-11 | 驾驶舱营收/利润前端 Math.min(×0.3) 封顶+目标写死+毛利冒充净利润 | P1 | 已验证 | useExecutiveDashboard.js；useExecutiveDashboard.test.js | 删封顶 0.5d | 静态已证；✅已动态回归（2026-07-03） | 前端 KPI now 显示真实合同额，不再按全年目标 30% 裁剪；利润卡改为“项目毛利”，口径为合同额减实际成本或后端显式 gross_profit |
+| RPT-12 | 驾驶舱成本页签/销售漏斗恒空（useState 无 setter），健康度结果丢弃 | P2 | 已验证 | useExecutiveDashboard.js；useExecutiveDashboard.test.js | 1d | 静态已证；✅已动态回归（2026-07-04） | 健康分布接口结果 now 写入 `healthData`；成本数据从 summary 生成已用/剩余预算；销售漏斗接 `/sales/statistics/funnel` 真实数据；`costData/salesFunnelData` 已补 setter |
+| RPT-13 | 采购看板"节省金额"写死 0 | P2 | 已验证 | dashboard/stats.py；tests/unit/test_dashboard_procurement_stats_rpt13.py | 0.5d(Quick-win) | 静态已证；✅已动态回归（2026-07-04） | 采购统计 now 按来源采购申请预估金额 - 关联采购订单实际金额聚合正差；含税金额优先，含税为 0 回退 `total_amount`，不再硬写 0 |
+| RPT-14 | 成本看板图表配置保存/读取为桩 | P3 | 已验证 | dashboard/cost_dashboard.py；models/dashboard_chart_config.py；schemas/dashboard.py；tests/unit/test_cost_dashboard_chart_config_rpt14.py | 1d | 静态已证；✅已动态回归（2026-07-04） | 图表配置 now 持久化到 `dashboard_chart_configs`；保存返回 id，读取按 id 查库，缺失 404；`/chart-config/{config_id}` 已排在 `/{project_id}` 前 |
 | RPT-15 | admin_stats 整体占位 fallback | P2 | 重复-合并→ADMIN-05 | admin_stats.py:7-23 | — | 静态已证 | 与 ADMIN-05 同一文件同一占位，ADMIN-05 为主 |
 | RPT-16 | 负荷瓶颈接口 dept.name 字段不存在必 500（模型只有 dept_name） | P2 | 已验证 | workload.py:373；organization.py:59-62 | 0.1d(Quick-win) | 静态已证；✅已补回归验证（2026-07-03） | 当前 Department.name 兼容属性返回 dept_name；已新增超载部门 API 合约测试 |
 | RPT-17 | 报表框架主干（引擎/17 适配器/YAML/Excel·Word 渲染/销售域导出） | — | 已验证 | engine.py:126；excel_export_service.py:106-235 | — | 静态已证（正面确认） | 无缺陷 |
 
-**RPT 域小结**：框架和大部分聚合真（RPT-17），但三类系统性假象：①"待实现"桩静默返回空 200（RPT-01）；②demo 硬编码兜底/前端封顶让经营数字失真（RPT-04/11）；③schema 契约断裂让约 46 张工作台卡+驾驶舱 4 项 KPI+导出明细恒空（RPT-06/09/10，均 AS-13 同型）。建议作"契约测试"专项一次收口。Quick-win 包：RPT-06、RPT-09 批量改名、RPT-16、RPT-11 删封顶、RPT-13 下架。
+**RPT 域小结**：框架和大部分聚合真（RPT-17）；"待实现"桩静默返回空 200（RPT-01）、demo 硬编码兜底/前端封顶（RPT-04/11）、schema 契约断裂（RPT-06/09/10）、template_report 三套并存（RPT-07）、PPT 硬编码孤岛（RPT-08）、含税/不含税口径混用（RPT-05/SALES-17）已先后收口。RPT 域当前无独立待修项。
 
 ### 十二、边缘业务模块域（MISC，24 项）
 
@@ -348,29 +352,29 @@
 | MISC-01 | 竞品分析菜单页展示虚构数据（后端硬编码+前端 0 次 API 调用） | P0 | 已验证 | competitor_analysis.py；salesRoutes.jsx；sidebarConfig/default.js；tests/api/test_competitor_analysis_stopgap_contracts.py；salesCompetitorAnalysisStopgap.test.jsx | 下架 0.5d | 静态已证；✅已下架止血并回归（2026-07-03） | 菜单与 `/sales/competitor-analysis` 路由已移除；后端直链返回 501，不再吐“竞品A/宁德时代”等硬编码假数据 |
 | MISC-02 | 资源总览 PMO 可达页恒空白 | P1 | 待修 | resource_overview.py:7-24；ResourceOverview.jsx:323 | 聚合 3-5d/摘菜单 0.5h | 静态已证 | 与 HR-23、AS-24 同 resource_conflicts 空表/双轨病灶互引 |
 | MISC-03 | 预警超时升级任务坏死（对 Column 取布尔导致查询短路） | P1 | 已验证 | alert_escalation_task.py；tests/unit/test_utils_missing.py | 0.5d | 静态已证；✅已动态回归（2026-07-03） | 与 APPR-17/AS-25 的 841 饿死不同源，是升级任务本身崩；未升级判断改 SQL 表达式并纳入 OPEN/PENDING/ACKNOWLEDGED/PROCESSING |
-| MISC-04 | best_practice(P0 优化 4 端点) 僵尸+半成品（从未注册、0 commit、无认证） | P2 | 待修 | best_practice.py:32-34；set_kitting_targets:435 | 下架 0.5d | 静态已证 | 零鉴权写端点；与已挂载 best_practices/ 勿混 |
+| MISC-04 | best_practice(P0 优化 4 端点) 僵尸+半成品（从未注册、0 commit、无认证） | P2 | 已验证 | best_practice.py；projects/__init__.py；tests/unit/test_best_practice_legacy_misc04.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 旧 `best_practice.py` 仍未挂载主路由；潜在写端点已补 `material:update/supplier:update/project:update`；真实前端路径继续走已挂载 `/projects/best-practices` |
 | MISC-05 | endpoints/knowledge 僵尸三无（表不存在挂载即 500，硬编码冒充 AI） | P2 | 待修 | __init__.py:19；knowledge_entries/knowledge_alerts 表不存在 | 下架 1d | 静态已证 | 前端调另一套 /knowledge-base |
 | MISC-06 | documents 文档中心上传端到端不可用（无 multipart 端点前端必 422） | P1 | 待修 | documents POST 只收 JSON；Documents.jsx:188 | 2-3d | 静态已证 | 权限错用 document:read 应改 document:create；DB 60 行全 demo 假 path |
-| MISC-07 | advantage_products 133 行真数据不可达（前端组件孤儿无入口） | P1 | 待修 | AdvantageProducts.jsx 无 import；routes/sidebar 零命中 | 加路由+菜单 0.5d | 静态已证 | 5 模块唯一有真数据；import?clear_existing=true 默认清库需改 false |
+| MISC-07 | advantage_products 133 行真数据不可达（前端组件孤儿无入口） | P1 | 已验证 | AdvantageProducts.jsx；presalesRoutes.jsx；sidebarConfig/default.js；presales.js；import_excel.py；tests/unit/test_advantage_products_misc07.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 已新增 `/presales/advantage-products` 路由和侧边栏“优势产品”入口；导入接口前后端默认 `clear_existing=false`，避免误清库；搜索框不再默认显示 unknown |
 | MISC-08 | change_impact 占位上线真路由未挂 | P2 | 待修 | change_impact.py:7-24；projects/change_impact.py 未 include | 下架 0.5h/挂真 1-2d | 静态已证 | — |
-| MISC-09 | cost_collection POST/collect 缺 RBAC（任何用户可全量触发写库归集） | P1 | 待修 | cost_endpoints/collection.py:55 | 0.5-1d | 静态已证 | 零鉴权写端点；与 PROJ-11 成本归集互引 |
-| MISC-10 | cost_variance 成本偏差真功能·隐身（无菜单入口，无数据权限） | P2 | 待修 | financeRoutes:28；/{project_id}:166 | 1d | 静态已证 | /{project_id} 不存在返 200 应 404；/summary N+1 |
-| MISC-11 | solution_credits 僵尸+刷分漏洞（自退任意积分） | P2 | 待修 | solution_credits 428 行；POST/internal/refund:56 | 下架 0.5h | 静态已证 | 任何登录用户可给自己退任意积分，启用扣费即刷分 |
+| MISC-09 | cost_collection POST/collect 缺 RBAC（任何用户可全量触发写库归集） | P1 | 已验证 | cost_endpoints/collection.py；tests/unit/test_cost_collection_permissions_misc09.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | `/cost-collection/collect` now 要求 `cost:manage`；读侧 status/by-project 仍为登录可读；与 PROJ-11 成本归集口径问题互引但权限漏洞已收口 |
+| MISC-10 | cost_variance 成本偏差真功能·隐身（无菜单入口，无数据权限） | P2 | 已验证 | cost_endpoints/variance_analysis.py；tests/unit/test_cost_variance_misc10.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | `/cost-variance` 三端点 now 要求 `project:read`；`/{project_id}` 不存在抛 404；`summary` 成本类型 breakdown 改为一次 grouped 查询，消除逐项目 N+1 |
+| MISC-11 | solution_credits 僵尸+刷分漏洞（自退任意积分） | P2 | 已验证 | solution_credits/internal.py；tests/unit/test_solution_credits_permissions_misc11.py | 0.5h | 静态已证；✅已动态回归（2026-07-04） | `/solution-credits/internal/refund` now 要求 `solution_credit:manage`；退款数量 Query 加 `ge=1/le=1000` 边界；用户自助查询/检查仍保持登录可用 |
 | MISC-12 | performance_contract 裸 sqlite3+import 期 DDL | P1 | 重复-合并→HR-15 | contract.py:28,140 | — | 静态已证 | 与 HR-15 同一 performance_contract 裸 sqlite3，HR-15 为主 |
 | MISC-13 | project_contributions 闭环断裂（前端仅 getReport 接了页面，报告页永远空） | P2 | 待修 | 后端 5 端点全真；rate/calculate/list 仅测试出现 | 2-3d | 静态已证 | DB period 全 "pr30222" 非法 |
-| MISC-14 | pm_involvement 零鉴权+数据源桩致误判（6 端点全无 auth 含写语义） | P1 | 待修 | 6 端点无 auth；get_similar_project_count:131 硬编码 0；crd.py:195 | 加 auth 0.5d+数据源 2-3d | 静态已证 | 零鉴权写端点；DB 10/12 工单误判"高风险"失去区分度 |
-| MISC-15 | relationship_maturity 假数据+必崩（improvement-plan 引用未定义变量 NameError 500） | P1 | 待修 | relationship 725 行:286,602 | 下架 1h | 静态已证 | 前后端双假（RelationshipMaturity.jsx:41 硬编码）；建议下架 |
+| MISC-14 | pm_involvement 零鉴权+数据源桩致误判（6 端点全无 auth 含写语义） | P1 | 已验证 | performance/pm_involvement.py；pm_involvement_service.py；presale/tickets/crud.py；tests/unit/test_pm_involvement_misc14.py | 1d | 静态已证；✅已动态回归（2026-07-04） | 6 端点已补鉴权：POST 判断/自动判断/通知生成需 `presale:manage`，GET 查询/示例需登录；相似项目/失败数查 `Project`，标准方案查启用模板库，工单创建和 auto-judge 不再固定 0/False |
+| MISC-15 | relationship_maturity 假数据+必崩（improvement-plan 引用未定义变量 NameError 500） | P1 | 已验证 | relationship_maturity.py；RelationshipMaturity.jsx；relationshipMaturity.js；tests/unit/test_relationship_maturity_misc15.py | 1d | 静态已证；✅已动态回归（2026-07-04） | 客户评估 now 查真实客户并调用 `RelationshipScoringService`；缺失客户 404；improvement-plan 修复 `gap` NameError 且移除固定人名；portfolio 读取 `customer_relationship_scores` 最新记录；前端不再内置宁德/比亚迪样例，改走真实 API |
 | MISC-16 | RequirementSurvey 前端孤儿+后端 404 僵尸 | P2 | 待修 | survey.js:4；后端零匹配无表 | 删目录 0.5h | 静态已证 | 完整开发后遗弃 |
 | MISC-17 | resource_scheduling 占位+完全僵尸 | P2 | 待修 | placeholder shim；api.py:1151 | 下架 0.5h | 静态已证 | 与真实 engineer_scheduling 无关联，勿误删 |
-| MISC-18 | business_support 前缀丢失 5 组 API 全 404 | P1 | 待修 | api.py:826 不带前缀挂载 | 补前缀 0.5d/下架 1d | 静态已证 | dashboard/bidding/contractReview/paymentReminder/getTodos 全 404 |
+| MISC-18 | business_support 前缀丢失 5 组 API 全 404 | P1 | 已验证 | api.py:824；business_support/__init__.py；dashboard.py；contract_review.py；payment_reminders.py；tests/unit/test_business_support_prefix_misc18.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 主路由 now 挂 `/business-support`；dashboard/bidding/contract-review/payment-reminder/todos 前端路径全部注册；旧 contracts/payment-reminders 兼容保留 |
 | MISC-19 | business_support_orders 发货真其余僵尸 | P2 | 待修 | 发货单完整；开票/对账/入驻/验收僵尸 | 评估 1d | 静态已证 | 发货审批走模块内翻状态不走引擎 |
-| MISC-20 | budget 写操作权限全配成 budget:read（接前端即越权） | P2 | 待修 | budgets.py/items.py/allocation_rules.py update/submit/delete | 换权限码 0.5d | 静态已证 | permissions 表已有 budget:create/update/delete 种子 |
+| MISC-20 | budget 写操作权限全配成 budget:read（接前端即越权） | P2 | 已验证 | budgets.py；items.py；allocation_rules.py；tests/unit/test_budget_permissions_misc20.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 预算 update/submit→`budget:update`，delete→`budget:delete`；明细写操作→`budget:update`；分摊规则 create/update/delete→对应权限，读接口保留 `budget:read` |
 | MISC-21 | budget 整体审批自闭环+前端僵尸+脏数据（total≠Σitems） | P2 | 待修 | submit/approve 只翻 status 无 ApprovalInstance | 切 budgetApi 2-3d/下架 0.5d | 静态已证 | 与 APPR-02 同源（连接口都没接）；DB 60 行全部 total≠Σitems |
 | MISC-22 | alerts 自定义规则 CRUD 是摆设（通用引擎无生产调用方） | P2 | 待修 | AlertRuleEngine.evaluate_rule 仅单测；rules.py:128 | 加调度 2-4d/降级 0.5d | 静态已证 | 实际产警走各域硬编码 rule_code；create/toggle 无权限 |
 | MISC-23 | culture_wall config 占位+goals 前端 404+空播 | P2 | 待修 | culture_wall_config.py:7-25；admin.js:243；contents 无 PUT/DELETE | 1-2d | 静态已证 | 与 HR-22 同一 culture_wall，HR-22 为主，本项补 config/goals/PUT 细节，互引不合并 |
 | MISC-24 | ai_strategy 84 端点巨型僵尸+前端 5 接口全 404 | P2 | 待修 | /ai-strategy 8 模块 84 端点；aiStrategy.js 5 调用无一匹配 | 下架 0.5d/重写 5d+ | 静态已证 | 全库最大僵尸，典型前后端各写各的 |
 
-**MISC 域小结**：24 个边缘模块以"僵尸/半成品/假实现"为主。P0 唯 MISC-01（用户正看虚构竞品数据）已下架止血；P1 集群：MISC-02 恒空白、MISC-03 升级任务坏死（已修复）、MISC-06 上传必 422、MISC-07 133 行真数据不可达+清库默认值、MISC-09 归集无 RBAC、MISC-12 裸 sqlite3+启动 DDL（并入 HR-15）、MISC-14 PM 误判 10/12、MISC-18 商务支持 5 组 404、人事 PII 入库。建议直接下架止血：resource_scheduling、relationship_maturity、change_impact 占位、culture_wall_config 占位、best_practice、endpoints/knowledge、solution_credits、RequirementSurvey、ai_strategy、business_support 五组。
+**MISC 域小结**：24 个边缘模块以"僵尸/半成品/假实现"为主。P0 唯 MISC-01（用户正看虚构竞品数据）已下架止血；P1 集群：MISC-02 恒空白、MISC-03 升级任务坏死（已修复）、MISC-06 上传必 422、MISC-12 裸 sqlite3+启动 DDL（并入 HR-15）、人事 PII 入库。MISC-04 legacy best_practice 下架确认+潜在权限、MISC-07 优势产品入口/导入默认安全值、MISC-09 归集无 RBAC、MISC-10 成本偏差权限/404/N+1、MISC-11 积分自退刷分、MISC-14 PM 介入零鉴权/数据源桩、MISC-15 关系成熟度前后端假数据/NameError 已接真实评分与记录、MISC-18 商务支持 5 组 404 已补前后端契约/权限。建议直接下架止血：resource_scheduling、change_impact 占位、culture_wall_config 占位、endpoints/knowledge、RequirementSurvey、ai_strategy。
 
 ## 视图一：17 项全局 P0 → 追踪 ID 映射
 
@@ -402,10 +406,10 @@
 |---|---|---|
 | **P0-0 资金正确性急救包**（插队最前） | SALES-03 → SALES-01 → SALES-02 → SALES-04 → APPR-10 → APPR-11（含 PEER-04）→ APPR-15 → PEER-05 → SALES-09 | 约 6-8d |
 | **P0-0' 审批链救活包**（并入/前置 F2） | APPR-01（已验证）→ APPR-02（已验证）→ APPR-07（已验证，含 PEER-03）→ APPR-03（已验证；SALES-10 已随包消除） | 约 4-5d |
-| **Quick-win 闸门包**（≤1d/项，本周清完） | PROJ-06（已验证：结项 readiness 门禁）、PROJ-10（已验证：里程碑 except 重抛+全局 complete 接状态机）、PRE-16（已验证：_has_live_ai 补 qwen）、PRE-23（已验证：立项关卡异常不再静默）、AS-19（已验证：关单 payload/id + 质保工单兜底）、APPR-07（已验证：撤回参数名）、AS-16（Header 铃铛）、PROD-13（报工回写移审批后） | 约 3d |
+| **Quick-win 闸门包**（≤1d/项，本周清完） | PROJ-06（已验证：结项 readiness 门禁）、PROJ-10（已验证：里程碑 except 重抛+全局 complete 接状态机）、PRE-16（已验证：_has_live_ai 补 qwen）、PRE-23（已验证：立项关卡异常不再静默）、AS-19（已验证：关单 payload/id + 质保工单兜底）、APPR-07（已验证：撤回参数名）、AS-16（已验证：Header 铃铛）、PROD-13（已验证：报工回写移审批后）、RPT-02（已验证：项目月报成本真实聚合）、RPT-03（已验证：成本分析按配置时薪）、RPT-06（已验证：xlsx 明细导出）、RPT-09（已验证：工作台 stats 契约）、RPT-10（已验证：驾驶舱 KPI 真实绑定）、RPT-11（已验证：驾驶舱 KPI 不封顶）、RPT-13（已验证：采购看板节省金额真实聚合） | 约 3d |
 | **假实现止损下架包** | SALES-06（假接口下架）、SALES-07（前端假兜底）、SALES-13（智能报价页）、PROD-17（AI 排程建议）、PRE-15（售前移动端路由）、PRE-20（AI 工作流编排）、PRE-12（方案"PDF 导出"）、PRE-13（export-report 假 URL） | 约 2d |
 | **F1 扩围（库存台账真实化）** | PROD-03（已验证）→ PROD-11（已验证，含 PROD-22）→ PROD-04（已验证）→ PROD-12（已验证）→ PROD-14（已验证）＋ PROD-02（已验证）；PROD-05（齐套修正）与 PROD-15（缺料→紧急采购闭环）仍待修 | 约 13d |
-| **F3 扩围（通知+调度可信化）** | AS-02（已验证）、AS-15（已验证）、AS-03（已验证）、AS-06（已验证）、AS-25（已验证）、AS-23（已验证）、PROJ-21（已验证）、APPR-16（已验证）、APPR-17（已验证）、MISC-03（已验证）、PRE-21（已验证，含 APPR-22①）、APPR-04（stub 标记/禁用已完成，缺料回填待做）、APPR-22（①/②/③/⑤已修，第二调度器监控待做） | 约 10-14d |
+| **F3 扩围（通知+调度可信化）** | AS-02（已验证）、AS-15（已验证）、AS-03（已验证）、AS-06（已验证）、AS-25（已验证）、AS-23（已验证）、PROJ-21（已验证）、APPR-16（已验证）、APPR-17（已验证）、MISC-03（已验证）、PRE-21（已验证，含 APPR-22①）、APPR-04（stub 标记/禁用已完成，缺料回填待做）、APPR-22（已验证：①/②/③/④/⑤） | 约 10-14d |
 | **其他（结构性/体验/收口，按域推进）** | 结构断链：PROD-08、AS-10、AS-11、PROJ-20、PROD-01、AS-04、PROD-06、PROD-07、PROD-16、AS-12；审批收口（F2 相关）：APPR-08、APPR-09、APPR-12、APPR-13（含 PEER-01/02）、APPR-19、APPR-20、APPR-21、PROD-09、PROD-10、SALES-05、AS-05、PROJ-04、PROJ-07；北极星体验：SALES-11、SALES-12、APPR-18、APPR-14、PROJ-03、PRE-04、PRE-10；数据可信：PROJ-11、PROJ-13、PROJ-14、PROJ-15、PROJ-16、PROJ-17/18/19、SALES-08、SALES-15；其余 P2/P3 按域排期 | 余量 |
 
 ## 视图三：数据清洗专项清单（存量脏数据，任何状态机修复前置）
@@ -486,10 +490,11 @@
 | ID | 一句话 | 等级 |
 |---|---|---|
 | ADMIN-18 | 合同附件下载无目录白名单，可 POST 任意 file_path→GET 拖走整库/私钥（任意文件读取） | P0(安全) |
-| MISC-11 | solution_credits POST/internal/refund 任何登录用户可给自己退任意积分（刷分） | P2 |
-| MISC-14 | pm_involvement 6 端点全无 auth（含写语义）+test 端点暴露生产 | P1 |
-| MISC-09 | cost_collection POST/collect 仅要求登录，任何用户可全量触发写库归集，无留痕 | P1 |
-| MISC-04 | best_practice 4 端点（含 PUT 写）均无认证 | P2 |
+| MISC-11 | solution_credits POST/internal/refund 原任何登录用户可给自己退任意积分；已改为 `solution_credit:manage` 权限门禁（2026-07-04） | P2（已验证） |
+| MISC-14 | pm_involvement 原 6 端点全无 auth；已补登录/`presale:manage` 权限，且 test 示例端点不再匿名可读（2026-07-04） | P1（已验证） |
+| MISC-09 | cost_collection POST/collect 原仅要求登录；已改为 `cost:manage` 权限门禁（2026-07-04） | P1（已验证） |
+| MISC-10 | cost_variance 原 summary/patterns/detail 仅登录可读，且 detail 缺失项目返 200；已改为 `project:read`、404、summary grouped 查询（2026-07-04） | P2（已验证） |
+| MISC-04 | legacy best_practice 原 4 个潜在写端点均无认证；已确认未挂载主路由并补写权限门禁（2026-07-04） | P2（已验证） |
 | PERM-11 | require_permission 覆盖率 34%，125 个 NONE 端点裸奔（通用 CRUD/员工/风险/产能任意登录可调） | P1 |
 | PERM-15/16/17 | 数据权限整域裸奔：制造/供应链/财务 0 行级过滤，配置层坏死，CUSTOMER 恒 True | P1 |
 | TEN-06 | 多租户无上下文全链 fail-open，163 非超管 tenant_id=NULL 畅通，越权不被拒 | P1 |

@@ -1,5 +1,242 @@
 # PROJECT_NOTES
 
+## 2026-07-04 继续：功能审计 SALES-11 修复（线索转商机承接 + G1 默认走门）
+
+- 修复项：`SALES-11`（北极星项），转商机丢字段（LeadRequirementDetail 里已录的对象/节拍/接口/验收/安全全部丢弃）+ 前端 LeadManagement 写死 skip_validation=true 默认绕 G1。
+- 后端 `leads/actions.py`：
+  - 新增 `_carry_over_lead_detail`：转商机自动承接线索需求详情到 opportunity_requirements（product_object/ct_seconds/interface_desc(通讯协议+接口类型)/acceptance_criteria(依据+方式)/safety_requirement/site_constraints(环境+占地+现场规范)）；显式 requirement_data 优先，承接只补空位；JSON 数组字段拍平为顿号串。
+  - 商机侧承接 requirement_maturity/acceptance_basis/delivery_window（期望交付日期）。
+- 前端 `LeadManagement.jsx`：默认 skip_validation=false 走 G1；400 时把缺口清单展示给人，由人确认"带缺口转换"（gate_status=PENDING 待补）——绕门从默认行为变成显式人工决策留痕。
+- 验证：红灯 2 项（承接/显式优先）→ 绿灯 `tests/unit/test_lead_convert_carryover.py` 2 passed；`tests/api/test_sales.py` 回归仅剩已知签署门禁测试债 2 项；LeadDetail 前端回归 1 passed；eslint + `npm run build` 通过。
+
+## 2026-07-04 继续：功能审计 RPT-07 修复（template_report 三套实现收敛）
+
+- 修复项：`RPT-07`，template_report 同时存在旧根服务 `app/services/template_report_service.py`、新核心 `app/services/template_report/core.py`、统一框架 adapter 三套；adapter 还从 `app.services.template_report import template_report_service` 导入一个不存在的符号，直跑会 ImportError。
+- 根因：旧服务早期内置了一套 `_generate_*` 分发，后续新增了 `TemplateReportCore` 和 `TemplateReportDataService`，但 adapter 没切到新核心；`app/services/template_report/` 目录也没有兼容导出。
+- 改动：
+  - `app/services/report_framework/adapters/template.py`：新增 `template_report_service` facade，实际调用 `TemplateReportCore.generate_from_template()`；移除函数内断链 import。
+  - `app/services/template_report_service.py`：改成旧入口兼容 wrapper，不再保留第二套 `_generate_*` 逻辑。
+  - `app/services/template_report/__init__.py`：新增懒加载代理，保留旧 `app.services.template_report.template_report_service` 路径。
+  - `app/services/template_report/core.py`：补 `__init__(db)` 兼容旧实例化方式，并将 mixin imports 提到模块级。
+  - 新增 `tests/unit/test_template_report_rpt07.py`，覆盖 adapter 不再断链、旧根服务只转发到 core。
+- 验证：
+  - 红灯：`pytest -q tests/unit/test_template_report_rpt07.py` -> 2 failed，adapter ImportError，旧根服务返回自己的空结构。
+  - 绿灯：同命令 -> 2 passed。
+  - 相邻回归：`pytest -q tests/unit/test_template_report_rpt07.py tests/unit/test_template_report_adapter.py tests/unit/test_template_report_data_service.py tests/unit/test_template_report_core.py tests/unit/test_template_report_service_coverage.py tests/unit/test_template_coverage.py` -> 34 passed。
+  - 兼容回归：`PYTHONPATH=. pytest -q app/tests/services/report_framework/adapters/test_template.py` -> 6 passed。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `RPT-07` 已改为 `已验证`。
+
+## 2026-07-04 继续：功能审计 RPT-08 修复（PPT 生成器硬编码孤岛）
+
+- 修复项：`RPT-08`，`app/services/ppt_generator/generator.py` 能真实产出 pptx，但主流程 100% 写死非标自动化营销 deck（15+ 年、1000+ 台、50+ 专利等），且项目内没有 API/服务调用方。
+- 根因：PPT 生成器把“模板内容”和“生成引擎”写在同一个类里；无输入参数也会保存一份硬编码演示稿，测试也在保护旧硬编码章节。
+- 改动：
+  - `PresentationGenerator.generate()` 改为必须显式传入 `deck_spec`，未传直接 `ValueError`，避免无数据也生成演示内容。
+  - 主生成流程改为数据驱动：支持 cover、toc、section、content、table；所有标题、正文、表头、行数据都来自 `deck_spec`。
+  - 删除旧硬编码营销 deck 生成分支，`rg` 扫描确认生成器内不再残留旧“15+ 年/1000+ 台/50+ 专利/5000 亿美元”等文案。
+  - 补齐 `app/services/ppt_generator/builders/*` 兼容导入路径；`BaseSlideBuilder` 支持无参初始化；`PresentationConfig` 增加 `fonts` 映射。
+  - 重写 `tests/unit/test_ppt_generator.py` 为新数据驱动契约，并新增 `tests/unit/test_ppt_generator_rpt08.py`。
+- 验证：
+  - 红灯：`pytest -q tests/unit/test_ppt_generator_rpt08.py` -> 2 failed，无 spec 仍生成 demo，`deck_spec` 参数不存在。
+  - 绿灯：同命令 -> 2 passed。
+  - PPT 组合回归：`pytest -q tests/unit/test_ppt_generator*.py` -> 25 passed, 8 skipped。
+  - 静态扫描：`rg -n "15\\+|1000\\+|50\\+|5000亿美元|黄金时代|智能驱动|精准交付|救火|掌控|非标自动化测试设备全生命周期" app/services/ppt_generator ...` -> no matches。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `RPT-08` 已改为 `已验证`。
+
+## 2026-07-04 继续：功能审计 RPT-01 修复（报表中心待实现桩）
+
+- 修复项：`RPT-01`，报表中心配置和角色权限矩阵展示 `RISK_REPORT/COMPANY_MONTHLY/CUSTOM/SALES_FUNNEL/PROCUREMENT_ANALYSIS` 等未实现类型；用户直调生成时旧 router 返回空 `summary/details/charts` + `message=该报表类型待实现`，adapter/API 会当成功报表保存。
+- 根因：公开配置、权限矩阵、旧 `ReportRouterMixin` 三处各自维护报表类型；router 的兜底不是 `error`，而 adapter 只会把 `error` 转成异常。
+- 改动：
+  - `app/services/report_data_generation/core.py`：新增 `IMPLEMENTED_REPORT_TYPE_DEFINITIONS/IMPLEMENTED_REPORT_TYPES`，并将角色权限矩阵收敛到真实可生成的 6 类报表。
+  - `app/api/v1/endpoints/report_center/configs.py`：`/configs/types` 改为从真实已实现类型定义生成，不再展示 `RISK_REPORT/COMPANY_MONTHLY/CUSTOM`。
+  - `app/services/report_data_generation/router.py`：未实现或未开放报表类型返回 `{"error": ...}`，不再返回空成功桩。
+  - 新增 `tests/unit/test_report_center_rpt01.py`，覆盖权限矩阵、类型配置和直调 fail-closed。
+- 验证：
+  - 红灯：`pytest -q tests/unit/test_report_center_rpt01.py` -> 3 failed，缺少已实现类型中心定义，配置仍展示未实现类型，`RISK_REPORT` 返回空成功桩。
+  - 绿灯：同命令 -> 3 passed。
+  - 相邻回归：`pytest -q tests/unit/test_report_center_rpt01.py tests/unit/test_services_p5_coverage.py::TestReportRouterMixin tests/unit/test_services_p5_coverage.py::TestReportDataGenerationCore` -> 10 passed。
+  - 备注：旧 `app/tests/services/report_framework/adapters/test_report_data_generation.py` 当前自身失败（`mock_db=` 参数错误、patch 不存在的 `ReportRouterMixin` 模块符号），未进入本次业务断言。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `RPT-01` 已改为 `已验证`。
+
+## 2026-07-04 继续：功能审计 RPT-14 修复（成本看板图表配置）
+
+- 修复项：`RPT-14`，成本看板 `POST /dashboard/cost/chart-config` 只 echo 请求体，`GET /chart-config/{config_id}` 返回示例配置；同时读取路由排在 `GET /{project_id}` 后，存在被动态路由吞掉的风险。
+- 根因：端点没有任何持久化模型；读取接口用硬编码示例配置冒充真实查询；静态路由顺序不符合 FastAPI 路由匹配要求。
+- 改动：
+  - 新增 `app/models/dashboard_chart_config.py`，保存图表类型、标题、轴字段、数据源、筛选条件、自定义指标和创建用户。
+  - `app/schemas/dashboard.py` 的 `ChartConfigSchema` 增加可选 `id`。
+  - `app/api/v1/endpoints/dashboard/cost_dashboard.py`：保存配置落库并返回 id；读取按 id 查询，不存在返回 404。
+  - 将 `GET /chart-config/{config_id}` 移到 `GET /{project_id}` 之前。
+  - 新增 `tests/unit/test_cost_dashboard_chart_config_rpt14.py`，覆盖保存-读取往返、缺失 404、静态路由优先于动态路由。
+- 验证：
+  - 红灯1：`pytest -q tests/unit/test_cost_dashboard_chart_config_rpt14.py` -> 2 failed，保存返回 dict 无 id，缺失 id 未 404。
+  - 红灯2：补持久化后同命令 -> route order failed，`/chart-config/{config_id}` 在 `/{project_id}` 后。
+  - 绿灯：同命令 -> 3 passed。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `RPT-14` 已改为 `已验证`。
+
+## 2026-07-04 继续：功能审计 RPT-04 修复（财务报表 demo 兜底）
+
+- 修复项：`RPT-04`，财务报表 `monthly-trend/cost-analysis/project-profitability/cash-flow` 在无真实数据时返回硬编码 demo；`cost-analysis` 预算列用 `amount * 1.08` 编造。
+- 根因：`app/api/v1/endpoints/finance_reports.py` 已接真实合同、发票、项目成本和财务成本，但空数据分支继续静默返回演示数据；成本预算没有读取预算表。
+- 改动：
+  - 删除四个端点的 demo fallback；无真实数据时返回空列表，让前端按空态处理。
+  - `cost-analysis` 新增 `_budget_by_cost_category()`，汇总 `ProjectBudgetItem`，只读取 `ProjectBudget.status == APPROVED` 且 active 的预算明细。
+  - 成本分析类目 now 取实际成本类目和预算类目的并集，预算-only 类目也返回；`variance = amount - budget`。
+  - 新增 `tests/unit/test_finance_reports_rpt04.py`，覆盖空库不返回 demo、预算来自审批预算明细、不计 `PLAN` 成本。
+- 验证：
+  - 红灯：`pytest -q tests/unit/test_finance_reports_rpt04.py` -> 2 failed，月趋势返回 12 个月 demo，成本预算为 108 且缺人工预算行。
+  - 绿灯：同命令 -> 2 passed。
+  - 备注：`tests/api/test_financial_reports_api.py` 当前卡在本机 `TestClient`/`httpx` 不兼容：`Client.__init__() got an unexpected keyword argument 'app'`，未进入业务断言。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `RPT-04` 已改为 `已验证`。
+
+## 2026-07-04 继续：功能审计 RPT-03 修复（成本分析时薪硬编码）
+
+- 修复项：`RPT-03`，`COST_ANALYSIS` 人工成本按总工时直接乘硬编码 100；同一工程师不同日期时薪变更、不同工程师不同配置都会被抹平。
+- 根因：旧 `app/services/report_data_generation/analysis_reports.py` 和新 `app/services/report_framework/generators/analysis.py` 都没有接已有 `HourlyRateService`，而是各自保留 100 元默认口径。
+- 改动：
+  - 新增 `app/services/report_labor_cost.py`，按每条 `Timesheet.user_id + work_date` 读取 `HourlyRateService.get_user_hourly_rate()` 并汇总人工成本。
+  - `report_data_generation` 旧入口和 `report_framework` 新生成器都改用共享 helper。
+  - 新增 `tests/unit/test_analysis_reports_rpt03.py`，覆盖同一工程师 1 月 15 日前后不同配置、另一工程师不同配置，以及区间外工时不计入。
+- 验证：
+  - 红灯：`pytest -q tests/unit/test_analysis_reports_rpt03.py` -> 2 failed，两个入口均返回 600（6 小时 × 100），期望 760。
+  - 绿灯：同命令 -> 2 passed。
+  - 相邻回归：`pytest -q tests/unit/test_analysis_reports.py tests/unit/test_services_p3_coverage.py::TestAnalysisReportGenerator tests/unit/test_services_p5_coverage.py::TestWorkloadAnalysisAdapter tests/unit/test_services_p5_coverage.py::TestReportDataGenerationAdapter` -> 14 passed。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `RPT-03` 已改为 `已验证`。
+
+## 2026-07-04 继续：功能审计 RPT-02 修复（项目月报成本恒 0）
+
+- 修复项：`RPT-02`，`PROJECT_MONTHLY` 项目月报 `cost.actual_cost/cost_variance/cost_variance_percent` 写死 0，导致有成本记录的项目月报仍显示无实际成本。
+- 根因：`app/services/report_data_generation/project_reports.py` 已有项目月报结构，但没有接项目成本数据源；真实成本分散在自动归集 `ProjectCost` 和财务手录 `FinancialProjectCost`。
+- 改动：
+  - `app/services/report_data_generation/project_reports.py`：新增 `_sum_project_actual_cost()`。
+  - 月报成本汇总 now 按报表期间汇总 `ProjectCost` 的 ACTUAL 口径成本与 `FinancialProjectCost` 金额。
+  - `cost_variance` 改为 `planned_cost - actual_cost`，`cost_variance_percent` 按预算差额率计算。
+  - 新增 `tests/unit/test_project_monthly_report_rpt02.py`，覆盖同项目区间内自动成本 200 + 财务成本 150，区间外成本不计入，月报实际成本应为 350。
+- 验证：
+  - 红灯：`pytest -q tests/unit/test_project_monthly_report_rpt02.py` -> failed，`actual_cost` 仍为 0。
+  - 绿灯：同命令 -> 1 passed。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `RPT-02` 已改为 `已验证`。
+
+## 2026-07-04 继续：功能审计 RPT-13 修复（采购看板节省金额）
+
+- 修复项：`RPT-13`，统一工作台采购统计卡“节省金额”在后端 `dashboard/stats.py` 明确硬编码为 0，前端只显示后端返回值，导致采购看板恒 `¥0`。
+- 根因：后端没有把采购申请的预估金额与来源采购订单的实际金额做关联比较；`StatsCard` 的前端默认 `¥0` 只是 API 不可用兜底，不是真实数据源。
+- 改动：
+  - `app/api/v1/endpoints/dashboard/stats.py`：新增采购节省额聚合，按 `PurchaseRequest.total_amount - 关联 PurchaseOrder 实际金额` 计算正差。
+  - 同一采购申请先聚合订单金额，避免拆单重复计算申请金额；订单实际金额优先用 `amount_with_tax`，含税金额为 0 时回退 `total_amount`。
+  - 新增 `tests/unit/test_dashboard_procurement_stats_rpt13.py`，用真实 SQLite 测采购申请 1000、关联订单 700 时卡片显示 `¥300`。
+- 验证：
+  - 红灯：`pytest -q tests/unit/test_dashboard_procurement_stats_rpt13.py` -> failed，节省金额仍返回 `¥0`。
+  - 绿灯：同命令 -> 1 passed。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `RPT-13` 已改为 `已验证`。
+
+## 2026-07-04 继续：功能审计 RPT-12 修复（驾驶舱数据集恒空）
+
+- 修复项：`RPT-12`，决策驾驶舱 `costData/salesFunnelData` 使用无 setter 的 `useState([])`，销售漏斗和成本构成恒空；`getHealthDistribution()` 被调用但结果直接丢弃。
+- 改动：
+  - `frontend/src/pages/executive-dashboard/useExecutiveDashboard.js`：`costData/salesFunnelData` 补 setter。
+  - 健康分布接口结果写入 `healthData` 并复用健康指数计算。
+  - 成本数据由 executive summary 的 `total_budget/total_actual_cost` 生成“已用预算/剩余预算/超预算”结构。
+  - 销售漏斗接 `salesStatisticsApi.funnel()`，归一化为 FunnelChart 需要的 `stage/value`。
+  - `frontend/src/pages/executive-dashboard/useExecutiveDashboard.test.js` 新增 RPT-12 契约测试。
+- 验证：
+  - 红灯：`npm run test:run -- src/pages/executive-dashboard/useExecutiveDashboard.test.js` -> failed，`healthData` 仍为 `{}`。
+  - 绿灯：同命令 -> 3 passed。
+  - 静态检查：`npx eslint src/pages/executive-dashboard/useExecutiveDashboard.js src/pages/executive-dashboard/useExecutiveDashboard.test.js` passed；相关 diff whitespace check passed。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `RPT-12` 已改为 `已验证`。
+
+## 2026-07-04 继续：功能审计 RPT-10 修复（驾驶舱 KPI 字段绑定）
+
+- 修复项：`RPT-10`，决策驾驶舱 KPI 卡读取后端 executive summary 不存在的 `project_growth/on_time_delivery_rate/delivery_rate_change`，导致活跃项目变化和交付准时率稳定显示假 0。
+- 根因：`delivery-rate` 接口已单独请求并返回真实 `on_time_rate/on_time_projects/total_projects`，但前端归一化时丢掉分子/分母，且 `kpiCards` memo 不依赖 `deliveryData`。
+- 改动：
+  - `frontend/src/pages/executive-dashboard/useExecutiveDashboard.js`：新增交付数据归一化，保留 `rate/on_time_projects/total_projects`。
+  - 交付准时率 KPI 优先读 summary 显式字段，否则读最新 `deliveryData`；无环比时显示 `按期/总数`。
+  - 活跃项目 KPI 无 `project_growth` 时显示项目总数，不再假写“较上月 0%”。
+  - `kpiCards` memo 依赖补 `deliveryData`。
+  - `frontend/src/pages/executive-dashboard/useExecutiveDashboard.test.js` 新增 RPT-10 契约测试。
+- 验证：
+  - 红灯：`npm run test:run -- src/pages/executive-dashboard/useExecutiveDashboard.test.js` -> failed，交付数据只剩 `{ month, rate }`，分子/分母丢失。
+  - 绿灯：同命令 -> 2 passed。
+  - 静态检查：`npx eslint src/pages/executive-dashboard/useExecutiveDashboard.js src/pages/executive-dashboard/useExecutiveDashboard.test.js` passed；相关 diff whitespace check passed。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `RPT-10` 已改为 `已验证`。
+
+## 2026-07-03 继续：功能审计 RPT-11 修复（驾驶舱 KPI 前端封顶）
+
+- 修复项：`RPT-11`，决策驾驶舱前端把真实营收/利润用 `Math.min(..., 年目标 * 0.3)` 裁成 Q1 口径；合同额超过 4800 万时被截断，同时“合同额-实际成本”被标成“净利润”。
+- 改动：
+  - `frontend/src/pages/executive-dashboard/useExecutiveDashboard.js`：移除营收/利润 30% 封顶，达成率按真实值计算。
+  - 利润卡标题改为“项目毛利”，口径为后端显式 `gross_profit/total_gross_profit/profit`，否则用 `total_contract_amount - total_actual_cost` 兜底。
+  - 新增 `frontend/src/pages/executive-dashboard/useExecutiveDashboard.test.js`，覆盖 8000 万合同额不被裁剪、6000 万毛利不误标净利润。
+- 验证：
+  - 红灯：`npm run test:run -- src/pages/executive-dashboard/useExecutiveDashboard.test.js` -> failed，营收显示 `¥48,000,000.00` 而非 `¥80,000,000.00`。
+  - 绿灯：同命令 -> 1 passed。
+  - 静态检查：`npx eslint src/pages/executive-dashboard/useExecutiveDashboard.js src/pages/executive-dashboard/useExecutiveDashboard.test.js` passed；相关 diff whitespace check passed。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `RPT-11` 已改为 `已验证`。
+
+## 2026-07-03 继续：功能审计 RPT-09 修复（统一工作台统计卡契约）
+
+- 修复项：`RPT-09`，8 个旧工作台 adapter 用 `DashboardStatCard(label=...)`，但 schema 必填 `title`；统一入口吞掉单模块异常后表现为统计卡恒空。
+- 改动：
+  - `app/schemas/dashboard.py`：`DashboardStatCard.title` 兼容 `title`/`label` 两种输入，输出字段仍统一为 `title`。
+  - 同步保留旧 adapter 已传入的 `icon`/`color` 字段，避免统计卡样式信息被 schema 丢弃。
+  - 新增 `tests/unit/test_dashboard_stat_card_rpt09.py`，覆盖直接 `label=` 构造和真实 Presales adapter stats。
+- 验证：
+  - 红灯：`pytest tests/unit/test_dashboard_stat_card_rpt09.py -q` -> 2 failed，`title Field required`。
+  - 绿灯：同命令 -> 2 passed。
+  - 相邻回归：`tests/unit/test_dashboard_stat_card_rpt09.py tests/unit/test_dashboard_adapter.py` -> 17 passed。
+  - 8 个旧 `label=` adapter 空库 smoke：presales/hr/production/pmo/business_support/shortage/strategy/assembly_kit 均可产出 `title`。
+  - 静态检查：相关文件 `py_compile` passed；`ruff check` passed。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `RPT-09` 已改为 `已验证`。
+
+## 2026-07-03 继续：功能审计 RPT-06 修复（报表中心 xlsx 明细导出）
+
+- 修复项：`RPT-06`，旧报表导出分支把 `details` 塞进 table section 的 `source` 字段，而 `ExcelRenderer` 只读取 `data/columns`，导致 xlsx 明细恒写“无数据”。
+- 额外发现：同函数 CSV 分支局部 `from datetime import datetime` 让 xlsx 分支更新 `exported_at` 时命中 `UnboundLocalError` 500。
+- 改动：
+  - `app/api/v1/endpoints/report_center/generate/export.py`：抽出 `_build_legacy_report_sections()` / `_table_section()` / `_table_columns()`，xlsx/pdf 旧导出分支统一生成 `data + columns`。
+  - 移除 CSV 分支局部 `datetime` 导入，复用文件顶部导入。
+  - 新增 `tests/unit/test_report_center_export_rpt06.py`，用真实 `ExcelRenderer` 生成 xlsx 并用 openpyxl 验证明细表头和数据行。
+- 验证：
+  - 红灯1：`pytest tests/unit/test_report_center_export_rpt06.py -q` -> 500，`cannot access local variable 'datetime'...`。
+  - 红灯2：修复 datetime 后同命令 -> failed，xlsx 中仍有“无数据”。
+  - 绿灯：同命令 -> 1 passed。
+  - 报表相邻回归：`tests/unit/test_report_center_export_rpt06.py tests/unit/test_excel_renderer_coverage.py tests/unit/test_report_engine_n3.py` -> 49 passed。
+  - 静态检查：相关文件 `py_compile` passed；`ruff check` passed。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `RPT-06` 已改为 `已验证`。
+
+## 2026-07-03 继续：功能审计 HR-01 修复（员工 Excel 导入端点）
+
+- 修复项：`HR-01`，`POST /org/employees/import` 运行时从 `employee_import_service` 导入不存在的 `validate_excel_file`，上传入口会在服务层真正处理前崩溃。
+- 改动：
+  - `app/services/employee_import_service.py`：新增 `validate_excel_file()`，仅允许 `.xlsx/.xls`，非 Excel 返回 HTTP 400。
+  - `app/utils/common.py`：`clean_name("")`/`"/"`/`"NaN"` 恢复清洗为 `None`，避免空姓名行继续进入员工创建逻辑。
+  - `tests/unit/test_employee_import_service.py`：新增文件类型校验契约，并恢复员工导入服务整文件通过。
+  - `tests/api/test_organization.py`：新增非 Excel 上传 API 合约，确认返回 400 而不是运行时导入崩溃。
+- 验证：
+  - 红灯：`pytest tests/unit/test_employee_import_service.py -q` -> collection error，`cannot import name 'validate_excel_file'`。
+  - 绿灯：`tests/unit/test_employee_import_service.py` -> 24 passed。
+  - API 合约：`tests/api/test_organization.py::TestEmployeeCRUD::test_import_employees_rejects_non_excel_file` -> passed。
+  - 组合回归：`tests/unit/test_employee_import_service.py tests/api/test_organization.py::TestEmployeeCRUD::test_import_employees_rejects_non_excel_file` -> 25 passed。
+  - 静态检查：相关文件 `py_compile` passed；`ruff check` passed。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `HR-01` 已改为 `已验证`。
+
+## 2026-07-03 继续：功能审计 APPR-22 收口（第二调度器监控）
+
+- 修复项：`APPR-22` 子项④，`app/main.py` 启动了第二个 `app.scheduler_progress` 调度器，但监控面只看 `app.utils.scheduler` 主调度器；进度预测 job 执行不写 `scheduler_metrics`，`/scheduler/status` 与 `/scheduler/jobs` 也看不到它。
+- 改动：
+  - `app/scheduler_progress.py` 注册 `progress_auto_processing_daily` 时包 `_wrap_progress_job_callable()`，成功写 `record_job_success`，异常写 `record_job_failure` 后原样抛出。
+  - `app/api/v1/endpoints/scheduler/status.py` 汇总主调度器和 progress 调度器的 `running/job_count/jobs`，jobs 输出增加 `scheduler` 字段标识来源。
+  - 新增 `tests/unit/test_scheduler_progress_metrics_appr22.py`，覆盖 success/failure metrics 以及 status/jobs 两个监控接口。
+- 验证：
+  - 红灯：`pytest tests/unit/test_scheduler_progress_metrics_appr22.py -q` -> 先 2 failed（metrics 不记录），补状态契约后再 2 failed（job_count/jobs 只有主调度器）。
+  - 绿灯：同命令 -> 4 passed。
+  - 调度相邻回归：`tests/unit/test_scheduler_progress_metrics_appr22.py tests/unit/test_scheduler_utils.py tests/unit/test_scheduler_l4.py tests/unit/test_scheduler.py tests/unit/test_scheduler_unit.py tests/unit/test_scheduler_metrics_utils.py` -> 74 passed。
+  - APPR-22 组合回归：`tests/unit/test_ai_job_recovery.py tests/unit/test_backup_scheduler_appr22.py tests/unit/test_scheduler_progress_metrics_appr22.py tests/unit/test_scheduler_utils.py` -> 30 passed。
+  - 静态检查：`py_compile` 相关文件 passed；`ruff check` passed。
+- 台账：`APPR-22` 子项①/②/③/④/⑤全部已动态回归，主表从 `修复中` 改为 `已验证`。
+
 ## 2026-07-03 继续：功能审计 SALES-08 修复（目标 actual_value 实时回填）
 
 - 修复项：`SALES-08`，目标列表接口 `# TODO 实现目标绩效计算逻辑`——`actual_value` 取不存在的模型列恒 0，达成率恒 0；而 `SalesTeamService.calculate_target_performance`（SALES-15 补的）已具备完整口径，又是"算法真接线假"。
@@ -36,7 +273,7 @@
   - 备份服务回归：`app/tests/services/backup/test_backup_service.py tests/unit/test_backup_service_deep.py tests/unit/test_backup_scheduler_appr22.py` -> 35 passed。
   - 调度相邻回归：`tests/unit/test_scheduler_utils.py tests/audit_p0/test_p0_10_stub_tasks.py tests/unit/test_j3_scheduled_tasks.py::TestStubTasks tests/unit/test_backup_scheduler_appr22.py` -> 49 passed。
   - 静态检查：相关文件 `py_compile` passed；`ruff check` passed。
-- 台账：`APPR-22` 子项②已标已回归；当前 `APPR-22` 只剩子项④“第二调度器不进监控”。
+- 台账：`APPR-22` 子项②已标已回归；后续子项④“第二调度器不进监控”已在 APPR-22 收口小切口完成。
 
 ## 2026-07-03 继续：功能审计 PROJ-21 修复（项目变更通知）
 
@@ -74,7 +311,7 @@
   - 绿灯：`tests/unit/test_scheduler_utils.py` -> 20 passed；`import app.main` 路由加载成功。
   - 相邻回归：`tests/audit_p0/test_p0_10_stub_tasks.py tests/unit/test_j3_scheduled_tasks.py::TestStubTasks tests/unit/test_scheduler_utils.py` -> 47 passed。
   - 静态检查：`py_compile app/utils/scheduler.py app/main.py tests/unit/test_scheduler_utils.py` passed；`ruff check` passed。
-- 台账：`APPR-22` 从 `待修` 改为 `修复中`；子项①/③/⑤已标已回归，②备份自动执行、④第二调度器监控仍待做。
+- 台账：`APPR-22` 从 `待修` 改为 `修复中`；子项①/③/⑤已标已回归，②备份自动执行、④第二调度器监控已在后续小切口完成。
 
 ## 2026-07-03 继续：功能审计 PRE-21 验收收口（AI job 恢复）
 
@@ -176,7 +413,7 @@
 - 验证：
   - 红灯：`pytest tests/unit/test_scheduler_utils.py::TestResolveCallable::test_registered_ecn_overdue_job_resolves_real_callable -q` -> failed，`ModuleNotFoundError: No module named 'app.services.ecn_scheduler'`。
   - 绿灯：同命令 -> 1 passed；`pytest tests/unit/test_scheduler_utils.py::TestResolveCallable -q` -> 4 passed。
-- 残留：本项只修 ECN job 注册路径；`APPR-22` 里导入失败可见化已在后续小切口处理，备份自动执行和第二调度器监控仍单独保留。
+- 残留：本项只修 ECN job 注册路径；`APPR-22` 里的导入失败可见化、备份自动执行、第二调度器监控已在后续小切口收口。
 
 ## 2026-07-03 继续：功能审计 MISC-03 修复（预警超时升级扫描）
 
@@ -188,7 +425,7 @@
 - 验证：
   - 红灯：`pytest tests/unit/test_utils_missing.py::TestAlertEscalationTask::test_check_alert_timeout_escalation_query_targets_open_unescalated_alerts tests/unit/test_utils_missing.py::TestAlertEscalationTask::test_check_alert_timeout_escalation -q` -> 1 failed，捕获到过滤条件 `[status IN (...), False]`。
   - 绿灯：同命令 -> 2 passed；`pytest tests/unit/test_utils_missing.py::TestAlertEscalationTask -q` -> 6 passed。
-- 残留：本项只修升级任务自身查询和状态覆盖；订阅默认接收人与 webhook 渠道问题仍归 `AS-25`，备份/调度监控残项仍归 `APPR-22`。
+- 残留：本项只修升级任务自身查询和状态覆盖；订阅默认接收人与 webhook 渠道问题仍归 `AS-25`，`APPR-22` 备份/调度监控残项已在后续小切口收口。
 
 ## 2026-07-03 继续：售前 AI 前端闭环重建（requirement_analysis_id 全链贯通）
 
@@ -1636,3 +1873,295 @@
   - `.venv/bin/python -m pytest tests/services/test_sales_team_aggregation_contracts.py tests/services/test_sales_ranking_service.py tests/unit/test_sales_team_service.py tests/unit/test_sales_team_service_coverage.py tests/unit/test_sales_team_deep.py -q` 通过（62 个用例）。
   - `.venv/bin/python -m compileall app/services/sales_team_service.py app/services/sales_ranking_service.py app/api/v1/endpoints/sales/team/utils.py tests/services/test_sales_team_aggregation_contracts.py tests/unit/test_sales_team_service.py tests/unit/test_sales_team_deep.py` 通过。
   - `git diff --check -- app/services/sales_team_service.py app/services/sales_ranking_service.py app/api/v1/endpoints/sales/team/utils.py tests/services/test_sales_team_aggregation_contracts.py tests/unit/test_sales_team_service.py tests/unit/test_sales_team_deep.py` 通过。
+
+## 2026-07-04 继续：RPT-05 / SALES-17 含税与不含税口径
+
+- 修复目标：报价、合同、财务报表不能再把不含税金额、税额、含税金额混在同一个总额里；报表必须显式输出口径。
+- 红测：
+  - `tests/unit/test_finance_reports_rpt05.py::test_quote_creation_persists_explicit_tax_breakdown` 先失败：`QuoteVersion` 无 `amount_without_tax`。
+  - `tests/unit/test_finance_reports_rpt05.py::test_contract_from_quote_inherits_quote_tax_breakdown` 先失败：`QuoteVersion/Contract` 不接受税口径字段。
+  - `tests/unit/test_finance_reports_rpt05.py::test_finance_reports_return_net_tax_and_gross_amounts` 先失败：财务报表无不含税/税额/含税拆分。
+- 代码面：
+  - `QuoteVersion`、`Contract` 新增 `amount_without_tax/tax_rate/tax_amount/amount_with_tax`。
+  - `app/services/sales/tax_basis.py` 统一金额口径推导；报价创建、报价版本创建、报价详情/列表返回均接入。
+  - 合同轻量入口支持税字段；从报价生成合同时继承报价版本税口径，旧 `total_price/total_amount` 保持兼容总价。
+  - `finance_reports.py` 四个端点改为 net/tax/gross 三元聚合：月趋势、成本分析、项目盈利、现金流都输出不含税、税额、含税字段。
+  - 新增迁移脚本 `migrations/versions/20260704_add_sales_tax_basis.py`。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_finance_reports_rpt05.py` 通过（3 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_finance_reports_rpt04.py tests/unit/test_finance_reports_rpt05.py` 通过（5 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_finance_reports_rpt05.py tests/unit/test_finance_reports_rpt04.py tests/unit/test_sales_forecast_wiring.py tests/unit/models/sales/test_contract_model.py` 通过（20 个用例）。
+  - `python -m py_compile ...` 覆盖本次改动文件，通过。
+  - `ruff check ...` 覆盖本次改动文件，通过。
+  - API `TestClient` 类测试当前被本地依赖版本挡住：`Client.__init__() got an unexpected keyword argument 'app'`，不是本次代码路径失败；本轮以直接函数和模型/报表单测完成回归。
+
+## 2026-07-04 继续：ADMIN-18 合同附件任意文件读取
+
+- 修复目标：合同附件下载不能直接信任 DB 中的 `file_path`；绝对路径和路径穿越不能读出上传目录外文件。
+- 红测：
+  - `tests/unit/test_contract_attachment_security_admin18.py::test_contract_attachment_download_rejects_absolute_path_outside_upload_dir` 先失败：登记 `/tmp/.../secret.txt` 可被 `FileResponse` 返回。
+  - `tests/unit/test_contract_attachment_security_admin18.py::test_contract_attachment_download_allows_file_inside_upload_dir` 先失败：合法相对路径未映射到 `UPLOAD_DIR`。
+- 代码面：
+  - 新增 `app/api/v1/endpoints/sales/contracts/attachment_security.py`，统一解析附件路径：相对路径落到 `settings.UPLOAD_DIR`，绝对路径必须位于上传根目录内。
+  - `enhanced_attachments.py` 和老 `enhanced.py` 两个下载入口都走共享 resolver；非法路径返回 403，缺文件返回 404。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_contract_attachment_security_admin18.py` 通过（4 个用例，覆盖新旧两个入口）。
+  - `python -m py_compile app/api/v1/endpoints/sales/contracts/attachment_security.py app/api/v1/endpoints/sales/contracts/enhanced_attachments.py app/api/v1/endpoints/sales/contracts/enhanced.py tests/unit/test_contract_attachment_security_admin18.py` 通过。
+  - `ruff check app/api/v1/endpoints/sales/contracts/attachment_security.py app/api/v1/endpoints/sales/contracts/enhanced_attachments.py app/api/v1/endpoints/sales/contracts/enhanced.py tests/unit/test_contract_attachment_security_admin18.py` 通过。
+
+## 2026-07-04 继续：ADMIN-01/02/03 备份 API、恢复与 SQLite 脚本
+
+- 修复目标：备份 API 不能再是自 import 占位 router；产品内必须有可调用 restore；数据库备份/校验/恢复脚本必须对齐当前 SQLite 数据库，而不是 MySQL/mysqldump。
+- 红测：
+  - `tests/unit/test_backup_admin01_03.py::test_backup_router_exposes_real_operations_not_placeholder` 先失败：router 只有 `/` 占位路径。
+  - `tests/unit/test_backup_admin01_03.py::test_restore_backup_replaces_sqlite_database_and_keeps_pre_restore_copy` 先失败：`BackupService` 无 `restore_backup`。
+  - `tests/unit/test_backup_admin01_03.py::test_database_backup_scripts_use_sqlite_backup_verify_and_restore` 先失败：`backup_database.sh` 要求 `MYSQL_PASSWORD`。
+- 代码面：
+  - `app/api/v1/endpoints/backup.py` 改为真实 FastAPI router，提供列表、创建、数据库备份、验证、恢复、清理过期备份、统计端点。
+  - `BackupService.restore_backup()` 支持 SQLite gzip SQL dump 恢复；恢复必须 `confirm=True`，恢复前自动生成 `before_restore_*.sql.gz`。
+  - `backup_database.sh`、`verify_backup.sh`、`restore_database.sh` 改为读取 `DATABASE_URL=sqlite:///...`，用 Python sqlite3 生成/加载 gzip SQL dump，不再依赖 MySQL 客户端。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_backup_admin01_03.py` 先红后绿（3 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_backup_admin01_03.py tests/unit/test_backup_scheduler_appr22.py tests/unit/test_backup_service.py tests/unit/test_batch2_backup_service.py tests/unit/test_backup_service_coverage.py tests/unit/test_backup_service_deep.py app/tests/services/backup/test_backup_service.py` 通过（95 个用例）。
+  - `python -m py_compile app/api/v1/endpoints/backup.py app/services/backup_service.py tests/unit/test_backup_admin01_03.py` 通过。
+  - `ruff check app/api/v1/endpoints/backup.py app/services/backup_service.py tests/unit/test_backup_admin01_03.py` 通过。
+  - `rg -n "mysql|mysqldump|MYSQL_PASSWORD|DB_HOST|DB_PORT|MySQL" scripts/backup_database.sh scripts/restore_database.sh scripts/verify_backup.sh || true` 无命中。
+
+## 2026-07-04 继续：ADMIN-13/14 数据导入假失败与错误明细
+
+- 修复目标：`/data-import-export/upload` 不能先提交导入数据、再因 `DataImportTask` 字段错配报失败；部分失败时错误行必须落任务表并返回给前端。
+- 红测：
+  - `tests/unit/test_data_import_upload_admin13_14.py::test_upload_import_persists_real_task_fields_and_returns_failed_rows` 先失败：`DataImportTask(task_code=...)` 抛出 `invalid keyword argument`，且失败发生在导入结果提交之后。
+- 代码面：
+  - `import_upload.py` 删除导入后提前 `db.commit()`，导入数据和导入任务记录改为同一事务提交。
+  - 任务记录改用真实字段：`task_no/import_type/target_table/file_name/file_size/status/total_rows/success_rows/failed_rows/validation_errors/imported_by/started_at/completed_at/error_message`。
+  - `ImportUploadResponse` 增加 `imported_count/updated_count/failed_count/failed_rows`，兼容旧的 `task_id/task_code/status/message`。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_data_import_upload_admin13_14.py` 先红后绿（1 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_data_import_upload_admin13_14.py tests/unit/test_schemas_p1_coverage.py tests/unit/test_unified_import/test_task_importer.py tests/unit/test_task_importer.py app/tests/services/unified_import/test_task_importer.py` 通过（154 passed，1 skipped）。
+  - `python -m py_compile app/api/v1/endpoints/data_import_export/import_upload.py app/schemas/data_import_export.py tests/unit/test_data_import_upload_admin13_14.py` 通过。
+  - `ruff check app/api/v1/endpoints/data_import_export/import_upload.py app/schemas/data_import_export.py tests/unit/test_data_import_upload_admin13_14.py` 通过。
+
+## 2026-07-04 继续：ADMIN-09 健康检查依赖探测
+
+- 修复目标：`/health` 与 `/api/health` 不能再只返回常量；至少要反映数据库、调度器、Redis 的当前状态。
+- 红测：
+  - `tests/unit/test_health_check_admin09.py::test_root_health_reports_degraded_when_database_probe_fails` 先失败：数据库探测被 mock 为 down 时 `/health` 仍返回 `ok` 且没有 `dependencies`。
+  - `tests/unit/test_health_check_admin09.py::test_api_health_reports_healthy_when_required_dependencies_are_up` 先失败：`/api/health` 只有 `status/timestamp`，没有依赖详情。
+- 代码面：
+  - `app/main.py` 新增 `_probe_database()`、`_probe_scheduler()`、`_probe_redis()` 与 `_build_health_payload()`。
+  - 数据库使用 `SELECT 1` 探测；调度器返回 running/job_count；Redis 未配置返回 `disabled`，配置后异常返回 `down`。
+  - `/health` 保持成功态 `ok`，异常态 `degraded`；`/api/health` 保持成功态 `healthy`，异常态 `degraded`。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_health_check_admin09.py` 先红后绿（2 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_health_check_admin09.py tests/unit/test_data_import_upload_admin13_14.py tests/unit/test_backup_admin01_03.py` 通过（6 个用例）。
+  - `python -m py_compile app/main.py tests/unit/test_health_check_admin09.py` 通过。
+  - `ruff check app/main.py tests/unit/test_health_check_admin09.py` 通过。
+
+## 2026-07-04 继续：ADMIN-05/06 admin_stats 与系统统计
+
+- 修复目标：`admin_stats.py` 不能再是 fallback 占位；`/admin/stats` 不能再返回 99.9% uptime、0 错误率、从未备份等硬编码指标。
+- 红测：
+  - `tests/unit/test_admin_stats_admin05_06.py::test_admin_stats_router_exposes_stats_route_not_placeholder` 先失败：router 只有 `/` 占位路径。
+  - `tests/unit/test_admin_stats_admin05_06.py::test_collect_admin_stats_uses_runtime_counts_and_backup_metadata` 先失败：`admin_stats` 无 `BackupService/collect_admin_stats`。
+  - `tests/unit/test_admin_stats_admin05_06.py::test_admin_compat_stats_delegates_to_same_runtime_collector` 先失败：兼容路由未复用共享采集器。
+- 代码面：
+  - `app/api/v1/endpoints/admin_stats.py` 改为真实 `/stats` 路由，并提供 `collect_admin_stats(db)`。
+  - 统计字段保留旧契约，但来源改为运行时采集：用户、角色、权限、用户角色、登录尝试、权限审计、备份元数据、SQLite DB 文件体积、上传/备份目录体积、DB ping 响应耗时。
+  - `admin_compat.py` 的 `/admin/stats` 复用同一采集器，避免两个 `/admin/stats` 口径分叉。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_admin_stats_admin05_06.py` 先红后绿（3 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_admin_stats_admin05_06.py tests/unit/test_health_check_admin09.py` 通过（5 个用例）。
+  - `python -m py_compile app/api/v1/endpoints/admin_stats.py app/api/v1/endpoints/admin_compat.py tests/unit/test_admin_stats_admin05_06.py` 通过。
+  - `ruff check app/api/v1/endpoints/admin_stats.py app/api/v1/endpoints/admin_compat.py tests/unit/test_admin_stats_admin05_06.py` 通过。
+
+## 2026-07-04 继续：MISC-18 business_support 前端 API 404
+
+- 修复目标：前端 `businessSupportApi` 调用的 `/business-support/...` 不能再因为后端裸挂 `business_support` 子路由而全部 404；dashboard/todos、投标、合同审核、回款催收路径要与前端契约对齐。
+- 红测：
+  - `tests/unit/test_business_support_prefix_misc18.py::test_business_support_frontend_routes_are_registered_under_expected_prefix` 先失败：`/business-support/dashboard`、`/business-support/bidding`、`/business-support/contract-review`、`/business-support/payment-reminder`、`/business-support/dashboard/todos` 等路径均缺失。
+- 代码面：
+  - `api.py` 将商务支持主路由统一挂到 `prefix="/business-support"`。
+  - `business_support/__init__.py` 增加 `/contract-review` 与 `/payment-reminder` 前端兼容别名，保留旧 `/contracts` 与 `/payment-reminders`。
+  - `dashboard.py` 将 active-contracts/active-bidding/performance 收口到 `/dashboard/...`，并新增 `/dashboard/todos`。
+  - `contract_review.py` 增加前端需要的列表、详情、创建、更新 CRUD 形态，复用原合同审核创建/更新逻辑。
+  - `payment_reminders.py` 增加详情和更新端点，复用现有列表/创建响应转换。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_business_support_prefix_misc18.py` 先红后绿（1 个用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/api.py app/api/v1/endpoints/business_support/__init__.py app/api/v1/endpoints/business_support/dashboard.py app/api/v1/endpoints/business_support/contract_review.py app/api/v1/endpoints/business_support/payment_reminders.py tests/unit/test_business_support_prefix_misc18.py` 通过。
+  - `ruff check app/api/v1/api.py app/api/v1/endpoints/business_support/__init__.py app/api/v1/endpoints/business_support/dashboard.py app/api/v1/endpoints/business_support/contract_review.py app/api/v1/endpoints/business_support/payment_reminders.py tests/unit/test_business_support_prefix_misc18.py` 通过。
+  - `git diff --check app/api/v1/api.py app/api/v1/endpoints/business_support/__init__.py app/api/v1/endpoints/business_support/dashboard.py app/api/v1/endpoints/business_support/contract_review.py app/api/v1/endpoints/business_support/payment_reminders.py tests/unit/test_business_support_prefix_misc18.py` 通过。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js` 通过（24 个用例）。
+  - 相关扩展回归仍有既存阻塞：`tests/api/test_business_support_delivery_routes.py` 卡在本地 `TestClient` / `httpx` 版本不兼容（`Client.__init__() got an unexpected keyword argument 'app'`）；`tests/unit/test_business_support_auto.py tests/unit/test_business_support_helpers.py` 中 `generate_invoice_no` 旧方法名漂移失败，与本次路由修复无关。
+
+## 2026-07-04 继续：ADMIN-12 项目缓存管理端点
+
+- 修复目标：`/projects/cache/clear` 不能调用不存在的 `clear_all/invalidate_all_project_details/invalidate_user_cache`，也不能为了“清全部”改成会 `flushdb()` 的全库清理；前端传 `pattern` 参数时必须进入项目缓存白名单。
+- 红测：
+  - `tests/unit/test_projects_cache_admin12.py::test_clear_cache_default_clears_only_project_namespace` 先失败：默认清理走 `clear_all`，触发整库清理保护并返回 500。
+  - `tests/unit/test_projects_cache_admin12.py::test_clear_cache_supports_frontend_pattern_param_with_allowlist` 先失败：endpoint 不接受前端 `pattern` 参数。
+- 代码面：
+  - `clear_cache()` 新增 `pattern` 兼容参数，`cache_type`/`pattern` 统一归一为项目缓存范围。
+  - 默认、`project`、`all`、`project:*` 全部只调用 `CacheService.invalidate_all_project_cache()`，限定 `project:*` 命名空间。
+  - `project_list/project:list:*`、`project_detail/project:detail:*`、`project_statistics/project:statistics:*` 走明确白名单方法或 pattern；未知范围返回 `code=400`，不执行删除。
+  - 删除对不存在方法和全库清理方法的调用，避免误清限流、Token 黑名单等共库数据。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_projects_cache_admin12.py` 先红后绿（2 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_projects_cache_admin12.py tests/unit/test_cache_service.py` 通过（35 passed，1 skipped；Redis 外部依赖测试按原标记跳过）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/endpoints/projects/cache.py tests/unit/test_projects_cache_admin12.py` 通过。
+  - `ruff check app/api/v1/endpoints/projects/cache.py tests/unit/test_projects_cache_admin12.py` 通过。
+  - `git diff --check app/api/v1/endpoints/projects/cache.py tests/unit/test_projects_cache_admin12.py` 通过。
+
+## 2026-07-04 继续：MISC-09 成本归集写端点 RBAC
+
+- 修复目标：`POST /cost-collection/collect` 会触发写库归集，不能只要求登录；必须要求成本管理权限，避免任意用户全量触发成本归集。
+- 红测：
+  - `tests/unit/test_cost_collection_permissions_misc09.py::test_cost_collection_collect_requires_cost_manage_permission` 先失败：`run_cost_collection.current_user` 依赖是 `Depends(deps.get_current_active_user)`。
+- 代码面：
+  - `app/api/v1/endpoints/cost_endpoints/collection.py` 引入 `security.require_permission`。
+  - `run_cost_collection` 的 `current_user` 依赖改为 `Depends(security.require_permission("cost:manage"))`。
+  - 只收紧写端点；`GET /status`、`GET /by-project` 仍保持登录可读。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_cost_collection_permissions_misc09.py` 先红后绿（1 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_cost_collection_permissions_misc09.py tests/services/test_cost_collection_business_docs.py` 通过（2 个用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/endpoints/cost_endpoints/collection.py tests/unit/test_cost_collection_permissions_misc09.py` 通过。
+  - `ruff check app/api/v1/endpoints/cost_endpoints/collection.py tests/unit/test_cost_collection_permissions_misc09.py` 通过。
+  - `git diff --check app/api/v1/endpoints/cost_endpoints/collection.py tests/unit/test_cost_collection_permissions_misc09.py` 通过。
+
+## 2026-07-04 继续：MISC-20 预算写接口权限码
+
+- 修复目标：预算相关写操作不能继续使用 `budget:read`；更新、提交、删除、明细维护、分摊规则维护要使用现有 `budget:create/update/delete` 权限。
+- 红测：
+  - `tests/unit/test_budget_permissions_misc20.py::test_budget_write_endpoints_do_not_use_budget_read_permission` 先失败：`update_budget` 等写函数仍绑定 `budget:read`。
+- 代码面：
+  - `budgets.py`：预算 `update/submit` 改 `budget:update`，`delete` 改 `budget:delete`；列表、项目预算列表、详情仍为 `budget:read`。
+  - `items.py`：预算明细 `create/update/delete` 改 `budget:update`；明细列表仍为 `budget:read`。
+  - `allocation_rules.py`：分摊规则 `create/update/delete` 分别改 `budget:create/update/delete`；列表和详情仍为 `budget:read`。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_budget_permissions_misc20.py` 先红后绿（1 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_budget_permissions_misc20.py tests/schemas/test_budget.py tests/unit/test_budget_execution_check_service.py tests/unit/test_budget_alert_service.py` 通过（28 个用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/endpoints/budget/budgets.py app/api/v1/endpoints/budget/items.py app/api/v1/endpoints/budget/allocation_rules.py tests/unit/test_budget_permissions_misc20.py` 通过。
+  - `ruff check app/api/v1/endpoints/budget/budgets.py app/api/v1/endpoints/budget/items.py app/api/v1/endpoints/budget/allocation_rules.py tests/unit/test_budget_permissions_misc20.py` 通过。
+  - `git diff --check app/api/v1/endpoints/budget/budgets.py app/api/v1/endpoints/budget/items.py app/api/v1/endpoints/budget/allocation_rules.py tests/unit/test_budget_permissions_misc20.py` 通过。
+
+## 2026-07-04 继续：MISC-11 方案积分退款刷分漏洞
+
+- 修复目标：`POST /solution-credits/internal/refund` 不能只要求登录；该入口可增加积分，必须要求积分管理权限，避免任意用户给自己退款刷分。
+- 红测：
+  - `tests/unit/test_solution_credits_permissions_misc11.py::test_internal_refund_requires_solution_credit_manage_permission` 先失败：`internal_refund_credits.current_user` 依赖是 `Depends(deps.get_current_user)`。
+- 代码面：
+  - `app/api/v1/endpoints/solution_credits/internal.py` 引入 `security.require_permission`。
+  - `internal_refund_credits` 的 `current_user` 依赖改为 `Depends(security.require_permission("solution_credit:manage"))`。
+  - 退款 `amount` Query 增加 `ge=1/le=1000` 边界；用户端查询/检查接口不变。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_solution_credits_permissions_misc11.py` 先红后绿（1 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_solution_credits_permissions_misc11.py tests/unit/test_solution_credit_service.py` 通过（26 个用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/endpoints/solution_credits/internal.py tests/unit/test_solution_credits_permissions_misc11.py` 通过。
+  - `ruff check app/api/v1/endpoints/solution_credits/internal.py tests/unit/test_solution_credits_permissions_misc11.py` 通过。
+  - `git diff --check app/api/v1/endpoints/solution_credits/internal.py tests/unit/test_solution_credits_permissions_misc11.py` 通过。
+
+## 2026-07-04 继续：MISC-14 PM 介入零鉴权与数据源桩
+
+- 修复目标：`/pm-involvement` 6 个端点不能匿名调用；POST 判断/自动判断/通知生成使用 `presale:manage`，GET 相似项目/标准方案/示例至少要求登录。同时，PM 介入判断不能再用相似项目 0、失败数 0、标准方案 False 的固定桩。
+- 红测：
+  - `tests/unit/test_pm_involvement_misc14.py::test_pm_involvement_post_endpoints_require_presale_manage_permission` 先失败：POST 端点没有 `current_user` 依赖。
+  - `tests/unit/test_pm_involvement_misc14.py::test_pm_involvement_read_endpoints_require_authenticated_user` 先失败：GET 端点没有登录依赖。
+  - `tests/unit/test_pm_involvement_misc14.py` 中 3 个数据源用例先失败：服务方法不接受 DB，仍返回固定 0/False/模拟工单。
+  - `test_presale_ticket_creation_no_longer_hardcodes_zero_history` 先失败：工单创建仍写死 `历史相似项目数/失败项目数` 为 0。
+- 代码面：
+  - `performance/pm_involvement.py`：POST 判断、auto-judge、通知生成改为 `presale:manage`；GET 相似项目、标准方案、测试示例改为登录用户可读；相似项目/模板/auto-judge 注入 DB。
+  - `pm_involvement_service.py`：新增基于 `Project` 的相似项目总数/成功数/失败数/成功率；新增基于启用 `PresaleSolutionTemplate` 的标准方案检查；`auto_judge_from_ticket` 查真实售前工单并结合历史/模板判断。
+  - `presale/tickets/crud.py`：创建工单时复用同一历史项目/标准方案查询，不再固定相似项目 0、失败数 0、标准方案 False。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_pm_involvement_misc14.py` 先红后绿（6 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_pm_involvement_misc14.py tests/unit/test_services_p3_coverage.py::TestPMInvolvementService tests/unit/test_services_p4_coverage.py::TestPMInvolvementService` 通过（19 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_presale_ticket_response.py::test_build_ticket_response_exposes_pm_involvement_context` 通过。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/endpoints/performance/pm_involvement.py app/api/v1/endpoints/presale/tickets/crud.py app/services/pm_involvement_service.py tests/unit/test_pm_involvement_misc14.py` 通过。
+  - `ruff check app/api/v1/endpoints/performance/pm_involvement.py app/api/v1/endpoints/presale/tickets/crud.py app/services/pm_involvement_service.py tests/unit/test_pm_involvement_misc14.py` 通过。
+  - `git diff --check app/api/v1/endpoints/performance/pm_involvement.py app/api/v1/endpoints/presale/tickets/crud.py app/services/pm_involvement_service.py tests/unit/test_pm_involvement_misc14.py` 通过。
+  - 旁路观察：全量 `tests/unit/test_presale_ticket_response.py` 仍有一个既存失败，原因是 deliverables 响应多了 `is_required` 字段，与本次 MISC-14 改动无关。
+
+## 2026-07-04 继续：MISC-04 legacy best_practice 半成品路由
+
+- 修复目标：旧 `app/api/v1/endpoints/best_practice.py` 的 4 个 P0 优化端点不能作为裸写路由残留；同时必须确认它没有被主路由误挂载，避免和已注册的真实 `/projects/best-practices` 混淆。
+- 红测：
+  - `tests/unit/test_best_practice_legacy_misc04.py::test_legacy_best_practice_write_endpoints_are_permission_guarded` 先失败：`abc_classification` 等函数没有 `current_user` 权限依赖。
+  - 同文件确认 `api.py` 没有挂旧 `best_practice` 模块，且 `projects/__init__.py` 继续挂载真实 `ext_best_practices.router`。
+- 代码面：
+  - `app/api/v1/endpoints/best_practice.py` 引入 `security.require_permission`。
+  - ABC 分级和缺料升级潜在写端点要求 `material:update`。
+  - 供应商自动升降级要求 `supplier:update`。
+  - 项目齐套率目标配置要求 `project:update`。
+  - 不把旧模块新增挂载到 `api.py`；真实前端路径继续走 `/projects/best-practices`。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_best_practice_legacy_misc04.py` 先红后绿（3 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_best_practices_service.py` 通过（23 个用例），确认真实 best-practices 服务未受影响。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/endpoints/best_practice.py tests/unit/test_best_practice_legacy_misc04.py` 通过。
+  - `ruff check app/api/v1/endpoints/best_practice.py tests/unit/test_best_practice_legacy_misc04.py` 通过。
+  - `git diff --check app/api/v1/endpoints/best_practice.py tests/unit/test_best_practice_legacy_misc04.py` 通过。
+  - 旁路观察：`tests/unit/test_best_practice_service_coverage.py` 和 `tests/unit/test_best_practice_deep.py` 仍有既存失败，分别要求不存在的 `get_best_practices()` 和无参 config 调用，与本次 legacy 路由权限补丁无关。
+
+## 2026-07-04 继续：MISC-10 成本偏差权限/404/N+1
+
+- 修复目标：`/cost-variance` 三个端点不能只要求登录；详情缺失项目不能返回 200；summary 成本类型 breakdown 不应按项目逐条查询。
+- 红测：
+  - `tests/unit/test_cost_variance_misc10.py::test_cost_variance_routes_require_project_read_permission` 先失败：summary/patterns/detail 仍绑定 `deps.get_current_active_user`。
+  - `tests/unit/test_cost_variance_misc10.py::test_variance_detail_returns_404_when_project_missing` 先失败：缺失项目没有抛 `HTTPException(404)`。
+  - `tests/unit/test_cost_variance_misc10.py::test_variance_summary_loads_cost_breakdowns_in_one_grouped_query` 覆盖 summary 只做项目列表 + grouped breakdown 两次查询。
+- 代码面：
+  - `cost_endpoints/variance_analysis.py` 引入 `security.require_permission("project:read")`，summary/patterns/detail 三个端点统一收紧为项目读权限。
+  - `variance_detail` 在项目不存在时抛 `HTTPException(status_code=404, detail="项目不存在")`。
+  - 新增 `_load_cost_breakdowns`，按项目 ID 一次 grouped 查询 `project_costs`，替代原先逐项目 breakdown 查询。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_cost_variance_misc10.py` 先红后绿（3 个用例）。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js` 通过（24 个用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/endpoints/cost_endpoints/variance_analysis.py tests/unit/test_cost_variance_misc10.py` 通过。
+  - `ruff check app/api/v1/endpoints/cost_endpoints/variance_analysis.py tests/unit/test_cost_variance_misc10.py` 通过。
+  - `git diff --check app/api/v1/endpoints/cost_endpoints/variance_analysis.py tests/unit/test_cost_variance_misc10.py` 通过。
+
+## 2026-07-04 继续：MISC-15 关系成熟度假数据与 NameError
+
+- 修复目标：`relationship_maturity` 不能继续向用户展示固定客户样例；`POST /relationship/improvement-plan` 不能因为未定义 `gap` 直接 500；前端页面不能继续内置固定客户和组合分析数据。
+- 红测：
+  - `tests/unit/test_relationship_maturity_misc15.py::test_customer_assessment_uses_scoring_service_and_real_customer` 先失败：客户评估没有调用 `RelationshipScoringService`，仍返回固定“宁德时代”。
+  - `test_customer_assessment_raises_404_for_missing_customer` 先失败：不存在客户仍返回假评估。
+  - `test_improvement_plan_uses_computed_gap_without_name_error` 先失败：`gap` 未定义导致 NameError。
+  - `test_portfolio_analysis_uses_score_records_not_static_demo_customers` 先失败：组合分析固定返回 45 个客户和固定客户名。
+  - 前端 route contract 先失败：`relationshipMaturity.js` API 模块不存在。
+- 代码面：
+  - `relationship_maturity.py`：客户评估查 `Customer`，缺失返回 404；评估结果走 `RelationshipScoringService.calculate_customer_score(save_to_db=False)`；历史趋势取真实评分历史；组合分析读取 `CustomerRelationshipScore` 最新记录并按 L1-L5 汇总。
+  - `create_relationship_improvement_plan`：显式计算 `gap`，里程碑用真实差距，行动项改成通用角色/信息补齐动作，移除固定人名。
+  - `frontend/src/services/api/relationshipMaturity.js`：新增真实路由包装，保持当前后端挂载路径 `/sales/relationship/relationship/...`。
+  - `frontend/src/pages/SalesAI/RelationshipMaturity.jsx`：移除本地 `useState({ ...固定样例... })`，改为接口读取、空态/错误态/刷新。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_relationship_maturity_misc15.py --tb=short` 先红后绿（5 个用例）。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js` 通过（25 个用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/endpoints/relationship_maturity.py tests/unit/test_relationship_maturity_misc15.py` 通过。
+  - `ruff check app/api/v1/endpoints/relationship_maturity.py tests/unit/test_relationship_maturity_misc15.py` 通过。
+  - `npm exec eslint src/pages/SalesAI/RelationshipMaturity.jsx src/services/api/relationshipMaturity.js src/services/api/__tests__/routeContracts.test.js`（cwd=`frontend`）通过。
+  - `git diff --check app/api/v1/endpoints/relationship_maturity.py tests/unit/test_relationship_maturity_misc15.py frontend/src/pages/SalesAI/RelationshipMaturity.jsx frontend/src/services/api/relationshipMaturity.js frontend/src/services/api.js frontend/src/services/api/__tests__/routeContracts.test.js FUNCTIONAL_AUDIT_TRACKER.md PROJECT_NOTES.md` 通过。
+  - 旁路观察：`tests/services/test_relationship_scoring_service.py` 现有两处旧 mock 链用例仍失败（`get_score_history` / `get_latest_score`），失败在测试 patch 链与当前服务查询链不匹配，不是本次 MISC-15 接线失败。
+
+## 2026-07-04 继续：MISC-07 优势产品入口与导入默认安全
+
+- 修复目标：`AdvantageProducts.jsx` 有真实优势产品展示和 133 行历史数据，但前端没有路由/菜单入口；Excel 导入前后端默认 `clear_existing=true`，用户不显式传参时会清空现有数据。
+- 红测：
+  - `tests/unit/test_advantage_products_misc07.py` 先失败：后端导入默认 `Query(True)`、路由和侧边栏无 `/presales/advantage-products`、搜索框默认显示 `unknown`。
+  - `frontend/src/services/api/__tests__/routeContracts.test.js` 中优势产品导入用例先失败：前端 `importFromExcel(file)` 发送 `clear_existing: true`。
+  - `frontend/src/routes/modules/__tests__/presalesRoutes.test.jsx` 中优势产品路由用例先失败：没有匹配 `/presales/advantage-products`。
+- 代码面：
+  - `app/api/v1/endpoints/advantage_products/import_excel.py`：`clear_existing` 默认改为 `False`。
+  - `frontend/src/services/api/presales.js`：`advantageProductApi.importFromExcel` 默认 `clearExisting=false`。
+  - `frontend/src/routes/modules/presalesRoutes.jsx`：新增 `/presales/advantage-products` 路由。
+  - `frontend/src/components/layout/sidebarConfig/default.js`：售前技术菜单新增“优势产品”。
+  - `frontend/src/components/sales/AdvantageProducts.jsx`：搜索输入框不再把空值显示成 `unknown`。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_advantage_products_misc07.py --tb=short --disable-warnings` 先红后绿（3 个用例）。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js --testNamePattern "advantage products"` 先红后绿（1 个用例）。
+  - `npm --prefix frontend test -- --run src/routes/modules/__tests__/presalesRoutes.test.jsx --testNamePattern "advantage products"` 先红后绿（1 个用例）。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js` 通过（26 个用例）。
+  - `npm --prefix frontend test -- --run src/routes/modules/__tests__/presalesRoutes.test.jsx` 通过（13 个用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/endpoints/advantage_products/import_excel.py tests/unit/test_advantage_products_misc07.py` 通过。
+  - `ruff check app/api/v1/endpoints/advantage_products/import_excel.py tests/unit/test_advantage_products_misc07.py` 通过。
+  - `npm exec eslint src/components/sales/AdvantageProducts.jsx src/routes/modules/presalesRoutes.jsx src/components/layout/sidebarConfig/default.js src/services/api/presales.js src/services/api/__tests__/routeContracts.test.js src/routes/modules/__tests__/presalesRoutes.test.jsx`（cwd=`frontend`）通过。
+  - `git diff --check app/api/v1/endpoints/advantage_products/import_excel.py tests/unit/test_advantage_products_misc07.py frontend/src/components/sales/AdvantageProducts.jsx frontend/src/routes/modules/presalesRoutes.jsx frontend/src/components/layout/sidebarConfig/default.js frontend/src/services/api/presales.js frontend/src/services/api/__tests__/routeContracts.test.js frontend/src/routes/modules/__tests__/presalesRoutes.test.jsx FUNCTIONAL_AUDIT_TRACKER.md PROJECT_NOTES.md` 通过。
