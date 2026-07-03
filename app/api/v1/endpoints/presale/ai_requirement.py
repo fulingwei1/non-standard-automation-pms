@@ -17,6 +17,7 @@ from app.schemas.presale_ai_requirement import (
     RequirementRefinementRequest,
     RequirementUpdateRequest,
 )
+from app.schemas.presale_ai_solution import SolutionGenerationRequest
 from app.services.presale.presale_ai_requirement_service import PresaleAIRequirementService
 
 router = APIRouter(prefix="/presale/ai", tags=["presale-ai-requirement"])
@@ -208,6 +209,30 @@ def confirm_requirement_analysis(
         return bridge.confirm_and_backfill(db, analysis_id, current_user.id)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.post(
+    "/generate-solution",
+    summary="提交 AI 方案生成（后台任务）",
+    description="""
+    提交方案生成后台任务，立即返回 job_id，用 GET /ai-jobs/{job_id} 轮询结果。
+
+    给定 requirement_analysis_id 时自动带出已存分析内容（requirements 可省略），
+    显式 requirements 字段优先——需求分析结果直通方案生成，前端不必重贴需求。
+    """,
+)
+def submit_generate_solution(
+    request: "SolutionGenerationRequest",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """方案生成走 ai_job 基建（重 AI 调用不占同步请求）"""
+    from app.services import ai_job_service
+
+    job = ai_job_service.submit(
+        db, "presale_solution_generation", request.model_dump(mode="json"), current_user.id
+    )
+    return {"job_id": job.id, "status": job.status}
 
 
 @router.post(

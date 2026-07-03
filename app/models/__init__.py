@@ -623,6 +623,10 @@ from app.models.project_delivery import (
     ProjectDeliveryDependency,
 )
 
+# AI 基建：后台任务与产出反馈（注册进 metadata，隔离测试库 create_all 需要）
+from app.models.ai_feedback import AIOutputFeedback  # noqa: E402,F401
+from app.models.ai_job import AIGenerationJob  # noqa: E402,F401
+
 try:
     from app.models.base import _ensure_sqlite_schema, get_engine
 

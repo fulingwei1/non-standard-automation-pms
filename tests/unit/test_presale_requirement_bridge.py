@@ -208,3 +208,40 @@ def test_confirm_analysis_without_opportunity_still_approves(db_session):
     db_session.expire_all()
     analysis = db_session.get(PresaleAIRequirementAnalysis, analysis.id)
     assert analysis.status == "approved"
+
+
+def test_solution_generation_job_handler_registered(db_session):
+    """方案生成必须有后台任务出口（旧同步路由已下线，走 ai_job 基建）。"""
+    from unittest.mock import patch
+
+    from app.services import ai_job_service
+
+    assert "presale_solution_generation" in ai_job_service._HANDLERS
+
+    user = _user(db_session)
+    ticket, analysis = _seed_ticket_and_analysis(db_session, user)
+    with patch(
+        "app.services.presale.presale_ai_service.PresaleAIService.generate_solution",
+        return_value={"solution_id": 77, "confidence_score": 0.8},
+    ) as mocked:
+        result = ai_job_service._HANDLERS["presale_solution_generation"](
+            db_session,
+            {
+                "presale_ticket_id": ticket.id,
+                "requirement_analysis_id": analysis.id,
+                "generate_architecture": False,
+                "generate_bom": False,
+            },
+            user.id,
+        )
+    assert result["solution_id"] == 77
+    request = mocked.call_args.args[0]
+    assert request.requirement_analysis_id == analysis.id
+
+
+def test_generate_solution_endpoint_mounted():
+    """POST /presale/ai/generate-solution 必须真实挂载。"""
+    from app.main import app
+
+    paths = {r.path for r in app.routes}
+    assert any(p.endswith("/presale/ai/generate-solution") for p in paths), "生成方案端点未挂载"

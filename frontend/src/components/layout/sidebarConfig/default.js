@@ -98,6 +98,7 @@ export const defaultNavGroups = [
         permissionLabel: "售前工作台"
       },
       // 业务功能
+      { name: "AI需求工作台", path: "/presales/ai-workbench", icon: "Sparkles", permission: "presales:task:read", permissionLabel: "AI需求工作台(分析/方案/报价)" },
       { name: "技术方案", path: "/presales/technical-solutions?tab=solutions", icon: "Lightbulb", permission: "presales:task:read", permissionLabel: "技术方案" },
       { name: "成本估算", path: "/presales/technical-solutions?tab=cost", icon: "Calculator", permission: "presales:task:read", permissionLabel: "成本估算" },
       // 资源与工具

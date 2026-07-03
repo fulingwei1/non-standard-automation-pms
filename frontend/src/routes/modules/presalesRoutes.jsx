@@ -7,6 +7,7 @@ import {
 
 const PresalesWorkstation = lazyLoad(() => import("../../pages/PresalesWorkstation"));
 const PresalesWorkbench = lazyLoad(() => import("../../pages/PresalesWorkbench"));
+const PresaleAIWorkbench = lazyLoad(() => import("../../pages/PresaleAIWorkbench"));
 const SalesPresaleWorkbench = lazyLoad(() => import("../../pages/SalesPresaleWorkbench"));
 const PresaleAnalytics = lazyLoad(() => import("../../pages/PresaleAnalytics"));
 const PresalesManagerWorkstation = lazyLoad(() => import("../../pages/PresalesManagerWorkstation"));
@@ -18,6 +19,7 @@ export function PresalesRoutes() {
   return (
     <>
       <Route path="/presales/workbench" element={<PresalesWorkbench />} />
+      <Route path="/presales/ai-workbench" element={<PresaleAIWorkbench />} />
       <Route path="/presales/workbench/sales" element={<SalesPresaleWorkbench />} />
       <Route path="/presales/workbench/execution" element={<PresalesWorkstation />} />
       <Route path="/presales/workbench/manager" element={<PresalesManagerWorkstation />} />

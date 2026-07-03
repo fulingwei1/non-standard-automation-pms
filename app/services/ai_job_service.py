@@ -170,6 +170,19 @@ def _handle_three_tier_quotation(session, params: Dict[str, Any], user_id: Optio
 register_handler("three_tier_quotation", _handle_three_tier_quotation)
 
 
+def _handle_presale_solution_generation(session, params: Dict[str, Any], user_id: Optional[int]) -> Dict[str, Any]:
+    """售前 AI 方案生成（单次重 AI 调用；requirement_analysis_id 自动带出分析内容）。"""
+    from app.schemas.presale_ai_solution import SolutionGenerationRequest
+    from app.services.presale.presale_ai_service import PresaleAIService
+
+    request = SolutionGenerationRequest(**params)
+    service = PresaleAIService(session)
+    return service.generate_solution(request, user_id or 1)
+
+
+register_handler("presale_solution_generation", _handle_presale_solution_generation)
+
+
 def _extract_json(content: str) -> Dict[str, Any]:
     """从大模型输出里提取 JSON 对象。"""
     if not content:

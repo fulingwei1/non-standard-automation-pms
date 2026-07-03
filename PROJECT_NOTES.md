@@ -1,5 +1,35 @@
 # PROJECT_NOTES
 
+## 2026-07-03 继续：售前 AI 前端闭环重建（requirement_analysis_id 全链贯通）
+
+- 背景：旧售前 AI 方案栈前端在去重重构中下线，方案生成连后端 HTTP 端点都没有；`presaleAIService.js` 不存在但测试文件还在（孤儿测试债）。PRE-10 后端贯通后前端无处可接。
+- 后端：
+  - `ai_job_service` 注册 `presale_solution_generation` handler（复用后台任务基建，单次重 AI 调用不占同步请求）；
+  - 新增 `POST /presale/ai/generate-solution`（提交返回 job_id，轮询 /ai-jobs/{id}）；
+  - `app/models/__init__.py` 补注册 ai_feedback/ai_job 模型（隔离测试库 create_all 此前漏建表，靠测试文件自身 import 碰巧过）。
+- 前端：
+  - 重建精简版 `services/presaleAIService.js`：analyze/getAnalysis/confirm/generate-solution/three-tier/getJob 六个方法；孤儿测试同路径替换为对齐新服务面的活测试（5 用例）。
+  - 新页 `pages/PresaleAIWorkbench.jsx`（路由 `/presales/ai-workbench`，菜单"AI需求工作台"挂售前技术组）：需求只录一次——分析 → 确认回填商机（显示补齐字段）→ 生成方案/三档报价均自动带 `requirement_analysis_id`，后台任务轮询展示。
+- 验证：后端 bridge 套件 11 passed（含 handler 注册+端点挂载契约）；前端 42 passed（服务 5 + 页面 4 + 路由回归）；`npm run build` 通过；TestClient 验证 generate-solution 端点 401 权限门。
+- 边界：方案生成默认 generate_architecture/generate_bom=false（BOM 成本假数据是 PRE 详#10 待修项，不放大）；PRE 详#10 mock 方案可入库仍待修。
+
+## 2026-07-03 继续：功能审计 APPR-17 修复（预警通知状态流转）
+
+- 修复项：`APPR-17`，`send_alert_notifications()` 每轮只取最新 50 条 `AlertRecord.status='PENDING'`，且通知创建/发送尝试后不流转 `AlertRecord` 状态，导致老预警永久留在 PENDING 窗口外。
+- 根因：
+  - `app/utils/scheduled_tasks/alert_tasks.py` 对 `AlertRecord` 使用 `triggered_at.desc()`，只优先处理最新预警。
+  - 预警通知生成/发送后只更新 `AlertNotification`，没有把 `AlertRecord` 从“等待通知生成”的 `PENDING` 推到真正业务待处理态。
+- 改动：
+  - `send_alert_notifications()` 改为 `triggered_at.asc().nulls_last()`，优先处理最老 PENDING，避免积压饿死。
+  - 每个 pending alert 完成通知生成/发送尝试后，若仍为 `PENDING`，推进为 `OPEN`，不冒充用户确认；返回值与日志新增 `opened_alerts`。
+  - `tests/audit_p0/test_p0_11_notification_fake_success.py` 新增两个契约：通知尝试后 alert 必须离开 PENDING；积压扫描必须最老优先。
+- 验证：
+  - 红灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_11_notification_fake_success.py -q` -> 2 failed，缺 `opened_alerts` 且 order_by 为 `triggered_at DESC`。
+  - 绿灯：`.venv/bin/python -m pytest tests/audit_p0/test_p0_11_notification_fake_success.py -q` -> 7 passed。
+  - 相邻回归：`.venv/bin/python -m pytest tests/unit/test_scheduled_alert_tasks.py tests/unit/test_j3_scheduled_tasks.py::TestSendAlertNotifications tests/unit/test_scheduled_tasks_h2.py::TestAlertTasksExtended::test_send_alert_notifications_no_pending_alerts -q` -> 16 passed。
+  - 静态检查：`py_compile app/utils/scheduled_tasks/alert_tasks.py tests/audit_p0/test_p0_11_notification_fake_success.py` passed；`ruff check app/utils/scheduled_tasks/alert_tasks.py tests/audit_p0/test_p0_11_notification_fake_success.py tests/unit/test_scheduled_alert_tasks.py` passed；`git diff --check` passed。
+- 残留：未直接改写 `data/app.db` 里的历史 841 条；修复后调度会按最老优先逐批把 PENDING 推到 OPEN，一次性生产清理仍应走运维窗口。
+
 ## 2026-07-03 继续：AI 效果看板（持续优化环节的人工消费入口）
 
 - 新增 `pages/AIEffectiveness.jsx`（路由 `/ai/effectiveness`，菜单"AI效果看板"挂客户关系层 AI 组）：
