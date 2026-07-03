@@ -152,17 +152,10 @@ class PresaleAIService:
                 logger.error(f"❌ 向量相似度计算失败，回退到 Jaccard: {e}")
                 # Fall through to Jaccard
         
-        # Fallback: Jaccard 相似度
-        words1 = set(text1.lower().split())
-        words2 = set(text2.lower().split())
-        
-        if not words1 or not words2:
-            return 0.0
+        # Fallback: 中文 bigram 余弦相似度（空格 Jaccard 对中文恒 0，详#16）
+        from app.utils.text_similarity import cosine_similarity
 
-        intersection = words1 & words2
-        union = words1 | words2
-
-        return len(intersection) / len(union) if union else 0.0
+        return cosine_similarity(text1, text2)
 
     # ==================== 方案生成 ====================
 

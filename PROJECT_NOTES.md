@@ -1,5 +1,15 @@
 # PROJECT_NOTES
 
+## 2026-07-04 继续：功能审计 PRE-17/18 修复（中文检索短期方案，详#16）
+
+- 修复项：`PRE-17`（"语义搜索"实为字符哈希/Jaccard）+ `PRE-18`（相似案例 equipment_type 精确匹配、空值互配）。前置勘察：百炼 Coding Plan 端点 `/embeddings` 实测 404——真向量方案需标准百炼密钥，中期再升级（ROADMAP F4）。
+- 代码面：
+  - 新增 `app/utils/text_similarity.py`：中文字符 bigram + 英文词元的计数向量余弦相似度；`stable_token_hash`（md5 基）替代内建哈希。
+  - `presale_ai_service._calculate_similarity` 回退：空格 Jaccard（中文恒 0）→ bigram 余弦。
+  - `presale_ai_knowledge_service._generate_embedding` 哈希回退：单字符+内建 hash() → bigram+稳定哈希。**顺带修隐藏 bug**：内建 hash() 进程级随机化，重启后存量向量与新查询必然失配（等于每次重启知识库检索清零）。
+  - `similar_cases`：双向 LIKE 粗召回（FCT vs FCT测试 词表分裂容错）+ bigram 相似度精排（WON +0.1 加权，阈值 0.15），空设备类型不再 ''='' 全库互配，返回带 similarity 分。
+- 验证：红灯 4 项 → 绿灯 `tests/unit/test_text_similarity_retrieval.py` 4 passed；presale 桥接/mock 守卫回归 11 passed；schemas+技术评估回归 105 passed；`import app.main` 通过。
+
 ## 2026-07-04 继续：功能审计 SALES-13 修复（智能报价假实现收口）
 
 - 修复项：`SALES-13`，intelligent_quote.py 整文件硬编码（历史价"宁德时代320万"、竞品、最优价、自动折扣、赢单率全常量）；唯一真实消费方是报价编辑器侧栏的 historical-prices。
@@ -2185,3 +2195,25 @@
   - `ruff check app/api/v1/endpoints/advantage_products/import_excel.py tests/unit/test_advantage_products_misc07.py` 通过。
   - `npm exec eslint src/components/sales/AdvantageProducts.jsx src/routes/modules/presalesRoutes.jsx src/components/layout/sidebarConfig/default.js src/services/api/presales.js src/services/api/__tests__/routeContracts.test.js src/routes/modules/__tests__/presalesRoutes.test.jsx`（cwd=`frontend`）通过。
   - `git diff --check app/api/v1/endpoints/advantage_products/import_excel.py tests/unit/test_advantage_products_misc07.py frontend/src/components/sales/AdvantageProducts.jsx frontend/src/routes/modules/presalesRoutes.jsx frontend/src/components/layout/sidebarConfig/default.js frontend/src/services/api/presales.js frontend/src/services/api/__tests__/routeContracts.test.js frontend/src/routes/modules/__tests__/presalesRoutes.test.jsx FUNCTIONAL_AUDIT_TRACKER.md PROJECT_NOTES.md` 通过。
+
+## 2026-07-04 继续：MISC-06 文档中心上传端到端不可用
+
+- 修复目标：`Documents.jsx` 上传 `FormData` 时不能继续 POST 到只收 JSON schema 的 `/documents/`，否则端到端必 422；项目级创建文档不能用 `document:read` 作为写权限；当前默认 `data/app.db` 里 60 行 `project_documents` 均为 `/demo/project_documents/*` 假文件路径，不能继续在列表里冒充真实可下载文件。
+- 红测：
+  - `tests/unit/test_documents_upload_misc06.py` 先失败：没有 `upload_document_file`；`crud_refactored.py` 没有 `/upload` multipart 端点；`create_project_document` 仍使用 `document:read`。
+  - `frontend/src/services/api/__tests__/routeContracts.test.js` 中 FormData 上传用例先失败：`documentApi.create(formData)` 仍 POST `/documents/`。
+  - 新增 fake path 过滤红测先失败：列表查询没有过滤 `/demo/%` 文件路径。
+- 代码面：
+  - `documents/crud_refactored.py`：新增静态路由 `/documents/upload`，接收 `file/project_id/machine_id/doc_type/doc_category/doc_name/doc_no/version/description` 的 multipart 表单，验证项目/机台、扩展名和 50MB 大小限制，保存到 `uploads/documents/{project_id}/{YYYYMM}/...`，并创建 `ProjectDocument`。
+  - `create_project_document` 写权限从 `document:read` 改为 `document:create`。
+  - 文档列表和项目文档列表通过 `_exclude_demo_file_paths` 过滤 `/demo/%`，不直接删除本地 SQLite 里的历史 demo 行。
+  - `frontend/src/services/api/projects.js`：`documentApi.create(FormData)` 自动走 `/documents/upload`，保留 JSON 创建走 `/documents/`；同时新增显式 `documentApi.upload(formData)`。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_documents_upload_misc06.py --tb=short --disable-warnings` 先红后绿（3 个用例）。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js --testNamePattern "uploads document FormData"` 先红后绿（1 个用例）。
+  - `npm --prefix frontend test -- --run src/pages/__tests__/Documents.test.jsx` 通过（5 个用例）。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js` 通过（27 个用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/endpoints/documents/crud_refactored.py tests/unit/test_documents_upload_misc06.py` 通过。
+  - `ruff check app/api/v1/endpoints/documents/crud_refactored.py tests/unit/test_documents_upload_misc06.py` 通过。
+  - `npm exec eslint src/services/api/projects.js src/services/api/__tests__/routeContracts.test.js src/pages/__tests__/Documents.test.jsx`（cwd=`frontend`）通过。
+  - `git diff --check app/api/v1/endpoints/documents/crud_refactored.py frontend/src/services/api/projects.js tests/unit/test_documents_upload_misc06.py frontend/src/services/api/__tests__/routeContracts.test.js frontend/src/pages/__tests__/Documents.test.jsx FUNCTIONAL_AUDIT_TRACKER.md PROJECT_NOTES.md` 通过。

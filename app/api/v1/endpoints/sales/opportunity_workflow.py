@@ -161,20 +161,47 @@ def similar_cases(
     opp_id: int,
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
-    """相似案例检索：按设备类型找历史同类商机(含成交与报价金额) → 可复用经验/参考报价。
-    把'从零画/从零估'变成'有历史可比'。"""
+    """相似案例检索：设备类型/商机名模糊召回 + bigram 相似度排序（详#16：
+    原精确匹配对词表分裂（FCT vs FCT测试）零命中、空值互配全库乱串）。"""
     from sqlalchemy import text as _t
 
+    from app.utils.text_similarity import cosine_similarity
+
     opp = get_or_404(db, Opportunity, opp_id, "商机不存在")
-    et = opp.equipment_type or ""
+    et = (opp.equipment_type or "").strip()
+    query_text = f"{et} {opp.opp_name or ''}".strip()
+    if not query_text:
+        return ResponseModel(code=200, message="商机缺少设备类型与名称，无法检索相似案例",
+                             data={"equipment_type": et, "reference": "", "total": 0, "cases": []})
+
+    # 粗召回：设备类型双向 LIKE（词表分裂容错）；无设备类型时按名称关键词
+    if et:
+        where, params = (
+            "(o.equipment_type LIKE :et_like OR :et LIKE '%' || o.equipment_type || '%') "
+            "AND o.equipment_type IS NOT NULL AND o.equipment_type != '' AND o.id != :i"
+        ), {"et_like": f"%{et}%", "et": et, "i": opp_id}
+    else:
+        where, params = "o.id != :i", {"i": opp_id}
     rows = db.execute(_t(
-        "SELECT o.id, o.opp_name, o.stage, o.est_amount, "
+        "SELECT o.id, o.opp_name, o.stage, o.est_amount, o.equipment_type, "
         "(SELECT v.total_price FROM quotes q JOIN quote_versions v ON v.id=q.current_version_id "
         " WHERE q.opportunity_id=o.id LIMIT 1) AS quote_amount "
-        "FROM opportunities o WHERE o.equipment_type=:et AND o.id!=:i "
-        "ORDER BY (o.stage='WON') DESC, o.updated_at DESC LIMIT 8"), {"et": et, "i": opp_id}).all()
+        f"FROM opportunities o WHERE {where} "
+        "ORDER BY o.updated_at DESC LIMIT 50"), params).all()
+
+    # 精排：与本商机（设备类型+名称）的 bigram 相似度，WON 加权靠前
+    scored = []
+    for r in rows:
+        candidate_text = f"{r[4] or ''} {r[1] or ''}".strip()
+        score = cosine_similarity(query_text, candidate_text)
+        if score < 0.15:
+            continue
+        scored.append((score + (0.1 if r[2] == "WON" else 0), r, score))
+    scored.sort(key=lambda x: x[0], reverse=True)
     cases = [{"opportunity_id": r[0], "name": r[1], "stage": r[2],
-              "est_amount": float(r[3] or 0), "quote_amount": float(r[4] or 0)} for r in rows]
+              "est_amount": float(r[3] or 0), "quote_amount": float(r[5] or 0),
+              "similarity": round(raw, 3)}
+             for _, r, raw in scored[:8]]
     won = [c for c in cases if c["stage"] == "WON"]
     tip = ""
     if won:

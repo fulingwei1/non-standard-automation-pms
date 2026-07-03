@@ -436,9 +436,13 @@ class PresaleAIKnowledgeService:
             except Exception as exc:
                 logger.warning("语义模型编码失败，回退到哈希向量: %s", exc)
 
+        # 哈希向量回退：bigram 词元（语序敏感）+ 稳定哈希
+        # （内建哈希函数有进程级随机化，会导致存量向量与新查询失配，详#16）
+        from app.utils.text_similarity import stable_token_hash, tokenize
+
         embedding = np.zeros(384, dtype=np.float32)
-        for token in self._tokenize_text(text):
-            embedding[hash(token) % embedding.size] += 1.0
+        for token in tokenize(text):
+            embedding[stable_token_hash(token, embedding.size)] += 1.0
         norm = np.linalg.norm(embedding)
         if norm > 0:
             embedding = embedding / norm

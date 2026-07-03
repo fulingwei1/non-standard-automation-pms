@@ -72,8 +72,8 @@
 | PRE-14 | 售前工单状态字典分裂（PROCESSING vs IN_PROGRESS / REVIEW 无路可走） | P2 | 待修 | presale/core.py:50-59；operations.py:146-149；crud.py:117,151 | 1d | 静态已证 | 详#14；数据清洗专项（存量 PROCESSING/REVIEW 工单迁移）；PRE-02 并入本项 |
 | PRE-15 | 售前移动端整域假实现（AI问答/语音/拜访/估价/快照全硬编码，前端零消费） | P1 | 待修 | presale_mobile_service.py:69-78,166-170,214-543 | 下架0.5d/做实4-5d | 静态已证 | 详#13；止损包（僵尸路由下架） |
 | PRE-16 | 知识库 _has_live_ai 漏判 qwen，AI 提取/问答永走规则模板 | P1 | 已验证 | presale_ai_knowledge_service.py:681-687 | 0.1d | 静态已证；✅已修复并回归（2026-07-03） | 详#15；Quick-win 闸门包；_has_live_ai 已纳入 qwen_api_key |
-| PRE-17 | 知识库/模板"语义搜索"实为字符哈希/Jaccard，非语义 RAG | P2 | 待修 | presale_ai_knowledge_service.py:439-445,677-679 | 短期1d/中期3-5d | 静态已证 | 详#16；sentence-transformers 未安装；ROADMAP F4 |
-| PRE-18 | 相似案例检索为 equipment_type 精确匹配 SQL，非语义 | P2 | 待修 | opportunity_workflow.py:170-175 | 并入 PRE-17 | 静态已证 | 详#16；空值互配、命中率低 |
+| PRE-17 | 知识库/模板"语义搜索"实为字符哈希/Jaccard，非语义 RAG | P2 | 已修待验(短期) | utils/text_similarity.py；presale_ai_knowledge_service.py；presale_ai_service.py；tests/unit/test_text_similarity_retrieval.py | 短期1d/中期3-5d | 静态已证；✅契约测试回归（2026-07-04） | 详#16；短期方案已落：中文 bigram 余弦替换空格 Jaccard；哈希向量改 bigram+稳定哈希（顺带修内建 hash() 进程随机化导致存量向量失配的隐藏 bug）；中期 qwen embedding 需标准百炼密钥（Coding Plan 端点 /embeddings 404 已实测），ROADMAP F4 |
+| PRE-18 | 相似案例检索为 equipment_type 精确匹配 SQL，非语义 | P2 | 已修待验 | opportunity_workflow.py similar_cases；tests/unit/test_text_similarity_retrieval.py | 并入 PRE-17 | 静态已证；✅契约测试回归（2026-07-04） | 详#16；改双向 LIKE 粗召回（词表分裂容错）+ bigram 相似度精排（WON 加权），空设备类型不再全库互配，返回带 similarity 分 |
 | PRE-19 | 方案 AI 评审 ai-solution-review / 验收标准生成 | — | 已验证 | — | — | 静态已证（正面确认） | 无缺陷；ai-acceptance-criteria 真回填 |
 | PRE-20 | AI 工作流编排只建状态壳无执行器（DB 中 20 行 status 全空） | P2 | 待修 | presale_ai_integration.py:285-319 | 做实3d/下架0.5d | 静态已证 | 详#17；止损包 |
 | PRE-21 | AI 后台任务重启后 PENDING/RUNNING 永久卡死（无恢复无超时） | P2 | 已验证 | ai_job_service.py；main.py startup；tests/unit/test_ai_job_recovery.py | 0.5d | 静态已证；✅已动态回归（2026-07-03） | 详#18；**主项**：APPR-22① 同问题并入本项（互为引用）；startup recover_stale_jobs + 轮询惰性超时（AI_JOB_MAX_RUNTIME_SECONDS 默认1800s）；`import app.main` 路由加载成功 |
@@ -354,7 +354,7 @@
 | MISC-03 | 预警超时升级任务坏死（对 Column 取布尔导致查询短路） | P1 | 已验证 | alert_escalation_task.py；tests/unit/test_utils_missing.py | 0.5d | 静态已证；✅已动态回归（2026-07-03） | 与 APPR-17/AS-25 的 841 饿死不同源，是升级任务本身崩；未升级判断改 SQL 表达式并纳入 OPEN/PENDING/ACKNOWLEDGED/PROCESSING |
 | MISC-04 | best_practice(P0 优化 4 端点) 僵尸+半成品（从未注册、0 commit、无认证） | P2 | 已验证 | best_practice.py；projects/__init__.py；tests/unit/test_best_practice_legacy_misc04.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 旧 `best_practice.py` 仍未挂载主路由；潜在写端点已补 `material:update/supplier:update/project:update`；真实前端路径继续走已挂载 `/projects/best-practices` |
 | MISC-05 | endpoints/knowledge 僵尸三无（表不存在挂载即 500，硬编码冒充 AI） | P2 | 待修 | __init__.py:19；knowledge_entries/knowledge_alerts 表不存在 | 下架 1d | 静态已证 | 前端调另一套 /knowledge-base |
-| MISC-06 | documents 文档中心上传端到端不可用（无 multipart 端点前端必 422） | P1 | 待修 | documents POST 只收 JSON；Documents.jsx:188 | 2-3d | 静态已证 | 权限错用 document:read 应改 document:create；DB 60 行全 demo 假 path |
+| MISC-06 | documents 文档中心上传端到端不可用（无 multipart 端点前端必 422） | P1 | 已验证 | documents/crud_refactored.py；projects.js；Documents.test.jsx；routeContracts.test.js；tests/unit/test_documents_upload_misc06.py | 1d | 静态已证；✅已动态回归（2026-07-04） | 新增 `/documents/upload` multipart 上传端点；`documentApi.create(FormData)` now 走上传路由；项目级创建权限改 `document:create`；列表层过滤 `/demo/` 假文件路径，避免 60 行 demo 文档继续冒充真实文件 |
 | MISC-07 | advantage_products 133 行真数据不可达（前端组件孤儿无入口） | P1 | 已验证 | AdvantageProducts.jsx；presalesRoutes.jsx；sidebarConfig/default.js；presales.js；import_excel.py；tests/unit/test_advantage_products_misc07.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 已新增 `/presales/advantage-products` 路由和侧边栏“优势产品”入口；导入接口前后端默认 `clear_existing=false`，避免误清库；搜索框不再默认显示 unknown |
 | MISC-08 | change_impact 占位上线真路由未挂 | P2 | 待修 | change_impact.py:7-24；projects/change_impact.py 未 include | 下架 0.5h/挂真 1-2d | 静态已证 | — |
 | MISC-09 | cost_collection POST/collect 缺 RBAC（任何用户可全量触发写库归集） | P1 | 已验证 | cost_endpoints/collection.py；tests/unit/test_cost_collection_permissions_misc09.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | `/cost-collection/collect` now 要求 `cost:manage`；读侧 status/by-project 仍为登录可读；与 PROJ-11 成本归集口径问题互引但权限漏洞已收口 |
@@ -374,7 +374,7 @@
 | MISC-23 | culture_wall config 占位+goals 前端 404+空播 | P2 | 待修 | culture_wall_config.py:7-25；admin.js:243；contents 无 PUT/DELETE | 1-2d | 静态已证 | 与 HR-22 同一 culture_wall，HR-22 为主，本项补 config/goals/PUT 细节，互引不合并 |
 | MISC-24 | ai_strategy 84 端点巨型僵尸+前端 5 接口全 404 | P2 | 待修 | /ai-strategy 8 模块 84 端点；aiStrategy.js 5 调用无一匹配 | 下架 0.5d/重写 5d+ | 静态已证 | 全库最大僵尸，典型前后端各写各的 |
 
-**MISC 域小结**：24 个边缘模块以"僵尸/半成品/假实现"为主。P0 唯 MISC-01（用户正看虚构竞品数据）已下架止血；P1 集群：MISC-02 恒空白、MISC-03 升级任务坏死（已修复）、MISC-06 上传必 422、MISC-12 裸 sqlite3+启动 DDL（并入 HR-15）、人事 PII 入库。MISC-04 legacy best_practice 下架确认+潜在权限、MISC-07 优势产品入口/导入默认安全值、MISC-09 归集无 RBAC、MISC-10 成本偏差权限/404/N+1、MISC-11 积分自退刷分、MISC-14 PM 介入零鉴权/数据源桩、MISC-15 关系成熟度前后端假数据/NameError 已接真实评分与记录、MISC-18 商务支持 5 组 404 已补前后端契约/权限。建议直接下架止血：resource_scheduling、change_impact 占位、culture_wall_config 占位、endpoints/knowledge、RequirementSurvey、ai_strategy。
+**MISC 域小结**：24 个边缘模块以"僵尸/半成品/假实现"为主。P0 唯 MISC-01（用户正看虚构竞品数据）已下架止血；P1 集群：MISC-02 恒空白、MISC-03 升级任务坏死（已修复）、MISC-12 裸 sqlite3+启动 DDL（并入 HR-15）、人事 PII 入库。MISC-04 legacy best_practice 下架确认+潜在权限、MISC-06 文档上传 multipart 契约/写权限/demo 假路径、MISC-07 优势产品入口/导入默认安全值、MISC-09 归集无 RBAC、MISC-10 成本偏差权限/404/N+1、MISC-11 积分自退刷分、MISC-14 PM 介入零鉴权/数据源桩、MISC-15 关系成熟度前后端假数据/NameError 已接真实评分与记录、MISC-18 商务支持 5 组 404 已补前后端契约/权限。建议直接下架止血：resource_scheduling、change_impact 占位、culture_wall_config 占位、endpoints/knowledge、RequirementSurvey、ai_strategy。
 
 ## 视图一：17 项全局 P0 → 追踪 ID 映射
 
