@@ -50,6 +50,11 @@ class TestSMSChannelHandler:
     def test_send_sms_success(self, mock_settings, sms_handler, mock_db, mock_user_with_phone):
         """测试短信发送成功"""
         mock_settings.SMS_ENABLED = True
+        mock_settings.SMS_PROVIDER = "aliyun"
+        mock_settings.SMS_ALIYUN_ACCESS_KEY_ID = "key-id"
+        mock_settings.SMS_ALIYUN_ACCESS_KEY_SECRET = "key-secret"
+        mock_settings.SMS_ALIYUN_SIGN_NAME = "签名"
+        mock_settings.SMS_ALIYUN_TEMPLATE_CODE = "SMS_001"
         
         mock_query = Mock()
         mock_query.filter.return_value.first.return_value = mock_user_with_phone
@@ -64,10 +69,12 @@ class TestSMSChannelHandler:
             priority=NotificationPriority.NORMAL,
         )
 
-        result = sms_handler.send(request)
+        with patch.object(SMSChannelHandler, "_send_aliyun") as mock_send_aliyun:
+            result = sms_handler.send(request)
 
         assert result.success is True
         assert result.channel == NotificationChannel.SMS
+        mock_send_aliyun.assert_called_once()
 
     @patch('app.services.notification.channels.sms_handler.settings')
     def test_send_sms_user_not_found(self, mock_settings, sms_handler, mock_db):
@@ -112,6 +119,35 @@ class TestSMSChannelHandler:
 
         assert result.success is False
         assert "手机" in result.error_message or "电话" in result.error_message
+
+    @patch('app.services.notification.channels.sms_handler.settings')
+    def test_send_sms_missing_gateway_config_fails(
+        self, mock_settings, sms_handler, mock_db, mock_user_with_phone
+    ):
+        """测试缺少短信网关配置时不能假报发送成功"""
+        mock_settings.SMS_ENABLED = True
+        mock_settings.SMS_PROVIDER = "aliyun"
+        mock_settings.SMS_ALIYUN_ACCESS_KEY_ID = None
+        mock_settings.SMS_ALIYUN_ACCESS_KEY_SECRET = None
+        mock_settings.SMS_ALIYUN_SIGN_NAME = None
+        mock_settings.SMS_ALIYUN_TEMPLATE_CODE = None
+
+        mock_query = Mock()
+        mock_query.filter.return_value.first.return_value = mock_user_with_phone
+        mock_db.query.return_value = mock_query
+
+        request = NotificationRequest(
+            recipient_id=1,
+            notification_type="TEST",
+            category="test",
+            title="测试短信",
+            content="这是测试内容",
+        )
+
+        result = sms_handler.send(request)
+
+        assert result.success is False
+        assert "短信网关配置不完整" in result.error_message
 
     @patch('app.services.notification.channels.sms_handler.settings')
     def test_send_sms_disabled(self, mock_settings, sms_handler, mock_db):

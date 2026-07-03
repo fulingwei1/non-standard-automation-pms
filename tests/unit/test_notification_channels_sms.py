@@ -87,6 +87,34 @@ class TestSMSChannelHandler:
     def test_send_success(self, mock_settings, handler, mock_db, mock_user):
         """测试发送短信成功"""
         mock_settings.SMS_ENABLED = True
+        mock_settings.SMS_PROVIDER = "aliyun"
+        mock_settings.SMS_ALIYUN_ACCESS_KEY_ID = "key-id"
+        mock_settings.SMS_ALIYUN_ACCESS_KEY_SECRET = "key-secret"
+        mock_settings.SMS_ALIYUN_SIGN_NAME = "签名"
+        mock_settings.SMS_ALIYUN_TEMPLATE_CODE = "SMS_001"
+        mock_db.query.return_value.filter.return_value.first.return_value = mock_user
+        request = NotificationRequest(
+            recipient_id=1,
+            notification_type="alert",
+            category="system",
+            title="测试短信",
+            content="测试内容",
+        )
+        with patch.object(SMSChannelHandler, "_send_aliyun") as mock_send_aliyun:
+            result = handler.send(request)
+        assert result.success is True
+        assert result.channel == "sms"
+        mock_send_aliyun.assert_called_once()
+
+    @patch("app.services.notification.channels.sms_handler.settings")
+    def test_send_missing_gateway_config_fails(self, mock_settings, handler, mock_db, mock_user):
+        """测试缺少短信网关配置时返回失败"""
+        mock_settings.SMS_ENABLED = True
+        mock_settings.SMS_PROVIDER = "aliyun"
+        mock_settings.SMS_ALIYUN_ACCESS_KEY_ID = None
+        mock_settings.SMS_ALIYUN_ACCESS_KEY_SECRET = None
+        mock_settings.SMS_ALIYUN_SIGN_NAME = None
+        mock_settings.SMS_ALIYUN_TEMPLATE_CODE = None
         mock_db.query.return_value.filter.return_value.first.return_value = mock_user
         request = NotificationRequest(
             recipient_id=1,
@@ -96,8 +124,8 @@ class TestSMSChannelHandler:
             content="测试内容",
         )
         result = handler.send(request)
-        assert result.success is True
-        assert result.channel == "sms"
+        assert result.success is False
+        assert "短信网关配置不完整" in result.error_message
 
     def test_is_enabled_when_sms_disabled(self, handler):
         """测试 is_enabled 返回正确状态 - 禁用"""
@@ -115,6 +143,11 @@ class TestSMSChannelHandler:
     def test_send_with_priority(self, mock_settings, handler, mock_db, mock_user):
         """测试带优先级的短信发送"""
         mock_settings.SMS_ENABLED = True
+        mock_settings.SMS_PROVIDER = "aliyun"
+        mock_settings.SMS_ALIYUN_ACCESS_KEY_ID = "key-id"
+        mock_settings.SMS_ALIYUN_ACCESS_KEY_SECRET = "key-secret"
+        mock_settings.SMS_ALIYUN_SIGN_NAME = "签名"
+        mock_settings.SMS_ALIYUN_TEMPLATE_CODE = "SMS_001"
         mock_db.query.return_value.filter.return_value.first.return_value = mock_user
         request = NotificationRequest(
             recipient_id=1,
@@ -124,13 +157,19 @@ class TestSMSChannelHandler:
             content="测试内容",
             priority="urgent",
         )
-        result = handler.send(request)
+        with patch.object(SMSChannelHandler, "_send_aliyun"):
+            result = handler.send(request)
         assert result.success is True
 
     @patch("app.services.notification.channels.sms_handler.settings")
     def test_send_logging(self, mock_settings, handler, mock_db, mock_user, caplog):
         """测试短信发送日志"""
         mock_settings.SMS_ENABLED = True
+        mock_settings.SMS_PROVIDER = "aliyun"
+        mock_settings.SMS_ALIYUN_ACCESS_KEY_ID = "key-id"
+        mock_settings.SMS_ALIYUN_ACCESS_KEY_SECRET = "key-secret"
+        mock_settings.SMS_ALIYUN_SIGN_NAME = "签名"
+        mock_settings.SMS_ALIYUN_TEMPLATE_CODE = "SMS_001"
         mock_db.query.return_value.filter.return_value.first.return_value = mock_user
         request = NotificationRequest(
             recipient_id=1,
@@ -139,7 +178,8 @@ class TestSMSChannelHandler:
             title="测试短信",
             content="测试内容",
         )
-        handler.send(request)
+        with patch.object(SMSChannelHandler, "_send_aliyun"):
+            handler.send(request)
         # 验证日志被记录
         assert "短信通知" in caplog.text
         assert "13800138000" in caplog.text

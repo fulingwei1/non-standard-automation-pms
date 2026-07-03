@@ -107,7 +107,8 @@ class NotificationSender:
     def _send_email_notification(self, reminder: TimesheetReminderRecord, user: User) -> bool:
         """发送邮件通知"""
         # 检查邮件配置
-        if not hasattr(settings, "SMTP_HOST") or not settings.SMTP_HOST:
+        smtp_host = self._setting_str("EMAIL_SMTP_SERVER") or self._setting_str("SMTP_HOST")
+        if not smtp_host:
             logger.warning("邮件服务未配置")
             return False
 
@@ -119,7 +120,11 @@ class NotificationSender:
             # 创建邮件
             msg = MIMEMultipart("alternative")
             msg["Subject"] = reminder.title
-            msg["From"] = getattr(settings, "SMTP_FROM", "noreply@example.com")
+            msg["From"] = (
+                self._setting_str("EMAIL_FROM")
+                or self._setting_str("SMTP_FROM")
+                or "noreply@example.com"
+            )
             msg["To"] = user.email
 
             # 邮件内容（支持HTML）
@@ -133,13 +138,17 @@ class NotificationSender:
             msg.attach(part2)
 
             # 发送邮件
-            smtp_host = settings.SMTP_HOST
-            smtp_port = getattr(settings, "SMTP_PORT", 587)
-            smtp_user = getattr(settings, "SMTP_USER", "")
-            smtp_password = getattr(settings, "SMTP_PASSWORD", "")
+            smtp_port = self._setting_int("EMAIL_SMTP_PORT", self._setting_int("SMTP_PORT", 587))
+            smtp_user = self._setting_str("EMAIL_USERNAME") or self._setting_str("SMTP_USER")
+            smtp_password = self._setting_str("EMAIL_PASSWORD") or self._setting_str(
+                "SMTP_PASSWORD"
+            )
+            if bool(smtp_user) != bool(smtp_password):
+                logger.error("邮件SMTP认证配置不完整")
+                return False
 
             with smtplib.SMTP(smtp_host, smtp_port) as server:
-                if getattr(settings, "SMTP_TLS", True):
+                if self._setting_bool("EMAIL_SMTP_TLS", self._setting_bool("SMTP_TLS", True)):
                     server.starttls()
                 if smtp_user and smtp_password:
                     server.login(smtp_user, smtp_password)
@@ -150,6 +159,30 @@ class NotificationSender:
         except Exception as e:
             logger.error(f"发送邮件通知失败: {str(e)}")
             return False
+
+    @staticmethod
+    def _setting_str(name: str) -> Optional[str]:
+        value = getattr(settings, name, None)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        return None
+
+    @staticmethod
+    def _setting_int(name: str, default: int) -> int:
+        value = getattr(settings, name, default)
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
+
+    @staticmethod
+    def _setting_bool(name: str, default: bool) -> bool:
+        value = getattr(settings, name, default)
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            return value.strip().lower() in {"1", "true", "yes", "on"}
+        return default
 
     def _send_wechat_notification(self, reminder: TimesheetReminderRecord, user: User) -> bool:
         """发送企业微信通知"""

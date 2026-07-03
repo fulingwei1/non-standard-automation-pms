@@ -8,7 +8,10 @@ EmailNotificationHandler: 完整 SMTP 邮件处理器（预警通知系统使用
 完整的 SMTP 邮件发送实现在 notification_handlers/email_handler.py 中。
 """
 
+import smtplib
 from datetime import datetime
+from email.message import EmailMessage
+from typing import Optional
 
 from app.core.config import settings
 from app.models.user import User
@@ -49,10 +52,82 @@ class EmailChannelHandler(ChannelHandler):
                 channel=self.channel, success=False, error_message="用户未配置邮箱"
             )
 
-        self.logger.info(f"[邮件通知] 发送给 {recipient.email}: {request.title}")
+        config_error = self._validate_smtp_config()
+        if config_error:
+            return NotificationResult(
+                channel=self.channel,
+                success=False,
+                error_message=config_error,
+            )
+
+        try:
+            self._send_smtp_message(
+                to_email=recipient.email,
+                subject=request.title,
+                content=request.content,
+            )
+        except Exception as exc:
+            self.logger.exception("[邮件通知] SMTP发送失败: %s", exc)
+            return NotificationResult(
+                channel=self.channel,
+                success=False,
+                error_message=f"邮件SMTP发送失败: {exc}",
+            )
+
+        self.logger.info("[邮件通知] 已通过SMTP发送给 %s: %s", recipient.email, request.title)
         return NotificationResult(
             channel=self.channel, success=True, sent_at=datetime.now().isoformat()
         )
 
     def is_enabled(self) -> bool:
         return bool(settings.EMAIL_ENABLED)
+
+    def _validate_smtp_config(self) -> Optional[str]:
+        if not self._setting_str("EMAIL_FROM") or not self._setting_str("EMAIL_SMTP_SERVER"):
+            return "邮件SMTP配置不完整"
+
+        username = self._setting_str("EMAIL_USERNAME")
+        password = self._setting_str("EMAIL_PASSWORD")
+        if bool(username) != bool(password):
+            return "邮件SMTP认证配置不完整"
+        return None
+
+    def _send_smtp_message(self, to_email: str, subject: str, content: str) -> None:
+        message = EmailMessage()
+        message["From"] = self._setting_str("EMAIL_FROM")
+        message["To"] = to_email
+        message["Subject"] = subject
+        message.set_content(content or "")
+
+        smtp = smtplib.SMTP(
+            self._setting_str("EMAIL_SMTP_SERVER"),
+            self._setting_int("EMAIL_SMTP_PORT", default=587),
+            timeout=10,
+        )
+        try:
+            username = self._setting_str("EMAIL_USERNAME")
+            password = self._setting_str("EMAIL_PASSWORD")
+            if username and password:
+                smtp.starttls()
+                smtp.login(username, password)
+            smtp.send_message(message)
+        finally:
+            try:
+                smtp.quit()
+            except Exception:
+                pass
+
+    @staticmethod
+    def _setting_str(name: str) -> Optional[str]:
+        value = getattr(settings, name, None)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        return None
+
+    @staticmethod
+    def _setting_int(name: str, default: int) -> int:
+        value = getattr(settings, name, default)
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default

@@ -2,9 +2,8 @@
 """
 邮件通知处理器测试
 """
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import pytest
-from datetime import datetime
 
 from app.services.notification.channels.email_handler import EmailChannelHandler
 from app.services.channel_handlers.base import (
@@ -51,6 +50,9 @@ class TestEmailChannelHandler:
     def test_send_email_success(self, mock_settings, email_handler, mock_db, mock_user_with_email):
         """测试邮件发送成功"""
         mock_settings.EMAIL_ENABLED = True
+        mock_settings.EMAIL_FROM = "noreply@example.com"
+        mock_settings.EMAIL_SMTP_SERVER = "smtp.example.com"
+        mock_settings.EMAIL_SMTP_PORT = 587
         
         # Mock查询返回用户
         mock_query = Mock()
@@ -67,13 +69,18 @@ class TestEmailChannelHandler:
             priority=NotificationPriority.NORMAL,
         )
 
-        # 执行发送
-        result = email_handler.send(request)
+        with patch("app.services.notification.channels.email_handler.smtplib.SMTP") as mock_smtp_cls:
+            mock_smtp = Mock()
+            mock_smtp_cls.return_value = mock_smtp
+
+            # 执行发送
+            result = email_handler.send(request)
 
         # 验证结果
         assert result.success is True
         assert result.channel == NotificationChannel.EMAIL
         assert result.sent_at is not None
+        mock_smtp.send_message.assert_called_once()
         mock_db.query.assert_called_once()
 
     @patch('app.services.notification.channels.email_handler.settings')
@@ -120,6 +127,32 @@ class TestEmailChannelHandler:
 
         assert result.success is False
         assert "邮箱" in result.error_message
+
+    @patch('app.services.notification.channels.email_handler.settings')
+    def test_send_email_missing_smtp_config_fails(
+        self, mock_settings, email_handler, mock_db, mock_user_with_email
+    ):
+        """测试缺少SMTP配置时不能假报发送成功"""
+        mock_settings.EMAIL_ENABLED = True
+        mock_settings.EMAIL_FROM = None
+        mock_settings.EMAIL_SMTP_SERVER = None
+
+        mock_query = Mock()
+        mock_query.filter.return_value.first.return_value = mock_user_with_email
+        mock_db.query.return_value = mock_query
+
+        request = NotificationRequest(
+            recipient_id=1,
+            notification_type="TEST",
+            category="test",
+            title="测试邮件",
+            content="这是测试内容",
+        )
+
+        result = email_handler.send(request)
+
+        assert result.success is False
+        assert "SMTP配置不完整" in result.error_message
 
     @patch('app.services.notification.channels.email_handler.settings')
     def test_send_email_disabled(self, mock_settings, email_handler, mock_db):
