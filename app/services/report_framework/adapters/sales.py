@@ -41,6 +41,7 @@ class SalesReportAdapter(BaseReportAdapter):
         from app.common.date_range import get_month_range_by_ym
         from app.models.business_support import BiddingProject, SalesOrder
         from app.models.sales import Contract, Invoice
+        from app.services.sales.contract.status_service import contract_status_query_values
 
         # 解析月份
         month_str = params.get("month")
@@ -62,7 +63,7 @@ class SalesReportAdapter(BaseReportAdapter):
             .filter(
                 Contract.signing_date >= month_start,
                 Contract.signing_date <= month_end,
-                Contract.status.in_(["SIGNED", "EXECUTING"]),
+                Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING"])),
             )
             .all()
         )
@@ -70,10 +71,10 @@ class SalesReportAdapter(BaseReportAdapter):
             "new_contracts_count": len(new_contracts),
             "new_contracts_amount": sum(c.contract_amount or Decimal("0") for c in new_contracts),
             "active_contracts": self.db.query(Contract)
-            .filter(Contract.status.in_(["SIGNED", "EXECUTING"]))
+            .filter(Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING"])))
             .count(),
             "completed_contracts": self.db.query(Contract)
-            .filter(Contract.status == "COMPLETED")
+            .filter(Contract.status.in_(contract_status_query_values("COMPLETED")))
             .count(),
         }
 

@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.sales.contracts import Contract
 from app.models.user import User
+from app.services.sales.contract.status_service import apply_contract_status, normalize_contract_status
 
 from .base import ApprovalAdapter
 
@@ -44,7 +45,7 @@ def _first_model_attr(obj: Any, *names: str, default: Any = None) -> Any:
 
 
 def _status_key(status: Any) -> str:
-    return str(status or "").upper()
+    return normalize_contract_status(status) or ""
 
 
 class ContractApprovalAdapter(ApprovalAdapter):
@@ -100,28 +101,28 @@ class ContractApprovalAdapter(ApprovalAdapter):
         """提交审批时的回调"""
         contract = self.get_entity(entity_id)
         if contract:
-            contract.status = "PENDING_APPROVAL"
+            apply_contract_status(contract, "PENDING_APPROVAL")
             self.db.flush()
 
     def on_approved(self, entity_id: int, instance: ApprovalInstance) -> None:
         """审批通过时的回调"""
         contract = self.get_entity(entity_id)
         if contract:
-            contract.status = "APPROVED"
+            apply_contract_status(contract, "APPROVED")
             self.db.flush()
 
     def on_rejected(self, entity_id: int, instance: ApprovalInstance, *_args: Any) -> None:
         """审批驳回时的回调"""
         contract = self.get_entity(entity_id)
         if contract:
-            contract.status = "REJECTED"
+            apply_contract_status(contract, "REJECTED")
             self.db.flush()
 
     def on_withdrawn(self, entity_id: int, instance: ApprovalInstance) -> None:
         """撤回审批时的回调"""
         contract = self.get_entity(entity_id)
         if contract:
-            contract.status = "DRAFT"
+            apply_contract_status(contract, "DRAFT")
             self.db.flush()
 
     def on_cancelled(self, entity_id: int, instance: ApprovalInstance) -> None:

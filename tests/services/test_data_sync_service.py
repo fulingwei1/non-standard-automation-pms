@@ -59,9 +59,15 @@ class TestDataSyncService:
             id=1,
             project_id=10,
             contract_amount=amount,
+            signing_date=None,
             signed_date=None,
             quote_version=None,
             delivery_deadline=None,
+            customer_id=None,
+            opportunity_id=None,
+            sales_owner_id=None,
+            opportunity=None,
+            customer=None,
         )
         project = MagicMock(
             id=10, contract_amount=amount, contract_date=None, planned_end_date=None
@@ -89,15 +95,27 @@ class TestDataSyncService:
         assert "未关联合同" in result["message"]
 
     def test_sync_project_completed_updates_contract(self):
-        """项目已结项（ST30）时更新合同状态为 COMPLETED"""
+        """项目已结项（ST30）时通过合同状态服务更新为 COMPLETED"""
         svc, db = self._make_service()
         project = MagicMock(id=1, stage="S9", status="ST30")
-        contract = MagicMock(id=10, status="ACTIVE")
+        contract = MagicMock(id=10, status="EXECUTING")
         db.query.return_value.filter.return_value.first.return_value = project
         db.query.return_value.filter.return_value.all.return_value = [contract]
         result = svc.sync_project_to_contract(1)
         assert result["success"] is True
         assert contract.status == "COMPLETED"
+
+    def test_sync_project_completed_does_not_complete_draft_contract(self):
+        """项目同步不能把未进入执行的草稿合同直接刷成完成。"""
+        svc, db = self._make_service()
+        project = MagicMock(id=1, stage="S9", status="ST30")
+        contract = MagicMock(id=10, status="DRAFT")
+        db.query.return_value.filter.return_value.first.return_value = project
+        db.query.return_value.filter.return_value.all.return_value = [contract]
+        result = svc.sync_project_to_contract(1)
+        assert result["success"] is True
+        assert "无需同步" in result["message"]
+        assert contract.status == "DRAFT"
 
     # ---------- get_sync_status ----------
 

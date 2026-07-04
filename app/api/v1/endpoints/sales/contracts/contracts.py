@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.sales.contracts import Contract
+from app.services.sales.contract.status_service import normalize_contract_status
 from app.services.sales.payment_plan_service import PaymentPlanService
 from app.services.status_transition_service import StatusTransitionService
 
@@ -21,7 +22,7 @@ from ..utils.gate_validation import validate_g4_contract_to_project
 logger = logging.getLogger(__name__)
 
 # 允许创建项目的合同状态
-ALLOWED_CONTRACT_STATUSES = {"signed", "executing", "SIGNED", "EXECUTING"}
+ALLOWED_CONTRACT_STATUSES = {"SIGNED", "EXECUTING"}
 
 router = APIRouter(prefix="/contracts", tags=["contracts"])
 
@@ -56,7 +57,7 @@ def create_project_from_contract(
         raise HTTPException(status_code=404, detail=f"合同不存在: {contract_id}")
 
     # 2. 验证合同状态（只有已签署/执行中的合同才能创建项目）
-    if contract.status not in ALLOWED_CONTRACT_STATUSES:
+    if normalize_contract_status(contract.status) not in ALLOWED_CONTRACT_STATUSES:
         raise HTTPException(
             status_code=400,
             detail=f"合同状态为 '{contract.status}'，只有已签署(signed)或执行中(executing)的合同才能创建项目",

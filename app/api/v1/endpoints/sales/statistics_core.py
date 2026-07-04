@@ -21,6 +21,7 @@ from app.models.enums import OpportunityStageEnum
 from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.sales.contract.status_service import contract_status_query_values
 
 router = APIRouter()
 
@@ -89,7 +90,9 @@ def get_sales_funnel(
     won_opps = query_opps.filter(Opportunity.stage == "WON").all()
     total_opp_amount = sum([float(opp.est_amount or 0) for opp in won_opps])
 
-    signed_contracts = query_contracts.filter(Contract.status == "SIGNED").all()
+    signed_contracts = query_contracts.filter(
+        Contract.status.in_(contract_status_query_values("SIGNED"))
+    ).all()
     total_contract_amount = sum(
         [float(contract.contract_amount or 0) for contract in signed_contracts]
     )
@@ -247,7 +250,9 @@ def get_sales_summary(
     won_opportunities = query_opps.filter(Opportunity.stage == "WON").count()
 
     # 合同统计
-    signed_contracts = query_contracts.filter(Contract.status == "SIGNED").all()
+    signed_contracts = query_contracts.filter(
+        Contract.status.in_(contract_status_query_values("SIGNED"))
+    ).all()
     total_contract_amount = sum([float(c.contract_amount or 0) for c in signed_contracts])
 
     # 发票统计
@@ -290,7 +295,6 @@ def get_sales_statistics_overview(
     """
     销售统计总览：按时间/产品/客户类型统计，赢单率/输单率
     """
-    from calendar import monthrange
 
     now = datetime.now()
     target_year = year or now.year

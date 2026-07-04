@@ -50,6 +50,7 @@ from app.models.sales import (
     QuoteItem,
     QuoteVersion,
 )
+from app.services.sales.contract.status_service import normalize_contract_status
 
 
 def validate_g1_lead_to_opportunity(
@@ -272,7 +273,7 @@ def validate_g4_contract_to_project(
     if not contract.payment_terms_summary:
         errors.append("付款条款摘要不能为空，请补充付款节点信息")
 
-    if contract.status != "SIGNED":
+    if normalize_contract_status(contract.status) != "SIGNED":
         errors.append("只有已签订的合同才能生成项目")
 
     if contract.project_id:

@@ -20,6 +20,7 @@ from app.api import deps
 from app.core import security
 from app.models.sales import Contract, ContractDeliverable, Opportunity
 from app.models.user import User
+from app.services.sales.contract.status_service import contract_status_query_values
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -162,7 +163,7 @@ def export_contracts(
             )
         )
     if status:
-        query = query.filter(Contract.status == status)
+        query = query.filter(Contract.status.in_(contract_status_query_values(status)))
     if customer_id:
         query = query.filter(Contract.customer_id == customer_id)
     if owner_id:

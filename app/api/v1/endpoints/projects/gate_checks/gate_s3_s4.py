@@ -36,9 +36,10 @@ def check_gate_s3_to_s4(db: Session, project: Project) -> Tuple[bool, List[str]]
         # 如果关联了合同，检查合同状态
         if project.contract_id:
             from app.models.sales import Contract
+            from app.services.sales.contract.status_service import normalize_contract_status
 
             contract = db.query(Contract).filter(Contract.id == project.contract_id).first()
-            if contract and contract.status != "SIGNED":
+            if contract and normalize_contract_status(contract.status) != "SIGNED":
                 missing.append(f"合同状态为{contract.status}，需为已签订(SIGNED)")
 
     # 检查立项评审通过

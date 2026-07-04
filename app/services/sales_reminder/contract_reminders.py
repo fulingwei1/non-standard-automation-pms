@@ -10,9 +10,9 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.enums import ContractStatusEnum
 from app.models.notification import Notification
 from app.models.sales import Contract
+from app.services.sales.contract.status_service import contract_status_query_values
 from app.services.sales_reminder.base import create_notification
 
 
@@ -58,7 +58,7 @@ def notify_contract_expiring(db: Session) -> int:
     # 查询所有有效的合同（使用正确的枚举值）
     contracts = (
         db.query(Contract)
-        .filter(Contract.status.in_([ContractStatusEnum.SIGNED, ContractStatusEnum.ACTIVE]))
+        .filter(Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING"])))
         .all()
     )
 

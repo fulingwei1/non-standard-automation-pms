@@ -27,6 +27,11 @@ from app.schemas.sales import (
     ContractResponse,
     ContractUpdate,
 )
+from app.services.sales.contract.status_service import (
+    apply_contract_status,
+    contract_status_query_values,
+    normalize_contract_status,
+)
 from app.utils.db_helpers import get_or_404
 
 from ..utils import (
@@ -59,6 +64,10 @@ def _map_contract_payload_to_model(payload: dict, *, is_create: bool = False) ->
         "customer_id": "customer_id",
         "project_id": "project_id",
         "contract_amount": "total_amount",
+        "amount_without_tax": "amount_without_tax",
+        "tax_rate": "tax_rate",
+        "tax_amount": "tax_amount",
+        "amount_with_tax": "amount_with_tax",
         "signed_date": "signing_date",
         "status": "status",
         "payment_terms_summary": "payment_terms",
@@ -74,9 +83,21 @@ def _map_contract_payload_to_model(payload: dict, *, is_create: bool = False) ->
     if is_create:
         mapped.setdefault("contract_type", "sales")
         if not mapped.get("status"):
-            mapped["status"] = "draft"
+            mapped["status"] = "DRAFT"
+        else:
+            mapped["status"] = normalize_contract_status(mapped["status"])
+        if mapped.get("total_amount") is None and mapped.get("amount_with_tax") is not None:
+            mapped["total_amount"] = mapped["amount_with_tax"]
         if mapped.get("total_amount") is None:
             mapped["total_amount"] = 0
+        mapped.setdefault("tax_rate", 0)
+        mapped.setdefault("tax_amount", 0)
+        if mapped.get("amount_with_tax") is None:
+            mapped["amount_with_tax"] = mapped["total_amount"]
+        if mapped.get("amount_without_tax") is None:
+            mapped["amount_without_tax"] = (
+                mapped["total_amount"] if not mapped.get("tax_amount") else None
+            )
 
     return mapped
 
@@ -124,6 +145,28 @@ def _latest_quote_version(db: Session, quote: Quote) -> Optional[QuoteVersion]:
     )
 
 
+def _create_deliverables_from_quote_items(
+    db: Session, *, contract_id: int, items: List[QuoteItem]
+) -> None:
+    """将报价明细沉淀为合同交付物，避免 G4 前人工重录。"""
+
+    for index, item in enumerate(items, start=1):
+        deliverable_name = (
+            (item.item_name or "").strip()
+            or (item.specification or "").strip()
+            or f"报价明细{index}"
+        )
+        db.add(
+            ContractDeliverable(
+                contract_id=contract_id,
+                deliverable_name=deliverable_name,
+                deliverable_type=item.item_type or item.cost_category or "QUOTE_ITEM",
+                required_for_payment=True,
+                template_ref=f"quote_item:{item.id}",
+            )
+        )
+
+
 def _apply_quote_context_to_contract_data(
     db: Session,
     contract_payload: dict,
@@ -165,6 +208,16 @@ def _apply_quote_context_to_contract_data(
             contract_data["customer_id"] = quote.customer_id
         if contract_data.get("total_amount") in (None, 0) and version.total_price is not None:
             contract_data["total_amount"] = version.total_price
+        if not contract_data.get("amount_without_tax") and getattr(version, "amount_without_tax", None):
+            contract_data["amount_without_tax"] = version.amount_without_tax
+        if not contract_data.get("tax_rate") and getattr(version, "tax_rate", None):
+            contract_data["tax_rate"] = version.tax_rate
+        if not contract_data.get("tax_amount") and getattr(version, "tax_amount", None):
+            contract_data["tax_amount"] = version.tax_amount
+        if not contract_data.get("amount_with_tax") and getattr(version, "amount_with_tax", None):
+            contract_data["amount_with_tax"] = version.amount_with_tax
+        if contract_data.get("total_amount") in (None, 0) and contract_data.get("amount_with_tax"):
+            contract_data["total_amount"] = contract_data["amount_with_tax"]
         if not contract_data.get("sales_owner_id") and quote.owner_id:
             contract_data["sales_owner_id"] = quote.owner_id
         items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).all()
@@ -210,7 +263,7 @@ def read_contracts(
         )
         .with_scope_filter(current_user)
         .with_keyword(keyword)
-        .with_status(status)
+        .with_status(contract_status_query_values(status) if status else None)
         .with_customer(customer_id)
         .with_sort()
         .with_pagination(pagination)
@@ -306,6 +359,8 @@ def create_contract(
                 contract_id=contract.id, **deliverable_data.model_dump()
             )
             db.add(deliverable)
+    elif items:
+        _create_deliverables_from_quote_items(db, contract_id=contract.id, items=items)
 
     db.commit()
     db.refresh(contract)
@@ -354,7 +409,7 @@ def archive_contract(
     ):
         raise HTTPException(status_code=403, detail="您没有权限归档此合同")
 
-    contract.status = "COMPLETED"
+    apply_contract_status(contract, "COMPLETED")
     db.commit()
     db.refresh(contract)
 
@@ -480,12 +535,18 @@ def create_contract_from_quote(
         quote_id=version.id,
         customer_id=quote.customer_id,
         total_amount=version.total_price or 0,
-        status="draft",
+        amount_without_tax=version.amount_without_tax,
+        tax_rate=version.tax_rate or 0,
+        tax_amount=version.tax_amount or 0,
+        amount_with_tax=version.amount_with_tax or version.total_price or 0,
+        status="DRAFT",
         sales_owner_id=quote.owner_id or current_user.id,
         payment_terms=request.payment_terms,
     )
     db.add(contract)
     db.flush()
+
+    _create_deliverables_from_quote_items(db, contract_id=contract.id, items=items)
 
     db.commit()
     db.refresh(contract)
@@ -560,6 +621,12 @@ def update_contract(
         raise HTTPException(status_code=403, detail="您没有权限编辑此合同")
 
     update_payload = contract_in.model_dump(exclude_unset=True)
+    if "status" in update_payload:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="合同状态不可通过通用更新接口修改，请使用签署/作废/审批等专用流程",
+        )
+
     update_data = _map_contract_payload_to_model(update_payload)
 
     # 记录需要同步的字段

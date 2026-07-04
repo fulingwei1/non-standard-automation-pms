@@ -21,6 +21,7 @@ from app.models.sales import Contract, ContractDeliverable, Opportunity, QuoteVe
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import ContractProjectCreateRequest, ContractSignRequest
+from app.services.sales.contract.status_service import apply_contract_status, normalize_contract_status
 from app.services.status_handlers.contract_handler import bind_presale_context_to_project
 from app.utils.db_helpers import get_or_404
 
@@ -61,12 +62,18 @@ def sign_contract(
 
     # F2: 签署前置——合同须已审批通过（approval_status/status 任一为 approved）
     _appr = str(getattr(contract, "approval_status", "") or "").lower()
-    _st = str(getattr(contract, "status", "") or "").lower()
-    if _appr != "approved" and _st not in ("approved", "signed", "executing", "completed"):
+    normalized_status = normalize_contract_status(getattr(contract, "status", None))
+    if _appr != "approved" and normalized_status not in (
+        "APPROVED",
+        "SIGNED",
+        "EXECUTING",
+        "COMPLETED",
+    ):
         raise HTTPException(status_code=400, detail="合同未审批通过，不能签署")
 
     contract.signing_date = sign_request.signed_date
-    contract.status = "SIGNED"
+    if normalized_status not in ("SIGNED", "EXECUTING", "COMPLETED"):
+        apply_contract_status(contract, "SIGNED")
 
     # Sprint 2.1 + Issue 1.2: 合同签订自动创建项目并触发阶段流转
     auto_create_project = (
@@ -153,7 +160,7 @@ def create_contract_project(
         raise HTTPException(status_code=403, detail="无权为该合同创建项目")
 
     # P0-3: 验证合同状态必须为已签订
-    if contract.status != "SIGNED":
+    if normalize_contract_status(contract.status) != "SIGNED":
         raise HTTPException(
             status_code=400,
             detail=f"合同状态必须为已签订才能创建项目，当前状态: {contract.status}",

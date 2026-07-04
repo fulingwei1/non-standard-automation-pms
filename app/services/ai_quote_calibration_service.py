@@ -11,11 +11,12 @@ from typing import Any, Dict, List, Optional
 from app.models.presale.core import PresaleSupportTicket
 from app.models.presale_ai_quotation import PresaleAIQuotation
 from app.models.sales.contracts import Contract
+from app.services.sales.contract.status_service import contract_status_query_values
 
 logger = logging.getLogger("ai.calibration")
 
 # 视为"成交"的合同状态
-DEAL_STATUSES = ("signed", "executing", "completed")
+DEAL_STATUSES = contract_status_query_values(["SIGNED", "EXECUTING", "COMPLETED"])
 TIERS = ("basic", "standard", "premium")
 
 

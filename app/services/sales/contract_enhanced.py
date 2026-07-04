@@ -33,10 +33,13 @@ from app.schemas.sales.contract_enhanced import (
 from app.services.sales.contract.analyzer import ContractAnalyzer
 from app.services.sales.contract.approval_service import ContractApprovalService
 from app.services.sales.contract.attachment_service import ContractAttachmentService
-from app.services.sales.contract.status_service import ContractStatusService
+from app.services.sales.contract.status_service import (
+    ContractStatusService,
+    contract_status_query_values,
+    normalize_contract_status,
+)
 from app.services.sales.contract.term_service import ContractTermService
 from app.utils.db_helpers import delete_obj
-from app.utils.status_helpers import assert_status_allows
 
 
 class ContractEnhancedService:
@@ -69,7 +72,7 @@ class ContractEnhancedService:
         # 创建合同主体
         contract_dict = contract_data.model_dump(exclude={"terms"})
         contract_dict["unreceived_amount"] = unreceived_amount
-        contract_dict["status"] = "draft"  # 初始状态为草稿
+        contract_dict["status"] = "DRAFT"  # 初始状态为草稿
 
         contract = Contract(**contract_dict)
         db.add(contract)
@@ -136,7 +139,7 @@ class ContractEnhancedService:
 
         # 筛选条件
         if status:
-            query = query.filter(Contract.status == status)
+            query = query.filter(Contract.status.in_(contract_status_query_values(status)))
         if customer_id:
             query = query.filter(Contract.customer_id == customer_id)
         if contract_type:
@@ -165,10 +168,14 @@ class ContractEnhancedService:
             return None
 
         # 只允许在草稿状态下更新
-        assert_status_allows(contract, "draft", "只能更新草稿状态的合同")
+        if normalize_contract_status(contract.status) != "DRAFT":
+            raise ValueError("只能更新草稿状态的合同")
+
+        update_data = contract_data.model_dump(exclude_unset=True)
+        if "status" in update_data:
+            raise ValueError("合同状态不可通过通用更新修改")
 
         # 更新字段
-        update_data = contract_data.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(contract, field, value)
 
@@ -187,7 +194,8 @@ class ContractEnhancedService:
         if not contract:
             return False
 
-        assert_status_allows(contract, "draft", "只能删除草稿状态的合同")
+        if normalize_contract_status(contract.status) != "DRAFT":
+            raise ValueError("只能删除草稿状态的合同")
 
         delete_obj(db, contract)
         return True

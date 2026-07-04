@@ -245,6 +245,7 @@ class PerformanceCalculator:
             PresaleSupportTicket,
         )
         from app.models.sales import Contract
+        from app.services.sales.contract.status_service import contract_status_query_values
 
         # 1. 方案成功率维度（30%权重）
         solutions = (
@@ -275,7 +276,7 @@ class PerformanceCalculator:
                         self.db.query(Contract)
                         .filter(
                             Contract.opportunity_id == solution.opportunity_id,
-                            Contract.status == "SIGNED",
+                            Contract.status.in_(contract_status_query_values("SIGNED")),
                         )
                         .first()
                     )

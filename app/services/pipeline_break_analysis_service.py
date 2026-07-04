@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote
 from app.models.user import User
+from app.services.sales.contract.status_service import contract_status_query_values
 
 logger = logging.getLogger(__name__)
 
@@ -263,7 +264,7 @@ class PipelineBreakAnalysisService:
             .filter(
                 Contract.signing_date >= start_date,
                 Contract.signing_date <= end_date,
-                Contract.status == "SIGNED",
+                Contract.status.in_(contract_status_query_values("SIGNED")),
             )
             .all()
         )

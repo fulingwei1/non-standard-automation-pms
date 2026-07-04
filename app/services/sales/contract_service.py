@@ -13,19 +13,19 @@
 import logging
 from typing import Any, Dict
 
-from sqlalchemy import Column, Date, Integer, Numeric, String, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import relationship, selectinload
+from sqlalchemy.orm import selectinload
 
-from app.models.base import Base
 from app.models.project import Customer, Project, ProjectMilestone, ProjectPaymentPlan
 from app.models.sales.contracts import Contract
+from app.services.sales.contract.status_service import normalize_contract_status
 from app.utils.json_helpers import safe_json_loads
 
 logger = logging.getLogger(__name__)
 
 # 允许创建项目的合同状态
-ALLOWED_CONTRACT_STATUSES = {"signed", "executing", "SIGNED", "EXECUTING"}
+ALLOWED_CONTRACT_STATUSES = {"SIGNED", "EXECUTING"}
 
 
 class ContractService:
@@ -62,7 +62,7 @@ class ContractService:
         customer = contract_data[1]
 
         # 2. 验证合同状态（只有已签署/执行中的合同才能创建项目）
-        if contract.status not in ALLOWED_CONTRACT_STATUSES:
+        if normalize_contract_status(contract.status) not in ALLOWED_CONTRACT_STATUSES:
             raise ValueError(
                 f"合同状态为 '{contract.status}'，只有已签署(signed)或执行中(executing)的合同才能创建项目"
             )

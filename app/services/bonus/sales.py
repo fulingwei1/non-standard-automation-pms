@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.models.bonus import BonusCalculation, BonusRule
 from app.models.sales import Contract, Invoice
 from app.services.bonus.base import BonusCalculatorBase
+from app.services.sales.contract.status_service import contract_status_query_values
 
 
 class SalesBonusCalculator(BonusCalculatorBase):
@@ -155,7 +156,7 @@ class SalesBonusCalculator(BonusCalculatorBase):
             .filter(
                 Contract.signing_date >= period_start,
                 Contract.signing_date <= period_end,
-                Contract.status == "SIGNED",
+                Contract.status.in_(contract_status_query_values("SIGNED")),
             )
             .all()
         )

@@ -3,7 +3,6 @@
 合同管理增强 API - 完整的CRUD与审批流程
 """
 
-from pathlib import Path
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -30,7 +29,11 @@ from app.schemas.sales.contract_enhanced import (
 )
 from app.core.sales_permissions import check_sales_data_permission, filter_sales_data_by_scope
 from app.models.sales import Contract, ContractAttachment
+from app.services.contract_approval import (
+    ContractApprovalService as UnifiedContractApprovalService,
+)
 from app.services.sales.contract_enhanced import ContractEnhancedService
+from .attachment_security import resolve_contract_attachment_path
 
 router = APIRouter()
 
@@ -49,6 +52,10 @@ def _serialize_contract_list_item(contract) -> dict:
         "contract_type": contract.contract_type,
         "customer_id": contract.customer_id,
         "total_amount": float(total_amount),
+        "amount_without_tax": float(contract.amount_without_tax or 0),
+        "tax_rate": float(contract.tax_rate or 0),
+        "tax_amount": float(contract.tax_amount or 0),
+        "amount_with_tax": float(contract.amount_with_tax or total_amount),
         "received_amount": float(received_amount),
         "unreceived_amount": float(unreceived_amount or 0),
         "status": contract.status,
@@ -167,11 +174,26 @@ def submit_contract_for_approval(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("contract:create")),
 ):
-    """提交审批"""
+    """提交审批（兼容旧增强路径，但必须走统一审批引擎）。"""
     try:
-        contract = ContractEnhancedService.submit_for_approval(db, contract_id, current_user.id)
+        service = UnifiedContractApprovalService(db)
+        results, errors = service.submit_contracts_for_approval(
+            contract_ids=[contract_id],
+            initiator_id=current_user.id,
+            comment=submit_data.comment if submit_data else None,
+        )
+        if errors and not results:
+            raise ValueError(errors[0].get("error") or "提交合同统一审批失败")
+        db.commit()
+        contract = ContractEnhancedService.get_contract(db, contract_id)
+        if not contract:
+            raise ValueError("合同不存在")
         return contract
     except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -196,18 +218,11 @@ def approve_contract(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("contract:approve")),
 ):
-    """审批通过"""
-    try:
-        if approval_data and approval_data.approval_status != "approved":
-            raise ValueError("此接口仅用于审批通过")
-        
-        opinion = approval_data.approval_opinion if approval_data else None
-        contract = ContractEnhancedService.approve_contract(
-            db, contract_id, approval_id, current_user.id, opinion
-        )
-        return contract
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    """旧审批入口已停用，避免绕过统一审批任务。"""
+    raise HTTPException(
+        status_code=400,
+        detail="旧增强合同审批入口已下线，请使用统一审批 /sales/contracts/approval/action",
+    )
 
 
 @router.post("/{contract_id}/reject", response_model=ContractResponse)
@@ -218,17 +233,11 @@ def reject_contract(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("contract:approve")),
 ):
-    """审批驳回"""
-    try:
-        if not approval_data or not approval_data.approval_opinion:
-            raise ValueError("驳回必须填写审批意见")
-        
-        contract = ContractEnhancedService.reject_contract(
-            db, contract_id, approval_id, current_user.id, approval_data.approval_opinion
-        )
-        return contract
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    """旧驳回入口已停用，避免绕过统一审批任务。"""
+    raise HTTPException(
+        status_code=400,
+        detail="旧增强合同审批入口已下线，请使用统一审批 /sales/contracts/approval/action",
+    )
 
 
 @router.get("/approvals/pending", response_model=List[ContractApprovalResponse])
@@ -340,11 +349,9 @@ def download_attachment(
     attachment = db.query(ContractAttachment).filter(ContractAttachment.id == attachment_id).first()
     if not attachment:
         raise HTTPException(status_code=404, detail="附件不存在")
-    file_path = Path(attachment.file_path).expanduser()
-    if not file_path.is_file():
-        raise HTTPException(status_code=404, detail="附件文件不存在")
+    file_path = resolve_contract_attachment_path(attachment.file_path)
     return FileResponse(
-        path=file_path,
+        path=str(file_path),
         filename=attachment.file_name,
         media_type=attachment.file_type or "application/octet-stream",
     )
@@ -428,12 +435,11 @@ def get_contract_statistics(
     )
 
     total_count = base.count()
-    draft_count = base.filter(Contract.status == "draft").count()
-    approving_count = base.filter(Contract.status == "approving").count()
-    signed_count = base.filter(Contract.status == "signed").count()
-    executing_count = base.filter(Contract.status == "executing").count()
-    completed_count = base.filter(Contract.status == "completed").count()
-    voided_count = base.filter(Contract.status == "voided").count()
+    from app.services.sales.contract.status_service import fold_contract_status_counts
+
+    status_counts = fold_contract_status_counts(
+        base.with_entities(Contract.status, func.count(Contract.id)).group_by(Contract.status).all()
+    )
 
     total_amount = base.with_entities(func.sum(Contract.total_amount)).scalar() or Decimal(0)
     received_amount = base.with_entities(func.sum(Contract.received_amount)).scalar() or Decimal(0)
@@ -441,12 +447,12 @@ def get_contract_statistics(
 
     return ContractStats(
         total_count=total_count,
-        draft_count=draft_count,
-        approving_count=approving_count,
-        signed_count=signed_count,
-        executing_count=executing_count,
-        completed_count=completed_count,
-        voided_count=voided_count,
+        draft_count=status_counts.get("DRAFT", 0),
+        approving_count=status_counts.get("PENDING_APPROVAL", 0),
+        signed_count=status_counts.get("SIGNED", 0),
+        executing_count=status_counts.get("EXECUTING", 0),
+        completed_count=status_counts.get("COMPLETED", 0),
+        voided_count=status_counts.get("CANCELLED", 0),
         total_amount=total_amount,
         received_amount=received_amount,
         unreceived_amount=unreceived_amount,

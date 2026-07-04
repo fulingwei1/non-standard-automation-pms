@@ -17,6 +17,7 @@ from app.models.sales import Contract
 from app.models.user import User
 from app.schemas.business_support import ContractReportResponse
 from app.schemas.common import ResponseModel
+from app.services.sales.contract.status_service import contract_status_query_values
 
 router = APIRouter()
 
@@ -49,23 +50,55 @@ async def get_contract_report(
         report_date_str = f"{start_dt.strftime('%Y-%m-%d')} ~ {end_dt.strftime('%Y-%m-%d')}"
 
         # 合同状态统计
-        draft_count = db.query(Contract).filter(Contract.status == "DRAFT").count()
-        signed_count = db.query(Contract).filter(Contract.status == "SIGNED").count()
-        executing_count = db.query(Contract).filter(Contract.status == "EXECUTING").count()
-        completed_count = db.query(Contract).filter(Contract.status == "COMPLETED").count()
-        cancelled_count = db.query(Contract).filter(Contract.status == "CANCELLED").count()
+        draft_count = (
+            db.query(Contract)
+            .filter(Contract.status.in_(contract_status_query_values("DRAFT")))
+            .count()
+        )
+        signed_count = (
+            db.query(Contract)
+            .filter(Contract.status.in_(contract_status_query_values("SIGNED")))
+            .count()
+        )
+        executing_count = (
+            db.query(Contract)
+            .filter(Contract.status.in_(contract_status_query_values("EXECUTING")))
+            .count()
+        )
+        completed_count = (
+            db.query(Contract)
+            .filter(Contract.status.in_(contract_status_query_values("COMPLETED")))
+            .count()
+        )
+        cancelled_count = (
+            db.query(Contract)
+            .filter(Contract.status.in_(contract_status_query_values("CANCELLED")))
+            .count()
+        )
 
         # 合同金额统计
         total_contracts = db.query(Contract).all()
         total_contract_amount = sum(c.total_amount or Decimal("0") for c in total_contracts)
 
-        signed_contracts = db.query(Contract).filter(Contract.status == "SIGNED").all()
+        signed_contracts = (
+            db.query(Contract)
+            .filter(Contract.status.in_(contract_status_query_values("SIGNED")))
+            .all()
+        )
         signed_amount = sum(c.total_amount or Decimal("0") for c in signed_contracts)
 
-        executing_contracts = db.query(Contract).filter(Contract.status == "EXECUTING").all()
+        executing_contracts = (
+            db.query(Contract)
+            .filter(Contract.status.in_(contract_status_query_values("EXECUTING")))
+            .all()
+        )
         executing_amount = sum(c.total_amount or Decimal("0") for c in executing_contracts)
 
-        completed_contracts_objs = db.query(Contract).filter(Contract.status == "COMPLETED").all()
+        completed_contracts_objs = (
+            db.query(Contract)
+            .filter(Contract.status.in_(contract_status_query_values("COMPLETED")))
+            .all()
+        )
         completed_amount = sum(c.total_amount or Decimal("0") for c in completed_contracts_objs)
 
         # 执行进度（简化处理，使用回款进度）

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.models.project import Customer, Project, ProjectPaymentPlan
 from app.models.sales import Contract
+from app.services.sales.contract.status_service import apply_contract_status, normalize_contract_status
 
 logger = logging.getLogger(__name__)
 
@@ -175,9 +176,10 @@ class DataSyncService:
             # 更新合同执行状态（如果有相关字段）
             # 这里可以根据项目阶段更新合同状态
             if project.stage == "S9" and project.status == "ST30":
-                # 项目已结项，可以更新合同状态为已完成
-                if contract.status != "COMPLETED":
-                    contract.status = "COMPLETED"
+                # 项目已结项时，只能把执行中的合同推进到完成，避免旁路草稿/审批状态。
+                normalized_status = normalize_contract_status(contract.status)
+                if normalized_status == "EXECUTING":
+                    apply_contract_status(contract, "COMPLETED")
                     updated = True
 
             if updated:

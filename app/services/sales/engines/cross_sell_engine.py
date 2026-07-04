@@ -35,6 +35,7 @@ class CrossSellEngine(BaseRecommendationEngine):
     def get_recommendations(self, user_id: int) -> List[Recommendation]:
         """获取交叉销售推荐"""
         from app.models.sales import Contract
+        from app.services.sales.contract.status_service import contract_status_query_values
 
         recommendations = []
 
@@ -45,7 +46,7 @@ class CrossSellEngine(BaseRecommendationEngine):
                 .options(joinedload(Contract.customer))
                 .filter(
                     Contract.sales_owner_id == user_id,
-                    Contract.status.in_(["SIGNED", "ACTIVE", "EXECUTING"]),
+                    Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING"])),
                     Contract.created_at >= datetime.now() - timedelta(days=self.RECENT_DAYS),
                 )
                 .all()

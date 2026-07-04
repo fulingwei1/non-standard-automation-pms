@@ -11,17 +11,15 @@
 
 import logging
 from datetime import date, datetime, timedelta
-from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import and_, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from app.models.sales.leads import Opportunity
 from app.models.sales.contracts import Contract
-from app.models.project.customer import Customer
 from app.models.enums.sales import OpportunityStageEnum
+from app.services.sales.contract.status_service import contract_status_query_values
 
 logger = logging.getLogger(__name__)
 
@@ -186,9 +184,8 @@ class SalesForecastService:
                     and_(
                         Contract.signing_date >= start_date,
                         Contract.signing_date <= end_date,
-                        # 现行小写状态词表；兼容历史大写脏数据
                         Contract.status.in_(
-                            ["signed", "executing", "completed", "ACTIVE", "COMPLETED"]
+                            contract_status_query_values(["SIGNED", "EXECUTING", "COMPLETED"])
                         ),
                     )
                 )
@@ -346,8 +343,6 @@ class SalesForecastService:
         self, actual_revenue: float, pipeline_data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """获取预测分解"""
-        total_weighted = pipeline_data.get("total_weighted", 0)
-
         # 已签约
         committed = {
             "amount": actual_revenue,

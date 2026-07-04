@@ -6,10 +6,10 @@
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.sales.contracts import Contract
@@ -24,6 +24,7 @@ from app.models.sales.sales_funnel import (
     StageDwellTimeConfig,
     SalesFunnelStage,
 )
+from app.services.sales.contract.status_service import contract_status_query_values
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +149,7 @@ class DwellTimeMonitorService:
         # 获取待处理合同
         active_contracts = (
             self.db.query(Contract)
-            .filter(Contract.status.in_(["draft", "pending_approval", "approving"]))
+            .filter(Contract.status.in_(contract_status_query_values(["DRAFT", "PENDING_APPROVAL"])))
             .all()
         )
 

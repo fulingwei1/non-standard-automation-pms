@@ -16,7 +16,7 @@ from decimal import Decimal
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -35,15 +35,19 @@ from app.models.ecn.core import Ecn
 from app.models.ecn.evaluation_approval import EcnApproval, EcnEvaluation
 from app.models.production.work_order import WorkOrder
 from app.models.project import Project
-from app.models.purchase import PurchaseOrder
+from app.models.purchase import PurchaseOrder, PurchaseRequest
 from app.models.sales.contracts import Contract
 from app.models.sales.leads import Lead, Opportunity
+from app.services.sales.contract.status_service import contract_status_query_values
 from app.models.task_center import TaskUnified
 from app.models.timesheet import Timesheet
 from app.models.user import Role, User
 from app.schemas.common import ResponseModel
 
 router = APIRouter()
+
+
+INACTIVE_PURCHASE_ORDER_STATUSES = ("DRAFT", "CANCELLED", "CANCELED", "REJECTED")
 
 
 # TODO: [租户隔离] 当前业务模型(Lead/Contract/PurchaseOrder/WorkOrder等)缺少tenant_id字段
@@ -90,7 +94,9 @@ def get_sales_stats(db: Session, current_user: User) -> dict:
 
     # 合同统计（已签约/执行中）
     active_contracts = (
-        db.query(func.count(Contract.id)).filter(Contract.status.in_(["SIGNED", "ACTIVE"])).scalar()
+        db.query(func.count(Contract.id))
+        .filter(Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING"])))
+        .scalar()
         or 0
     )
 
@@ -98,14 +104,14 @@ def get_sales_stats(db: Session, current_user: User) -> dict:
     monthly_revenue = db.query(func.sum(Contract.contract_amount)).filter(
         Contract.signing_date >= month_start,
         Contract.signing_date <= month_end,
-        Contract.status.in_(["SIGNED", "ACTIVE", "COMPLETED"]),
+        Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING", "COMPLETED"])),
     ).scalar() or Decimal("0")
 
     # 上月签约金额（用于计算趋势）
     last_month_revenue = db.query(func.sum(Contract.contract_amount)).filter(
         Contract.signing_date >= last_month_start,
         Contract.signing_date <= last_month_end,
-        Contract.status.in_(["SIGNED", "ACTIVE", "COMPLETED"]),
+        Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING", "COMPLETED"])),
     ).scalar() or Decimal("0")
 
     revenue_trend = calculate_trend(monthly_revenue, last_month_revenue)
@@ -238,8 +244,7 @@ def get_procurement_stats(db: Session, current_user: User) -> dict:
         or 0
     )
 
-    # 节省金额暂无比较数据，保持为0
-    savings = 0
+    savings = _calculate_procurement_savings(db)
 
     return create_stats_response(
         [
@@ -249,6 +254,43 @@ def get_procurement_stats(db: Session, current_user: User) -> dict:
             create_stat_card("savings", "节省金额", format_currency(savings)),
         ]
     )
+
+
+def _purchase_order_actual_amount_expr():
+    return case(
+        (PurchaseOrder.amount_with_tax > 0, PurchaseOrder.amount_with_tax),
+        else_=func.coalesce(PurchaseOrder.total_amount, 0),
+    )
+
+
+def _calculate_procurement_savings(db: Session) -> Decimal:
+    """Aggregate positive savings from request estimates versus linked orders."""
+    rows = (
+        db.query(
+            PurchaseRequest.id.label("request_id"),
+            func.coalesce(PurchaseRequest.total_amount, 0).label("request_amount"),
+            func.coalesce(func.sum(_purchase_order_actual_amount_expr()), 0).label(
+                "ordered_amount"
+            ),
+        )
+        .join(PurchaseOrder, PurchaseOrder.source_request_id == PurchaseRequest.id)
+        .filter(
+            PurchaseOrder.status.isnot(None),
+            ~PurchaseOrder.status.in_(INACTIVE_PURCHASE_ORDER_STATUSES),
+        )
+        .group_by(PurchaseRequest.id, PurchaseRequest.total_amount)
+        .all()
+    )
+
+    total_savings = Decimal("0")
+    for row in rows:
+        request_amount = Decimal(str(row.request_amount or 0))
+        ordered_amount = Decimal(str(row.ordered_amount or 0))
+        delta = request_amount - ordered_amount
+        if delta > 0:
+            total_savings += delta
+
+    return total_savings.quantize(Decimal("0.01"))
 
 
 def get_production_stats(db: Session, current_user: User) -> dict:

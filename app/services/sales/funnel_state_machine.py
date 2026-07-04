@@ -559,7 +559,7 @@ class FunnelStateMachine:
             quote_id=quote.current_version_id,
             customer_id=quote.customer_id,
             total_amount=current_version.total_price if current_version else 0,
-            status="draft",
+            status="DRAFT",
             sales_owner_id=transitioned_by,
         )
 

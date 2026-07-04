@@ -16,6 +16,7 @@ from app.models.presale import (
 )
 from app.models.sales import Contract
 from app.services.bonus.base import BonusCalculatorBase
+from app.services.sales.contract.status_service import contract_status_query_values
 
 
 class SolutionEngineerBonusService(BonusCalculatorBase):
@@ -97,7 +98,7 @@ class SolutionEngineerBonusService(BonusCalculatorBase):
                     self.db.query(Contract)
                     .filter(
                         Contract.opportunity_id == solution.opportunity_id,
-                        Contract.status == "SIGNED",
+                        Contract.status.in_(contract_status_query_values("SIGNED")),
                     )
                     .first()
                 )
@@ -206,7 +207,7 @@ class SolutionEngineerBonusService(BonusCalculatorBase):
                     self.db.query(Contract)
                     .filter(
                         Contract.opportunity_id == solution.opportunity_id,
-                        Contract.status == "SIGNED",
+                        Contract.status.in_(contract_status_query_values("SIGNED")),
                     )
                     .first()
                 )

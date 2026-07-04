@@ -10,8 +10,8 @@ from sqlalchemy.orm import Session
 
 from app.models.sales.contracts import Contract
 from app.schemas.sales.contract_enhanced import ContractStats
+from app.services.sales.contract.status_service import fold_contract_status_counts
 from app.utils.decimal_helpers import ZERO
-from app.utils.status_helpers import count_by_status
 
 
 class ContractAnalyzer:
@@ -24,9 +24,12 @@ class ContractAnalyzer:
         """获取合同统计"""
         total_count = self.db.query(func.count(Contract.id)).scalar() or 0
 
-        # 使用 count_by_status 一次查询获取所有状态计数
-        status_list = ["draft", "approving", "signed", "executing", "completed", "voided"]
-        status_counts = count_by_status(self.db, Contract, status_list)
+        raw_status_counts = (
+            self.db.query(Contract.status, func.count(Contract.id))
+            .group_by(Contract.status)
+            .all()
+        )
+        status_counts = fold_contract_status_counts(raw_status_counts)
 
         total_amount = self.db.query(func.sum(Contract.total_amount)).scalar() or ZERO
         received_amount = self.db.query(func.sum(Contract.received_amount)).scalar() or ZERO
@@ -34,12 +37,12 @@ class ContractAnalyzer:
 
         return ContractStats(
             total_count=total_count,
-            draft_count=status_counts.get("draft", 0),
-            approving_count=status_counts.get("approving", 0),
-            signed_count=status_counts.get("signed", 0),
-            executing_count=status_counts.get("executing", 0),
-            completed_count=status_counts.get("completed", 0),
-            voided_count=status_counts.get("voided", 0),
+            draft_count=status_counts.get("DRAFT", 0),
+            approving_count=status_counts.get("PENDING_APPROVAL", 0),
+            signed_count=status_counts.get("SIGNED", 0),
+            executing_count=status_counts.get("EXECUTING", 0),
+            completed_count=status_counts.get("COMPLETED", 0),
+            voided_count=status_counts.get("CANCELLED", 0),
             total_amount=total_amount,
             received_amount=received_amount,
             unreceived_amount=unreceived_amount,

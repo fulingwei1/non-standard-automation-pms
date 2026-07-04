@@ -58,6 +58,7 @@ class RiskEngine(BaseRecommendationEngine):
     def _get_expiring_contract_alerts(self, user_id: int) -> List[Recommendation]:
         """获取合同到期预警"""
         from app.models.sales import Contract
+        from app.services.sales.contract.status_service import contract_status_query_values
 
         recommendations = []
         today = date.today()
@@ -71,7 +72,7 @@ class RiskEngine(BaseRecommendationEngine):
             )
             .filter(
                 Contract.sales_owner_id == user_id,
-                Contract.status.in_(["ACTIVE", "EXECUTING"]),
+                Contract.status.in_(contract_status_query_values(["EXECUTING"])),
                 Contract.expiry_date.isnot(None),
                 Contract.expiry_date <= today + timedelta(days=self.CONTRACT_EXPIRY_WARNING_DAYS),
                 Contract.expiry_date >= today,

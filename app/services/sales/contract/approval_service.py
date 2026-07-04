@@ -15,7 +15,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.sales.contracts import Contract, ContractApproval
-from app.utils.status_helpers import assert_status_allows
+from app.services.sales.contract.status_service import apply_contract_status, normalize_contract_status
 
 
 class ContractApprovalService:
@@ -30,13 +30,14 @@ class ContractApprovalService:
         if not contract:
             raise ValueError("合同不存在")
 
-        assert_status_allows(contract, "draft", "只能提交草稿状态的合同")
+        if normalize_contract_status(contract.status) != "DRAFT":
+            raise ValueError("只能提交草稿状态的合同")
 
         # 根据金额创建审批流程
         approvals = self._create_approval_flow(contract.id, contract.total_amount)
 
         # 更新合同状态
-        contract.status = "approving" if approvals else "approved"
+        apply_contract_status(contract, "PENDING_APPROVAL" if approvals else "APPROVED")
 
         self.db.commit()
         self.db.refresh(contract)
@@ -147,7 +148,7 @@ class ContractApprovalService:
         )
 
         if pending_count == 0:
-            contract.status = "approved"
+            apply_contract_status(contract, "APPROVED")
 
         self.db.commit()
         self.db.refresh(contract)
@@ -184,7 +185,7 @@ class ContractApprovalService:
 
         # 驳回合同，回到草稿状态
         contract = self.db.query(Contract).filter(Contract.id == contract_id).first()
-        contract.status = "draft"
+        apply_contract_status(contract, "DRAFT")
 
         self.db.commit()
         self.db.refresh(contract)

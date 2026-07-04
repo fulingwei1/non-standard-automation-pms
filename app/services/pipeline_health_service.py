@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.models.project import Project
 from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote
+from app.services.sales.contract.status_service import normalize_contract_status
 
 logger = logging.getLogger(__name__)
 
@@ -240,8 +241,10 @@ class PipelineHealthService:
         if not contract:
             raise ValueError(f"合同 {contract_id} 不存在")
 
+        contract_status = normalize_contract_status(contract.status)
+
         # H4: 已结案或取消
-        if contract.status == "CLOSED":
+        if contract_status in ("COMPLETED", "CLOSED"):
             return {
                 "contract_id": contract_id,
                 "health_status": "H4",
@@ -249,7 +252,7 @@ class PipelineHealthService:
                 "risk_factors": ["已结案"],
                 "description": "合同已结案",
             }
-        if contract.status == "CANCELLED":
+        if contract_status == "CANCELLED":
             return {
                 "contract_id": contract_id,
                 "health_status": "H4",

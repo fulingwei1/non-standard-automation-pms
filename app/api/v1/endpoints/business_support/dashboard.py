@@ -30,6 +30,7 @@ from app.schemas.business_support import (
     PerformanceMetricsResponse,
 )
 from app.schemas.common import ResponseModel
+from app.services.sales.contract.status_service import contract_status_query_values
 
 
 class BusinessSupportDashboardEndpoint(BaseDashboardEndpoint):
@@ -43,21 +44,28 @@ class BusinessSupportDashboardEndpoint(BaseDashboardEndpoint):
         super().__init__()
         # 添加其他端点
         self.router.add_api_route(
-            "/business_support/dashboard/active-contracts",
+            "/dashboard/active-contracts",
             self._get_active_contracts_handler,
             methods=["GET"],
             summary="获取进行中的合同列表",
             response_model=ResponseModel[List[dict]],
         )
         self.router.add_api_route(
-            "/business_support/dashboard/active-bidding",
+            "/dashboard/active-bidding",
             self._get_active_bidding_handler,
             methods=["GET"],
             summary="获取进行中的投标列表",
             response_model=ResponseModel[List[BiddingProjectResponse]],
         )
         self.router.add_api_route(
-            "/business_support/dashboard/performance",
+            "/dashboard/todos",
+            self._get_todos_handler,
+            methods=["GET"],
+            summary="获取今日待办列表",
+            response_model=ResponseModel[List[dict]],
+        )
+        self.router.add_api_route(
+            "/dashboard/performance",
             self._get_performance_metrics_handler,
             methods=["GET"],
             summary="获取本月绩效指标",
@@ -167,7 +175,7 @@ class BusinessSupportDashboardEndpoint(BaseDashboardEndpoint):
             # 查询进行中的合同
             contracts = (
                 db.query(Contract)
-                .filter(Contract.status.in_(["SIGNED", "EXECUTING"]))
+                .filter(Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING"])))
                 .order_by(desc(Contract.signing_date))
                 .limit(limit)
                 .all()
@@ -298,6 +306,23 @@ class BusinessSupportDashboardEndpoint(BaseDashboardEndpoint):
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"获取进行中的投标列表失败: {str(e)}")
 
+    def _get_todos_handler(
+        self,
+        db: Session = Depends(deps.get_db),
+        current_user: User = Depends(security.require_permission("business_support:read")),
+    ):
+        """获取今日待办列表（用于工作台展示）"""
+        try:
+            from app.services.dashboard.business_support_dashboard_service import get_today_todos
+
+            return ResponseModel(
+                code=200,
+                message="获取今日待办列表成功",
+                data=get_today_todos(db, current_user.id, date.today()),
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"获取今日待办列表失败: {str(e)}")
+
     def _get_performance_metrics_handler(
         self,
         month: Optional[str] = Query(
@@ -328,7 +353,7 @@ class BusinessSupportDashboardEndpoint(BaseDashboardEndpoint):
                 .filter(
                     Contract.signing_date >= month_start,
                     Contract.signing_date <= month_end,
-                    Contract.status.in_(["SIGNED", "EXECUTING"]),
+                    Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING"])),
                 )
                 .count()
             )

@@ -50,6 +50,7 @@ def get_historical_prices(
     from app.models.project import Customer
     from app.models.sales import Opportunity
     from app.models.sales.contracts import Contract
+    from app.services.sales.contract.status_service import contract_status_query_values
 
     keyword = (product_category or "").strip()
     query = (
@@ -57,7 +58,7 @@ def get_historical_prices(
         .join(Contract, Contract.opportunity_id == Opportunity.id)
         .join(Customer, Customer.id == Opportunity.customer_id)
         .filter(Opportunity.stage == "WON")
-        .filter(Contract.status.in_(["signed", "executing", "completed"]))
+        .filter(Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING", "COMPLETED"])))
     )
     if keyword:
         query = query.filter(

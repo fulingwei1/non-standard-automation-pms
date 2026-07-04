@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.models.acceptance import AcceptanceOrder
 from app.models.business_support import BiddingProject
 from app.models.sales import Contract, Invoice
+from app.services.sales.contract.status_service import contract_status_query_values
 from app.models.task_center import TaskUnified
 
 
@@ -23,7 +24,11 @@ def count_active_contracts(db: Session) -> int:
     Returns:
         int: 合同数量
     """
-    return db.query(Contract).filter(Contract.status.in_(["SIGNED", "EXECUTING"])).count()
+    return (
+        db.query(Contract)
+        .filter(Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING"])))
+        .count()
+    )
 
 
 def calculate_pending_amount(db: Session, today: date) -> Decimal:

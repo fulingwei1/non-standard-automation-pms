@@ -190,8 +190,9 @@ def update_opportunity_stage_on_contract_status(mapper, connection, target):
     """
     from datetime import date
 
-    from app.models.enums import ContractStatusEnum, OpportunityStageEnum
+    from app.models.enums import OpportunityStageEnum
     from app.models.sales import Opportunity
+    from app.services.sales.contract.status_service import normalize_contract_status
 
     if not target.opportunity_id:
         return
@@ -210,7 +211,9 @@ def update_opportunity_stage_on_contract_status(mapper, connection, target):
 
         old_stage = opportunity.stage
 
-        if target.status == ContractStatusEnum.SIGNED:
+        contract_status = normalize_contract_status(target.status)
+
+        if contract_status == "SIGNED":
             if opportunity.stage != OpportunityStageEnum.WON:
                 opportunity.stage = OpportunityStageEnum.WON
                 # 记录实际成交日期（复用 expected_close_date 字段）
@@ -221,7 +224,7 @@ def update_opportunity_stage_on_contract_status(mapper, connection, target):
                     f"从 {old_stage} 标记为赢单 (WON)"
                 )
 
-        elif target.status == ContractStatusEnum.CANCELLED:
+        elif contract_status == "CANCELLED":
             # 合同取消时，商机回退到 CLOSING（而非直接输单，给销售补救机会）
             if opportunity.stage == OpportunityStageEnum.WON:
                 opportunity.stage = OpportunityStageEnum.CLOSING
@@ -247,8 +250,12 @@ def sync_related_entities_on_opportunity_lost(mapper, connection, target):
     - 草稿合同自动取消
     - 已签订的合同保持不变（需人工处理）
     """
-    from app.models.enums import ContractStatusEnum, OpportunityStageEnum, QuoteStatusEnum
+    from app.models.enums import OpportunityStageEnum, QuoteStatusEnum
     from app.models.sales import Contract, Quote
+    from app.services.sales.contract.status_service import (
+        apply_contract_status,
+        contract_status_query_values,
+    )
 
     # 仅处理变为 LOST 的情况
     stage_value = target.stage.value if hasattr(target.stage, "value") else target.stage
@@ -276,14 +283,11 @@ def sync_related_entities_on_opportunity_lost(mapper, connection, target):
         # 将草稿合同取消
         draft_contracts = session.query(Contract).filter(
             Contract.opportunity_id == target.id,
-            Contract.status.in_([
-                ContractStatusEnum.DRAFT.value,
-                ContractStatusEnum.REVIEW.value,
-            ])
+            Contract.status.in_(contract_status_query_values(["DRAFT", "APPROVED"])),
         ).all()
 
         for contract in draft_contracts:
-            contract.status = ContractStatusEnum.CANCELLED.value
+            apply_contract_status(contract, "CANCELLED")
             logger.info(f"商机输单联动: Contract {contract.id} 标记为取消")
 
     except Exception as e:

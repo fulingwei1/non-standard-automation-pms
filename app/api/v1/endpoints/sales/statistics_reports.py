@@ -24,6 +24,7 @@ from app.core.sales_permissions import (
 )
 from app.models.enums import OpportunityStageEnum
 from app.models.organization import Department
+from app.services.sales.contract.status_service import contract_status_query_values
 from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote, SalesTarget
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -145,7 +146,9 @@ def get_sales_performance(
         query_contracts = query_contracts.filter(Contract.sales_owner_id == owner_id)
 
     won_opps = query_opps.filter(Opportunity.stage == "WON").all()
-    signed_contracts = query_contracts.filter(Contract.status == "SIGNED").all()
+    signed_contracts = query_contracts.filter(
+        Contract.status.in_(contract_status_query_values("SIGNED"))
+    ).all()
     issued_invoices = query_invoices.filter(Invoice.status == "ISSUED").all()
 
     total_opp_amount = sum([float(opp.est_amount or 0) for opp in won_opps])
@@ -177,7 +180,9 @@ def get_customer_contribution(
     """
     客户贡献分析（已集成数据权限过滤）
     """
-    query_contracts = db.query(Contract).filter(Contract.status == "SIGNED")
+    query_contracts = db.query(Contract).filter(
+        Contract.status.in_(contract_status_query_values("SIGNED"))
+    )
     # 应用数据权限过滤
     query_contracts = filter_sales_data_by_scope(
         query_contracts, current_user, db, Contract, "owner_id"
@@ -297,7 +302,9 @@ def get_o2c_pipeline(
         )
 
     total_contracts = query_contracts.count()
-    signed_contracts = query_contracts.filter(Contract.status == "SIGNED").all()
+    signed_contracts = query_contracts.filter(
+        Contract.status.in_(contract_status_query_values("SIGNED"))
+    ).all()
     signed_amount = sum([float(c.contract_amount or 0) for c in signed_contracts])
 
     # 发票统计（使用财务数据权限）
@@ -615,7 +622,7 @@ def _team_performance(
             db.query(Contract)
             .filter(
                 Contract.sales_owner_id == uid,
-                Contract.status == "signed",
+                Contract.status.in_(contract_status_query_values("SIGNED")),
                 Contract.created_at >= dt_start,
                 Contract.created_at <= dt_end,
             )
@@ -718,7 +725,6 @@ def _forecast_report(
     forecast_total = actual_amount + total_weighted
 
     # 按月拆分预测
-    import datetime as dt_module
 
     monthly_forecast = []
     current = dt_start

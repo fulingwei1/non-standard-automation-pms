@@ -11,14 +11,14 @@
 
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.sales import Contract
+from app.services.sales.contract.status_service import contract_status_query_values
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +130,7 @@ class ContractMilestoneService:
             .options(joinedload(Contract.customer))
             .filter(
                 Contract.sales_owner_id == user_id,
-                Contract.status.in_(["ACTIVE", "EXECUTING", "SIGNED"]),
+                Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING"])),
             )
             .all()
         )

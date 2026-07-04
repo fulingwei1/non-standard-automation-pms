@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.models.business_support import BiddingProject, SalesOrder
 from app.models.sales import Contract, Invoice
+from app.services.sales.contract.status_service import contract_status_query_values
 
 
 class BusinessSupportReportsService:
@@ -50,7 +51,7 @@ class BusinessSupportReportsService:
             .filter(
                 Contract.signing_date >= start_date,
                 Contract.signing_date <= end_date,
-                Contract.status.in_(["SIGNED", "EXECUTING"]),
+                Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING"])),
             )
             .all()
         )
@@ -58,10 +59,10 @@ class BusinessSupportReportsService:
             "new_count": len(new_contracts),
             "new_amount": sum(c.contract_amount or Decimal("0") for c in new_contracts),
             "active_count": self.db.query(Contract)
-            .filter(Contract.status.in_(["SIGNED", "EXECUTING"]))
+            .filter(Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING"])))
             .count(),
             "completed_count": self.db.query(Contract)
-            .filter(Contract.status == "COMPLETED")
+            .filter(Contract.status.in_(contract_status_query_values("COMPLETED")))
             .count(),
         }
 
@@ -201,7 +202,7 @@ class BusinessSupportReportsService:
             self.db.query(Contract)
             .filter(
                 func.date(Contract.signing_date) == report_dt,
-                Contract.status.in_(["SIGNED", "EXECUTING"]),
+                Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING"])),
             )
             .all()
         )
@@ -209,10 +210,16 @@ class BusinessSupportReportsService:
         new_contracts_amount = sum(c.contract_amount or Decimal("0") for c in new_contracts)
 
         active_contracts = (
-            self.db.query(Contract).filter(Contract.status.in_(["SIGNED", "EXECUTING"])).count()
+            self.db.query(Contract)
+            .filter(Contract.status.in_(contract_status_query_values(["SIGNED", "EXECUTING"])))
+            .count()
         )
 
-        completed_contracts = self.db.query(Contract).filter(Contract.status == "COMPLETED").count()
+        completed_contracts = (
+            self.db.query(Contract)
+            .filter(Contract.status.in_(contract_status_query_values("COMPLETED")))
+            .count()
+        )
 
         # 2. 订单统计
         new_orders = (

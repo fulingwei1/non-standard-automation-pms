@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.models.project import Customer
 from app.models.sales import Contract, Opportunity
+from app.services.sales.contract.status_service import contract_status_query_values
 
 
 class SalesPredictionService:
@@ -71,7 +72,7 @@ class SalesPredictionService:
 
         # 获取历史合同数据（用于训练预测模型）
         query_contracts = self.db.query(Contract).filter(
-            Contract.status == "SIGNED",
+            Contract.status.in_(contract_status_query_values("SIGNED")),
             Contract.total_amount.isnot(None),
         )
 
@@ -417,7 +418,7 @@ class SalesPredictionService:
         actual_contracts = (
             self.db.query(Contract)
             .filter(
-                Contract.status == "SIGNED",
+                Contract.status.in_(contract_status_query_values("SIGNED")),
                 Contract.signing_date >= start_date,
                 Contract.signing_date <= today,
             )
