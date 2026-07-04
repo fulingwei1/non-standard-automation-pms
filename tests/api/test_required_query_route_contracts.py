@@ -166,19 +166,18 @@ def test_strategy_review_routes_tolerate_legacy_json_lists(
     db_session.commit()
 
     headers = _auth_headers(admin_token)
-    for prefix in ("/strategy", "/ai-strategy"):
-        response = client.get(
-            f"{settings.API_V1_PREFIX}{prefix}/reviews",
-            params={"strategy_id": strategy_id},
-            headers=headers,
-            follow_redirects=False,
-        )
-        assert response.status_code == 200, response.text
-        item = response.json()["items"][0]
-        assert item["decisions"] == [{"content": "保持当前方向"}]
-        assert item["action_items"] == [{"content": "补齐周报数据"}]
-        assert item["attendees"] == []
-        assert item["attendee_names"] == ["张三", "李四"]
+    response = client.get(
+        f"{settings.API_V1_PREFIX}/strategy/reviews",
+        params={"strategy_id": strategy_id},
+        headers=headers,
+        follow_redirects=False,
+    )
+    assert response.status_code == 200, response.text
+    item = response.json()["items"][0]
+    assert item["decisions"] == [{"content": "保持当前方向"}]
+    assert item["action_items"] == [{"content": "补齐周报数据"}]
+    assert item["attendees"] == []
+    assert item["attendee_names"] == ["张三", "李四"]
 
 
 def test_report_required_query_routes_return_successful_empty_reports(

@@ -269,6 +269,15 @@ class UserSyncService:
         user.updated_at = datetime.now()
         db.commit()
 
+        from app.services.session_service import SessionService
+
+        revoked_count = SessionService.revoke_all_sessions(db, user_id)
+        logger.info(
+            "重置用户密码后已撤销目标用户会话: user_id=%s, revoked_session_count=%s",
+            user_id,
+            revoked_count,
+        )
+
         return True, new_password
 
     @staticmethod

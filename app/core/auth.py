@@ -20,11 +20,7 @@ from ..common.context import set_audit_context
 from ..models.user import User
 from ..utils.redis_client import get_redis_client
 from .config import settings
-from .permission_codes import (
-    canonicalize_permission_code,
-    canonicalize_permission_codes,
-    get_equivalent_permission_codes,
-)
+from .permission_codes import canonicalize_permission_code, canonicalize_permission_codes
 
 logger = logging.getLogger(__name__)
 
@@ -321,6 +317,93 @@ def _memory_blacklist_jti_key(jti: str) -> str:
     return f"jti:{jti}"
 
 
+def _ensure_persistent_blacklist_table(conn) -> None:
+    from sqlalchemy import text
+
+    conn.execute(
+        text(
+            """
+            CREATE TABLE IF NOT EXISTS jwt_token_blacklist (
+                jti VARCHAR(128) PRIMARY KEY,
+                expires_at DATETIME NOT NULL,
+                revoked_at DATETIME NOT NULL
+            )
+            """
+        )
+    )
+    conn.execute(
+        text(
+            """
+            CREATE INDEX IF NOT EXISTS idx_jwt_token_blacklist_expires
+            ON jwt_token_blacklist(expires_at)
+            """
+        )
+    )
+
+
+def _persist_blacklisted_jti(jti: str, ttl_seconds: int) -> bool:
+    """将撤销的JTI写入应用数据库，作为Redis不可用时的跨进程兜底。"""
+    try:
+        from sqlalchemy import text
+
+        from app.models.base import get_engine
+
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        expires_at = now + timedelta(seconds=ttl_seconds)
+        engine = get_engine()
+        with engine.begin() as conn:
+            _ensure_persistent_blacklist_table(conn)
+            conn.execute(
+                text("DELETE FROM jwt_token_blacklist WHERE expires_at <= :now"),
+                {"now": now},
+            )
+            conn.execute(
+                text("DELETE FROM jwt_token_blacklist WHERE jti = :jti"),
+                {"jti": jti},
+            )
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO jwt_token_blacklist (jti, expires_at, revoked_at)
+                    VALUES (:jti, :expires_at, :revoked_at)
+                    """
+                ),
+                {"jti": jti, "expires_at": expires_at, "revoked_at": now},
+            )
+        return True
+    except Exception as e:
+        logger.warning(f"写入数据库Token黑名单失败，保留内存兜底: {e}")
+        return False
+
+
+def _is_jti_revoked_in_database(jti: str) -> bool:
+    """检查数据库兜底黑名单。"""
+    try:
+        from sqlalchemy import text
+
+        from app.models.base import get_engine
+
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        engine = get_engine()
+        with engine.begin() as conn:
+            _ensure_persistent_blacklist_table(conn)
+            row = conn.execute(
+                text(
+                    """
+                    SELECT 1
+                    FROM jwt_token_blacklist
+                    WHERE jti = :jti AND expires_at > :now
+                    LIMIT 1
+                    """
+                ),
+                {"jti": jti, "now": now},
+            ).first()
+        return row is not None
+    except Exception as e:
+        logger.warning(f"查询数据库Token黑名单失败，降级到内存检查: {e}")
+        return False
+
+
 def revoke_token_jti(jti: Optional[str], ttl_seconds: Optional[int] = None) -> bool:
     """
     按JTI撤销Token。
@@ -330,7 +413,7 @@ def revoke_token_jti(jti: Optional[str], ttl_seconds: Optional[int] = None) -> b
         ttl_seconds: 过期时间（秒）
 
     Returns:
-        bool: True表示已写入Redis，False表示降级写入内存
+        bool: True表示已写入跨进程存储，False表示仅降级写入内存
     """
     if not jti:
         return False
@@ -349,7 +432,8 @@ def revoke_token_jti(jti: Optional[str], ttl_seconds: Optional[int] = None) -> b
 
     with _token_blacklist_lock:
         _token_blacklist.add(_memory_blacklist_jti_key(jti))
-    return False
+
+    return _persist_blacklisted_jti(jti, ttl)
 
 
 def revoke_token(token: Optional[str]) -> None:
@@ -386,10 +470,10 @@ def revoke_token(token: Optional[str]) -> None:
         else:
             ttl = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
 
-        stored_in_redis = revoke_token_jti(jti, ttl_seconds=ttl)
-        if not stored_in_redis:
-            with _token_blacklist_lock:
-                _token_blacklist.add(token)
+        stored_persistent = revoke_token_jti(jti, ttl_seconds=ttl)
+        with _token_blacklist_lock:
+            _token_blacklist.add(token)
+            if not stored_persistent:
                 logger.debug("Token已加入内存黑名单（降级模式）")
     except JWTError as e:
         logger.warning(f"无法解析token，尝试按JTI撤销: {e}")
@@ -434,6 +518,9 @@ def is_token_revoked(token: Optional[str]) -> bool:
             except Exception as e:
                 logger.warning(f"Redis查询失败，降级到内存检查: {e}")
 
+        if _is_jti_revoked_in_database(jti):
+            return True
+
         # 降级到内存检查（同时兼容按token和按jti的撤销）
         with _token_blacklist_lock:
             return (
@@ -450,8 +537,11 @@ def is_token_revoked(token: Optional[str]) -> bool:
             except Exception:
                 pass
 
+        token_str = str(token)
+        if _is_jti_revoked_in_database(token_str):
+            return True
+
         with _token_blacklist_lock:
-            token_str = str(token)
             return (
                 token in _token_blacklist
                 or token_str in _token_blacklist
@@ -744,6 +834,11 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
         return True
 
     tenant_id = getattr(user, "tenant_id", None)
+    normalized_permission = canonicalize_permission_code(permission_code)
+
+    if db is not None:
+        permissions = _load_user_permissions_from_db(user.id, db, tenant_id)
+        return normalized_permission in canonicalize_permission_codes(permissions)
 
     try:
         from app.services.permission_cache_service import get_permission_cache_service
@@ -751,16 +846,14 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
         cache_svc = get_permission_cache_service()
         cached_permissions = cache_svc.get_user_permissions(user.id, tenant_id)
         if cached_permissions is not None:
-            return permission_code in cached_permissions
+            return normalized_permission in canonicalize_permission_codes(cached_permissions)
     except Exception as e:
         logger.warning("check_permission cache lookup failed: %s", e)
 
-    if db is not None:
-        permissions = _load_user_permissions_from_db(user.id, db, tenant_id)
-        return permission_code in permissions
-
     logger.warning("check_permission: no db session for user=%s, falling back to user.roles", user.id)
-    return permission_code in _extract_permission_codes_from_roles(user)
+    return normalized_permission in canonicalize_permission_codes(
+        _extract_permission_codes_from_roles(user)
+    )
 
 
 

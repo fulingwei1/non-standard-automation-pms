@@ -8,12 +8,15 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.login_attempt import LoginAttempt
 from app.utils.redis_client import get_redis_client
 
 logger = logging.getLogger(__name__)
+
+ADMIN_UNLOCK_FAILURE_REASON = "admin_unlocked"
 
 
 class AccountLockoutService:
@@ -116,6 +119,10 @@ class AccountLockoutService:
             LoginAttempt.username == username,
             LoginAttempt.success == False,
             LoginAttempt.created_at >= cutoff_time,
+            or_(
+                LoginAttempt.failure_reason.is_(None),
+                LoginAttempt.failure_reason != ADMIN_UNLOCK_FAILURE_REASON,
+            ),
         )
         count = base_query.count()
         if count <= 0:
@@ -355,6 +362,7 @@ class AccountLockoutService:
         Returns:
             是否成功解锁
         """
+        unlocked = False
         redis = get_redis_client()
         
         if redis:
@@ -362,12 +370,57 @@ class AccountLockoutService:
                 redis.delete(f"login_attempts:{username}")
                 redis.delete(f"lockout:{username}")
                 logger.info(f"管理员 {admin_user} 解锁账户: {username}")
-                return True
+                unlocked = True
             except Exception as e:
                 logger.error(f"解锁账户失败: {e}")
-                return False
         
-        return False
+        db_unlocked = AccountLockoutService._unlock_account_in_db(
+            username=username,
+            admin_user=admin_user,
+            db=db,
+        )
+        return unlocked or db_unlocked
+
+    @staticmethod
+    def _unlock_account_in_db(username: str, admin_user: str = None, db: Session = None) -> bool:
+        """清理数据库降级模式下的窗口内失败计数。"""
+
+        if not db:
+            return False
+
+        cutoff_time = datetime.now() - timedelta(minutes=AccountLockoutService.ATTEMPT_WINDOW_MINUTES)
+        try:
+            updated = (
+                db.query(LoginAttempt)
+                .filter(
+                    LoginAttempt.username == username,
+                    LoginAttempt.success == False,
+                    LoginAttempt.created_at >= cutoff_time,
+                    or_(
+                        LoginAttempt.failure_reason.is_(None),
+                        LoginAttempt.failure_reason != ADMIN_UNLOCK_FAILURE_REASON,
+                    ),
+                )
+                .update(
+                    {
+                        LoginAttempt.failure_reason: ADMIN_UNLOCK_FAILURE_REASON,
+                        LoginAttempt.locked: False,
+                    },
+                    synchronize_session=False,
+                )
+            )
+            if not isinstance(updated, int) or updated <= 0:
+                return False
+            db.commit()
+            logger.info(f"管理员 {admin_user} 通过数据库降级解锁账户: {username}")
+            return True
+        except Exception as e:
+            logger.error(f"数据库降级解锁账户失败: {e}")
+            try:
+                db.rollback()
+            except Exception:
+                pass
+            return False
     
     @staticmethod
     def get_locked_accounts(db: Session) -> List[Dict]:

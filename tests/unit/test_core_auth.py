@@ -9,7 +9,7 @@
 - 用户获取函数
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 from app.core.auth import (
@@ -211,7 +211,7 @@ class TestTokenRevocation:
         import uuid
         from datetime import datetime, timedelta, timezone
 
-        import jwt
+        from jose import jwt
 
         payload = {
             "sub": "user123",
@@ -255,6 +255,36 @@ class TestTokenRevocation:
             # 测试内存黑名单
             # 注意:由于我们在测试环境中可能没有 Redis，这里只测试不会抛出异常
             assert True  # 如果没有异常就通过
+
+    def test_revoke_token_persists_when_redis_unavailable(self, monkeypatch):
+        """Redis 不可用时，撤销状态应能跨进程内存恢复。"""
+        from jose import jwt
+        from sqlalchemy import create_engine
+
+        from app.core import auth
+        from app.models import base as model_base
+
+        engine = create_engine("sqlite:///:memory:")
+        monkeypatch.setattr(auth, "get_redis_client", lambda: None)
+        monkeypatch.setattr(model_base, "get_engine", lambda: engine)
+        monkeypatch.setattr(auth.settings, "SECRET_KEY", "test_secret_key_for_unit_tests")
+        monkeypatch.setattr(auth.settings, "ALGORITHM", "HS256")
+
+        token = jwt.encode(
+            {
+                "sub": "user123",
+                "jti": "persisted_jti_123",
+                "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            },
+            "test_secret_key_for_unit_tests",
+            algorithm="HS256",
+        )
+
+        revoke_token(token)
+        with auth._token_blacklist_lock:
+            auth._token_blacklist.clear()
+
+        assert is_token_revoked(token) is True
 
 
 class TestGetCurrentUser:

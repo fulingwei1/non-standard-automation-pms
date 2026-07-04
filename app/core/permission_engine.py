@@ -18,7 +18,94 @@ from typing import List, Optional, Set
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.core.permission_codes import canonicalize_permission_code, canonicalize_permission_codes
+
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# 权限缓存修订号：Redis 不可用时用于跨 worker 识别陈旧内存缓存
+# ---------------------------------------------------------------------------
+
+def _permission_revision_scope(tenant_id: Optional[int]) -> str:
+    return f"tenant:{tenant_id}" if tenant_id is not None else "system"
+
+
+def _ensure_permission_cache_revision_table(db: Session) -> None:
+    db.execute(
+        text(
+            """
+            CREATE TABLE IF NOT EXISTS permission_cache_revisions (
+                scope VARCHAR(64) PRIMARY KEY,
+                revision INTEGER NOT NULL DEFAULT 0,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+    )
+
+
+def _current_permission_cache_revision(
+    db: Session,
+    tenant_id: Optional[int],
+) -> Optional[int]:
+    """读取当前权限缓存修订号；失败时返回 None，保持旧缓存逻辑可用。"""
+    try:
+        _ensure_permission_cache_revision_table(db)
+        row = db.execute(
+            text("SELECT revision FROM permission_cache_revisions WHERE scope = :scope"),
+            {"scope": _permission_revision_scope(tenant_id)},
+        ).fetchone()
+        if row is None:
+            return 0
+        return int(row[0])
+    except Exception as exc:
+        logger.warning("Permission cache revision read failed: %s", exc)
+        return None
+
+
+def bump_permission_cache_revision(
+    db: Session,
+    tenant_id: Optional[int],
+    *,
+    commit: bool = True,
+) -> Optional[int]:
+    """权限/角色关系变更后递增修订号，让其他 worker 丢弃旧内存缓存。"""
+    try:
+        _ensure_permission_cache_revision_table(db)
+        scope = _permission_revision_scope(tenant_id)
+        row = db.execute(
+            text("SELECT revision FROM permission_cache_revisions WHERE scope = :scope"),
+            {"scope": scope},
+        ).fetchone()
+        next_revision = int(row[0]) + 1 if row is not None else 1
+        if row is None:
+            db.execute(
+                text(
+                    """
+                    INSERT INTO permission_cache_revisions (scope, revision, updated_at)
+                    VALUES (:scope, :revision, CURRENT_TIMESTAMP)
+                    """
+                ),
+                {"scope": scope, "revision": next_revision},
+            )
+        else:
+            db.execute(
+                text(
+                    """
+                    UPDATE permission_cache_revisions
+                    SET revision = :revision, updated_at = CURRENT_TIMESTAMP
+                    WHERE scope = :scope
+                    """
+                ),
+                {"scope": scope, "revision": next_revision},
+            )
+        if commit:
+            db.commit()
+        return next_revision
+    except Exception as exc:
+        logger.warning("Permission cache revision bump failed: %s", exc)
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -60,15 +147,33 @@ def _load_permissions_from_db(
             JOIN role_tree rt ON r.id = rt.parent_id
             WHERE rt.inherit_permissions = 1
         )
-        SELECT DISTINCT ap.perm_code
+        SELECT DISTINCT ap.perm_code, ap.is_active
         FROM role_tree rt
         JOIN role_api_permissions rap ON rt.id = rap.role_id
         JOIN api_permissions ap ON rap.permission_id = ap.id
-        WHERE ap.is_active = 1
+        WHERE 1 = 1
         {tenant_filter}
     """
     result = db.execute(text(sql), params)
-    return {row[0] for row in result.fetchall() if row[0]}
+    permissions: Set[str] = set()
+    inactive_permissions: Set[str] = set()
+    for perm_code, is_active in result.fetchall():
+        if not perm_code:
+            continue
+        if is_active:
+            permissions.add(perm_code)
+        else:
+            inactive_permissions.add(perm_code)
+
+    if inactive_permissions:
+        logger.warning(
+            "Inactive API permissions assigned to user: user=%s tenant=%s permissions=%s",
+            user_id,
+            tenant_id,
+            sorted(inactive_permissions),
+        )
+
+    return permissions
 
 
 # ---------------------------------------------------------------------------
@@ -95,15 +200,17 @@ def load_permissions(
     Returns:
         权限编码集合
     """
+    revision = _current_permission_cache_revision(db, tenant_id)
+
     # 1. 尝试缓存
     try:
         from app.services.permission_management.permission_cache_service import get_permission_cache_service
         cache_svc = get_permission_cache_service()
-        cached = cache_svc.get_user_permissions(user_id, tenant_id)
+        cached = cache_svc.get_user_permissions(user_id, tenant_id, revision=revision)
         if cached is not None:
             logger.debug(
-                "PermEngine cache HIT: user=%s tenant=%s count=%d",
-                user_id, tenant_id, len(cached),
+                "PermEngine cache HIT: user=%s tenant=%s revision=%s count=%d",
+                user_id, tenant_id, revision, len(cached),
             )
             return cached
     except Exception as e:
@@ -125,7 +232,7 @@ def load_permissions(
     # 3. 回写缓存
     if cache_svc is not None:
         try:
-            cache_svc.set_user_permissions(user_id, permissions, tenant_id)
+            cache_svc.set_user_permissions(user_id, permissions, tenant_id, revision=revision)
         except Exception as e:
             logger.warning("PermEngine cache write failed: %s", e)
 
@@ -150,7 +257,9 @@ def check_permission_for_user(
         bool
     """
     permissions = load_permissions(user_id, db, tenant_id)
-    return permission_code in permissions
+    return canonicalize_permission_code(permission_code) in canonicalize_permission_codes(
+        permissions
+    )
 
 
 def check_any_permission_for_user(
@@ -161,7 +270,11 @@ def check_any_permission_for_user(
 ) -> bool:
     """检查用户是否拥有任一权限（纯数据层）。"""
     permissions = load_permissions(user_id, db, tenant_id)
-    return any(code in permissions for code in permission_codes)
+    normalized_permissions = canonicalize_permission_codes(permissions)
+    return any(
+        canonicalize_permission_code(code) in normalized_permissions
+        for code in permission_codes
+    )
 
 
 def check_all_permissions_for_user(
@@ -172,4 +285,8 @@ def check_all_permissions_for_user(
 ) -> bool:
     """检查用户是否拥有所有权限（纯数据层）。"""
     permissions = load_permissions(user_id, db, tenant_id)
-    return all(code in permissions for code in permission_codes)
+    normalized_permissions = canonicalize_permission_codes(permissions)
+    return all(
+        canonicalize_permission_code(code) in normalized_permissions
+        for code in permission_codes
+    )
