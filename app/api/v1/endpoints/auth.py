@@ -190,6 +190,32 @@ def login(
                     },
                 )
 
+        # 3.5 租户生命周期检查（TEN-07）：超管无租户不受此限制；租户被暂停或
+        # 已过期时拒绝登录——管理端（TEN-01）早就能设置这两个状态，但此前
+        # 登录流程从不读取，暂停/过期租户下的用户照常能登录。
+        tenant_id = user_dict.get("tenant_id")
+        if tenant_id and not user_dict.get("is_superuser"):
+            from app.services.tenant_service import TenantService
+
+            login_check = TenantService(db).check_tenant_login_allowed(tenant_id)
+            if not login_check.allowed:
+                logger.warning(
+                    f"租户生命周期拒绝登录: username={form_data.username}, "
+                    f"tenant_id={tenant_id}, reason={login_check.reason}"
+                )
+                message = {
+                    "suspended": "所属租户已被暂停，请联系租户管理员",
+                    "expired": "所属租户服务已到期，请联系租户管理员续费",
+                    "tenant-not-found": "账号租户归属异常，请联系管理员",
+                }.get(login_check.reason, "账号当前不可登录，请联系管理员")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={
+                        "error_code": "TENANT_" + login_check.reason.upper().replace("-", "_"),
+                        "message": message,
+                    },
+                )
+
         # === 2FA验证检查 ===
         # 如果用户启用了2FA，需要提供2FA验证码
         if user_dict.get("two_factor_enabled"):

@@ -229,12 +229,25 @@ def create_user(
             detail="系统管理员创建租户用户时需要显式指定租户，请使用专门的租户管理接口",
         )
 
-    employee = prepare_employee_for_new_user(db, user_in)
-
     # 创建用户时确保租户数据一致性
     # 普通用户必须属于当前用户的租户
     # 只有超级管理员可以创建跨租户用户（但这需要专门的接口，这里不支持）
     user_tenant_id = getattr(current_user, "tenant_id", None)
+
+    # TEN-07：新建用户前校验租户 max_users 配额。管理端（TEN-01）早就能设置
+    # 套餐配额，但此前建用户流程从未读取过，配额形同虚设。
+    if user_tenant_id is not None:
+        from app.services.tenant_service import TenantService
+
+        quota_check = TenantService(db).check_user_quota(user_tenant_id)
+        if not quota_check.allowed:
+            raise HTTPException(
+                status_code=400,
+                detail=f"租户用户数已达套餐上限（{quota_check.current}/{quota_check.limit}），"
+                "请联系租户管理员升级套餐或先停用部分账号",
+            )
+
+    employee = prepare_employee_for_new_user(db, user_in)
 
     user = User(
         employee_id=employee.id,

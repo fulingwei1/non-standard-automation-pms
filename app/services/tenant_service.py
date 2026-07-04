@@ -7,6 +7,7 @@
 
 import logging
 import uuid
+from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 from sqlalchemy import func
@@ -25,6 +26,23 @@ from app.schemas.tenant import (
 from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class TenantLoginCheck:
+    """TEN-07：登录允许性判定结果。reason 取值：ok/suspended/expired/tenant-not-found。"""
+
+    allowed: bool
+    reason: str
+
+
+@dataclass
+class TenantQuotaCheck:
+    """TEN-07：用户数配额判定结果。limit=None 表示未配置配额，不拦截。"""
+
+    allowed: bool
+    current: int
+    limit: Optional[int]
 
 
 class TenantService:
@@ -142,6 +160,39 @@ class TenantService:
 
         logger.info(f"删除租户成功: {tenant.tenant_code}")
         return True
+
+    def check_tenant_login_allowed(self, tenant_id: int) -> TenantLoginCheck:
+        """TEN-07：登录前校验租户生命周期状态。
+
+        管理端（TEN-01）已经可以把租户置为 SUSPENDED 或设置 expired_at，
+        但此前没有任何地方在登录时读取这两个字段——暂停/过期的租户下的
+        用户照常能登录。租户不存在（数据不一致）按拒绝处理，不静默放行。
+        """
+        tenant = self.get_tenant(tenant_id)
+        if tenant is None:
+            return TenantLoginCheck(allowed=False, reason="tenant-not-found")
+        if not tenant.is_active:
+            return TenantLoginCheck(allowed=False, reason="suspended")
+        if tenant.is_expired:
+            return TenantLoginCheck(allowed=False, reason="expired")
+        return TenantLoginCheck(allowed=True, reason="ok")
+
+    def check_user_quota(self, tenant_id: int) -> TenantQuotaCheck:
+        """TEN-07：新建用户前校验租户 max_users 配额。
+
+        max_users 此前只在建租户时写入一次，后续从未被任何创建用户的
+        流程读取过——套餐/配额形同虚设。tenant 不存在或 max_users 未配置
+        时不拦截（避免因数据缺失误伤，与既有 get_tenant_stats 的宽容口径
+        一致）。
+        """
+        tenant = self.get_tenant(tenant_id)
+        if tenant is None or tenant.max_users is None:
+            return TenantQuotaCheck(allowed=True, current=0, limit=None)
+
+        current = self.db.query(func.count(User.id)).filter(User.tenant_id == tenant_id).scalar() or 0
+        return TenantQuotaCheck(
+            allowed=current < tenant.max_users, current=current, limit=tenant.max_users
+        )
 
     def init_tenant(self, tenant_id: int, init_data: TenantInitRequest) -> Dict[str, Any]:
         """初始化租户数据"""
