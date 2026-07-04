@@ -551,8 +551,8 @@ describe.skip('GeneralManagerWorkstation', () => {
       const cultureItem = screen.getByText('Culture Item');
       fireEvent.click(cultureItem);
 
-      // 应该导航到个人目标页面
-      expect(window.location.href).toContain('personal-goals');
+      // 应该导航到文化墙详情页，避免跳到未注册的个人目标页面
+      expect(window.location.href).toContain('culture-wall?item=1');
     });
   });
 });

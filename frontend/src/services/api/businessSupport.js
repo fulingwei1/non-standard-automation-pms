@@ -36,6 +36,8 @@ export const businessSupportApi = {
     create: (data) => api.post("/business-support-orders/delivery-orders", data),
     update: (id, data) =>
       api.put(`/business-support-orders/delivery-orders/${id}`, data),
+    submitApproval: (id) =>
+      api.post(`/business-support-orders/delivery-orders/${id}/submit-approval`),
     approve: (id, data) =>
       api.post(`/business-support-orders/delivery-orders/${id}/approve`, data),
     print: (id) => api.post(`/business-support-orders/delivery-orders/${id}/print`),

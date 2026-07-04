@@ -34,7 +34,10 @@ import {
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { contractApi, paymentPlanApi, pmoApi } from "../services/api";
-import { pickExistingInitiationByContractNo } from "../utils/pmoInitiations";
+import {
+  buildContractInitiationPath,
+  pickExistingInitiationByContractNo,
+} from "../utils/pmoInitiations";
 
 // Mock contract detail data
 // Mock data - 已移除，使用真实API
@@ -433,19 +436,7 @@ export default function ContractDetail() {
         return;
       }
 
-      const response = await pmoApi.initiations.create({
-        project_name: contract.contractName || contract.projectName || contract.contractNo,
-        customer_name: contract.customerName,
-        customer_id: contract.customer_id || null,
-        contract_no: String(contract.contractNo),
-        contract_amount: contract.contractAmount,
-        requirement_summary: `由合同 ${contract.contractNo} 发起立项`,
-      });
-      const created = getResponsePayload(response);
-      setLinkedInitiation(created);
-      if (created?.id) {
-        navigate(`/pmo/initiations/${created.id}`);
-      }
+      navigate(buildContractInitiationPath(contract));
     } catch (err) {
       console.error("Create PMO initiation from contract failed:", err);
       setWorkflowWarning(err?.response?.data?.detail || err.message || "发起立项失败");

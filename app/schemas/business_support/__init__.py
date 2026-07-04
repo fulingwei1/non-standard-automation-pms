@@ -42,6 +42,8 @@ from .dashboard import (
 from .delivery import (
     DeliveryApprovalRequest,
     DeliveryOrderCreate,
+    DeliveryOrderItemCreate,
+    DeliveryOrderItemResponse,
     DeliveryOrderResponse,
     DeliveryOrderUpdate,
     DeliveryStatistics,
@@ -139,6 +141,8 @@ __all__ = [
     "SendNoticeRequest",
     # 发货管理
     "DeliveryOrderCreate",
+    "DeliveryOrderItemCreate",
+    "DeliveryOrderItemResponse",
     "DeliveryOrderUpdate",
     "DeliveryOrderResponse",
     "DeliveryApprovalRequest",

@@ -5,32 +5,274 @@
 """
 
 from datetime import date, datetime
-from typing import Optional
+from decimal import Decimal
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter
-from app.models.business_support import DeliveryOrder, SalesOrder
+from app.models.approval import ApprovalInstance, ApprovalTask
+from app.models.business_support import DeliveryOrder, DeliveryOrderItem, SalesOrder, SalesOrderItem
 from app.models.project import Project
+from app.models.production import QualityInspection, WorkOrder
 from app.models.user import User
 from app.schemas.business_support import (
     DeliveryApprovalRequest,
     DeliveryOrderCreate,
+    DeliveryOrderItemCreate,
+    DeliveryOrderItemResponse,
     DeliveryOrderResponse,
     DeliveryOrderUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.services.approval_engine import ApprovalEngineService
 from app.services.sales.payment_plan_service import PaymentPlanService
 from app.utils.db_helpers import get_or_404
 
 from ..utils import generate_delivery_no
 
 router = APIRouter()
+
+DELIVERY_ORDER_APPROVAL_ENTITY_TYPE = "DELIVERY_ORDER"
+DELIVERY_ORDER_APPROVAL_TEMPLATE_CODE = "TPL_DELIVERY_ORDER"
+ACTIVE_APPROVAL_STATUSES = {"PENDING", "IN_PROGRESS"}
+READY_MATERIAL_STATUSES = {"齐套", "READY", "KITTED", "COMPLETE", "COMPLETED"}
+FINAL_INSPECTION_TYPES = {"FQC", "OQC"}
+PROJECT_STATUS_RANK = {f"ST{idx:02d}": idx for idx in range(1, 31)}
+
+
+def _as_decimal(value: Any) -> Decimal:
+    if value is None:
+        return Decimal("0")
+    return Decimal(str(value))
+
+
+def _build_delivery_item_response(item: DeliveryOrderItem) -> DeliveryOrderItemResponse:
+    return DeliveryOrderItemResponse(
+        id=item.id,
+        delivery_order_id=item.delivery_order_id,
+        sales_order_item_id=item.sales_order_item_id,
+        material_id=item.material_id,
+        item_name=item.item_name,
+        item_spec=item.item_spec,
+        delivery_qty=item.delivery_qty,
+        unit=item.unit,
+        unit_price=item.unit_price,
+        amount=item.amount,
+        quality_status=item.quality_status,
+        remark=item.remark,
+        created_at=item.created_at,
+        updated_at=item.updated_at,
+    )
+
+
+def _allocated_sales_order_qty(db: Session, sales_order_item_id: int) -> Decimal:
+    allocated = (
+        db.query(func.coalesce(func.sum(DeliveryOrderItem.delivery_qty), 0))
+        .join(DeliveryOrder, DeliveryOrder.id == DeliveryOrderItem.delivery_order_id)
+        .filter(
+            DeliveryOrderItem.sales_order_item_id == sales_order_item_id,
+            DeliveryOrder.delivery_status != "returned",
+        )
+        .scalar()
+    )
+    return _as_decimal(allocated)
+
+
+def _remaining_sales_order_qty(db: Session, source_item: SalesOrderItem) -> Decimal:
+    return _as_decimal(source_item.qty) - _allocated_sales_order_qty(db, source_item.id)
+
+
+def _get_sales_order_item(
+    db: Session, sales_order_id: int, sales_order_item_id: int
+) -> SalesOrderItem:
+    source_item = (
+        db.query(SalesOrderItem)
+        .filter(
+            SalesOrderItem.id == sales_order_item_id,
+            SalesOrderItem.sales_order_id == sales_order_id,
+        )
+        .first()
+    )
+    if not source_item:
+        raise HTTPException(status_code=400, detail="发货明细不属于当前销售订单")
+    return source_item
+
+
+def _build_delivery_order_item(
+    *,
+    db: Session,
+    sales_order: SalesOrder,
+    item_data: DeliveryOrderItemCreate,
+    source_item: Optional[SalesOrderItem] = None,
+) -> DeliveryOrderItem:
+    if item_data.sales_order_item_id:
+        source_item = _get_sales_order_item(db, sales_order.id, item_data.sales_order_item_id)
+
+    delivery_qty = _as_decimal(item_data.delivery_qty)
+    if source_item:
+        remaining_qty = _remaining_sales_order_qty(db, source_item)
+        if delivery_qty > remaining_qty:
+            raise HTTPException(
+                status_code=400,
+                detail=f"发货数量超过销售订单明细剩余数量：剩余 {remaining_qty}",
+            )
+        item_name = item_data.item_name or source_item.item_name
+        if not item_name:
+            raise HTTPException(status_code=400, detail="发货明细名称不能为空")
+        unit_price = item_data.unit_price if item_data.unit_price is not None else source_item.unit_price
+        amount = item_data.amount
+        if amount is None and unit_price is not None:
+            amount = delivery_qty * _as_decimal(unit_price)
+        return DeliveryOrderItem(
+            sales_order_item_id=source_item.id,
+            material_id=item_data.material_id,
+            item_name=item_name,
+            item_spec=item_data.item_spec or source_item.item_spec,
+            delivery_qty=delivery_qty,
+            unit=item_data.unit or source_item.unit,
+            unit_price=unit_price,
+            amount=amount if amount is not None else source_item.amount,
+            quality_status="pending",
+            remark=item_data.remark or source_item.remark,
+        )
+
+    if not item_data.item_name:
+        raise HTTPException(status_code=400, detail="手工发货明细必须填写名称")
+    return DeliveryOrderItem(
+        material_id=item_data.material_id,
+        item_name=item_data.item_name,
+        item_spec=item_data.item_spec,
+        delivery_qty=delivery_qty,
+        unit=item_data.unit,
+        unit_price=item_data.unit_price,
+        amount=item_data.amount,
+        quality_status="pending",
+        remark=item_data.remark,
+    )
+
+
+def _build_delivery_order_items(db: Session, sales_order: SalesOrder, delivery_data: DeliveryOrderCreate) -> list[DeliveryOrderItem]:
+    if delivery_data.items:
+        return [
+            _build_delivery_order_item(db=db, sales_order=sales_order, item_data=item_data)
+            for item_data in delivery_data.items
+        ]
+
+    source_items = list(sales_order.order_items or [])
+    if not source_items:
+        raise HTTPException(status_code=400, detail="发货单必须包含明细行，销售订单也没有可复制明细")
+
+    delivery_items: list[DeliveryOrderItem] = []
+    for source_item in source_items:
+        remaining_qty = _remaining_sales_order_qty(db, source_item)
+        if remaining_qty <= 0:
+            continue
+        delivery_items.append(
+            _build_delivery_order_item(
+                db=db,
+                sales_order=sales_order,
+                source_item=source_item,
+                item_data=DeliveryOrderItemCreate(
+                    sales_order_item_id=source_item.id,
+                    item_name=source_item.item_name,
+                    item_spec=source_item.item_spec,
+                    delivery_qty=remaining_qty,
+                    unit=source_item.unit,
+                    unit_price=source_item.unit_price,
+                    amount=source_item.amount,
+                    remark=source_item.remark,
+                ),
+            )
+        )
+
+    if not delivery_items:
+        raise HTTPException(status_code=400, detail="销售订单明细已全部发货，不能重复创建发货单")
+    return delivery_items
+
+
+def _ensure_delivery_has_valid_items(delivery_order: DeliveryOrder) -> None:
+    items = list(delivery_order.items or [])
+    if not items:
+        raise HTTPException(status_code=400, detail="发货单没有明细行，不能发货")
+    if any(_as_decimal(item.delivery_qty) <= 0 for item in items):
+        raise HTTPException(status_code=400, detail="发货明细数量必须大于0")
+
+
+def _ensure_project_kitting_ready(project: Optional[Project]) -> None:
+    if not project:
+        raise HTTPException(status_code=400, detail="发货单未关联项目，不能发货")
+
+    material_status = (project.material_status or "").strip()
+    kitting_rate = _as_decimal(project.kitting_rate)
+    shortage_items_count = int(project.shortage_items_count or 0)
+    status_is_ready = material_status.upper() in READY_MATERIAL_STATUSES or material_status == "齐套"
+    if not status_is_ready or kitting_rate < 100 or shortage_items_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "项目未达到发货齐套门禁："
+                f"物料状态={material_status or '未设置'}，"
+                f"齐套率={kitting_rate}，缺料项={shortage_items_count}"
+            ),
+        )
+
+
+def _latest_final_quality_inspection(
+    db: Session, delivery_order: DeliveryOrder
+) -> Optional[QualityInspection]:
+    if delivery_order.project_id:
+        inspection = (
+            db.query(QualityInspection)
+            .join(WorkOrder, WorkOrder.id == QualityInspection.work_order_id)
+            .filter(
+                WorkOrder.project_id == delivery_order.project_id,
+                QualityInspection.inspection_type.in_(FINAL_INSPECTION_TYPES),
+            )
+            .order_by(desc(QualityInspection.inspection_date), desc(QualityInspection.id))
+            .first()
+        )
+        if inspection:
+            return inspection
+
+    material_ids = [item.material_id for item in delivery_order.items or [] if item.material_id]
+    if not material_ids:
+        return None
+    return (
+        db.query(QualityInspection)
+        .filter(
+            QualityInspection.material_id.in_(material_ids),
+            QualityInspection.inspection_type.in_(FINAL_INSPECTION_TYPES),
+        )
+        .order_by(desc(QualityInspection.inspection_date), desc(QualityInspection.id))
+        .first()
+    )
+
+
+def _ensure_final_quality_passed(db: Session, delivery_order: DeliveryOrder) -> None:
+    inspection = _latest_final_quality_inspection(db, delivery_order)
+    if not inspection:
+        raise HTTPException(status_code=400, detail="项目缺少FQC/OQC质检通过记录，不能发货")
+    if inspection.inspection_result != "PASS":
+        raise HTTPException(
+            status_code=400,
+            detail=f"项目最终质检未通过，当前结果为 {inspection.inspection_result}",
+        )
+
+
+def _advance_project_status(project: Optional[Project], *, stage: str, status: str) -> None:
+    if not project:
+        return
+    current_rank = PROJECT_STATUS_RANK.get(project.status or "", 0)
+    target_rank = PROJECT_STATUS_RANK[status]
+    if current_rank <= target_rank:
+        project.stage = stage
+        project.status = status
 
 
 def build_delivery_order_response(delivery_order: DeliveryOrder) -> DeliveryOrderResponse:
@@ -66,8 +308,74 @@ def build_delivery_order_response(delivery_order: DeliveryOrder) -> DeliveryOrde
         return_status=delivery_order.return_status,
         return_date=delivery_order.return_date,
         remark=delivery_order.remark,
+        items=[_build_delivery_item_response(item) for item in delivery_order.items or []],
         created_at=delivery_order.created_at,
         updated_at=delivery_order.updated_at,
+    )
+
+
+def build_delivery_order_approval_form_data(delivery_order: DeliveryOrder) -> dict[str, Any]:
+    """构建发货单提交统一审批所需的业务快照。"""
+    return {
+        "delivery_id": delivery_order.id,
+        "delivery_no": delivery_order.delivery_no,
+        "order_id": delivery_order.order_id,
+        "order_no": delivery_order.order_no,
+        "contract_id": delivery_order.contract_id,
+        "customer_id": delivery_order.customer_id,
+        "customer_name": delivery_order.customer_name,
+        "project_id": delivery_order.project_id,
+        "delivery_date": (
+            delivery_order.delivery_date.isoformat() if delivery_order.delivery_date else None
+        ),
+        "delivery_type": delivery_order.delivery_type,
+        "delivery_amount": (
+            float(delivery_order.delivery_amount)
+            if delivery_order.delivery_amount is not None
+            else 0
+        ),
+        "items": [
+            {
+                "item_name": item.item_name,
+                "item_spec": item.item_spec,
+                "delivery_qty": float(item.delivery_qty or 0),
+                "unit": item.unit,
+                "amount": float(item.amount or 0),
+            }
+            for item in delivery_order.items or []
+        ],
+        "special_approval": bool(delivery_order.special_approval),
+        "special_approval_reason": delivery_order.special_approval_reason,
+    }
+
+
+def get_active_delivery_approval_instance(
+    db: Session, delivery_id: int
+) -> Optional[ApprovalInstance]:
+    return (
+        db.query(ApprovalInstance)
+        .filter(
+            ApprovalInstance.entity_type == DELIVERY_ORDER_APPROVAL_ENTITY_TYPE,
+            ApprovalInstance.entity_id == delivery_id,
+            ApprovalInstance.status.in_(ACTIVE_APPROVAL_STATUSES),
+        )
+        .order_by(desc(ApprovalInstance.created_at), desc(ApprovalInstance.id))
+        .first()
+    )
+
+
+def get_pending_delivery_approval_task(
+    db: Session, instance_id: int, user_id: int
+) -> Optional[ApprovalTask]:
+    return (
+        db.query(ApprovalTask)
+        .filter(
+            ApprovalTask.instance_id == instance_id,
+            ApprovalTask.assignee_id == user_id,
+            ApprovalTask.status == "PENDING",
+        )
+        .order_by(ApprovalTask.id.asc())
+        .first()
     )
 
 
@@ -170,6 +478,8 @@ async def create_delivery_order(
         if existing:
             raise HTTPException(status_code=400, detail="送货单号已存在")
 
+        delivery_items = _build_delivery_order_items(db, sales_order, delivery_data)
+
         # 创建发货单
         delivery_order = DeliveryOrder(
             delivery_no=delivery_no,
@@ -193,6 +503,7 @@ async def create_delivery_order(
             delivery_status="draft",
             remark=delivery_data.remark,
         )
+        delivery_order.items = delivery_items
 
         db.add(delivery_order)
         db.commit()
@@ -246,6 +557,71 @@ async def get_pending_approval_deliveries(
 
 
 @router.post(
+    "/delivery-orders/{delivery_id}/submit-approval",
+    response_model=ResponseModel[dict[str, Any]],
+    summary="提交发货单统一审批",
+)
+async def submit_delivery_order_approval(
+    delivery_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("delivery:manage")),
+):
+    """将发货单提交到统一审批引擎。"""
+    try:
+        delivery_order = get_or_404(db, DeliveryOrder, delivery_id, "发货单不存在")
+        if delivery_order.delivery_status in {"shipped", "received"}:
+            raise HTTPException(status_code=400, detail="已发货或已签收的发货单不能提交审批")
+
+        existing = get_active_delivery_approval_instance(db, delivery_id)
+        if existing:
+            return ResponseModel(
+                code=200,
+                message="发货单已在统一审批中",
+                data={
+                    "approval_instance_id": existing.id,
+                    "instance_no": existing.instance_no,
+                    "current_status": existing.status,
+                    "entity_type": existing.entity_type,
+                    "entity_id": existing.entity_id,
+                },
+            )
+
+        engine = ApprovalEngineService(db)
+        instance = engine.submit(
+            template_code=DELIVERY_ORDER_APPROVAL_TEMPLATE_CODE,
+            entity_type=DELIVERY_ORDER_APPROVAL_ENTITY_TYPE,
+            entity_id=delivery_id,
+            form_data=build_delivery_order_approval_form_data(delivery_order),
+            initiator_id=current_user.id,
+            title=f"发货单审批 - {delivery_order.delivery_no}",
+            summary=f"客户: {delivery_order.customer_name or '未指定'}",
+            urgency="NORMAL",
+            cc_user_ids=None,
+        )
+
+        db.refresh(delivery_order)
+        return ResponseModel(
+            code=200,
+            message="发货单统一审批已提交",
+            data={
+                "approval_instance_id": instance.id,
+                "instance_no": instance.instance_no,
+                "current_status": instance.status,
+                "entity_type": instance.entity_type,
+                "entity_id": instance.entity_id,
+            },
+        )
+    except HTTPException:
+        raise
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"提交发货单审批失败: {str(e)}")
+
+
+@router.post(
     "/delivery-orders/{delivery_id}/approve",
     response_model=ResponseModel[DeliveryOrderResponse],
     summary="审批发货单",
@@ -256,28 +632,48 @@ async def approve_delivery_order(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("delivery:manage")),
 ):
-    """审批通过或驳回发货单"""
+    """兼容旧入口：通过统一审批任务审批或驳回发货单。"""
     try:
         delivery_order = get_or_404(db, DeliveryOrder, delivery_id, "发货单不存在")
         if delivery_order.delivery_status in {"shipped", "received"}:
             raise HTTPException(status_code=400, detail="已发货或已签收的发货单不能重新审批")
 
-        delivery_order.approval_status = "approved" if approval_data.approved else "rejected"
-        delivery_order.approval_comment = approval_data.approval_comment
-        delivery_order.approved_by = current_user.id
-        delivery_order.approved_at = datetime.now()
-        delivery_order.delivery_status = "approved" if approval_data.approved else "draft"
+        instance = get_active_delivery_approval_instance(db, delivery_id)
+        if not instance:
+            raise HTTPException(
+                status_code=400,
+                detail="发货单必须先提交统一审批，不能在模块内直接审批",
+            )
 
-        db.commit()
+        task = get_pending_delivery_approval_task(db, instance.id, current_user.id)
+        if not task:
+            raise HTTPException(status_code=403, detail="当前用户没有该发货单的待审批任务")
+
+        engine = ApprovalEngineService(db)
+        if approval_data.approved:
+            engine.approve(
+                task_id=task.id,
+                approver_id=current_user.id,
+                comment=approval_data.approval_comment,
+            )
+        else:
+            engine.reject(
+                task_id=task.id,
+                approver_id=current_user.id,
+                comment=approval_data.approval_comment or "发货审批驳回",
+            )
         db.refresh(delivery_order)
 
         return ResponseModel(
             code=200,
-            message="发货单审批成功",
+            message="发货单统一审批处理成功",
             data=build_delivery_order_response(delivery_order),
         )
     except HTTPException:
         raise
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"审批发货单失败: {str(e)}")
@@ -337,8 +733,13 @@ async def ship_delivery_order(
         if delivery_order.delivery_status not in {"approved", "printed"}:
             raise HTTPException(status_code=400, detail="仅已审批或已打印的发货单可以发货")
 
+        _ensure_delivery_has_valid_items(delivery_order)
+        _ensure_project_kitting_ready(delivery_order.project)
+        _ensure_final_quality_passed(db, delivery_order)
+
         delivery_order.delivery_status = "shipped"
         delivery_order.ship_date = datetime.now()
+        _advance_project_status(delivery_order.project, stage="S8", status="ST24")
         PaymentPlanService(db).trigger_delivery_payment_plan(
             delivery_order,
             triggered_by=current_user.id,
@@ -378,6 +779,7 @@ async def receive_delivery_order(
 
         delivery_order.delivery_status = "received"
         delivery_order.receive_date = date.today()
+        _advance_project_status(delivery_order.project, stage="S8", status="ST25")
 
         db.commit()
         db.refresh(delivery_order)

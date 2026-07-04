@@ -40,7 +40,7 @@ import {
 "../components/ui";
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
-import { projectApi } from "../services/api";
+import { budgetApi, projectApi } from "../services/api";
 import { mergeProjectContextFilters } from "../lib/projectContext";
 
 // Mock data - 已移除，使用真实API
@@ -58,6 +58,18 @@ const getProjectUsedAmount = (project) =>
       project.cost_summary?.total_cost
   );
 
+const extractItems = (response) =>
+  response?.data?.items || response?.items || response?.data || [];
+
+const getBudgetStatus = (status, usageRate) => {
+  if (["DRAFT", "SUBMITTED", "APPROVED", "REJECTED"].includes(status)) {
+    return status;
+  }
+  if (usageRate >= 90) return "CRITICAL";
+  if (usageRate >= 80) return "WARNING";
+  return "NORMAL";
+};
+
 export default function BudgetManagement({ embedded = false }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -74,6 +86,33 @@ export default function BudgetManagement({ embedded = false }) {
   const loadBudgets = useCallback(async () => {
     try {
       setLoading(true);
+      const budgetRes = await budgetApi.list(projectListParams);
+      const budgetItems = extractItems(budgetRes);
+      if (budgetItems.length > 0) {
+        const budgetsData = budgetItems.map((budget) => {
+          const budgetAmount = toFiniteAmount(budget.total_amount ?? budget.budget_amount);
+          const usedAmount = toFiniteAmount(
+            budget.used_amount ?? budget.actual_cost ?? budget.project_actual_cost,
+          );
+          const usageRate = budgetAmount > 0 ? (usedAmount / budgetAmount) * 100 : 0;
+          return {
+            id: budget.id,
+            project_id: budget.project_id,
+            project_code: budget.project_code,
+            project_name: budget.project_name || budget.budget_name,
+            budget_amount: budgetAmount,
+            used_amount: usedAmount,
+            remaining_amount: budgetAmount - usedAmount,
+            usage_rate: usageRate,
+            status: getBudgetStatus(budget.status, usageRate),
+            start_date: budget.effective_date,
+            end_date: budget.expiry_date,
+          };
+        });
+        setBudgets((budgetsData || []).filter(Boolean));
+        return;
+      }
+
       // Load projects with budget information
       const res = await projectApi.list(projectListParams);
       const projects = res.data?.items || res.data?.items || res.data || [];
@@ -86,10 +125,6 @@ export default function BudgetManagement({ embedded = false }) {
             const usageRate =
             budgetAmount > 0 ? usedAmount / budgetAmount * 100 : 0;
 
-            let status = "NORMAL";
-            if (usageRate >= 90) {status = "CRITICAL";}else
-            if (usageRate >= 80) {status = "WARNING";}
-
             return {
               id: project.id,
               project_code: project.project_code,
@@ -98,7 +133,7 @@ export default function BudgetManagement({ embedded = false }) {
               used_amount: usedAmount,
               remaining_amount: budgetAmount - usedAmount,
               usage_rate: usageRate,
-              status,
+              status: getBudgetStatus(project.budget_status, usageRate),
               start_date: project.planned_start_date,
               end_date: project.planned_end_date
             };
@@ -167,7 +202,11 @@ export default function BudgetManagement({ embedded = false }) {
   const statusConfig = {
     CRITICAL: { label: "严重超支", color: "bg-red-500 text-white" },
     WARNING: { label: "预算预警", color: "bg-amber-500 text-white" },
-    NORMAL: { label: "正常", color: "bg-emerald-500 text-white" }
+    NORMAL: { label: "正常", color: "bg-emerald-500 text-white" },
+    DRAFT: { label: "草稿", color: "bg-slate-500 text-white" },
+    SUBMITTED: { label: "审批中", color: "bg-blue-500 text-white" },
+    APPROVED: { label: "已批准", color: "bg-emerald-500 text-white" },
+    REJECTED: { label: "已驳回", color: "bg-red-500 text-white" }
   };
 
   return (

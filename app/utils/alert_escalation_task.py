@@ -8,9 +8,11 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
+from sqlalchemy import or_
+
 from app.dependencies import get_db_session
 from app.models.alert import AlertRecord
-from app.models.enums import AlertLevelEnum
+from app.models.enums import AlertLevelEnum, AlertStatusEnum
 from app.services.alert.rule_engine import AlertRuleEngine
 from app.services.notification.notification_service import AlertNotificationService
 
@@ -34,12 +36,22 @@ def check_alert_timeout_escalation():
             now = datetime.now()
             escalated_count = 0
 
-            # 查询待处理或已确认的预警
+            # 查询仍需业务处理的预警。OPEN 是通知生成后的业务待处理态。
             pending_alerts = (
                 db.query(AlertRecord)
                 .filter(
-                    AlertRecord.status.in_(["PENDING", "ACKNOWLEDGED"]),
-                    not AlertRecord.is_escalated,  # 未升级过的预警
+                    AlertRecord.status.in_(
+                        [
+                            AlertStatusEnum.PENDING.value,
+                            AlertStatusEnum.OPEN.value,
+                            AlertStatusEnum.ACKNOWLEDGED.value,
+                            AlertStatusEnum.PROCESSING.value,
+                        ]
+                    ),
+                    or_(
+                        AlertRecord.is_escalated.is_(False),
+                        AlertRecord.is_escalated.is_(None),
+                    ),
                 )
                 .all()
             )

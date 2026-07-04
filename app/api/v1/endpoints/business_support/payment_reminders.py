@@ -18,11 +18,33 @@ from app.models.user import User
 from app.schemas.business_support import (
     PaymentReminderCreate,
     PaymentReminderResponse,
+    PaymentReminderUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+
+def _payment_reminder_response(reminder: PaymentReminder) -> PaymentReminderResponse:
+    return PaymentReminderResponse(
+        id=reminder.id,
+        contract_id=reminder.contract_id,
+        project_id=reminder.project_id,
+        payment_node=reminder.payment_node,
+        payment_amount=reminder.payment_amount,
+        plan_date=reminder.plan_date,
+        reminder_type=reminder.reminder_type,
+        reminder_content=reminder.reminder_content,
+        reminder_date=reminder.reminder_date,
+        reminder_person_id=reminder.reminder_person_id,
+        customer_response=reminder.customer_response,
+        next_reminder_date=reminder.next_reminder_date,
+        status=reminder.status,
+        remark=reminder.remark,
+        created_at=reminder.created_at,
+        updated_at=reminder.updated_at,
+    )
 
 
 @router.post("", response_model=ResponseModel[PaymentReminderResponse], summary="创建回款催收记录")
@@ -61,24 +83,7 @@ async def create_payment_reminder(
         return ResponseModel(
             code=200,
             message="创建回款催收记录成功",
-            data=PaymentReminderResponse(
-                id=reminder.id,
-                contract_id=reminder.contract_id,
-                project_id=reminder.project_id,
-                payment_node=reminder.payment_node,
-                payment_amount=reminder.payment_amount,
-                plan_date=reminder.plan_date,
-                reminder_type=reminder.reminder_type,
-                reminder_content=reminder.reminder_content,
-                reminder_date=reminder.reminder_date,
-                reminder_person_id=reminder.reminder_person_id,
-                customer_response=reminder.customer_response,
-                next_reminder_date=reminder.next_reminder_date,
-                status=reminder.status,
-                remark=reminder.remark,
-                created_at=reminder.created_at,
-                updated_at=reminder.updated_at,
-            ),
+            data=_payment_reminder_response(reminder),
         )
     except HTTPException:
         raise
@@ -124,27 +129,7 @@ async def get_payment_reminders(
         )
 
         # 转换为响应格式
-        reminder_list = [
-            PaymentReminderResponse(
-                id=item.id,
-                contract_id=item.contract_id,
-                project_id=item.project_id,
-                payment_node=item.payment_node,
-                payment_amount=item.payment_amount,
-                plan_date=item.plan_date,
-                reminder_type=item.reminder_type,
-                reminder_content=item.reminder_content,
-                reminder_date=item.reminder_date,
-                reminder_person_id=item.reminder_person_id,
-                customer_response=item.customer_response,
-                next_reminder_date=item.next_reminder_date,
-                status=item.status,
-                remark=item.remark,
-                created_at=item.created_at,
-                updated_at=item.updated_at,
-            )
-            for item in items
-        ]
+        reminder_list = [_payment_reminder_response(item) for item in items]
 
         return ResponseModel(
             code=200,
@@ -159,3 +144,61 @@ async def get_payment_reminders(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取回款催收记录列表失败: {str(e)}")
+
+
+@router.get(
+    "/{reminder_id}",
+    response_model=ResponseModel[PaymentReminderResponse],
+    summary="获取回款催收记录详情",
+)
+async def get_payment_reminder(
+    reminder_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("business_support:read")),
+):
+    """获取回款催收记录详情。"""
+    try:
+        reminder = get_or_404(db, PaymentReminder, reminder_id, "回款催收记录不存在")
+        return ResponseModel(
+            code=200,
+            message="获取回款催收记录详情成功",
+            data=_payment_reminder_response(reminder),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取回款催收记录详情失败: {str(e)}")
+
+
+@router.put(
+    "/{reminder_id}",
+    response_model=ResponseModel[PaymentReminderResponse],
+    summary="更新回款催收记录",
+)
+async def update_payment_reminder(
+    reminder_id: int,
+    reminder_data: PaymentReminderUpdate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("business_support:update")),
+):
+    """更新回款催收记录。"""
+    try:
+        reminder = get_or_404(db, PaymentReminder, reminder_id, "回款催收记录不存在")
+
+        update_data = reminder_data.dict(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(reminder, key, value)
+
+        db.commit()
+        db.refresh(reminder)
+
+        return ResponseModel(
+            code=200,
+            message="更新回款催收记录成功",
+            data=_payment_reminder_response(reminder),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"更新回款催收记录失败: {str(e)}")

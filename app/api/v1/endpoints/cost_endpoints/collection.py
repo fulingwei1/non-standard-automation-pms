@@ -14,6 +14,7 @@ from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.core import security
 from app.models.material import BomHeader
 from app.models.production.work_order import WorkOrder
 from app.models.project import Project, ProjectCost
@@ -52,7 +53,7 @@ def _collected_count(db: Session, source_type: str, source_ids: list[int]) -> in
 def run_cost_collection(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("cost:manage")),
     project_id: Optional[int] = Query(None, description="指定项目ID（空=全部）"),
 ) -> Any:
     """

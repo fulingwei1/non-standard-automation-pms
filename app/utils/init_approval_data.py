@@ -72,8 +72,8 @@ APPROVAL_WORKFLOW_SEEDS: list[dict[str, Any]] = [
                 "conditions": {
                     "operator": "OR",
                     "items": [
-                        {"field": "form_data.total_price", "op": ">=", "value": 1000000},
-                        {"field": "form_data.entity.total_price", "op": ">=", "value": 1000000},
+                        {"field": "form_data.total_price", "op": ">=", "value": 500000},
+                        {"field": "form_data.entity.total_price", "op": ">=", "value": 500000},
                     ],
                 },
             },
@@ -211,6 +211,34 @@ APPROVAL_WORKFLOW_SEEDS: list[dict[str, Any]] = [
                 "flow_name": "默认验收单审批",
                 "is_default": True,
                 "nodes": [_node("ACCEPTANCE_QA_REVIEW", "质量负责人审批", 1)],
+            }
+        ],
+    },
+    {
+        "template_code": "TPL_DELIVERY_ORDER",
+        "template_name": "发货单审批",
+        "category": "BUSINESS",
+        "entity_type": "DELIVERY_ORDER",
+        "description": "商务支持发货单审批流程。",
+        "flows": [
+            {
+                "flow_name": "默认发货单审批",
+                "is_default": True,
+                "nodes": [_node("DELIVERY_ORDER_MANAGER_REVIEW", "发货负责人审批", 1)],
+            }
+        ],
+    },
+    {
+        "template_code": "TPL_PROJECT_BUDGET",
+        "template_name": "项目预算审批",
+        "category": "FINANCE",
+        "entity_type": "PROJECT_BUDGET",
+        "description": "项目预算提交与审批流程。",
+        "flows": [
+            {
+                "flow_name": "默认项目预算审批",
+                "is_default": True,
+                "nodes": [_node("PROJECT_BUDGET_FINANCE_REVIEW", "财务负责人审批", 1)],
             }
         ],
     },

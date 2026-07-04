@@ -113,11 +113,13 @@ const DeliveryDetail = ({ id, onBack, onEdit }) => {
   const handleApprove = (approved) =>
     runAction(
       approved ? "approve" : "reject",
-      () =>
-        businessSupportApi.deliveryOrders.approve(id, {
+      async () => {
+        await businessSupportApi.deliveryOrders.submitApproval(id);
+        return businessSupportApi.deliveryOrders.approve(id, {
           approved,
           approval_comment: approved ? "发货审批通过" : "发货审批驳回",
-        }),
+        });
+      },
       approved ? "审批通过" : "审批驳回"
     );
 

@@ -9,6 +9,7 @@ vi.mock("../../../services/api", () => ({
   businessSupportApi: {
     deliveryOrders: {
       get: vi.fn(),
+      submitApproval: vi.fn(),
       approve: vi.fn(),
       print: vi.fn(),
       ship: vi.fn(),
@@ -43,6 +44,9 @@ describe("DeliveryDetail", () => {
     businessSupportApi.deliveryOrders.get.mockResolvedValue({
       data: { code: 200, data: pendingDelivery },
     });
+    businessSupportApi.deliveryOrders.submitApproval.mockResolvedValue({
+      data: { code: 200, data: { approval_instance_id: 1 } },
+    });
   });
 
   it("shows approval actions and refreshes to printable state after approval", async () => {
@@ -66,6 +70,7 @@ describe("DeliveryDetail", () => {
     await user.click(screen.getByRole("button", { name: /审批通过/ }));
 
     await waitFor(() => {
+      expect(businessSupportApi.deliveryOrders.submitApproval).toHaveBeenCalledWith("7");
       expect(businessSupportApi.deliveryOrders.approve).toHaveBeenCalledWith("7", {
         approved: true,
         approval_comment: "发货审批通过",

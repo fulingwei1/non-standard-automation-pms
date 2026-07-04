@@ -38,7 +38,7 @@ router = APIRouter(tags=["rules"])
 @router.get("/alert-rule-templates", response_model=List[dict], status_code=status.HTTP_200_OK)
 def read_alert_rule_templates(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("alert:read")),
 ) -> Any:
     """获取预警规则模板列表"""
     templates = (
@@ -70,7 +70,7 @@ def read_alert_rules(
     rule_type: Optional[str] = Query(None, description="规则类型筛选"),
     target_type: Optional[str] = Query(None, description="监控对象类型筛选"),
     is_enabled: Optional[bool] = Query(None, description="是否启用"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("alert:read")),
 ) -> Any:
     """
     获取预警规则列表（支持分页和筛选）
@@ -110,7 +110,7 @@ def read_alert_rules(
 def read_alert_rule(
     rule_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("alert:read")),
 ) -> Any:
     """
     获取预警规则详情
@@ -125,7 +125,7 @@ def create_alert_rule(
     *,
     db: Session = Depends(deps.get_db),
     rule_in: AlertRuleCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("alert:manage")),
 ) -> Any:
     """
     创建预警规则
@@ -205,7 +205,7 @@ def update_alert_rule(
     db: Session = Depends(deps.get_db),
     rule_id: int,
     rule_in: AlertRuleUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("alert:manage")),
 ) -> Any:
     """
     更新预警规则
@@ -232,7 +232,7 @@ def toggle_alert_rule(
     *,
     db: Session = Depends(deps.get_db),
     rule_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("alert:manage")),
 ) -> Any:
     """
     启用/禁用预警规则
@@ -251,7 +251,7 @@ def delete_alert_rule(
     *,
     db: Session = Depends(deps.get_db),
     rule_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("alert:manage")),
 ) -> Any:
     """
     删除预警规则

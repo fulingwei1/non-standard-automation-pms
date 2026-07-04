@@ -58,7 +58,7 @@ def create_budget_item(
     db: Session = Depends(deps.get_db),
     budget_id: int,
     item_in: ProjectBudgetItemCreate,
-    current_user: User = Depends(security.require_permission("budget:read")),
+    current_user: User = Depends(security.require_permission("budget:update")),
 ) -> Any:
     """
     创建预算明细
@@ -89,7 +89,7 @@ def update_budget_item(
     db: Session = Depends(deps.get_db),
     item_id: int,
     item_in: ProjectBudgetItemUpdate,
-    current_user: User = Depends(security.require_permission("budget:read")),
+    current_user: User = Depends(security.require_permission("budget:update")),
 ) -> Any:
     """
     更新预算明细
@@ -125,7 +125,7 @@ def delete_budget_item(
     *,
     db: Session = Depends(deps.get_db),
     item_id: int,
-    current_user: User = Depends(security.require_permission("budget:read")),
+    current_user: User = Depends(security.require_permission("budget:update")),
 ) -> Any:
     """
     删除预算明细

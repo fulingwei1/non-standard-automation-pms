@@ -69,7 +69,7 @@ def create_allocation_rule(
     *,
     db: Session = Depends(deps.get_db),
     rule_in: ProjectCostAllocationRuleCreate,
-    current_user: User = Depends(security.require_permission("budget:read")),
+    current_user: User = Depends(security.require_permission("budget:create")),
 ) -> Any:
     """
     创建成本分摊规则
@@ -110,7 +110,7 @@ def update_allocation_rule(
     db: Session = Depends(deps.get_db),
     rule_id: int,
     rule_in: ProjectCostAllocationRuleUpdate,
-    current_user: User = Depends(security.require_permission("budget:read")),
+    current_user: User = Depends(security.require_permission("budget:update")),
 ) -> Any:
     """
     更新成本分摊规则
@@ -136,7 +136,7 @@ def delete_allocation_rule(
     *,
     db: Session = Depends(deps.get_db),
     rule_id: int,
-    current_user: User = Depends(security.require_permission("budget:read")),
+    current_user: User = Depends(security.require_permission("budget:delete")),
 ) -> Any:
     """
     删除成本分摊规则

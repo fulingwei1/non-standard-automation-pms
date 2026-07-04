@@ -202,6 +202,9 @@ API_PERMISSIONS = [
     },
     # 成本管理权限
     {"perm_code": "cost:read", "perm_name": "查看成本", "module": "COST", "action": "READ"},
+    # 预警管理权限
+    {"perm_code": "alert:read", "perm_name": "查看预警", "module": "ALERT", "action": "VIEW"},
+    {"perm_code": "alert:manage", "perm_name": "管理预警规则", "module": "ALERT", "action": "EDIT"},
     # 人事管理权限
     {"perm_code": "hr:read", "perm_name": "查看HR数据", "module": "HR", "action": "VIEW"},
     {"perm_code": "hr:create", "perm_name": "创建HR数据", "module": "HR", "action": "CREATE"},

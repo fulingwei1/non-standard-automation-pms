@@ -89,6 +89,11 @@ class DeliveryOrder(Base, TimestampMixin):
     project = relationship("Project", foreign_keys=[project_id])
     approver = relationship("User", foreign_keys=[approved_by])
     special_approver = relationship("User", foreign_keys=[special_approver_id])
+    items = relationship(
+        "DeliveryOrderItem",
+        back_populates="delivery_order",
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (
         Index("idx_delivery_no", "delivery_no"),
@@ -100,3 +105,38 @@ class DeliveryOrder(Base, TimestampMixin):
 
     def __repr__(self):
         return f"<DeliveryOrder {self.delivery_no}>"
+
+
+class DeliveryOrderItem(Base, TimestampMixin):
+    """发货单明细表"""
+
+    __tablename__ = "delivery_order_items"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    delivery_order_id = Column(
+        Integer, ForeignKey("delivery_orders.id"), nullable=False, comment="发货单ID"
+    )
+    sales_order_item_id = Column(Integer, ForeignKey("sales_order_items.id"), comment="销售订单明细ID")
+    material_id = Column(Integer, ForeignKey("materials.id"), comment="物料ID")
+
+    item_name = Column(String(200), nullable=False, comment="明细名称")
+    item_spec = Column(String(200), comment="规格型号")
+    delivery_qty = Column(Numeric(10, 2), nullable=False, comment="本次发货数量")
+    unit = Column(String(20), comment="单位")
+    unit_price = Column(Numeric(12, 2), comment="单价")
+    amount = Column(Numeric(12, 2), comment="本次发货金额")
+    quality_status = Column(String(20), default="pending", comment="质检状态")
+    remark = Column(Text, comment="备注")
+
+    delivery_order = relationship("DeliveryOrder", back_populates="items")
+    sales_order_item = relationship("SalesOrderItem")
+    material = relationship("Material")
+
+    __table_args__ = (
+        Index("idx_delivery_order_item_order", "delivery_order_id"),
+        Index("idx_delivery_order_item_sales_item", "sales_order_item_id"),
+        Index("idx_delivery_order_item_material", "material_id"),
+    )
+
+    def __repr__(self):
+        return f"<DeliveryOrderItem {self.delivery_order_id}:{self.item_name}>"

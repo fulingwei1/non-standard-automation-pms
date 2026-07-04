@@ -195,11 +195,7 @@ export default function ChairmanWorkstation() {
           showIndicators
           height="400px"
           onItemClick={(item) => {
-            if (item.category === "GOAL") {
-              window.location.href = "/personal-goals";
-            } else {
-              window.location.href = `/culture-wall?item=${item.id}`;
-            }
+            window.location.href = `/culture-wall?item=${item.id}`;
           }} />
 
       </motion.div>

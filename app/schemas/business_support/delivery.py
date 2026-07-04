@@ -5,11 +5,42 @@
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
 from ...schemas.common import TimestampSchema
+
+
+class DeliveryOrderItemCreate(BaseModel):
+    """创建发货单明细"""
+
+    sales_order_item_id: Optional[int] = Field(default=None, description="销售订单明细ID")
+    material_id: Optional[int] = Field(default=None, description="物料ID")
+    item_name: Optional[str] = Field(default=None, max_length=200, description="明细名称")
+    item_spec: Optional[str] = Field(default=None, max_length=200, description="规格型号")
+    delivery_qty: Decimal = Field(gt=0, description="本次发货数量")
+    unit: Optional[str] = Field(default=None, max_length=20, description="单位")
+    unit_price: Optional[Decimal] = Field(default=None, description="单价")
+    amount: Optional[Decimal] = Field(default=None, description="本次发货金额")
+    remark: Optional[str] = Field(default=None, description="备注")
+
+
+class DeliveryOrderItemResponse(TimestampSchema):
+    """发货单明细响应"""
+
+    id: int
+    delivery_order_id: int
+    sales_order_item_id: Optional[int] = None
+    material_id: Optional[int] = None
+    item_name: str
+    item_spec: Optional[str] = None
+    delivery_qty: Decimal
+    unit: Optional[str] = None
+    unit_price: Optional[Decimal] = None
+    amount: Optional[Decimal] = None
+    quality_status: Optional[str] = None
+    remark: Optional[str] = None
 
 
 class DeliveryOrderCreate(BaseModel):
@@ -27,6 +58,10 @@ class DeliveryOrderCreate(BaseModel):
     receiver_phone: Optional[str] = Field(default=None, max_length=20, description="收货电话")
     receiver_address: Optional[str] = Field(default=None, max_length=500, description="收货地址")
     delivery_amount: Decimal = Field(description="本次发货金额")
+    items: Optional[List[DeliveryOrderItemCreate]] = Field(
+        default_factory=list,
+        description="发货明细；为空时从销售订单明细复制全部未发数量",
+    )
     special_approval: Optional[bool] = Field(default=False, description="是否特殊审批")
     special_approval_reason: Optional[str] = Field(default=None, description="特殊审批原因")
     remark: Optional[str] = Field(default=None, description="备注")
@@ -80,6 +115,7 @@ class DeliveryOrderResponse(TimestampSchema):
     return_status: Optional[str] = None
     return_date: Optional[date] = None
     remark: Optional[str] = None
+    items: List[DeliveryOrderItemResponse] = Field(default_factory=list, description="发货明细")
 
 
 class DeliveryApprovalRequest(BaseModel):

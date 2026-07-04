@@ -3,7 +3,7 @@
 项目预算CRUD端点
 """
 
-from datetime import datetime
+from decimal import Decimal
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -14,6 +14,7 @@ from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
+from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.budget import ProjectBudget, ProjectBudgetItem
 from app.models.project import Project
 from app.models.user import User
@@ -25,11 +26,88 @@ from app.schemas.budget import (
     ProjectBudgetUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.services.approval_engine import ApprovalEngineService
 from app.utils.db_helpers import get_or_404
 
 from .utils import generate_budget_no, generate_budget_version
 
 router = APIRouter()
+PROJECT_BUDGET_APPROVAL_ENTITY_TYPE = "PROJECT_BUDGET"
+PROJECT_BUDGET_APPROVAL_TEMPLATE_CODE = "TPL_PROJECT_BUDGET"
+ACTIVE_APPROVAL_STATUSES = {"PENDING", "IN_PROGRESS"}
+
+
+def calculate_budget_items_total(budget: ProjectBudget) -> Decimal:
+    return sum((item.budget_amount or Decimal("0")) for item in budget.items)
+
+
+def sync_budget_total_from_items(db: Session, budget: ProjectBudget) -> Decimal:
+    if budget.items:
+        budget.total_amount = calculate_budget_items_total(budget)
+        db.add(budget)
+    return Decimal(str(budget.total_amount or 0))
+
+
+def build_budget_response(budget: ProjectBudget, project: Optional[Project] = None) -> ProjectBudgetResponse:
+    project = project or budget.project
+    budget_dict = {
+        **{c.name: getattr(budget, c.name) for c in budget.__table__.columns},
+        "project_code": project.project_code if project else None,
+        "project_name": project.project_name if project else None,
+        "submitter_name": budget.submitter.real_name if budget.submitter else None,
+        "approver_name": budget.approver.real_name if budget.approver else None,
+        "items": [
+            ProjectBudgetItemResponse(
+                **{c.name: getattr(item, c.name) for c in item.__table__.columns}
+            )
+            for item in budget.items
+        ],
+    }
+    return ProjectBudgetResponse(**budget_dict)
+
+
+def build_budget_approval_form_data(budget: ProjectBudget) -> dict[str, Any]:
+    item_total = calculate_budget_items_total(budget)
+    return {
+        "budget_id": budget.id,
+        "budget_no": budget.budget_no,
+        "project_id": budget.project_id,
+        "budget_name": budget.budget_name,
+        "budget_type": budget.budget_type,
+        "version": budget.version,
+        "total_amount": float(budget.total_amount or 0),
+        "item_total": float(item_total),
+    }
+
+
+def get_active_budget_approval_instance(
+    db: Session, budget_id: int
+) -> Optional[ApprovalInstance]:
+    return (
+        db.query(ApprovalInstance)
+        .filter(
+            ApprovalInstance.entity_type == PROJECT_BUDGET_APPROVAL_ENTITY_TYPE,
+            ApprovalInstance.entity_id == budget_id,
+            ApprovalInstance.status.in_(ACTIVE_APPROVAL_STATUSES),
+        )
+        .order_by(desc(ApprovalInstance.created_at), desc(ApprovalInstance.id))
+        .first()
+    )
+
+
+def get_pending_budget_approval_task(
+    db: Session, instance_id: int, user_id: int
+) -> Optional[ApprovalTask]:
+    return (
+        db.query(ApprovalTask)
+        .filter(
+            ApprovalTask.instance_id == instance_id,
+            ApprovalTask.assignee_id == user_id,
+            ApprovalTask.status == "PENDING",
+        )
+        .order_by(ApprovalTask.id.asc())
+        .first()
+    )
 
 
 @router.get("/", response_model=PaginatedResponse[ProjectBudgetResponse])
@@ -141,6 +219,10 @@ def create_budget(
     budget_data["budget_no"] = budget_no
     budget_data["version"] = version
     budget_data["created_by"] = current_user.id
+    if budget_in.items:
+        budget_data["total_amount"] = sum(
+            (item_data.budget_amount or Decimal("0")) for item_data in budget_in.items
+        )
 
     budget = ProjectBudget(**budget_data)
     db.add(budget)
@@ -211,7 +293,7 @@ def update_budget(
     db: Session = Depends(deps.get_db),
     budget_id: int,
     budget_in: ProjectBudgetUpdate,
-    current_user: User = Depends(security.require_permission("budget:read")),
+    current_user: User = Depends(security.require_permission("budget:update")),
 ) -> Any:
     """
     更新预算（只能更新草稿状态的预算）
@@ -250,7 +332,7 @@ def submit_budget(
     *,
     db: Session = Depends(deps.get_db),
     budget_id: int,
-    current_user: User = Depends(security.require_permission("budget:read")),
+    current_user: User = Depends(security.require_permission("budget:update")),
 ) -> Any:
     """
     提交预算审批
@@ -260,27 +342,31 @@ def submit_budget(
     if budget.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只能提交草稿状态的预算")
 
-    budget.status = "SUBMITTED"
-    budget.submitted_at = datetime.now()
-    budget.submitted_by = current_user.id
+    sync_budget_total_from_items(db, budget)
+    existing = get_active_budget_approval_instance(db, budget_id)
+    if existing:
+        return build_budget_response(budget)
 
-    db.add(budget)
-    db.commit()
+    try:
+        engine = ApprovalEngineService(db)
+        engine.submit(
+            template_code=PROJECT_BUDGET_APPROVAL_TEMPLATE_CODE,
+            entity_type=PROJECT_BUDGET_APPROVAL_ENTITY_TYPE,
+            entity_id=budget_id,
+            form_data=build_budget_approval_form_data(budget),
+            initiator_id=current_user.id,
+            title=f"项目预算审批 - {budget.budget_no}",
+            summary=f"{budget.project.project_name if budget.project else '未指定项目'} / {budget.budget_name}",
+            urgency="NORMAL",
+            cc_user_ids=None,
+        )
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+
     db.refresh(budget)
 
-    budget_dict = {
-        **{c.name: getattr(budget, c.name) for c in budget.__table__.columns},
-        "project_code": budget.project.project_code if budget.project else None,
-        "project_name": budget.project.project_name if budget.project else None,
-        "items": [
-            ProjectBudgetItemResponse(
-                **{c.name: getattr(item, c.name) for c in item.__table__.columns}
-            )
-            for item in budget.items
-        ],
-    }
-
-    return ProjectBudgetResponse(**budget_dict)
+    return build_budget_response(budget)
 
 
 @router.post("/{budget_id}/approve", response_model=ProjectBudgetResponse)
@@ -296,54 +382,38 @@ def approve_budget(
     """
     budget = get_or_404(db, ProjectBudget, budget_id, "预算不存在")
 
-    if budget.status != "SUBMITTED":
-        raise HTTPException(status_code=400, detail="只���审批已提交的预算")
+    instance = get_active_budget_approval_instance(db, budget_id)
+    if not instance:
+        raise HTTPException(
+            status_code=400,
+            detail="预算必须先提交统一审批，不能在模块内直接审批",
+        )
 
-    if approve_request.approved:
-        budget.status = "APPROVED"
-        budget.approved_at = datetime.now()
-        budget.approved_by = current_user.id
+    task = get_pending_budget_approval_task(db, instance.id, current_user.id)
+    if not task:
+        raise HTTPException(status_code=403, detail="当前用户没有该预算的待审批任务")
 
-        # 如果是初始预算或修订预算，更新项目预算金额
-        if budget.budget_type in ["INITIAL", "REVISED"]:
-            project = db.query(Project).filter(Project.id == budget.project_id).first()
-            if project:
-                project.budget_amount = budget.total_amount
-                db.add(project)
+    engine = ApprovalEngineService(db)
+    try:
+        if approve_request.approved:
+            engine.approve(
+                task_id=task.id,
+                approver_id=current_user.id,
+                comment=approve_request.approval_note,
+            )
+        else:
+            engine.reject(
+                task_id=task.id,
+                approver_id=current_user.id,
+                comment=approve_request.approval_note or "预算审批驳回",
+            )
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
 
-        # 将其他版本的预算设为非生效
-        db.query(ProjectBudget).filter(
-            ProjectBudget.project_id == budget.project_id,
-            ProjectBudget.id != budget_id,
-            ProjectBudget.is_active,
-        ).update({"is_active": False})
-
-        budget.is_active = True
-    else:
-        budget.status = "REJECTED"
-        budget.approved_at = datetime.now()
-        budget.approved_by = current_user.id
-
-    if approve_request.approval_note:
-        budget.approval_note = approve_request.approval_note
-
-    db.add(budget)
-    db.commit()
     db.refresh(budget)
 
-    budget_dict = {
-        **{c.name: getattr(budget, c.name) for c in budget.__table__.columns},
-        "project_code": budget.project.project_code if budget.project else None,
-        "project_name": budget.project.project_name if budget.project else None,
-        "items": [
-            ProjectBudgetItemResponse(
-                **{c.name: getattr(item, c.name) for c in item.__table__.columns}
-            )
-            for item in budget.items
-        ],
-    }
-
-    return ProjectBudgetResponse(**budget_dict)
+    return build_budget_response(budget)
 
 
 @router.delete("/{budget_id}", status_code=status.HTTP_200_OK)
@@ -351,7 +421,7 @@ def delete_budget(
     *,
     db: Session = Depends(deps.get_db),
     budget_id: int,
-    current_user: User = Depends(security.require_permission("budget:read")),
+    current_user: User = Depends(security.require_permission("budget:delete")),
 ) -> Any:
     """
     删除预算（只能删除草稿状态的预算）

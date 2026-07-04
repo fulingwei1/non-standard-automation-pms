@@ -17,6 +17,7 @@ from .contract import (
 )
 from .delivery import (
     DeliveryOrder,
+    DeliveryOrderItem,
 )
 from .document import (
     DocumentArchive,
@@ -54,6 +55,7 @@ __all__ = [
     "SalesOrderItem",
     # Delivery
     "DeliveryOrder",
+    "DeliveryOrderItem",
     # Acceptance
     "AcceptanceTracking",
     "AcceptanceTrackingRecord",

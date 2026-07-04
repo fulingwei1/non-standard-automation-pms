@@ -3,21 +3,43 @@
 
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.core import security
 from app.models.user import User
 
 router = APIRouter()
+
+
+def _load_cost_breakdowns(db: Session, project_ids: list[int]) -> dict[int, dict[str, float]]:
+    if not project_ids:
+        return {}
+
+    placeholders = ", ".join(f":pid_{index}" for index, _ in enumerate(project_ids))
+    params = {f"pid_{index}": project_id for index, project_id in enumerate(project_ids)}
+    type_sql = text(
+        f"""
+        SELECT project_id, cost_type, SUM(amount) as total
+        FROM project_costs
+        WHERE project_id IN ({placeholders})
+        GROUP BY project_id, cost_type
+    """
+    )
+
+    breakdowns: dict[int, dict[str, float]] = {}
+    for row in db.execute(type_sql, params).fetchall():
+        breakdowns.setdefault(row.project_id, {})[row.cost_type] = float(row.total or 0)
+    return breakdowns
 
 
 @router.get("/summary", summary="全项目成本偏差汇总")
 def variance_summary(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:read")),
 ) -> Any:
     sql = text(
         """
@@ -29,6 +51,7 @@ def variance_summary(
     """
     )
     rows = db.execute(sql).fetchall()
+    breakdowns_by_project = _load_cost_breakdowns(db, [r.id for r in rows])
 
     projects = []
     total_overrun = 0
@@ -38,17 +61,7 @@ def variance_summary(
         variance = actual - budget
         var_pct = round(variance / budget * 100, 2) if budget > 0 else 0
 
-        # Per cost_type breakdown
-        type_sql = text(
-            """
-            SELECT cost_type, SUM(amount) as total
-            FROM project_costs WHERE project_id = :pid
-            GROUP BY cost_type
-        """
-        )
-        breakdown = {}
-        for c in db.execute(type_sql, {"pid": r.id}).fetchall():
-            breakdown[c.cost_type] = float(c.total)
+        breakdown = breakdowns_by_project.get(r.id, {})
 
         if variance > 0:
             total_overrun += variance
@@ -88,7 +101,7 @@ def variance_summary(
 def variance_patterns(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:read")),
 ) -> Any:
     # Which cost_type has highest average overrun
     sql = text(
@@ -158,13 +171,13 @@ def variance_patterns(
 def variance_detail(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:read")),
     project_id: int,
 ) -> Any:
     p_sql = text("SELECT * FROM projects WHERE id = :pid")
     p = db.execute(p_sql, {"pid": project_id}).fetchone()
     if not p:
-        return {"error": "项目不存在"}
+        raise HTTPException(status_code=404, detail="项目不存在")
 
     budget = float(p.budget_amount or 0)
     actual = float(p.actual_cost or 0)

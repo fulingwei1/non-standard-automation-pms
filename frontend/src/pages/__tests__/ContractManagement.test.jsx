@@ -233,6 +233,8 @@ describe('ContractManagement', () => {
           status: 'SIGNED',
           total_amount: '600000',
           signing_date: '2026-06-06',
+          delivery_deadline: '2026-09-30',
+          requirement_summary: 'FCT测试设备，扫码追溯，节拍8秒',
         },
       ],
       total: 1,
@@ -255,17 +257,15 @@ describe('ContractManagement', () => {
     await user.click(initiationButton);
 
     await waitFor(() => {
-      expect(pmoApi.initiations.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          project_name: '非标测试设备合同',
-          customer_name: '金凯博客户',
-          contract_no: 'CON-2026-003',
-          contract_amount: 600000,
-          requirement_summary: '由合同 CON-2026-003 发起立项',
-        }),
-      );
+      expect(pmoApi.initiations.create).not.toHaveBeenCalled();
       expect(contractService.createProjectFromContract).not.toHaveBeenCalled();
-      expect(mockNavigate).toHaveBeenCalledWith('/pmo/initiations/12');
+      expect(mockNavigate).toHaveBeenCalledWith(
+        expect.stringContaining('/pmo/initiations?handoff=contract'),
+      );
+      const target = mockNavigate.mock.calls.at(-1)[0];
+      expect(target).toContain('contract_no=CON-2026-003');
+      expect(decodeURIComponent(target)).toContain('requirement_summary=FCT测试设备，扫码追溯，节拍8秒');
+      expect(target).toContain('required_end_date=2026-09-30');
     });
   });
 

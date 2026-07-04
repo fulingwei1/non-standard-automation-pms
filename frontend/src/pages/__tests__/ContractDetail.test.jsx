@@ -138,6 +138,8 @@ describe("ContractDetail", () => {
         customer_name: "制造客户",
         status: "SIGNED",
         contract_amount: "800000",
+        delivery_deadline: "2026-10-20",
+        requirement_summary: "客户需要FCT测试线，含MES接口和扫码追溯",
       },
     });
     pmoApi.initiations.list.mockResolvedValue({ data: { items: [] } });
@@ -155,16 +157,16 @@ describe("ContractDetail", () => {
     await user.click(button);
 
     await waitFor(() => {
-      expect(pmoApi.initiations.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          project_name: "FCT测试线合同",
-          customer_name: "制造客户",
-          customer_id: 6,
-          contract_no: "HT2606-043",
-          contract_amount: 800000,
-        }),
+      expect(pmoApi.initiations.create).not.toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith(
+        expect.stringContaining("/pmo/initiations?handoff=contract"),
       );
-      expect(mockNavigate).toHaveBeenCalledWith("/pmo/initiations/17");
+      const target = mockNavigate.mock.calls.at(-1)[0];
+      expect(target).toContain("contract_no=HT2606-043");
+      expect(decodeURIComponent(target)).toContain(
+        "requirement_summary=客户需要FCT测试线，含MES接口和扫码追溯",
+      );
+      expect(target).toContain("required_end_date=2026-10-20");
     });
   });
 });

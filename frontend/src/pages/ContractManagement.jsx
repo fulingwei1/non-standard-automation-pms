@@ -66,7 +66,10 @@ import {
   deleteContract,
 } from '../services/contractService';
 import { paymentPlanApi, pmoApi, receivableApi } from '../services/api';
-import { pickExistingInitiationByContractNo } from '../utils/pmoInitiations';
+import {
+  buildContractInitiationPath,
+  pickExistingInitiationByContractNo,
+} from '../utils/pmoInitiations';
 
 const { Title, Text, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
@@ -206,10 +209,15 @@ const ContractManagement = () => {
         return {
           id: c.id,
           title: c.contract_name || c.contract_code || `合同-${c.id}`,
-          contract_no: c.contract_code,
+          contract_no: c.contract_code || c.contract_no,
+          contract_code: c.contract_code,
           contract_name: c.contract_name,
+          project_name: c.project_name,
+          customer_name: c.customer_name,
           client_name: c.customer_name,
           clientName: c.customer_name,
+          contract_amount: c.contract_amount,
+          total_amount: c.total_amount,
           value: numericAmount,
           amount: numericAmount,
           status: normalizedStatus,
@@ -218,6 +226,21 @@ const ContractManagement = () => {
           riskLevel: 'normal',
           created_at: c.created_at,
           signing_date: c.signing_date,
+          signed_date: c.signed_date,
+          start_date: c.start_date,
+          end_date: c.end_date,
+          delivery_deadline: c.delivery_deadline,
+          required_start_date: c.required_start_date,
+          required_end_date: c.required_end_date,
+          requirement_summary: c.requirement_summary,
+          requirement_description: c.requirement_description,
+          scope_of_work: c.scope_of_work,
+          contract_scope: c.contract_scope,
+          project_scope: c.project_scope,
+          technical_requirements: c.technical_requirements,
+          description: c.description,
+          technical_solution_id: c.technical_solution_id,
+          estimated_hours: c.estimated_hours,
           customer_id: c.customer_id,
           project_id: c.project_id,
           project_code: c.project_code,
@@ -340,9 +363,6 @@ const ContractManagement = () => {
 
   const handleCreateProject = async (contract) => {
     const contractCode = contract.contract_no || contract.contract_code || contract.id || contract.contract_id;
-    const today = new Date().toISOString().slice(0, 10);
-    const projectName = contract.title || contract.contract_name || '销售项目';
-    const contractAmount = contract.value || contract.amount || undefined;
 
     try {
       setLoading(true);
@@ -353,21 +373,8 @@ const ContractManagement = () => {
         return;
       }
 
-      const response = await pmoApi.initiations.create({
-        project_name: projectName,
-        project_type: 'NEW',
-        customer_name: contract.clientName || contract.client_name || contract.customer_name || '',
-        contract_no: String(contractCode),
-        contract_amount: contractAmount,
-        required_start_date: today,
-        requirement_summary: `由合同 ${contractCode} 发起立项`,
-      });
-
-      const initiation = response?.formatted || response?.data?.data || response?.data || {};
-      const initiationId = initiation.id;
-      messageApi.success('立项申请已创建，正在打开立项详情');
-      await loadData();
-      navigate(initiationId ? `/pmo/initiations/${initiationId}` : '/pmo/initiations');
+      messageApi.success('正在打开立项申请');
+      navigate(buildContractInitiationPath(contract));
     } catch (error) {
       const detail = error?.response?.data?.detail || error?.response?.data?.message || error.message;
       messageApi.error(`发起立项失败: ${detail}`);

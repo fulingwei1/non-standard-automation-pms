@@ -14,11 +14,15 @@
 - PURCHASE_ORDER: 采购订单审批
 - OUTSOURCING_ORDER: 外协订单审批
 - ACCEPTANCE_ORDER: 验收单审批
+- DELIVERY_ORDER: 发货单审批
+- PROJECT_BUDGET: 项目预算审批
 """
 
 from .acceptance import AcceptanceOrderApprovalAdapter
 from .base import ApprovalAdapter
+from .budget import ProjectBudgetApprovalAdapter
 from .contract import ContractApprovalAdapter
+from .delivery_order import DeliveryOrderApprovalAdapter
 from .ecn import EcnApprovalAdapter
 from .invoice import InvoiceApprovalAdapter
 from .outsourcing import OutsourcingOrderApprovalAdapter
@@ -38,6 +42,8 @@ __all__ = [
     "PurchaseOrderApprovalAdapter",
     "OutsourcingOrderApprovalAdapter",
     "AcceptanceOrderApprovalAdapter",
+    "DeliveryOrderApprovalAdapter",
+    "ProjectBudgetApprovalAdapter",
 ]
 
 
@@ -52,6 +58,8 @@ ADAPTER_REGISTRY = {
     "PURCHASE_ORDER": PurchaseOrderApprovalAdapter,
     "OUTSOURCING_ORDER": OutsourcingOrderApprovalAdapter,
     "ACCEPTANCE_ORDER": AcceptanceOrderApprovalAdapter,
+    "DELIVERY_ORDER": DeliveryOrderApprovalAdapter,
+    "PROJECT_BUDGET": ProjectBudgetApprovalAdapter,
 }
 
 
