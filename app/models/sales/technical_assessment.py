@@ -43,6 +43,7 @@ class TechnicalAssessment(Base, TimestampMixin):
     ai_analysis = Column(Text, comment="AI分析报告")
     conditions = Column(Text, comment="立项条件(JSON)")
     evaluated_at = Column(DateTime, comment="评估完成时间")
+    auto_generated = Column(Boolean, default=False, comment="是否为系统自动补建的占位评估")
 
     # 售前工单关联（2026-03-12 新增）
     presale_ticket_id = Column(

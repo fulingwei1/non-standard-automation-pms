@@ -422,6 +422,34 @@ def _ensure_sqlite_schema(engine):
         except Exception:
             logger.debug("ECN/模板配置历史表补丁跳过", exc_info=True)
 
+    # OTD 智能体阈值配置表 + 风险快照表 + 毛利率快照表（新增表，对历史 DB 补建）
+    otd_tables = [
+        "otd_threshold_configs",
+        "otd_risk_snapshots",
+        "project_margin_snapshots",
+    ]
+    missing_otd_tables = [
+        table_name for table_name in otd_tables if table_name not in tables
+    ]
+    if missing_otd_tables:
+        try:
+            import importlib
+
+            importlib.import_module("app.models.otd_threshold_config")
+            importlib.import_module("app.models.otd_risk_snapshot")
+            importlib.import_module("app.models.project_margin_snapshot")
+            metadata_tables = [
+                Base.metadata.tables[table_name]
+                for table_name in missing_otd_tables
+                if table_name in Base.metadata.tables
+            ]
+            if metadata_tables:
+                Base.metadata.create_all(bind=engine, tables=metadata_tables)
+                inspector = inspect(engine)
+                tables = inspector.get_table_names()
+        except Exception:
+            logger.debug("OTD 阈值配置/风险快照/毛利率快照表补丁跳过", exc_info=True)
+
     # Many models use TimestampMixin (created_at/updated_at). Historical SQLite
     # databases or hand-written migration scripts may omit these columns for
     # some tables, which can cause runtime 500s when ORM queries select/order
@@ -849,6 +877,10 @@ def _ensure_sqlite_schema(engine):
             statements.append(
                 "ALTER TABLE technical_assessments ADD COLUMN item_scores TEXT"
             )
+        if "auto_generated" not in columns:
+            statements.append(
+                "ALTER TABLE technical_assessments ADD COLUMN auto_generated BOOLEAN DEFAULT 0"
+            )
 
         if statements:
             with engine.begin() as conn:
@@ -957,6 +989,67 @@ def _ensure_sqlite_schema(engine):
                     conn.execute(text(ddl))
                 except Exception:
                     logger.debug("presale_expenses 索引补丁跳过", exc_info=True)
+
+    if "presale_knowledge_case" in tables:
+        case_columns = {
+            col["name"] for col in inspector.get_columns("presale_knowledge_case")
+        }
+        case_statements = []
+        if "source_project_id" not in case_columns:
+            case_statements.append(
+                "ALTER TABLE presale_knowledge_case ADD COLUMN source_project_id INTEGER"
+            )
+
+        if case_statements:
+            with engine.begin() as conn:
+                for ddl in case_statements:
+                    try:
+                        conn.execute(text(ddl))
+                    except Exception:
+                        logger.debug(
+                            "presale_knowledge_case.source_project_id 列补丁跳过",
+                            exc_info=True,
+                        )
+                try:
+                    conn.execute(
+                        text(
+                            "CREATE INDEX IF NOT EXISTS idx_presale_case_source_project "
+                            "ON presale_knowledge_case(source_project_id)"
+                        )
+                    )
+                except Exception:
+                    logger.debug("presale_knowledge_case 来源项目索引补丁跳过", exc_info=True)
+
+    if "presale_agent_metrics" not in tables:
+        # 表不存在则用 ORM metadata 建表（含索引）
+        try:
+            import importlib
+            importlib.import_module("app.models.presale_agent_metric")
+            metadata_tables = [
+                Base.metadata.tables[name]
+                for name in ("presale_agent_metrics",)
+                if name in Base.metadata.tables
+            ]
+            if metadata_tables:
+                Base.metadata.create_all(bind=engine, tables=metadata_tables)
+                tables = inspect(engine).get_table_names()
+        except Exception:
+            logger.debug("presale_agent_metrics 建表补丁跳过", exc_info=True)
+
+    if "presale_agent_revisions" not in tables:
+        try:
+            import importlib
+            importlib.import_module("app.models.presale_agent_revision")
+            metadata_tables = [
+                Base.metadata.tables[name]
+                for name in ("presale_agent_revisions",)
+                if name in Base.metadata.tables
+            ]
+            if metadata_tables:
+                Base.metadata.create_all(bind=engine, tables=metadata_tables)
+                tables = inspect(engine).get_table_names()
+        except Exception:
+            logger.debug("presale_agent_revisions 建表补丁跳过", exc_info=True)
 
     if "ecn" in tables:
         columns = {col["name"] for col in inspector.get_columns("ecn")}

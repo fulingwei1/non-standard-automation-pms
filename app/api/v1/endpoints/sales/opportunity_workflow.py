@@ -19,6 +19,7 @@ from app.models.sales import Opportunity, OpportunityRequirement
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import OpportunityRequirementResponse, OpportunityResponse
+from app.services.presale.assessment_status import unfinished_assessment_sql
 from app.utils.db_helpers import get_or_404
 
 from .utils import validate_g2_opportunity_to_quote, validate_opportunity_stage_transition
@@ -26,6 +27,24 @@ from .utils import validate_g2_opportunity_to_quote, validate_opportunity_stage_
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _raise_if_mock_ai_response(response: dict | None, action: str) -> None:
+    model = str((response or {}).get("model") or "")
+    if model.endswith("-mock"):
+        raise HTTPException(
+            status_code=502,
+            detail=f"AI 服务当前不可用，{action}未执行，请稍后重试",
+        )
+
+
+def _clean_ai_text(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text or text.lower() == "null":
+        return None
+    return text
 
 
 class RequestPresaleSupportRequest(BaseModel):
@@ -94,7 +113,7 @@ def request_presale_support(
         },
     )
     # 回填商机：已申请售前评估
-    opp.assessment_status = "REQUESTED"
+    opp.assessment_status = "PENDING"
     opp.updated_at = datetime.now()
     db.add(opp)
     db.commit()
@@ -102,7 +121,7 @@ def request_presale_support(
     return ResponseModel(
         code=200,
         message="已向售前技术支持部提交技术支持申请，待售前完成技术初评后方可推进立项",
-        data={"ticket_no": ticket_no, "opportunity_id": opp.id, "assessment_status": "REQUESTED"},
+        data={"ticket_no": ticket_no, "opportunity_id": opp.id, "assessment_status": "PENDING"},
     )
 
 
@@ -422,6 +441,7 @@ def ai_quote_estimate(
     )
     resp = AIClientService().generate_solution(
         prompt=prompt, model="qwen3-coder-plus", temperature=0.25, max_tokens=1800)
+    _raise_if_mock_ai_response(resp, "报价估算")
     est = ai_job_service._extract_json(resp.get("content") or "")
     if not est:
         raise HTTPException(status_code=502, detail="AI 报价估算失败，请稍后重试")
@@ -467,12 +487,13 @@ def ai_sales_briefing(
                        "action": "点『AI 完善需求』或补录活动", "items": [{"opportunity_id": x[0], "name": x[1]} for x in r]})
 
     # 3) 售前评估缺失（未申请/未完成）→ 建议一键申请售前支持(②)
+    missing_assessment = unfinished_assessment_sql("o.assessment_status")
     r = rows(f"SELECT o.id,o.opp_name FROM opportunities o WHERE o.stage NOT IN ('WON','LOST','CLOSED') "
-             f"AND (o.assessment_status IS NULL OR o.assessment_status='REQUESTED') {own} "
+             f"AND {missing_assessment} {own} "
              f"ORDER BY o.updated_at DESC LIMIT 10")
     if r:
         cnt = db.execute(_t(f"SELECT COUNT(*) FROM opportunities o WHERE o.stage NOT IN ('WON','LOST','CLOSED') "
-                            f"AND (o.assessment_status IS NULL OR o.assessment_status='REQUESTED') {own}"), p).scalar()
+                            f"AND {missing_assessment} {own}"), p).scalar()
         alerts.append({"type": "售前评估缺失", "severity": "medium", "count": cnt,
                        "action": "一键申请售前技术支持", "items": [{"opportunity_id": x[0], "name": x[1]} for x in r]})
 
@@ -541,6 +562,7 @@ def ai_enrich_requirement(
     )
     ai = AIClientService()
     resp = ai.generate_solution(prompt=prompt, model="qwen3-coder-plus", temperature=0.2, max_tokens=1200)
+    _raise_if_mock_ai_response(resp, "需求完善")
     s = ai_job_service._extract_json(resp.get("content") or "")
     if not s:
         raise HTTPException(status_code=502, detail="AI 未能解析需求，请稍后重试或补充活动记录")
@@ -566,28 +588,59 @@ def ai_enrich_requirement(
     db.add(opp)
 
     # 回填需求表（upsert）
-    exists = db.execute(_t("SELECT id FROM opportunity_requirements WHERE opportunity_id=:i"), {"i": opp_id}).first()
+    existing_requirement = db.execute(
+        _t(
+            "SELECT id, product_object, ct_seconds, interface_desc, site_constraints, "
+            "acceptance_criteria, safety_requirement "
+            "FROM opportunity_requirements WHERE opportunity_id=:i"
+        ),
+        {"i": opp_id},
+    ).mappings().first()
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ct = s.get("ct_seconds")
     try:
         ct = int(ct) if ct not in (None, "", "null") else None
     except (TypeError, ValueError):
         ct = None
-    fields = {
-        "po": s.get("product_object") or "", "ct": ct, "ifc": s.get("interface_desc") or "",
-        "sc": s.get("site_constraints") or "", "ac": s.get("acceptance_criteria") or "",
-        "sr": s.get("safety_requirement") or "", "i": opp_id, "now": now,
+
+    new_values = {
+        "product_object": _clean_ai_text(s.get("product_object")),
+        "ct_seconds": ct,
+        "interface_desc": _clean_ai_text(s.get("interface_desc")),
+        "site_constraints": _clean_ai_text(s.get("site_constraints")),
+        "acceptance_criteria": _clean_ai_text(s.get("acceptance_criteria")),
+        "safety_requirement": _clean_ai_text(s.get("safety_requirement")),
     }
-    if exists:
-        db.execute(_t(
-            "UPDATE opportunity_requirements SET product_object=:po, ct_seconds=:ct, interface_desc=:ifc, "
-            "site_constraints=:sc, acceptance_criteria=:ac, safety_requirement=:sr, updated_at=:now "
-            "WHERE opportunity_id=:i"), fields)
+
+    if existing_requirement:
+        merged_requirement = dict(existing_requirement)
+        updates = {
+            column: value
+            for column, value in new_values.items()
+            if value is not None
+        }
+        if updates:
+            assignments = ", ".join(f"{column}=:{column}" for column in updates)
+            params = {**updates, "i": opp_id, "now": now}
+            db.execute(
+                _t(
+                    f"UPDATE opportunity_requirements SET {assignments}, updated_at=:now "
+                    "WHERE opportunity_id=:i"
+                ),
+                params,
+            )
+            merged_requirement.update(updates)
     else:
-        db.execute(_t(
-            "INSERT INTO opportunity_requirements(opportunity_id, product_object, ct_seconds, interface_desc, "
-            "site_constraints, acceptance_criteria, safety_requirement, created_at, updated_at) "
-            "VALUES(:i,:po,:ct,:ifc,:sc,:ac,:sr,:now,:now)"), fields)
+        merged_requirement = {"id": None, **new_values}
+        db.execute(
+            _t(
+                "INSERT INTO opportunity_requirements(opportunity_id, product_object, ct_seconds, interface_desc, "
+                "site_constraints, acceptance_criteria, safety_requirement, created_at, updated_at) "
+                "VALUES(:i,:product_object,:ct_seconds,:interface_desc,:site_constraints,"
+                ":acceptance_criteria,:safety_requirement,:now,:now)"
+            ),
+            {**new_values, "i": opp_id, "now": now},
+        )
     db.commit()
 
     return ResponseModel(
@@ -599,9 +652,12 @@ def ai_enrich_requirement(
             "budget_range": opp.budget_range,
             "requirement_maturity": opp.requirement_maturity,
             "requirement": {
-                "product_object": fields["po"], "ct_seconds": ct,
-                "interface_desc": fields["ifc"], "acceptance_criteria": fields["ac"],
-                "site_constraints": fields["sc"], "safety_requirement": fields["sr"],
+                "product_object": merged_requirement.get("product_object"),
+                "ct_seconds": merged_requirement.get("ct_seconds"),
+                "interface_desc": merged_requirement.get("interface_desc"),
+                "acceptance_criteria": merged_requirement.get("acceptance_criteria"),
+                "site_constraints": merged_requirement.get("site_constraints"),
+                "safety_requirement": merged_requirement.get("safety_requirement"),
             },
             "key_demands": _j(s.get("key_demands")),
             "competitors": _j(s.get("competitors")),

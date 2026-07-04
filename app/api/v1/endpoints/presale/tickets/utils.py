@@ -11,6 +11,30 @@ from app.common.query_filters import apply_like_filter
 from app.models.presale import PresaleSolution, PresaleSupportTicket, PresaleTenderRecord
 from app.schemas.presale import TicketResponse
 
+LEGACY_TICKET_STATUS_ALIASES = {
+    "PROCESSING": "IN_PROGRESS",
+    "REVIEW": "PENDING",
+}
+
+
+def canonical_ticket_status(status: str | None) -> str:
+    normalized = str(status or "").strip().upper()
+    return LEGACY_TICKET_STATUS_ALIASES.get(normalized, normalized)
+
+
+def expand_ticket_status_filter(status: str | None) -> list[str]:
+    requested = str(status or "").strip().upper()
+    if not requested:
+        return []
+    canonical = canonical_ticket_status(requested)
+    expanded = {requested, canonical}
+    expanded.update(
+        legacy
+        for legacy, mapped in LEGACY_TICKET_STATUS_ALIASES.items()
+        if mapped == canonical
+    )
+    return sorted(expanded)
+
 
 def generate_ticket_no(db: Session) -> str:
     """生成工单编号：TICKET-yymmdd-xxx"""
@@ -139,7 +163,7 @@ def build_ticket_response(ticket: PresaleSupportTicket, opportunity=None) -> Tic
         accept_time=ticket.accept_time,
         expected_date=ticket.expected_date,
         deadline=ticket.deadline,
-        status=ticket.status,
+        status=canonical_ticket_status(ticket.status),
         progress_percent=getattr(latest_progress, "progress_percent", None),
         progress_note=progress_note,
         complete_time=ticket.complete_time,

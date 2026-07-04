@@ -289,6 +289,11 @@ class PresaleAIIntegrationService:
         auto_run: bool = True,
     ) -> List[PresaleAIWorkflowLog]:
         """启动AI工作流"""
+        if auto_run:
+            raise ValueError(
+                "AI工作流自动运行执行器尚未实现；请使用 auto_run=false 仅创建待执行计划"
+            )
+
         workflow_steps = [
             WorkflowStepEnum.REQUIREMENT,
             WorkflowStepEnum.SOLUTION,
@@ -309,12 +314,6 @@ class PresaleAIIntegrationService:
             logs.append(log)
 
         self.db.commit()
-
-        # 如果auto_run，启动第一步
-        if auto_run and logs:
-            logs[0].status = WorkflowStatusEnum.RUNNING
-            logs[0].started_at = datetime.now()
-            self.db.commit()
 
         return logs
 

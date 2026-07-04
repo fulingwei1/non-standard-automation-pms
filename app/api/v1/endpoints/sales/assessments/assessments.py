@@ -161,6 +161,7 @@ def _assessment_response(
         template_id=assessment.template_id,
         version_no=assessment.version_no,
         item_scores=assessment.item_scores,
+        auto_generated=bool(getattr(assessment, "auto_generated", False)),
     )
 
 

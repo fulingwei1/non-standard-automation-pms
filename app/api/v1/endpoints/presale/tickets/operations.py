@@ -29,6 +29,7 @@ from app.services.presale_assessment_completion import complete_presale_source_a
 from app.utils.db_helpers import get_or_404, save_obj
 
 from .crud import read_ticket
+from .utils import canonical_ticket_status
 
 router = APIRouter()
 
@@ -114,7 +115,7 @@ def accept_ticket(
     """
     ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
 
-    if ticket.status != "PENDING":
+    if canonical_ticket_status(ticket.status) != "PENDING":
         raise HTTPException(status_code=400, detail="只有待处理状态的工单才能接单")
 
     assignee_id = accept_request.assignee_id or current_user.id
@@ -143,7 +144,7 @@ def update_ticket_progress(
     """
     ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
 
-    if ticket.status not in ["ACCEPTED", "IN_PROGRESS"]:
+    if canonical_ticket_status(ticket.status) not in ["ACCEPTED", "IN_PROGRESS"]:
         raise HTTPException(status_code=400, detail="只有已接单或进行中的工单才能更新进度")
 
     ticket.status = "IN_PROGRESS"

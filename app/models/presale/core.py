@@ -52,11 +52,12 @@ class TicketStatusEnum(str, Enum):
 
     PENDING = "PENDING"  # 待接单
     ACCEPTED = "ACCEPTED"  # 已接单
-    PROCESSING = "PROCESSING"  # 处理中
-    REVIEW = "REVIEW"  # 待审核
+    IN_PROGRESS = "IN_PROGRESS"  # 处理中
     COMPLETED = "COMPLETED"  # 已完成
     CLOSED = "CLOSED"  # 已关闭
     CANCELLED = "CANCELLED"  # 已取消
+    PROCESSING = "PROCESSING"  # 历史兼容：等同 IN_PROGRESS
+    REVIEW = "REVIEW"  # 历史兼容：等同 PENDING
 
 
 class DeliverableStatusEnum(str, Enum):

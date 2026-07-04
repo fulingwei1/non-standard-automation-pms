@@ -6,7 +6,7 @@ Team 5: AI Quotation Generator Service
 import json
 import time
 from datetime import datetime
-from decimal import Decimal
+from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import desc, text
@@ -208,23 +208,34 @@ class AIQuotationGeneratorService:
 
         # 创建版本快照
         change_summary = []
+        previous_subtotal = self._to_decimal(quotation.subtotal)
+        existing_tax_rate = self._safe_rate(quotation.tax, previous_subtotal)
+        existing_discount_rate = self._safe_rate(quotation.discount, previous_subtotal)
 
         # 更新报价项
         if request.items is not None:
-            quotation.items = [item.dict() for item in request.items]
+            quotation.items = self._serialize_items(request.items)
             # 重新计算价格
             subtotal = sum(item.total_price for item in request.items)
             quotation.subtotal = subtotal
             change_summary.append("更新报价项")
 
         # 更新税率
+        if request.items is not None or request.tax_rate is not None:
+            tax_rate = request.tax_rate if request.tax_rate is not None else existing_tax_rate
+            quotation.tax = quotation.subtotal * tax_rate
         if request.tax_rate is not None:
-            quotation.tax = quotation.subtotal * request.tax_rate
             change_summary.append(f"税率调整为{request.tax_rate}")
 
         # 更新折扣
+        if request.items is not None or request.discount_rate is not None:
+            discount_rate = (
+                request.discount_rate
+                if request.discount_rate is not None
+                else existing_discount_rate
+            )
+            quotation.discount = quotation.subtotal * discount_rate
         if request.discount_rate is not None:
-            quotation.discount = quotation.subtotal * request.discount_rate
             change_summary.append(f"折扣率调整为{request.discount_rate}")
 
         # 重新计算总价
@@ -309,24 +320,47 @@ class AIQuotationGeneratorService:
             )
             if not row:
                 return None
-            payload = dict(row)
-            payload["quotation_type"] = self._normalize_quotation_type(
-                payload.get("quotation_type")
-            )
-            payload["status"] = self._normalize_quotation_status(payload.get("status"))
-            payload["items"] = self._json_or_default(payload.get("items"), [])
-            payload["validity_days"] = payload.get("validity_days") or 30
-            payload["version"] = payload.get("version") or 1
-            return payload
+            return self._quotation_row_to_response(row)
 
-    def get_quotation_history(self, ticket_id: int) -> List[PresaleAIQuotation]:
-        """获取报价单历史（按版本号降序）"""
-        return (
-            self.db.query(PresaleAIQuotation)
-            .filter(PresaleAIQuotation.presale_ticket_id == ticket_id)
-            .order_by(desc(PresaleAIQuotation.version))
+    def get_quotation_history(self, ticket_id: int) -> List[Dict[str, Any]]:
+        """获取报价单历史（按版本号降序），兼容历史非法枚举值。"""
+        rows = (
+            self.db.execute(
+                text(
+                    """
+                    SELECT
+                        id,
+                        presale_ticket_id,
+                        customer_id,
+                        quotation_number,
+                        quotation_type,
+                        items,
+                        subtotal,
+                        tax,
+                        discount,
+                        total,
+                        payment_terms,
+                        validity_days,
+                        status,
+                        pdf_url,
+                        version,
+                        created_by,
+                        created_at,
+                        updated_at,
+                        ai_model,
+                        generation_time,
+                        notes
+                    FROM presale_ai_quotation
+                    WHERE presale_ticket_id = :ticket_id
+                    ORDER BY version DESC, id DESC
+                    """
+                ),
+                {"ticket_id": ticket_id},
+            )
+            .mappings()
             .all()
         )
+        return [self._quotation_row_to_response(row) for row in rows]
 
     def get_quotation_versions(self, quotation_id: int) -> List[QuotationVersion]:
         """获取报价单所有版本"""
@@ -347,6 +381,36 @@ class AIQuotationGeneratorService:
             except json.JSONDecodeError:
                 return default
         return value
+
+    def _quotation_row_to_response(self, row: Any) -> Dict[str, Any]:
+        payload = dict(row)
+        payload["quotation_type"] = self._normalize_quotation_type(payload.get("quotation_type"))
+        payload["status"] = self._normalize_quotation_status(payload.get("status"))
+        payload["items"] = self._json_or_default(payload.get("items"), [])
+        payload["validity_days"] = payload.get("validity_days") or 30
+        payload["version"] = payload.get("version") or 1
+        return payload
+
+    @staticmethod
+    def _to_decimal(value: Any) -> Decimal:
+        if value is None:
+            return Decimal("0")
+        if isinstance(value, Decimal):
+            return value
+        return Decimal(str(value))
+
+    def _safe_rate(self, amount: Any, subtotal: Any) -> Decimal:
+        subtotal_decimal = self._to_decimal(subtotal)
+        if subtotal_decimal == 0:
+            return Decimal("0")
+        return self._to_decimal(amount) / subtotal_decimal
+
+    @staticmethod
+    def _serialize_items(items: List[QuotationItem]) -> List[Dict[str, Any]]:
+        return [
+            {k: (float(v) if isinstance(v, Decimal) else v) for k, v in item.dict().items()}
+            for item in items
+        ]
 
     @staticmethod
     def _normalize_quotation_type(value: Any) -> str:
@@ -438,41 +502,15 @@ class AIQuotationGeneratorService:
             reference_items=basic_items,
         )
         if ai_items:
-            return ai_items
+            items = ai_items
+        else:
+            items = self._fallback_standard_items()
 
-        items = basic_items.copy()
-        items[0] = QuotationItem(
-            name="标准ERP系统",
-            description="包含进销存、财务管理、人力资源、报表分析功能",
-            quantity=Decimal("1"),
-            unit="套",
-            unit_price=Decimal("150000"),
-            total_price=Decimal("150000"),
-            category="软件开发",
+        return self._ensure_minimum_subtotal(
+            items,
+            reference_items=basic_items,
+            multiplier=Decimal("1.18"),
         )
-        items.append(
-            QuotationItem(
-                name="移动端APP",
-                description="iOS和Android移动应用",
-                quantity=Decimal("1"),
-                unit="套",
-                unit_price=Decimal("30000"),
-                total_price=Decimal("30000"),
-                category="软件开发",
-            )
-        )
-        items.append(
-            QuotationItem(
-                name="系统部署与培训",
-                description="标准部署和用户培训（5天）",
-                quantity=Decimal("1"),
-                unit="次",
-                unit_price=Decimal("10000"),
-                total_price=Decimal("10000"),
-                category="服务",
-            )
-        )
-        return items
 
     def _generate_premium_items(
         self, requirements: str, standard_items: List[QuotationItem]
@@ -484,75 +522,197 @@ class AIQuotationGeneratorService:
             reference_items=standard_items,
         )
         if ai_items:
-            return ai_items
+            items = ai_items
+        else:
+            items = self._fallback_premium_items()
 
-        items = standard_items.copy()
-        items[0] = QuotationItem(
-            name="高级ERP系统",
-            description="包含进销存、财务管理、人力资源、项目管理、BI分析、AI智能推荐等全功能",
-            quantity=Decimal("1"),
-            unit="套",
-            unit_price=Decimal("250000"),
-            total_price=Decimal("250000"),
-            category="软件开发",
+        return self._ensure_minimum_subtotal(
+            items,
+            reference_items=standard_items,
+            multiplier=Decimal("1.22"),
         )
-        items.append(
-            QuotationItem(
-                name="定制化开发",
-                description="根据企业特定需求定制功能模块",
-                quantity=Decimal("1"),
-                unit="项",
-                unit_price=Decimal("50000"),
-                total_price=Decimal("50000"),
-                category="软件开发",
-            )
-        )
-        items.append(
-            QuotationItem(
-                name="系统集成",
-                description="与现有系统（财务软件、OA等）集成",
-                quantity=Decimal("1"),
-                unit="项",
-                unit_price=Decimal("30000"),
-                total_price=Decimal("30000"),
-                category="软件开发",
-            )
-        )
-        items.append(
-            QuotationItem(
-                name="一年技术支持",
-                description="7x24小时技术支持服务",
-                quantity=Decimal("1"),
-                unit="年",
-                unit_price=Decimal("20000"),
-                total_price=Decimal("20000"),
-                category="服务",
-            )
-        )
-        return items
 
     def _fallback_basic_items(self) -> List[QuotationItem]:
         """基础版静态回退报价项。"""
         return [
             QuotationItem(
-                name="基础ERP系统",
-                description="包含进销存、基础财务管理功能",
+                name="基础检测工装与控制单元",
+                description="包含基础测试工装、控制单元、I/O模块和必要安全互锁，满足单工位检测需求",
                 quantity=Decimal("1"),
                 unit="套",
                 unit_price=Decimal("80000"),
                 total_price=Decimal("80000"),
-                category="软件开发",
+                category="设备",
             ),
             QuotationItem(
-                name="系统部署与培训",
-                description="基础部署和用户培训（2天）",
+                name="通用夹治具与安全防护",
+                description="包含产品定位夹具、压紧机构、探针/接插件和基础防护罩",
+                quantity=Decimal("1"),
+                unit="套",
+                unit_price=Decimal("28000"),
+                total_price=Decimal("28000"),
+                category="夹治具",
+            ),
+            QuotationItem(
+                name="现场安装调试与操作培训",
+                description="完成现场安装、基础参数调试、操作培训和试运行支持",
                 quantity=Decimal("1"),
                 unit="次",
-                unit_price=Decimal("5000"),
-                total_price=Decimal("5000"),
+                unit_price=Decimal("12000"),
+                total_price=Decimal("12000"),
                 category="服务",
             ),
         ]
+
+    def _fallback_standard_items(self) -> List[QuotationItem]:
+        """标准版静态回退报价项。"""
+        return [
+            QuotationItem(
+                name="标准自动化检测工作站",
+                description="包含标准机架、PLC控制、气动执行、测试仪表集成和安全防护",
+                quantity=Decimal("1"),
+                unit="套",
+                unit_price=Decimal("120000"),
+                total_price=Decimal("120000"),
+                category="自动化集成",
+            ),
+            QuotationItem(
+                name="视觉与传感检测模块",
+                description="配置工业相机、光源、传感器和检测算法，用于关键尺寸/状态识别",
+                quantity=Decimal("1"),
+                unit="套",
+                unit_price=Decimal("45000"),
+                total_price=Decimal("45000"),
+                category="视觉检测",
+            ),
+            QuotationItem(
+                name="数据采集与追溯模块",
+                description="采集检测数据、条码信息和工艺参数，支持本地报表与追溯查询",
+                quantity=Decimal("1"),
+                unit="套",
+                unit_price=Decimal("30000"),
+                total_price=Decimal("30000"),
+                category="数据系统",
+            ),
+            QuotationItem(
+                name="现场安装调试与验收培训",
+                description="完成现场联调、节拍验证、验收资料和班组培训",
+                quantity=Decimal("1"),
+                unit="次",
+                unit_price=Decimal("25000"),
+                total_price=Decimal("25000"),
+                category="服务",
+            ),
+        ]
+
+    def _fallback_premium_items(self) -> List[QuotationItem]:
+        """高级版静态回退报价项。"""
+        return [
+            QuotationItem(
+                name="高节拍自动化检测产线",
+                description="包含多工位检测平台、节拍平衡、自动流转机构和完整安全防护",
+                quantity=Decimal("1"),
+                unit="套",
+                unit_price=Decimal("180000"),
+                total_price=Decimal("180000"),
+                category="自动化集成",
+            ),
+            QuotationItem(
+                name="机器人或自动上下料模块",
+                description="配置机器人/机械手、料仓、输送定位和防呆检测，实现自动上下料",
+                quantity=Decimal("1"),
+                unit="套",
+                unit_price=Decimal("85000"),
+                total_price=Decimal("85000"),
+                category="自动上下料",
+            ),
+            QuotationItem(
+                name="高级视觉与数据追溯系统",
+                description="包含多相机检测、缺陷判定、检测数据归档、看板和接口对接",
+                quantity=Decimal("1"),
+                unit="套",
+                unit_price=Decimal("65000"),
+                total_price=Decimal("65000"),
+                category="视觉检测",
+            ),
+            QuotationItem(
+                name="定制夹治具与安全防护系统",
+                description="针对多型号产品配置快换夹治具、互锁防护、光栅和安全门",
+                quantity=Decimal("1"),
+                unit="套",
+                unit_price=Decimal("42000"),
+                total_price=Decimal("42000"),
+                category="夹治具",
+            ),
+            QuotationItem(
+                name="一年质保与驻场支持",
+                description="提供验收后一年的质保、远程诊断和关键阶段驻场支持",
+                quantity=Decimal("1"),
+                unit="年",
+                unit_price=Decimal("28000"),
+                total_price=Decimal("28000"),
+                category="服务",
+            ),
+        ]
+
+    @staticmethod
+    def _round_money(value: Decimal) -> Decimal:
+        return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    @staticmethod
+    def _ceil_money(value: Decimal) -> Decimal:
+        return value.quantize(Decimal("0.01"), rounding=ROUND_CEILING)
+
+    def _items_subtotal(self, items: List[QuotationItem]) -> Decimal:
+        return self._round_money(sum((self._to_decimal(item.total_price) for item in items), Decimal("0")))
+
+    def _ensure_minimum_subtotal(
+        self,
+        items: List[QuotationItem],
+        reference_items: List[QuotationItem],
+        multiplier: Decimal,
+    ) -> List[QuotationItem]:
+        """按参考档放大报价小计，避免三档总价被税折扣放大后倒挂。"""
+        current_subtotal = self._items_subtotal(items)
+        reference_subtotal = self._items_subtotal(reference_items)
+        if current_subtotal <= 0 or reference_subtotal <= 0:
+            return items
+
+        minimum_subtotal = self._round_money(reference_subtotal * multiplier)
+        if current_subtotal >= minimum_subtotal:
+            return items
+
+        scale = minimum_subtotal / current_subtotal
+        adjusted = [
+            self._copy_item_with_price(item, self._to_decimal(item.unit_price) * scale)
+            for item in items
+        ]
+
+        adjusted_subtotal = self._items_subtotal(adjusted)
+        if adjusted and adjusted_subtotal < minimum_subtotal:
+            shortfall = minimum_subtotal - adjusted_subtotal
+            last = adjusted[-1]
+            unit_increment = self._ceil_money(shortfall / self._to_decimal(last.quantity))
+            adjusted[-1] = self._copy_item_with_price(
+                last,
+                self._to_decimal(last.unit_price) + unit_increment,
+            )
+
+        return adjusted
+
+    def _copy_item_with_price(self, item: QuotationItem, unit_price: Decimal) -> QuotationItem:
+        unit_price = self._round_money(unit_price)
+        quantity = self._to_decimal(item.quantity)
+        return QuotationItem(
+            item_id=item.item_id,
+            name=item.name,
+            description=item.description,
+            quantity=quantity,
+            unit=item.unit,
+            unit_price=unit_price,
+            total_price=self._round_money(quantity * unit_price),
+            category=item.category,
+        )
 
     def _create_version_snapshot(
         self, quotation: PresaleAIQuotation, user_id: int, change_summary: str

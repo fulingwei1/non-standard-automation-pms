@@ -281,11 +281,13 @@ async def get_quotation_history(
 
         # 获取最新报价单的所有版本
         latest_quotation = quotations[0]
-        versions = service.get_quotation_versions(latest_quotation.id)
+        latest_quotation_id = latest_quotation["id"]
+        latest_version = latest_quotation["version"]
+        versions = service.get_quotation_versions(latest_quotation_id)
 
         return {
-            "quotation_id": latest_quotation.id,
-            "current_version": latest_quotation.version,
+            "quotation_id": latest_quotation_id,
+            "current_version": latest_version,
             "versions": versions,
             "total_versions": len(versions),
         }

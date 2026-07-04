@@ -5,14 +5,12 @@
 """
 from collections import defaultdict
 from datetime import date, datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.common.date_range import get_month_range
 from app.core import security
 from app.models.presale import (
     PresaleSolution,
@@ -46,7 +44,7 @@ def get_analytics_dashboard(
 
     # ── 1. 核心指标卡片 ──
     all_tickets = db.query(PresaleSupportTicket).all()
-    active_statuses = {"PENDING", "ACCEPTED", "PROCESSING", "REVIEW"}
+    active_statuses = {"PENDING", "ACCEPTED", "IN_PROGRESS", "PROCESSING", "REVIEW"}
     processing_count = sum(1 for t in all_tickets if t.status in active_statuses)
 
     overdue_count = sum(

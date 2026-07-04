@@ -101,6 +101,7 @@ def complete_presale_source_assessment(
             decision="推荐立项",
             evaluated_at=datetime.now(),
             presale_ticket_id=ticket.id if ticket else None,
+            auto_generated=True,
         )
         db.add(assessment)
         db.flush()

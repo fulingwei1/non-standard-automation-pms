@@ -11,7 +11,7 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path
 from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -100,7 +100,7 @@ def auto_assign_tickets(
         raise HTTPException(status_code=400, detail="无可用候选处理人")
 
     # 计算每个候选人的当前活跃工单数
-    active_statuses = {"PENDING", "ACCEPTED", "PROCESSING", "REVIEW"}
+    active_statuses = {"PENDING", "ACCEPTED", "IN_PROGRESS", "PROCESSING", "REVIEW"}
     active_counts: Dict[int, int] = defaultdict(int)
     active_tickets = (
         db.query(
@@ -210,7 +210,7 @@ def get_team_workload(
 
     实时查询每个售前人员的工单分布、工时、忙闲状态。
     """
-    active_statuses = {"PENDING", "ACCEPTED", "PROCESSING", "REVIEW"}
+    active_statuses = {"PENDING", "ACCEPTED", "IN_PROGRESS", "PROCESSING", "REVIEW"}
 
     # 获取所有有工单记录的处理人
     assignee_ids = (
@@ -249,7 +249,7 @@ def get_team_workload(
         uid = t.assignee_id
         if t.status == "PENDING":
             by_user[uid]["pending"] += 1
-        elif t.status in ("ACCEPTED", "PROCESSING", "REVIEW"):
+        elif t.status in ("ACCEPTED", "IN_PROGRESS", "PROCESSING", "REVIEW"):
             by_user[uid]["processing"] += 1
         elif t.status in ("COMPLETED", "CLOSED"):
             by_user[uid]["completed"] += 1
@@ -548,7 +548,7 @@ def get_ticket_timeline(
         key_milestones.append({"event": "完成", "time": ticket.complete_time.isoformat()})
     if ticket.deadline:
         is_overdue = (
-            ticket.status in ("PENDING", "ACCEPTED", "PROCESSING", "REVIEW")
+            ticket.status in ("PENDING", "ACCEPTED", "IN_PROGRESS", "PROCESSING", "REVIEW")
             and ticket.deadline < datetime.now()
         )
         key_milestones.append({

@@ -15,6 +15,7 @@ from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services import ai_job_service
+from app.services.presale.assessment_status import unfinished_assessment_sql
 
 router = APIRouter(prefix="/ai-copilot", tags=["AI Copilot(提效/易用)"])
 
@@ -202,7 +203,8 @@ def my_day(db: Session = Depends(deps.get_db), current_user: User = Depends(secu
     uid = current_user.id
     stale = db.execute(text("SELECT COUNT(*) FROM opportunities WHERE owner_id=:u AND stage NOT IN ('WON','LOST','CLOSED') AND (last_progress_at IS NULL OR last_progress_at < date('now','-14 days'))"), {"u": uid}).scalar() or 0
     my_opps = db.execute(text("SELECT COUNT(*) FROM opportunities WHERE owner_id=:u AND stage NOT IN ('WON','LOST','CLOSED')"), {"u": uid}).scalar() or 0
-    unassessed = db.execute(text("SELECT COUNT(*) FROM opportunities WHERE owner_id=:u AND stage NOT IN ('WON','LOST','CLOSED') AND (assessment_status IS NULL OR assessment_status='REQUESTED')"), {"u": uid}).scalar() or 0
+    missing_assessment = unfinished_assessment_sql("assessment_status")
+    unassessed = db.execute(text(f"SELECT COUNT(*) FROM opportunities WHERE owner_id=:u AND stage NOT IN ('WON','LOST','CLOSED') AND {missing_assessment}"), {"u": uid}).scalar() or 0
     facts = f"我负责在跟商机{my_opps}个，其中{stale}个14天没进展、{unassessed}个缺售前评估。"
     tip = _ai(f"你是我的AI助理。根据：{facts} 用2-3条给出我今天最该先做的事(每条一句话)。直接输出。", mt=400)
     return ResponseModel(code=200, message="ok", data={"my_opportunities": my_opps, "stale": stale, "unassessed": unassessed, "today_focus": tip})

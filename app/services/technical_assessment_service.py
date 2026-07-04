@@ -374,6 +374,7 @@ class TechnicalAssessmentService:
         assessment.ai_analysis = ai_analysis
         assessment.item_scores = json.dumps(item_scores, ensure_ascii=False) if item_scores else None
         assessment.evaluated_at = datetime.now()
+        assessment.auto_generated = False
 
         self.db.flush()
         self._sync_structured_risks(assessment.id, evaluator_id, risks)

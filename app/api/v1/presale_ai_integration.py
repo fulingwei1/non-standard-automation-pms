@@ -3,14 +3,18 @@
 Team 10: 售前AI系统集成与前端UI
 """
 
+import csv
 import logging
 from datetime import date, datetime
+from pathlib import Path
 from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core.config import settings
 from app.models.user import User
 from app.schemas.presale_ai import (
     AIAuditLogResponse,
@@ -34,6 +38,139 @@ from app.services.presale.presale_ai_integration import PresaleAIIntegrationServ
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+EXPORT_COLUMNS = [
+    ("date", "日期"),
+    ("ai_function", "AI功能"),
+    ("user_id", "用户ID"),
+    ("usage_count", "使用次数"),
+    ("success_count", "成功次数"),
+    ("success_rate", "成功率"),
+    ("avg_response_time", "平均响应时间(ms)"),
+]
+
+EXPORT_MEDIA_TYPES = {
+    "csv": "text/csv; charset=utf-8",
+    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "pdf": "application/pdf",
+}
+
+
+def _report_export_dir() -> Path:
+    export_dir = Path(settings.UPLOAD_DIR).expanduser().resolve() / "presale_ai_reports"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    return export_dir
+
+
+def _normalize_export_format(format_name: str) -> tuple[str, str]:
+    normalized = (format_name or "excel").strip().lower()
+    if normalized in {"excel", "xlsx"}:
+        return "xlsx", "xlsx"
+    if normalized in {"csv"}:
+        return "csv", "csv"
+    if normalized in {"pdf"}:
+        return "pdf", "pdf"
+    raise HTTPException(status_code=400, detail=f"不支持的导出格式: {format_name}")
+
+
+def _report_rows(stats: list[dict]) -> list[dict]:
+    rows = []
+    for item in stats:
+        usage_count = int(item.get("usage_count") or 0)
+        success_count = int(item.get("success_count") or 0)
+        success_rate = round(success_count / usage_count * 100, 2) if usage_count else 0
+        report_date = item.get("date")
+        ai_function = str(item.get("ai_function") or "")
+        if ai_function.isupper():
+            ai_function = ai_function.lower()
+        rows.append(
+            {
+                "date": report_date.isoformat() if hasattr(report_date, "isoformat") else report_date,
+                "ai_function": ai_function,
+                "user_id": item.get("user_id") or "",
+                "usage_count": usage_count,
+                "success_count": success_count,
+                "success_rate": f"{success_rate}%",
+                "avg_response_time": item.get("avg_response_time") or "",
+            }
+        )
+    return rows
+
+
+def _write_csv_report(file_path: Path, rows: list[dict]) -> None:
+    with file_path.open("w", encoding="utf-8-sig", newline="") as fp:
+        writer = csv.DictWriter(fp, fieldnames=[column for column, _ in EXPORT_COLUMNS])
+        writer.writerow({column: label for column, label in EXPORT_COLUMNS})
+        writer.writerows(rows)
+
+
+def _write_xlsx_report(file_path: Path, rows: list[dict]) -> None:
+    try:
+        from openpyxl import Workbook
+    except ImportError as exc:  # pragma: no cover - depends on optional package
+        raise HTTPException(status_code=500, detail="Excel 导出功能需要安装 openpyxl") from exc
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "AI使用统计"
+    sheet.append([label for _, label in EXPORT_COLUMNS])
+    for row in rows:
+        sheet.append([row.get(column, "") for column, _ in EXPORT_COLUMNS])
+    for column_cells in sheet.columns:
+        max_length = max(len(str(cell.value or "")) for cell in column_cells)
+        sheet.column_dimensions[column_cells[0].column_letter].width = min(max_length + 2, 32)
+    workbook.save(file_path)
+
+
+def _write_pdf_report(file_path: Path, rows: list[dict], title: str) -> None:
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    except ImportError as exc:  # pragma: no cover - depends on optional package
+        raise HTTPException(status_code=500, detail="PDF 导出功能需要安装 reportlab") from exc
+
+    styles = getSampleStyleSheet()
+    document = SimpleDocTemplate(str(file_path), pagesize=A4)
+    table_data = [[label for _, label in EXPORT_COLUMNS]]
+    table_data.extend([[row.get(column, "") for column, _ in EXPORT_COLUMNS] for row in rows])
+    table = Table(table_data, repeatRows=1)
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#E5E7EB")),
+                ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, -1), 8),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ]
+        )
+    )
+    document.build([Paragraph(title, styles["Title"]), Spacer(1, 12), table])
+
+
+def _generate_usage_report_file(
+    export_request: ExportReportRequest,
+    stats: list[dict],
+) -> Path:
+    _, extension = _normalize_export_format(export_request.format)
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    file_name = f"ai_report_{export_request.start_date}_{export_request.end_date}_{timestamp}.{extension}"
+    file_path = _report_export_dir() / file_name
+    rows = _report_rows(stats)
+
+    if extension == "csv":
+        _write_csv_report(file_path, rows)
+    elif extension == "xlsx":
+        _write_xlsx_report(file_path, rows)
+    else:
+        _write_pdf_report(
+            file_path,
+            rows,
+            f"AI Usage Report {export_request.start_date} to {export_request.end_date}",
+        )
+    return file_path
 
 
 # ============ 仪表盘统计 ============
@@ -187,6 +324,8 @@ async def start_workflow(
         )
 
         return logs
+    except ValueError as e:
+        raise HTTPException(status_code=501, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Failed to start workflow: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to start workflow: {str(e)}")
@@ -396,14 +535,40 @@ async def export_report(
         user_agent=request.headers.get("user-agent"),
     )
 
-    # TODO: 实际的报告生成逻辑
-    file_name = (
-        f"ai_report_{export_request.start_date}_{export_request.end_date}.{export_request.format}"
+    stats = service.get_usage_stats(
+        start_date=export_request.start_date,
+        end_date=export_request.end_date,
+        ai_functions=export_request.ai_functions,
+        user_ids=export_request.user_ids,
     )
+    file_path = _generate_usage_report_file(export_request, stats)
 
     return ExportReportResponse(
-        file_url=f"/api/v1/presale/ai/downloads/{file_name}",
-        file_name=file_name,
-        file_size=0,  # 待实现
+        file_url=f"/api/v1/presale/ai/downloads/{file_path.name}",
+        file_name=file_path.name,
+        file_size=file_path.stat().st_size,
         generated_at=datetime.now(),
     )
+
+
+@router.get("/downloads/{file_name}", response_class=FileResponse)
+async def download_exported_report(
+    file_name: str,
+    current_user: User = Depends(get_current_user),
+):
+    """下载 AI 使用报告导出文件。"""
+    safe_name = Path(file_name).name
+    if safe_name != file_name:
+        raise HTTPException(status_code=400, detail="非法文件名")
+
+    file_path = _report_export_dir() / safe_name
+    try:
+        file_path.resolve().relative_to(_report_export_dir())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="非法文件路径") from exc
+    if not file_path.exists() or not file_path.is_file():
+        raise HTTPException(status_code=404, detail="导出文件不存在")
+
+    extension = file_path.suffix.lstrip(".").lower()
+    media_type = EXPORT_MEDIA_TYPES.get(extension, "application/octet-stream")
+    return FileResponse(path=file_path, media_type=media_type, filename=safe_name)

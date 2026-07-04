@@ -20,7 +20,7 @@ from app.schemas.common import PaginatedResponse
 from app.schemas.presale import TicketCreate, TicketResponse, TicketUpdate
 from app.utils.db_helpers import get_or_404, save_obj
 
-from .utils import build_ticket_response, generate_ticket_no
+from .utils import build_ticket_response, expand_ticket_status_filter, generate_ticket_no
 
 router = APIRouter()
 
@@ -49,12 +49,15 @@ def read_tickets(
     query = apply_keyword_filter(query, PresaleSupportTicket, keyword, ["ticket_no", "title"])
 
     if status:
+        expanded_status_values: list[str] = []
         if "," in status:
             status_values = [item.strip() for item in status.split(",") if item.strip()]
-            if status_values:
-                query = query.filter(PresaleSupportTicket.status.in_(status_values))
         else:
-            query = query.filter(PresaleSupportTicket.status == status)
+            status_values = [status]
+        for status_value in status_values:
+            expanded_status_values.extend(expand_ticket_status_filter(status_value))
+        if expanded_status_values:
+            query = query.filter(PresaleSupportTicket.status.in_(sorted(set(expanded_status_values))))
 
     if ticket_type:
         if "," in ticket_type:
@@ -148,7 +151,7 @@ def create_ticket(
         if not can_manage_sales_opportunity(db, current_user, opportunity):
             raise HTTPException(status_code=403, detail="无权限为该商机申请评审")
 
-    ticket_status = "REVIEW" if ticket_in.ticket_type == "SOLUTION_REVIEW" else "PENDING"
+    ticket_status = "PENDING"
     resolved_customer_name = (
         ticket_in.customer_name
         or (
@@ -186,15 +189,29 @@ def create_ticket(
     # PM介入策略判断（2026-02-15新增）
     # ========================================
     try:
+        project_type = (
+            getattr(opportunity, "project_type", None)
+            or getattr(opportunity, "equipment_type", None)
+            or ticket_in.title
+            or ""
+        )
+        industry = (getattr(ticket_in, "industry", None) or (lead.industry if lead else "") or "")
+        similar_projects = PMInvolvementService.get_similar_project_count(
+            project_type, industry, db
+        )
+        has_standard_solution = bool(
+            getattr(ticket_in, "has_standard_solution", False)
+        ) or PMInvolvementService.check_has_standard_solution(project_type, industry, db)
+
         # 准备项目数据（从工单信息中提取）
         project_data = {
             "项目金额": getattr(ticket_in, "estimated_amount", 0),
-            "项目类型": ticket_in.title or "",  # 从标题推断项目类型
-            "行业": getattr(ticket_in, "industry", ""),
+            "项目类型": project_type,
+            "行业": industry,
             "是否首次做": getattr(ticket_in, "is_first_time", False),
-            "历史相似项目数": 0,  # 需要从数据库查询（暂时默认0）
-            "失败项目数": 0,  # 需要从数据库查询（暂时默认0）
-            "是否有标准方案": getattr(ticket_in, "has_standard_solution", False),
+            "历史相似项目数": similar_projects["总数"],
+            "失败项目数": similar_projects["失败数"],
+            "是否有标准方案": has_standard_solution,
             "技术创新点": getattr(ticket_in, "innovation_points", []),
         }
 

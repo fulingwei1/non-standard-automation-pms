@@ -577,6 +577,7 @@ def _build_technical_assessment_payload(assessment: TechnicalAssessment) -> Dict
         "template_id": assessment.template_id,
         "version_no": assessment.version_no,
         "is_latest": bool(assessment.is_latest),
+        "auto_generated": bool(getattr(assessment, "auto_generated", False)),
         "item_scores": safe_json_loads(
             assessment.item_scores,
             default=[],

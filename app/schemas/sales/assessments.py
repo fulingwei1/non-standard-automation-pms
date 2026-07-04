@@ -50,6 +50,7 @@ class TechnicalAssessmentResponse(TimestampSchema):
     template_id: Optional[int] = None
     version_no: Optional[str] = None
     item_scores: Optional[str] = None
+    auto_generated: bool = False
 
     @field_validator("status", mode="before")
     @classmethod
