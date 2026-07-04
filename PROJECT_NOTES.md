@@ -1,5 +1,14 @@
 # PROJECT_NOTES
 
+## 2026-07-04 继续：功能审计 HR-17 修复（奖金审批主链路加固）
+
+- 修复项：`HR-17`（同 SALES-01 性质），奖金审批端点任意登录用户可批、可批自己的奖金、任意状态可流转；Excel 分配表导入直 APPROVED 无审批人痕迹。
+- 代码面：
+  - `bonus/sales_calc.py` approve 端点：挂 `bonus:manage` 权限（PERM 小切口已建）；防自审（受益人审批自己的奖金 403）；状态前置（仅 CALCULATED 可流转，防重复审批/终态翻案）。
+  - `bonus_distribution_service.create_calculation_from_team_allocation`：保留 APPROVED（发放前有财务/HR/总经理三方线下确认闸，见 validate_sheet_for_distribution），但补审批留痕（approved_by=发放操作人 + 时间 + "线下确认"意见）；调用方传 current_user.id。
+- 验证：红灯 4 项 → 绿灯 `tests/unit/test_bonus_approval_gate.py` 4 passed；bonus 相关 6 套件 190 passed（11 项失败经 HEAD worktree 证实为 solution_engineer_bonus/resource_scheduling 既有测试债）；`import app.main` 通过。
+- 残留：接统一审批引擎（多级审批链）待排期——当前单级审批+权限门+防自审已闭合审计判定的最大风险。
+
 ## 2026-07-04 继续：功能审计 APPR-04 首个回填（缺料预警任务接真引擎）
 
 - 修复项：`APPR-04`（全局 P0#10）剩余的"业务回填"部分，首个回填 `generate_shortage_alerts`——PROD-02 修好的 SmartAlertEngine 一直没有调度消费方。
@@ -2265,3 +2274,592 @@
   - `PYTHONPATH=. pytest -q tests/unit/test_change_impact_misc08.py --tb=short --disable-warnings` 先红后绿（4 个用例）。
   - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/api.py app/api/v1/endpoints/change_impact.py tests/unit/test_change_impact_misc08.py` 通过。
   - `ruff check app/api/v1/api.py app/api/v1/endpoints/change_impact.py tests/unit/test_change_impact_misc08.py` 通过。
+
+## 2026-07-04 继续：MISC-13 project_contributions 报告页闭环
+
+- 修复目标：`/projects/:id/contributions` 页面不能继续默认按当前月过滤，导致默认库里 period 全是 `pr30222` 时永远空白；已有 `getReport/calculate/rateMember` API 应在页面形成最小闭环。
+- 现场确认：
+  - 主 `api.py` 和 `api_lazy.py` 均挂 `/project-contributions`，后端 5 个端点存在。
+  - `frontend/src/pages/ProjectContributionReport.jsx` 原来只调用 `getReport(id, { period: 当前月 })`，没有周期切换、计算、评分入口。
+  - 默认 `data/app.db.project_member_contributions` 为 60 行，period 全是 `pr30222`，因此当前月过滤必空。
+- 红测：
+  - `tests/unit/test_project_contributions_misc13.py` 先失败：报告行和 top contributor 没有带 `period`，全周期下无法按行评分。
+  - `ProjectContributionReport.test.jsx` 先失败：页面默认调用 `getReport("42", { period: "2026-07" })`，且没有 `统计周期` 控件和 `计算贡献` 按钮。
+  - 追加评分红测：页面应调用 `rateMember(projectId, userId, { period: row.period, pm_rating })`。
+- 代码面：
+  - `project_contribution_service.py`：`generate_contribution_report` 的 `contributions/top_contributors` now 带 `period`。
+  - `ProjectContributionReport.jsx`：默认 period 改为空，首次读取全周期；新增 month 筛选、全部周期、计算贡献按钮；已有报告刷新时不整页 skeleton；表格新增周期列；PM 评分由静态文本改为可提交下拉框。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_project_contributions_misc13.py --tb=short --disable-warnings` 先红后绿（1 个用例）。
+  - `npm --prefix frontend test -- --run src/pages/__tests__/ProjectContributionReport.test.jsx --silent` 先红后绿（3 个用例）。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/projects.test.js --testNamePattern "projectContributionApi" --silent` 通过（3 个相关用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/services/project_contribution_service.py tests/unit/test_project_contributions_misc13.py` 通过。
+  - `ruff check app/services/project_contribution_service.py tests/unit/test_project_contributions_misc13.py` 通过。
+  - `npm exec eslint src/pages/ProjectContributionReport.jsx src/pages/__tests__/ProjectContributionReport.test.jsx`（cwd=`frontend`）通过。
+
+## 2026-07-04 继续：MISC-16 RequirementSurvey 旧死链下架
+
+- 修复目标：不能继续从前端 barrel export `surveyApi`，因为它调用 `/requirement-surveys`，后端无匹配路由/表；同时不能误删当前已经接入售前工单上下文的 `RequirementSurvey` 活页面。
+- 现场确认：
+  - `frontend/src/pages/RequirementSurvey/index.jsx` 当前通过 `presaleApi.tickets.list/create` 和 `presaleWorkbenchApi.loadContext` 工作，已有 7 个页面测试覆盖上下文、需求包和创建调研工单。
+  - `frontend/src/services/api/survey.js` 仍导出旧 `surveyApi`，调用 `/requirement-surveys`；`api.js` 仍 barrel export 该死链。
+  - `frontend/src/pages/RequirementSurvey/hooks/useRequirementSurvey.js` 是未使用旧 hook，仅依赖旧 `surveyApi`；其测试为 `describe.skip`。
+- 红测：
+  - `routeContracts.test.js::does not expose the legacy requirement-surveys API that has no backend` 先失败：`api.js` 仍包含 `./api/survey.js`。
+- 代码面：
+  - `frontend/src/services/api.js` 删除 `export * from "./api/survey.js"`。
+  - 删除旧 `frontend/src/services/api/survey.js`。
+  - 删除未使用的 `RequirementSurvey/hooks/useRequirementSurvey.js`、`hooks/index.js`、以及 skipped hook test。
+  - 保留当前 `RequirementSurvey` 页面、路由和售前工单实现。
+- 验证：
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js --testNamePattern "legacy requirement-surveys" --silent` 先红后绿。
+  - `npm --prefix frontend test -- --run src/pages/__tests__/RequirementSurvey.test.jsx --silent` 通过（7 个用例）。
+  - `rg -n "surveyApi|requirement-surveys|useRequirementSurvey|RequirementSurvey/hooks" frontend/src --glob '*.js' --glob '*.jsx'` 仅剩本次防回归测试命中。
+
+## 2026-07-04 继续：MISC-17 legacy resource_scheduling 下架止血
+
+- 修复目标：主 `api.py` 不能继续暴露旧 `/resource-scheduling` 占位 shim；真实工程师调度 `/engineer-scheduling` 必须保留，前端现有调用不能误删。
+- 现场确认：
+  - `api.py` 同时挂了真实 `engineer_scheduling` 到 `/engineer-scheduling`，以及旧 `resource_scheduling` 到 `/resource-scheduling`。
+  - `app/api/v1/endpoints/resource_scheduling.py` 是 ImportError 猜模块后返回 `resource_scheduling module placeholder` 的 shim。
+  - 前端只调用 `/engineer-scheduling`；没有 `/resource-scheduling` 调用点。
+- 红测：
+  - `tests/unit/test_resource_scheduling_misc17.py` 先失败：主 `api.py` 仍 import/include `resource_scheduling`，旧 shim 仍有 placeholder，且无 `legacy_resource_scheduling_disabled`。
+- 代码面：
+  - `api.py` 移除 legacy `/resource-scheduling` 挂载，同块 `resource_overview/margin_prediction/cost_collection` 保持不动。
+  - `resource_scheduling.py` 改为 501 stopgap，误挂时提示使用 `/engineer-scheduling`。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_resource_scheduling_misc17.py --tb=short --disable-warnings` 先红后绿（3 个用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/api.py app/api/v1/endpoints/resource_scheduling.py tests/unit/test_resource_scheduling_misc17.py` 通过。
+  - `ruff check app/api/v1/api.py app/api/v1/endpoints/resource_scheduling.py tests/unit/test_resource_scheduling_misc17.py` 通过。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js --testNamePattern "engineer-scheduling" --silent` 通过。
+
+## 2026-07-04 继续：MISC-19 发货审批接统一审批引擎
+
+- 修复目标：`business_support_orders` 的发货审批不能继续在模块内直接翻 `approval_status/delivery_status`，必须通过统一审批实例和审批任务落状态；同时现场校正原 tracker 的“开票/对账/入驻/验收僵尸”判断，默认库已有 `invoice_requests/reconciliations` 等真实表和已挂路由，不按全量下架处理。
+- 现场确认：
+  - `/business-support-orders/delivery-orders/{id}/approve` 原来虽有 `delivery:manage` 权限，但直接修改发货单状态，没有 `ApprovalInstance/ApprovalTask`。
+  - `businessSupportApi.deliveryOrders` 只有发货/销售订单 wrapper，发货详情页旧按钮直接调用 approve。
+  - `app/utils/init_approval_data.py` 没有发货审批模板，审批引擎 registry 也没有 `DELIVERY_ORDER` 适配器。
+- 红测：
+  - `test_business_support_delivery_routes.py::test_delivery_order_approval_template_and_adapter_are_registered` 先失败：`TPL_DELIVERY_ORDER` 不存在。
+  - `tests/unit/test_business_support_delivery_approval_misc19.py` 锁定：没有统一审批实例时 approve 必须 400；提交统一审批后才可通过待办任务审批并落发货单状态。
+- 代码面：
+  - 新增 `DeliveryOrderApprovalAdapter` 并注册 `DELIVERY_ORDER`，回调负责 submit/approved/rejected/withdrawn 时同步发货单状态。
+  - `init_approval_data.py` 和 `migrations/20260704_delivery_order_approval_sqlite.sql` 补 `TPL_DELIVERY_ORDER` 默认审批模板/流程/节点。
+  - `delivery_orders/crud.py` 新增 `submit-approval`；旧 `approve` 变成兼容入口，只查当前活跃统一审批实例和当前用户待办任务，再调用 `ApprovalEngineService.approve/reject`。
+  - 前端 `businessSupportApi.deliveryOrders.submitApproval` 补齐；`DeliveryDetail` 的通过/驳回按钮先提交统一审批，再走兼容 approve，用户仍是一键操作。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_business_support_delivery_approval_misc19.py tests/api/test_business_support_delivery_routes.py::test_delivery_order_approval_template_and_adapter_are_registered --tb=short --disable-warnings` 通过（3 个用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/endpoints/business_support_orders/delivery_orders/crud.py app/services/approval_engine/adapters/delivery_order.py app/services/approval_engine/adapters/__init__.py app/utils/init_approval_data.py tests/unit/test_business_support_delivery_approval_misc19.py tests/api/test_business_support_delivery_routes.py tests/audit_p0/test_p0_02_approval_template_no_seed.py` 通过。
+  - `ruff check app/api/v1/endpoints/business_support_orders/delivery_orders/crud.py app/services/approval_engine/adapters/delivery_order.py app/services/approval_engine/adapters/__init__.py app/utils/init_approval_data.py tests/unit/test_business_support_delivery_approval_misc19.py tests/api/test_business_support_delivery_routes.py tests/audit_p0/test_p0_02_approval_template_no_seed.py` 通过。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js src/pages/DeliveryManagement/__tests__/DeliveryDetail.test.jsx --silent` 通过（29 个用例）。
+  - 备注：直接跑 API TestClient 路由测试时命中当前环境的 `Client.__init__() got an unexpected keyword argument 'app'`，属于 Starlette/TestClient 与 httpx 版本兼容问题；本次用直接函数+真实 DB/审批引擎覆盖核心行为。
+
+## 2026-07-04 继续：MISC-22 alert-rules 写接口权限降级止血
+
+- 修复目标：自定义预警规则 CRUD 目前未接生产扫描调度，不能继续让任意登录用户创建/更新/开关/删除规则；本次只做降级止血，不宣称已补完整调度链路。
+- 现场确认：
+  - `app/api/v1/endpoints/alerts/rules.py` 中模板/规则读、创建、更新、toggle、delete 全部只依赖 `security.get_current_active_user`。
+  - `AlertRuleEngine` 位于 `app/services/alert/rule_engine`，`evaluate_rule` 主要由单测覆盖；生产预警仍更多走各域硬编码规则和专用任务。
+  - 权限种子中缺 `alert:read/alert:manage`，前端 `usePermission.js` 只有 `ALERT.READ`。
+- 红测：
+  - `tests/unit/test_alert_rules_misc22.py` 先失败：读接口未要求 `alert:read`，写接口未要求 `alert:manage`，权限种子和前端常量缺失。
+- 代码面：
+  - 规则模板/规则列表/详情：改为 `security.require_permission("alert:read")`。
+  - create/update/toggle/delete：改为 `security.require_permission("alert:manage")`。
+  - `init_permissions_data.py` 补 `alert:read`、`alert:manage`；`usePermission.js` 补 `ALERT.MANAGE`。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_alert_rules_misc22.py --tb=short --disable-warnings` 先红后绿（4 个用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile app/api/v1/endpoints/alerts/rules.py app/utils/init_permissions_data.py tests/unit/test_alert_rules_misc22.py` 通过。
+  - `ruff check app/api/v1/endpoints/alerts/rules.py app/utils/init_permissions_data.py tests/unit/test_alert_rules_misc22.py` 通过。
+  - `npm exec eslint src/hooks/usePermission.js`（cwd=`frontend`）通过。
+
+## 2026-07-04 继续：MISC-24 legacy ai_strategy 下架止血
+
+- 修复目标：不能继续把 `/ai-strategy` 旧别名/占位 shim 当成可用模块挂到主 API；前端不能继续暴露会调用 5 个 `/ai-strategy/*` 死接口的 AI 战略助手入口。真实战略能力继续保留在 `/strategy`。
+- 现场确认：
+  - `app/api/v1/endpoints/ai_strategy.py` 实际只有兼容导入 fallback，最终返回 `ai_strategy module placeholder`，本地不存在 `app/api/v1/endpoints/ai_strategy/` 子模块。
+  - 主 `api.py` 原来把该占位 shim 挂到 `/ai-strategy`。
+  - 前端 `aiStrategyApi` 调用 `/ai-strategy/analyze/decompose/annual-plan/dept-objectives/apply`，`/strategy/ai-assistant` 路由和侧边栏入口会把用户带到死链。
+  - 历史 API 契约测试还把 `/ai-strategy` 当 `/strategy` 的旧别名覆盖。
+- 红测：
+  - 新增 `tests/unit/test_ai_strategy_misc24.py`，先失败：主路由仍挂 `/ai-strategy`，shim 仍有 placeholder，前端 barrel/route/sidebar/API 仍存在，历史契约测试仍引用 `/ai-strategy`。
+- 代码面：
+  - `api.py` 移除 `/ai-strategy` 挂载。
+  - `ai_strategy.py` 改为未挂载的 501 legacy shim，误挂时提示使用 `/strategy`。
+  - 删除 `frontend/src/services/api/aiStrategy.js` 和 `frontend/src/pages/AIStrategyAssistant/*`，移除 `/strategy/ai-assistant` 路由与侧边栏入口。
+  - API 契约测试中的旧 `/ai-strategy` 别名改回真实 `/strategy`。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_ai_strategy_misc24.py --tb=short --disable-warnings` 先红后绿（3 个用例）。
+  - `rg -n "ai-strategy|aiStrategyApi|aiStrategy.js|AIStrategyAssistant|AI战略助手|strategy/ai-assistant|ai_strategy module placeholder|include_router\\(ai_strategy_router" app frontend/src tests --glob '*.py' --glob '*.js' --glob '*.jsx'` 仅剩 MISC-24 防回归测试自身命中。
+
+## 2026-07-04 继续：MISC-02 资源总览 PMO 页面接真实数据源
+
+- 修复目标：PMO 的 `/pmo/resource-overview` 页面不能继续调用旧 `/resource-overview/` 占位 shim；即使当前库没有资源分配明细，也要展示真实 PMO 汇总和部门资源汇总，而不是吃 placeholder 后看起来恒空白。
+- 现场确认：
+  - `app/api/v1/endpoints/resource_overview.py` 是兼容 fallback，占位返回 `resource_overview module placeholder`。
+  - 主 `api.py` 原来仍挂 legacy `/resource-overview`。
+  - 活接口已存在于 `app/api/v1/endpoints/pmo/cockpit.py` 的 `/pmo/resource-overview`，但响应只含 `total_resources/allocated_resources/by_department`，不含页面甘特需要的 `employees`。
+  - `ResourceOverview.jsx` 原来通过 `resourceOverviewApi.list()` 调旧 `/resource-overview/`，所以 PMO 可达页无法拿到真实数据。
+- 红测：
+  - 新增 `tests/unit/test_resource_overview_misc02.py`：锁旧 `/resource-overview` 不再挂主路由、shim 不再 placeholder、PMO schema 必须有 `employees/avg_utilization/conflicts`、前端 service 必须走 `/pmo/resource-overview`。
+  - `routeContracts.test.js` 新增 PMO resource overview 路由契约，先失败在旧 `/resource-overview/`。
+- 代码面：
+  - `api.py` 移除 legacy `/resource-overview` 挂载；`resource_overview.py` 改为未挂载 501 shim，误挂时提示使用 `/pmo/resource-overview`。
+  - `ResourceOverviewResponse` 补 `total_employees/employees_with_conflicts/total_conflicts/avg_utilization/employees`。
+  - `PmoCockpitService.get_resource_overview()` 从 `pmo_resource_allocation + users + projects` 组装页面 timeline rows，并计算当前负荷和重叠分配冲突。
+  - `resourceOverviewApi.list()` 改走 `/pmo/resource-overview`；`ResourceOverview.jsx` 改本地部门/冲突过滤，并在无 allocation 明细时展示真实资源总数和部门汇总。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_resource_overview_misc02.py --tb=short --disable-warnings` 先红后绿（3 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_pmo_cockpit_service.py -k resource_overview --tb=short --disable-warnings` 通过（2 个用例）。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js --testNamePattern "PMO resource overview" --silent` 先红后绿。
+  - `npm --prefix frontend test -- --run src/pages/__tests__/ResourceOverview.test.jsx --silent` 通过。
+  - 直接调用 `PmoCockpitService(SessionLocal()).get_resource_overview()` 成功返回 `employees` key；当前默认库 `employee_rows=0`，说明页面会显示真实汇总/部门汇总，等待业务表产生 allocation 明细后甘特行自然出现。
+
+## 2026-07-04 继续：MISC-21 项目预算审批接统一审批引擎
+
+- 修复目标：预算不能继续在 `/budgets/{id}/submit` 和 `/budgets/{id}/approve` 内直接翻 `status`；预算总额不能长期与明细合计不一致；前端预算入口不能只停留在项目列表预算字段而完全不碰预算单 API。
+- 现场确认：
+  - `budgets.py` 原来 `submit_budget` 直接 `SUBMITTED`，`approve_budget` 直接 `APPROVED/REJECTED` 并同步项目预算金额，没有 `ApprovalInstance/ApprovalTask`。
+  - 默认 `data/app.db` 中 60 条 `project_budgets` 全部 `total_amount != Σproject_budget_items.budget_amount`。
+  - `BudgetManagement.jsx` 原来只读 `projectApi.list`，`budgetApi` 虽存在但页面不使用。
+- 红测：
+  - 新增 `tests/unit/test_budget_approval_misc21.py`，先失败：缺 `PROJECT_BUDGET` adapter/template，预算路由仍直接翻状态，缺总额重算 helper。
+  - 新增 `tests/unit/test_budget_approval_flow_misc21.py`，验证没有统一审批实例时旧 approve 必须 400；submit 后产生 `PROJECT_BUDGET` 审批实例和待办，approve 后预算/项目金额按明细总额落库。
+- 代码面：
+  - 新增 `ProjectBudgetApprovalAdapter` 并注册 `PROJECT_BUDGET`。
+  - `init_approval_data.py`、审计测试和 `migrations/20260704_project_budget_approval_sqlite.sql` 补 `TPL_PROJECT_BUDGET`、默认流程、财务审批节点。
+  - 预算创建/提交前按明细合计重算 `total_amount`；迁移同时修历史预算总额。
+  - `submit_budget` now 调 `ApprovalEngineService.submit`；`approve_budget` 必须找到活跃统一审批实例和当前用户待办，再调用 `engine.approve/reject`。
+  - `BudgetManagement.jsx` 优先读 `budgetApi.list(projectContext)`；无预算单时保留原项目预算使用率 fallback，避免破坏现有项目成本中心入口。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_budget_approval_misc21.py tests/unit/test_budget_approval_flow_misc21.py tests/audit_p0/test_p0_02_approval_template_no_seed.py --tb=short --disable-warnings` 通过（6 个用例）。
+  - `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -m py_compile ...` 通过。
+  - `ruff check ...` 通过。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js src/pages/__tests__/ProjectManagementDownstreamContext.test.jsx --silent` 通过（34 个用例）。
+  - `npm exec eslint src/pages/BudgetManagement.jsx src/pages/__tests__/ProjectManagementDownstreamContext.test.jsx src/services/api/__tests__/routeContracts.test.js src/services/api/budget.js` 通过。
+  - 迁移 SQL 用 `data/app.db` 备份到临时库执行后，`TPL_PROJECT_BUDGET`、默认流程、`PROJECT_BUDGET_FINANCE_REVIEW` 均存在，预算总额 mismatch 数从 60 降到 0。
+
+## 2026-07-04 继续：MISC-23 文化墙 config/goals/content 链路补齐
+
+- 修复目标：文化墙配置不能继续返回 placeholder；前端 goals 不能再打裸 `/personal-goals` 或跳未注册页面；内容管理既然前端暴露 update，就必须有后端 PUT/DELETE。
+- 现场确认：
+  - `app/api/v1/endpoints/culture_wall_config.py` 原来只是兼容导入 fallback，最终返回 `culture_wall_config module placeholder`。
+  - 后端真实 goals 已在 `/culture-wall/personal-goals`，但 `frontend/src/services/api/admin.js` 原来调用 `/personal-goals`。
+  - `contents.py` 原来只有 list/create/get，缺 `/culture-wall/contents/{id}` 的 PUT/DELETE。
+  - Chairman/GM 工作台点击 GOAL 原来跳 `/personal-goals`，项目里没有该页面路由。
+- 红测：
+  - 新增 `tests/unit/test_culture_wall_misc23.py`，先失败在 config placeholder、contents 缺 PUT/DELETE、前端缺 `contents.delete` 且 goals 路径错误。
+- 代码面：
+  - `culture_wall_config.py` 改为真实 CRUD：list/create/get/update/delete，支持默认配置唯一性、配置名唯一性、默认 content/play 配置回填。
+  - `contents.py` 补统一响应 helper、PUT 更新、DELETE 删除内容并清理阅读记录。
+  - `cultureWallApi.contents` 补 `delete`；`cultureWallApi.goals` 改走 `/culture-wall/personal-goals`。
+  - Chairman/GM 工作台点击文化墙任意项统一跳 `/culture-wall?item={id}`，不再跳不存在的 `/personal-goals`。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_culture_wall_misc23.py` 先红后绿（5 个用例，含临时 SQLite 落库验证）。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js --silent` 通过（31 个用例）。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js src/pages/gm-workstation/__tests__/GeneralManagerWorkstation.test.jsx --silent` 通过；其中 GM 工作台测试文件当前 34 个用例为 skip，未作为行为证明。
+  - `PYTHONPATH=. python -m py_compile app/api/v1/endpoints/culture_wall/contents.py app/api/v1/endpoints/culture_wall_config.py tests/unit/test_culture_wall_misc23.py` 通过。
+  - `PYTHONPATH=. ruff check app/api/v1/endpoints/culture_wall/contents.py app/api/v1/endpoints/culture_wall_config.py tests/unit/test_culture_wall_misc23.py` 通过。
+  - `npm exec eslint -- src/services/api/admin.js src/services/api/__tests__/routeContracts.test.js src/pages/ChairmanWorkstation.jsx src/pages/gm-workstation/GeneralManagerWorkstation.jsx src/pages/gm-workstation/__tests__/GeneralManagerWorkstation.test.jsx`（cwd=`frontend`）通过。
+  - 残留扫描：`culture_wall_config module placeholder` 只剩防回归测试负断言；裸 `/personal-goals` 不再出现在工作台跳转或 API service 中。
+
+## 2026-07-04 继续：HR-22 文化墙发布审核补齐
+
+- 修复目标：文化墙内容不能由创建/编辑人自勾 `is_published=true` 直接上墙；MISC-23 已修配置 CRUD、前端 405 和 goals 前缀，本项补主问题“无审核”。
+- 现场确认：
+  - `CultureWallContentCreate/Update` 都带 `is_published`，旧 `contents.py` 直接按入参写发布状态和发布人。
+  - 列表响应 `is_read` 原来恒 `False`，实际阅读记录表和详情阅读写入链路已存在。
+- 代码面：
+  - 新增 `CultureWallContentReview` schema。
+  - 创建内容时强制 `is_published=False`，不接受作者自发布。
+  - 更新内容时忽略 `is_published` 字段，内容编辑与发布分离。
+  - 新增 `POST /culture-wall/contents/{content_id}/review`，审核通过才设置 `is_published/publish_date/published_by/published_by_name`，驳回则取消发布。
+  - 内容列表批量查询 `CultureWallReadRecord`，返回当前用户真实 `is_read`。
+  - 前端 `cultureWallApi.contents.review()` 接入 `/culture-wall/contents/{id}/review`。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_culture_wall_hr22.py tests/unit/test_culture_wall_misc23.py` 通过（8 个用例，含临时 SQLite 自发布拦截、review 发布、is_read 回归）。
+  - `npm --prefix frontend test -- --run src/services/api/__tests__/routeContracts.test.js --silent` 通过（31 个用例）。
+  - `PYTHONPATH=. python -m py_compile app/api/v1/endpoints/culture_wall/contents.py app/api/v1/endpoints/culture_wall_config.py app/schemas/culture_wall.py tests/unit/test_culture_wall_hr22.py tests/unit/test_culture_wall_misc23.py` 通过。
+  - `PYTHONPATH=. ruff check app/api/v1/endpoints/culture_wall/contents.py app/api/v1/endpoints/culture_wall_config.py app/schemas/culture_wall.py tests/unit/test_culture_wall_hr22.py tests/unit/test_culture_wall_misc23.py` 通过。
+  - `npm exec eslint -- src/services/api/admin.js src/services/api/__tests__/routeContracts.test.js`（cwd=`frontend`）通过。
+  - 残留扫描：旧 `is_published=content_data.is_published` / `published_by=... if content_data.is_published` 不再存在；`review` 路由和前端调用均可搜到。
+
+## 2026-07-04 继续：PRE-07 报价更新后税额/折扣重算
+
+- 修复目标：`update_quotation` 修改明细时，不能只改 `subtotal` 却沿用旧税额/旧折扣绝对值；JSON 字段也不能塞 `Decimal` 导致提交失败。
+- 现场确认：
+  - `generate_quotation()` 创建分支会把报价项中的 `Decimal` 转 `float`，但 `update_quotation()` 原来直接 `[item.dict()]` 写 JSON。
+  - `update_quotation()` 原来只有传 `tax_rate/discount_rate` 时才改税额/折扣；只改明细时 `tax/discount` 不随新小计变化。
+- 代码面：
+  - 更新前先从旧 `tax/subtotal`、`discount/subtotal` 计算有效税率和折扣率。
+  - 明细变更时用旧有效税率/折扣率重算 `tax/discount/total`；显式传新税率/折扣率时优先用新值。
+  - 新增 `_serialize_items()` 复用创建分支的 `Decimal -> float` JSON 序列化规则。
+- 验证：
+  - 新增 `tests/unit/test_presale_ai_quotation_pre07.py`，先红后绿：只改明细时 `100→200` 后税额 `13→26`、折扣 `5→10`、总额 `216`；同时覆盖显式税率/折扣率覆盖场景。
+  - `PYTHONPATH=. pytest -q tests/unit/test_presale_ai_quotation_pre07.py tests/unit/test_presale_ai_quotation_service_coverage.py tests/unit/test_presale_requirement_bridge.py` 通过（10 个用例）。
+  - `PYTHONPATH=. python -m py_compile app/services/presale/presale_ai_quotation_service.py tests/unit/test_presale_ai_quotation_pre07.py` 通过。
+  - `PYTHONPATH=. ruff check app/services/presale/presale_ai_quotation_service.py tests/unit/test_presale_ai_quotation_pre07.py` 通过。
+
+## 2026-07-04 继续：PRE-05/PRE-06 三档报价阶梯与静态兜底修复
+
+- 修复目标：三档报价不能因为 AI 独立生成和折扣叠加出现 `BASIC > STANDARD`；AI 失效时静态兜底也不能继续输出 ERP/进销存/移动端 APP 这种非本业务报价。
+- 现场确认：
+  - `generate_three_tier_quotations()` 原来逐档生成后直接落库，没有 basic/standard/premium 跨档金额校验。
+  - `_generate_standard_items()`、`_generate_premium_items()` 的静态回退仍是 ERP 软件报价；在真实非标自动化场景里领域错配。
+- 代码面：
+  - 新增 `_ensure_minimum_subtotal()`、`_items_subtotal()`、价格复制/四舍五入 helper。
+  - 标准档生成后要求小计不少于基础档 `1.18x`，高级档生成后要求小计不少于标准档 `1.22x`，即使 AI 返回低价明细也按比例抬升明细单价，避免总价阶梯倒挂。
+  - 静态兜底替换为非标自动化检测工作站、夹治具与安全防护、视觉检测、数据采集追溯、机器人/自动上下料、现场调试与验收培训、质保驻场支持等明细。
+- 验证：
+  - 新增 `tests/unit/test_presale_ai_quotation_pre05_06.py`，先红后绿：模拟 AI 把标准/高级报低时，最终报价仍满足 `basic.total < standard.total < premium.total`；强制静态兜底时不含 ERP/进销存/财务/人力资源/移动端 APP。
+  - `PYTHONPATH=. pytest -q tests/unit/test_presale_ai_quotation_pre05_06.py tests/unit/test_presale_ai_quotation_pre07.py tests/unit/test_presale_ai_quotation_service_coverage.py tests/unit/test_presale_requirement_bridge.py` 通过（12 个用例）。
+  - `PYTHONPATH=. python -m py_compile app/services/presale/presale_ai_quotation_service.py tests/unit/test_presale_ai_quotation_pre05_06.py tests/unit/test_presale_ai_quotation_pre07.py` 通过。
+  - `PYTHONPATH=. ruff check app/services/presale/presale_ai_quotation_service.py tests/unit/test_presale_ai_quotation_pre05_06.py tests/unit/test_presale_ai_quotation_pre07.py` 通过。
+  - `git diff --check` 通过。
+
+## 2026-07-04 继续：PRE-08/PRE-09 商机 AI mock 回退与需求增量回填
+
+- 修复目标：`ai-enrich-requirement` 和 `ai-quote-estimate` 不能把 AIClientService 的 `*-mock` 降级响应当成真实 AI 结果返回 200；需求增强不能用空字段整行覆盖人工已填内容。
+- 现场确认：
+  - `ai_quote_estimate()` 原来拿到 AI 响应后直接 `_extract_json()`，只要 JSON 能解析就 200 返回。
+  - `ai_enrich_requirement()` 原来同样不看 `model`，且需求表更新时固定写 `product_object/ct/interface/site/acceptance/safety` 六列，AI 空字符串会清掉已有人工值。
+- 代码面：
+  - 新增 `_raise_if_mock_ai_response()`，对 `model.endswith("-mock")` 的 AI 响应统一返回 502，当前接入报价估算和需求完善两个端点。
+  - 新增 `_clean_ai_text()`，将 AI 空字符串和 `"null"` 当作无新值。
+  - 需求表 upsert 改为增量：已有记录只更新 AI 非空字段；无记录时插入清洗后的字段，空值保持 `NULL`。
+  - 响应里的 `requirement` 改返回合并后的当前字段，而不是仅返回本次 AI 原始字段。
+- 验证：
+  - 新增 `tests/unit/test_sales_opportunity_ai_mock_guard_pre08_09.py`，先红后绿：报价估算 `-mock` 返回 502；需求完善 `-mock` 返回 502 且不改人工字段；正常非 mock 部分字段返回时只合并非空字段。
+  - `PYTHONPATH=. pytest -q tests/unit/test_sales_opportunity_ai_mock_guard_pre08_09.py tests/unit/test_presale_ai_mock_guard.py tests/unit/test_presale_requirement_bridge.py` 通过（14 个用例）。
+  - `PYTHONPATH=. python -m py_compile app/api/v1/endpoints/sales/opportunity_workflow.py tests/unit/test_sales_opportunity_ai_mock_guard_pre08_09.py` 通过。
+  - `PYTHONPATH=. ruff check app/api/v1/endpoints/sales/opportunity_workflow.py tests/unit/test_sales_opportunity_ai_mock_guard_pre08_09.py` 通过。
+
+## 2026-07-04 继续：PRE-10/PRE-11 状态校正
+
+- PRE-10：`tests/unit/test_presale_requirement_bridge.py` 在本轮 PRE-08/PRE-09 周边回归中再次通过，tracker 从“已修待验”校正为“已验证”。
+- PRE-11：代码已存在 mock 守卫和 BOM 真实价格/待询价逻辑，`tests/unit/test_presale_ai_mock_guard.py` 在本轮回归中通过，tracker 从“待修”校正为“已验证”；本轮未新增 PRE-11 业务代码。
+
+## 2026-07-04 继续：PRE-12/PRE-13 导出假成功止损
+
+- PRE-12 现场对账：
+  - 审计提到的 `presale_ai_export_service.py` / `presale_ai_routes.py` 源文件已不存在，只剩历史 pycache/跳过式旧测试引用。
+  - `app/api/v1/api.py` 明确下线老 AI 方案栈：`presale_ai_routes` 不再注册，方案统一走 `/presale/proposals`。
+  - 因此本轮未重建旧 PDF/Word/Excel 导出，只把 tracker 标为“已验证-旧链路下线”；后续若新方案栈要导出，应在 `/presale/proposals` 体系下重新设计，不要复活旧假成功路由。
+- PRE-13 代码面：
+  - `/presale/ai/export-report` 原来只拼 `file_url` 且 `file_size=0`，没有文件生成和下载路由。
+  - 新增 CSV/XLSX/PDF 文件生成 helper，导出目录为 `settings.UPLOAD_DIR/presale_ai_reports`。
+  - 返回真实 `file_name/file_size/file_url`；新增 `GET /presale/ai/downloads/{file_name}`，带文件名/path 安全检查。
+- 验证：
+  - 新增 `tests/unit/test_presale_ai_export_report_pre13.py`，先红后绿：导出 CSV 后文件真实存在、`file_size>0`、内容含 usage 记录，下载路由返回同一路径。
+  - `PYTHONPATH=. pytest -q tests/unit/test_presale_ai_export_report_pre13.py tests/unit/test_presale_ai_integration_coverage.py` 通过（2 个用例）。
+  - `PYTHONPATH=. python -m py_compile app/api/v1/presale_ai_integration.py tests/unit/test_presale_ai_export_report_pre13.py` 通过。
+  - `PYTHONPATH=. ruff check app/api/v1/presale_ai_integration.py tests/unit/test_presale_ai_export_report_pre13.py` 通过。
+
+## 2026-07-04 继续：PRE-14 售前工单状态字典统一
+
+- 修复目标：售前工单不能同时存在 `PROCESSING` 和 `IN_PROGRESS` 两套“处理中”，`REVIEW` 也不能作为新建方案评审工单的死路状态。
+- 代码面：
+  - `TicketStatusEnum` 增加规范值 `IN_PROGRESS`，保留 `PROCESSING/REVIEW` 作为历史兼容。
+  - `tickets/utils.py` 新增 `canonical_ticket_status()` 和 `expand_ticket_status_filter()`：响应层把 `PROCESSING` 归一为 `IN_PROGRESS`、`REVIEW` 归一为 `PENDING`；查询 `status=IN_PROGRESS/PENDING` 时同时命中历史别名。
+  - `tickets/crud.py` 新建 `SOLUTION_REVIEW` 工单 now 直接 `PENDING`，不再落 `REVIEW`；列表筛选使用扩展状态集合。
+  - `tickets/operations.py` 接单和进度更新按规范状态判断，历史 `REVIEW` 可作为待接单接单，历史 `PROCESSING` 可继续更新进度并落新状态 `IN_PROGRESS`。
+  - 看板/分析/任务管理活跃状态集合加入 `IN_PROGRESS`。
+  - 新增 `migrations/20260704_presale_ticket_status_normalization_sqlite.sql` 清洗存量 `PROCESSING→IN_PROGRESS`、`REVIEW→PENDING`。
+- 验证：
+  - 新增 `tests/unit/test_presale_ticket_status_pre14.py`，先红后绿：`PROCESSING` 可按 `IN_PROGRESS` 查询和更新；`REVIEW` 响应为 `PENDING` 且可接单；新建 `SOLUTION_REVIEW` 返回 `PENDING`。
+  - `PYTHONPATH=. pytest -q tests/unit/test_presale_ticket_status_pre14.py` 通过（3 个用例）。
+  - `PYTHONPATH=. python -m py_compile app/models/presale/core.py app/api/v1/endpoints/presale/tickets/utils.py app/api/v1/endpoints/presale/tickets/crud.py app/api/v1/endpoints/presale/tickets/operations.py app/api/v1/endpoints/presale/dashboard.py app/api/v1/endpoints/presale/analytics.py app/api/v1/endpoints/presale/task_management.py tests/unit/test_presale_ticket_status_pre14.py` 通过。
+  - `PYTHONPATH=. ruff check app/models/presale/core.py app/api/v1/endpoints/presale/tickets/utils.py app/api/v1/endpoints/presale/tickets/crud.py app/api/v1/endpoints/presale/tickets/operations.py app/api/v1/endpoints/presale/dashboard.py app/api/v1/endpoints/presale/analytics.py app/api/v1/endpoints/presale/task_management.py tests/unit/test_presale_ticket_status_pre14.py` 通过。
+  - 迁移 SQL 在临时 SQLite 库实测通过：结果为 `IN_PROGRESS|1`、`PENDING|2`。
+  - API 级 `tests/api/test_presales_contract_api.py -k ticket_update_and_complete_accept_json_body` 未作为通过证据：本地 TestClient/httpx 版本不兼容，fixture 初始化时报 `Client.__init__() got an unexpected keyword argument 'app'`，未进入业务断言。
+
+## 2026-07-04 继续：PRE-15 售前移动端假实现下线
+
+- 修复目标：`/presale-mobile` 整域不能继续暴露硬编码 AI 问答、STT/TTS、拜访准备、快速估价和客户快照；前端无任何消费，属于僵尸假实现。
+- 现场确认：
+  - `frontend/src` 无 `/presale-mobile` 调用；生产移动端页面走 `/mobile/*`。
+  - `presale_mobile_service.py` 仍含大量模拟返回，但仅通过 `api.py` 的 `/presale-mobile` 挂载暴露。
+- 代码面：
+  - `app/api/v1/api.py` 移除 `/presale-mobile` router include，改为显式下线注释。
+  - 保留服务/endpoint 源码不删除，避免影响旧 import 测试；后续若要做实，应在真实移动端产品入口重新设计 AI/语音/估价链路。
+- 验证：
+  - 新增 `tests/unit/test_presale_mobile_downline_pre15.py`，先红后绿：`api.py` 不再包含 `prefix="/presale-mobile"` 或 `tags=["presale-mobile"]`。
+  - `PYTHONPATH=. pytest -q tests/unit/test_presale_mobile_downline_pre15.py` 通过（1 个用例）。
+  - `PYTHONPATH=. python -m py_compile app/api/v1/api.py tests/unit/test_presale_mobile_downline_pre15.py` 通过。
+  - `PYTHONPATH=. ruff check app/api/v1/api.py tests/unit/test_presale_mobile_downline_pre15.py` 通过。
+
+## 2026-07-04 继续：PRE-17/PRE-18 状态校正
+
+- `PYTHONPATH=. pytest -q tests/unit/test_text_similarity_retrieval.py` 通过（4 个用例），覆盖中文 bigram 相似度、模板检索、知识库相似度、相似案例粗召回+精排。
+- tracker 将 PRE-17 从“已修待验(短期)”校正为“已验证(短期)”，PRE-18 从“已修待验”校正为“已验证”。
+
+## 2026-07-04 继续：PRE-20 AI 工作流空壳止损
+
+- 修复目标：`/presale/ai/workflow/start` 不能在没有执行器的情况下把第一步置为 `RUNNING`，让用户误以为工作流正在自动执行。
+- 代码面：
+  - `PresaleAIIntegrationService.start_workflow(auto_run=True)` now 直接 `ValueError`，不创建任何日志。
+  - `auto_run=False` 保留为“创建待执行计划”：5 个步骤均为 `PENDING`，用于后续真实执行器接入。
+  - API 层将该 `ValueError` 转为 HTTP 501，明确表达“自动运行执行器未实现”。
+- 验证：
+  - 新增 `tests/unit/test_presale_ai_workflow_pre20.py`，先红后绿：`auto_run=True` 拒绝且不落库；`auto_run=False` 创建 5 条全 `PENDING` 计划，状态查询为 pending/0%。
+  - `PYTHONPATH=. pytest -q tests/unit/test_presale_ai_workflow_pre20.py tests/unit/test_presale_ai_integration_coverage.py tests/unit/test_presale_ai_export_report_pre13.py` 通过（4 个用例）。
+  - `PYTHONPATH=. python -m py_compile app/services/presale/presale_ai_integration.py app/api/v1/presale_ai_integration.py tests/unit/test_presale_ai_workflow_pre20.py` 通过。
+  - `PYTHONPATH=. ruff check app/services/presale/presale_ai_integration.py app/api/v1/presale_ai_integration.py tests/unit/test_presale_ai_workflow_pre20.py` 通过。
+
+## 2026-07-04 继续：PRE-24 遗留脏数据字典收敛
+
+- 修复目标：`presale_ai_quotation.quotation_type` 存量非法值不能导致历史列表 ORM Enum 加载崩溃；`opportunities.assessment_status` 不能继续同时写/查 `REQUESTED`、`ASSESSMENT_COMPLETED` 和规范状态。
+- 现场确认：
+  - `data/app.db.presale_ai_quotation.quotation_type` 含 `AUTO/MANUAL/NORMAL`，以及合法的 `BASIC/STANDARD/PREMIUM`（SQLAlchemy Enum 实际存大写 name）。
+  - `data/app.db.opportunities.assessment_status` 为 `ASSESSMENT_COMPLETED(51)`、`COMPLETED(4)`、空值 191。
+  - 单条报价读取已有 PRE-07 raw SQL 兼容；历史列表仍 ORM `.all()`，碰到非法 Enum 会 `LookupError`。
+- 代码面：
+  - 新增 `app/services/presale/assessment_status.py`：统一 `REQUESTED→PENDING`、`ASSESSMENT_IN_PROGRESS→IN_PROGRESS`、`ASSESSMENT_COMPLETED→COMPLETED`，并提供未完成/已完成 SQL 谓词。
+  - `request_presale_support` 写入侧改为 `PENDING`，不再新增 `REQUESTED`。
+  - 销售工作流预警与 AI Copilot “我的一天”缺评统计改用统一未完成评估谓词，兼容旧 `REQUESTED` 和规范 `PENDING/IN_PROGRESS`。
+  - `AIQuotationGeneratorService.get_quotation_history()` 改 raw SQL 读取并复用归一化响应转换，避免非法 `AUTO/MANUAL/NORMAL` 触发 ORM Enum `LookupError`。
+  - 新增 `migrations/20260704_presale_legacy_dictionary_cleanup_sqlite.sql`，清洗报价档位与商机评估状态；未直接改真实 `data/app.db`。
+- 验证：
+  - 新增 `tests/unit/test_presale_legacy_dictionary_pre24.py`，先红后绿：报价历史非法类型归一为 `standard`；申请售前支持落 `PENDING`；缺评统计包含 `REQUESTED/PENDING/IN_PROGRESS/ASSESSMENT_IN_PROGRESS`，排除 `COMPLETED/ASSESSMENT_COMPLETED`。
+  - `PYTHONPATH=. pytest -q tests/unit/test_presale_legacy_dictionary_pre24.py` 通过（3 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_presale_legacy_dictionary_pre24.py tests/unit/test_sales_opportunity_ai_mock_guard_pre08_09.py tests/unit/test_presale_ai_quotation_pre07.py tests/unit/test_presale_ai_quotation_pre05_06.py` 通过（10 个用例）。
+  - `python -m py_compile app/services/presale/assessment_status.py app/services/presale/presale_ai_quotation_service.py app/api/v1/presale_ai_quotation.py app/api/v1/endpoints/sales/opportunity_workflow.py app/api/v1/endpoints/ai_copilot.py` 通过。
+  - `ruff check app/services/presale/assessment_status.py app/services/presale/presale_ai_quotation_service.py app/api/v1/presale_ai_quotation.py app/api/v1/endpoints/sales/opportunity_workflow.py app/api/v1/endpoints/ai_copilot.py tests/unit/test_presale_legacy_dictionary_pre24.py` 通过。
+  - 迁移 SQL 在临时 SQLite 库实测通过：`AUTO/MANUAL/NORMAL/空值→STANDARD`，`REQUESTED→PENDING`，`ASSESSMENT_IN_PROGRESS→IN_PROGRESS`，`ASSESSMENT_COMPLETED→COMPLETED`，空评估状态保持 `NULL`。
+
+## 2026-07-04 继续：PRE-04 立项关卡拒绝自动空评估
+
+- 修复目标：售前工单/方案完成时不能自动补一条 `COMPLETED + 推荐立项` 空评估就满足 PMO 立项关卡；立项必须依赖真实技术评估内容。
+- 现场确认：
+  - `complete_presale_source_assessment()` 找不到评估时会自动创建 `status=COMPLETED`、`decision=推荐立项`、`evaluated_at=now` 的空评估。
+  - `submit_initiation()` 原来只检查交接包里有 `technical_assessment.current` 且 status 为 `COMPLETED`，没有检查评分/维度/风险/条件等实际内容。
+- 代码面：
+  - `TechnicalAssessment` 新增 `auto_generated` 字段；SQLite runtime schema patch 会自动补列。
+  - 自动补建评估 now `auto_generated=True`；真实 `TechnicalAssessmentService.evaluate()` 完成评估时标回 `False`。
+  - 交接包 `_build_technical_assessment_payload()` 输出 `auto_generated`。
+  - PMO 关卡新增实质内容判定：`auto_generated=True` 直接不通过；非自动评估也必须至少有 `total_score/dimension_scores/item_scores/risks/similar_cases/conditions/ai_analysis/veto_rules` 之一。
+  - 新增 `migrations/20260704_presale_assessment_auto_generated_sqlite.sql`：补列并把历史 `COMPLETED + 推荐立项 + 无评分/无维度/无风险/无内容` 记录标成占位评估；未直接改真实 `data/app.db`。
+- 验证：
+  - 新增 `tests/unit/test_presale_assessment_completion_pre04.py`，先红后绿：自动补建评估必须 `auto_generated=True`。
+  - `test_pmo_initiation_service.py` 新增红绿用例：`COMPLETED` 但 `auto_generated=True` 且无实质内容时，提交立项抛 `缺少实际评估内容`。
+  - `PYTHONPATH=. pytest -q tests/unit/test_pmo_initiation_service.py tests/unit/test_presale_assessment_completion_pre04.py tests/unit/test_technical_assessment_service.py tests/unit/test_presale_ticket_status_pre14.py` 通过（71 个用例）。
+  - `python -m py_compile app/models/sales/technical_assessment.py app/models/base.py app/services/presale_assessment_completion.py app/services/technical_assessment_service.py app/services/project_workspace_service.py app/services/pmo_initiation/service.py app/api/v1/endpoints/sales/assessments/assessments.py app/schemas/sales/assessments.py tests/unit/test_presale_assessment_completion_pre04.py tests/unit/test_pmo_initiation_service.py` 通过。
+  - `ruff check app/models/sales/technical_assessment.py app/models/base.py app/services/presale_assessment_completion.py app/services/technical_assessment_service.py app/services/project_workspace_service.py app/services/pmo_initiation/service.py app/api/v1/endpoints/sales/assessments/assessments.py app/schemas/sales/assessments.py tests/unit/test_presale_assessment_completion_pre04.py tests/unit/test_pmo_initiation_service.py` 通过。
+  - 迁移 SQL 在临时 SQLite 库实测：历史空评估 `auto_generated=1`，有真实分数的完成评估和 PENDING 不变。
+
+## 2026-07-04 继续：PROJ-02 立项审批必须指定 PM
+
+- 修复目标：立项审批通过时不能在未指定项目经理的情况下把申请置为 `APPROVED`，否则会出现“已批准但未创建项目”的断链状态。
+- 现场确认：
+  - `PmoInitiationService.approve_initiation()` 原逻辑先写 `status=APPROVED`，仅当 `approved_pm_id` 存在时才调用 `_create_project_from_initiation()`。
+  - 前端 `ReviewInitiationDialog` 有“暂不指定”选项，空 PM 时仍可提交审批通过。
+- 代码面：
+  - `approve_initiation()` now 在任何状态写入前检查 `approved_pm_id`，缺失则 `ValueError("审批通过必须指定项目经理，否则不会创建项目")`，不 add/commit。
+  - 前端审批弹窗 now 空 PM 时 alert `审批通过前必须指定项目经理`，不调用 `onSubmit`；下拉占位改为 `请选择项目经理`。
+- 验证：
+  - `tests/unit/test_pmo_initiation_service.py` 将旧“无 PM 可审批通过”测试改为红绿回归：缺 PM 必须抛错，状态保持 `SUBMITTED`，不提交 DB。
+  - 新增 `frontend/src/pages/InitiationManagement/components/__tests__/ReviewInitiationDialog.test.jsx`，覆盖空 PM 阻断和选中 PM 正常提交。
+  - `PYTHONPATH=. pytest -q tests/unit/test_pmo_initiation_service.py` 通过（37 个用例）。
+  - `npm --prefix frontend test -- --run src/pages/InitiationManagement/components/__tests__/ReviewInitiationDialog.test.jsx --silent` 通过（2 个用例）。
+  - `python -m py_compile app/services/pmo_initiation/service.py tests/unit/test_pmo_initiation_service.py` 通过。
+  - `ruff check app/services/pmo_initiation/service.py tests/unit/test_pmo_initiation_service.py` 通过。
+  - `npm exec eslint src/pages/InitiationManagement/components/ReviewInitiationDialog.jsx src/pages/InitiationManagement/components/__tests__/ReviewInitiationDialog.test.jsx`（cwd=`frontend`）通过。
+
+## 2026-07-04 继续：PROJ-03 合同立项带真实字段
+
+- 修复目标：合同列表/合同详情发起 PMO 立项时不能直接后台创建一条 `由合同 xxx 发起立项` 的占位需求；应把合同真实需求、金额、客户、编号、交付日期带到立项表单，由人确认后创建。
+- 现场确认：
+  - `ContractManagement.handleCreateProject()` 原来查重后直接调用 `pmoApi.initiations.create()`，`requirement_summary` 固定拼占位文本。
+  - `ContractDetail.handleCreateInitiation()` 同样直接创建占位立项。
+  - `InitiationManagement` 只识别 `handoff=presale`，不识别 `handoff=contract`。
+- 代码面：
+  - 新增 `buildContractInitiationPath()`，统一把合同字段映射为 `/pmo/initiations?handoff=contract...`，优先带出真实 `requirement_summary/requirement_description/scope/technical_requirements`，不再生成占位需求。
+  - 合同列表 normalize now 保留需求、交付日期、金额、客户、方案等立项交接字段。
+  - 合同列表页/详情页 now 保留“已有立项则打开详情”，没有已有立项则跳转新建立项表单，不直接创建草稿。
+  - 立项页 now 识别 `handoff=contract` 并预填字段；合同交接不调用售前 workbench 上下文。
+- 验证：
+  - 新增/更新前端红绿用例：合同列表入口、合同详情入口、立项页 contract handoff 预填。
+  - `npm --prefix frontend test -- --run src/pages/__tests__/ContractManagement.test.jsx src/pages/__tests__/ContractDetail.test.jsx src/pages/__tests__/InitiationManagement.test.jsx --silent` 通过（14 个用例）。
+  - `npm exec eslint src/pages/ContractManagement.jsx src/pages/ContractDetail.jsx src/pages/InitiationManagement/index.jsx src/pages/__tests__/ContractManagement.test.jsx src/pages/__tests__/ContractDetail.test.jsx src/pages/__tests__/InitiationManagement.test.jsx src/utils/pmoInitiations.js`（cwd=`frontend`）通过。
+  - `git diff --check` 通过。
+
+## 2026-07-04 继续：PROJ-04 项目阶段/状态禁止跨级直跳
+
+- 修复目标：项目阶段和状态不能通过 direct PUT 或 `stage-advance` 从 `S1→S9`、`ST01→ST30` 这类跨级直跳绕过阶段门。
+- 现场确认：
+  - `projects/status/status_crud.py` direct PUT 只校验枚举值，不校验旧值到新值是否合法。
+  - `stage_advance_service.validate_stage_advancement()` 原来允许任意向前跳，只拒绝倒退/相同阶段。
+  - direct PUT 历史日志回调参数名与 `StatusUpdateService` 不匹配，导致更新成功但日志回调报 warning。
+- 代码面：
+  - direct PUT 阶段/状态更新 now 增加顺序流转守卫：当前值必须有效，且只能转换到下一阶段/下一状态；相同值仍按“未变化”处理。
+  - `stage-advance` now 只能推进到相邻下一阶段，`S1→S9`、`S2→S5` 均返回 400。
+  - 修复 `history_cb(..., reason=None)` 参数名，恢复 direct PUT 状态日志写入。
+- 验证：
+  - 新增 `tests/unit/test_project_status_guard_proj04.py`，先红后绿覆盖 `S1→S9`、`ST01→ST30` 拒绝且原值不变。
+  - 更新旧测试预期：跨级跳转不再视为合法推进。
+  - `PYTHONPATH=. pytest -q tests/unit/test_project_status_guard_proj04.py tests/unit/test_stage_advance_service.py tests/unit/test_service_edge_cases.py tests/unit/test_state_machines_depth.py` 通过（124 个用例）。
+  - `PYTHONPATH=. ruff check app/api/v1/endpoints/projects/status/status_crud.py app/services/stage_advance_service.py tests/unit/test_project_status_guard_proj04.py tests/unit/test_stage_advance_service.py tests/unit/test_service_edge_cases.py` 通过。
+  - `PYTHONPATH=. python -m py_compile app/api/v1/endpoints/projects/status/status_crud.py app/services/stage_advance_service.py tests/unit/test_project_status_guard_proj04.py tests/unit/test_stage_advance_service.py tests/unit/test_service_edge_cases.py` 通过。
+  - API TestClient 节点受当前本地 `starlette TestClient` / `httpx` 版本不兼容阻断，报 `Client.__init__() got an unexpected keyword argument 'app'`，未作为本次逻辑失败处理。
+
+## 2026-07-04 继续：PROJ-05 项目 status 三套词汇表清洗
+
+- 修复目标：`projects.status` 不再混用 `COMPLETED/EXECUTING/archived/STxx`；读侧兼容旧数据，写侧收口到 `stage + STxx`，归档只使用 `is_archived`。
+- 现场确认：
+  - 本地 `data/app.db` 只读统计存在 `COMPLETED=45`、`EXECUTING=35`、`ST01=24`，旧完成行均有 `actual_end_date`。
+  - `archive_project()` 原来把 `status` 写成 `archived`；`ai_delivery` 和部分定时/报表/成本入口仍按 `EXECUTING/COMPLETED` 或误把 `S4/S5` 写在 `status` 字段上过滤。
+- 代码面：
+  - 新增 `app/services/project_status_normalization.py`：统一提供旧状态归一化、打开项目、交付项目、已完成、归档、取消和状态筛选 helper。
+  - 项目列表/导出/QueryOptimizer/KPI/报表中心/PMO cockpit/项目统计/定时任务/AI 交付/AI 产能/预算/成本超支/延期/排产/资源冲突/历史复用等入口改用 helper 或 `Project.stage`。
+  - 归档接口 now 只写 `is_archived=True/False`，保留原 `status`，状态日志 old/new status 均记录真实旧状态。
+  - 新增 `migrations/20260704_project_status_normalization_sqlite.sql`：`COMPLETED/CLOSED/DONE/FINISHED → S9/ST30`；`EXECUTING/IN_PROGRESS/ACTIVE/ARCHIVED/空值 → 当前 stage 对应 STxx`；旧 `ARCHIVED` 同时置 `is_archived=1`。
+- 验证：
+  - 新增 `tests/unit/test_project_status_normalization_proj05.py`，覆盖旧状态归一化、open/delivery 过滤、旧 status 参数兼容、归档不污染 status。
+  - 迁移 SQL 在临时 SQLite 库实测通过：`COMPLETED/S3→ST30/S9/H4`，`EXECUTING/S5→ST10/S5`，`archived/S4→ST07/S4/is_archived=1`，`NULL/S2→ST03/S2`。
+  - `PYTHONPATH=. pytest -q tests/unit/test_project_status_normalization_proj05.py` 通过（4 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_project_status_normalization_proj05.py tests/unit/test_project_status_guard_proj04.py tests/services/test_otd_scan_service.py tests/unit/test_analysis_reports_rpt03.py tests/unit/test_project_monthly_report_rpt02.py tests/unit/test_resource_overview_misc02.py` 通过（29 个用例）。
+  - `PYTHONPATH=. pytest -q tests/services/test_query_optimizer.py tests/unit/test_cache_service.py` 通过（49 个通过，1 个 Redis 依赖按原配置跳过）。
+  - `PYTHONPATH=. ruff check ...`（PROJ-05 涉及 Python 文件 + 新测试）通过；`PYTHONPATH=. python -m py_compile ...` 通过；`git diff --check` 通过。
+
+## 2026-07-04 继续：PROJ-07 阶段门旁路收口
+
+- 修复目标：S8→S9 必须经过阶段门；终验收通过不能直接写项目 `stage=S9` 绕过回款率门；superuser 不能未显式跳过就自动免检。
+- 现场确认：
+  - `perform_gate_check()` 在 `skip_gate_check=False` 时仍对 `current_user_is_superuser=True` 直接返回通过。
+  - `trigger_warranty_period()` 在 FINAL 验收通过时直接 `project.stage="S9"`、`actual_end_date=today`，不看 S8→S9 的回款率/终验收/设备交付门。
+  - 旧 async `acceptance/acceptance_service.py::_update_project_to_warranty()` 也会直接把 `S8/ST08` 写成 `S9/ST30`。
+  - 扩展回归时发现 `stage_transition_checks.execute_stage_transition()` 仍导入旧路径 `app.api.v1.endpoints.projects.utils.check_gate`，在当前包结构/测试替身下会断，影响自动阶段流转链路。
+- 代码面：
+  - `perform_gate_check()` now 只有 `skip_gate_check=True` 且 superuser 才跳门，并返回 `{"skipped": True, "reason": "管理员显式跳过阶段门校验"}`；superuser 未显式跳过时同普通用户一样执行真实 gate。
+  - `advance_project_stage()` now 对显式跳门的响应保留 skip 结果，并把 `管理员显式跳过阶段门校验` 写进阶段变更日志原因。
+  - `trigger_warranty_period()` now 先调用 `check_auto_stage_transition_after_acceptance()`；若 S8→S9 自动流转未通过且项目仍非 S9，则不写实际结束日期、不更新机台 S9。
+  - 旧 async 验收服务 now 只在项目已是 S9/ST30 时补质保字段，不再负责推进阶段。
+  - `stage_transition_checks` now 解析真实 `projects.gate_checks.check_gate`，同时兼容旧测试 patch 路径。
+- 验证：
+  - `tests/unit/test_stage_advance_service.py` 新增红绿：superuser 未显式 skip 时必须执行 gate；显式 skip 返回跳门痕迹。
+  - `tests/unit/test_acceptance_completion_service.py` 新增红绿：终验收自动流转被回款门挡住时项目保持 S8。
+  - `tests/unit/test_acceptance_service.py` 新增红绿：旧 async 服务不能 S8→S9 直推，已入 S9 时才补质保字段。
+  - `PYTHONPATH=. pytest -q tests/unit/test_stage_advance_service.py tests/unit/test_acceptance_completion_service.py tests/unit/test_acceptance_service.py tests/unit/test_stage_transition_checks.py tests/unit/test_stage_transition_checks_service.py tests/unit/test_stage_transition_service.py tests/unit/test_project_status_guard_proj04.py` 通过（99 个通过，8 个按现有测试数据条件跳过）。
+  - `PYTHONPATH=. ruff check app/services/stage_advance_service.py app/api/v1/endpoints/projects/status/stages.py app/services/acceptance_completion_service.py app/services/acceptance/acceptance_service.py app/services/stage_transition_checks.py tests/unit/test_stage_advance_service.py tests/unit/test_acceptance_completion_service.py tests/unit/test_acceptance_service.py` 通过。
+  - `PYTHONPATH=. python -m py_compile app/services/stage_advance_service.py app/api/v1/endpoints/projects/status/stages.py app/services/acceptance_completion_service.py app/services/acceptance/acceptance_service.py app/services/stage_transition_checks.py tests/unit/test_stage_advance_service.py tests/unit/test_acceptance_completion_service.py tests/unit/test_acceptance_service.py` 通过；`git diff --check` 通过。
+
+## 2026-07-04 继续：PROJ-08 任务进度加权汇总接线
+
+- 修复目标：`aggregate_task_progress()` 不能把项目进度写成任务进度简单平均；应复用现有按 `estimated_hours` 加权的项目进度聚合口径。
+- 现场确认：
+  - `ProgressAggregationService.aggregate_project_progress()` 已经按 `estimated_hours` 计算 `overall_progress`。
+  - `aggregate_task_progress()` 原来仍用 `sum(progress) / count(task)` 写回 `Project.progress_pct`，导致 1 小时任务和 9 小时任务等权。
+  - 同函数阶段聚合仍看旧的 `TaskUnified.stage`，当前真实字段是 `project_stage`。
+- 代码面：
+  - `aggregate_task_progress()` now 调用 `ProgressAggregationService.aggregate_project_progress(project_id, db)["overall_progress"]` 写回项目进度。
+  - 阶段聚合 now 用 `TaskUnified.project_stage` 过滤，并按 `estimated_hours` 加权；当总权重为 0 时回退平均值，避免除零。
+  - 进度分支测试同步修正到当前 `TaskUnified`/`TaskForecastItem` schema，整份分支测试可直接运行。
+- 验证：
+  - 新增红绿用例：1 小时 100% + 9 小时 0% 的项目，`aggregate_task_progress()` 必须写回 10.0，不是 50.0。
+  - `PYTHONPATH=. pytest -q tests/services/test_progress_service.py tests/services/test_progress_service_extended.py app/tests/services/project_management/test_progress_service_branches.py` 通过（74 个用例）。
+  - `ruff check app/services/progress_service.py app/tests/services/project_management/test_progress_service_branches.py tests/services/test_progress_service.py tests/services/test_progress_service_extended.py` 通过。
+  - `python -m py_compile app/services/progress_service.py app/tests/services/project_management/test_progress_service_branches.py tests/services/test_progress_service.py tests/services/test_progress_service_extended.py` 通过；`git diff --check` 通过。
+
+## 2026-07-04 继续：PROJ-09 甘特依赖驱动排期级联
+
+- 修复目标：甘特依赖不能只保存画线关系；新增依赖后应按依赖类型和 lag_days 推迟后继任务计划日期，并继续影响后续链路；关键路径也不能把所有依赖都当 FS 串行长度。
+- 现场确认：
+  - `add_dependency()` 原来只插入 `task_dependencies`，不改 `task_unified.plan_start_date/plan_end_date`。
+  - `get_critical_path()` 原来用 `longest_path_to(predecessor) + lag_days`，未使用 FS/SS/FF/SF 语义。
+  - 单元测试库已有 ORM `task_dependencies` 表，缺少该 endpoint 假定的 `created_at`，`_ensure_table()` 只补 `project_id`。
+- 代码面：
+  - `_ensure_table()` now 幂等补齐历史表的 `created_at` 列。
+  - 新增 `_cascade_reschedule_project()`：读取项目任务和依赖，按 FS/SS/FF/SF + lag_days 计算后继最早开始日，只向后推迟、不自动提前；任务被推迟后继续迭代级联后续任务。
+  - `add_dependency()` now 在同一事务内插入依赖并执行级联重排，响应返回 `schedule_adjustments`，前端可据此刷新甘特图。
+  - `get_critical_path()` now 基于依赖类型计算 earliest start/finish：FS 看前置完成，SS 看前置开始，FF/SF 通过后继工期反推开始日。
+- 验证：
+  - 新增 `tests/unit/test_gantt_dependency_proj09.py`，覆盖 FS A→B→C 级联推迟、SS lag 语义、SS 关键路径不误算成串行 9 天。
+  - `PYTHONPATH=. pytest -q tests/unit/test_gantt_dependency_proj09.py` 通过（3 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_gantt_dependency_proj09.py tests/schemas/test_progress.py::TestGanttTaskItem tests/schemas/test_progress.py::TestTaskDependencyCreate` 通过（7 个用例）。
+  - `ruff check app/api/v1/endpoints/gantt_dependency.py tests/unit/test_gantt_dependency_proj09.py` 通过；`python -m py_compile app/api/v1/endpoints/gantt_dependency.py tests/unit/test_gantt_dependency_proj09.py` 通过。
+
+## 2026-07-04 继续：PROJ-11 成本归集口径部分收口
+
+- 修复目标：成本归集不应等全量扫描才反映收货，不应把采购订单总额/下单日期当作实际成本，不应把在制工单按硬编码 200 元/小时入账。
+- 代码面：
+  - 采购成本 now 优先使用 `PurchaseOrder.received_amount`，税额按已收货金额比例折算，成本日期优先取显式收货日期，其次取最新未作废收货单日期。
+  - `create_goods_receipt()` 和 `update_goods_receipt_status(...RECEIVED)` now 在同一事务内触发 `CostCollectionService.collect_from_purchase_order()`，收货创建/确认后即可更新项目实际成本。
+  - 批量归集 now 覆盖 `RECEIVING/PARTIAL_RECEIVED/PARTIALLY_RECEIVED`，部分收货订单不必等全收才能补账。
+  - 工单成本 now 只认 `COMPLETED/DONE`，`IN_PROGRESS` 会删除既有实际成本并重算项目；已完成工单按 `Worker.hourly_rate` 或显式传入费率计算，不再使用硬编码 200。
+- 仍未闭环：
+  - 当前采购收货模块未发现退货/作废业务入口，尚未实现退货自动冲减。
+  - ECN 负向成本和存量 `project_costs` 脏数据清洗仍待继续。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/services/test_cost_collection_business_docs.py` 通过（6 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_m2_cost_purchase_notification_strategy.py::TestCostCollectionService tests/unit/test_cost_collection_n3.py tests/unit/test_cost_collection_service_coverage.py` 通过（46 个用例）。
+  - `PYTHONPATH=. pytest -q tests/services/test_cost_collection_business_docs.py tests/unit/test_m2_cost_purchase_notification_strategy.py::TestCostCollectionService tests/unit/test_cost_collection_n3.py tests/unit/test_cost_collection_service_coverage.py` 通过（52 个用例）。
+  - `ruff check app/services/cost/cost_collection_service.py app/api/v1/endpoints/purchase/receipts.py tests/services/test_cost_collection_business_docs.py` 通过；`python -m py_compile app/services/cost/cost_collection_service.py app/api/v1/endpoints/purchase/receipts.py tests/services/test_cost_collection_business_docs.py` 通过。
+  - `PYTHONPATH=. pytest -q tests/services/test_cost_collection_business_docs.py tests/api/test_purchase_receipts_workflow_contracts.py` 未能完成 API 层合约测试：当前本地 `starlette TestClient` / `httpx` 版本不兼容，初始化时报 `Client.__init__() got an unexpected keyword argument 'app'`，业务逻辑未执行。
+
+## 2026-07-04 继续：PROJ-13 工时成本只认已审批工时
+
+- 修复目标：成本超支分析里的人工成本、实际工时和人员归责不能把 `DRAFT/PENDING/SUBMITTED` 等未审批工时算入成本。
+- 现场确认：
+  - 第二轮审计已更正：`cost_overrun_analysis_service.py` 的时薪硬编码 100 半项已改为 `HourlyRateService`，剩余核心问题是审批状态过滤缺失。
+  - `_calculate_labor_cost()`、`_calculate_actual_hours()`、`analyze_accountability()` 原来都只按 `Timesheet.project_id` 查询，未限制 `status == APPROVED`。
+- 代码面：
+  - `CostOverrunAnalysisService` 新增 `_approved_timesheet_query()`，人工成本和归责分析统一只读已审批工时。
+  - `_calculate_actual_hours()` 同步加 `Timesheet.status == APPROVED`，避免成本原因判断里的“工时超支”被草稿/待审工时放大。
+  - 修正旧测试中的过期 import 路径，从 `app.services.cost_overrun_analysis_service` 改为当前真实路径 `app.services.cost.cost_overrun_analysis_service`。
+- 验证：
+  - 新增真实 DB 回归：2h APPROVED + 10h DRAFT + 8h PENDING 只产生 2h、246 元人工成本；归责分析不包含未审批工时用户。
+  - `PYTHONPATH=. pytest -q tests/unit/test_cost_overrun_analysis_service.py tests/unit/test_cost_overrun_analysis_service_coverage.py` 通过（10 个用例）。
+  - `ruff check app/services/cost/cost_overrun_analysis_service.py tests/unit/test_cost_overrun_analysis_service.py tests/unit/test_cost_overrun_analysis_service_coverage.py` 通过；`python -m py_compile app/services/cost/cost_overrun_analysis_service.py tests/unit/test_cost_overrun_analysis_service.py tests/unit/test_cost_overrun_analysis_service_coverage.py` 通过。
+
+## 2026-07-04 继续：PROJ-15 定时成本超支扫描排除计划成本
+
+- 修复目标：`check_project_cost_overrun()` 不能直接 `sum(ProjectCost.amount)`，否则 BOM/计划成本会被当作实际成本触发误报。
+- 代码面：
+  - `project_scheduled_tasks.py` 引入 `actual_project_cost_filter()`。
+  - 成本超支定时扫描 now 在 `ProjectCost.project_id == project.id` 外追加实际成本过滤，只统计 ACTUAL 口径；旧 `cost_basis IS NULL` 按既有兼容逻辑仍视为 ACTUAL。
+- 验证：
+  - 新增单元回归确认 `actual_project_cost_filter()` 被传入成本查询。
+  - `PYTHONPATH=. pytest -q tests/unit/test_project_scheduled_tasks.py::TestCheckProjectCostOverrun tests/unit/test_scheduled_tasks_h2.py::TestProjectScheduledTasksExtended::test_check_project_cost_overrun_callable tests/unit/test_scheduled_tasks_h2.py::TestProjectScheduledTasksExtended::test_check_project_cost_overrun_no_projects` 通过（11 个用例）。
+  - `ruff check app/utils/scheduled_tasks/project_scheduled_tasks.py tests/unit/test_project_scheduled_tasks.py` 通过；`python -m py_compile app/utils/scheduled_tasks/project_scheduled_tasks.py tests/unit/test_project_scheduled_tasks.py` 通过。
+
+## 2026-07-04 继续：PROJ-18 四维健康趋势成本维修正
+
+- 修复目标：健康趋势风险拆解的成本维不能一直满分；应从项目真实成本字段计算预算使用率，并识别当前系统真实成本超支枚举。
+- 现场确认：
+  - `Project` 模型只有 `budget_amount` 和 `actual_cost`，没有 `budget_used_pct` 字段，原 `_calc_cost_score()` 的预算使用率恒回 0。
+  - `AlertRuleTypeEnum` 当前真实成本超支类型是 `COST_OVERRUN`，原代码仍匹配 `BUDGET_OVERRUN/COST_VARIANCE`。
+- 代码面：
+  - `HealthTrendService` 新增 `_budget_used_pct()`，按 `Project.actual_cost / Project.budget_amount * 100` 计算预算使用率。
+  - `_calc_cost_score()` now 使用真实预算使用率参与成本效率扣分。
+  - 成本类告警 now 匹配 `AlertRuleTypeEnum.COST_OVERRUN.value`，待处理成本超支告警每条扣 10 分。
+  - 旧 `MagicMock` 冒烟用例收紧为明确的异常/回归断言，避免裸 mock 触发日期和计数魔法方法。
+- 验证：
+  - 新增真实 DB 回归：`actual_cost=150、budget=100、progress=50` 时成本分低于 100；`COST_OVERRUN` 待处理告警会把成本分扣到 90。
+  - `PYTHONPATH=. pytest -q tests/unit/test_health_trend_service.py tests/unit/test_health_trend_service_coverage.py` 通过（12 个用例）。
+  - `ruff check app/services/health_trend_service.py tests/unit/test_health_trend_service.py tests/unit/test_health_trend_service_coverage.py` 通过；`python -m py_compile app/services/health_trend_service.py tests/unit/test_health_trend_service.py tests/unit/test_health_trend_service_coverage.py` 通过。
+
+## 2026-07-04 继续：PROJ-17/19 主健康度与快照分维可信化
+
+- 修复目标：
+  - 主健康度计算器不能继续只看状态/进度/问题/缺料而忽略成本风险。
+  - 完全没有计划、进度、成本基线的数据不能默认 H1 绿灯。
+  - 每日健康度快照不能继续把四个分维写成同一个总健康度，且不能把成本/进度指标硬编码 0。
+- 现场确认：
+  - `health_calculator.py` 原 `calculate_health()` 只做 H4/H3/H2/H1 级联，H2 风险未包含成本。
+  - `project_scheduled_tasks.daily_health_snapshot()` 原写入 `schedule/cost/quality/resource_health = new_health`，`schedule_variance/cost_variance/budget_used_pct` 全为 0。
+  - `project_health_tasks.daily_health_snapshot()` 是另一条同名快照实现，原只写综合健康度和少量计数，不写四维。
+- 代码面：
+  - `HealthTrendService` 新增公开 `calculate_dimension_scores(project)`，供快照复用 PROJ-18 修过的四维评分。
+  - `HealthCalculator` 新增成本风险规则：预算未建但有实际成本、预算使用率 >100%、待处理 `COST_OVERRUN` 告警均判为 H2 风险。
+  - `HealthCalculator` 新增无基线数据保护：计划、进度、成本基线全缺时不再返回 H1。
+  - `HealthCalculator.build_health_snapshot_data()` 统一构建快照字段：四维健康度、综合分、未处理预警/问题、里程碑、进度偏差、预算使用率、成本偏差。
+  - `project_scheduled_tasks.py` 和 `project_health_tasks.py` 两条快照任务 now 都调用同一套快照构造逻辑落库。
+  - 顺手修正旧健康度分支测试里的过期模型用法：`AlertRule.condition` 和 `IssueTypeEnum.TASK` 已不是当前 schema。
+- 验证：
+  - 新增/修正回归覆盖：实际成本 125/预算 100 返回 H2；完全无健康度基线返回 H2；快照写入 cost_health、budget_used_pct、cost_variance、schedule_variance 等真实字段。
+  - `PYTHONPATH=. pytest -q tests/unit/test_health_calculator.py tests/unit/test_health_calculator_coverage.py app/tests/services/project_management/test_health_calculator_branches.py tests/unit/test_project_scheduled_tasks.py::TestDailyHealthSnapshotInProjectScheduled tests/unit/test_project_health_tasks.py::TestDailyHealthSnapshot` 通过（65 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_health_trend_service.py tests/unit/test_health_trend_service_coverage.py` 通过（12 个用例）。
+  - `ruff check app/services/health_calculator.py app/services/health_trend_service.py app/utils/scheduled_tasks/project_scheduled_tasks.py app/utils/scheduled_tasks/project_health_tasks.py tests/unit/test_health_calculator.py tests/unit/test_project_scheduled_tasks.py tests/unit/test_project_health_tasks.py app/tests/services/project_management/test_health_calculator_branches.py` 通过。
+  - `python -m py_compile app/services/health_calculator.py app/services/health_trend_service.py app/utils/scheduled_tasks/project_scheduled_tasks.py app/utils/scheduled_tasks/project_health_tasks.py tests/unit/test_health_calculator.py tests/unit/test_project_scheduled_tasks.py tests/unit/test_project_health_tasks.py app/tests/services/project_management/test_health_calculator_branches.py` 通过；`git diff --check` 通过。

@@ -273,12 +273,23 @@ def approve_bonus_calculation(
     db: Session = Depends(deps.get_db),
     calc_id: int,
     approve_in: BonusCalculationApprove,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("bonus:manage")),
 ) -> Any:
     """
-    审批奖金计算
+    审批奖金计算（HR-17：权限门 + 防自审 + 状态前置）
     """
     calculation = get_or_404(db, BonusCalculation, calc_id, "计算记录不存在")
+
+    # 防自审：受益人不得审批自己的奖金
+    if calculation.user_id == current_user.id:
+        raise HTTPException(status_code=403, detail="不能审批自己的奖金计算，请由其他有权人员审批")
+
+    # 状态前置：只有待审批（CALCULATED）可流转，防重复审批与终态翻案
+    if calculation.status != "CALCULATED":
+        raise HTTPException(
+            status_code=400,
+            detail=f"当前状态 {calculation.status} 不可审批，只有 CALCULATED（待审批）可流转",
+        )
 
     if approve_in.approved:
         calculation.status = "APPROVED"

@@ -59,51 +59,51 @@
 | PRE-01 | 商机一键申请售前支持 request-presale-support | — | 已验证 | presale/tickets/crud.py:126-183 | — | 静态已证（正面确认） | 无缺陷 |
 | PRE-02 | 售前工单主链路（接单→进度→交付物→完成→评分） | P2 | 重复-合并→PRE-14 | 见 PRE-14 | — | 静态已证 | 主链路本体可用，唯一缺陷即状态字典分裂（PRE-14），域内合并 |
 | PRE-03 | 技术评估打分/否决/风险生成（evaluate） | — | 已验证 | — | — | 静态已证（正面确认） | 无缺陷 |
-| PRE-04 | 立项关卡 PMO_REQUIRE_PRESALE_ASSESSMENT 可被"自动空评估"绕过 | P1 | 待修 | presale_assessment_completion.py:95-105；pmo_initiation/service.py:213-214,362-371 | 1.5d | 静态已证 | 详#1；关联 PROJ-01（关卡本体真拦截） |
-| PRE-05 | 三档报价金额梯度倒挂（BASIC>STANDARD，DB 实证两例） | P1 | 待修 | presale_ai_quotation_service.py:117-169 | 1d | 静态已证 | 详#2 |
-| PRE-06 | 三档报价静态回退项是"ERP软件"报价，领域错配 | P2 | 待修 | presale_ai_quotation_service.py:424-536 | 0.5d | 静态已证 | 详#3 |
-| PRE-07 | update_quotation 税额/折扣不随明细重算 | P2 | 待修 | presale_ai_quotation_service.py:194-212 | 0.5d | 静态已证 | 详#4 |
-| PRE-08 | ai-enrich-requirement 整行覆盖清空已有需求；mock 回退破坏性写入 | P1 | 待修 | opportunity_workflow.py:508-522；ai_client_service.py:256-257 | 1d | 静态已证 | 详#5；mock 集群（集群2）统一拦截点 |
-| PRE-09 | ai-quote-estimate mock 回退静默返回垃圾 200 | P2 | 待修 | opportunity_workflow.py:358-363 | 0.5d | 静态已证 | 详#6；修复并入 PRE-08 |
-| PRE-10 | AI 需求分析结果无下游消费（数据孤岛，北极星断点） | P1 | 已修待验 | presale/requirement_analysis_bridge.py；presale_ai_service.py；presale_ai_quotation_service.py；tests/unit/test_presale_requirement_bridge.py | 3d | 静态已证；✅契约测试回归（2026-07-03） | 详#8；方案生成/三档报价支持 requirement_analysis_id 自动带出；新增 POST /presale/ai/analysis/{id}/confirm 确认后增量回填商机需求（不覆盖人工值，extra_json 溯源） |
-| PRE-11 | 方案生成 mock 方案可入库（confidence 0.8）+ BOM 成本硬编码 10000 元 | P1 | 待修 | presale_ai_service.py:193-242,492-504 | 2d | 静态已证 | 详#10；mock 集群 |
-| PRE-12 | 方案导出 PDF 是纯文本桩、Word/Excel 为 pass 缺失 | P1 | 待修 | presale_ai_export_service.py:46-72；presale_ai_routes.py:257-268 | 2-3d | 静态已证 | 详#11；止损包（先提示假导出）；同域有真 reportlab 可复用 |
-| PRE-13 | AI 使用报告 export-report 返回不存在的文件 URL | P2 | 待修 | presale_ai_integration.py:399-409 | 1d | 静态已证 | 详#12；止损包 |
-| PRE-14 | 售前工单状态字典分裂（PROCESSING vs IN_PROGRESS / REVIEW 无路可走） | P2 | 待修 | presale/core.py:50-59；operations.py:146-149；crud.py:117,151 | 1d | 静态已证 | 详#14；数据清洗专项（存量 PROCESSING/REVIEW 工单迁移）；PRE-02 并入本项 |
-| PRE-15 | 售前移动端整域假实现（AI问答/语音/拜访/估价/快照全硬编码，前端零消费） | P1 | 待修 | presale_mobile_service.py:69-78,166-170,214-543 | 下架0.5d/做实4-5d | 静态已证 | 详#13；止损包（僵尸路由下架） |
+| PRE-04 | 立项关卡 PMO_REQUIRE_PRESALE_ASSESSMENT 可被"自动空评估"绕过 | P1 | 已验证 | presale_assessment_completion.py；technical_assessment_service.py；pmo_initiation/service.py；project_workspace_service.py；20260704_presale_assessment_auto_generated_sqlite.sql；tests/unit/test_presale_assessment_completion_pre04.py；test_pmo_initiation_service.py | 1.5d | 静态已证；✅已动态回归（2026-07-04） | 详#1；自动补建评估 now 标 `auto_generated=True`，真实 evaluate 标回 False；PMO 关卡要求 COMPLETED 且有评分/维度/风险/条件/AI分析等实质内容，空评估不再满足立项 |
+| PRE-05 | 三档报价金额梯度倒挂（BASIC>STANDARD，DB 实证两例） | P1 | 已验证 | presale_ai_quotation_service.py；tests/unit/test_presale_ai_quotation_pre05_06.py | 1d | 静态已证；✅已动态回归（2026-07-04） | 三档生成后 now 强制标准档小计 >= 基础档 1.18 倍、高级档小计 >= 标准档 1.22 倍，覆盖 AI 低报导致的 basic/standard/premium 总价倒挂 |
+| PRE-06 | 三档报价静态回退项是"ERP软件"报价，领域错配 | P2 | 已验证 | presale_ai_quotation_service.py；tests/unit/test_presale_ai_quotation_pre05_06.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 静态兜底 now 改为非标自动化检测工作站/夹治具/视觉检测/数据追溯/自动上下料/现场调试，不再输出 ERP/进销存/移动端 APP 明细 |
+| PRE-07 | update_quotation 税额/折扣不随明细重算 | P2 | 已验证 | presale_ai_quotation_service.py；tests/unit/test_presale_ai_quotation_pre07.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 更新明细 now 按旧有效税率/折扣率重算税额、折扣和总额；同时修复 update 分支 Decimal 直接写 JSON 的提交失败 |
+| PRE-08 | ai-enrich-requirement 整行覆盖清空已有需求；mock 回退破坏性写入 | P1 | 已验证 | opportunity_workflow.py；tests/unit/test_sales_opportunity_ai_mock_guard_pre08_09.py | 1d | 静态已证；✅已动态回归（2026-07-04） | 端点 now 拒绝 `model.endswith("-mock")` 并返回 502；需求表回填改为只覆盖 AI 非空字段，保留人工已填 product/ct/interface/site/acceptance/safety |
+| PRE-09 | ai-quote-estimate mock 回退静默返回垃圾 200 | P2 | 已验证 | opportunity_workflow.py；tests/unit/test_sales_opportunity_ai_mock_guard_pre08_09.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 修复并入 PRE-08：报价估算 now 在解析 JSON 前拦截 `-mock` 模型响应，避免 mock/演示数据以 200 返回 |
+| PRE-10 | AI 需求分析结果无下游消费（数据孤岛，北极星断点） | P1 | 已验证 | presale/requirement_analysis_bridge.py；presale_ai_service.py；presale_ai_quotation_service.py；tests/unit/test_presale_requirement_bridge.py | 3d | 静态已证；✅契约测试回归（2026-07-03、2026-07-04） | 详#8；方案生成/三档报价支持 requirement_analysis_id 自动带出；新增 POST /presale/ai/analysis/{id}/confirm 确认后增量回填商机需求（不覆盖人工值，extra_json 溯源） |
+| PRE-11 | 方案生成 mock 方案可入库（confidence 0.8）+ BOM 成本硬编码 10000 元 | P1 | 已验证 | presale_ai_service.py；tests/unit/test_presale_ai_mock_guard.py | 2d | 静态已证；✅已动态回归（2026-07-04） | `generate_solution` now 拒绝 mock 方案入库；BOM 单价 now 查物料库/标准模块库，查无价标“待询价”，不再写死 10000/推荐供应商A/30天 |
+| PRE-12 | 方案导出 PDF 是纯文本桩、Word/Excel 为 pass 缺失 | P1 | 已验证-旧链路下线 | api.py:269-278；源文件 `presale_ai_export_service.py`/`presale_ai_routes.py` 已不存在 | 2-3d | 静态已证；✅路由对账（2026-07-04） | 老 AI 方案导出栈未再注册，未复活旧 PDF/Word/Excel 假成功路由；方案统一走 `/presale/proposals`，后续如要导出需在新方案栈重新设计 |
+| PRE-13 | AI 使用报告 export-report 返回不存在的文件 URL | P2 | 已验证 | presale_ai_integration.py；tests/unit/test_presale_ai_export_report_pre13.py | 1d | 静态已证；✅已动态回归（2026-07-04） | `/presale/ai/export-report` now 生成真实 CSV/XLSX/PDF 文件，返回非零 file_size 和 `/downloads/{file_name}` 下载路由 |
+| PRE-14 | 售前工单状态字典分裂（PROCESSING vs IN_PROGRESS / REVIEW 无路可走） | P2 | 已验证 | presale/core.py；tickets/crud.py；tickets/operations.py；tickets/utils.py；migrations/20260704_presale_ticket_status_normalization_sqlite.sql；tests/unit/test_presale_ticket_status_pre14.py | 1d | 静态已证；✅已动态回归（2026-07-04） | 工单状态 now 规范为 `IN_PROGRESS`，兼容 `PROCESSING→IN_PROGRESS`、`REVIEW→PENDING`；新建 SOLUTION_REVIEW 直接 PENDING；迁移脚本清洗存量 |
+| PRE-15 | 售前移动端整域假实现（AI问答/语音/拜访/估价/快照全硬编码，前端零消费） | P1 | 已验证-路由下线 | api.py；tests/unit/test_presale_mobile_downline_pre15.py | 下架0.5d/做实4-5d | 静态已证；✅已动态回归（2026-07-04） | `/presale-mobile` now 不再挂载；保留源码但不暴露假 AI/语音/估价/快照接口，真实生产移动端仍走 `/mobile/*` |
 | PRE-16 | 知识库 _has_live_ai 漏判 qwen，AI 提取/问答永走规则模板 | P1 | 已验证 | presale_ai_knowledge_service.py:681-687 | 0.1d | 静态已证；✅已修复并回归（2026-07-03） | 详#15；Quick-win 闸门包；_has_live_ai 已纳入 qwen_api_key |
-| PRE-17 | 知识库/模板"语义搜索"实为字符哈希/Jaccard，非语义 RAG | P2 | 已修待验(短期) | utils/text_similarity.py；presale_ai_knowledge_service.py；presale_ai_service.py；tests/unit/test_text_similarity_retrieval.py | 短期1d/中期3-5d | 静态已证；✅契约测试回归（2026-07-04） | 详#16；短期方案已落：中文 bigram 余弦替换空格 Jaccard；哈希向量改 bigram+稳定哈希（顺带修内建 hash() 进程随机化导致存量向量失配的隐藏 bug）；中期 qwen embedding 需标准百炼密钥（Coding Plan 端点 /embeddings 404 已实测），ROADMAP F4 |
-| PRE-18 | 相似案例检索为 equipment_type 精确匹配 SQL，非语义 | P2 | 已修待验 | opportunity_workflow.py similar_cases；tests/unit/test_text_similarity_retrieval.py | 并入 PRE-17 | 静态已证；✅契约测试回归（2026-07-04） | 详#16；改双向 LIKE 粗召回（词表分裂容错）+ bigram 相似度精排（WON 加权），空设备类型不再全库互配，返回带 similarity 分 |
+| PRE-17 | 知识库/模板"语义搜索"实为字符哈希/Jaccard，非语义 RAG | P2 | 已验证(短期) | utils/text_similarity.py；presale_ai_knowledge_service.py；presale_ai_service.py；tests/unit/test_text_similarity_retrieval.py | 短期1d/中期3-5d | 静态已证；✅契约测试回归（2026-07-04） | 详#16；短期方案已落：中文 bigram 余弦替换空格 Jaccard；哈希向量改 bigram+稳定哈希（顺带修内建 hash() 进程随机化导致存量向量失配的隐藏 bug）；中期 qwen embedding 需标准百炼密钥（Coding Plan 端点 /embeddings 404 已实测），ROADMAP F4 |
+| PRE-18 | 相似案例检索为 equipment_type 精确匹配 SQL，非语义 | P2 | 已验证 | opportunity_workflow.py similar_cases；tests/unit/test_text_similarity_retrieval.py | 并入 PRE-17 | 静态已证；✅契约测试回归（2026-07-04） | 详#16；改双向 LIKE 粗召回（词表分裂容错）+ bigram 相似度精排（WON 加权），空设备类型不再全库互配，返回带 similarity 分 |
 | PRE-19 | 方案 AI 评审 ai-solution-review / 验收标准生成 | — | 已验证 | — | — | 静态已证（正面确认） | 无缺陷；ai-acceptance-criteria 真回填 |
-| PRE-20 | AI 工作流编排只建状态壳无执行器（DB 中 20 行 status 全空） | P2 | 待修 | presale_ai_integration.py:285-319 | 做实3d/下架0.5d | 静态已证 | 详#17；止损包 |
+| PRE-20 | AI 工作流编排只建状态壳无执行器（DB 中 20 行 status 全空） | P2 | 已验证-止损 | presale_ai_integration.py；tests/unit/test_presale_ai_workflow_pre20.py | 做实3d/下架0.5d | 静态已证；✅已动态回归（2026-07-04） | `auto_run=true` now 返回 501/ValueError，不再落 RUNNING 空壳；仅 `auto_run=false` 可创建全 PENDING 待执行计划 |
 | PRE-21 | AI 后台任务重启后 PENDING/RUNNING 永久卡死（无恢复无超时） | P2 | 已验证 | ai_job_service.py；main.py startup；tests/unit/test_ai_job_recovery.py | 0.5d | 静态已证；✅已动态回归（2026-07-03） | 详#18；**主项**：APPR-22① 同问题并入本项（互为引用）；startup recover_stale_jobs + 轮询惰性超时（AI_JOB_MAX_RUNTIME_SECONDS 默认1800s）；`import app.main` 路由加载成功 |
 | PRE-22 | 模块库 ai-modules（挖掘/列表/标准化建议，DB 7 模块） | — | 已验证 | — | — | 静态已证（正面确认） | 无缺陷 |
 | PRE-23 | 立项提交关卡异常静默放行（except 后 missing=[]） | P2 | 已验证 | pmo_initiation/service.py:363-371 | 0.25d | 静态已证；✅已修复并回归（2026-07-03） | 详#19；Quick-win 闸门包；handover 构建异常 now raises ValueError，不再静默提交 |
-| PRE-24 | 遗留脏数据字典（quotation_type 非法枚举 / assessment_status 两套值报表漏 93%） | P3 | 待修 | presale_ai_quotation.quotation_type；opportunities.assessment_status（DB 实证 51 vs 4） | 0.5d | 静态已证 | 详#20；数据清洗专项 |
+| PRE-24 | 遗留脏数据字典（quotation_type 非法枚举 / assessment_status 两套值报表漏 93%） | P3 | 已验证 | presale_ai_quotation_service.py；assessment_status.py；opportunity_workflow.py；ai_copilot.py；20260704_presale_legacy_dictionary_cleanup_sqlite.sql；tests/unit/test_presale_legacy_dictionary_pre24.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 详#20；报价历史读取 now raw SQL 归一化非法枚举，售前支持申请写入 PENDING，不再新增 REQUESTED；缺评统计兼容 PENDING/IN_PROGRESS/REQUESTED；迁移脚本清洗 AUTO/MANUAL/NORMAL 与 ASSESSMENT_* |
 
 ### 三、项目/PMO 域（PROJ，26 项）
 
 | ID | 功能/问题 | 等级 | 状态 | 证据位置 | 工作量 | 验证方式 | 备注/关联 |
 |---|---|---|---|---|---|---|---|
 | PROJ-01 | 立项链路（草稿→提交→审批→建项目）+ 售前评估关卡 | — | 已验证 | pmo_initiation/service.py:358-371 | — | 静态已证（正面确认） | 无缺陷；但关卡可被空评估绕过见 PRE-04、异常静默放行见 PRE-23 |
-| PROJ-02 | 立项审批未选 PM 则静默不建项目（APPROVED 但无项目无报错） | P2 | 待修 | pmo_initiation/service.py:415-425 | 0.5d | 静态已证 | 详#15 |
-| PROJ-03 | 合同→立项字段带入偷懒：占位文本冒充需求（商机/售前路径可用） | P2 | 待修 | ContractManagement.jsx:363；ContractDetail.jsx:442 | 2-3d | 静态已证 | 详#17；北极星主项；关联 APPR-14（交付日期幽灵字段） |
-| PROJ-04 | 项目状态机无转移守卫，可任意非法跳转（S1→S9 直跳） | P1 | 待修 | projects/status/status_crud.py:107-127,157-177 | 2d | 静态已证 | 详#3；superuser 无条件放行 stage_advance_service.py:73-75；先清洗 PROJ-05 脏数据 |
-| PROJ-05 | 项目 status 三套词汇表并存，过滤逻辑实际失效 | P2 | 待修 | DB：COMPLETED45/EXECUTING35/ST01×24；project_scheduled_tasks.py:279；archive.py:54 | 2-3d | 静态已证 | 详#4；数据清洗专项 |
+| PROJ-02 | 立项审批未选 PM 则静默不建项目（APPROVED 但无项目无报错） | P2 | 已验证 | pmo_initiation/service.py；ReviewInitiationDialog.jsx；tests/unit/test_pmo_initiation_service.py；ReviewInitiationDialog.test.jsx | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 详#15；审批通过 now 必须指定 `approved_pm_id`，否则 400/ValueError 且不改 APPROVED、不提交；前端审批弹窗也拦截空 PM |
+| PROJ-03 | 合同→立项字段带入偷懒：占位文本冒充需求（商机/售前路径可用） | P2 | 已验证 | ContractManagement.jsx；ContractDetail.jsx；InitiationManagement/index.jsx；pmoInitiations.js；ContractManagement.test.jsx；ContractDetail.test.jsx；InitiationManagement.test.jsx | 2-3d | 静态已证；✅前端链路回归（2026-07-04） | 详#17；北极星主项；合同入口 now 查重后跳转 `handoff=contract` 立项表单，带出真实需求/金额/交期，不再创建占位需求立项；关联 APPR-14（交付日期幽灵字段） |
+| PROJ-04 | 项目状态机无转移守卫，可任意非法跳转（S1→S9 直跳） | P1 | 已验证 | projects/status/status_crud.py；stage_advance_service.py；tests/unit/test_project_status_guard_proj04.py；test_stage_advance_service.py；test_service_edge_cases.py | 2d | 静态已证；✅单元回归（2026-07-04） | 详#3；direct PUT 阶段/状态 now 只能走下一步，`stage-advance` 也拒绝 S1→S9 跨级跳；存量脏状态仍留给 PROJ-05 清洗 |
+| PROJ-05 | 项目 status 三套词汇表并存，过滤逻辑实际失效 | P2 | 已验证 | project_status_normalization.py；project_crud/service.py；project_scheduled_tasks.py；archive.py；ai_delivery.py；20260704_project_status_normalization_sqlite.sql；tests/unit/test_project_status_normalization_proj05.py | 2-3d | 静态已证；✅单元+迁移回归（2026-07-04） | 详#4；项目状态 now 统一读写为 stage+STxx，旧 `EXECUTING/COMPLETED/archived` 读侧兼容；归档不再写入 status；存量清洗脚本已在临时 SQLite 验证；PROJ-25 扫描改按 stage S2-S8 |
 | PROJ-06 | 结项无强制门禁——未验收可直接结项（readiness 真校验未接线） | P0 | 已验证 | pmo/closure.py:80-155；closure_readiness_service.py | 1-2d | ✅已动态复现并回归（test_p0_08，2026-07-03） | 全局P0#8；Quick-win 闸门包；创建结项 now requires readiness.ready=True |
-| PROJ-07 | 阶段门两条旁路：终验收直写 S9 绕回款门 + superuser 静默跳门 | P1 | 待修 | acceptance_completion_service.py:255-287；stage_advance_service.py:73-75 | 1-2d | 静态已证 | 详#14（详述定级 P2，总表定级 P1，从总表） |
-| PROJ-08 | 任务进度→项目进度"加权汇总"实为简单平均，真加权函数死代码 | P2 | 待修 | progress_service.py:196-200 vs :439-532 | 1d | 静态已证 | 详#13；"算法真接线假"集群3；Quick-win 候补 |
-| PROJ-09 | 甘特依赖不影响排期（仅画线+CPM 长度，无级联重排） | P1 | 待修 | gantt_dependency.py:107-118,399-418 | 4-6d | 静态已证 | 详#6 |
+| PROJ-07 | 阶段门两条旁路：终验收直写 S9 绕回款门 + superuser 静默跳门 | P1 | 已验证 | acceptance_completion_service.py；acceptance/acceptance_service.py；stage_advance_service.py；projects/status/stages.py；stage_transition_checks.py；test_acceptance_completion_service.py；test_stage_advance_service.py；test_acceptance_service.py | 1-2d | 静态已证；✅单元回归（2026-07-04） | 详#14；终验收 now 必须走 S8→S9 阶段门，回款不达标不写 S9；旧 async 验收服务不再直推 S9；superuser 不再隐式免检，只有显式 `skip_gate_check=true` 才可跳门且写入响应/日志 |
+| PROJ-08 | 任务进度→项目进度"加权汇总"实为简单平均，真加权函数死代码 | P2 | 已验证 | progress_service.py；test_progress_service_branches.py；test_progress_service.py；test_progress_service_extended.py | 1d | 静态已证；✅单元回归（2026-07-04） | 详#13；`aggregate_task_progress` now 复用真实 `ProgressAggregationService` 加权结果写回项目进度；阶段聚合同步按 `project_stage + estimated_hours` 加权，低工时任务不再与高工时任务等权 |
+| PROJ-09 | 甘特依赖不影响排期（仅画线+CPM 长度，无级联重排） | P1 | 已验证 | gantt_dependency.py；tests/unit/test_gantt_dependency_proj09.py | 4-6d | 静态已证；✅单元回归（2026-07-04） | 详#6；新增依赖 now 按 FS/SS/FF/SF + lag_days 推迟后继计划日期并继续级联；关键路径计算 now 使用依赖类型语义，不再把 SS/FF/SF 全按串行 FS 长度计算 |
 | PROJ-10 | 里程碑完成闸门被自身 except 吞掉，三条路径口径不一 | P1 | 已验证 | core/state_machine/milestone.py:91-118；endpoints/milestones.py:183-226 | 1-2d | 静态已证；✅已修复并回归（2026-07-03） | 详#5；Quick-win 闸门包；HTTPException 已重抛，全局 complete 端点已接 MilestoneStateMachine |
-| PROJ-11 | 成本归集非实时（D2 确认）、退货不冲减、在制工单入账、日期归错月 | P1 | 待修 | cost/cost_collection_service.py:33,157,188,383 | 4-5d | 静态已证 | 详#11；数据清洗（project_costs 141 行中 60 行 cost_type 空）；时薪写死 200 |
+| PROJ-11 | 成本归集非实时（D2 确认）、退货不冲减、在制工单入账、日期归错月 | P1 | 修复中 | cost/cost_collection_service.py；purchase/receipts.py；tests/services/test_cost_collection_business_docs.py | 4-5d | 静态已证；✅部分单元回归（2026-07-04） | 详#11；采购成本 now 按已收货金额/收货日期归集，创建/确认收货触发更新，部分收货批量扫描可补账；在制工单不再入实际成本，已完工工单按 Worker.hourly_rate；退货/作废冲减、ECN 负向成本和存量 project_costs 脏数据仍待继续 |
 | PROJ-12 | 工时填报→审批→撤回（统一引擎，模板已入库） | — | 已验证 | — | — | 静态已证（正面确认） | 无缺陷；附带 P3：工时提醒 REST 端点占位桩（详#22，timesheet_reminders.py:7-25），调度器仍 MemoryJobStore（F3） |
-| PROJ-13 | 工时→人工成本联动不过滤审批状态；报表时薪写死 100 | P1 | 待修 | cost_overrun_analysis_service.py:338-350 | 1-2d | 静态已证 | 详#12；DB：DRAFT71/PENDING113 占 43% 被计入 |
+| PROJ-13 | 工时→人工成本/超支分析联动不过滤审批状态（时薪已走费率服务） | P1 | 已验证 | cost/cost_overrun_analysis_service.py；tests/unit/test_cost_overrun_analysis_service.py | 1d | 静态已证；✅单元回归（2026-07-04） | 详#12；人工成本、实际工时、归责分析 now 统一只读取 `Timesheet.status == APPROVED`；DRAFT/PENDING 不再计入成本和归责；第二轮已确认“时薪写死100”半项此前已修 |
 | PROJ-14 | 预算超支只预警不拦截，预警链路"哑炮"（富版通知服务不在链路） | P1 | 待修 | cost_collection_service.py:108-116；budget_alert_service.py:716-777 未接 | 3-4d | 静态已证 | 详#10 |
-| PROJ-15 | 预算/成本预警调度口径含计划成本（把 BOM 计划当实际，误报超支） | P2 | 待修 | project_scheduled_tasks.py:455-461 | 0.5d | 静态已证 | 详#21；套用 cost_basis.py:17 现成过滤器 |
+| PROJ-15 | 预算/成本预警调度口径含计划成本（把 BOM 计划当实际，误报超支） | P2 | 已验证 | project_scheduled_tasks.py；tests/unit/test_project_scheduled_tasks.py | 0.5d | 静态已证；✅单元回归（2026-07-04） | 详#21；定时成本超支扫描 now 使用 `actual_project_cost_filter()`，只统计 ACTUAL/旧 NULL 兼容实际成本，PLAN/BOM 计划成本不再触发误报 |
 | PROJ-16 | EVM 挣值：引擎真、PV/EV/AC 全手填（data_source=MANUAL，仅 3 行数据） | P1 | 待修 | evm.py:33-36,256 | 3-4d | 静态已证 | 详#7；北极星项 |
-| PROJ-17 | 项目健康度主计算器（H1-H4）无成本维、无数据即绿 | P2 | 待修 | health_calculator.py:31-54 | 2d（与 PROJ-19 打包） | 静态已证 | 详#9 |
-| PROJ-18 | 四维趋势健康度成本维恒满分（幽灵字段 + 枚举错位双 bug） | P1 | 待修 | health_trend_service.py:335,352；enums/others.py:245 | 0.5-1d | 静态已证 | 详#8 |
-| PROJ-19 | 健康度快照维度字段写死 0（四分维写同一总值） | P2 | 待修 | project_scheduled_tasks.py:227-248 | 与 PROJ-17 打包 | 静态已证 | 详#9；DB：355 条快照 295 条全零 |
+| PROJ-17 | 项目健康度主计算器（H1-H4）无成本维、无数据即绿 | P2 | 已验证 | health_calculator.py；health_trend_service.py；tests/unit/test_health_calculator.py；test_health_calculator_branches.py | 2d（与 PROJ-19 打包） | 静态已证；✅单元回归（2026-07-04） | 详#9；主计算器 now 将预算缺失但有实际成本、预算使用率 >100%、待处理 `COST_OVERRUN` 纳入 H2 风险；完全缺少计划/进度/成本基线时不再默认 H1 |
+| PROJ-18 | 四维趋势健康度成本维恒满分（幽灵字段 + 枚举错位双 bug） | P1 | 已验证 | health_trend_service.py；tests/unit/test_health_trend_service.py | 0.5-1d | 静态已证；✅单元回归（2026-07-04） | 详#8；成本维 now 从 `Project.actual_cost / budget_amount` 推算预算使用率，并按真实 `COST_OVERRUN` 待处理告警扣分，不再依赖幽灵字段/旧枚举字符串 |
+| PROJ-19 | 健康度快照维度字段写死 0（四分维写同一总值） | P2 | 已验证 | health_calculator.py；project_scheduled_tasks.py；project_health_tasks.py；tests/unit/test_project_scheduled_tasks.py；tests/unit/test_project_health_tasks.py | 与 PROJ-17 打包 | 静态已证；✅单元回归（2026-07-04） | 详#9；快照 now 调四维趋势得分落 `schedule/cost/resource/quality_health`，并写入真实 `budget_used_pct/cost_variance/schedule_variance` 等指标，不再全 0/全等于综合 |
 | PROJ-20 | 变更请求审批通过不回写项目基线（真联动引擎只绑 ECN） | P0 | 待修 | project_change_requests/service.py:193-242；project_change_impact_service.py:144-219 未接 | 3-5d | ✅已动态复现（test_p0_08） | 全局P0#8；三套变更实现互不联动（集群6） |
 | PROJ-21 | 变更/立项审批通知均未实现（TODO/pass） | P2 | 已验证 | project_change_requests/service.py；tests/unit/test_project_change_notifications_proj21.py | 1-2d | 静态已证；✅已动态回归（2026-07-03） | 详#16；F3 扩围候补已收口；变更提交 now 通知项目 PM，审批结果 now 通知提交人，均走真实站内通知 |
 | PROJ-22 | 验收全流程 + 报告生成（真 reportlab PDF） | — | 已验证 | acceptance/report_utils.py:75-208 | — | 静态已证（正面确认） | 无缺陷 |
@@ -234,12 +234,12 @@
 | HR-14 | 三套绩效体系并行隔绝、服务大面积复制粘贴 | P2 | 待修 | evaluation.py:76,127；calculation.py:20 | 3d | 静态已证 | 谁是正式绩效说不清 |
 | HR-15 | 绩效合同绕 ORM 用裸 sqlite3（连接串写死） | P2 | 待修 | performance/contract.py:11,28,35 | 2-3d | 静态已证 | **主项**：MISC-12 同一 performance_contract 裸 sqlite3，MISC-12 标重复-合并→HR-15 |
 | HR-16 | 绩效→奖金串联空转（北极星断链，从未算出一分钱奖金） | P1 | 待修 | bonus/calculation.py:73；services/bonus/performance.py:42-46 | 0d(依赖HR-10)+0.5d | 静态已证 | 依赖 HR-10 疏通 |
-| HR-17 | 奖金审批无权限无引擎，可自审可绕过（Excel 导入直 APPROVED） | P1 | 待修 | sales_calc.py:271-297；bonus_distribution_service.py:106 | 2-3d | 静态已证 | 同 SALES-01 性质；bonus payment 端点已补 bonus:read/distribute/pay/manage（2026-07-03），审批主链路仍待修 |
+| HR-17 | 奖金审批无权限无引擎，可自审可绕过（Excel 导入直 APPROVED） | P1 | 已修待验 | sales_calc.py；bonus_distribution_service.py；tests/unit/test_bonus_approval_gate.py | 2-3d | 静态已证；✅契约测试回归（2026-07-04） | 审批端点挂 bonus:manage + 防自审（受益人 403）+ 状态前置（仅 CALCULATED 可流转）；Excel 导入保留 APPROVED（发放前有财务/HR/总经理三方线下确认闸）但补审批留痕（操作人/时间/意见）；接统一审批引擎待后续（当前单级审批+权限门已闭合最大风险） |
 | HR-18 | 团队奖金分配无"合计=100%/总额"校验 | P2 | 待修 | bonus_allocation_parser.py:239-276 | 0.5d | 静态已证 | Excel 可把 1 万分出 3 万 |
 | HR-19 | 奖金系数硬编码非规则驱动（等级/角色/售前系数全写死） | P2 | 待修 | services/bonus/base.py:96-125；presale.py:60-73 | 1-2d | 静态已证 | 规则表 DB 仅 3 行假种子 |
 | HR-20 | 时薪费率体系：本体真实，旁路 14 处写死 | P1 | 待修 | hourly_rate_service.py:30-157；labor_cost_detail.py:15；sales/cost/cost_calculator.py:28 等 | 2-3d | 静态已证 | 更正 PROJ-13：时薪写死已部分修复（cost_overrun_analysis_service.py:338-350 已走费率服务），仅剩不过滤审批状态 |
 | HR-21 | 费率兜底口径混乱（全级 miss 静默返 100）、变更无留痕 | P2 | 待修 | hourly_rate_service.py:28,50,157；crud.py:187-194 | 兜底0.5d/版本化1-2d | 静态已证 | 与 PROJ-11/PROJ-13、RPT-03 同"时薪多口径"病灶互引 |
-| HR-22 | 文化墙：配置端点坏 shim、无审核、前端 405 | P2 | 待修 | culture_wall_config.py:9-25；contents.py:115,122,85 | 2-3d | 静态已证 | **主项**：与 MISC-23 同一 culture_wall，互引不合并（MISC-23 补 config/goals/PUT 细节） |
+| HR-22 | 文化墙：配置端点坏 shim、无审核、前端 405 | P2 | 已验证 | culture_wall_config.py；contents.py；culture_wall.py schema；admin.js；tests/unit/test_culture_wall_hr22.py | 2d | 静态已证；✅已动态回归（2026-07-04） | **主项**：配置 CRUD 已由 MISC-23 修实；内容创建/编辑 now 不能自带 `is_published` 上墙，必须走 `/culture-wall/contents/{id}/review`；列表 `is_read` 改查真实阅读记录；前端补 `contents.review` |
 | HR-23 | 冲突调解：真算法架在无写入者的空表上（resource_conflicts 零写入） | P2 | 待修 | conflict_mediation_service.py:60-461；analytics/resource_conflicts.py:89-143 | 检测落库1d/收敛2-3d | 静态已证 | 与 MISC-02、AS-24 同 resource_conflicts 空表/双轨病灶互引 |
 | HR-24 | 协作评价自动补齐默认分污染（缺评一键填 3 分/75 分无标记） | P3 | 待修 | ratings.py:196-230 | 0.5d | 静态已证 | 本域少数真闭环 |
 | HR-25 | HR 域数据被通用填充脚本污染（假数据掩盖 HR-10 零写入断链） | P3 | 待修 | DB：hr_project_performance 70 行评分全 NULL；monthly_work_summary 含 task4_demo_seed | 0.5d | 静态已证 | 数据清洗专项 |
@@ -350,7 +350,7 @@
 | ID | 功能/问题 | 等级 | 状态 | 证据位置 | 工作量 | 验证方式 | 备注/关联 |
 |---|---|---|---|---|---|---|---|
 | MISC-01 | 竞品分析菜单页展示虚构数据（后端硬编码+前端 0 次 API 调用） | P0 | 已验证 | competitor_analysis.py；salesRoutes.jsx；sidebarConfig/default.js；tests/api/test_competitor_analysis_stopgap_contracts.py；salesCompetitorAnalysisStopgap.test.jsx | 下架 0.5d | 静态已证；✅已下架止血并回归（2026-07-03） | 菜单与 `/sales/competitor-analysis` 路由已移除；后端直链返回 501，不再吐“竞品A/宁德时代”等硬编码假数据 |
-| MISC-02 | 资源总览 PMO 可达页恒空白 | P1 | 待修 | resource_overview.py:7-24；ResourceOverview.jsx:323 | 聚合 3-5d/摘菜单 0.5h | 静态已证 | 与 HR-23、AS-24 同 resource_conflicts 空表/双轨病灶互引 |
+| MISC-02 | 资源总览 PMO 可达页恒空白 | P1 | 已验证 | resource_overview.py；pmo_cockpit_service.py；pmo.py；ResourceOverview.jsx；resourceOverview.js；tests/unit/test_resource_overview_misc02.py；ResourceOverview.test.jsx | 聚合 1d/摘菜单 0.5h | 静态已证；✅已动态回归（2026-07-04） | 前端 now 调真实 `/pmo/resource-overview`，旧 `/resource-overview` 占位挂载已下架为 501；PMO 响应补 `employees/avg_utilization/conflicts`，无 allocation 时展示真实资源总数和部门汇总，不再吃 placeholder 空页 |
 | MISC-03 | 预警超时升级任务坏死（对 Column 取布尔导致查询短路） | P1 | 已验证 | alert_escalation_task.py；tests/unit/test_utils_missing.py | 0.5d | 静态已证；✅已动态回归（2026-07-03） | 与 APPR-17/AS-25 的 841 饿死不同源，是升级任务本身崩；未升级判断改 SQL 表达式并纳入 OPEN/PENDING/ACKNOWLEDGED/PROCESSING |
 | MISC-04 | best_practice(P0 优化 4 端点) 僵尸+半成品（从未注册、0 commit、无认证） | P2 | 已验证 | best_practice.py；projects/__init__.py；tests/unit/test_best_practice_legacy_misc04.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 旧 `best_practice.py` 仍未挂载主路由；潜在写端点已补 `material:update/supplier:update/project:update`；真实前端路径继续走已挂载 `/projects/best-practices` |
 | MISC-05 | endpoints/knowledge 僵尸三无（表不存在挂载即 500，硬编码冒充 AI） | P2 | 已验证 | endpoints/knowledge/__init__.py；api.py；api_lazy.py；knowledge.js；knowledgeBase.js；tests/unit/test_knowledge_legacy_misc05.py | 下架 0.5d | 静态已证；✅已动态回归（2026-07-04） | 旧 `endpoints/knowledge` 自动沉淀聚合路由已下架为 501 stopgap，不再聚合依赖 `knowledge_entries/knowledge_alerts` 的 extraction/induction/alerts/search；主路由当前未挂 legacy `/knowledge`，前端继续走 `/knowledge-base` 或 `/service/knowledge-base` |
@@ -364,17 +364,17 @@
 | MISC-13 | project_contributions 闭环断裂（前端仅 getReport 接了页面，报告页永远空） | P2 | 已验证 | ProjectContributionReport.jsx；project_contribution_service.py；tests/unit/test_project_contributions_misc13.py；ProjectContributionReport.test.jsx | 1d | 静态已证；✅已动态回归（2026-07-04） | 报告页默认不再强塞当前月 period，改为全周期读取以避免默认库 `pr30222` 脏周期导致空页；页面 now 接 calculate 和 PM rate；后端报告行补 `period`，全周期视图能按行评分 |
 | MISC-14 | pm_involvement 零鉴权+数据源桩致误判（6 端点全无 auth 含写语义） | P1 | 已验证 | performance/pm_involvement.py；pm_involvement_service.py；presale/tickets/crud.py；tests/unit/test_pm_involvement_misc14.py | 1d | 静态已证；✅已动态回归（2026-07-04） | 6 端点已补鉴权：POST 判断/自动判断/通知生成需 `presale:manage`，GET 查询/示例需登录；相似项目/失败数查 `Project`，标准方案查启用模板库，工单创建和 auto-judge 不再固定 0/False |
 | MISC-15 | relationship_maturity 假数据+必崩（improvement-plan 引用未定义变量 NameError 500） | P1 | 已验证 | relationship_maturity.py；RelationshipMaturity.jsx；relationshipMaturity.js；tests/unit/test_relationship_maturity_misc15.py | 1d | 静态已证；✅已动态回归（2026-07-04） | 客户评估 now 查真实客户并调用 `RelationshipScoringService`；缺失客户 404；improvement-plan 修复 `gap` NameError 且移除固定人名；portfolio 读取 `customer_relationship_scores` 最新记录；前端不再内置宁德/比亚迪样例，改走真实 API |
-| MISC-16 | RequirementSurvey 前端孤儿+后端 404 僵尸 | P2 | 待修 | survey.js:4；后端零匹配无表 | 删目录 0.5h | 静态已证 | 完整开发后遗弃 |
-| MISC-17 | resource_scheduling 占位+完全僵尸 | P2 | 待修 | placeholder shim；api.py:1151 | 下架 0.5h | 静态已证 | 与真实 engineer_scheduling 无关联，勿误删 |
+| MISC-16 | RequirementSurvey 前端孤儿+后端 404 僵尸 | P2 | 已验证 | api.js；RequirementSurvey/index.jsx；RequirementSurvey.test.jsx；routeContracts.test.js | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 当前活页已接 `presaleApi.tickets` 售前工单上下文；已删除旧 `surveyApi`、`useRequirementSurvey` hook 和 `/requirement-surveys` barrel export，避免继续调用无后端路由 |
+| MISC-17 | resource_scheduling 占位+完全僵尸 | P2 | 已验证 | api.py；resource_scheduling.py；engineer_scheduling.py；tests/unit/test_resource_scheduling_misc17.py | 下架 0.5h | 静态已证；✅已动态回归（2026-07-04） | 主 `api.py` 已移除 legacy `/resource-scheduling` 挂载；旧 shim 下架为 501 stopgap；真实 `/engineer-scheduling` 保留且前端契约回归通过 |
 | MISC-18 | business_support 前缀丢失 5 组 API 全 404 | P1 | 已验证 | api.py:824；business_support/__init__.py；dashboard.py；contract_review.py；payment_reminders.py；tests/unit/test_business_support_prefix_misc18.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 主路由 now 挂 `/business-support`；dashboard/bidding/contract-review/payment-reminder/todos 前端路径全部注册；旧 contracts/payment-reminders 兼容保留 |
-| MISC-19 | business_support_orders 发货真其余僵尸 | P2 | 待修 | 发货单完整；开票/对账/入驻/验收僵尸 | 评估 1d | 静态已证 | 发货审批走模块内翻状态不走引擎 |
+| MISC-19 | business_support_orders 发货审批绕过统一引擎 | P2 | 已验证 | delivery_orders/crud.py；approval_engine/adapters/delivery_order.py；init_approval_data.py；DeliveryDetail.jsx；tests/unit/test_business_support_delivery_approval_misc19.py | 1d | 静态已证；✅已动态回归（2026-07-04） | 现场校正：开票/对账等已有真实表/路由，不按“全僵尸”处理；发货审批已补 `DELIVERY_ORDER` 适配器、`TPL_DELIVERY_ORDER` 模板/迁移、`submit-approval`，旧 approve 入口必须先有统一审批实例和当前待办任务才会落状态 |
 | MISC-20 | budget 写操作权限全配成 budget:read（接前端即越权） | P2 | 已验证 | budgets.py；items.py；allocation_rules.py；tests/unit/test_budget_permissions_misc20.py | 0.5d | 静态已证；✅已动态回归（2026-07-04） | 预算 update/submit→`budget:update`，delete→`budget:delete`；明细写操作→`budget:update`；分摊规则 create/update/delete→对应权限，读接口保留 `budget:read` |
-| MISC-21 | budget 整体审批自闭环+前端僵尸+脏数据（total≠Σitems） | P2 | 待修 | submit/approve 只翻 status 无 ApprovalInstance | 切 budgetApi 2-3d/下架 0.5d | 静态已证 | 与 APPR-02 同源（连接口都没接）；DB 60 行全部 total≠Σitems |
-| MISC-22 | alerts 自定义规则 CRUD 是摆设（通用引擎无生产调用方） | P2 | 待修 | AlertRuleEngine.evaluate_rule 仅单测；rules.py:128 | 加调度 2-4d/降级 0.5d | 静态已证 | 实际产警走各域硬编码 rule_code；create/toggle 无权限 |
-| MISC-23 | culture_wall config 占位+goals 前端 404+空播 | P2 | 待修 | culture_wall_config.py:7-25；admin.js:243；contents 无 PUT/DELETE | 1-2d | 静态已证 | 与 HR-22 同一 culture_wall，HR-22 为主，本项补 config/goals/PUT 细节，互引不合并 |
-| MISC-24 | ai_strategy 84 端点巨型僵尸+前端 5 接口全 404 | P2 | 待修 | /ai-strategy 8 模块 84 端点；aiStrategy.js 5 调用无一匹配 | 下架 0.5d/重写 5d+ | 静态已证 | 全库最大僵尸，典型前后端各写各的 |
+| MISC-21 | budget 整体审批自闭环+前端僵尸+脏数据（total≠Σitems） | P2 | 已验证 | budgets.py；approval_engine/adapters/budget.py；init_approval_data.py；BudgetManagement.jsx；tests/unit/test_budget_approval_flow_misc21.py；20260704_project_budget_approval_sqlite.sql | 1d | 静态已证；✅已动态回归（2026-07-04） | 预算 submit/approve now 接 `PROJECT_BUDGET` 统一审批实例/待办；`TPL_PROJECT_BUDGET` 种子和迁移已补；创建/提交/审批按明细重算总额，迁移临时库验证 60 条 mismatch→0；预算页优先读 `budgetApi.list`，无预算单再回退项目预算看板 |
+| MISC-22 | alerts 自定义规则 CRUD 是摆设（通用引擎无生产调用方） | P2 | 已验证 | alerts/rules.py；init_permissions_data.py；usePermission.js；tests/unit/test_alert_rules_misc22.py | 降级 0.5d | 静态已证；✅已动态回归（2026-07-04） | 降级止血：读规则/模板 now 要求 `alert:read`，create/update/toggle/delete now 要求 `alert:manage`；补权限种子和前端常量。生产调度接入仍不宣称已完成，实际产警继续走各域硬编码链路 |
+| MISC-23 | culture_wall config 占位+goals 前端 404+空播 | P2 | 已验证 | culture_wall_config.py；contents.py；admin.js；ChairmanWorkstation.jsx；GeneralManagerWorkstation.jsx；tests/unit/test_culture_wall_misc23.py | 1d | 静态已证；✅已动态回归（2026-07-04） | `culture_wall_config` placeholder 已替换为真实配置 CRUD；`/culture-wall/contents/{id}` 已补 PUT/DELETE 并落库清阅读记录；前端 goals 改走 `/culture-wall/personal-goals`，工作台点击目标不再跳未注册 `/personal-goals` |
+| MISC-24 | ai_strategy 旧别名/占位路由+前端 5 接口全 404 | P2 | 已验证 | api.py；ai_strategy.py；aiStrategy.js；strategyRoutes.jsx；sidebarConfig/default.js；tests/unit/test_ai_strategy_misc24.py | 下架 0.5d/重写 5d+ | 静态已证；✅已动态回归（2026-07-04） | 现场校正：当前后端实际只有兼容占位 shim，真实战略能力在 `/strategy`；已移除主路由 `/ai-strategy` 挂载、删除 AI 战略助手入口和死 API，保留未挂载 501 shim 防误挂 |
 
-**MISC 域小结**：24 个边缘模块以"僵尸/半成品/假实现"为主。P0 唯 MISC-01（用户正看虚构竞品数据）已下架止血；P1 集群：MISC-02 恒空白、MISC-03 升级任务坏死（已修复）、MISC-12 裸 sqlite3+启动 DDL（并入 HR-15）、人事 PII 入库。MISC-04 legacy best_practice 下架确认+潜在权限、MISC-05 legacy endpoints/knowledge 已下架为 501 stopgap、MISC-06 文档上传 multipart 契约/写权限/demo 假路径、MISC-07 优势产品入口/导入默认安全值、MISC-08 change_impact 主路由已挂真实 `/project-change-impacts` 且旧占位下架、MISC-09 归集无 RBAC、MISC-10 成本偏差权限/404/N+1、MISC-11 积分自退刷分、MISC-13 项目贡献报告默认全周期并接 calculate/rate 闭环、MISC-14 PM 介入零鉴权/数据源桩、MISC-15 关系成熟度前后端假数据/NameError 已接真实评分与记录、MISC-18 商务支持 5 组 404 已补前后端契约/权限。建议直接下架止血：resource_scheduling、culture_wall_config 占位、RequirementSurvey、ai_strategy。
+**MISC 域小结**：24 个边缘模块以"僵尸/半成品/假实现"为主。P0 唯 MISC-01（用户正看虚构竞品数据）已下架止血；P1 集群：MISC-02 资源总览已改走真实 PMO cockpit 并补汇总/明细响应、MISC-03 升级任务坏死（已修复）、MISC-12 裸 sqlite3+启动 DDL（并入 HR-15）、人事 PII 入库。MISC-04 legacy best_practice 下架确认+潜在权限、MISC-05 legacy endpoints/knowledge 已下架为 501 stopgap、MISC-06 文档上传 multipart 契约/写权限/demo 假路径、MISC-07 优势产品入口/导入默认安全值、MISC-08 change_impact 主路由已挂真实 `/project-change-impacts` 且旧占位下架、MISC-09 归集无 RBAC、MISC-10 成本偏差权限/404/N+1、MISC-11 积分自退刷分、MISC-13 项目贡献报告默认全周期并接 calculate/rate 闭环、MISC-14 PM 介入零鉴权/数据源桩、MISC-15 关系成熟度前后端假数据/NameError 已接真实评分与记录、MISC-16 RequirementSurvey 旧 `/requirement-surveys` 死链已移除、MISC-17 legacy resource_scheduling 已下架且保留真实 `/engineer-scheduling`、MISC-18 商务支持 5 组 404 已补前后端契约/权限、MISC-19 发货审批已接统一审批引擎并保留旧按钮兼容、MISC-21 预算提交/审批已接统一审批且修总额口径/前端预算接口接入、MISC-22 自定义预警规则 CRUD 已权限降级止血、MISC-23 文化墙配置/内容/目标链路已补真实 CRUD 与前端契约、MISC-24 legacy `/ai-strategy` 与 AI 战略助手死 API 已下架。
 
 ## 视图一：17 项全局 P0 → 追踪 ID 映射
 
@@ -419,9 +419,9 @@
 | 1 | 合同状态大小写两套混杂 | ACTIVE(18)/SIGNED(67)/draft(12)/executing(13)，ACTIVE 不属任何合法写入值 | APPR-13（PEER-01/02 收口后迁移归一） |
 | 2 | 服务工单状态枚举外脏值 | 89 条中 48 条为枚举外值 | AS-05 |
 | 3 | 项目状态三套词汇表 | COMPLETED(45)/EXECUTING(35)/ST01(24)/archived，定时任务过滤三套全不匹配 | PROJ-05（PROJ-04/PROJ-25 依赖先清洗） |
-| 4 | 商机 assessment_status 两套值 | ASSESSMENT_COMPLETED(51) vs COMPLETED(4)，按 COMPLETED 统计漏 93% | PRE-24 |
+| 4 | 商机 assessment_status 两套值 | 已补迁移脚本：ASSESSMENT_COMPLETED→COMPLETED、ASSESSMENT_IN_PROGRESS→IN_PROGRESS、REQUESTED→PENDING；读侧兼容旧值 | PRE-24（已验证） |
 | 5 | PO/POI 状态空值与读写字典错位 | PO 空状态 60 条、收货单 status 全空；读侧 ORDERED/PARTIAL_RECEIVED 无写入点 | PROD-11 + PROD-04 |
-| 6 | quotation_type 非法枚举 | 存量含 AUTO/MANUAL/NORMAL | PRE-24 |
+| 6 | quotation_type 非法枚举 | 已补迁移脚本：AUTO/MANUAL/NORMAL/空值→STANDARD；读取历史列表时也归一化为接口小写档位 | PRE-24（已验证） |
 | 7 | 售前工单状态字典分裂 | PROCESSING(1)/REVIEW(1) 存量工单无路可走 | PRE-14 |
 | 8 | 商机阶段词表分裂 | 经 advance 到 CLOSING 的商机在 PUT /stage 下为非法值 | SALES-21 |
 | 9 | 报价存量版本成本/毛利错算 | qty≠1 的版本成本被低估，需重算脚本 | SALES-03 |
@@ -438,7 +438,7 @@
 
 | # | 模块/路由 | 端点数 | 关联 |
 |---|---|---|---|
-| 1 | /ai-strategy | 84 | MISC-24（全库最大僵尸） |
+| 1 | /ai-strategy | 84 | MISC-24（已下架主挂载；保留未挂载 501 shim 防误挂） |
 | 2 | /timesheet-reminders | 26 | api.py:1247 整 router 冗余别名重挂 |
 | 3 | /solution-credits | 13 | MISC-11 |
 | 4 | /standard-costs | 13 | — |
@@ -458,7 +458,7 @@
 | 18 | /pitfalls | 6 | — |
 
 **四类结构性僵尸**：
-1. **占位自引用文件**（27 行自 import 永远 fallback 空 router，7 个）：itr.py、account_unlock.py、backup.py、change_impact.py、culture_wall_config.py、quality_risk.py、resource_scheduling.py。
+1. **占位自引用文件**（27 行自 import 永远 fallback 空 router，剩 6 个）：itr.py、account_unlock.py、backup.py、change_impact.py、quality_risk.py、resource_scheduling.py。`culture_wall_config.py` 已在 HR-22/MISC-23 修实。
 2. **丢前缀挂载**：permissions.matrix、performance.individual、business_support 系列（MISC-18）。
 3. **双段前缀 bug**：/analytics/analytics/skill-matrix、/kit-check/kit-check/*、/bonus/rules/rules。
 4. **冗余别名挂载**：/acceptance（前缀版 44 端点前端用免前缀 legacy）、/technical-specs、/presale-analytics。
@@ -469,7 +469,7 @@
 
 | 前端 service | 调用 | 后端实况 |
 |---|---|---|
-| aiStrategy.js:14-67 | /ai-strategy/analyze 等 | 84 路由无一匹配（MISC-24） |
+| aiStrategy.js:14-67 | /ai-strategy/analyze 等 | 已删除前端死 API、AI 战略助手路由和侧边栏入口（MISC-24） |
 | businessSupport.js | 16 调用 | 下划线/丢前缀（MISC-18） |
 | marginAlert.js | 14 调用 /sales/margin-alerts/* | 后端只有 /margin-prediction/* |
 | stageTemplates.js | 13 路径 | 后端仅 2 条只读 GET |

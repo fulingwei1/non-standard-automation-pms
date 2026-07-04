@@ -54,6 +54,7 @@ def create_calculation_from_team_allocation(
     user_id: int,
     calculated_amount: Decimal,
     calculator: BonusCalculator,
+    approved_by: Optional[int] = None,
 ) -> BonusCalculation:
     """
     从团队奖金分配创建个人计算记录
@@ -64,6 +65,7 @@ def create_calculation_from_team_allocation(
         user_id: 用户ID
         calculated_amount: 计算金额
         calculator: 奖金计算器
+        approved_by: 发放操作人（导入直批的审批留痕，HR-17）
 
     Returns:
         创建的计算记录
@@ -103,7 +105,12 @@ def create_calculation_from_team_allocation(
             "team_allocation_id": team_allocation_id,
             "user_id": user_id,
         },
-        status="APPROVED",  # 从Excel导入的视为已审批
+        # Excel 分配表须经财务/HR/总经理三方线下确认后才能发放（见
+        # validate_sheet_for_distribution），故视为已审批；但必须留审批痕迹（HR-17）
+        status="APPROVED",
+        approved_by=approved_by,
+        approved_at=datetime.now(),
+        approval_comment="Excel 分配表导入（财务/HR/总经理线下确认后发放）",
     )
 
     db.add(calculation)

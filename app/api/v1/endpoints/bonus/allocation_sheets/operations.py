@@ -116,6 +116,7 @@ def distribute_bonus_from_sheet(
                         row_data["user_id"],
                         Decimal(str(row_data["calculated_amount"])),
                         calculator,
+                        approved_by=current_user.id,
                     )
                     calculation_id = calculation.id
                 except ValueError as e:
