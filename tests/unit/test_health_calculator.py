@@ -133,6 +133,73 @@ class TestCalculateHealth:
         p = make_project(status="ST30")
         assert calculator.calculate_health(p) == ProjectHealthEnum.H4.value
 
+    def test_over_budget_project_returns_h2(self, mock_db, calculator):
+        """实际成本超过预算时，主健康度不能继续判 H1。"""
+        p = make_project(
+            status="ST10",
+            planned_start_date=date.today(),
+            planned_end_date=date.today() + timedelta(days=30),
+            progress_pct=50,
+            budget_amount=100,
+            actual_cost=125,
+        )
+        mock_db.query.return_value.filter.return_value.count.return_value = 0
+        mock_db.query.return_value.join.return_value.filter.return_value.count.return_value = 0
+
+        result = calculator.calculate_health(p)
+
+        assert result == ProjectHealthEnum.H2.value
+
+    def test_project_with_no_health_baseline_is_not_h1(self, mock_db, calculator):
+        """完全缺少计划、进度和成本基线时，不能默认绿灯。"""
+        p = make_project(
+            status="ST10",
+            planned_start_date=None,
+            planned_end_date=None,
+            progress_pct=0,
+            budget_amount=0,
+            actual_cost=0,
+        )
+        mock_db.query.return_value.filter.return_value.count.return_value = 0
+        mock_db.query.return_value.join.return_value.filter.return_value.count.return_value = 0
+
+        result = calculator.calculate_health(p)
+
+        assert result == ProjectHealthEnum.H2.value
+
+
+class TestHealthSnapshotData:
+    def test_snapshot_data_uses_dimension_scores_and_cost_metrics(self, mock_db, calculator):
+        p = make_project(
+            status="ST10",
+            planned_start_date=date.today() - timedelta(days=10),
+            planned_end_date=date.today() + timedelta(days=10),
+            progress_pct=25,
+            budget_amount=100,
+            actual_cost=125,
+        )
+        mock_db.query.return_value.filter.return_value.count.return_value = 0
+        mock_db.query.return_value.join.return_value.filter.return_value.count.return_value = 0
+
+        with patch("app.services.health_calculator.HealthTrendService") as trend_cls:
+            trend_cls.return_value.calculate_dimension_scores.return_value = {
+                "schedule": 90,
+                "cost": 45,
+                "resource": 85,
+                "quality": 75,
+            }
+
+            snapshot_data = calculator.build_health_snapshot_data(p)
+
+        assert snapshot_data["overall_health"] == ProjectHealthEnum.H2.value
+        assert snapshot_data["schedule_health"] == ProjectHealthEnum.H1.value
+        assert snapshot_data["cost_health"] == ProjectHealthEnum.H3.value
+        assert snapshot_data["resource_health"] == ProjectHealthEnum.H1.value
+        assert snapshot_data["quality_health"] == ProjectHealthEnum.H2.value
+        assert snapshot_data["budget_used_pct"] == 125.0
+        assert snapshot_data["cost_variance"] == 25.0
+        assert snapshot_data["schedule_variance"] == 25.0
+
 
 class TestScheduleVarianceCheck:
     def test_below_threshold_returns_false(self, mock_db, calculator):

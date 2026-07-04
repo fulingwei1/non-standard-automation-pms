@@ -207,7 +207,7 @@ class TestProgressAggregationBranches:
     def test_aggregate_to_stage(self, db_session, test_project, test_task):
         """分支：聚合到阶段级别"""
         # 设置任务阶段
-        test_task.stage = "S4"
+        test_task.project_stage = "S4"
         test_task.progress = 80
         db_session.commit()
 
@@ -216,7 +216,8 @@ class TestProgressAggregationBranches:
             project_id=test_project.id,
             stage_code="S4",
             stage_name="加工制造",
-            progress_pct=Decimal("0.0"),
+            stage_order=4,
+            progress_pct=0,
         )
         db_session.add(stage)
         db_session.commit()
@@ -226,7 +227,7 @@ class TestProgressAggregationBranches:
 
         assert result["stage_progress_updated"] is True
         assert result["stage_code"] == "S4"
-        assert result["new_stage_progress"] > 0
+        assert result["new_stage_progress"] == 80.0
 
     def test_aggregate_no_project(self, db_session, test_task):
         """分支：任务无关联项目 - 不聚合"""
@@ -243,8 +244,10 @@ class TestProgressAggregationBranches:
         # 创建多个任务，不同工时
         tasks = [
             TaskUnified(
+                task_code=f"TSK-WEIGHT-{i}",
+                title=f"任务{i}",
+                task_type="PROJECT_WBS",
                 project_id=test_project.id,
-                task_name=f"任务{i}",
                 assignee_id=1,
                 status="IN_PROGRESS",
                 progress=50 if i == 0 else 100,  # 第一个任务50%,其他100%
@@ -263,6 +266,42 @@ class TestProgressAggregationBranches:
         assert result["total_tasks"] >= 3
         # 加权平均应该更接近100%（大工时任务都是100%）
         assert result["overall_progress"] > 50
+
+    def test_aggregate_task_progress_writes_weighted_project_progress(
+        self, db_session, test_project
+    ):
+        """任务进度聚合到项目时，应按预估工时加权而不是简单平均"""
+        light_done = TaskUnified(
+            task_code="TSK-WEIGHT-LIGHT",
+            title="低工时已完成任务",
+            task_type="PROJECT_WBS",
+            project_id=test_project.id,
+            assignee_id=1,
+            status="COMPLETED",
+            progress=100,
+            estimated_hours=Decimal("1.0"),
+            is_active=True,
+        )
+        heavy_pending = TaskUnified(
+            task_code="TSK-WEIGHT-HEAVY",
+            title="高工时未完成任务",
+            task_type="PROJECT_WBS",
+            project_id=test_project.id,
+            assignee_id=1,
+            status="IN_PROGRESS",
+            progress=0,
+            estimated_hours=Decimal("9.0"),
+            is_active=True,
+        )
+        db_session.add_all([light_done, heavy_pending])
+        db_session.commit()
+
+        result = aggregate_task_progress(db_session, light_done.id)
+        db_session.refresh(test_project)
+
+        assert result["project_progress_updated"] is True
+        assert result["new_project_progress"] == 10.0
+        assert float(test_project.progress_pct) == 10.0
 
 
 class TestProgressAutoServiceBranches:
@@ -287,8 +326,8 @@ class TestProgressAutoServiceBranches:
             TaskForecastItem(
                 task_id=task.id,
                 task_name="延迟任务",
-                current_progress=10,
-                predicted_progress=50,
+                progress_percent=10,
+                predicted_finish_date=date.today() + timedelta(days=10),
                 status="Delayed",
                 delay_days=10,
                 critical=True,
@@ -325,8 +364,8 @@ class TestProgressAutoServiceBranches:
             TaskForecastItem(
                 task_id=task.id,
                 task_name="已完成任务",
-                current_progress=100,
-                predicted_progress=100,
+                progress_percent=100,
+                predicted_finish_date=date.today() + timedelta(days=10),
                 status="Delayed",
                 delay_days=10,
                 critical=True,
@@ -363,8 +402,8 @@ class TestProgressAutoServiceBranches:
             TaskForecastItem(
                 task_id=task.id,
                 task_name="高风险任务",
-                current_progress=5,
-                predicted_progress=30,
+                progress_percent=5,
+                predicted_finish_date=date.today() + timedelta(days=5),
                 status="Delayed",
                 delay_days=5,
                 critical=True,
@@ -523,29 +562,41 @@ class TestProjectProgressSummaryBranches:
         # 创建不同状态的任务
         tasks = [
             TaskUnified(
+                task_code="TSK-SUMMARY-DONE",
+                title="已完成任务",
+                task_type="PROJECT_WBS",
                 project_id=test_project.id,
-                task_name="已完成任务",
+                assignee_id=1,
                 status="COMPLETED",
                 progress=100,
                 is_active=True,
             ),
             TaskUnified(
+                task_code="TSK-SUMMARY-INPROGRESS",
+                title="进行中任务",
+                task_type="PROJECT_WBS",
                 project_id=test_project.id,
-                task_name="进行中任务",
+                assignee_id=1,
                 status="IN_PROGRESS",
                 progress=50,
                 is_active=True,
             ),
             TaskUnified(
+                task_code="TSK-SUMMARY-ACCEPTED",
+                title="待开始任务",
+                task_type="PROJECT_WBS",
                 project_id=test_project.id,
-                task_name="待开始任务",
+                assignee_id=1,
                 status="ACCEPTED",
                 progress=0,
                 is_active=True,
             ),
             TaskUnified(
+                task_code="TSK-SUMMARY-CANCELLED",
+                title="已取消任务",
+                task_type="PROJECT_WBS",
                 project_id=test_project.id,
-                task_name="已取消任务",
+                assignee_id=1,
                 status="CANCELLED",
                 progress=0,
                 is_active=False,
@@ -566,8 +617,11 @@ class TestProjectProgressSummaryBranches:
         """分支：包含延期任务的汇总"""
         # 创建延期任务
         task = TaskUnified(
+            task_code="TSK-SUMMARY-DELAYED",
+            title="延期任务",
+            task_type="PROJECT_WBS",
             project_id=test_project.id,
-            task_name="延期任务",
+            assignee_id=1,
             status="IN_PROGRESS",
             progress=30,
             is_delayed=True,
@@ -584,8 +638,11 @@ class TestProjectProgressSummaryBranches:
         """分支：包含逾期任务的汇总"""
         # 创建逾期任务
         task = TaskUnified(
+            task_code="TSK-SUMMARY-OVERDUE",
+            title="逾期任务",
+            task_type="PROJECT_WBS",
             project_id=test_project.id,
-            task_name="逾期任务",
+            assignee_id=1,
             status="IN_PROGRESS",
             progress=20,
             deadline=datetime.now() - timedelta(days=5),

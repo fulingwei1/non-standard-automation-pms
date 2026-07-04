@@ -38,7 +38,8 @@ function getSourceFromSearch(searchParams) {
 }
 
 function buildFallbackHandoffData(searchParams) {
-    if (searchParams.get("handoff") !== "presale") {
+    const handoffType = searchParams.get("handoff");
+    if (!["presale", "contract"].includes(handoffType)) {
         return null;
     }
 
@@ -54,9 +55,17 @@ function buildFallbackHandoffData(searchParams) {
             searchParams.get("contract_amount"),
             searchParams.get("estimated_amount"),
         ),
-        technical_solution_id: readNumberParam(searchParams, "solution_id"),
+        required_start_date: searchParams.get("required_start_date") || "",
+        required_end_date: searchParams.get("required_end_date") || "",
+        technical_solution_id: firstNonEmpty(
+            readNumberParam(searchParams, "solution_id"),
+            readNumberParam(searchParams, "technical_solution_id"),
+        ),
         requirement_summary: searchParams.get("requirement_summary") || "",
         estimated_hours: readNumberParam(searchParams, "estimated_hours"),
+        resource_requirements: searchParams.get("resource_requirements") || "",
+        risk_assessment: searchParams.get("risk_assessment") || "",
+        technical_difficulty: searchParams.get("technical_difficulty") || "",
     };
 }
 

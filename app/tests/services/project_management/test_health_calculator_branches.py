@@ -128,20 +128,26 @@ class TestHealthH3BlockedBranches:
         """分支：有严重缺料预警 - H3"""
         # 创建预警规则
         rule = AlertRule(
+            rule_code=f"MATERIAL_SHORTAGE_CRITICAL_{test_project.id}",
             rule_name="缺料预警",
             rule_type="MATERIAL_SHORTAGE",
-            condition="缺料",
+            target_type="project",
+            condition_type="THRESHOLD",
         )
         db_session.add(rule)
         db_session.commit()
 
         # 创建严重预警
         alert = AlertRecord(
+            alert_no=f"ALERT_SHORTAGE_CRITICAL_{test_project.id}",
             project_id=test_project.id,
             rule_id=rule.id,
+            target_type="project",
+            target_id=test_project.id,
             alert_level=AlertLevelEnum.CRITICAL,
             status="PENDING",
-            title="严重缺料",
+            alert_title="严重缺料",
+            alert_content="严重缺料",
         )
         db_session.add(alert)
         db_session.commit()
@@ -197,20 +203,26 @@ class TestHealthH2RiskBranches:
         """分支：有缺料预警（非严重） - H2"""
         # 创建预警规则
         rule = AlertRule(
+            rule_code=f"MATERIAL_SHORTAGE_WARNING_{test_project.id}",
             rule_name="缺料预警",
             rule_type="MATERIAL_SHORTAGE",
-            condition="缺料",
+            target_type="project",
+            condition_type="THRESHOLD",
         )
         db_session.add(rule)
         db_session.commit()
 
         # 创建警告级别预警
         alert = AlertRecord(
+            alert_no=f"ALERT_SHORTAGE_WARNING_{test_project.id}",
             project_id=test_project.id,
             rule_id=rule.id,
+            target_type="project",
+            target_id=test_project.id,
             alert_level=AlertLevelEnum.WARNING,
             status="PENDING",
-            title="缺料警告",
+            alert_title="缺料警告",
+            alert_content="缺料警告",
         )
         db_session.add(alert)
         db_session.commit()
@@ -225,7 +237,7 @@ class TestHealthH2RiskBranches:
             project_id=test_project.id,
             title="高优先级问题",
             description="高优先级问题描述",
-            issue_type=IssueTypeEnum.TASK,
+            issue_type=IssueTypeEnum.OTHER,
             status=IssueStatusEnum.OPEN,
             priority="HIGH",
             reporter_id=1,
@@ -511,9 +523,12 @@ class TestCalculateProjectHealthBranches:
         issue = Issue(
             project_id=test_project.id,
             title="高优先级问题",
-            issue_type=IssueTypeEnum.TASK,
+            description="高优先级问题描述",
+            issue_type=IssueTypeEnum.OTHER,
             status=IssueStatusEnum.OPEN,
             priority="HIGH",
+            reporter_id=1,
+            report_date=date.today(),
         )
         db_session.add(issue)
         db_session.commit()

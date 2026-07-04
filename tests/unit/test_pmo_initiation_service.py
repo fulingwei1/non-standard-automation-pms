@@ -372,7 +372,11 @@ class TestPmoInitiationServiceSubmit(unittest.TestCase):
         self.service = PmoInitiationService(self.db)
 
     def _mock_handover(self, missing=None, assessment_status="COMPLETED"):
-        current = {"status": assessment_status} if assessment_status else None
+        current = (
+            {"status": assessment_status, "total_score": 85}
+            if assessment_status == "COMPLETED"
+            else {"status": assessment_status} if assessment_status else None
+        )
         return {
             "handover_status": {"ready": not missing, "missing": missing or []},
             "technical_assessment": {"current": current},
@@ -441,6 +445,43 @@ class TestPmoInitiationServiceSubmit(unittest.TestCase):
         self.assertIn("尚未完成", str(context.exception))
         self.assertEqual(mock_initiation.status, "DRAFT")
 
+    def test_submit_initiation_blocked_with_auto_generated_empty_assessment(self):
+        """自动补建的空评估即使是 COMPLETED，也不能满足立项关卡"""
+        mock_initiation = MagicMock(id=1, status="DRAFT")
+
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = mock_initiation
+        self.db.query.return_value = mock_query
+
+        empty_assessment = {
+            "status": "COMPLETED",
+            "decision": "推荐立项",
+            "auto_generated": True,
+            "total_score": None,
+            "dimension_scores": None,
+            "item_scores": [],
+            "risks": None,
+            "conditions": None,
+            "ai_analysis": None,
+        }
+
+        with patch.object(
+            self.service,
+            "build_presale_handover_context",
+            return_value={
+                "handover_status": {"ready": True, "missing": []},
+                "technical_assessment": {"current": empty_assessment},
+            },
+        ):
+            with self.assertRaises(ValueError) as context:
+                self.service.submit_initiation(initiation_id=1)
+
+        self.assertIn("缺少实际评估内容", str(context.exception))
+        self.assertEqual(mock_initiation.status, "DRAFT")
+        self.db.add.assert_not_called()
+        self.db.commit.assert_not_called()
+
     def test_submit_initiation_blocks_when_handover_context_fails(self):
         """售前交接/技术评估上下文构建失败时不能静默放行"""
         mock_initiation = MagicMock(id=1, status="DRAFT")
@@ -497,8 +538,8 @@ class TestPmoInitiationServiceApprove(unittest.TestCase):
         self.db = MagicMock(spec=Session)
         self.service = PmoInitiationService(self.db)
 
-    def test_approve_initiation_without_pm(self):
-        """测试审批通过 - 不指定项目经理"""
+    def test_approve_initiation_without_pm_is_blocked(self):
+        """审批通过必须指定项目经理，避免 APPROVED 但无项目"""
         mock_initiation = MagicMock(
             id=1,
             status="SUBMITTED",
@@ -518,14 +559,13 @@ class TestPmoInitiationServiceApprove(unittest.TestCase):
 
         current_user = MagicMock(id=10, real_name="审批人")
 
-        result = self.service.approve_initiation(1, approve_request, current_user)
+        with self.assertRaises(ValueError) as context:
+            self.service.approve_initiation(1, approve_request, current_user)
 
-        # 验证状态更新
-        self.assertEqual(mock_initiation.status, "APPROVED")
-        self.assertEqual(mock_initiation.review_result, "评审通过")
-        self.assertEqual(mock_initiation.approved_level, "A")
-        self.assertEqual(mock_initiation.approved_by, 10)
-        self.assertIsNotNone(mock_initiation.approved_at)
+        self.assertIn("项目经理", str(context.exception))
+        self.assertEqual(mock_initiation.status, "SUBMITTED")
+        self.db.add.assert_not_called()
+        self.db.commit.assert_not_called()
 
     @patch.object(PmoInitiationService, "_create_project_from_initiation")
     def test_approve_initiation_with_pm(self, mock_create_project):
@@ -567,7 +607,7 @@ class TestPmoInitiationServiceApprove(unittest.TestCase):
         mock_query.first.return_value = mock_initiation
         self.db.query.return_value = mock_query
 
-        approve_request = InitiationApproveRequest(review_result="通过")
+        approve_request = InitiationApproveRequest(review_result="通过", approved_pm_id=5)
         current_user = MagicMock(id=10)
 
         result = self.service.approve_initiation(1, approve_request, current_user)

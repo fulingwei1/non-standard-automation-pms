@@ -227,4 +227,33 @@ describe("InitiationManagement presale handoff", () => {
       );
     });
   });
+
+  it("prefills a PMO initiation from contract handoff params", async () => {
+    renderPage(
+      "?handoff=contract&project_name=FCT%E6%B5%8B%E8%AF%95%E7%BA%BF%E5%90%88%E5%90%8C&customer_name=%E5%88%B6%E9%80%A0%E5%AE%A2%E6%88%B7&contract_no=HT2606-043&contract_amount=800000&required_end_date=2026-10-20&requirement_summary=%E5%AE%A2%E6%88%B7%E9%9C%80%E8%A6%81FCT%E6%B5%8B%E8%AF%95%E7%BA%BF%EF%BC%8C%E5%90%ABMES%E6%8E%A5%E5%8F%A3",
+    );
+
+    expect(presaleWorkbenchApi.loadContext).not.toHaveBeenCalled();
+    expect(await screen.findByDisplayValue("FCT测试线合同")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("制造客户")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("HT2606-043")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("800000")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("2026-10-20")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("客户需要FCT测试线，含MES接口")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "创建" }));
+
+    await waitFor(() => {
+      expect(pmoApi.initiations.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          project_name: "FCT测试线合同",
+          customer_name: "制造客户",
+          contract_no: "HT2606-043",
+          contract_amount: "800000",
+          required_end_date: "2026-10-20",
+          requirement_summary: "客户需要FCT测试线，含MES接口",
+        }),
+      );
+    });
+  });
 });

@@ -46,6 +46,27 @@ def make_mock_project(
     return p
 
 
+def make_snapshot_data(health="H1", score=100, **overrides):
+    data = {
+        "overall_health": health,
+        "schedule_health": health,
+        "cost_health": health,
+        "quality_health": health,
+        "resource_health": health,
+        "health_score": score,
+        "open_alerts": 0,
+        "open_exceptions": 0,
+        "blocking_issues": 0,
+        "schedule_variance": 0,
+        "milestone_on_track": 0,
+        "milestone_delayed": 0,
+        "cost_variance": 0,
+        "budget_used_pct": 0,
+    }
+    data.update(overrides)
+    return data
+
+
 # ============================================================================
 # 测试 check_project_deadline_alerts
 # ============================================================================
@@ -230,6 +251,30 @@ class TestCheckProjectCostOverrun:
 
         assert result["overrun_projects"] == 0
         mock_session.add.assert_not_called()
+
+    def test_cost_query_uses_actual_cost_basis_filter(self):
+        """成本超支扫描只统计 ACTUAL 成本，不把 BOM 等 PLAN 成本算进实际成本。"""
+        from app.utils.scheduled_tasks.project_scheduled_tasks import (
+            check_project_cost_overrun,
+        )
+
+        project = make_mock_project(budget_amount=100000.0)
+        mock_ctx, mock_session = make_mock_db_ctx()
+        mock_session.query.return_value.filter.return_value.all.return_value = [project]
+        mock_session.query.return_value.filter.return_value.scalar.return_value = 80000.0
+        actual_filter = object()
+
+        with (
+            patch(f"{MODULE}.get_db_session", return_value=mock_ctx),
+            patch(f"{MODULE}.actual_project_cost_filter", return_value=actual_filter),
+        ):
+            result = check_project_cost_overrun()
+
+        assert result["overrun_projects"] == 0
+        assert any(
+            actual_filter in call.args
+            for call in mock_session.query.return_value.filter.call_args_list
+        )
 
     def test_project_over_budget_creates_alert(self):
         """实际成本 > 预算：生成预警"""
@@ -639,6 +684,7 @@ class TestDailyHealthSnapshotInProjectScheduled:
 
         mock_calculator = MagicMock()
         mock_calculator.calculate_and_update.return_value = {"new_health": "H1"}
+        mock_calculator.build_health_snapshot_data.return_value = make_snapshot_data()
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
             with patch(
@@ -674,6 +720,14 @@ class TestDailyHealthSnapshotInProjectScheduled:
 
         mock_calculator = MagicMock()
         mock_calculator.calculate_and_update.return_value = {"new_health": "H2"}
+        mock_calculator.build_health_snapshot_data.return_value = make_snapshot_data(
+            health="H2",
+            score=70,
+            schedule_health="H1",
+            cost_health="H3",
+            budget_used_pct=120,
+            cost_variance=20,
+        )
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
             with patch(
@@ -685,3 +739,7 @@ class TestDailyHealthSnapshotInProjectScheduled:
         # 验证 snapshot 的 health_score = 70
         snapshot_obj = mock_session.add.call_args[0][0]
         assert snapshot_obj.health_score == 70
+        assert snapshot_obj.schedule_health == "H1"
+        assert snapshot_obj.cost_health == "H3"
+        assert snapshot_obj.budget_used_pct == 120
+        assert snapshot_obj.cost_variance == 20

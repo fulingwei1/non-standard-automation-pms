@@ -43,6 +43,10 @@ export function ReviewInitiationDialog({
             alert(isApprove ? "请填写评审结论" : "请填写驳回原因");
             return;
         }
+        if (isApprove && !formData.approved_pm_id) {
+            alert("审批通过前必须指定项目经理");
+            return;
+        }
 
         const payload = {
             review_result: formData.review_result.trim(),
@@ -85,7 +89,7 @@ export function ReviewInitiationDialog({
                                     }
                                     className="w-full px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                 >
-                                    <option value="">暂不指定</option>
+                                    <option value="">请选择项目经理</option>
                                     {(projectManagers || []).map((user) => (
                                         <option key={user.id} value={user.id}>
                                             {user.real_name || user.username || `用户 ${user.id}`}

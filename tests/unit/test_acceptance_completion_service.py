@@ -130,11 +130,32 @@ class TestTriggerWarrantyPeriod:
 
     def test_final_passed(self, db):
         order = MagicMock(acceptance_type="FINAL", project_id=1)
-        project = MagicMock()
+        project = MagicMock(stage="S9")
         db.query.return_value.filter.return_value.first.return_value = project
         db.query.return_value.filter.return_value.all.return_value = []
         trigger_warranty_period(db, order, "PASSED")
         assert project.stage == "S9"
+
+    @patch(
+        "app.services.acceptance_completion_service.check_auto_stage_transition_after_acceptance"
+    )
+    def test_final_passed_does_not_bypass_stage_gate_when_auto_transition_blocked(
+        self, mock_auto_transition, db
+    ):
+        order = MagicMock(acceptance_type="FINAL", project_id=1)
+        project = MagicMock(stage="S8")
+        db.query.return_value.filter.return_value.first.return_value = project
+        db.query.return_value.filter.return_value.all.return_value = []
+        mock_auto_transition.return_value = {
+            "auto_advanced": False,
+            "missing_items": ["回款率 20.0%，需≥80%"],
+        }
+
+        trigger_warranty_period(db, order, "PASSED")
+
+        mock_auto_transition.assert_called_once_with(db, order, "PASSED")
+        assert project.stage == "S8"
+        assert project.actual_end_date != datetime.now().date()
 
 
 class TestTriggerBonusCalculation:

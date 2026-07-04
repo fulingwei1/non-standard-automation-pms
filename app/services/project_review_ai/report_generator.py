@@ -13,8 +13,10 @@ from app.models.change_request import ChangeRequest
 from app.models.project import Project
 from app.models.project.financial import ProjectCost
 from app.models.timesheet import Timesheet
-from app.services.ai_client_service import AIClientService
+from app.services.ai_client_service import AIClientService, is_mock_response
 from app.services.cost.cost_basis import actual_project_cost_filter
+
+AI_REVIEW_DEGRADED_REASON = "AI_REVIEW_UNAVAILABLE"
 
 
 class ProjectReviewReportGenerator:
@@ -63,12 +65,17 @@ class ProjectReviewReportGenerator:
 
         # 5. 添加处理元数据
         processing_time = (datetime.now() - start_time).total_seconds() * 1000
+        degraded = is_mock_response(ai_response)
+        usage = ai_response.get("usage") or {}
         report_data["ai_metadata"] = {
-            "model": "glm-5",
+            "model": ai_response.get("model") or "glm-5",
             "processing_time_ms": processing_time,
-            "token_usage": ai_response.get("token_usage", 0),
+            "token_usage": ai_response.get("token_usage", usage.get("total_tokens", 0)),
             "generated_at": datetime.now().isoformat(),
+            "degraded": degraded,
         }
+        if degraded:
+            report_data["ai_metadata"]["degraded_reason"] = AI_REVIEW_DEGRADED_REASON
 
         return report_data
 
@@ -308,32 +315,14 @@ class ProjectReviewReportGenerator:
         self, ai_response: Dict[str, Any], project_data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """解析AI响应"""
-        content = ai_response.get("content", "{}")
-
-        # 尝试提取JSON
-        try:
-            # 如果响应包含```json代码块，提取它
-            if "```json" in content:
-                start = content.find("```json") + 7
-                end = content.find("```", start)
-                content = content[start:end].strip()
-            elif "```" in content:
-                start = content.find("```") + 3
-                end = content.find("```", start)
-                content = content[start:end].strip()
-
-            report_content = json.loads(content)
-        except json.JSONDecodeError:
-            # 如果解析失败，使用原始文本
-            report_content = {
-                "summary": content[:500],
-                "success_factors": [],
-                "problems": [],
-                "improvements": [],
-                "best_practices": [],
-                "conclusion": content[:300],
-                "insights": {},
-            }
+        if is_mock_response(ai_response):
+            report_content = self._fallback_review_content(project_data)
+            ai_generated = False
+            ai_generated_at = None
+        else:
+            report_content = self._extract_review_content(ai_response)
+            ai_generated = True
+            ai_generated_at = datetime.now()
 
         # 合并项目数据和AI分析结果
         return {
@@ -362,6 +351,79 @@ class ProjectReviewReportGenerator:
             "ai_summary": report_content.get("summary", ""),
             "ai_insights": report_content.get("insights", {}),
             # AI标记
-            "ai_generated": True,
-            "ai_generated_at": datetime.now(),
+            "ai_generated": ai_generated,
+            "ai_generated_at": ai_generated_at,
+        }
+
+    def _extract_review_content(self, ai_response: Dict[str, Any]) -> Dict[str, Any]:
+        """从真实 AI 响应中提取复盘内容。"""
+        content = ai_response.get("content", "{}")
+
+        # 尝试提取JSON
+        try:
+            # 如果响应包含```json代码块，提取它
+            if "```json" in content:
+                start = content.find("```json") + 7
+                end = content.find("```", start)
+                content = content[start:end].strip()
+            elif "```" in content:
+                start = content.find("```") + 3
+                end = content.find("```", start)
+                content = content[start:end].strip()
+
+            report_content = json.loads(content)
+        except json.JSONDecodeError:
+            # 如果解析失败，使用原始文本
+            return {
+                "summary": content[:500],
+                "success_factors": [],
+                "problems": [],
+                "improvements": [],
+                "best_practices": [],
+                "conclusion": content[:300],
+                "insights": {},
+            }
+
+        return report_content
+
+    def _fallback_review_content(self, project_data: Dict[str, Any]) -> Dict[str, Any]:
+        """AI 不可用时，基于结构化项目数据生成安全兜底复盘。"""
+        project = project_data["project"]
+        stats = project_data["statistics"]
+
+        summary = (
+            f"{project['name']}复盘暂未生成 AI 结论；当前仅基于项目结构化数据形成摘要。"
+            f"计划工期 {stats['plan_duration']} 天，实际工期 {stats['actual_duration']} 天，"
+            f"进度偏差 {stats['schedule_variance']} 天；预算 {project['budget']}，"
+            f"实际成本 {stats['total_cost']}，成本偏差 {stats['cost_variance']}。"
+        )
+
+        problems = []
+        improvements = []
+        if stats["schedule_variance"] > 0:
+            problems.append(f"项目较计划延期 {stats['schedule_variance']} 天，需复核延期原因。")
+            improvements.append("补充关键路径、资源投入和客户变更记录，明确延期责任与改进动作。")
+        if stats["cost_variance"] > 0:
+            problems.append(f"项目成本超预算 {stats['cost_variance']}，需复核成本归集和变更影响。")
+            improvements.append("复核预算、采购、工时和变更成本口径，形成超支纠偏清单。")
+        if stats["change_count"] > 0:
+            problems.append(f"项目存在 {stats['change_count']} 次变更，需确认范围和交期影响。")
+            improvements.append("将需求变更、审批结论和成本/交期影响纳入复盘证据。")
+        if not problems:
+            problems.append("结构化数据未显示明显进度或成本异常，仍需人工补充质量、客户反馈和团队协作事实。")
+            improvements.append("由项目负责人补充验收、质量、客户反馈和团队协作记录后再发布复盘。")
+
+        return {
+            "summary": summary,
+            "success_factors": [
+                "项目周期、成本、工时和变更数据已完成结构化归集，可作为人工复盘底稿。"
+            ],
+            "problems": problems,
+            "improvements": improvements,
+            "best_practices": [],
+            "conclusion": "AI 服务不可用，本次结果为规则兜底底稿，需人工确认后发布。",
+            "insights": {
+                "analysis_source": "rule_fallback",
+                "degraded_reason": AI_REVIEW_DEGRADED_REASON,
+            },
         }

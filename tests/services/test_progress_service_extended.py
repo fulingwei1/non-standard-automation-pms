@@ -75,8 +75,7 @@ class TestCheckAndUpdateHealth:
         db.query.return_value.filter.return_value.first.return_value = project
         db.query.return_value.filter.return_value.scalar.return_value = 0
 
-        with patch("app.services.progress_service.TaskUnified"):
-            _check_and_update_health(db, 10)
+        _check_and_update_health(db, 10)
 
     def test_health_updates_based_on_delayed_ratio(self):
         """测试根据延期比例更新健康度"""
@@ -86,8 +85,7 @@ class TestCheckAndUpdateHealth:
         db.query.return_value.filter.return_value.scalar.side_effect = [100, 30, 0]
         db.query.return_value.filter.return_value.first.return_value = project
 
-        with patch("app.services.progress_service.TaskUnified"):
-            _check_and_update_health(db, 10)
+        _check_and_update_health(db, 10)
 
         assert project.health == "H3"
 
@@ -99,8 +97,7 @@ class TestCheckAndUpdateHealth:
         db.query.return_value.filter.return_value.scalar.side_effect = [100, 15, 0]
         db.query.return_value.filter.return_value.first.return_value = project
 
-        with patch("app.services.progress_service.TaskUnified"):
-            _check_and_update_health(db, 10)
+        _check_and_update_health(db, 10)
 
         assert project.health == "H2"
 

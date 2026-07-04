@@ -49,8 +49,10 @@ def archive_project(
                 status_code=400, detail="项目未完成，无法归档。只有管理员可以强制归档未完成的项目。"
             )
 
+    old_status = project.status
+    old_health = project.health
+
     project.is_archived = True
-    project.status = "archived"
     project.archived_by = current_user.id
 
     if reason:
@@ -66,9 +68,9 @@ def archive_project(
         project_id=project_id,
         old_stage=project.stage,
         new_stage=project.stage,
-        old_status=project.status,
-        new_status=project.status,
-        old_health=project.health,
+        old_status=old_status,
+        new_status=old_status,
+        old_health=old_health,
         new_health="H4",  # 归档后健康度变为H4
         change_type="ARCHIVE",
         change_reason=reason or "项目归档",
@@ -78,7 +80,6 @@ def archive_project(
     db.add(status_log)
 
     # 更新健康度为H4（已完结）
-    old_health = project.health
     project.health = "H4"
 
     db.commit()
@@ -90,7 +91,7 @@ def archive_project(
             "project_id": project_id,
             "project_code": project.project_code,
             "project_name": project.project_name,
-            "archived_at": project.updated_at.isoformat() if project.status == "archived" else None,
+            "archived_at": project.updated_at.isoformat() if project.is_archived else None,
             "old_health": old_health,
             "new_health": "H4",
         },
@@ -115,8 +116,10 @@ def unarchive_project(
     if not project.is_archived:
         return ResponseModel(code=200, message="项目未归档", data={"project_id": project_id})
 
+    old_status = project.status
+    old_health = project.health
+
     project.is_archived = False
-    project.status = "active"
     project.archived_by = None
 
     db.add(project)
@@ -126,9 +129,9 @@ def unarchive_project(
         project_id=project_id,
         old_stage=project.stage,
         new_stage=project.stage,
-        old_status=project.status,
-        new_status=project.status,
-        old_health="H4",
+        old_status=old_status,
+        new_status=old_status,
+        old_health=old_health,
         new_health="H1",  # 取消归档后恢复为正常
         change_type="UNARCHIVE",
         change_reason=reason or "取消归档",
@@ -200,7 +203,7 @@ def get_archived_projects(
                 "status": project.status,
                 "contract_amount": float(project.contract_amount or 0),
                 "archived_at": (
-                    project.updated_at.isoformat() if project.status == "archived" else None
+                    project.updated_at.isoformat() if project.is_archived else None
                 ),
                 "archived_by": project.archived_by,
             }
@@ -259,7 +262,6 @@ def batch_archive_projects(
                     continue
 
             project.is_archived = True
-            project.status = "archived"
             project.archived_by = current_user.id
             project.health = "H4"
 

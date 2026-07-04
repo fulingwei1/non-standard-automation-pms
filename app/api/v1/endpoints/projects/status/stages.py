@@ -161,6 +161,11 @@ def advance_project_stage(
         db, project, advance_request.target_stage, old_stage, old_status
     )
 
+    log_reason = advance_request.reason
+    if advance_request.skip_gate_check:
+        skip_reason = "管理员显式跳过阶段门校验"
+        log_reason = f"{skip_reason}；原因：{log_reason}" if log_reason else skip_reason
+
     create_status_log(
         db,
         project_id,
@@ -169,7 +174,7 @@ def advance_project_stage(
         old_status,
         new_status,
         project.health,
-        advance_request.reason,
+        log_reason,
         current_user.id,
     )
 
@@ -210,9 +215,9 @@ def advance_project_stage(
             "new_status": new_status,
             "gate_passed": gate_passed,
             "gate_check_result": (
-                check_gate_detailed(db, project, advance_request.target_stage)
-                if not advance_request.skip_gate_check
-                else None
+                gate_check_result
+                if advance_request.skip_gate_check
+                else check_gate_detailed(db, project, advance_request.target_stage)
             ),
         },
     )

@@ -33,20 +33,36 @@ def validate_target_stage(target_stage: str) -> None:
 
 def validate_stage_advancement(current_stage: str, target_stage: str) -> None:
     """
-    检查阶段是否向前推进
+    检查阶段是否按相邻阶段向前推进
 
     Raises:
         HTTPException: 如果目标阶段不向前推进
     """
     from fastapi import HTTPException
 
-    current_stage_num = int(current_stage[1]) if len(current_stage) > 1 else 1
-    target_stage_num = int(target_stage[1]) if len(target_stage) > 1 else 1
+    valid_stages = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9"]
+    if current_stage not in valid_stages:
+        raise HTTPException(
+            status_code=400,
+            detail=f"当前阶段 {current_stage or '空'} 无效，需先清洗项目阶段数据",
+        )
+    if target_stage not in valid_stages:
+        raise HTTPException(status_code=400, detail=f"无效的目标阶段: {target_stage}")
+
+    current_stage_num = valid_stages.index(current_stage) + 1
+    target_stage_num = valid_stages.index(target_stage) + 1
 
     if target_stage_num <= current_stage_num:
         raise HTTPException(
             status_code=400,
             detail=f"目标阶段 {target_stage} 不能早于或等于当前阶段 {current_stage}",
+        )
+
+    if target_stage_num != current_stage_num + 1:
+        next_stage = valid_stages[current_stage_num]
+        raise HTTPException(
+            status_code=400,
+            detail=f"项目阶段只能推进到下一阶段：当前 {current_stage}，下一阶段 {next_stage}",
         )
 
 
@@ -68,10 +84,7 @@ def perform_gate_check(
     if skip_gate_check:
         if not current_user_is_superuser:
             raise HTTPException(status_code=403, detail="只有管理员可以跳过阶段门校验")
-        return True, [], None
-
-    if current_user_is_superuser:
-        return True, [], None
+        return True, [], {"skipped": True, "reason": "管理员显式跳过阶段门校验"}
 
     from app.api.v1.endpoints.projects import check_gate, check_gate_detailed
 

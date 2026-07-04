@@ -92,12 +92,14 @@ class TestValidateStageAdvancement:
         # 不应该抛出异常
         validate_stage_advancement("S1", "S2")
 
-    def test_validate_stage_advancement_forward_multiple(self):
-        """测试多级向前推进 (S1->S3)"""
-        # 不应该抛出异常
-        validate_stage_advancement("S1", "S3")
-        validate_stage_advancement("S2", "S5")
-        validate_stage_advancement("S1", "S9")
+    def test_validate_stage_advancement_rejects_forward_jump(self):
+        """测试拒绝跨级向前推进 (S1->S3)"""
+        for current_stage, target_stage in [("S1", "S3"), ("S2", "S5"), ("S1", "S9")]:
+            with pytest.raises(HTTPException) as exc_info:
+                validate_stage_advancement(current_stage, target_stage)
+
+            assert exc_info.value.status_code == 400
+            assert "只能推进到下一阶段" in exc_info.value.detail
 
     def test_validate_stage_advancement_invalid_same_stage(self):
         """测试目标阶段等于当前阶段"""
@@ -371,7 +373,7 @@ class TestPerformGateCheck:
     """执行阶段门校验测试"""
 
     def test_perform_gate_check_skip_as_superuser(self, db_session: Session):
-        """测试超级用户跳过阶段门校验"""
+        """测试超级用户显式跳过阶段门校验"""
         from app.models import Project
 
         project = Mock(spec=Project)
@@ -387,7 +389,7 @@ class TestPerformGateCheck:
 
         assert passed
         assert missing == []
-        assert result is None
+        assert result == {"skipped": True, "reason": "管理员显式跳过阶段门校验"}
 
     def test_perform_gate_check_skip_as_non_superuser(self, db_session: Session):
         """测试非超级用户尝试跳过阶段门校验"""
@@ -408,24 +410,32 @@ class TestPerformGateCheck:
             assert exc_info.value.status_code == 403
             assert "只有管理员可以跳过阶段门校验" in exc_info.value.detail
 
-    def test_perform_gate_check_superuser_auto_pass(self, db_session: Session):
-        """测试超级用户自动通过阶段门校验（不跳过）"""
+    @patch("app.api.v1.endpoints.projects.check_gate")
+    @patch("app.api.v1.endpoints.projects.check_gate_detailed")
+    def test_perform_gate_check_superuser_requires_explicit_skip(
+        self, mock_check_gate_detailed, mock_check_gate, db_session: Session
+    ):
+        """测试超级用户未显式跳过时仍必须执行阶段门校验"""
         from app.models import Project
 
         project = Mock(spec=Project)
         project.id = 1
+        mock_check_gate.return_value = (False, ["回款率 20.0%，需≥80%"])
+        mock_check_gate_detailed.return_value = {"gate_code": "G8", "passed": False}
 
         passed, missing, result = perform_gate_check(
             db_session,
             project,
-            "S2",
+            "S9",
             skip_gate_check=False,
             current_user_is_superuser=True,
         )
 
-        assert passed
-        assert missing == []
-        assert result is None
+        assert not passed
+        assert missing == ["回款率 20.0%，需≥80%"]
+        assert result == {"gate_code": "G8", "passed": False}
+        mock_check_gate.assert_called_once()
+        mock_check_gate_detailed.assert_called_once()
 
     @patch("app.api.v1.endpoints.projects.check_gate")
     @patch("app.api.v1.endpoints.projects.check_gate_detailed")

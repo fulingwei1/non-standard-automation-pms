@@ -10,7 +10,7 @@ import logging
 from calendar import monthrange
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -284,8 +284,8 @@ class ProjectDataFlowService:
     
     def transfer_to_after_sales(self, project_id: int) -> Dict[str, Any]:
         """项目验收后转入售后服务"""
-        from app.models.project import Project
-        from app.models.after_sales import AfterSalesMaintenance
+        from app.models.project import Machine, Project
+        from app.models.after_sales import AfterSalesMaintenance, AfterSalesWarranty
         
         project = self.db.query(Project).filter(Project.id == project_id).first()
         if not project:
@@ -297,12 +297,80 @@ class ProjectDataFlowService:
         ).all()
         existing_contents = {item.maintenance_content for item in existing_regular}
 
-        maintenance_start = (
+        handover_start = (
             project.warranty_start_date
             or project.actual_end_date
             or project.planned_end_date
             or date.today()
         )
+        warranty_months = project.warranty_period_months or 12
+        warranty_end = project.warranty_end_date or _add_months(handover_start, warranty_months)
+
+        existing_warranty = self.db.query(AfterSalesWarranty).filter(
+            AfterSalesWarranty.project_id == project_id,
+            AfterSalesWarranty.status == "ACTIVE",
+        ).first()
+        warranty_created = False
+        if existing_warranty:
+            warranty = existing_warranty
+        else:
+            warranty_no_base = f"WAR-{project_id}-{handover_start.strftime('%Y%m%d')}"
+            warranty_no_count = self.db.query(AfterSalesWarranty).filter(
+                AfterSalesWarranty.warranty_no.like(f"{warranty_no_base}%")
+            ).count()
+            warranty_no = (
+                warranty_no_base
+                if warranty_no_count == 0
+                else f"{warranty_no_base}-{warranty_no_count + 1}"
+            )
+            warranty = AfterSalesWarranty(
+                project_id=project_id,
+                customer_id=project.customer_id,
+                warranty_no=warranty_no,
+                warranty_type="STANDARD",
+                warranty_start=handover_start,
+                warranty_end=warranty_end,
+                warranty_months=warranty_months,
+                scope="终验收通过自动移交售后",
+                status="ACTIVE",
+            )
+            self.db.add(warranty)
+            self.db.flush()
+            warranty_created = True
+
+        project_backfilled = False
+        if not project.warranty_period_months:
+            project.warranty_period_months = warranty.warranty_months or warranty_months
+            project_backfilled = True
+        if not project.warranty_start_date:
+            project.warranty_start_date = warranty.warranty_start or handover_start
+            project_backfilled = True
+        if not project.warranty_end_date:
+            project.warranty_end_date = warranty.warranty_end or warranty_end
+            project_backfilled = True
+        if project_backfilled:
+            self.db.add(project)
+
+        machines_backfilled = 0
+        machines = self.db.query(Machine).filter(Machine.project_id == project_id).all()
+        warranty_text = (
+            f"{project.warranty_start_date.isoformat()} ~ "
+            f"{project.warranty_end_date.isoformat()}（{project.warranty_period_months}个月）"
+            if project.warranty_start_date and project.warranty_end_date
+            else None
+        )
+        for machine in machines:
+            changed = False
+            if warranty_text and not machine.warranty:
+                machine.warranty = warranty_text
+                changed = True
+            if project.customer_id and not machine.customer_id:
+                machine.customer_id = project.customer_id
+                changed = True
+            if changed:
+                self.db.add(machine)
+                machines_backfilled += 1
+
         maintenance_plan = [
             (1, "1 个月保养", "交付后 1 个月定期保养"),
             (3, "3 个月保养", "交付后 3 个月定期保养"),
@@ -323,19 +391,31 @@ class ProjectDataFlowService:
                 customer_id=project.customer_id,
                 maintenance_type="REGULAR",
                 maintenance_content=content,
-                scheduled_date=_add_months(maintenance_start, months),
+                scheduled_date=_add_months(handover_start, months),
                 status="SCHEDULED",
             )
             self.db.add(maintenance)
             maintenance_records.append(label)
 
-        if maintenance_records:
+        if maintenance_records or warranty_created or project_backfilled or machines_backfilled:
             self.db.commit()
         
-        logger.info(f"项目 {project_id}: 已转入售后，创建 {len(maintenance_records)} 个保养计划")
+        logger.info(
+            "项目 %s: 已转入售后，质保%s，创建 %s 个保养计划，回填 %s 台机台",
+            project_id,
+            "已创建" if warranty_created else "已存在",
+            len(maintenance_records),
+            machines_backfilled,
+        )
         
         return {
             "project_id": project_id,
+            "warranty_created": warranty_created,
+            "warranty_id": warranty.id,
+            "warranty_no": warranty.warranty_no,
+            "warranty_start": warranty.warranty_start.isoformat() if warranty.warranty_start else None,
+            "warranty_end": warranty.warranty_end.isoformat() if warranty.warranty_end else None,
+            "machines_backfilled": machines_backfilled,
             "maintenance_created": len(maintenance_records),
             "maintenance_records": maintenance_records,
             "skipped_existing": skipped_existing,

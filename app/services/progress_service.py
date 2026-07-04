@@ -183,21 +183,19 @@ def aggregate_task_progress(db: Session, task_id: int) -> dict:
     project_id = task.project_id
     result["project_id"] = project_id
 
-    # 2. 计算项目整体进度（使用聚合函数优化）
+    # 2. 计算项目整体进度（按任务预估工时加权）
     base_filter = and_(
         TaskUnified.project_id == project_id,
         TaskUnified.is_active,
         TaskUnified.status.notin_(["CANCELLED"]),
     )
 
-    total_tasks_result = db.query(func.count(TaskUnified.id)).filter(base_filter).scalar()
+    total_tasks_result = db.query(func.count(TaskUnified.id)).filter(base_filter).scalar() or 0
 
     if total_tasks_result:
-        # 使用SQL聚合计算加权平均
-        weighted_progress_result = (
-            db.query(func.sum(TaskUnified.progress)).filter(base_filter).scalar()
-        )
-        project_progress = round(float(weighted_progress_result or 0) / total_tasks_result, 2)
+        project_progress = ProgressAggregationService.aggregate_project_progress(
+            project_id, db
+        )["overall_progress"]
 
         # 更新项目进度
         project = db.query(Project).filter(Project.id == project_id).first()
@@ -210,14 +208,14 @@ def aggregate_task_progress(db: Session, task_id: int) -> dict:
             result["new_project_progress"] = project_progress
 
     # 3. 如果任务关联了阶段，计算阶段进度
-    if hasattr(task, "stage") and task.stage:
-        stage_code = task.stage
+    stage_code = getattr(task, "project_stage", None) or getattr(task, "stage", None)
+    if stage_code:
         result["stage_code"] = stage_code
 
         # 获取该阶段的所有任务（使用聚合函数优化）
         stage_filter = and_(
             TaskUnified.project_id == project_id,
-            TaskUnified.stage == stage_code,
+            TaskUnified.project_stage == stage_code,
             TaskUnified.is_active,
             TaskUnified.status.notin_(["CANCELLED"]),
         )
@@ -227,12 +225,29 @@ def aggregate_task_progress(db: Session, task_id: int) -> dict:
         )
 
         if total_stage_tasks_result:
+            stage_weight = case(
+                (TaskUnified.estimated_hours.isnot(None), TaskUnified.estimated_hours),
+                else_=1.0,
+            )
+            total_stage_hours_result = (
+                db.query(func.sum(stage_weight)).filter(stage_filter).scalar()
+            ) or 0.0
             weighted_stage_progress_result = (
-                db.query(func.sum(TaskUnified.progress)).filter(stage_filter).scalar()
-            )
-            stage_progress = round(
-                float(weighted_stage_progress_result or 0) / total_stage_tasks_result, 2
-            )
+                db.query(func.sum(TaskUnified.progress * stage_weight))
+                .filter(stage_filter)
+                .scalar()
+            ) or 0.0
+
+            if total_stage_hours_result > 0:
+                stage_progress = round(
+                    float(weighted_stage_progress_result) / float(total_stage_hours_result),
+                    2,
+                )
+            else:
+                avg_stage_progress_result = (
+                    db.query(func.avg(TaskUnified.progress)).filter(stage_filter).scalar()
+                )
+                stage_progress = round(float(avg_stage_progress_result or 0), 2)
 
             # 更新阶段进度
             project_stage = (

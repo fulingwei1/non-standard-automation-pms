@@ -13,6 +13,8 @@ from app.models.alert import ProjectHealthSnapshot
 from app.models.material import BomHeader, BomItem
 from app.models.project import Project, ProjectCost
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
+from app.services.cost.cost_basis import actual_project_cost_filter
+from app.services.project_status_normalization import is_project_open_expr
 from app.models.technical_spec import SpecMatchRecord, TechnicalSpecRequirement
 from app.utils.spec_match_service import SpecMatchService
 
@@ -30,9 +32,7 @@ def daily_spec_match_check():
     with get_db_session() as db:
         try:
             # 查询所有活跃项目
-            projects = (
-                db.query(Project).filter(Project.is_active, Project.status != "completed").all()
-            )
+            projects = db.query(Project).filter(is_project_open_expr(Project)).all()
 
             total_checked = 0
             total_mismatched = 0
@@ -223,28 +223,10 @@ def daily_health_snapshot():
 
                 if health_result:
                     # 创建快照记录
-                    new_health = health_result.get("new_health", "H1")
                     snapshot = ProjectHealthSnapshot(
                         project_id=project.id,
                         snapshot_date=datetime.now().date(),
-                        overall_health=new_health,
-                        schedule_health=new_health,
-                        cost_health=new_health,
-                        quality_health=new_health,
-                        resource_health=new_health,
-                        health_score=(
-                            100
-                            if new_health == "H1"
-                            else 70 if new_health == "H2" else 30 if new_health == "H3" else 0
-                        ),
-                        open_alerts=0,
-                        open_exceptions=0,
-                        blocking_issues=0,
-                        schedule_variance=0,
-                        milestone_on_track=0,
-                        milestone_delayed=0,
-                        cost_variance=0,
-                        budget_used_pct=0,
+                        **calculator.build_health_snapshot_data(project),
                     )
 
                     db.add(snapshot)
@@ -275,9 +257,7 @@ def calculate_progress_summary():
             from app.models.project.financial import ProjectMilestone
 
             # 获取所有活跃项目
-            projects = (
-                db.query(Project).filter(Project.is_active, Project.status != "completed").all()
-            )
+            projects = db.query(Project).filter(is_project_open_expr(Project)).all()
 
             updated_count = 0
 
@@ -363,8 +343,7 @@ def check_project_deadline_alerts():
             projects = (
                 db.query(Project)
                 .filter(
-                    Project.is_active,
-                    Project.status != "completed",
+                    is_project_open_expr(Project),
                     Project.planned_end_date <= upcoming_deadline,
                     Project.planned_end_date >= datetime.now().date(),
                 )
@@ -442,9 +421,7 @@ def check_project_cost_overrun():
             from app.models.alert import AlertRecord
 
             # 获取所有活跃项目
-            projects = (
-                db.query(Project).filter(Project.is_active, Project.status != "completed").all()
-            )
+            projects = db.query(Project).filter(is_project_open_expr(Project)).all()
 
             alert_count = 0
 
@@ -452,7 +429,10 @@ def check_project_cost_overrun():
                 # 计算实际成本
                 actual_cost = (
                     db.query(func.sum(ProjectCost.amount))
-                    .filter(ProjectCost.project_id == project.id)
+                    .filter(
+                        ProjectCost.project_id == project.id,
+                        actual_project_cost_filter(),
+                    )
                     .scalar()
                     or 0
                 )

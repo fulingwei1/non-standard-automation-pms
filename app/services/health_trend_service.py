@@ -7,13 +7,12 @@
 """
 
 from datetime import date, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertRecord, AlertRule, ProjectHealthSnapshot
-from app.models.enums import AlertLevelEnum
+from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum
 from app.models.issue import Issue, IssueTypeEnum
 from app.models.progress import Task
 from app.models.project import Project, ProjectMilestone
@@ -36,6 +35,21 @@ class HealthTrendService:
 
     def __init__(self, db: Session):
         self.db = db
+
+    @staticmethod
+    def _numeric(value: Any) -> float:
+        try:
+            return float(value or 0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _budget_used_pct(self, project: Project) -> float:
+        budget_amount = self._numeric(getattr(project, "budget_amount", 0))
+        if budget_amount <= 0:
+            return 0.0
+
+        actual_cost = self._numeric(getattr(project, "actual_cost", 0))
+        return actual_cost / budget_amount * 100
 
     # ================================================================
     #  1. 健康度趋势
@@ -131,10 +145,11 @@ class HealthTrendService:
         project = self._get_project(project_id)
 
         # 计算各维度得分
-        schedule_score = self._calc_schedule_score(project)
-        cost_score = self._calc_cost_score(project)
-        resource_score = self._calc_resource_score(project)
-        quality_score = self._calc_quality_score(project)
+        dimension_scores = self.calculate_dimension_scores(project)
+        schedule_score = dimension_scores["schedule"]
+        cost_score = dimension_scores["cost"]
+        resource_score = dimension_scores["resource"]
+        quality_score = dimension_scores["quality"]
 
         dimensions = [
             {
@@ -261,6 +276,14 @@ class HealthTrendService:
             raise ValueError(f"Project {project_id} not found")
         return project
 
+    def calculate_dimension_scores(self, project: Project) -> Dict[str, int]:
+        return {
+            "schedule": self._calc_schedule_score(project),
+            "cost": self._calc_cost_score(project),
+            "resource": self._calc_resource_score(project),
+            "quality": self._calc_quality_score(project),
+        }
+
     def _get_alert_events(
         self, project_id: int, start_date: date, end_date: date
     ) -> List[Dict[str, Any]]:
@@ -332,8 +355,8 @@ class HealthTrendService:
         score = 100
 
         # 通过预算使用率推算
-        budget_pct = float(getattr(project, "budget_used_pct", 0) or 0)
-        progress_pct = float(project.progress_pct or 0)
+        budget_pct = self._budget_used_pct(project)
+        progress_pct = self._numeric(project.progress_pct)
 
         if progress_pct > 0 and budget_pct > 0:
             cost_efficiency = budget_pct / max(progress_pct, 1) * 100
@@ -349,11 +372,11 @@ class HealthTrendService:
             .filter(
                 AlertRecord.project_id == project.id,
                 AlertRecord.status == "PENDING",
-                AlertRule.rule_type.in_(["BUDGET_OVERRUN", "COST_VARIANCE"]),
+                AlertRule.rule_type == AlertRuleTypeEnum.COST_OVERRUN.value,
             )
             .count()
         )
-        score -= cost_alerts * 10
+        score -= int(self._numeric(cost_alerts)) * 10
 
         return max(score, 0)
 

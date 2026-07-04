@@ -6,11 +6,12 @@ AI 自动组队服务
 """
 
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.engineer_capacity import EngineerCapacity
+from app.models.engineer_capacity import EngineerCapacity, EngineerTaskAssignment
+from app.models.pmo import PmoProjectInitiation
 from app.models.project import Project
 from app.models.project_team import ProjectTeamMember, ProjectTeamPlan
 from app.models.user import User
@@ -60,9 +61,11 @@ class TeamGenerationService:
 
     def _analyze_project_requirements(self, project: Project) -> Dict[str, Any]:
         """分析项目需求"""
+        initiation = self._get_initiation_context(project)
         product_category = project.product_category or ""
         industry = project.industry or ""
-        contract_amount = project.contract_amount or 0
+        contract_amount = float(project.contract_amount or 0)
+        technical_difficulty = getattr(initiation, "technical_difficulty", None) if initiation else None
 
         # 确定项目规模
         if contract_amount > 5000000:
@@ -81,6 +84,10 @@ class TeamGenerationService:
             "vision": "EXPERT",
         }
         tech_complexity = complexity_map.get(product_category, "MEDIUM")
+        if technical_difficulty == "HIGH":
+            tech_complexity = "HIGH"
+        elif technical_difficulty == "LOW":
+            tech_complexity = "MEDIUM"
 
         # 确定行业特殊要求
         industry_requirements = {
@@ -97,12 +104,40 @@ class TeamGenerationService:
             "industry_requirements": industry_requirements.get(industry, []),
             "product_category": product_category,
             "contract_amount": contract_amount,
+            "source": "pmo_initiation" if initiation else "project",
+            "initiation_id": getattr(initiation, "id", None) if initiation else None,
+            "estimated_hours": float(getattr(initiation, "estimated_hours", 0) or 0),
+            "resource_requirements": (
+                getattr(initiation, "resource_requirements", None) if initiation else None
+            )
+            or "",
+            "technical_difficulty": technical_difficulty,
+            "project_level": getattr(initiation, "project_level", None) if initiation else None,
         }
+
+    def _get_initiation_context(self, project: Project) -> Optional[PmoProjectInitiation]:
+        """回查由立项审批创建/绑定的项目上下文。"""
+        project_id = getattr(project, "id", None)
+        if not project_id:
+            return None
+
+        try:
+            return (
+                self.db.query(PmoProjectInitiation)
+                .filter(PmoProjectInitiation.project_id == project_id)
+                .filter(PmoProjectInitiation.status == "APPROVED")
+                .order_by(PmoProjectInitiation.id.desc())
+                .first()
+            )
+        except Exception:  # noqa: BLE001 - 兼容缺表/旧库，组队仍可按项目字段运行
+            return None
 
     def _determine_roles(self, requirements: Dict, project: Project) -> Dict[str, Any]:
         """确定所需角色和人数"""
         scale = requirements["scale"]
         product_category = requirements["product_category"]
+        resource_requirements = str(requirements.get("resource_requirements") or "")
+        resource_text = resource_requirements.lower()
 
         # 基础角色配置
         base_roles = {
@@ -122,25 +157,44 @@ class TeamGenerationService:
             },
         }
 
+        def mentions(*keywords: str) -> bool:
+            return any(keyword.lower() in resource_text for keyword in keywords)
+
         # 根据产品类型添加专业角色
-        if product_category in ["ICT", "FCT", "EOL"]:
+        if product_category in ["ICT", "FCT", "EOL"] or mentions("电气", "plc", "控制"):
             base_roles["ELEC_ENG"] = {  # 电气工程师
                 "count": 2 if scale == "LARGE" else 1,
                 "required_skills": ["电气设计", "PLC 调试"],
                 "min_experience": 3,
             }
+        if product_category in ["ICT", "FCT", "EOL"] or mentions("机械", "夹具", "结构"):
             base_roles["MECH_ENG"] = {  # 机械工程师
                 "count": 1,
                 "required_skills": ["机械设计", "CAD"],
                 "min_experience": 3,
             }
 
-        if product_category == "vision":
+        if product_category == "vision" or mentions("视觉", "图像", "光学"):
             base_roles["VISION_ENG"] = {  # 视觉工程师
                 "count": 1,
                 "required_skills": ["视觉算法", "光学调试"],
                 "min_experience": 4,
                 "ai_level": "ADVANCED",
+            }
+
+        if mentions("软件", "上位机", "mes", "scada", "数据采集"):
+            base_roles["SOFTWARE_ENG"] = {
+                "count": 1,
+                "required_skills": ["软件开发", "上位机"],
+                "min_experience": 3,
+                "ai_level": "INTERMEDIATE",
+            }
+
+        if mentions("测试", "验证", "fat", "sat"):
+            base_roles["TEST_ENG"] = {
+                "count": 1,
+                "required_skills": ["测试验证", "问题闭环"],
+                "min_experience": 2,
             }
 
         # 售后服务工程师
@@ -151,7 +205,37 @@ class TeamGenerationService:
             "customer_facing": True,
         }
 
+        self._apply_initiation_hour_allocation(base_roles, requirements)
+
         return base_roles
+
+    def _apply_initiation_hour_allocation(
+        self, roles: Dict[str, Dict[str, Any]], requirements: Dict[str, Any]
+    ) -> None:
+        """把立项预计总工时分摊到本次团队角色。"""
+        estimated_hours = float(requirements.get("estimated_hours") or 0)
+        if estimated_hours <= 0 or not roles:
+            return
+
+        role_weights = {
+            "PM": 0.15,
+            "TECH_LEAD": 0.20,
+            "MECH_ENG": 0.20,
+            "ELEC_ENG": 0.25,
+            "VISION_ENG": 0.15,
+            "SOFTWARE_ENG": 0.15,
+            "TEST_ENG": 0.10,
+            "SERVICE_ENG": 0.05,
+        }
+        total_weight = sum(role_weights.get(role, 0.10) for role in roles)
+        if total_weight <= 0:
+            return
+
+        for role, role_info in roles.items():
+            role_info["estimated_hours"] = round(
+                estimated_hours * role_weights.get(role, 0.10) / total_weight,
+                2,
+            )
 
     def _match_engineers_for_role(
         self,
@@ -191,7 +275,7 @@ class TeamGenerationService:
                         "role_name": self._get_role_name(role),
                         "match_score": match_result["score"],
                         "match_reason": match_result["reason"],
-                        "estimated_hours": self._estimate_hours(role, project),
+                        "estimated_hours": self._estimate_hours(role, project, role_info),
                         "capacity": capacity,
                     }
                 )
@@ -231,9 +315,16 @@ class TeamGenerationService:
             reasons.append(f"技能匹配 ({len(matched)}/{len(required_skills)})")
 
         # 2. 经验匹配（20 分）
-        # 简化：假设有经验数据
-        experience_score = 20
+        experience_score = self._calculate_experience_score(
+            engineer,
+            capacity,
+            role,
+            role_info,
+            project,
+        )
         score = score - 20 + experience_score
+        if experience_score >= 12:
+            reasons.append(f"经验匹配 ({experience_score:.1f}/20)")
 
         # 3. AI 能力（15 分）
         ai_levels = {"NONE": 0, "BASIC": 1, "INTERMEDIATE": 2, "ADVANCED": 3, "EXPERT": 4}
@@ -283,6 +374,92 @@ class TeamGenerationService:
             "reason": "。".join(reasons[:3]),
         }
 
+    def _calculate_experience_score(
+        self,
+        engineer: User,
+        capacity: EngineerCapacity,
+        role: str,
+        role_info: Dict,
+        project: Project,
+    ) -> float:
+        """按历史任务、交付质量和返工情况计算经验分（0-20）。"""
+
+        def safe_float(value: Any, default: float = 0.0) -> float:
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return default
+
+        assignments = []
+        try:
+            assignments = (
+                self.db.query(EngineerTaskAssignment)
+                .filter(EngineerTaskAssignment.engineer_id == engineer.id)
+                .all()
+            )
+        except Exception:  # noqa: BLE001 - 缺表/旧库时回退能力画像
+            assignments = []
+
+        completed_statuses = {"COMPLETED", "DONE", "CLOSED", "FINISHED"}
+        completed = [
+            item
+            for item in assignments
+            if str(getattr(item, "status", "") or "").upper() in completed_statuses
+        ]
+
+        required_skills = role_info.get("required_skills", [])
+        role_name = self._get_role_name(role)
+        keywords = [role, role_name, *required_skills]
+
+        def is_relevant(item: Any) -> bool:
+            text = " ".join(
+                str(part or "")
+                for part in (
+                    getattr(item, "task_type", ""),
+                    getattr(item, "task_description", ""),
+                    getattr(project, "product_category", ""),
+                    getattr(project, "industry", ""),
+                )
+            ).lower()
+            return any(str(keyword).lower() in text for keyword in keywords if keyword)
+
+        relevant = [item for item in completed if is_relevant(item)] or completed
+
+        target_count = max(1, int(role_info.get("min_experience", 0) or 1))
+        count_score = min(len(relevant) / target_count, 1.0) * 8
+
+        quality_values = [
+            safe_float(getattr(item, "quality_score", None))
+            for item in relevant
+            if getattr(item, "quality_score", None) is not None
+        ]
+        avg_quality = (
+            sum(quality_values) / len(quality_values)
+            if quality_values
+            else safe_float(getattr(capacity, "avg_quality_score", 0))
+        )
+        quality_score = max(0.0, min(avg_quality / 10, 1.0)) * 5
+
+        if relevant:
+            on_time_rate = (
+                sum(1 for item in relevant if bool(getattr(item, "is_on_time", False)))
+                / len(relevant)
+                * 100
+            )
+            rework_rate = (
+                sum(1 for item in relevant if bool(getattr(item, "has_rework", False)))
+                / len(relevant)
+                * 100
+            )
+        else:
+            on_time_rate = safe_float(getattr(capacity, "on_time_delivery_rate", 0))
+            rework_rate = safe_float(getattr(capacity, "rework_rate", 100), 100.0)
+
+        delivery_score = max(0.0, min(on_time_rate / 100, 1.0)) * 5
+        rework_score = max(0.0, min(1 - rework_rate / 100, 1.0)) * 2
+
+        return round(min(20.0, count_score + quality_score + delivery_score + rework_score), 1)
+
     def _get_role_name(self, role: str) -> str:
         """获取角色中文名称"""
         role_names = {
@@ -291,13 +468,23 @@ class TeamGenerationService:
             "MECH_ENG": "机械工程师",
             "ELEC_ENG": "电气工程师",
             "VISION_ENG": "视觉工程师",
+            "SOFTWARE_ENG": "软件工程师",
+            "TEST_ENG": "测试工程师",
             "SERVICE_ENG": "售后工程师",
         }
         return role_names.get(role, role)
 
-    def _estimate_hours(self, role: str, project: Project) -> float:
+    def _estimate_hours(
+        self,
+        role: str,
+        project: Project,
+        role_info: Optional[Dict[str, Any]] = None,
+    ) -> float:
         """估算工时"""
-        contract_amount = project.contract_amount or 0
+        if role_info and role_info.get("estimated_hours") is not None:
+            return float(role_info.get("estimated_hours") or 0)
+
+        contract_amount = float(project.contract_amount or 0)
 
         # 简化估算
         base_hours = {
@@ -306,6 +493,8 @@ class TeamGenerationService:
             "MECH_ENG": 0.20,
             "ELEC_ENG": 0.25,
             "VISION_ENG": 0.15,
+            "SOFTWARE_ENG": 0.15,
+            "TEST_ENG": 0.10,
             "SERVICE_ENG": 0.05,
         }
 
@@ -398,6 +587,14 @@ class TeamGenerationService:
             "capacity_balance": capacity_balance,
             "cost_efficiency": cost_efficiency,
             "role_assignments": role_assignments,
+            "requirements": {
+                "source": requirements.get("source", "project"),
+                "initiation_id": requirements.get("initiation_id"),
+                "scale": requirements.get("scale"),
+                "tech_complexity": requirements.get("tech_complexity"),
+                "estimated_hours": requirements.get("estimated_hours", 0),
+                "resource_requirements": requirements.get("resource_requirements", ""),
+            },
             "advantages": advantages,
             "risks": risks,
             "recommendations": ["建议确认过载工程师的时间安排"] if overloaded else [],

@@ -5,7 +5,7 @@ EVM (Earned Value Management) 挣值管理服务
 实现PMBOK标准的挣值管理核心算法和业务逻辑
 """
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Optional, Union
 
@@ -418,6 +418,105 @@ class EVMService:
         save_obj(self.db, evm_data)
 
         return evm_data
+
+    def calculate_system_evm_data(
+        self,
+        project_id: int,
+        period_type: str = "MONTH",
+        period_date: Optional[date] = None,
+        created_by: Optional[int] = None,
+        persist: bool = False,
+    ) -> EarnedValueData:
+        """
+        从项目真实计划、进度和实际成本推导 EVM 数据。
+
+        PV = BAC * 按计划日期推导的计划完成率
+        EV = BAC * 项目实际进度
+        AC = 项目实际成本
+        """
+        project = self.db.query(Project).filter(Project.id == project_id).first()
+        if not project:
+            raise ValueError(f"项目不存在: project_id={project_id}")
+
+        snapshot_date = period_date or date.today()
+        bac = self._budget_at_completion(project)
+        if bac <= 0:
+            raise ValueError("项目缺少预算金额，无法自动计算EVM")
+
+        planned_pct = self._planned_percent_complete(project, snapshot_date)
+        actual_pct = self._actual_percent_complete(project)
+        pv = self.calculator.round_decimal(bac * planned_pct / Decimal("100"))
+        ev = self.calculator.round_decimal(bac * actual_pct / Decimal("100"))
+        ac = self.calculator.round_decimal(Decimal(str(project.actual_cost or 0)))
+        metrics = self.calculator.calculate_all_metrics(pv, ev, ac, bac)
+
+        evm_data = EarnedValueData(
+            id=0,
+            project_id=project_id,
+            project_code=project.project_code,
+            period_type=period_type,
+            period_date=snapshot_date,
+            period_label=self._generate_period_label(period_type, snapshot_date),
+            planned_value=metrics["pv"],
+            earned_value=metrics["ev"],
+            actual_cost=metrics["ac"],
+            budget_at_completion=metrics["bac"],
+            currency="CNY",
+            schedule_variance=metrics["sv"],
+            cost_variance=metrics["cv"],
+            schedule_performance_index=metrics["spi"],
+            cost_performance_index=metrics["cpi"],
+            estimate_at_completion=metrics["eac"],
+            estimate_to_complete=metrics["etc"],
+            variance_at_completion=metrics["vac"],
+            to_complete_performance_index=metrics["tcpi"],
+            planned_percent_complete=metrics["planned_percent_complete"],
+            actual_percent_complete=metrics["actual_percent_complete"],
+            data_source="SYSTEM",
+            is_baseline=False,
+            is_forecast=False,
+            is_verified=False,
+            created_by=created_by,
+            notes="系统按项目计划、进度和实际成本自动推导",
+            calculation_notes=(
+                f"planned_percent={planned_pct}; actual_percent={actual_pct}; "
+                "pv=bac*planned_percent; ev=bac*actual_percent; ac=project.actual_cost"
+            ),
+        )
+        evm_data.created_at = datetime.now()
+        evm_data.updated_at = evm_data.created_at
+
+        if persist:
+            evm_data.id = None
+            save_obj(self.db, evm_data)
+
+        return evm_data
+
+    @staticmethod
+    def _clamp_percent(value: Decimal) -> Decimal:
+        if value < 0:
+            return Decimal("0")
+        if value > 100:
+            return Decimal("100")
+        return value
+
+    def _budget_at_completion(self, project: Project) -> Decimal:
+        return self.calculator.round_decimal(Decimal(str(project.budget_amount or 0)))
+
+    def _actual_percent_complete(self, project: Project) -> Decimal:
+        return self._clamp_percent(Decimal(str(project.progress_pct or 0)))
+
+    def _planned_percent_complete(self, project: Project, as_of: date) -> Decimal:
+        start_date = project.planned_start_date
+        end_date = project.planned_end_date
+        if start_date and end_date and end_date >= start_date:
+            total_days = max((end_date - start_date).days, 1)
+            elapsed_days = (as_of - start_date).days
+            planned_pct = Decimal(str(elapsed_days)) / Decimal(str(total_days)) * Decimal("100")
+            return self._clamp_percent(
+                self.calculator.round_decimal(planned_pct, self.calculator.PERCENT_DECIMAL_PLACES)
+            )
+        return self._actual_percent_complete(project)
 
     def _generate_period_label(self, period_type: str, period_date: date) -> str:
         """生成周期标签"""

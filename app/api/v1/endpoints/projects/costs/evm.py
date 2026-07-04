@@ -5,7 +5,7 @@ EVM (Earned Value Management) 挣值管理 API端点
 符合PMBOK标准的项目绩效测量API
 """
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
@@ -85,7 +85,7 @@ class EVMDataResponse(BaseModel):
     data_source: str
     is_baseline: bool
     is_verified: bool
-    created_at: date
+    created_at: datetime
 
     class Config:
         from_attributes = True
@@ -149,11 +149,14 @@ async def get_evm_analysis(
     # 获取EVM服务
     evm_service = EVMService(db)
 
-    # 获取最新EVM数据
-    latest_data = evm_service.get_latest_evm_data(project_id)
-
-    if not latest_data:
-        raise HTTPException(status_code=404, detail="该项目尚无EVM数据，请先记录EVM快照")
+    # 优先使用已记录快照；无快照时按项目真实计划/进度/成本自动推导。
+    try:
+        latest_data = (
+            evm_service.get_latest_evm_data(project_id)
+            or evm_service.calculate_system_evm_data(project_id)
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     # 绩效分析
     performance_analysis = evm_service.analyze_performance(latest_data)
@@ -194,7 +197,14 @@ async def get_evm_trend(
     trend_data = evm_service.get_evm_trend(project_id, period_type, limit)
 
     if not trend_data:
-        raise HTTPException(status_code=404, detail="该项目尚无EVM趋势数据")
+        try:
+            trend_data = [
+                evm_service.calculate_system_evm_data(
+                    project_id, period_type=period_type
+                )
+            ]
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
     # 计算趋势摘要
     trend_summary = _calculate_trend_summary(trend_data)
@@ -270,10 +280,11 @@ async def create_evm_snapshot(
 @router.get("/evm/metrics", response_model=dict)
 async def calculate_evm_metrics(
     project_id: int,
-    pv: Decimal = Query(..., ge=0, description="计划价值"),
-    ev: Decimal = Query(..., ge=0, description="挣得价值"),
-    ac: Decimal = Query(..., ge=0, description="实际成本"),
-    bac: Decimal = Query(..., gt=0, description="完工预算"),
+    pv: Optional[Decimal] = Query(None, ge=0, description="计划价值"),
+    ev: Optional[Decimal] = Query(None, ge=0, description="挣得价值"),
+    ac: Optional[Decimal] = Query(None, ge=0, description="实际成本"),
+    bac: Optional[Decimal] = Query(None, gt=0, description="完工预算"),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("cost:read")),
 ):
     """
@@ -283,11 +294,40 @@ async def calculate_evm_metrics(
     """
     from app.services.evm_service import EVMCalculator
 
-    calculator = EVMCalculator()
-    metrics = calculator.calculate_all_metrics(pv, ev, ac, bac)
+    provided = [value is not None for value in (pv, ev, ac, bac)]
+    if any(provided) and not all(provided):
+        raise HTTPException(status_code=400, detail="pv/ev/ac/bac 必须同时提供")
+
+    if all(provided):
+        metrics = EVMCalculator().calculate_all_metrics(pv, ev, ac, bac)
+        data_source = "MANUAL_INPUT"
+    else:
+        try:
+            evm_data = EVMService(db).calculate_system_evm_data(project_id)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        metrics = {
+            "pv": evm_data.planned_value,
+            "ev": evm_data.earned_value,
+            "ac": evm_data.actual_cost,
+            "bac": evm_data.budget_at_completion,
+            "sv": evm_data.schedule_variance,
+            "cv": evm_data.cost_variance,
+            "spi": evm_data.schedule_performance_index,
+            "cpi": evm_data.cost_performance_index,
+            "eac": evm_data.estimate_at_completion,
+            "etc": evm_data.estimate_to_complete,
+            "vac": evm_data.variance_at_completion,
+            "tcpi": evm_data.to_complete_performance_index,
+            "planned_percent_complete": evm_data.planned_percent_complete,
+            "actual_percent_complete": evm_data.actual_percent_complete,
+        }
+        data_source = "SYSTEM"
 
     # 转换Decimal为float以便JSON序列化
-    return {k: float(v) if v is not None else None for k, v in metrics.items()}
+    result = {k: float(v) if v is not None else None for k, v in metrics.items()}
+    result["data_source"] = data_source
+    return result
 
 
 # ==================== Helper Functions ====================

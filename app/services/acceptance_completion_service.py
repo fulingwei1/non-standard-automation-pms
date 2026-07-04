@@ -269,8 +269,18 @@ def trigger_warranty_period(db: Session, order: AcceptanceOrder, overall_result:
         if not project:
             return
 
-        # 更新项目阶段为S9（质保结项）
-        project.stage = "S9"
+        if project.stage != "S9":
+            transition_result = check_auto_stage_transition_after_acceptance(
+                db, order, overall_result
+            )
+            if not transition_result.get("auto_advanced") and project.stage != "S9":
+                logger.warning(
+                    "终验收已通过，但项目 %s 未满足 S8→S9 阶段门：%s",
+                    project.project_code,
+                    transition_result.get("missing_items") or transition_result.get("message"),
+                )
+                return
+
         project.actual_end_date = date.today()
         db.add(project)
 
@@ -284,6 +294,31 @@ def trigger_warranty_period(db: Session, order: AcceptanceOrder, overall_result:
         logger.info(f"终验收通过，项目 {project.project_code} 已进入质保期（S9阶段）")
     except Exception as e:
         logger.error(f"终验收后质保期触发失败: {str(e)}", exc_info=True)
+
+
+def trigger_after_sales_maintenance_plan(
+    db: Session, order: AcceptanceOrder, overall_result: str
+) -> Dict[str, Any]:
+    """终验收通过后转入售后并生成定期保养计划。"""
+    if overall_result != "PASSED" or order.acceptance_type != "FINAL" or not order.project_id:
+        return {"skipped": True, "reason": "not_final_acceptance_passed"}
+
+    try:
+        from app.services.project_data_flow_service import ProjectDataFlowService
+
+        result = ProjectDataFlowService(db).transfer_to_after_sales(order.project_id)
+        if result.get("error"):
+            logger.warning("终验收后售后保养计划生成未完成: %s", result["error"])
+        else:
+            logger.info(
+                "终验收通过，项目 %s 已生成 %s 条售后保养计划",
+                order.project_id,
+                result.get("maintenance_created", 0),
+            )
+        return result
+    except Exception as e:
+        logger.error(f"终验收后售后保养计划生成失败: {str(e)}", exc_info=True)
+        return {"error": str(e)}
 
 
 def trigger_bonus_calculation(db: Session, order: AcceptanceOrder, overall_result: str) -> None:

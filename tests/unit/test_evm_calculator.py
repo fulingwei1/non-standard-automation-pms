@@ -369,9 +369,9 @@ class TestEVMCalculatorRealWorldScenarios:
         # 完成百分比接近95%
         assert metrics["actual_percent_complete"] == Decimal("95.00")
 
-        # 剩余工作预算
+        # CPI < 1 时，按标准 EAC 公式推导的 ETC 会略高于剩余工作预算。
         etc = metrics["etc"]
-        assert etc > 0 and etc < Decimal("100000")
+        assert etc == Decimal("102631.5762")
 
 
 if __name__ == "__main__":

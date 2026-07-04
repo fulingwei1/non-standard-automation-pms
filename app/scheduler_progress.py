@@ -5,17 +5,43 @@
 """
 
 import logging
+import time
+from datetime import datetime, timezone
+from typing import Any, Callable
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.dependencies import get_db_session
 from app.services.progress_service import ProgressAutoService
+from app.utils.scheduler_metrics import record_job_failure, record_job_success
 
 logger = logging.getLogger(__name__)
 
 # 全局调度器
 scheduler = BackgroundScheduler()
+PROGRESS_AUTO_PROCESSING_JOB_ID = "progress_auto_processing_daily"
+
+
+def _wrap_progress_job_callable(
+    func: Callable[..., Any], job_id: str
+) -> Callable[..., Any]:
+    """Record second scheduler job runs in the unified scheduler metrics."""
+
+    def _job_wrapper(*args, **kwargs):
+        start_time = time.time()
+        try:
+            result = func(*args, **kwargs)
+        except Exception:
+            duration_ms = round((time.time() - start_time) * 1000, 2)
+            record_job_failure(job_id, duration_ms, datetime.now(timezone.utc).isoformat())
+            raise
+
+        duration_ms = round((time.time() - start_time) * 1000, 2)
+        record_job_success(job_id, duration_ms, datetime.now(timezone.utc).isoformat())
+        return result
+
+    return _job_wrapper
 
 
 def run_progress_auto_processing_job():
@@ -30,16 +56,12 @@ def run_progress_auto_processing_job():
     try:
         with get_db_session() as db:
             from app.models.project import Project
+            from app.services.project_status_normalization import project_delivery_scope_expr
 
             # 查询所有进行中的项目
             in_progress_projects = (
                 db.query(Project)
-                .filter(
-                    Project.status.in_(
-                        ["ST05", "ST06", "ST07", "ST08"]
-                    ),  # 装配调试、出厂验收、包装发运、现场安装
-                    Project.is_active,
-                )
+                .filter(project_delivery_scope_expr(Project))
                 .all()
             )
 
@@ -118,9 +140,11 @@ def start_scheduler():
         # 添加进度预测与依赖巡检自动处理任务
         # 每天凌晨2点执行
         scheduler.add_job(
-            func=run_progress_auto_processing_job,
+            func=_wrap_progress_job_callable(
+                run_progress_auto_processing_job, PROGRESS_AUTO_PROCESSING_JOB_ID
+            ),
             trigger=CronTrigger(hour=2, minute=0),
-            id="progress_auto_processing_daily",
+            id=PROGRESS_AUTO_PROCESSING_JOB_ID,
             name="进度预测与依赖巡检自动处理（每天凌晨2点）",
             replace_existing=True,
         )

@@ -16,10 +16,19 @@ from typing import Any, Dict, Optional
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertRecord, AlertRule
-from app.models.enums import AlertLevelEnum, IssueStatusEnum, ProjectHealthEnum
+from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, IssueStatusEnum, ProjectHealthEnum
 from app.models.issue import Issue, IssueTypeEnum
 from app.models.progress import Task
 from app.models.project import Project, ProjectMilestone, ProjectStatusLog
+from app.services.health_trend_service import DIMENSION_WEIGHTS, HealthTrendService
+
+
+HEALTH_SCORE_MAP = {
+    ProjectHealthEnum.H1.value: 100,
+    ProjectHealthEnum.H2.value: 70,
+    ProjectHealthEnum.H3.value: 30,
+    ProjectHealthEnum.H4.value: 0,
+}
 
 
 class HealthCalculator:
@@ -27,6 +36,39 @@ class HealthCalculator:
 
     def __init__(self, db: Session):
         self.db = db
+
+    @staticmethod
+    def _numeric(value: Any) -> float:
+        try:
+            return float(value or 0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    @staticmethod
+    def _count(value: Any) -> int:
+        try:
+            return int(value or 0)
+        except (TypeError, ValueError):
+            return 0
+
+    @staticmethod
+    def _health_from_score(score: float) -> str:
+        if score >= 80:
+            return ProjectHealthEnum.H1.value
+        if score >= 60:
+            return ProjectHealthEnum.H2.value
+        return ProjectHealthEnum.H3.value
+
+    @staticmethod
+    def _health_score(health: str) -> int:
+        return HEALTH_SCORE_MAP.get(health, HEALTH_SCORE_MAP[ProjectHealthEnum.H2.value])
+
+    def _budget_used_pct(self, project: Project) -> float:
+        budget_amount = self._numeric(getattr(project, "budget_amount", 0))
+        if budget_amount <= 0:
+            return 0.0
+        actual_cost = self._numeric(getattr(project, "actual_cost", 0))
+        return actual_cost / budget_amount * 100
 
     def calculate_health(self, project: Project) -> str:
         """
@@ -129,7 +171,58 @@ class HealthCalculator:
         if self._has_schedule_variance(project, threshold=10):
             return True
 
+        # 7. 检查成本风险
+        if self._has_cost_risk(project):
+            return True
+
+        # 8. 无健康度基线数据时不能默认绿灯
+        if self._has_insufficient_health_baseline(project):
+            return True
+
         return False
+
+    def _has_cost_risk(self, project: Project) -> bool:
+        """
+        检查项目是否存在成本风险。
+
+        规则：
+        - 有实际成本但预算未建，视为风险；
+        - 预算使用率超过 100%，视为风险；
+        - 存在待处理 COST_OVERRUN 告警，视为风险。
+        """
+        budget_amount = self._numeric(getattr(project, "budget_amount", 0))
+        actual_cost = self._numeric(getattr(project, "actual_cost", 0))
+
+        if budget_amount <= 0 and actual_cost > 0:
+            return True
+
+        if budget_amount > 0 and self._budget_used_pct(project) > 100:
+            return True
+
+        cost_alerts = (
+            self.db.query(AlertRecord)
+            .join(AlertRule, AlertRecord.rule_id == AlertRule.id)
+            .filter(
+                AlertRecord.project_id == project.id,
+                AlertRecord.status == "PENDING",
+                AlertRule.rule_type == AlertRuleTypeEnum.COST_OVERRUN.value,
+            )
+            .count()
+        )
+        return self._count(cost_alerts) > 0
+
+    def _has_insufficient_health_baseline(self, project: Project) -> bool:
+        """完全缺少进度、计划和成本基线时，不能把项目判成 H1。"""
+        has_schedule_data = bool(
+            getattr(project, "planned_start_date", None) or getattr(project, "planned_end_date", None)
+        )
+        has_progress_data = self._numeric(getattr(project, "progress_pct", 0)) > 0
+        has_cost_data = (
+            self._numeric(getattr(project, "budget_amount", 0)) > 0
+            or self._numeric(getattr(project, "actual_cost", 0)) > 0
+        )
+
+        return not (has_schedule_data or has_progress_data or has_cost_data)
 
     def _has_blocked_critical_tasks(self, project: Project) -> bool:
         """
@@ -418,6 +511,45 @@ class HealthCalculator:
 
         return result
 
+    def build_health_snapshot_data(self, project: Project) -> Dict[str, Any]:
+        """构建健康度快照落库字段。"""
+        overall_health = self.calculate_health(project)
+
+        if self._is_closed(project):
+            dimension_scores = {
+                "schedule": 0,
+                "cost": 0,
+                "resource": 0,
+                "quality": 0,
+            }
+        else:
+            dimension_scores = HealthTrendService(self.db).calculate_dimension_scores(project)
+
+        weighted_score = round(
+            sum(dimension_scores[key] * DIMENSION_WEIGHTS[key] for key in DIMENSION_WEIGHTS)
+        )
+        if overall_health == ProjectHealthEnum.H4.value:
+            weighted_score = HEALTH_SCORE_MAP[ProjectHealthEnum.H4.value]
+
+        delayed_milestones = self._delayed_milestone_count(project)
+
+        return {
+            "overall_health": overall_health,
+            "schedule_health": self._health_from_score(dimension_scores["schedule"]),
+            "cost_health": self._health_from_score(dimension_scores["cost"]),
+            "quality_health": self._health_from_score(dimension_scores["quality"]),
+            "resource_health": self._health_from_score(dimension_scores["resource"]),
+            "health_score": int(weighted_score),
+            "open_alerts": self._open_alert_count(project),
+            "open_exceptions": self._open_exception_count(project),
+            "blocking_issues": self._blocking_issue_count(project),
+            "schedule_variance": round(self._schedule_variance_pct(project), 2),
+            "milestone_on_track": self._on_track_milestone_count(project),
+            "milestone_delayed": delayed_milestones,
+            "cost_variance": round(max(self._budget_used_pct(project) - 100, 0), 2),
+            "budget_used_pct": round(self._budget_used_pct(project), 2),
+        }
+
     def batch_calculate(
         self, project_ids: Optional[list] = None, batch_size: int = 100
     ) -> Dict[str, Any]:
@@ -499,28 +631,81 @@ class HealthCalculator:
                 "has_schedule_variance": self._has_schedule_variance(project),
             },
             "statistics": {
-                "blocked_tasks": self.db.query(Task)
-                .filter(Task.project_id == project.id, Task.status == "BLOCKED")
-                .count(),
-                "blocking_issues": self.db.query(Issue)
-                .filter(
-                    Issue.project_id == project.id,
-                    Issue.issue_type == IssueTypeEnum.BLOCKER,
-                    Issue.status.in_(
-                        [IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value]
-                    ),
-                )
-                .count(),
-                "overdue_milestones": self.db.query(ProjectMilestone)
-                .filter(
-                    ProjectMilestone.project_id == project.id,
-                    ProjectMilestone.planned_date < date.today(),
-                    ProjectMilestone.status != "COMPLETED",
-                    ProjectMilestone.is_key,
-                )
-                .count(),
-                "active_alerts": self.db.query(AlertRecord)
-                .filter(AlertRecord.project_id == project.id, AlertRecord.status == "PENDING")
-                .count(),
+                "blocked_tasks": self._blocked_task_count(project),
+                "blocking_issues": self._blocking_issue_count(project),
+                "overdue_milestones": self._delayed_milestone_count(project),
+                "active_alerts": self._open_alert_count(project),
             },
         }
+
+    def _blocked_task_count(self, project: Project) -> int:
+        return self._count(
+            self.db.query(Task)
+            .filter(Task.project_id == project.id, Task.status == "BLOCKED")
+            .count()
+        )
+
+    def _blocking_issue_count(self, project: Project) -> int:
+        return self._count(
+            self.db.query(Issue)
+            .filter(
+                Issue.project_id == project.id,
+                Issue.issue_type == IssueTypeEnum.BLOCKER,
+                Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value]),
+            )
+            .count()
+        )
+
+    def _open_exception_count(self, project: Project) -> int:
+        return self._count(
+            self.db.query(Issue)
+            .filter(
+                Issue.project_id == project.id,
+                Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value]),
+            )
+            .count()
+        )
+
+    def _open_alert_count(self, project: Project) -> int:
+        return self._count(
+            self.db.query(AlertRecord)
+            .filter(AlertRecord.project_id == project.id, AlertRecord.status == "PENDING")
+            .count()
+        )
+
+    def _delayed_milestone_count(self, project: Project) -> int:
+        return self._count(
+            self.db.query(ProjectMilestone)
+            .filter(
+                ProjectMilestone.project_id == project.id,
+                ProjectMilestone.planned_date < date.today(),
+                ProjectMilestone.status != "COMPLETED",
+                ProjectMilestone.is_key,
+            )
+            .count()
+        )
+
+    def _on_track_milestone_count(self, project: Project) -> int:
+        return self._count(
+            self.db.query(ProjectMilestone)
+            .filter(
+                ProjectMilestone.project_id == project.id,
+                ProjectMilestone.is_key,
+                ProjectMilestone.status == "COMPLETED",
+            )
+            .count()
+        )
+
+    def _schedule_variance_pct(self, project: Project) -> float:
+        if not project.planned_end_date or not project.planned_start_date:
+            return 0.0
+
+        today = date.today()
+        total_days = (project.planned_end_date - project.planned_start_date).days
+        elapsed_days = (today - project.planned_start_date).days
+        if total_days <= 0:
+            return 0.0
+
+        planned_progress = min(max((elapsed_days / total_days) * 100, 0), 100)
+        actual_progress = self._numeric(project.progress_pct)
+        return max(planned_progress - actual_progress, 0.0)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """甘特图依赖关系与关键路径 API"""
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional, Set
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -70,6 +70,19 @@ def _ensure_table(db: Session) -> None:
                 db.rollback()
                 if "duplicate column name" not in str(exc).lower():
                     raise
+        if not _table_has_column(db, "task_dependencies", "created_at"):
+            try:
+                db.execute(
+                    text(
+                        "ALTER TABLE task_dependencies "
+                        "ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+                    )
+                )
+                db.commit()
+            except OperationalError as exc:
+                db.rollback()
+                if "duplicate column name" not in str(exc).lower():
+                    raise
     except SQLAlchemyError:
         # 表创建/修改失败时回滚
         db.rollback()
@@ -102,6 +115,146 @@ def _task_duration_days(task: Dict[str, Any]) -> float:
     if end_date < start_date:
         return 1.0
     return float((end_date - start_date).days + 1)
+
+
+def _date_iso(value: Any) -> Optional[str]:
+    parsed = _parse_to_date(value)
+    return parsed.isoformat() if parsed else None
+
+
+def _required_successor_start(
+    predecessor: Dict[str, Any],
+    successor: Dict[str, Any],
+    dependency_type: str,
+    lag_days: int,
+) -> Optional[date]:
+    predecessor_start = _parse_to_date(predecessor.get("plan_start"))
+    predecessor_end = _parse_to_date(predecessor.get("plan_end"))
+    successor_duration = int(_task_duration_days(successor))
+    dependency_type = (dependency_type or "FS").upper()
+
+    if dependency_type == "FS":
+        if not predecessor_end:
+            return None
+        return predecessor_end + timedelta(days=lag_days + 1)
+    if dependency_type == "SS":
+        if not predecessor_start:
+            return None
+        return predecessor_start + timedelta(days=lag_days)
+    if dependency_type == "FF":
+        if not predecessor_end:
+            return None
+        required_finish = predecessor_end + timedelta(days=lag_days)
+        return required_finish - timedelta(days=successor_duration - 1)
+    if dependency_type == "SF":
+        if not predecessor_start:
+            return None
+        required_finish = predecessor_start + timedelta(days=lag_days)
+        return required_finish - timedelta(days=successor_duration - 1)
+    return None
+
+
+def _cascade_reschedule_project(db: Session, project_id: int) -> List[Dict[str, Any]]:
+    task_rows = db.execute(
+        text(
+            """
+            SELECT id, plan_start_date AS plan_start, plan_end_date AS plan_end
+            FROM task_unified
+            WHERE project_id = :project_id
+            """
+        ),
+        {"project_id": project_id},
+    ).fetchall()
+    tasks: Dict[int, Dict[str, Any]] = {
+        row.id: {"id": row.id, "plan_start": row.plan_start, "plan_end": row.plan_end}
+        for row in task_rows
+    }
+    if not tasks:
+        return []
+
+    dependency_rows = db.execute(
+        text(
+            """
+            SELECT task_id, depends_on_task_id, dependency_type, lag_days
+            FROM task_dependencies
+            WHERE project_id = :project_id
+            ORDER BY id
+            """
+        ),
+        {"project_id": project_id},
+    ).fetchall()
+
+    adjustments_by_task: Dict[int, Dict[str, Any]] = {}
+
+    for _ in range(len(tasks)):
+        changed = False
+        for row in dependency_rows:
+            predecessor = tasks.get(row.depends_on_task_id)
+            successor = tasks.get(row.task_id)
+            if not predecessor or not successor:
+                continue
+
+            required_start = _required_successor_start(
+                predecessor,
+                successor,
+                row.dependency_type or "FS",
+                int(row.lag_days or 0),
+            )
+            current_start = _parse_to_date(successor.get("plan_start"))
+            if not required_start or (current_start and current_start >= required_start):
+                continue
+
+            duration_days = int(_task_duration_days(successor))
+            old_start = _parse_to_date(successor.get("plan_start"))
+            old_end = _parse_to_date(successor.get("plan_end"))
+            new_end = required_start + timedelta(days=duration_days - 1)
+
+            successor["plan_start"] = required_start
+            successor["plan_end"] = new_end
+
+            adjustment = adjustments_by_task.setdefault(
+                row.task_id,
+                {
+                    "task_id": row.task_id,
+                    "old_plan_start": _date_iso(old_start),
+                    "old_plan_end": _date_iso(old_end),
+                    "new_plan_start": required_start.isoformat(),
+                    "new_plan_end": new_end.isoformat(),
+                },
+            )
+            adjustment["new_plan_start"] = required_start.isoformat()
+            adjustment["new_plan_end"] = new_end.isoformat()
+            changed = True
+
+        if not changed:
+            break
+
+    adjustments = list(adjustments_by_task.values())
+    if not adjustments:
+        return []
+
+    updated_at = datetime.now()
+    update_sql = text(
+        """
+        UPDATE task_unified
+        SET plan_start_date = :plan_start_date,
+            plan_end_date = :plan_end_date,
+            updated_at = :updated_at
+        WHERE id = :task_id
+        """
+    )
+    for adjustment in adjustments:
+        db.execute(
+            update_sql,
+            {
+                "task_id": adjustment["task_id"],
+                "plan_start_date": adjustment["new_plan_start"],
+                "plan_end_date": adjustment["new_plan_end"],
+                "updated_at": updated_at,
+            },
+        )
+
+    return adjustments
 
 
 def _has_path(adjacency: Dict[int, Set[int]], start: int, target: int) -> bool:
@@ -283,6 +436,7 @@ def add_dependency(
             },
         )
         dependency_id = int(result.lastrowid)
+        schedule_adjustments = _cascade_reschedule_project(db, project_id)
         db.commit()
     except HTTPException:
         raise
@@ -302,6 +456,7 @@ def add_dependency(
             "lag_days": int(row.lag_days or 0),
             "created_at": row.created_at,
         },
+        "schedule_adjustments": schedule_adjustments,
     }
 
 
@@ -394,40 +549,57 @@ def get_critical_path(
             }
         )
 
-    memo: Dict[int, float] = {}
+    start_memo: Dict[int, float] = {}
+    finish_memo: Dict[int, float] = {}
     previous: Dict[int, Optional[int]] = {}
     visit_state: Dict[int, int] = {}
 
-    def longest_path_to(task_id: int) -> float:
+    def calculate_offsets(task_id: int) -> tuple[float, float]:
         state = visit_state.get(task_id, 0)
         if state == 2:
-            return memo[task_id]
+            return start_memo[task_id], finish_memo[task_id]
         if state == 1:
-            return durations[task_id]
+            return 0.0, durations[task_id]
 
         visit_state[task_id] = 1
         best_predecessor = None
-        best_value = 0.0
+        best_start = 0.0
+        successor_duration = durations[task_id]
 
         for pred in predecessors.get(task_id, []):
             predecessor_id = pred["task_id"]
             lag_days = float(pred["lag_days"] or 0)
-            candidate = longest_path_to(predecessor_id) + lag_days
-            if candidate > best_value:
-                best_value = candidate
+            dependency_type = (pred["dependency_type"] or "FS").upper()
+            predecessor_start, predecessor_finish = calculate_offsets(predecessor_id)
+
+            if dependency_type == "FS":
+                candidate_start = predecessor_finish + lag_days
+            elif dependency_type == "SS":
+                candidate_start = predecessor_start + lag_days
+            elif dependency_type == "FF":
+                candidate_start = predecessor_finish + lag_days - successor_duration
+            elif dependency_type == "SF":
+                candidate_start = predecessor_start + lag_days - successor_duration
+            else:
+                candidate_start = predecessor_finish + lag_days
+
+            candidate_start = max(0.0, candidate_start)
+            if candidate_start > best_start:
+                best_start = candidate_start
                 best_predecessor = predecessor_id
 
-        total = durations[task_id] + best_value
-        memo[task_id] = total
+        finish = best_start + successor_duration
+        start_memo[task_id] = best_start
+        finish_memo[task_id] = finish
         previous[task_id] = best_predecessor
         visit_state[task_id] = 2
-        return total
+        return best_start, finish
 
     for task_id in tasks:
-        longest_path_to(task_id)
+        calculate_offsets(task_id)
 
-    end_task_id = max(tasks.keys(), key=lambda task_id: memo.get(task_id, 0.0))
-    total_duration = round(memo.get(end_task_id, 0.0), 2)
+    end_task_id = max(tasks.keys(), key=lambda task_id: finish_memo.get(task_id, 0.0))
+    total_duration = round(finish_memo.get(end_task_id, 0.0), 2)
 
     chain_ids: List[int] = []
     current = end_task_id

@@ -11,6 +11,22 @@ from app.models.acceptance import AcceptanceOrder
 from app.models.material import BomHeader
 from app.models.project import Project, ProjectPaymentPlan
 from app.models.sales import Contract
+from app.services.sales.contract.status_service import normalize_contract_status
+
+
+def _resolve_check_gate():
+    """Resolve project gate checker while keeping legacy test patch path compatible."""
+    import sys
+
+    projects_module = sys.modules.get("app.api.v1.endpoints.projects")
+    patched_utils = getattr(projects_module, "utils", None) if projects_module else None
+    patched_check_gate = getattr(patched_utils, "check_gate", None)
+    if callable(patched_check_gate):
+        return patched_check_gate
+
+    from app.api.v1.endpoints.projects.gate_checks import check_gate
+
+    return check_gate
 
 
 def check_s3_to_s4_transition(
@@ -28,7 +44,7 @@ def check_s3_to_s4_transition(
     # 检查合同状态
     contract = db.query(Contract).filter(Contract.contract_code == project.contract_no).first()
 
-    if contract and contract.status == "SIGNED":
+    if contract and normalize_contract_status(contract.status) == "SIGNED":
         return True, "S4", []
     else:
         return False, None, ["合同未签订（请完成合同签订流程）"]
@@ -176,9 +192,8 @@ def execute_stage_transition(
     Returns:
         Tuple[bool, Dict[str, Any]]: (是否成功, 结果字典)
     """
-    from app.api.v1.endpoints.projects.utils import check_gate
-
     try:
+        check_gate = _resolve_check_gate()
         gate_passed, gate_missing = check_gate(db, project, target_stage)
 
         if not gate_passed:

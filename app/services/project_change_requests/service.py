@@ -3,8 +3,9 @@
 项目变更请求服务层
 """
 
-from datetime import datetime
-from decimal import Decimal
+import logging
+from datetime import date, datetime, timedelta
+from decimal import Decimal, InvalidOperation
 from typing import Dict, List, Optional
 
 from fastapi import HTTPException
@@ -22,7 +23,7 @@ from app.models.enums import (
     ChangeStatusEnum,
     ChangeTypeEnum,
 )
-from app.models.project import Project
+from app.models.project import Project, ProjectCost, ProjectMilestone
 from app.models.user import User
 from app.schemas.change_request import (
     ChangeApprovalRequest,
@@ -34,7 +35,15 @@ from app.schemas.change_request import (
     ChangeStatusUpdateRequest,
     ChangeVerificationRequest,
 )
+from app.services.notification.channels.base import (
+    NotificationChannel,
+    NotificationPriority,
+    NotificationRequest,
+)
+from app.services.notification.unified_notification_service import get_notification_service
 from app.utils.db_helpers import get_or_404, save_obj
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectChangeRequestsService:
@@ -42,6 +51,236 @@ class ProjectChangeRequestsService:
 
     def __init__(self, db: Session):
         self.db = db
+
+    def _has_real_session(self) -> bool:
+        return type(self.db).__module__.startswith("sqlalchemy.orm")
+
+    def _send_change_notification(
+        self,
+        change_request: ChangeRequest,
+        *,
+        recipient_ids: set[int],
+        event: str,
+        title: str,
+        content: str,
+        priority: str = NotificationPriority.NORMAL,
+    ) -> None:
+        if not self._has_real_session():
+            return
+
+        recipients = sorted(recipient_id for recipient_id in recipient_ids if recipient_id)
+        if not recipients:
+            return
+
+        notification_service = get_notification_service(self.db)
+        for recipient_id in recipients:
+            request = NotificationRequest(
+                recipient_id=recipient_id,
+                notification_type=f"PROJECT_CHANGE_{event}",
+                category="project",
+                title=title,
+                content=content,
+                priority=priority,
+                channels=[NotificationChannel.SYSTEM],
+                source_type="project_change_request",
+                source_id=change_request.id,
+                link_url=f"/projects/{change_request.project_id}/changes/{change_request.id}",
+                extra_data={
+                    "project_id": change_request.project_id,
+                    "change_request_id": change_request.id,
+                    "change_code": change_request.change_code,
+                    "event": event,
+                },
+                force_send=True,
+            )
+            try:
+                notification_service.send_notification(request)
+            except Exception:
+                logger.exception(
+                    "项目变更通知发送失败: event=%s change_id=%s recipient_id=%s",
+                    event,
+                    change_request.id,
+                    recipient_id,
+                )
+
+    def _project_pm_recipient_ids(self, project_id: int) -> set[int]:
+        if not self._has_real_session():
+            return set()
+        project = self.db.query(Project).filter(Project.id == project_id).first()
+        if project and project.pm_id:
+            return {project.pm_id}
+        return set()
+
+    @staticmethod
+    def _decimal(value) -> Decimal:
+        if value is None:
+            return Decimal("0")
+        try:
+            return Decimal(str(value))
+        except (InvalidOperation, TypeError, ValueError):
+            return Decimal("0")
+
+    @staticmethod
+    def _impact_details(change_request: ChangeRequest) -> dict:
+        if isinstance(change_request.impact_details, dict):
+            return dict(change_request.impact_details)
+        return {}
+
+    def _change_delay_days(self, change_request: ChangeRequest, impact_details: dict) -> int:
+        if change_request.time_impact:
+            return int(change_request.time_impact)
+
+        schedule = impact_details.get("schedule")
+        if isinstance(schedule, dict):
+            return int(schedule.get("delay_days") or 0)
+
+        return 0
+
+    def _change_cost_impact(self, change_request: ChangeRequest, impact_details: dict) -> Decimal:
+        explicit_cost = self._decimal(change_request.cost_impact)
+        if explicit_cost > 0:
+            return explicit_cost
+
+        cost = impact_details.get("cost")
+        if isinstance(cost, dict):
+            for key in ("total", "additional", "amount"):
+                amount = self._decimal(cost.get(key))
+                if amount > 0:
+                    return amount
+
+        return Decimal("0")
+
+    def _affected_milestone_ids(self, impact_details: dict) -> list[int]:
+        schedule = impact_details.get("schedule")
+        raw_items = []
+        if isinstance(schedule, dict):
+            raw_items = schedule.get("affected_milestones") or []
+        if not raw_items:
+            raw_items = impact_details.get("affected_milestones") or []
+
+        milestone_ids = []
+        for item in raw_items:
+            if isinstance(item, dict) and item.get("milestone_id"):
+                milestone_ids.append(int(item["milestone_id"]))
+        return milestone_ids
+
+    def _apply_milestone_delay(
+        self,
+        change_request: ChangeRequest,
+        delay_days: int,
+        impact_details: dict,
+    ) -> list[dict]:
+        if delay_days <= 0:
+            return []
+
+        milestone_ids = self._affected_milestone_ids(impact_details)
+        if milestone_ids:
+            query = self.db.query(ProjectMilestone).filter(
+                ProjectMilestone.project_id == change_request.project_id,
+                ProjectMilestone.id.in_(milestone_ids),
+            )
+        else:
+            query = self.db.query(ProjectMilestone).filter(
+                ProjectMilestone.project_id == change_request.project_id,
+                ProjectMilestone.status.in_(["PENDING", "IN_PROGRESS"]),
+            )
+
+        updates = []
+        for milestone in query.all():
+            if not milestone.planned_date:
+                continue
+            old_date = milestone.planned_date
+            milestone.planned_date = old_date + timedelta(days=delay_days)
+            self.db.add(milestone)
+            updates.append(
+                {
+                    "milestone_id": milestone.id,
+                    "name": milestone.milestone_name,
+                    "old_date": old_date.isoformat(),
+                    "new_date": milestone.planned_date.isoformat(),
+                }
+            )
+        return updates
+
+    def _record_change_cost(
+        self,
+        change_request: ChangeRequest,
+        amount: Decimal,
+        current_user_id: int,
+    ) -> tuple[ProjectCost | None, bool]:
+        if amount <= 0:
+            return None, False
+
+        existing = (
+            self.db.query(ProjectCost)
+            .filter(
+                ProjectCost.project_id == change_request.project_id,
+                ProjectCost.source_type == "CHANGE_REQUEST",
+                ProjectCost.source_id == change_request.id,
+            )
+            .first()
+        )
+        if existing:
+            return existing, False
+
+        cost = ProjectCost(
+            project_id=change_request.project_id,
+            cost_type="CHANGE",
+            cost_category="PROJECT_CHANGE",
+            cost_basis="ACTUAL",
+            source_module="project_change_request",
+            source_type="CHANGE_REQUEST",
+            source_id=change_request.id,
+            source_no=change_request.change_code,
+            amount=amount,
+            cost_date=date.today(),
+            description=f"项目变更成本 - {change_request.change_code}: {change_request.title}",
+            created_by=current_user_id,
+        )
+        self.db.add(cost)
+        self.db.flush()
+        return cost, True
+
+    def _apply_approved_change_to_project_baseline(
+        self,
+        change_request: ChangeRequest,
+        current_user: User,
+    ) -> None:
+        impact_details = self._impact_details(change_request)
+        baseline_application = impact_details.get("baseline_application")
+        if isinstance(baseline_application, dict) and baseline_application.get("applied"):
+            return
+
+        project = get_or_404(self.db, Project, change_request.project_id, detail="项目不存在")
+        delay_days = self._change_delay_days(change_request, impact_details)
+        cost_amount = self._change_cost_impact(change_request, impact_details)
+
+        old_end_date = project.planned_end_date
+        if delay_days > 0 and project.planned_end_date:
+            project.planned_end_date = project.planned_end_date + timedelta(days=delay_days)
+            self.db.add(project)
+
+        milestone_updates = self._apply_milestone_delay(change_request, delay_days, impact_details)
+
+        cost, cost_created = self._record_change_cost(change_request, cost_amount, current_user.id)
+        if cost_created and cost:
+            project.actual_cost = self._decimal(project.actual_cost) + self._decimal(cost.amount)
+            self.db.add(project)
+
+        impact_details["baseline_application"] = {
+            "applied": True,
+            "applied_at": datetime.utcnow().isoformat(),
+            "applied_by": current_user.id,
+            "delay_days": delay_days,
+            "old_planned_end_date": old_end_date.isoformat() if old_end_date else None,
+            "new_planned_end_date": (
+                project.planned_end_date.isoformat() if project.planned_end_date else None
+            ),
+            "milestone_updates": milestone_updates,
+            "cost_amount": float(cost_amount),
+            "cost_id": cost.id if cost else None,
+        }
+        change_request.impact_details = impact_details
 
     def generate_change_code(self, project_id: int) -> str:
         """生成变更编号"""
@@ -110,10 +349,15 @@ class ProjectChangeRequestsService:
 
         save_obj(self.db, change_request)
 
-        # 创建通知记录（后续可以扩展发送通知）
         if change_request.notify_team:
-            # TODO: 实现团队通知逻辑
-            pass
+            self._send_change_notification(
+                change_request,
+                recipient_ids=self._project_pm_recipient_ids(change_request.project_id),
+                event="SUBMITTED",
+                title="项目变更请求已提交",
+                content=f"项目变更 {change_request.change_code} 已提交：{change_request.title}",
+                priority=NotificationPriority.HIGH,
+            )
 
         return change_request
 
@@ -213,6 +457,7 @@ class ProjectChangeRequestsService:
         # 根据审批决策更新状态
         if approval_in.decision == ApprovalDecisionEnum.APPROVED:
             change_request.status = ChangeStatusEnum.APPROVED
+            self._apply_approved_change_to_project_baseline(change_request, current_user)
         elif approval_in.decision == ApprovalDecisionEnum.REJECTED:
             change_request.status = ChangeStatusEnum.REJECTED
         elif approval_in.decision == ApprovalDecisionEnum.RETURNED:
@@ -234,10 +479,20 @@ class ProjectChangeRequestsService:
         self.db.commit()
         self.db.refresh(change_request)
 
-        # 发送通知（后续实现）
         if change_request.notify_team:
-            # TODO: 实现审批通知逻辑
-            pass
+            decision = approval_in.decision.value
+            self._send_change_notification(
+                change_request,
+                recipient_ids={change_request.submitter_id},
+                event=decision,
+                title="项目变更审批结果",
+                content=f"项目变更 {change_request.change_code} 审批结果：{decision}",
+                priority=(
+                    NotificationPriority.HIGH
+                    if approval_in.decision == ApprovalDecisionEnum.REJECTED
+                    else NotificationPriority.NORMAL
+                ),
+            )
 
         return change_request
 

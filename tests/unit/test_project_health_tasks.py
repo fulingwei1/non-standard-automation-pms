@@ -32,6 +32,27 @@ def make_mock_project(project_id=1, is_active=True, is_archived=False):
     return p
 
 
+def make_snapshot_data(health="H1", score=100, **overrides):
+    data = {
+        "overall_health": health,
+        "schedule_health": health,
+        "cost_health": health,
+        "quality_health": health,
+        "resource_health": health,
+        "health_score": score,
+        "open_alerts": 0,
+        "open_exceptions": 0,
+        "blocking_issues": 0,
+        "schedule_variance": 0,
+        "milestone_on_track": 0,
+        "milestone_delayed": 0,
+        "cost_variance": 0,
+        "budget_used_pct": 0,
+    }
+    data.update(overrides)
+    return data
+
+
 # ============================================================================
 # 测试 calculate_project_health
 # ============================================================================
@@ -184,14 +205,7 @@ class TestDailyHealthSnapshot:
         mock_session.query.return_value.filter.return_value.first.return_value = None
 
         mock_calculator = MagicMock()
-        mock_calculator.get_health_details.return_value = {
-            "calculated_health": "H1",
-            "statistics": {
-                "active_alerts": 0,
-                "blocking_issues": 0,
-                "overdue_milestones": 0,
-            },
-        }
+        mock_calculator.build_health_snapshot_data.return_value = make_snapshot_data()
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
             with patch(
@@ -235,8 +249,8 @@ class TestDailyHealthSnapshot:
         assert "error" in result
         assert "snapshot failed" in result["error"]
 
-    def test_snapshot_uses_health_details(self):
-        """快照中包含 get_health_details 的数据"""
+    def test_snapshot_uses_calculated_dimension_data(self):
+        """快照中包含健康度快照计算数据"""
         from app.utils.scheduled_tasks.project_health_tasks import daily_health_snapshot
 
         p1 = make_mock_project(project_id=1)
@@ -245,14 +259,17 @@ class TestDailyHealthSnapshot:
         mock_session.query.return_value.filter.return_value.first.return_value = None
 
         mock_calculator = MagicMock()
-        mock_calculator.get_health_details.return_value = {
-            "calculated_health": "H3",
-            "statistics": {
-                "active_alerts": 5,
-                "blocking_issues": 2,
-                "overdue_milestones": 1,
-            },
-        }
+        mock_calculator.build_health_snapshot_data.return_value = make_snapshot_data(
+            health="H3",
+            score=30,
+            schedule_health="H2",
+            cost_health="H3",
+            open_alerts=5,
+            blocking_issues=2,
+            milestone_delayed=1,
+            budget_used_pct=130,
+            cost_variance=30,
+        )
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
             with patch(
@@ -263,12 +280,16 @@ class TestDailyHealthSnapshot:
         assert result["snapshot_count"] == 1
         snapshot_obj = mock_session.add.call_args[0][0]
         assert snapshot_obj.overall_health == "H3"
+        assert snapshot_obj.schedule_health == "H2"
+        assert snapshot_obj.cost_health == "H3"
         assert snapshot_obj.open_alerts == 5
         assert snapshot_obj.blocking_issues == 2
         assert snapshot_obj.milestone_delayed == 1
+        assert snapshot_obj.budget_used_pct == 130
+        assert snapshot_obj.cost_variance == 30
 
     def test_calculator_called_with_each_project(self):
-        """每个项目都调用 get_health_details"""
+        """每个项目都调用 build_health_snapshot_data"""
         from app.utils.scheduled_tasks.project_health_tasks import daily_health_snapshot
 
         projects = [make_mock_project(i) for i in range(1, 4)]
@@ -277,10 +298,10 @@ class TestDailyHealthSnapshot:
         mock_session.query.return_value.filter.return_value.first.return_value = None
 
         mock_calculator = MagicMock()
-        mock_calculator.get_health_details.return_value = {
-            "calculated_health": "H2",
-            "statistics": {"active_alerts": 0, "blocking_issues": 0, "overdue_milestones": 0},
-        }
+        mock_calculator.build_health_snapshot_data.return_value = make_snapshot_data(
+            health="H2",
+            score=70,
+        )
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
             with patch(
@@ -289,4 +310,4 @@ class TestDailyHealthSnapshot:
                 result = daily_health_snapshot()
 
         assert result["snapshot_count"] == 3
-        assert mock_calculator.get_health_details.call_count == 3
+        assert mock_calculator.build_health_snapshot_data.call_count == 3

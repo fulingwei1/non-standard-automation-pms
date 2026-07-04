@@ -34,6 +34,37 @@ from app.services.sales.presale_quote_context import (
 from app.utils.domain_codes import pmo as pmo_codes, task_center as task_center_codes
 
 
+def _has_meaningful_assessment_value(value: Any) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, (list, tuple, set, dict)):
+        return bool(value)
+    text = str(value).strip()
+    return bool(text) and text.lower() not in {"null", "none", "[]", "{}"}
+
+
+def _has_substantive_technical_assessment(assessment: Optional[Dict[str, Any]]) -> bool:
+    if not assessment:
+        return False
+    if bool(assessment.get("auto_generated")):
+        return False
+    if assessment.get("total_score") is not None:
+        return True
+    evidence_fields = (
+        "dimension_scores",
+        "item_scores",
+        "risks",
+        "similar_cases",
+        "conditions",
+        "ai_analysis",
+        "veto_rules",
+    )
+    return any(
+        _has_meaningful_assessment_value(assessment.get(field))
+        for field in evidence_fields
+    )
+
+
 class PmoInitiationService:
     """PMO 立项管理服务"""
 
@@ -210,7 +241,7 @@ class PmoInitiationService:
             missing.append("presale_solution")
         if not ticket:
             missing.append("presale_ticket")
-        if not technical_assessment["current"]:
+        if not _has_substantive_technical_assessment(technical_assessment["current"]):
             missing.append("technical_assessment")
         if (
             baseline_cost["contract_amount"] is None
@@ -381,6 +412,11 @@ class PmoInitiationService:
                     f"售前技术评估尚未完成（当前状态：{assessment_status}），"
                     "请等售前技术支持部完成技术初评后再提交立项。"
                 )
+            if not _has_substantive_technical_assessment(current_assessment):
+                raise ValueError(
+                    "售前技术评估缺少实际评估内容，无法提交立项。"
+                    "请完成评分、风险、条件或AI分析后再提交。"
+                )
 
         initiation.status = "SUBMITTED"
         self.db.add(initiation)
@@ -415,6 +451,9 @@ class PmoInitiationService:
 
         if initiation.status not in ["SUBMITTED", "REVIEWING"]:
             raise ValueError("只有已提交或评审中的申请才能审批")
+
+        if not approve_request.approved_pm_id:
+            raise ValueError("审批通过必须指定项目经理，否则不会创建项目")
 
         # 更新审批信息
         initiation.status = "APPROVED"

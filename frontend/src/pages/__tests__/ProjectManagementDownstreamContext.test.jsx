@@ -7,6 +7,7 @@ import TaskCenter from "../TaskCenter";
 import TimeCostMarginFlow from "../TimeCostMarginFlow";
 import {
   costApi,
+  budgetApi,
   ganttDependencyApi,
   projectApi,
   taskCenterApi,
@@ -16,6 +17,9 @@ vi.mock("../../services/api", () => ({
   projectApi: {
     list: vi.fn(),
     getTimesheetSummary: vi.fn(),
+  },
+  budgetApi: {
+    list: vi.fn(),
   },
   costApi: {
     getProjectSummary: vi.fn(),
@@ -104,6 +108,9 @@ describe("Project management downstream context", () => {
     projectApi.list.mockResolvedValue({
       data: { items: [mockProject], total: 1 },
     });
+    budgetApi.list.mockResolvedValue({
+      data: { items: [], total: 0 },
+    });
     costApi.getProjectSummary.mockResolvedValue({
       data: { total_cost: 20000 },
     });
@@ -125,6 +132,13 @@ describe("Project management downstream context", () => {
     renderWithRouter(<BudgetManagement embedded />);
 
     await waitFor(() => {
+      expect(budgetApi.list).toHaveBeenCalledWith({
+        page: 1,
+        page_size: 8,
+        project_id: "42",
+        contract_id: "9",
+        opportunity_id: "2",
+      });
       expect(projectApi.list).toHaveBeenCalledWith({
         page: 1,
         page_size: 8,

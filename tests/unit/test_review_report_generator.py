@@ -70,6 +70,39 @@ class TestProjectReviewReportGenerator(unittest.TestCase):
 
     @patch.object(ProjectReviewReportGenerator, "_extract_project_data")
     @patch.object(ProjectReviewReportGenerator, "_build_review_prompt")
+    def test_generate_report_marks_mock_ai_response_as_degraded(
+        self, mock_build_prompt, mock_extract
+    ):
+        """测试 AI mock 响应不能冒充项目复盘结论"""
+        mock_project_data = self._create_mock_project_data()
+        mock_extract.return_value = mock_project_data
+        mock_build_prompt.return_value = "project review prompt"
+        self.generator.ai_client.generate_solution = MagicMock(
+            return_value={
+                "content": """```json
+{
+  "description": "基于客户需求，我们设计了一套高效的非标自动化生产线方案。",
+  "equipment_list": [{"name": "自动上料机"}],
+  "technical_advantages": ["提高生产效率50%以上"]
+}
+```""",
+                "model": "glm-5-mock",
+                "usage": {"total_tokens": 123},
+            }
+        )
+
+        result = self.generator.generate_report(project_id=1)
+
+        self.assertFalse(result["ai_generated"])
+        self.assertEqual(result["ai_metadata"]["model"], "glm-5-mock")
+        self.assertTrue(result["ai_metadata"]["degraded"])
+        self.assertEqual(result["ai_metadata"]["degraded_reason"], "AI_REVIEW_UNAVAILABLE")
+        self.assertEqual(result["ai_metadata"]["token_usage"], 123)
+        self.assertNotIn("非标自动化生产线方案", result["ai_summary"])
+        self.assertIn("测试项目", result["ai_summary"])
+
+    @patch.object(ProjectReviewReportGenerator, "_extract_project_data")
+    @patch.object(ProjectReviewReportGenerator, "_build_review_prompt")
     def test_generate_report_with_additional_context(self, mock_build_prompt, mock_extract):
         """测试带额外上下文的报告生成"""
         mock_extract.return_value = self._create_mock_project_data()
@@ -530,15 +563,19 @@ class TestProjectReviewReportGenerator(unittest.TestCase):
         mock_project = MagicMock()
         mock_project.id = project_id
         mock_project.code = code
+        mock_project.project_code = code
         mock_project.name = name
+        mock_project.project_name = name
         mock_project.description = "这是一个测试项目"
         mock_project.status = "DONE"
         mock_project.project_type = "INTERNAL"
         mock_project.budget_amount = budget_amount
+        mock_project.customer_name = None
 
         # 客户
         mock_customer = MagicMock()
         mock_customer.name = "测试客户"
+        mock_customer.customer_name = "测试客户"
         mock_project.customer = mock_customer
 
         # 日期
@@ -625,13 +662,17 @@ class TestProjectReviewReportGeneratorEdgeCases(unittest.TestCase):
         mock_project = MagicMock()
         mock_project.id = 1
         mock_project.code = "PRJ001"
+        mock_project.project_code = "PRJ001"
         mock_project.name = "测试项目"
+        mock_project.project_name = "测试项目"
         mock_project.description = "描述"
         mock_project.status = "PLANNING"
         mock_project.project_type = "INTERNAL"
         mock_project.budget_amount = 10000
         mock_project.customer = MagicMock()
         mock_project.customer.name = "客户"
+        mock_project.customer.customer_name = "客户"
+        mock_project.customer_name = None
         mock_project.members = []
 
         # 所有日期都是None
@@ -654,11 +695,14 @@ class TestProjectReviewReportGeneratorEdgeCases(unittest.TestCase):
         mock_project = MagicMock()
         mock_project.id = 1
         mock_project.code = "PRJ001"
+        mock_project.project_code = "PRJ001"
         mock_project.name = "内部项目"
+        mock_project.project_name = "内部项目"
         mock_project.description = "描述"
         mock_project.status = "ACTIVE"
         mock_project.project_type = "INTERNAL"
         mock_project.budget_amount = 5000
+        mock_project.customer_name = None
         mock_project.planned_start_date = date(2024, 1, 1)
         mock_project.planned_end_date = date(2024, 1, 31)
         mock_project.actual_start_date = None
@@ -680,13 +724,17 @@ class TestProjectReviewReportGeneratorEdgeCases(unittest.TestCase):
         mock_project = MagicMock()
         mock_project.id = 1
         mock_project.code = "PRJ001"
+        mock_project.project_code = "PRJ001"
         mock_project.name = "项目"
+        mock_project.project_name = "项目"
         mock_project.description = ""
         mock_project.status = "ACTIVE"
         mock_project.project_type = "INTERNAL"
         mock_project.budget_amount = 0
         mock_project.customer = MagicMock()
         mock_project.customer.name = "客户"
+        mock_project.customer.customer_name = "客户"
+        mock_project.customer_name = None
         mock_project.planned_start_date = date(2024, 1, 1)
         mock_project.planned_end_date = date(2024, 1, 31)
         mock_project.actual_start_date = None
@@ -722,13 +770,17 @@ class TestProjectReviewReportGeneratorEdgeCases(unittest.TestCase):
         mock_project = MagicMock()
         mock_project.id = 1
         mock_project.code = "PRJ001"
+        mock_project.project_code = "PRJ001"
         mock_project.name = "项目"
+        mock_project.project_name = "项目"
         mock_project.description = ""
         mock_project.status = "ACTIVE"
         mock_project.project_type = "INTERNAL"
         mock_project.budget_amount = None  # 预算也是None
         mock_project.customer = MagicMock()
         mock_project.customer.name = "客户"
+        mock_project.customer.customer_name = "客户"
+        mock_project.customer_name = None
         mock_project.planned_start_date = date(2024, 1, 1)
         mock_project.planned_end_date = date(2024, 1, 31)
         mock_project.actual_start_date = None

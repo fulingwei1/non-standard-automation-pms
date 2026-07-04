@@ -169,11 +169,16 @@ class TestAggregateTaskProgress:
 
         with (
             patch("app.services.progress_service._check_and_update_health"),
+            patch(
+                "app.services.progress_service.ProgressAggregationService.aggregate_project_progress",
+                return_value={"overall_progress": 42.0},
+            ),
             patch("app.services.progress_service.TaskUnified", MagicMock()),
             patch("app.services.progress_service.and_", lambda *a: MagicMock()),
         ):
             result = aggregate_task_progress(db, 1)
         assert "project_id" in result
+        assert result["new_project_progress"] == 42.0
 
 
 # --- create_progress_log_entry ---

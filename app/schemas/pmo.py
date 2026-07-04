@@ -376,7 +376,12 @@ class ResourceOverviewResponse(BaseModel):
     allocated_resources: int = 0
     available_resources: int = 0
     overloaded_resources: int = 0
-    by_department: List[Dict[str, Any]] = []
+    by_department: List[Dict[str, Any]] = Field(default_factory=list)
+    total_employees: int = 0
+    employees_with_conflicts: int = 0
+    total_conflicts: int = 0
+    avg_utilization: float = 0.0
+    employees: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 class RiskWallResponse(BaseModel):

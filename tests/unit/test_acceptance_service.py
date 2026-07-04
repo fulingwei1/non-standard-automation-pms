@@ -22,11 +22,28 @@ class TestAcceptanceServiceUpdateWarranty:
             await AcceptanceService._update_project_to_warranty(db, 999, 1)
 
     @pytest.mark.asyncio
-    async def test_update_project_s8_to_s9(self):
+    async def test_update_project_s8_does_not_bypass_stage_gate(self):
         from app.services.acceptance.acceptance_service import AcceptanceService
 
         db = AsyncMock()
+        db.add = MagicMock()
         project = MagicMock(stage="S8", status="ST08")
+        db.get.return_value = project
+        await AcceptanceService._update_project_to_warranty(db, 1, 1)
+        assert project.stage == "S8"
+        assert project.status == "ST08"
+        assert project.end_date != date.today()
+        assert project.health_status != "H4"
+        db.add.assert_called_with(project)
+        db.commit.assert_awaited()
+
+    @pytest.mark.asyncio
+    async def test_update_project_already_s9_sets_warranty_fields(self):
+        from app.services.acceptance.acceptance_service import AcceptanceService
+
+        db = AsyncMock()
+        db.add = MagicMock()
+        project = MagicMock(stage="S9", status="ST30")
         db.get.return_value = project
         await AcceptanceService._update_project_to_warranty(db, 1, 1)
         assert project.stage == "S9"
@@ -41,6 +58,7 @@ class TestAcceptanceServiceUpdateWarranty:
         from app.services.acceptance.acceptance_service import AcceptanceService
 
         db = AsyncMock()
+        db.add = MagicMock()
         project = MagicMock(stage="S5", status="ST12")
         db.get.return_value = project
         await AcceptanceService._update_project_to_warranty(db, 1, 1)

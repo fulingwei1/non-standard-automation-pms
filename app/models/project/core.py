@@ -462,9 +462,12 @@ class Machine(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="所属项目")
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=True, comment="客户ID")
     machine_code = Column(String(50), nullable=False, comment="设备编码")
     machine_name = Column(String(200), nullable=False, comment="设备名称")
     machine_no = Column(Integer, default=1, comment="设备序号（项目内）")
+    serial_no = Column(String(100), comment="客户侧设备序列号/SN")
+    warranty = Column(String(100), comment="质保信息")
 
     # 设备信息
     machine_type = Column(String(50), comment="设备类型")
@@ -499,10 +502,13 @@ class Machine(Base, TimestampMixin):
 
     # 关系
     project = relationship("Project", back_populates="machines")
+    customer = relationship("Customer", foreign_keys=[customer_id])
     bom_headers = relationship("BomHeader", back_populates="machine", lazy="dynamic")
 
     __table_args__ = (
         Index("idx_machines_project", "project_id"),
+        Index("idx_machines_customer", "customer_id"),
+        Index("idx_machines_serial_no", "serial_no"),
         Index("idx_machines_stage", "stage"),
         Index("idx_machines_project_code", "project_id", "machine_code", unique=True),
     )
