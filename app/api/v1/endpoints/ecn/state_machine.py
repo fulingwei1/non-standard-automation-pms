@@ -290,6 +290,11 @@ def _apply_current_transition(
         )
     )
     db.add(ecn)
+    db.flush()
+    if target_state in {"EXECUTING", "IN_PROGRESS", "IMPLEMENTED"}:
+        from app.services.ecn.integration import EcnIntegrationService
+
+        EcnIntegrationService(db).sync_to_bom_if_ready(ecn.id)
     db.commit()
     db.refresh(ecn)
 

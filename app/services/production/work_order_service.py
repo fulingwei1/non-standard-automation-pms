@@ -5,6 +5,7 @@
 处理工单验证、创建、响应构建、派工（单个和批量）等业务逻辑。
 """
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Dict, List, Optional
 
 from fastapi import HTTPException
@@ -20,9 +21,21 @@ from app.models.production import (
     Workshop,
     Workstation,
 )
+from app.models.material import BomHeader, BomItem
 from app.models.project import Machine, Project
+from app.models.shortage import WorkOrderBom
 from app.schemas.production import WorkOrderResponse
 from app.utils import db_helpers
+
+
+def get_or_404(*args, **kwargs):
+    """Compatibility wrapper for older tests that patch this module directly."""
+    return db_helpers.get_or_404(*args, **kwargs)
+
+
+def save_obj(*args, **kwargs):
+    """Compatibility wrapper for older tests that patch db_helpers.save_obj."""
+    return db_helpers.save_obj(*args, **kwargs)
 
 
 class WorkOrderService:
@@ -30,6 +43,18 @@ class WorkOrderService:
 
     def __init__(self, db: Session):
         self.db = db
+
+    @staticmethod
+    def _optional_int(value) -> Optional[int]:
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        return None
+
+    @staticmethod
+    def _optional_str(value) -> Optional[str]:
+        if isinstance(value, str):
+            return value
+        return None
 
     # ------------------------------------------------------------------
     # Internal helpers for batch-loading related name maps
@@ -177,6 +202,9 @@ class WorkOrderService:
             workshop_name=workshop_name,
             workstation_id=order.workstation_id,
             workstation_name=workstation_name,
+            bom_id=self._optional_int(getattr(order, "bom_id", None)),
+            bom_no=self._optional_str(getattr(order, "bom_no", None)),
+            bom_version=self._optional_str(getattr(order, "bom_version", None)),
             material_name=order.material_name,
             specification=order.specification,
             plan_qty=order.plan_qty or 0,
@@ -252,17 +280,29 @@ class WorkOrderService:
 
         # 验证关联实体
         if order_in.project_id:
-            db_helpers.get_or_404(self.db, Project, order_in.project_id, "项目不存在")
+            get_or_404(self.db, Project, order_in.project_id, "项目不存在")
         if order_in.machine_id:
-            db_helpers.get_or_404(self.db, Machine, order_in.machine_id, "机台不存在")
+            get_or_404(self.db, Machine, order_in.machine_id, "机台不存在")
         if order_in.production_plan_id:
-            db_helpers.get_or_404(self.db, ProductionPlan, order_in.production_plan_id, "生产计划不存在")
+            get_or_404(self.db, ProductionPlan, order_in.production_plan_id, "生产计划不存在")
         if order_in.workshop_id:
-            db_helpers.get_or_404(self.db, Workshop, order_in.workshop_id, "车间不存在")
+            get_or_404(self.db, Workshop, order_in.workshop_id, "车间不存在")
         if order_in.workstation_id:
-            workstation = db_helpers.get_or_404(self.db, Workstation, order_in.workstation_id, "工位不存在")
+            workstation = get_or_404(self.db, Workstation, order_in.workstation_id, "工位不存在")
             if workstation.workshop_id != order_in.workshop_id:
                 raise HTTPException(status_code=400, detail="工位不属于该车间")
+
+        order_data = order_in.model_dump()
+        bom = None
+        bom_id = order_data.get("bom_id")
+        if isinstance(bom_id, int) and not isinstance(bom_id, bool):
+            bom = get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
+            if order_in.project_id and bom.project_id != order_in.project_id:
+                raise HTTPException(status_code=400, detail="BOM不属于该项目")
+            if order_in.machine_id and bom.machine_id and bom.machine_id != order_in.machine_id:
+                raise HTTPException(status_code=400, detail="BOM不属于该机台")
+            order_data["bom_no"] = bom.bom_no
+            order_data["bom_version"] = bom.version
 
         work_order_no = generate_work_order_no(self.db)
 
@@ -275,41 +315,120 @@ class WorkOrderService:
             defect_qty=0,
             actual_hours=0,
             created_by=current_user_id,
-            **order_in.model_dump(),
+            **order_data,
         )
-        db_helpers.save_obj(self.db, order)
+        if bom:
+            self.db.add(order)
+            self.db.flush()
+            self._replace_bom_snapshot(order, bom)
+            self.db.commit()
+            self.db.refresh(order)
+        else:
+            save_obj(self.db, order)
 
         return self.build_response(order)
 
+    def _replace_bom_snapshot(self, order: WorkOrder, bom: BomHeader) -> None:
+        """将发布时点的 BOM 明细固化为工单 BOM 快照。"""
+        self.db.query(WorkOrderBom).filter(
+            WorkOrderBom.work_order_id == order.id
+        ).delete(synchronize_session=False)
+
+        items = (
+            self.db.query(BomItem)
+            .filter(BomItem.bom_id == bom.id)
+            .order_by(BomItem.item_no, BomItem.id)
+            .all()
+        )
+        plan_qty = Decimal(str(order.plan_qty or 1))
+        fallback_required_date = order.plan_start_date or order.plan_end_date or date.today()
+
+        for item in items:
+            bom_qty = Decimal(str(item.quantity or 0))
+            material_type = (item.source_type or "PURCHASE").lower()
+            lead_time = 0
+            if item.material and item.material.lead_time_days is not None:
+                lead_time = item.material.lead_time_days
+
+            self.db.add(
+                WorkOrderBom(
+                    work_order_id=order.id,
+                    work_order_no=order.work_order_no,
+                    project_id=order.project_id,
+                    material_id=item.material_id,
+                    material_code=item.material_code,
+                    material_name=item.material_name,
+                    specification=item.specification,
+                    unit=item.unit or "件",
+                    bom_qty=bom_qty,
+                    required_qty=bom_qty * plan_qty,
+                    required_date=item.required_date or fallback_required_date,
+                    material_type=material_type,
+                    lead_time=lead_time,
+                    is_key_material=bool(item.is_key_item),
+                )
+            )
+
     def get_work_order(self, order_id: int) -> WorkOrderResponse:
         """获取工单详情"""
-        order = db_helpers.get_or_404(self.db, WorkOrder, order_id, detail="工单不存在")
+        order = get_or_404(self.db, WorkOrder, order_id, detail="工单不存在")
         return self.build_response(order)
 
     def update_work_order(self, order_id: int, order_in) -> WorkOrderResponse:
         """更新工单（兼容前端 PUT /production/work-orders/{id}）"""
-        order = db_helpers.get_or_404(self.db, WorkOrder, order_id, detail="工单不存在")
+        order = get_or_404(self.db, WorkOrder, order_id, detail="工单不存在")
 
         update_data = order_in.model_dump(exclude_unset=True)
+        snapshot_bom = None
+        clear_snapshot = False
 
         if "workshop_id" in update_data and update_data["workshop_id"]:
-            db_helpers.get_or_404(self.db, Workshop, update_data["workshop_id"], "车间不存在")
+            get_or_404(self.db, Workshop, update_data["workshop_id"], "车间不存在")
 
         if "assigned_to" in update_data and update_data["assigned_to"]:
-            db_helpers.get_or_404(self.db, Worker, update_data["assigned_to"], "工人不存在")
+            get_or_404(self.db, Worker, update_data["assigned_to"], "工人不存在")
 
         workstation_id = update_data.get("workstation_id")
         if workstation_id:
-            workstation = db_helpers.get_or_404(self.db, Workstation, workstation_id, "工位不存在")
+            workstation = get_or_404(self.db, Workstation, workstation_id, "工位不存在")
             target_workshop_id = update_data.get("workshop_id", order.workshop_id)
             if target_workshop_id and workstation.workshop_id != target_workshop_id:
                 raise HTTPException(status_code=400, detail="工位不属于该车间")
+
+        if "bom_id" in update_data:
+            bom_id = update_data["bom_id"]
+            if bom_id is None:
+                update_data["bom_no"] = None
+                update_data["bom_version"] = None
+                clear_snapshot = True
+            elif isinstance(bom_id, int) and not isinstance(bom_id, bool):
+                snapshot_bom = get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
+                if order.project_id and snapshot_bom.project_id != order.project_id:
+                    raise HTTPException(status_code=400, detail="BOM不属于该项目")
+                if order.machine_id and snapshot_bom.machine_id and snapshot_bom.machine_id != order.machine_id:
+                    raise HTTPException(status_code=400, detail="BOM不属于该机台")
+                update_data["bom_no"] = snapshot_bom.bom_no
+                update_data["bom_version"] = snapshot_bom.version
+            else:
+                raise HTTPException(status_code=400, detail="BOM ID格式不正确")
 
         for field, value in update_data.items():
             if hasattr(order, field):
                 setattr(order, field, value)
 
-        db_helpers.save_obj(self.db, order)
+        if snapshot_bom or clear_snapshot:
+            self.db.add(order)
+            self.db.flush()
+            if clear_snapshot:
+                self.db.query(WorkOrderBom).filter(
+                    WorkOrderBom.work_order_id == order.id
+                ).delete(synchronize_session=False)
+            else:
+                self._replace_bom_snapshot(order, snapshot_bom)
+            self.db.commit()
+            self.db.refresh(order)
+        else:
+            save_obj(self.db, order)
         return self.build_response(order)
 
     def assign_work_order(
@@ -319,17 +438,17 @@ class WorkOrderService:
         current_user_id: int,
     ) -> WorkOrderResponse:
         """任务派工（指派人员/工位）"""
-        order = db_helpers.get_or_404(self.db, WorkOrder, order_id, detail="工单不存在")
+        order = get_or_404(self.db, WorkOrder, order_id, detail="工单不存在")
 
         if order.status != "PENDING":
             raise HTTPException(status_code=400, detail="只有待派工状态的工单才能派工")
 
         # 检查工人是否存在
-        db_helpers.get_or_404(self.db, Worker, assign_in.assigned_to, "工人不存在")
+        get_or_404(self.db, Worker, assign_in.assigned_to, "工人不存在")
 
         # 检查工位是否存在
         if assign_in.workstation_id:
-            workstation = db_helpers.get_or_404(self.db, Workstation, assign_in.workstation_id, "工位不存在")
+            workstation = get_or_404(self.db, Workstation, assign_in.workstation_id, "工位不存在")
             if order.workshop_id and workstation.workshop_id != order.workshop_id:
                 raise HTTPException(status_code=400, detail="工位不属于该车间")
 
@@ -341,7 +460,7 @@ class WorkOrderService:
         if assign_in.workstation_id:
             order.workstation_id = assign_in.workstation_id
 
-        db_helpers.save_obj(self.db, order)
+        save_obj(self.db, order)
         return self.build_response(order)
 
     def batch_assign(

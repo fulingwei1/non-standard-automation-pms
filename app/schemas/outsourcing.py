@@ -98,6 +98,7 @@ class OutsourcingOrderCreate(BaseModel):
     vendor_id: int = Field(description="外协商ID")
     project_id: int = Field(description="项目ID")
     machine_id: Optional[int] = None
+    work_order_id: Optional[int] = None
     order_type: str = Field(description="MACHINING/ASSEMBLY/SURFACE/OTHER")
     order_title: str = Field(max_length=200)
     order_description: Optional[str] = None
@@ -184,6 +185,7 @@ class OutsourcingOrderResponse(TimestampSchema):
     project_name: Optional[str] = None
     machine_id: Optional[int] = None
     machine_name: Optional[str] = None
+    work_order_id: Optional[int] = None
     order_type: str
     order_title: str
     total_amount: Decimal = 0
@@ -226,6 +228,7 @@ class OutsourcingOrderListResponse(BaseSchema):
     order_no: str
     vendor_name: str
     project_name: Optional[str] = None
+    work_order_id: Optional[int] = None
     order_type: str
     order_title: str
     amount_with_tax: Decimal

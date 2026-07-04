@@ -2,6 +2,7 @@
 """
 生产排程优化服务
 """
+import json
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
@@ -201,8 +202,9 @@ class ProductionScheduleService:
         """
         schedules = []
 
-        # 1. 工单排序: 优先级 > 交期 > 工单号
-        sorted_orders = sorted(
+        # 1. 工单排序: 优先级 > 交期 > 工单号；随后按显式依赖拓扑校正
+        dependency_map = self._build_work_order_dependency_map(request, work_orders)
+        priority_sorted_orders = sorted(
             work_orders,
             key=lambda x: (
                 self._get_priority_weight(x.priority),
@@ -210,10 +212,15 @@ class ProductionScheduleService:
                 x.work_order_no,
             ),
         )
+        sorted_orders = self._sort_work_orders_with_dependencies(
+            priority_sorted_orders,
+            dependency_map,
+        )
 
         # 2. 资源时间表 (记录每个资源的占用情况)
         equipment_timeline = {eq.id: [] for eq in equipment}
         worker_timeline = {w.id: [] for w in workers}
+        scheduled_by_work_order_id: Dict[int, ProductionSchedule] = {}
 
         # 3. 为每个工单分配资源和时间
         current_time = request.start_date
@@ -228,11 +235,17 @@ class ProductionScheduleService:
             )
             best_worker = self._select_best_worker(order, workers, worker_timeline, request)
 
+            dependency_ready_time = self._get_dependency_ready_time(
+                dependency_map.get(order.id, []),
+                scheduled_by_work_order_id,
+                current_time,
+            )
+
             # 计算最早开始时间
             earliest_start = self._find_earliest_available_slot(
                 equipment_timeline.get(best_equipment.id if best_equipment else None, []),
                 worker_timeline.get(best_worker.id if best_worker else None, []),
-                current_time,
+                max(current_time, dependency_ready_time),
                 duration_hours,
                 request,
             )
@@ -254,11 +267,13 @@ class ProductionScheduleService:
                 priority_score=self._calculate_priority_score(order),
                 status="PENDING",
                 algorithm_version=self.ALGORITHM_VERSION,
+                constraints_met=self._build_schedule_constraints(order.id, dependency_map),
                 created_by=user_id,
                 sequence_no=len(schedules) + 1,
             )
 
             schedules.append(schedule)
+            scheduled_by_work_order_id[order.id] = schedule
 
             # 更新资源时间表
             if best_equipment:
@@ -292,8 +307,228 @@ class ProductionScheduleService:
 
         # 优化步骤:尝试交换排程以提高整体评分
         schedules = self._optimize_schedules(schedules, request)
+        schedules = self._enforce_dependency_timing(schedules, request)
 
         return schedules
+
+    def _build_work_order_dependency_map(
+        self, request: ScheduleGenerateRequest, work_orders: List[WorkOrder]
+    ) -> Dict[int, List[int]]:
+        """解析排程请求/工单上的前置依赖，返回 child -> predecessors。"""
+        valid_ids = {int(order.id) for order in work_orders if getattr(order, "id", None)}
+        dependency_map: Dict[int, List[int]] = {}
+
+        def add_dependency(child_id: Any, raw_predecessors: Any) -> None:
+            try:
+                child = int(child_id)
+            except (TypeError, ValueError):
+                return
+            if child not in valid_ids:
+                return
+            predecessors = [
+                predecessor
+                for predecessor in self._coerce_dependency_ids(raw_predecessors)
+                if predecessor in valid_ids and predecessor != child
+            ]
+            if not predecessors:
+                return
+            existing = dependency_map.setdefault(child, [])
+            for predecessor in predecessors:
+                if predecessor not in existing:
+                    existing.append(predecessor)
+
+        constraints = request.constraints or {}
+        raw_dependencies = (
+            constraints.get("dependencies") if isinstance(constraints, dict) else None
+        )
+        if isinstance(raw_dependencies, dict):
+            for child_id, predecessors in raw_dependencies.items():
+                add_dependency(child_id, predecessors)
+        elif isinstance(raw_dependencies, list):
+            for item in raw_dependencies:
+                if not isinstance(item, dict):
+                    continue
+                child_id = (
+                    item.get("work_order_id")
+                    or item.get("successor_id")
+                    or item.get("child_id")
+                    or item.get("task_id")
+                )
+                predecessors = (
+                    item.get("depends_on")
+                    or item.get("predecessors")
+                    or item.get("predecessor_ids")
+                    or item.get("depends_on_work_order_ids")
+                )
+                if predecessors is None and item.get("predecessor_id") is not None:
+                    predecessors = [item.get("predecessor_id")]
+                add_dependency(child_id, predecessors)
+
+        for order in work_orders:
+            for attr in (
+                "depends_on_work_order_ids",
+                "predecessor_work_order_ids",
+                "dependencies",
+            ):
+                raw = getattr(order, attr, None)
+                if raw:
+                    add_dependency(order.id, raw)
+
+        return {child: sorted(predecessors) for child, predecessors in dependency_map.items()}
+
+    def _coerce_dependency_ids(self, raw_value: Any) -> List[int]:
+        """兼容数组、逗号字符串和 JSON 字符串形式的依赖 ID。"""
+        if raw_value is None:
+            return []
+        if isinstance(raw_value, int):
+            return [raw_value]
+        if isinstance(raw_value, str):
+            value = raw_value.strip()
+            if not value:
+                return []
+            try:
+                parsed = json.loads(value)
+            except json.JSONDecodeError:
+                parsed = [part.strip() for part in value.split(",")]
+            return self._coerce_dependency_ids(parsed)
+        if isinstance(raw_value, dict):
+            return self._coerce_dependency_ids(
+                raw_value.get("predecessors")
+                or raw_value.get("depends_on")
+                or raw_value.get("ids")
+            )
+        if isinstance(raw_value, (list, tuple, set)):
+            result = []
+            for item in raw_value:
+                result.extend(self._coerce_dependency_ids(item))
+            unique = []
+            for item in result:
+                if item not in unique:
+                    unique.append(item)
+            return unique
+        try:
+            return [int(raw_value)]
+        except (TypeError, ValueError):
+            return []
+
+    def _sort_work_orders_with_dependencies(
+        self, sorted_orders: List[WorkOrder], dependency_map: Dict[int, List[int]]
+    ) -> List[WorkOrder]:
+        """在原优先级排序基础上做依赖拓扑排序。"""
+        if not dependency_map:
+            return sorted_orders
+
+        remaining = list(sorted_orders)
+        remaining_ids = {order.id for order in remaining}
+        scheduled_ids = set()
+        result = []
+
+        while remaining:
+            ready_order = next(
+                (
+                    order
+                    for order in remaining
+                    if all(
+                        predecessor not in remaining_ids or predecessor in scheduled_ids
+                        for predecessor in dependency_map.get(order.id, [])
+                    )
+                ),
+                None,
+            )
+            if ready_order is None:
+                logger.warning("生产排程依赖存在环或缺口，保留原优先级顺序继续排程")
+                result.extend(remaining)
+                break
+            result.append(ready_order)
+            scheduled_ids.add(ready_order.id)
+            remaining_ids.discard(ready_order.id)
+            remaining.remove(ready_order)
+
+        return result
+
+    def _get_dependency_ready_time(
+        self,
+        predecessor_ids: List[int],
+        scheduled_by_work_order_id: Dict[int, ProductionSchedule],
+        fallback: datetime,
+    ) -> datetime:
+        predecessor_end_times = [
+            scheduled_by_work_order_id[predecessor_id].scheduled_end_time
+            for predecessor_id in predecessor_ids
+            if predecessor_id in scheduled_by_work_order_id
+        ]
+        return max(predecessor_end_times) if predecessor_end_times else fallback
+
+    def _build_schedule_constraints(
+        self, work_order_id: int, dependency_map: Dict[int, List[int]]
+    ) -> Optional[Dict[str, Any]]:
+        predecessors = dependency_map.get(work_order_id, [])
+        if not predecessors:
+            return None
+        return {
+            "dependencies": {
+                "predecessors": predecessors,
+                "enforced": True,
+            }
+        }
+
+    def _enforce_dependency_timing(
+        self, schedules: List[ProductionSchedule], request: ScheduleGenerateRequest
+    ) -> List[ProductionSchedule]:
+        """优化交换后再次保证后置工单不早于前置工单结束。"""
+        schedule_by_work_order_id = {schedule.work_order_id: schedule for schedule in schedules}
+        for _ in range(len(schedules)):
+            changed = False
+            for schedule in schedules:
+                predecessors = self._extract_schedule_predecessor_work_order_ids(schedule)
+                ready_time = self._get_dependency_ready_time(
+                    predecessors,
+                    schedule_by_work_order_id,
+                    schedule.scheduled_start_time,
+                )
+                if ready_time > schedule.scheduled_start_time:
+                    schedule.scheduled_start_time = self._adjust_to_work_time(ready_time, request)
+                    schedule.scheduled_end_time = self._calculate_end_time(
+                        schedule.scheduled_start_time,
+                        schedule.duration_hours,
+                        request,
+                    )
+                    changed = True
+            if not changed:
+                break
+        return schedules
+
+    def _extract_schedule_predecessor_work_order_ids(
+        self, schedule: ProductionSchedule
+    ) -> List[int]:
+        """从排程 constraints_met 中读取前置工单 ID。"""
+        constraints = getattr(schedule, "constraints_met", None) or {}
+        if isinstance(constraints, str):
+            try:
+                constraints = json.loads(constraints)
+            except json.JSONDecodeError:
+                constraints = {}
+        if not isinstance(constraints, dict):
+            return []
+
+        dependencies = constraints.get("dependencies") or {}
+        if not isinstance(dependencies, dict):
+            return []
+        return self._coerce_dependency_ids(
+            dependencies.get("predecessors") or dependencies.get("depends_on")
+        )
+
+    def _gantt_dependency_task_ids(
+        self,
+        schedule: ProductionSchedule,
+        schedule_id_by_work_order_id: Dict[int, int],
+    ) -> List[int]:
+        """把前置工单 ID 映射成甘特图任务 ID（即 ProductionSchedule.id）。"""
+        return [
+            schedule_id_by_work_order_id[work_order_id]
+            for work_order_id in self._extract_schedule_predecessor_work_order_ids(schedule)
+            if work_order_id in schedule_id_by_work_order_id
+        ]
 
     def _optimize_schedules(
         self, schedules: List[ProductionSchedule], request: ScheduleGenerateRequest
@@ -1293,6 +1528,7 @@ class ProductionScheduleService:
             wo.id: wo
             for wo in self.db.query(WorkOrder).filter(WorkOrder.id.in_(work_order_ids)).all()
         }
+        schedule_id_by_work_order_id = {s.work_order_id: s.id for s in schedules}
 
         # 构建甘特图任务
         tasks = []
@@ -1314,7 +1550,10 @@ class ProductionScheduleService:
                 worker=f"工人{schedule.worker_id}" if schedule.worker_id else None,
                 status=schedule.status,
                 priority=work_order.priority,
-                dependencies=[],
+                dependencies=self._gantt_dependency_task_ids(
+                    schedule,
+                    schedule_id_by_work_order_id,
+                ),
                 color=self.GANTT_COLOR_MAP.get(schedule.status, "#9E9E9E"),
             )
             tasks.append(task)

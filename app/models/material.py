@@ -140,7 +140,7 @@ class BomHeader(Base, TimestampMixin):
     __tablename__ = "bom_headers"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    bom_no = Column(String(50), unique=True, nullable=False, comment="BOM编号")
+    bom_no = Column(String(50), nullable=False, comment="BOM编号")
     bom_name = Column(String(200), nullable=False, comment="BOM名称")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
@@ -169,6 +169,8 @@ class BomHeader(Base, TimestampMixin):
     items = relationship("BomItem", back_populates="header", lazy="dynamic")
 
     __table_args__ = (
+        Index("idx_bom_no", "bom_no"),
+        Index("uq_bom_no_version", "bom_no", "version", unique=True),
         Index("idx_bom_project", "project_id"),
         Index("idx_bom_machine", "machine_id"),
     )
@@ -290,4 +292,3 @@ class MaterialShortage(Base, TimestampMixin):
         Index("idx_shortage_material", "material_id"),
         Index("idx_shortage_status", "status"),
     )
-

@@ -34,6 +34,7 @@ class WorkOrderCreate(BaseModel):
     material_name: Optional[str] = Field(default=None, description="物料名称")
     specification: Optional[str] = Field(default=None, description="规格型号")
     drawing_no: Optional[str] = Field(default=None, description="图纸编号")
+    bom_id: Optional[int] = Field(default=None, description="BOM ID")
     plan_qty: int = Field(default=1, description="计划数量")
     standard_hours: Optional[Decimal] = Field(default=None, description="标准工时")
     plan_start_date: Optional[date] = Field(default=None, description="计划开始日期")
@@ -53,6 +54,7 @@ class WorkOrderUpdate(BaseModel):
     assigned_to: Optional[int] = None
     material_name: Optional[str] = None
     specification: Optional[str] = None
+    bom_id: Optional[int] = None
     plan_qty: Optional[int] = None
     plan_start_date: Optional[date] = None
     plan_end_date: Optional[date] = None
@@ -103,6 +105,9 @@ class WorkOrderResponse(TimestampSchema):
     workshop_name: Optional[str] = None
     workstation_id: Optional[int] = None
     workstation_name: Optional[str] = None
+    bom_id: Optional[int] = None
+    bom_no: Optional[str] = None
+    bom_version: Optional[str] = None
     material_name: Optional[str] = None
     specification: Optional[str] = None
     plan_qty: int

@@ -99,8 +99,14 @@ SHORTAGE_TASKS = [
         "owner": "Supply Chain",
         "category": "Shortage",
         "description": "5:15 生成缺料日报供前端查询。",
-        "enabled": False,
-        "dependencies_tables": ["bom_items", "materials", "purchase_orders", "goods_receipts"],
+        "enabled": True,
+        "dependencies_tables": [
+            "alert_records",
+            "shortage_reports",
+            "mat_kit_check",
+            "material_arrivals",
+            "mat_shortage_daily_report",
+        ],
         "risk_level": "MEDIUM",
         "sla": {
             "max_execution_time_seconds": 1200,

@@ -207,6 +207,7 @@ class TestCollectFromEcn:
 
         mock_db.query.return_value.filter.return_value.first.side_effect = [
             mock_ecn,
+            None,
         ]
         result = CostCollectionService.collect_from_ecn(mock_db, 1)
         assert result is None

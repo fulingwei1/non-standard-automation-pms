@@ -10,12 +10,64 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.material import BomHeader
+from app.models.material import BomHeader, BomItem
 from app.models.user import User
-from app.schemas.material import BomResponse
+from app.schemas.material import BomItemResponse, BomResponse, BomRevisionCreate
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+
+def _build_bom_response(bom: BomHeader) -> BomResponse:
+    items = [
+        BomItemResponse(
+            id=item.id,
+            bom_id=item.bom_id,
+            item_no=item.item_no,
+            parent_item_id=item.parent_item_id,
+            material_id=item.material_id,
+            material_code=item.material_code,
+            material_name=item.material_name,
+            specification=item.specification,
+            drawing_no=item.drawing_no,
+            unit=item.unit,
+            quantity=item.quantity,
+            unit_price=item.unit_price or 0,
+            amount=item.amount or 0,
+            source_type=item.source_type,
+            supplier_id=item.supplier_id,
+            required_date=item.required_date,
+            purchased_qty=item.purchased_qty or 0,
+            received_qty=item.received_qty or 0,
+            level=item.level,
+            sort_order=item.sort_order,
+            is_key_item=item.is_key_item,
+            remark=item.remark,
+        )
+        for item in bom.items.order_by(BomItem.item_no).all()
+    ]
+
+    return BomResponse(
+        id=bom.id,
+        bom_no=bom.bom_no,
+        bom_name=bom.bom_name,
+        project_id=bom.project_id,
+        project_name=bom.project.project_name if bom.project else None,
+        machine_id=bom.machine_id,
+        machine_name=bom.machine.machine_name if bom.machine else None,
+        version=bom.version,
+        is_latest=bom.is_latest,
+        status=bom.status,
+        total_items=bom.total_items,
+        total_amount=bom.total_amount or 0,
+        approved_by=bom.approved_by,
+        approved_at=bom.approved_at.isoformat() if bom.approved_at else None,
+        created_by=bom.created_by,
+        remark=bom.remark,
+        items=items,
+        created_at=bom.created_at,
+        updated_at=bom.updated_at,
+    )
 
 
 @router.get("/{bom_id}/versions", response_model=List[BomResponse])
@@ -38,30 +90,92 @@ def get_bom_versions(
         .all()
     )
 
-    result = []
-    for version in versions:
-        # 获取BOM明细数量（简化版，不加载完整明细）
-        version.items.count()
+    return [_build_bom_response(version) for version in versions]
 
-        result.append(
-            BomResponse(
-                id=version.id,
-                bom_no=version.bom_no,
-                bom_name=version.bom_name,
-                project_id=version.project_id,
-                project_name=version.project.project_name if version.project else None,
-                machine_id=version.machine_id,
-                machine_name=version.machine.machine_name if version.machine else None,
-                version=version.version,
-                is_latest=version.is_latest,
-                status=version.status,
-                total_items=version.total_items,
-                total_amount=version.total_amount or 0,
-                items=[],
-            )
+
+@router.post("/{bom_id}/versions", response_model=BomResponse, status_code=201)
+def create_bom_revision(
+    *,
+    db: Session = Depends(deps.get_db),
+    bom_id: int,
+    revision_in: BomRevisionCreate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> BomResponse:
+    """从已发布 BOM 克隆一个新的草稿修订版本。"""
+    source_bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
+
+    if source_bom.status != "RELEASED":
+        raise HTTPException(status_code=400, detail="只有已发布BOM才能创建修订版本")
+
+    existing_version = (
+        db.query(BomHeader)
+        .filter(
+            BomHeader.bom_no == source_bom.bom_no,
+            BomHeader.version == revision_in.version,
         )
+        .first()
+    )
+    if existing_version:
+        raise HTTPException(status_code=400, detail="该BOM版本号已存在")
 
-    return result
+    source_items = source_bom.items.order_by(BomItem.item_no).all()
+    if not source_items:
+        raise HTTPException(status_code=400, detail="BOM没有明细，无法创建修订版本")
+
+    revision = BomHeader(
+        bom_no=source_bom.bom_no,
+        bom_name=source_bom.bom_name,
+        project_id=source_bom.project_id,
+        machine_id=source_bom.machine_id,
+        version=revision_in.version,
+        is_latest=False,
+        status="DRAFT",
+        total_items=source_bom.total_items,
+        total_amount=source_bom.total_amount,
+        remark=revision_in.change_note or source_bom.remark,
+        created_by=current_user.id,
+    )
+    db.add(revision)
+    db.flush()
+
+    copied_items: list[tuple[BomItem, BomItem]] = []
+    old_to_new_id: dict[int, int] = {}
+    for source_item in source_items:
+        copied_item = BomItem(
+            bom_id=revision.id,
+            item_no=source_item.item_no,
+            material_id=source_item.material_id,
+            material_code=source_item.material_code,
+            material_name=source_item.material_name,
+            specification=source_item.specification,
+            drawing_no=source_item.drawing_no,
+            unit=source_item.unit,
+            quantity=source_item.quantity,
+            unit_price=source_item.unit_price or 0,
+            amount=source_item.amount or 0,
+            source_type=source_item.source_type,
+            supplier_id=source_item.supplier_id,
+            required_date=source_item.required_date,
+            purchased_qty=0,
+            received_qty=0,
+            kitting_status="PENDING",
+            level=source_item.level,
+            sort_order=source_item.sort_order,
+            is_key_item=source_item.is_key_item,
+            remark=source_item.remark,
+        )
+        db.add(copied_item)
+        db.flush()
+        copied_items.append((source_item, copied_item))
+        old_to_new_id[source_item.id] = copied_item.id
+
+    for source_item, copied_item in copied_items:
+        if source_item.parent_item_id in old_to_new_id:
+            copied_item.parent_item_id = old_to_new_id[source_item.parent_item_id]
+
+    db.commit()
+    db.refresh(revision)
+    return _build_bom_response(revision)
 
 
 @router.get("/{bom_id}/versions/compare", response_model=dict)

@@ -23,12 +23,20 @@ from app.schemas.production import (
     WorkReportResponse,
     WorkReportStartRequest,
 )
+from app.services.production.work_order_state_machine import validate_transition
 
 from .utils import generate_report_no
 from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+
+def _validate_work_order_transition(work_order: WorkOrder, target_status: str) -> None:
+    try:
+        validate_transition(work_order.status, target_status)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 def _get_work_report_response(db: Session, report: WorkReport) -> WorkReportResponse:
@@ -93,6 +101,7 @@ def _apply_complete_report_to_work_order(db: Session, report: WorkReport) -> Non
         work_order.actual_hours = (work_order.actual_hours or 0) + report.work_hours
 
     if completed_qty >= work_order.plan_qty:
+        _validate_work_order_transition(work_order, "COMPLETED")
         work_order.status = "COMPLETED"
         work_order.actual_end_time = datetime.now()
 
@@ -159,8 +168,7 @@ def start_work_report(
     """
     work_order = get_or_404(db, WorkOrder, report_in.work_order_id, "工单不存在")
 
-    if work_order.status != "ASSIGNED":
-        raise HTTPException(status_code=400, detail="只有已派工的工单才能开工")
+    _validate_work_order_transition(work_order, "STARTED")
 
     worker = _resolve_report_worker(db, current_user, work_order, report_in.worker_id)
 
@@ -254,8 +262,7 @@ def complete_work_report(
     """
     work_order = get_or_404(db, WorkOrder, report_in.work_order_id, "工单不存在")
 
-    if work_order.status not in ["STARTED", "PAUSED"]:
-        raise HTTPException(status_code=400, detail="只有已开始或已暂停的工单才能完工")
+    _validate_work_order_transition(work_order, "COMPLETED")
 
     # 检查完成数量
     if report_in.completed_qty > work_order.plan_qty:

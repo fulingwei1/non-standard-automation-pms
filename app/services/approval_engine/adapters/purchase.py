@@ -14,6 +14,7 @@ from app.models.approval import ApprovalInstance
 from app.models.project import Project
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.vendor import Vendor
+from app.services.purchase.order_state_machine import transition_purchase_order_status
 
 from .base import ApprovalAdapter
 
@@ -116,7 +117,7 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
         """
         order = self.get_entity(entity_id)
         if order:
-            order.status = "PENDING_APPROVAL"
+            transition_purchase_order_status(order, "PENDING_APPROVAL")
             order.submitted_at = datetime.now()
             self.db.flush()
 
@@ -128,7 +129,7 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
         """
         order = self.get_entity(entity_id)
         if order:
-            order.status = "APPROVED"
+            transition_purchase_order_status(order, "APPROVED")
             order.approved_by = instance.final_approver_id
             order.approved_at = instance.completed_at or datetime.now()
             self.db.flush()
@@ -141,7 +142,7 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
         """
         order = self.get_entity(entity_id)
         if order:
-            order.status = "REJECTED"
+            transition_purchase_order_status(order, "REJECTED")
             # approval_note可以记录驳回原因（如果有的话）
             if hasattr(instance, "reject_reason"):
                 order.approval_note = instance.reject_reason
@@ -155,7 +156,7 @@ class PurchaseOrderApprovalAdapter(ApprovalAdapter):
         """
         order = self.get_entity(entity_id)
         if order:
-            order.status = "DRAFT"
+            transition_purchase_order_status(order, "DRAFT")
             order.submitted_at = None
             self.db.flush()
 

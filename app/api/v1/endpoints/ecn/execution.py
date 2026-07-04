@@ -16,6 +16,7 @@ from app.core import security
 from app.models.ecn import Ecn, EcnLog, EcnTask
 from app.models.user import User
 from app.schemas.ecn import EcnClose, EcnResponse, EcnStartExecution, EcnVerify
+from app.services.ecn.integration import EcnIntegrationService
 from app.utils.db_helpers import get_or_404
 
 from .utils import build_ecn_response
@@ -57,6 +58,8 @@ def start_ecn_execution(
     )
     db.add(log)
     db.add(ecn)
+    db.flush()
+    EcnIntegrationService(db).sync_to_bom_if_ready(ecn_id)
     db.commit()
     db.refresh(ecn)
 

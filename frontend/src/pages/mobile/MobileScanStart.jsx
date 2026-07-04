@@ -17,6 +17,13 @@ import { Input } from "../../components/ui/input";
 import { Card, CardContent } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { productionApi } from "../../services/api";
+import {
+  enqueueOfflineStartWorkReport,
+  flushOfflineStartWorkReports,
+  getCameraScanUnavailableMessage,
+  isLikelyOfflineStartError,
+  readOfflineStartQueue,
+} from "./mobileScanStartHelpers";
 
 const statusConfigs = {
   PENDING: { label: "待派工", color: "bg-slate-500" },
@@ -36,12 +43,35 @@ export default function MobileScanStart() {
   const [workOrder, setWorkOrder] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [offlineQueued, setOfflineQueued] = useState(false);
+  const [queuedCount, setQueuedCount] = useState(0);
 
   useEffect(() => {
     if (workOrderId) {
       fetchWorkOrder(workOrderId);
     }
   }, [workOrderId]);
+
+  useEffect(() => {
+    const refreshQueuedCount = () => {
+      setQueuedCount(readOfflineStartQueue().length);
+    };
+    const replayQueuedStarts = async () => {
+      if (navigator.onLine === false) {
+        refreshQueuedCount();
+        return;
+      }
+      const result = await flushOfflineStartWorkReports((payload) =>
+        productionApi.workReports.start(payload)
+      );
+      setQueuedCount(result.remaining);
+    };
+
+    refreshQueuedCount();
+    replayQueuedStarts();
+    window.addEventListener("online", replayQueuedStarts);
+    return () => window.removeEventListener("online", replayQueuedStarts);
+  }, []);
 
   const fetchWorkOrder = async (id) => {
     try {
@@ -78,6 +108,7 @@ export default function MobileScanStart() {
     try {
       setLoading(true);
       setError("");
+      setOfflineQueued(false);
       const res = await productionApi.workOrders.list({
         search: input,
         page_size: 10
@@ -111,8 +142,9 @@ export default function MobileScanStart() {
   const handleCameraScan = async (file) => {
     if (!file) {return;}
     try {
-      if (!("BarcodeDetector" in window)) {
-        alert("当前浏览器不支持自动扫码，请手动输入工单号");
+      const unavailableMessage = getCameraScanUnavailableMessage(window, navigator);
+      if (unavailableMessage) {
+        setError(unavailableMessage);
         return;
       }
       const detector = new window.BarcodeDetector({
@@ -139,6 +171,7 @@ export default function MobileScanStart() {
     try {
       setLoading(true);
       setError("");
+      setOfflineQueued(false);
       await productionApi.workReports.start({
         work_order_id: workOrder.id,
         report_note: ""
@@ -149,6 +182,16 @@ export default function MobileScanStart() {
       }, 1500);
     } catch (error) {
       console.error("Failed to start work:", error);
+      if (isLikelyOfflineStartError(error, navigator)) {
+        enqueueOfflineStartWorkReport(workOrder, "", localStorage);
+        setQueuedCount(readOfflineStartQueue().length);
+        setOfflineQueued(true);
+        setSuccess(true);
+        setTimeout(() => {
+          navigate("/mobile/tasks");
+        }, 1500);
+        return;
+      }
       setError("开工失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -239,6 +282,17 @@ export default function MobileScanStart() {
         </Card>
         }
 
+        {queuedCount > 0 && !success &&
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <div className="text-sm font-medium text-amber-800">
+                有 {queuedCount} 条离线开工待同步，恢复网络后自动补传
+              </div>
+            </div>
+        </div>
+        }
+
         {/* 错误提示 */}
         {error &&
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
@@ -255,7 +309,7 @@ export default function MobileScanStart() {
             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
             <div className="flex-1">
               <div className="text-sm font-medium text-emerald-800">
-                开工成功！
+                {offlineQueued ? "当前离线，开工请求已暂存，联网后自动补传" : "开工成功！"}
               </div>
             </div>
         </div>

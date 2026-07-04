@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.models.ecn import Ecn, EcnAffectedMaterial, EcnAffectedOrder, EcnBomChange, EcnTask
 from app.models.material import BomItem
 from app.models.project import Project
-from app.models.purchase import PurchaseOrder
+from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.schemas.ecn import EcnTaskCreate
 from app.services.ecn.ecn_auto_assign_service import auto_assign_task
 from app.services.ecn.notification import notify_task_assigned
@@ -102,6 +102,13 @@ class EcnIntegrationService:
 
         return {"updated_count": updated_count}
 
+    def sync_to_bom_if_ready(self, ecn_id: int) -> Dict[str, Any]:
+        """在 ECN 已批准或执行中时幂等同步 BOM。"""
+        ecn = get_or_404(self.db, Ecn, ecn_id, "ECN不存在")
+        if ecn.status not in ["APPROVED", "EXECUTING"]:
+            return {"updated_count": 0, "skipped": True, "reason": f"ECN状态{ecn.status}不可同步"}
+        return self.sync_to_bom(ecn_id)
+
     def sync_to_project(self, ecn_id: int) -> Dict[str, Any]:
         """
         将ECN变更同步到项目
@@ -154,7 +161,8 @@ class EcnIntegrationService:
         Returns:
             同步结果字典，包含更新数量
         """
-        get_or_404(self.db, Ecn, ecn_id, "ECN不存在")
+        ecn = get_or_404(self.db, Ecn, ecn_id, "ECN不存在")
+        created_count = self._ensure_purchase_affected_orders(ecn)
 
         affected_orders = (
             self.db.query(EcnAffectedOrder)
@@ -167,17 +175,24 @@ class EcnIntegrationService:
         )
 
         updated_count = 0
+        cancelled_count = 0
+        change_required_count = 0
         for ao in affected_orders:
             order = self.db.query(PurchaseOrder).filter(PurchaseOrder.id == ao.order_id).first()
             if order:
                 # 根据处理方式更新订单
                 if ao.action_type == "CANCEL":
                     order.status = "CANCELLED"
+                    self._append_purchase_ecn_note(ecn, order, "采购订单已按ECN取消")
+                    ao.status = "PROCESSED"
+                    cancelled_count += 1
                 elif ao.action_type == "MODIFY":
-                    # 可以添加更详细的订单修改逻辑
-                    pass
+                    self._mark_purchase_change_required(ecn, order, ao)
+                    change_required_count += 1
+                else:
+                    self._mark_purchase_change_required(ecn, order, ao)
+                    change_required_count += 1
 
-                ao.status = "PROCESSED"
                 ao.processed_by = current_user_id
                 ao.processed_at = datetime.now()
                 self.db.add(order)
@@ -186,7 +201,132 @@ class EcnIntegrationService:
 
         self.db.commit()
 
-        return {"updated_count": updated_count}
+        return {
+            "updated_count": updated_count,
+            "created_count": created_count,
+            "cancelled_count": cancelled_count,
+            "change_required_count": change_required_count,
+        }
+
+    def _ensure_purchase_affected_orders(self, ecn: Ecn) -> int:
+        affected_materials = (
+            self.db.query(EcnAffectedMaterial)
+            .filter(EcnAffectedMaterial.ecn_id == ecn.id)
+            .all()
+        )
+        if not affected_materials:
+            return 0
+
+        impacts_by_order: dict[int, dict[str, Any]] = {}
+        for affected_material in affected_materials:
+            if not affected_material.material_id:
+                continue
+            rows = (
+                self.db.query(PurchaseOrderItem, PurchaseOrder)
+                .join(PurchaseOrder, PurchaseOrder.id == PurchaseOrderItem.order_id)
+                .filter(PurchaseOrderItem.material_id == affected_material.material_id)
+                .filter(PurchaseOrder.status.notin_(["CANCELLED", "DRAFT"]))
+                .order_by(desc(PurchaseOrder.created_at))
+                .all()
+            )
+            for _order_item, order in rows:
+                impact = impacts_by_order.setdefault(
+                    order.id,
+                    {
+                        "order": order,
+                        "descriptions": [],
+                    },
+                )
+                impact["descriptions"].append(
+                    self._build_purchase_impact_description(affected_material)
+                )
+
+        created_count = 0
+        for order_id, impact in impacts_by_order.items():
+            existing = (
+                self.db.query(EcnAffectedOrder)
+                .filter(
+                    EcnAffectedOrder.ecn_id == ecn.id,
+                    EcnAffectedOrder.order_type == "PURCHASE",
+                    EcnAffectedOrder.order_id == order_id,
+                )
+                .first()
+            )
+            description = "；".join(dict.fromkeys(impact["descriptions"]))
+            if existing:
+                if not existing.impact_description:
+                    existing.impact_description = description
+                if not existing.action_type:
+                    existing.action_type = "MODIFY"
+                if not existing.action_description:
+                    existing.action_description = self._default_purchase_review_action(ecn)
+                self.db.add(existing)
+                continue
+
+            order = impact["order"]
+            self.db.add(
+                EcnAffectedOrder(
+                    ecn_id=ecn.id,
+                    order_type="PURCHASE",
+                    order_id=order.id,
+                    order_no=order.order_no,
+                    impact_description=description,
+                    action_type="MODIFY",
+                    action_description=self._default_purchase_review_action(ecn),
+                    status="PENDING",
+                )
+            )
+            created_count += 1
+
+        if created_count:
+            self.db.flush()
+        return created_count
+
+    @staticmethod
+    def _build_purchase_impact_description(affected_material: EcnAffectedMaterial) -> str:
+        parts = [
+            f"物料 {affected_material.material_code} {affected_material.change_type}",
+        ]
+        if affected_material.old_quantity is not None or affected_material.new_quantity is not None:
+            parts.append(f"数量 {affected_material.old_quantity}→{affected_material.new_quantity}")
+        if (
+            affected_material.old_specification is not None
+            or affected_material.new_specification is not None
+        ):
+            parts.append(
+                f"规格 {affected_material.old_specification or '-'}"
+                f"→{affected_material.new_specification or '-'}"
+            )
+        if affected_material.new_supplier_id:
+            parts.append(f"新供应商ID {affected_material.new_supplier_id}")
+        if affected_material.cost_impact:
+            parts.append(f"成本影响 {affected_material.cost_impact}")
+        return "，".join(parts)
+
+    @staticmethod
+    def _default_purchase_review_action(ecn: Ecn) -> str:
+        return (
+            f"采购需评审 ECN {ecn.ecn_no} 对采购数量、规格、供应商、交期和价格的影响；"
+            "确认后修改或取消对应采购行。"
+        )
+
+    def _mark_purchase_change_required(
+        self, ecn: Ecn, order: PurchaseOrder, affected_order: EcnAffectedOrder
+    ) -> None:
+        affected_order.action_type = affected_order.action_type or "MODIFY"
+        affected_order.action_description = (
+            affected_order.action_description or self._default_purchase_review_action(ecn)
+        )
+        affected_order.status = "CHANGE_REQUIRED"
+        self._append_purchase_ecn_note(ecn, order, affected_order.action_description)
+
+    @staticmethod
+    def _append_purchase_ecn_note(ecn: Ecn, order: PurchaseOrder, note: str) -> None:
+        ecn_note = f"[ECN {ecn.ecn_no}] {note}"
+        existing = order.remark or ""
+        if ecn_note in existing:
+            return
+        order.remark = f"{existing}\n{ecn_note}".strip()
 
     def batch_sync_to_bom(self, ecn_ids: List[int]) -> Dict[str, Any]:
         """

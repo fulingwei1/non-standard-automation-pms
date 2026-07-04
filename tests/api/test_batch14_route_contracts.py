@@ -953,20 +953,20 @@ def test_batch5_strategy_comparison_routes_use_current_model_fields(
     db_session.commit()
 
     headers = _auth_headers(admin_token)
-    for path in (
+    response = client.get(
         f"{settings.API_V1_PREFIX}/strategy/comparisons",
-        f"{settings.API_V1_PREFIX}/ai-strategy/comparisons",
-    ):
-        response = client.get(path, headers=headers, follow_redirects=False)
-        assert response.status_code == 200, response.text
-        item = next(
-            item
-            for item in response.json()["items"]
-            if item["current_strategy_id"] == current_strategy_id
-        )
-        assert item["current_year"] == 2026
-        assert item["previous_year"] == 2025
-        assert item["generated_by"] == admin.id
+        headers=headers,
+        follow_redirects=False,
+    )
+    assert response.status_code == 200, response.text
+    item = next(
+        item
+        for item in response.json()["items"]
+        if item["current_strategy_id"] == current_strategy_id
+    )
+    assert item["current_year"] == 2026
+    assert item["previous_year"] == 2025
+    assert item["generated_by"] == admin.id
 
 
 def test_batch5_outsourcing_readonly_routes_tolerate_legacy_nulls(

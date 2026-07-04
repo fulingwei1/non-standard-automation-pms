@@ -34,6 +34,8 @@ from app.services.purchase_order_from_bom_service import (
     get_purchase_items_from_bom,
     group_items_by_supplier,
 )
+from app.services.purchase.order_state_machine import transition_purchase_order_status
+from app.services.budget_alert_service import BudgetAlertService
 from app.utils.db_helpers import get_or_404, save_obj
 
 from .utils import (
@@ -197,20 +199,7 @@ def create_purchase_order(
     if required_date:
         parsed_required_date = date.fromisoformat(required_date)
 
-    order = PurchaseOrder(
-        order_no=order_no,
-        supplier_id=supplier.id,
-        project_id=payload.get("project_id"),
-        order_type=payload.get("order_type") or "NORMAL",
-        order_title=payload.get("order_title"),
-        required_date=parsed_required_date,
-        status="DRAFT",
-        created_by=current_user.id,
-        order_date=date.today(),
-    )
-    db.add(order)
-    db.flush()
-
+    item_rows = []
     total_amount = Decimal("0")
     total_tax_amount = Decimal("0")
     total_amount_with_tax = Decimal("0")
@@ -224,7 +213,55 @@ def create_purchase_order(
         total_amount += amount
         total_tax_amount += tax_amount
         total_amount_with_tax += amount_with_tax
+        item_rows.append(
+            {
+                "idx": idx,
+                "item": item,
+                "material": material,
+                "qty": qty,
+                "unit_price": unit_price,
+                "tax_rate": tax_rate,
+                "amount": amount,
+                "tax_amount": tax_amount,
+                "amount_with_tax": amount_with_tax,
+            }
+        )
 
+    project_id = payload.get("project_id")
+    budget_guard = None
+    if project_id:
+        budget_guard = BudgetAlertService(db).check_budget_soft_intercept(
+            project_id,
+            total_amount,
+            override_approved=bool(payload.get("budget_override")),
+        )
+        if budget_guard and not budget_guard["allowed"]:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": budget_guard["message"],
+                    "budget_guard": budget_guard,
+                },
+            )
+
+    order = PurchaseOrder(
+        order_no=order_no,
+        supplier_id=supplier.id,
+        project_id=project_id,
+        order_type=payload.get("order_type") or "NORMAL",
+        order_title=payload.get("order_title"),
+        required_date=parsed_required_date,
+        status="DRAFT",
+        created_by=current_user.id,
+        order_date=date.today(),
+    )
+    db.add(order)
+    db.flush()
+
+    for row in item_rows:
+        idx = row["idx"]
+        item = row["item"]
+        material = row["material"]
         order_item = PurchaseOrderItem(
             order_id=order.id,
             item_no=idx,
@@ -233,12 +270,12 @@ def create_purchase_order(
             material_name=item.get("material_name") or (material.material_name if material else ""),
             specification=item.get("specification") or (material.specification if material else None),
             unit=item.get("unit") or (material.unit if material else "件"),
-            quantity=qty,
-            unit_price=unit_price,
-            amount=amount,
-            tax_rate=tax_rate,
-            tax_amount=tax_amount,
-            amount_with_tax=amount_with_tax,
+            quantity=row["qty"],
+            unit_price=row["unit_price"],
+            amount=row["amount"],
+            tax_rate=row["tax_rate"],
+            tax_amount=row["tax_amount"],
+            amount_with_tax=row["amount_with_tax"],
             required_date=parsed_required_date,
             status="PENDING",
         )
@@ -250,9 +287,10 @@ def create_purchase_order(
     save_obj(db, order)
 
     # 使用统一响应格式
-    return success_response(
-        data=serialize_purchase_order(order, include_items=True), message="采购订单创建成功"
-    )
+    response_data = serialize_purchase_order(order, include_items=True)
+    if budget_guard:
+        response_data["budget_guard"] = budget_guard
+    return success_response(data=response_data, message="采购订单创建成功")
 
 
 @router.get("/{order_id}")
@@ -333,7 +371,10 @@ def submit_purchase_order(
         items_count = 0
     if items_count == 0:
         raise HTTPException(status_code=400, detail="采购订单没有明细")
-    order.status = "SUBMITTED"
+    try:
+        transition_purchase_order_status(order, "SUBMITTED")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     order.submitted_at = datetime.now()
     db.commit()
 
@@ -360,7 +401,10 @@ def approve_purchase_order(
     order.approved_by = current_user.id
     order.approved_at = datetime.now()
     order.approval_note = approval_note
-    order.status = "APPROVED" if approved else "REJECTED"
+    try:
+        transition_purchase_order_status(order, "APPROVED" if approved else "REJECTED")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     db.commit()
 
     # 使用统一响应格式

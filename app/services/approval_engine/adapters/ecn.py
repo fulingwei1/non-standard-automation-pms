@@ -409,7 +409,19 @@ class EcnApprovalAdapter(ApprovalAdapter):
             ecn.approval_note = instance.final_comment
 
         self.db.add(ecn)
-        self.db.commit()
+        self.db.flush()
+
+        if instance.status == "APPROVED":
+            from app.services.ecn.integration import EcnIntegrationService
+
+            sync_result = EcnIntegrationService(self.db).sync_to_bom_if_ready(ecn.id)
+            logger.info(
+                "ECN %s 审批通过后自动同步 BOM: %s",
+                ecn.ecn_no,
+                sync_result,
+            )
+        else:
+            self.db.commit()
 
         # 如果状态发生变化，记录日志
         if old_status != instance.status:

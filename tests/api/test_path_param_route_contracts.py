@@ -1706,17 +1706,17 @@ def test_strategy_path_routes_tolerate_legacy_model_field_drift(
 
     headers = _auth_headers(admin_token)
     routes = [
-        f"/ai-strategy/csfs/{csf.id}",
-        f"/ai-strategy/kpis/{kpi.id}",
-        f"/ai-strategy/kpis/{kpi.id}/with-history",
-        f"/ai-strategy/annual-works/{work.id}",
-        f"/ai-strategy/annual-works/{work.id}/linked-projects",
-        f"/ai-strategy/decomposition/trace/{personal.id}",
-        f"/ai-strategy/health/{strategy.id}",
-        f"/ai-strategy/routine/{strategy.id}",
-        f"/ai-strategy/comparisons/{comparison.id}",
-        f"/ai-strategy/dashboard/overview/{strategy.id}",
-        f"/ai-strategy/dashboard/execution-status/{strategy.id}",
+        f"/strategy/csfs/{csf.id}",
+        f"/strategy/kpis/{kpi.id}",
+        f"/strategy/kpis/{kpi.id}/with-history",
+        f"/strategy/annual-works/{work.id}",
+        f"/strategy/annual-works/{work.id}/linked-projects",
+        f"/strategy/decomposition/trace/{personal.id}",
+        f"/strategy/health/{strategy.id}",
+        f"/strategy/routine/{strategy.id}",
+        f"/strategy/comparisons/{comparison.id}",
+        f"/strategy/dashboard/overview/{strategy.id}",
+        f"/strategy/dashboard/execution-status/{strategy.id}",
     ]
     for route in routes:
         response = client.get(

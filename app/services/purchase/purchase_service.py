@@ -21,6 +21,8 @@ from app.models.purchase import (
     PurchaseRequest,
     PurchaseRequestItem,
 )
+from app.services.purchase.order_state_machine import transition_purchase_order_status
+
 
 class PurchaseService:
     """采购管理服务"""
@@ -120,7 +122,7 @@ class PurchaseService:
         if not order:
             return False
 
-        order.status = "SUBMITTED"
+        transition_purchase_order_status(order, "SUBMITTED")
         order.submitted_at = datetime.now()
         return True
 
@@ -130,7 +132,7 @@ class PurchaseService:
         if not order:
             return False
 
-        order.status = "APPROVED"
+        transition_purchase_order_status(order, "APPROVED")
         order.approved_at = datetime.now()
         order.approver_id = approver_id
         return True

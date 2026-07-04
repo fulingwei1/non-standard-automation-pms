@@ -264,6 +264,12 @@ class BomUpdate(BaseModel):
     remark: Optional[str] = None
 
 
+class BomRevisionCreate(BaseModel):
+    """创建 BOM 修订版本"""
+    version: str = Field(max_length=20)
+    change_note: Optional[str] = None
+
+
 class BomItemResponse(BaseSchema):
     """BOM 明细响应"""
     id: int

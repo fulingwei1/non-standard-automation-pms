@@ -41,6 +41,9 @@ class WorkOrder(Base, TimestampMixin):
     material_name = Column(String(200), nullable=True, comment="物料名称")
     specification = Column(String(200), nullable=True, comment="规格型号")
     drawing_no = Column(String(100), nullable=True, comment="图纸编号")
+    bom_id = Column(Integer, ForeignKey("bom_headers.id"), nullable=True, comment="BOM ID")
+    bom_no = Column(String(50), nullable=True, comment="BOM编号快照")
+    bom_version = Column(String(20), nullable=True, comment="BOM版本快照")
 
     # 计划信息
     plan_qty = Column(Integer, default=1, comment="计划数量")
@@ -82,11 +85,16 @@ class WorkOrder(Base, TimestampMixin):
     work_reports = relationship("WorkReport", back_populates="work_order")
     material_requisitions = relationship("MaterialRequisition", back_populates="work_order")
     exceptions = relationship("ProductionException", back_populates="work_order")
+    bom = relationship("BomHeader")
+    bom_snapshots = relationship(
+        "WorkOrderBom", back_populates="work_order", cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         Index("idx_work_order_no", "work_order_no"),
         Index("idx_work_order_project", "project_id"),
         Index("idx_work_order_plan", "production_plan_id"),
+        Index("idx_work_order_bom", "bom_id"),
         Index("idx_work_order_workshop", "workshop_id"),
         Index("idx_work_order_assigned", "assigned_to"),
         Index("idx_work_order_status", "status"),

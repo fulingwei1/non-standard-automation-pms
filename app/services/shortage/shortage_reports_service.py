@@ -18,6 +18,7 @@ from app.models.alert import AlertRecord
 from app.models.shortage import (
     KitCheck,
     MaterialArrival,
+    ShortageDailyReport,
     ShortageReport,
 )
 from app.models.user import User
@@ -182,6 +183,16 @@ class ShortageReportsService:
         self.db.refresh(shortage_report)
 
         return shortage_report
+
+    def generate_daily_report(self, target_date: Optional[date] = None) -> Dict[str, Any]:
+        """生成并保存缺料日报，供统一报表框架/调度复用。"""
+        report = save_shortage_daily_report(self.db, target_date)
+        return {
+            "report_type": "SHORTAGE",
+            "status": "success",
+            "report_date": report.report_date.isoformat(),
+            "data": build_shortage_daily_report_response(report),
+        }
 
 
 def calculate_alert_statistics(db: Session, target_date: date) -> Dict[str, Any]:
@@ -461,4 +472,108 @@ def build_daily_report_data(db: Session, target_date: date) -> Dict[str, Any]:
         **arrival_stats,
         **response_stats,
         **stoppage_stats,
+    }
+
+
+def _normalize_report_date(target_date: Optional[date | datetime | str]) -> date:
+    if target_date is None:
+        return date.today()
+    if isinstance(target_date, datetime):
+        return target_date.date()
+    if isinstance(target_date, str):
+        return date.fromisoformat(target_date)
+    return target_date
+
+
+def _daily_report_values(stats: Dict[str, Any]) -> Dict[str, Any]:
+    level_counts = stats.get("level_counts") or {}
+    return {
+        "new_alerts": stats.get("new_alerts", 0),
+        "resolved_alerts": stats.get("resolved_alerts", 0),
+        "pending_alerts": stats.get("pending_alerts", 0),
+        "overdue_alerts": stats.get("overdue_alerts", 0),
+        "level1_count": level_counts.get("level1", 0),
+        "level2_count": level_counts.get("level2", 0),
+        "level3_count": level_counts.get("level3", 0),
+        "level4_count": level_counts.get("level4", 0),
+        "new_reports": stats.get("new_reports", 0),
+        "resolved_reports": stats.get("resolved_reports", 0),
+        "total_work_orders": stats.get("total_work_orders", 0),
+        "kit_complete_count": stats.get("kit_complete_count", 0),
+        "kit_rate": stats.get("kit_rate", 0),
+        "expected_arrivals": stats.get("expected_arrivals", 0),
+        "actual_arrivals": stats.get("actual_arrivals", 0),
+        "delayed_arrivals": stats.get("delayed_arrivals", 0),
+        "on_time_rate": stats.get("on_time_rate", 0),
+        "avg_response_minutes": stats.get("avg_response_minutes", 0),
+        "avg_resolve_hours": stats.get("avg_resolve_hours", 0),
+        "stoppage_count": stats.get("stoppage_count", 0),
+        "stoppage_hours": stats.get("stoppage_hours", 0),
+    }
+
+
+def save_shortage_daily_report(
+    db: Session, target_date: Optional[date | datetime | str] = None
+) -> ShortageDailyReport:
+    """按日期生成/更新 mat_shortage_daily_report。"""
+    report_date = _normalize_report_date(target_date)
+    stats = build_daily_report_data(db, report_date)
+    values = _daily_report_values(stats)
+
+    report = (
+        db.query(ShortageDailyReport)
+        .filter(ShortageDailyReport.report_date == report_date)
+        .first()
+    )
+    if report is None:
+        report = ShortageDailyReport(report_date=report_date)
+        db.add(report)
+
+    for field, value in values.items():
+        setattr(report, field, value)
+
+    db.commit()
+    db.refresh(report)
+    return report
+
+
+def build_shortage_daily_report_response(report: ShortageDailyReport) -> Dict[str, Any]:
+    """序列化已保存的缺料日报。"""
+    return {
+        "date": report.report_date.isoformat(),
+        "alerts": {
+            "new": report.new_alerts,
+            "resolved": report.resolved_alerts,
+            "pending": report.pending_alerts,
+            "overdue": report.overdue_alerts,
+            "levels": {
+                "level1": report.level1_count,
+                "level2": report.level2_count,
+                "level3": report.level3_count,
+                "level4": report.level4_count,
+            },
+        },
+        "reports": {
+            "new": report.new_reports,
+            "resolved": report.resolved_reports,
+        },
+        "kit": {
+            "total_work_orders": report.total_work_orders,
+            "complete_count": report.kit_complete_count,
+            "kit_rate": float(report.kit_rate or 0),
+        },
+        "arrivals": {
+            "expected": report.expected_arrivals,
+            "actual": report.actual_arrivals,
+            "delayed": report.delayed_arrivals,
+            "on_time_rate": float(report.on_time_rate or 0),
+        },
+        "response": {
+            "avg_response_minutes": report.avg_response_minutes,
+            "avg_resolve_hours": float(report.avg_resolve_hours or 0),
+        },
+        "stoppage": {
+            "count": report.stoppage_count,
+            "hours": float(report.stoppage_hours or 0),
+        },
     }

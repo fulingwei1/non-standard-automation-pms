@@ -82,27 +82,6 @@ def _run_kitting_sync(task_name: str):
         raise
 
 
-@_stub_task("generate_shortage_daily_report", "生成缺料日报")
-def generate_shortage_daily_report():
-    """
-    生成缺料日报
-    汇总每日缺料情况生成报告
-    """
-    pass
-
-
-# ==================== 设备管理 ====================
-
-
-@_stub_task("check_equipment_maintenance_reminder", "设备保养提醒检查")
-def check_equipment_maintenance_reminder():
-    """
-    设备保养提醒检查
-    检查即将到期的设备保养计划并发送提醒
-    """
-    pass
-
-
 # ==================== 成本管理 ====================
 
 
@@ -210,8 +189,6 @@ __all__ = [
     "check_issue_timeout_escalation",
     "daily_kit_check",
     "sync_kitting_rate_hourly",
-    "generate_shortage_daily_report",
-    "check_equipment_maintenance_reminder",
     "check_cost_overrun_alerts",
     "check_task_delay_alerts",
     "check_task_deadline_reminder",

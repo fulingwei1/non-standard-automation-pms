@@ -84,3 +84,44 @@ def generate_shortage_alerts():
         }
     finally:
         session.close()
+
+
+def generate_shortage_daily_report(target_date=None):
+    """生成/更新缺料日报（每日调度）。
+
+    写入 mat_shortage_daily_report，供缺料看板的最新/按日查询直接读取。
+    """
+    from app.models.base import get_session
+    from app.services.shortage.shortage_reports_service import (
+        build_shortage_daily_report_response,
+        save_shortage_daily_report,
+    )
+
+    session = get_session()
+    try:
+        report = save_shortage_daily_report(session, target_date)
+        payload = build_shortage_daily_report_response(report)
+        result = {
+            "status": "success",
+            "task": "generate_shortage_daily_report",
+            "report_date": report.report_date.isoformat(),
+            "report_id": report.id,
+            "data": payload,
+            "timestamp": datetime.now().isoformat(),
+        }
+        logger.info("[缺料日报任务] 生成完成: %s", result["report_date"])
+        return result
+    except Exception as e:  # noqa: BLE001 - 返回 error 哨兵让调度监控记失败
+        logger.exception("[缺料日报任务] 执行失败")
+        try:
+            session.rollback()
+        except Exception:  # noqa: BLE001
+            pass
+        return {
+            "status": "error",
+            "task": "generate_shortage_daily_report",
+            "message": str(e)[:500],
+            "timestamp": datetime.now().isoformat(),
+        }
+    finally:
+        session.close()

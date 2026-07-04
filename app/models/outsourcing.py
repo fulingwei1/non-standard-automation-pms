@@ -31,6 +31,7 @@ class OutsourcingOrder(Base, TimestampMixin):
     vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=False, comment="外协商ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
+    work_order_id = Column(Integer, ForeignKey("work_order.id"), comment="生产工单ID")
 
     # 订单信息
     order_date = Column(Date, comment="下单日期")
@@ -67,6 +68,7 @@ class OutsourcingOrder(Base, TimestampMixin):
     vendor = relationship("Vendor", back_populates="outsourcing_orders")
     project = relationship("Project")
     machine = relationship("Machine")
+    work_order = relationship("WorkOrder")
     items = relationship("OutsourcingOrderItem", back_populates="order", lazy="dynamic")
     deliveries = relationship("OutsourcingDelivery", back_populates="order", lazy="dynamic")
     progress_records = relationship("OutsourcingProgress", back_populates="order", lazy="dynamic")
@@ -74,6 +76,7 @@ class OutsourcingOrder(Base, TimestampMixin):
     __table_args__ = (
         Index("idx_os_order_vendor", "vendor_id"),
         Index("idx_os_order_project", "project_id"),
+        Index("idx_os_order_work_order", "work_order_id"),
         Index("idx_os_order_status", "status"),
     )
 

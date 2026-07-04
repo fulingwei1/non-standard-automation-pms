@@ -736,14 +736,18 @@ class TestCostCollectionPurchaseOrder:
         # 设置查询返回值
         def query_side_effect(model):
             mock = MagicMock()
-            if model.__name__ == "PurchaseOrder":
+            model_name = getattr(model, "__name__", None)
+            if model_name == "PurchaseOrder":
                 mock.filter.return_value.first.return_value = order
-            elif model.__name__ == "ProjectCost":
+            elif model_name == "ProjectCost":
                 # 第一次查询返回existing_cost，第二次返回空列表
                 mock.filter.return_value.first.return_value = existing_cost
                 mock.filter.return_value.all.return_value = [existing_cost]
-            elif model.__name__ == "Project":
+            elif model_name == "Project":
                 mock.filter.return_value.first.return_value = project
+            else:
+                # func.max(GoodsReceipt.receipt_date) 无关联收货，走订单日期兜底
+                mock.filter.return_value.scalar.return_value = None
             return mock
 
         db.query.side_effect = query_side_effect
@@ -773,12 +777,16 @@ class TestCostCollectionPurchaseOrder:
         # 设置查询返回值
         def query_side_effect(model):
             mock = MagicMock()
-            if model.__name__ == "PurchaseOrder":
+            model_name = getattr(model, "__name__", None)
+            if model_name == "PurchaseOrder":
                 mock.filter.return_value.first.return_value = order
-            elif model.__name__ == "ProjectCost":
+            elif model_name == "ProjectCost":
                 mock.filter.return_value.first.return_value = None  # 不存在
-            elif model.__name__ == "Project":
+            elif model_name == "Project":
                 mock.filter.return_value.first.return_value = project
+            else:
+                # func.max(GoodsReceipt.receipt_date) 无关联收货，走订单日期兜底
+                mock.filter.return_value.scalar.return_value = None
             return mock
 
         db.query.side_effect = query_side_effect
@@ -871,16 +879,26 @@ class TestCostCollectionECN:
         assert result is None
 
     def test_collect_ecn_negative_cost_impact(self):
-        """分支: ECN成本影响为负"""
+        """分支: ECN成本影响为负时作为冲减成本"""
         db = MagicMock()
         ecn = MagicMock()
         ecn.id = 1
+        ecn.project_id = 10
+        ecn.machine_id = None
+        ecn.ecn_no = "ECN-CREDIT"
+        ecn.ecn_title = "成本冲减"
         ecn.cost_impact = Decimal("-1000")
-        db.query.return_value.filter.return_value.first.return_value = ecn
+        project = make_project(project_id=10)
+        db.query.return_value.filter.return_value.first.side_effect = [
+            ecn,
+            None,
+            project,
+        ]
 
         result = CostCollectionService.collect_from_ecn(db, 1)
 
-        assert result is None
+        assert result is not None
+        assert result.amount == Decimal("-1000")
 
     def test_collect_ecn_no_project(self):
         """分支: ECN未关联项目"""

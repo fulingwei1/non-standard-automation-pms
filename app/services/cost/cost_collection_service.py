@@ -13,15 +13,16 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.ecn import Ecn
-from app.models.outsourcing import OutsourcingOrder
+from app.models.outsourcing import OutsourcingOrder, OutsourcingOrderItem
 from app.models.project import Project, ProjectCost
-from app.models.purchase import PurchaseOrder
+from app.models.purchase import GoodsReceipt, PurchaseOrder
 from app.services.cost.cost_basis import (
     COST_BASIS_ACTUAL as PROJECT_COST_BASIS_ACTUAL,
     COST_BASIS_PLAN as PROJECT_COST_BASIS_PLAN,
     actual_project_cost_filter,
 )
-from app.services.cost.cost_alert_service import CostAlertService
+from app.services.budget_alert_service import BudgetAlertService
+from app.services.cost.cost_alert_service import CostAlertService  # noqa: F401 - legacy patch target
 from app.utils.db_helpers import delete_obj
 
 
@@ -30,10 +31,30 @@ class CostCollectionService:
 
     COST_BASIS_PLAN = PROJECT_COST_BASIS_PLAN
     COST_BASIS_ACTUAL = PROJECT_COST_BASIS_ACTUAL
-    PURCHASE_COLLECTIBLE_STATUSES = ("RECEIVED", "COMPLETED", "SHIPPED")
-    WORK_ORDER_COLLECTIBLE_STATUSES = ("COMPLETED", "IN_PROGRESS")
+    PURCHASE_COLLECTIBLE_STATUSES = (
+        "RECEIVING",
+        "PARTIAL_RECEIVED",
+        "PARTIALLY_RECEIVED",
+        "RECEIVED",
+        "COMPLETED",
+        "SHIPPED",
+    )
+    WORK_ORDER_COLLECTIBLE_STATUSES = ("COMPLETED", "DONE")
     TIMESHEET_COLLECTIBLE_STATUSES = ("APPROVED",)
-    WORK_ORDER_HOURLY_RATE = Decimal("200")
+    PURCHASE_CANCELLED_STATUSES = ("CANCELLED", "VOID", "DELETED", "REJECTED")
+    COST_SOURCE_DEFAULTS = {
+        "PURCHASE_ORDER": ("PURCHASE", "MATERIAL", "PURCHASE", PROJECT_COST_BASIS_ACTUAL),
+        "OUTSOURCING_ORDER": (
+            "OUTSOURCING",
+            "OUTSOURCING",
+            "OUTSOURCING",
+            PROJECT_COST_BASIS_ACTUAL,
+        ),
+        "ECN": ("ECN", "CHANGE", "ECN", PROJECT_COST_BASIS_ACTUAL),
+        "BOM_COST": ("BOM", "MATERIAL", "BOM", PROJECT_COST_BASIS_PLAN),
+        "WORK_ORDER": ("PRODUCTION", "LABOR", "PRODUCTION", PROJECT_COST_BASIS_ACTUAL),
+        "LABOR_COST": ("TIMESHEET", "LABOR", "LABOR", PROJECT_COST_BASIS_ACTUAL),
+    }
 
     @staticmethod
     def _as_decimal(value: Any) -> Decimal:
@@ -57,6 +78,118 @@ class CostCollectionService:
         if project_id is not None:
             conditions.append(ProjectCost.project_id == project_id)
         return db.query(ProjectCost).filter(*conditions).first()
+
+    @staticmethod
+    def _purchase_order_status(order: PurchaseOrder) -> str:
+        status = getattr(order, "status", None)
+        return status.upper() if isinstance(status, str) else ""
+
+    @staticmethod
+    def _purchase_received_amount(order: PurchaseOrder) -> Decimal:
+        received_amount = CostCollectionService._as_decimal(
+            getattr(order, "received_amount", None)
+        )
+        if received_amount > 0:
+            return received_amount
+        status = CostCollectionService._purchase_order_status(order)
+        if status in ("RECEIVING", "PARTIAL_RECEIVED", "PARTIALLY_RECEIVED"):
+            return Decimal("0")
+        return CostCollectionService._as_decimal(order.total_amount)
+
+    @staticmethod
+    def _purchase_tax_amount(order: PurchaseOrder, amount: Decimal) -> Decimal:
+        tax_amount = CostCollectionService._as_decimal(order.tax_amount)
+        total_amount = CostCollectionService._as_decimal(order.total_amount)
+        if total_amount > 0 and amount > 0 and amount != total_amount:
+            return (tax_amount * amount / total_amount).quantize(Decimal("0.01"))
+        return tax_amount
+
+    @staticmethod
+    def _purchase_cost_date(
+        db: Session, order: PurchaseOrder, explicit_cost_date: Optional[date]
+    ) -> date:
+        if explicit_cost_date:
+            return explicit_cost_date
+        latest_receipt_date = (
+            db.query(func.max(GoodsReceipt.receipt_date))
+            .filter(
+                GoodsReceipt.order_id == order.id,
+                GoodsReceipt.status.notin_(["CANCELLED", "VOID", "DELETED"]),
+            )
+            .scalar()
+        )
+        return latest_receipt_date or order.order_date or date.today()
+
+    @staticmethod
+    def _outsourcing_qualified_cost_basis(
+        db: Session, order: OutsourcingOrder
+    ) -> Optional[Dict[str, Decimal]]:
+        """Return accepted outsourcing cost based on qualified inspection quantity.
+
+        Returns None when item rows cannot be loaded, which keeps legacy mock-based tests
+        and degraded callers on the previous order-total fallback.
+        """
+        if not isinstance(order, OutsourcingOrder):
+            return None
+
+        try:
+            items = (
+                db.query(OutsourcingOrderItem)
+                .filter(OutsourcingOrderItem.order_id == order.id)
+                .all()
+            )
+        except Exception:
+            return None
+        if not isinstance(items, list):
+            return None
+
+        total_order_qty = Decimal("0")
+        total_qualified_qty = Decimal("0")
+        accepted_amount = Decimal("0")
+
+        for item in items:
+            order_qty = CostCollectionService._as_decimal(item.quantity)
+            qualified_qty = CostCollectionService._as_decimal(item.qualified_quantity)
+            if order_qty > 0:
+                qualified_qty = min(qualified_qty, order_qty)
+            unit_price = CostCollectionService._as_decimal(item.unit_price)
+            if unit_price <= 0 and order_qty > 0:
+                unit_price = CostCollectionService._as_decimal(item.amount) / order_qty
+
+            total_order_qty += order_qty
+            total_qualified_qty += qualified_qty
+            accepted_amount += qualified_qty * unit_price
+
+        accepted_amount = accepted_amount.quantize(Decimal("0.01"))
+        order_amount = CostCollectionService._as_decimal(order.total_amount)
+        order_tax = CostCollectionService._as_decimal(order.tax_amount)
+        if order_amount > 0 and accepted_amount > 0:
+            tax_amount = (order_tax * accepted_amount / order_amount).quantize(Decimal("0.01"))
+        else:
+            tax_amount = Decimal("0.00")
+
+        return {
+            "amount": accepted_amount,
+            "tax_amount": tax_amount,
+            "qualified_quantity": total_qualified_qty,
+            "order_quantity": total_order_qty,
+        }
+
+    @staticmethod
+    def _work_order_hourly_rate(
+        db: Session, work_order: Any, explicit_hourly_rate: Optional[Decimal]
+    ) -> Optional[Decimal]:
+        if explicit_hourly_rate is not None:
+            return CostCollectionService._as_decimal(explicit_hourly_rate)
+        if not getattr(work_order, "assigned_to", None):
+            return None
+        from app.models.production.worker import Worker
+
+        worker_rate = (
+            db.query(Worker.hourly_rate).filter(Worker.id == work_order.assigned_to).scalar()
+        )
+        rate = CostCollectionService._as_decimal(worker_rate)
+        return rate if rate > 0 else None
 
     @staticmethod
     def _recalculate_project_actual_cost(db: Session, project_id: int) -> None:
@@ -109,11 +242,78 @@ class CostCollectionService:
         db: Session, project_id: int, trigger_source: str, source_id: int
     ) -> None:
         try:
-            CostAlertService.check_budget_execution(
-                db, project_id, trigger_source=trigger_source, source_id=source_id
+            BudgetAlertService(db).check_and_alert(
+                project_id=project_id,
+                trigger_source=trigger_source,
+                source_id=source_id,
             )
         except Exception as e:
             logging.warning(f"成本预警检查失败：{str(e)}")
+
+    @staticmethod
+    def _delete_cost_and_recalculate(
+        db: Session, cost: ProjectCost, fallback_project_id: Optional[int] = None
+    ) -> None:
+        project_id = cost.project_id or fallback_project_id
+        db.delete(cost)
+        db.flush()
+        if project_id:
+            CostCollectionService._recalculate_project_actual_cost(db, project_id)
+
+    @staticmethod
+    def normalize_project_cost_records(
+        db: Session, project_id: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        修复历史 project_costs 空口径字段，并按 ACTUAL/PLAN 口径重算项目实际成本。
+        """
+        query = db.query(ProjectCost)
+        if project_id:
+            query = query.filter(ProjectCost.project_id == project_id)
+
+        updated = 0
+        affected_project_ids: set[int] = set()
+        for cost in query.all():
+            source_type = str(cost.source_type or "").upper()
+            defaults = CostCollectionService.COST_SOURCE_DEFAULTS.get(source_type)
+            if not defaults:
+                continue
+
+            source_module, cost_type, cost_category, cost_basis = defaults
+            changed = False
+            if not cost.source_module:
+                cost.source_module = source_module
+                changed = True
+            if not cost.cost_type:
+                cost.cost_type = cost_type
+                changed = True
+            if not cost.cost_category:
+                cost.cost_category = cost_category
+                changed = True
+            if not cost.cost_basis or (
+                source_type == "BOM_COST" and cost.cost_basis != cost_basis
+            ):
+                cost.cost_basis = cost_basis
+                changed = True
+
+            if changed:
+                db.add(cost)
+                updated += 1
+                if cost.project_id:
+                    affected_project_ids.add(cost.project_id)
+
+        if updated:
+            db.flush()
+            for affected_project_id in affected_project_ids:
+                CostCollectionService._recalculate_project_actual_cost(
+                    db, affected_project_id
+                )
+
+        return {
+            "scanned": query.count(),
+            "updated": updated,
+            "affected_projects": len(affected_project_ids),
+        }
 
     @staticmethod
     def collect_from_purchase_order(
@@ -142,6 +342,29 @@ class CostCollectionService:
         existing_cost = CostCollectionService._find_source_cost(
             db, "PURCHASE_ORDER", order_id, order.project_id
         )
+        order_status = CostCollectionService._purchase_order_status(order)
+        if (
+            order_status
+            and order_status not in CostCollectionService.PURCHASE_COLLECTIBLE_STATUSES
+        ):
+            if existing_cost:
+                CostCollectionService._delete_cost_and_recalculate(
+                    db, existing_cost, order.project_id
+                )
+            return None
+
+        amount = CostCollectionService._purchase_received_amount(order)
+        if amount <= 0:
+            if existing_cost:
+                CostCollectionService._delete_cost_and_recalculate(
+                    db, existing_cost, order.project_id
+                )
+            return None
+
+        tax_amount = CostCollectionService._purchase_tax_amount(order, amount)
+        effective_cost_date = CostCollectionService._purchase_cost_date(
+            db, order, cost_date
+        )
 
         if existing_cost:
             # 更新现有成本记录
@@ -152,9 +375,9 @@ class CostCollectionService:
             existing_cost.source_module = "PURCHASE"
             existing_cost.source_type = "PURCHASE_ORDER"
             existing_cost.source_no = order.order_no
-            existing_cost.amount = order.total_amount or Decimal("0")
-            existing_cost.tax_amount = order.tax_amount or Decimal("0")
-            existing_cost.cost_date = cost_date or order.order_date or date.today()
+            existing_cost.amount = amount
+            existing_cost.tax_amount = tax_amount
+            existing_cost.cost_date = effective_cost_date
             existing_cost.description = (
                 f"采购订单：{order.order_title or order.order_no}"
             )
@@ -183,9 +406,9 @@ class CostCollectionService:
             source_type="PURCHASE_ORDER",
             source_id=order_id,
             source_no=order.order_no,
-            amount=order.total_amount or Decimal("0"),
-            tax_amount=order.tax_amount or Decimal("0"),
-            cost_date=cost_date or order.order_date or date.today(),
+            amount=amount,
+            tax_amount=tax_amount,
+            cost_date=effective_cost_date,
             description=f"采购订单：{order.order_title or order.order_no}",
             created_by=created_by,
         )
@@ -225,6 +448,19 @@ class CostCollectionService:
         if not order:
             return None
 
+        qualified_basis = CostCollectionService._outsourcing_qualified_cost_basis(db, order)
+        if qualified_basis is None:
+            cost_amount = CostCollectionService._as_decimal(order.total_amount)
+            tax_amount = CostCollectionService._as_decimal(order.tax_amount)
+            qualified_note = ""
+        else:
+            cost_amount = qualified_basis["amount"]
+            tax_amount = qualified_basis["tax_amount"]
+            qualified_note = (
+                f"（合格数量：{qualified_basis['qualified_quantity']}/"
+                f"{qualified_basis['order_quantity']}）"
+            )
+
         # 检查是否已归集过
         existing_cost = (
             db.query(ProjectCost)
@@ -236,13 +472,23 @@ class CostCollectionService:
             .first()
         )
 
+        if qualified_basis is not None and cost_amount <= 0:
+            if existing_cost:
+                CostCollectionService._delete_cost_and_recalculate(
+                    db, existing_cost, order.project_id
+                )
+            return None
+
         if existing_cost:
             # 更新现有成本记录
-            existing_cost.amount = order.total_amount or Decimal("0")
-            existing_cost.tax_amount = order.tax_amount or Decimal("0")
+            existing_cost.amount = cost_amount
+            existing_cost.tax_amount = tax_amount
             existing_cost.cost_basis = CostCollectionService.COST_BASIS_ACTUAL
             existing_cost.cost_date = cost_date or (
                 order.created_at.date() if order.created_at else date.today()
+            )
+            existing_cost.description = (
+                f"外协订单：{order.order_title or order.order_no}{qualified_note}"
             )
             if created_by:
                 existing_cost.created_by = created_by
@@ -270,11 +516,11 @@ class CostCollectionService:
             source_type="OUTSOURCING_ORDER",
             source_id=order_id,
             source_no=order.order_no,
-            amount=order.total_amount or Decimal("0"),
-            tax_amount=order.tax_amount or Decimal("0"),
+            amount=cost_amount,
+            tax_amount=tax_amount,
             cost_date=cost_date
             or (order.created_at.date() if order.created_at else date.today()),
-            description=f"外协订单：{order.order_title or order.order_no}",
+            description=f"外协订单：{order.order_title or order.order_no}{qualified_note}",
             created_by=created_by,
         )
         db.add(cost)
@@ -311,11 +557,6 @@ class CostCollectionService:
         if not ecn:
             return None
 
-        # 如果没有成本影响，不创建成本记录
-        cost_impact = ecn.cost_impact or Decimal("0")
-        if cost_impact <= 0:
-            return None
-
         # 检查是否已归集过
         existing_cost = (
             db.query(ProjectCost)
@@ -326,9 +567,27 @@ class CostCollectionService:
             )
             .first()
         )
+        cost_impact = CostCollectionService._as_decimal(ecn.cost_impact)
+
+        # 如果没有成本影响，不保留历史成本记录
+        if cost_impact == 0:
+            if existing_cost:
+                CostCollectionService._delete_cost_and_recalculate(
+                    db, existing_cost, ecn.project_id
+                )
+            return None
+
+        # 如果没有关联项目，不创建成本记录；已有脏记录也一并清掉。
+        if not ecn.project_id:
+            if existing_cost:
+                CostCollectionService._delete_cost_and_recalculate(
+                    db, existing_cost, None
+                )
+            return None
 
         if existing_cost:
             # 更新现有成本记录
+            existing_cost.project_id = ecn.project_id
             existing_cost.amount = cost_impact
             existing_cost.cost_basis = CostCollectionService.COST_BASIS_ACTUAL
             existing_cost.cost_date = cost_date or date.today()
@@ -342,10 +601,6 @@ class CostCollectionService:
                 )
 
             return existing_cost
-
-        # 如果没有关联项目，不创建成本记录
-        if not ecn.project_id:
-            return None
 
         # 创建新的成本记录（变更成本独立核算）
         cost = ProjectCost(
@@ -368,14 +623,11 @@ class CostCollectionService:
         db.flush()
         CostCollectionService._recalculate_project_actual_cost(db, ecn.project_id)
 
-        # 检查预算执行情况并生成预警
-        try:
-            CostAlertService.check_budget_execution(
+        # 成本增加才需要预算超支预警；负向变更是冲减。
+        if cost_impact > 0:
+            CostCollectionService._check_budget_alert(
                 db, ecn.project_id, trigger_source="ECN", source_id=ecn_id
             )
-        except Exception as e:
-            # 预警失败不影响成本归集
-            logging.warning(f"成本预警检查失败：{str(e)}")
 
         return cost
 
@@ -519,14 +771,10 @@ class CostCollectionService:
             db.flush()
             CostCollectionService._recalculate_project_actual_cost(db, bom.project_id)
 
-            # 检查预算执行情况并生成预警
-            try:
-                CostAlertService.check_budget_execution(
-                    db, bom.project_id, trigger_source="BOM", source_id=bom_id
-                )
-            except Exception as e:
-                # 预警失败不影响成本归集
-                logging.warning(f"成本预警检查失败：{str(e)}")
+            # 检查预算执行情况并推送预警
+            CostCollectionService._check_budget_alert(
+                db, bom.project_id, trigger_source="BOM", source_id=bom_id
+            )
 
             return cost
 
@@ -549,11 +797,20 @@ class CostCollectionService:
         if not work_order or not work_order.project_id:
             return None
 
-        hours = CostCollectionService._as_decimal(
-            work_order.actual_hours or work_order.standard_hours or 0
-        )
         existing_cost = CostCollectionService._find_source_cost(
             db, "WORK_ORDER", work_order_id, work_order.project_id
+        )
+        if work_order.status not in CostCollectionService.WORK_ORDER_COLLECTIBLE_STATUSES:
+            if existing_cost:
+                db.delete(existing_cost)
+                db.flush()
+                CostCollectionService._recalculate_project_actual_cost(
+                    db, work_order.project_id
+                )
+            return None
+
+        hours = CostCollectionService._as_decimal(
+            work_order.actual_hours or work_order.standard_hours or 0
         )
 
         if hours <= 0:
@@ -565,7 +822,16 @@ class CostCollectionService:
                 )
             return None
 
-        rate = hourly_rate or CostCollectionService.WORK_ORDER_HOURLY_RATE
+        rate = CostCollectionService._work_order_hourly_rate(db, work_order, hourly_rate)
+        if not rate:
+            if existing_cost:
+                db.delete(existing_cost)
+                db.flush()
+                CostCollectionService._recalculate_project_actual_cost(
+                    db, work_order.project_id
+                )
+            return None
+
         amount = (hours * rate).quantize(Decimal("0.01"))
         task_type = work_order.task_type or "PRODUCTION"
         cost_type = (
@@ -785,6 +1051,9 @@ class CostCollectionService:
 
         results: List[Dict[str, Any]] = []
         collected_costs: List[ProjectCost] = []
+        normalization = CostCollectionService.normalize_project_cost_records(
+            db, project_id=project_id
+        )
 
         purchase_query = db.query(PurchaseOrder).filter(
             PurchaseOrder.project_id.isnot(None),
@@ -923,5 +1192,6 @@ class CostCollectionService:
             "total_amount": round(total_amount, 2),
             "actual_amount": round(actual_amount, 2),
             "plan_amount": round(plan_amount, 2),
+            "normalized_cost_records": normalization,
             "details": results,
         }

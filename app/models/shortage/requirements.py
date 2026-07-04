@@ -54,7 +54,7 @@ class WorkOrderBom(Base, TimestampMixin):
     is_key_material = Column(Boolean, default=False, comment="是否关键物料")
 
     # 关系
-    work_order = relationship("WorkOrder")
+    work_order = relationship("WorkOrder", back_populates="bom_snapshots")
     project = relationship("Project")
     material = relationship("Material")
 

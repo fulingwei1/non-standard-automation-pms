@@ -318,14 +318,22 @@ class TestCollectFromEcn:
         result = CostCollectionService.collect_from_ecn(mock_db, 1)
         assert result is None
 
-    def test_returns_none_when_negative_cost(self):
+    def test_collects_negative_cost_as_credit(self):
         from app.services.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         ecn = self._make_ecn(cost_impact=Decimal("-100"))
-        mock_db.query.return_value.filter.return_value.first.return_value = ecn
+        project = _make_project(project_id=1)
+        mock_db.query.return_value.filter.return_value.first.side_effect = [
+            ecn,
+            None,
+            project,
+        ]
         result = CostCollectionService.collect_from_ecn(mock_db, 1)
-        assert result is None
+        assert result is not None
+        assert result.amount == Decimal("-100")
+        assert result.cost_type == "CHANGE"
+        assert result.cost_category == "ECN"
 
     def test_returns_none_when_no_project(self):
         from app.services.cost_collection_service import CostCollectionService

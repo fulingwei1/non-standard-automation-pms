@@ -28,6 +28,7 @@ from app.models.outsourcing import (
     OutsourcingOrder,
     OutsourcingOrderItem,
 )
+from app.models.production import WorkOrder
 from app.models.project import Machine, Project
 from app.models.user import User
 from app.models.vendor import Vendor
@@ -119,6 +120,7 @@ def read_outsourcing_orders(
                 order_no=order.order_no,
                 vendor_name=_vendor_name_or_default(vendor),
                 project_name=project.project_name if project else None,
+                work_order_id=order.work_order_id,
                 order_type=order.order_type,
                 order_title=order.order_title,
                 amount_with_tax=order.amount_with_tax or Decimal("0"),
@@ -196,6 +198,7 @@ def read_outsourcing_order(
         project_name=project.project_name if project else None,
         machine_id=order.machine_id,
         machine_name=machine.machine_name if machine else None,
+        work_order_id=order.work_order_id,
         order_type=order.order_type,
         order_title=order.order_title,
         total_amount=order.total_amount or Decimal("0"),
@@ -248,6 +251,13 @@ def create_outsourcing_order(
         if not machine or machine.project_id != order_in.project_id:
             raise HTTPException(status_code=400, detail="机台不存在或不属于该项目")
 
+    if order_in.work_order_id:
+        work_order = db.query(WorkOrder).filter(WorkOrder.id == order_in.work_order_id).first()
+        if not work_order:
+            raise HTTPException(status_code=404, detail="生产工单不存在")
+        if work_order.project_id and work_order.project_id != order_in.project_id:
+            raise HTTPException(status_code=400, detail="生产工单不属于该项目")
+
     if not order_in.items:
         raise HTTPException(status_code=400, detail="订单明细不能为空")
 
@@ -259,7 +269,8 @@ def create_outsourcing_order(
         item_amount = item.quantity * item.unit_price
         total_amount += item_amount
 
-    tax_amount = total_amount * (order_in.tax_rate / 100)
+    tax_rate = Decimal(str(order_in.tax_rate or Decimal("0")))
+    tax_amount = total_amount * tax_rate / Decimal("100")
     amount_with_tax = total_amount + tax_amount
 
     order = OutsourcingOrder(
@@ -267,10 +278,11 @@ def create_outsourcing_order(
         vendor_id=order_in.vendor_id,
         project_id=order_in.project_id,
         machine_id=order_in.machine_id,
+        work_order_id=order_in.work_order_id,
         order_type=order_in.order_type,
         order_title=order_in.order_title,
         order_description=order_in.order_description,
-        tax_rate=order_in.tax_rate,
+        tax_rate=tax_rate,
         total_amount=total_amount,
         tax_amount=tax_amount,
         amount_with_tax=amount_with_tax,
