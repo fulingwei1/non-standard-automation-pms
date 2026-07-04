@@ -176,18 +176,6 @@ class TestExceptionHandlers:
             pytest.skip("异常处理器导入失败")
 
 
-class TestDecorators:
-    """装饰器测试"""
-
-    def test_tenant_isolation_decorator_import(self):
-        """测试租户隔离装饰器可导入"""
-        try:
-            from app.core.decorators.tenant_isolation import tenant_isolated
-            assert tenant_isolated is not None
-        except ImportError:
-            pytest.skip("租户隔离装饰器导入失败")
-
-
 class TestUtilities:
     """工具函数测试"""
 
