@@ -41,6 +41,34 @@ def _create_project_status_log(db, project, old_values, new_values, change_type,
     db.add(log)
 
 
+def _validate_project_sequential_transition(
+    *,
+    current_value: Optional[str],
+    new_value: str,
+    valid_values: list,
+    label: str,
+) -> None:
+    if current_value == new_value:
+        return
+
+    if current_value not in valid_values:
+        raise HTTPException(
+            status_code=400,
+            detail=f"当前{label} {current_value or '空'} 不在有效值中，需先清洗项目{label}数据",
+        )
+
+    current_index = valid_values.index(current_value)
+    next_value = valid_values[current_index + 1] if current_index + 1 < len(valid_values) else None
+    if new_value != next_value:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"不允许的{label}转换: {current_value} → {new_value}。"
+                f"只能转换到下一{label}: {next_value or '无'}"
+            ),
+        )
+
+
 def _update_project_field(
     db: Session,
     current_user: User,
@@ -59,15 +87,23 @@ def _update_project_field(
 
     service = StatusUpdateService(db)
 
+    if field in {"stage", "status"}:
+        _validate_project_sequential_transition(
+            current_value=getattr(project, field, None),
+            new_value=new_value,
+            valid_values=valid_values,
+            label=label,
+        )
+
     # 使用 StatusUpdateService 进行验证和更新
-    def history_cb(entity, old_status, new_status, operator, reason_text):
+    def history_cb(entity, old_status, new_status, operator, reason=None):
         _create_project_status_log(
             db,
             project,
             {field: old_status},
             {field: new_status},
             change_type,
-            reason_text or f"{label}变更：{old_status} → {new_status}",
+            reason or f"{label}变更：{old_status} → {new_status}",
             operator.id,
         )
 

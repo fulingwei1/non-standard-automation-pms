@@ -18,6 +18,7 @@ from app.models.issue import Issue
 from app.models.project import Project, ProjectMilestone, ProjectStatusLog
 from app.models.sales import Contract
 from app.models.shortage import ShortageReport
+from app.services.project_status_normalization import apply_project_status_filter
 
 
 class QueryOptimizer:
@@ -55,7 +56,7 @@ class QueryOptimizer:
 
         # 添加过滤条件
         if status:
-            query = query.filter(Project.status == status)
+            query = apply_project_status_filter(query, status, Project)
 
         if customer_id:
             query = query.filter(Project.customer_id == customer_id)

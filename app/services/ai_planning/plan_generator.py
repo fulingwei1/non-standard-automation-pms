@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Project
 from app.models.ai_planning import AIProjectPlanTemplate
+from app.services.project_status_normalization import is_project_completed_expr
 
 from .glm_service import GLMService
 
@@ -110,7 +111,7 @@ class AIProjectPlanGenerator:
 
         query = self.db.query(Project).filter(
             Project.project_type == project_type,
-            Project.status.in_(["ST06", "ST07"]),  # 已完成或已验收的项目
+            is_project_completed_expr(Project),
         )
 
         if industry:

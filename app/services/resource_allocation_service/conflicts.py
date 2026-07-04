@@ -9,6 +9,7 @@ from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.models import Machine, Project
+from app.services.project_status_normalization import is_project_open_expr
 
 
 def detect_resource_conflicts(
@@ -40,7 +41,8 @@ def detect_resource_conflicts(
                 .filter(
                     Machine.id == machine_id,
                     Project.id != project_id,
-                    Project.status.in_(["S4", "S5"]),  # 加工制造、装配调试阶段
+                    Project.stage.in_(["S4", "S5"]),
+                    is_project_open_expr(Project),
                     or_(
                         and_(
                             Project.planned_start_date.isnot(None),

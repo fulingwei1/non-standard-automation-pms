@@ -14,6 +14,9 @@ from sqlalchemy.orm import Session
 
 from app.models.project import Project
 from app.models.project_schedule import ProjectSchedulePlan, ScheduleTask
+from app.services.project_status_normalization import is_project_completed_expr
+
+MIN_HISTORICAL_SAMPLES = 3
 
 
 class ScheduleGenerationService:
@@ -45,6 +48,8 @@ class ScheduleGenerationService:
 
         # 1. 分析历史类似项目
         historical_data = self._analyze_historical_projects(project)
+        if historical_data.get("status") == "unavailable":
+            return historical_data
 
         # 2. 确定项目阶段和任务
         phases_tasks = self._determine_phases_and_tasks(project, mode)
@@ -71,6 +76,14 @@ class ScheduleGenerationService:
             efficiency_factors,
             mode,
         )
+        schedule_plan.update(
+            {
+                "status": "success",
+                "data_source": "historical_projects",
+                "historical_sample_count": historical_data["sample_count"],
+                "history_confidence": historical_data["confidence"],
+            }
+        )
 
         return schedule_plan
 
@@ -84,15 +97,14 @@ class ScheduleGenerationService:
                 Project.product_category == project.product_category,
                 Project.industry == project.industry,
                 Project.id != project.id,
-                Project.status.in_(["COMPLETED", "DELIVERED"]),
+                is_project_completed_expr(Project),
             )
             .limit(10)
             .all()
         )
 
         if not similar_projects:
-            # 无历史数据，使用默认值
-            return self._get_default_historical_data()
+            return self._unavailable_historical_data()
 
         # 统计工期
         durations = []
@@ -102,8 +114,8 @@ class ScheduleGenerationService:
                 if 0 < duration < 365:
                     durations.append(duration)
 
-        if not durations:
-            return self._get_default_historical_data()
+        if len(durations) < MIN_HISTORICAL_SAMPLES:
+            return self._unavailable_historical_data(sample_count=len(durations))
 
         avg_duration = sum(durations) / len(durations)
         min_duration = min(durations)
@@ -144,6 +156,16 @@ class ScheduleGenerationService:
                 "delivery": 6,
             },
             "confidence": "LOW",
+        }
+
+    def _unavailable_historical_data(self, sample_count: int = 0) -> Dict[str, Any]:
+        """历史样本不足时不生成模板排程，避免伪造 AI 结论。"""
+        return {
+            "status": "unavailable",
+            "reason": "insufficient_historical_samples",
+            "message": "相似历史项目样本不足，无法生成可信排程",
+            "sample_count": sample_count,
+            "minimum_required": MIN_HISTORICAL_SAMPLES,
         }
 
     def _determine_phases_and_tasks(

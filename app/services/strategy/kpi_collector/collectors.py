@@ -29,6 +29,10 @@ def collect_project_metrics(
         Optional[Decimal]: 采集到的值
     """
     from app.models.project import Project
+    from app.services.project_status_normalization import (
+        apply_project_status_filter,
+        is_project_completed_expr,
+    )
 
     filters = filters or {}
 
@@ -36,7 +40,7 @@ def collect_project_metrics(
 
     # 应用筛选条件
     if "status" in filters:
-        query = query.filter(Project.status == filters["status"])
+        query = apply_project_status_filter(query, filters["status"], Project)
     if "year" in filters:
         query = query.filter(func.year(Project.created_at) == filters["year"])
     if "health_status" in filters:
@@ -51,12 +55,12 @@ def collect_project_metrics(
         total = query.count()
         if total == 0:
             return Decimal(0)
-        completed = query.filter(Project.status == "COMPLETED").count()
+        completed = query.filter(is_project_completed_expr(Project)).count()
         return Decimal(str(completed / total * 100))
 
     elif metric == "PROJECT_ON_TIME_RATE":
         # 项目按时完成率
-        completed = query.filter(Project.status == "COMPLETED").all()
+        completed = query.filter(is_project_completed_expr(Project)).all()
         if not completed:
             return Decimal(0)
         on_time = sum(

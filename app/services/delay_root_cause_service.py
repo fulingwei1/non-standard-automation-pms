@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.models.progress import Task
 from app.models.project import Project
+from app.services.project_status_normalization import is_project_open_expr
 
 logger = logging.getLogger(__name__)
 
@@ -103,11 +104,7 @@ class DelayRootCauseService:
     ) -> Dict[str, Any]:
         """延期影响分析"""
         # 查询延期项目
-        projects = (
-            self.db.query(Project)
-            .filter(Project.status.notin_(["ST30", "ST99"]))  # 排除已结项和取消
-            .all()
-        )
+        projects = self.db.query(Project).filter(is_project_open_expr(Project)).all()
 
         cost_impact = Decimal("0")
         revenue_impact = Decimal("0")

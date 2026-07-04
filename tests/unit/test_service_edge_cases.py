@@ -202,7 +202,12 @@ class TestStageAdvanceServiceEdgeCases:
     def test_validate_stage_advancement_forward(self):
         """测试向前推进"""
         validate_stage_advancement("S1", "S2")
-        validate_stage_advancement("S1", "S9")
+        validate_stage_advancement("S8", "S9")
+
+    def test_validate_stage_advancement_rejects_forward_jump(self):
+        """测试拒绝跨级向前推进"""
+        with pytest.raises(Exception):
+            validate_stage_advancement("S1", "S9")
 
     def test_validate_stage_advancement_backward(self):
         """测试向后推进"""
@@ -244,9 +249,10 @@ class TestStageAdvanceServiceEdgeCases:
         mapping = get_stage_status_mapping()
         assert mapping["S2"] == "ST03"
 
-    def test_complete_workflow_extreme_jump(self):
-        """测试极端跳跃"""
+    def test_complete_workflow_rejects_extreme_jump(self):
+        """测试拒绝极端跳跃"""
         validate_target_stage("S9")
-        validate_stage_advancement("S1", "S9")
+        with pytest.raises(Exception):
+            validate_stage_advancement("S1", "S9")
         mapping = get_stage_status_mapping()
         assert mapping["S9"] == "ST30"

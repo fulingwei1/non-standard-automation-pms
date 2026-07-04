@@ -16,7 +16,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query, status
 from fastapi.responses import JSONResponse
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -28,6 +28,12 @@ from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.models.vendor import Vendor
 from app.schemas.common import ResponseModel
+from app.services.project_status_normalization import (
+    is_project_completed_expr,
+    is_project_not_archived_expr,
+    is_project_not_cancelled_expr,
+    project_delivery_scope_expr,
+)
 
 router = APIRouter()
 
@@ -64,7 +70,9 @@ def get_delivery_rate(
         .filter(
             Project.planned_end_date >= start_date,
             Project.planned_end_date <= end_date,
-            Project.status.in_(["COMPLETED", "EXECUTING"]),
+            is_project_not_archived_expr(Project),
+            is_project_not_cancelled_expr(Project),
+            or_(is_project_completed_expr(Project), project_delivery_scope_expr(Project)),
         )
         .all()
     )
@@ -107,7 +115,7 @@ def get_health_distribution(
     """
     health_stats = (
         db.query(Project.health, func.count(Project.id).label("count"))
-        .filter(Project.status != "CANCELLED")
+        .filter(is_project_not_archived_expr(Project), is_project_not_cancelled_expr(Project))
         .group_by(Project.health)
         .all()
     )
@@ -346,14 +354,26 @@ def get_executive_dashboard(
         month_start = date(today.year, today.month, 1)
 
         # 项目统计
-        total_projects = db.query(Project).filter(Project.status != "CANCELLED").count()
-        active_projects = db.query(Project).filter(Project.status == "EXECUTING").count()
-        completed_projects = db.query(Project).filter(Project.status == "COMPLETED").count()
+        total_projects = (
+            db.query(Project)
+            .filter(is_project_not_archived_expr(Project), is_project_not_cancelled_expr(Project))
+            .count()
+        )
+        active_projects = db.query(Project).filter(project_delivery_scope_expr(Project)).count()
+        completed_projects = (
+            db.query(Project)
+            .filter(
+                is_project_not_archived_expr(Project),
+                is_project_not_cancelled_expr(Project),
+                is_project_completed_expr(Project),
+            )
+            .count()
+        )
 
         # 健康度分布
         health_dist = (
             db.query(Project.health, func.count(Project.id).label("count"))
-            .filter(Project.status != "CANCELLED")
+            .filter(is_project_not_archived_expr(Project), is_project_not_cancelled_expr(Project))
             .group_by(Project.health)
             .all()
         )

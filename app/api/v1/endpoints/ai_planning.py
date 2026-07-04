@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """收尾批：C2排产工时 · C3质量异常 · C4行业分析 · C5战略规划 · C6经营计划分解 ·
 工程师能力匹配 · 售前ROI取舍 · 产能决策 · 竞品情报。"""
+from datetime import date, timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -10,9 +11,11 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services import ai_job_service
+from app.services.project_status_normalization import project_delivery_scope_expr
 
 router = APIRouter(prefix="/ai-planning", tags=["AI战略/经营/资源"])
 
@@ -138,8 +141,14 @@ def presale_roi(req: OppRef, db: Session = Depends(deps.get_db), current_user: U
 @router.post("/capacity-decision", response_model=ResponseModel, summary="能不能接-产能决策")
 def capacity_decision(req: OppRef, db: Session = Depends(deps.get_db), current_user: User = Depends(security.get_current_active_user)) -> Any:
     o, ctx = _req(db, req.opportunity_id)
-    load = db.execute(text("SELECT COUNT(*) FROM projects WHERE status='EXECUTING'")).scalar() or 0
-    near_delivery = db.execute(text("SELECT COUNT(*) FROM projects WHERE status='EXECUTING' AND planned_end_date < date('now','+45 day')")).scalar() or 0
+    delivery_projects = db.query(Project).filter(project_delivery_scope_expr(Project))
+    load = delivery_projects.count()
+    near_delivery = (
+        delivery_projects.filter(
+            Project.planned_end_date.isnot(None),
+            Project.planned_end_date < date.today() + timedelta(days=45),
+        ).count()
+    )
     r = _ai(f"你是运营总监。当前在制项目{load}个(其中{near_delivery}个45天内需交付)。新订单需求：{ctx}。"
             "判断能否按期承接，严格只输出 JSON：\n"
             '{"can_take":"能接|有条件接|建议婉拒","bottleneck":["产能瓶颈(设计/装配/调试/长周期件)"],"conditions":["承接前提"],"delivery_risk":"交付风险评估"}\n\n只返回合法 JSON。')

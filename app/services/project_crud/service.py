@@ -26,6 +26,7 @@ from app.schemas.project import (
     ProjectCreate,
     ProjectMemberResponse,
 )
+from app.services.project_status_normalization import apply_project_status_filter
 from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
@@ -82,7 +83,7 @@ class ProjectCrudService:
 
         # 状态筛选
         if status:
-            query = query.filter(Project.status == status)
+            query = apply_project_status_filter(query, status, Project)
 
         # 健康度筛选
         if health:

@@ -11,8 +11,8 @@
 
 import logging
 from datetime import date, datetime
-from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from decimal import Decimal, InvalidOperation
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -23,7 +23,6 @@ from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
 from app.models.outsourcing import OutsourcingOrder
 from app.models.project import Project, ProjectCost
 from app.models.project.financial import FinancialProjectCost
-from app.services.cost.cost_basis import actual_project_cost_filter
 from app.models.purchase import PurchaseOrder
 from app.schemas.budget_alert import (
     BudgetAlertConfig,
@@ -35,6 +34,8 @@ from app.schemas.budget_alert import (
     CostTrendPrediction,
     ExecutionRates,
 )
+from app.services.cost.cost_basis import actual_project_cost_filter
+from app.services.project_status_normalization import is_project_completed_expr, is_project_open_expr
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ class BudgetAlertService:
         if budget_amount <= 0:
             return None
 
-        config = config or BudgetAlertConfig()
+        config = self._resolve_config(config)
 
         # 成本分解
         actual_cost = self._get_actual_cost(project_id, project)
@@ -156,7 +157,7 @@ class BudgetAlertService:
         if project_ids:
             projects = self.db.query(Project).filter(Project.id.in_(project_ids)).all()
         else:
-            projects = self.db.query(Project).filter(Project.is_active).all()
+            projects = self.db.query(Project).filter(is_project_open_expr(Project)).all()
 
         results: List[BudgetStatusResponse] = []
         counts = {"GREEN": 0, "YELLOW": 0, "ORANGE": 0, "RED": 0}
@@ -192,7 +193,10 @@ class BudgetAlertService:
 
         适合在成本归集后调用（采购入库/工时提交/费用报销时）。
         """
-        status = self.get_budget_status(project_id, include_trend=True, config=config)
+        resolved_config = self._resolve_config(config)
+        status = self.get_budget_status(
+            project_id, include_trend=True, config=resolved_config
+        )
         if not status or status.alert_level == "GREEN":
             return None
 
@@ -255,9 +259,7 @@ class BudgetAlertService:
             triggered_at=datetime.now(),
             trigger_value=str(round(float(status.execution_rate), 2)),
             threshold_value=str(
-                self._threshold_for_level(
-                    status.alert_level, config or BudgetAlertConfig()
-                )
+                self._threshold_for_level(status.alert_level, resolved_config)
             ),
         )
         self.db.add(alert_record)
@@ -267,6 +269,70 @@ class BudgetAlertService:
         self._dispatch_notifications(alert_record, project, status)
 
         return alert_record
+
+    def check_budget_soft_intercept(
+        self,
+        project_id: int,
+        proposed_amount: Decimal,
+        *,
+        config: Optional[BudgetAlertConfig] = None,
+        override_approved: bool = False,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        提交采购/费用前的预算软拦截检查。
+
+        返回 None 表示项目不存在或没有可用预算，不做拦截；命中红线时返回
+        requires_approval=True，由入口决定是否要求显式 override 后继续。
+        """
+        project = self.db.query(Project).filter(Project.id == project_id).first()
+        if not project:
+            return None
+
+        budget_amount = Decimal(str(self._get_budget_amount(project_id, project)))
+        if budget_amount <= 0:
+            return None
+
+        resolved_config = self._resolve_config(config)
+        amount = Decimal(str(proposed_amount or 0))
+        actual_cost = Decimal(str(self._get_actual_cost(project_id, project)))
+        committed_cost = Decimal(str(self._get_committed_cost(project_id)))
+        projected_committed_cost = committed_cost + amount
+        projected_total = actual_cost + projected_committed_cost
+        projected_rate = (projected_total / budget_amount * Decimal("100")).quantize(
+            Decimal("0.01")
+        )
+
+        alert_level = self._level_for_rate(projected_rate, resolved_config)
+        requires_approval = alert_level == "RED"
+        allowed = not requires_approval or override_approved
+        red_threshold = Decimal(str(resolved_config.red_threshold))
+
+        if requires_approval:
+            message = (
+                f"本次提交后预算执行率预计为 {projected_rate}%，"
+                f"达到红色阈值 {red_threshold}%，需预算例外确认后继续"
+            )
+        elif alert_level in {"YELLOW", "ORANGE"}:
+            message = f"本次提交后预算执行率预计为 {projected_rate}%，请关注预算消耗"
+        else:
+            message = "预算执行情况正常"
+
+        return {
+            "project_id": project_id,
+            "budget_amount": budget_amount,
+            "current_actual_cost": actual_cost,
+            "current_committed_cost": committed_cost,
+            "proposed_amount": amount,
+            "projected_committed_cost": projected_committed_cost,
+            "projected_total_cost": projected_total,
+            "projected_execution_rate": projected_rate,
+            "alert_level": alert_level,
+            "red_threshold": red_threshold,
+            "requires_approval": requires_approval,
+            "override_approved": override_approved,
+            "allowed": allowed,
+            "message": message,
+        }
 
     # ================================================================
     # 内部方法 — 数据获取
@@ -443,6 +509,18 @@ class BudgetAlertService:
             recommended_actions=actions,
         )
 
+    def _level_for_rate(
+        self, rate: Decimal, config: BudgetAlertConfig
+    ) -> str:
+        """根据单一执行率返回 GREEN/YELLOW/ORANGE/RED。"""
+        if rate >= Decimal(str(config.red_threshold)):
+            return "RED"
+        if rate >= Decimal(str(config.orange_threshold)):
+            return "ORANGE"
+        if rate >= Decimal(str(config.yellow_threshold)):
+            return "YELLOW"
+        return "GREEN"
+
     # ================================================================
     # 内部方法 — 成本趋势预测
     # ================================================================
@@ -606,7 +684,7 @@ class BudgetAlertService:
             .filter(
                 Project.dept_id == project.dept_id,
                 Project.id != project.id,
-                Project.status.in_(["COMPLETED", "CLOSED"]),
+                is_project_completed_expr(Project),
                 Project.budget_amount > 0,
                 Project.actual_cost > 0,
             )
@@ -632,6 +710,34 @@ class BudgetAlertService:
 
     def _get_or_create_budget_alert_rule(self) -> AlertRule:
         """获取或创建预算超支预警规则"""
+        rule = self._get_budget_alert_rule()
+        if rule:
+            return rule
+
+        rule = AlertRule(
+            rule_code="BUDGET_EXECUTION",
+            rule_name="预算执行预警",
+            rule_type=AlertRuleTypeEnum.COST_OVERRUN.value,
+            target_type="PROJECT",
+            condition_type="THRESHOLD",
+            condition_operator="GT",
+            threshold_value="80",
+            threshold_min="90",
+            threshold_max="100",
+            alert_level=AlertLevelEnum.WARNING.value,
+            enforcement_mode="REQUIRE_APPROVAL",
+            is_enabled=True,
+            is_system=True,
+            description="当项目预算执行率超过阈值时触发分级预警（黄80%/橙90%/红100%）",
+            notify_channels=["SYSTEM", "EMAIL"],
+            notify_roles=["PROJECT_MANAGER", "FINANCE", "PMO"],
+        )
+        self.db.add(rule)
+        self.db.flush()
+        return rule
+
+    def _get_budget_alert_rule(self) -> Optional[AlertRule]:
+        """读取预算预警规则；优先新规则，兼容旧 COST_OVERRUN 规则。"""
         rule = (
             self.db.query(AlertRule)
             .filter(AlertRule.rule_code == "BUDGET_EXECUTION", AlertRule.is_enabled)
@@ -644,25 +750,35 @@ class BudgetAlertService:
                 .filter(AlertRule.rule_code == "COST_OVERRUN", AlertRule.is_enabled)
                 .first()
             )
-        if not rule:
-            rule = AlertRule(
-                rule_code="BUDGET_EXECUTION",
-                rule_name="预算执行预警",
-                rule_type=AlertRuleTypeEnum.COST_OVERRUN.value,
-                target_type="PROJECT",
-                condition_type="THRESHOLD",
-                condition_operator="GT",
-                threshold_value="80",
-                alert_level=AlertLevelEnum.WARNING.value,
-                is_enabled=True,
-                is_system=True,
-                description="当项目预算执行率超过阈值时触发分级预警（黄80%/橙90%/红100%）",
-                notify_channels=["SYSTEM", "EMAIL"],
-                notify_roles=["PROJECT_MANAGER", "FINANCE", "PMO"],
-            )
-            self.db.add(rule)
-            self.db.flush()
         return rule
+
+    def _resolve_config(
+        self, config: Optional[BudgetAlertConfig] = None
+    ) -> BudgetAlertConfig:
+        """显式请求配置优先；否则从 AlertRule 阈值字段读取黄/橙/红配置。"""
+        if config:
+            return config
+
+        rule = self._get_budget_alert_rule()
+        if not rule:
+            return BudgetAlertConfig()
+
+        return BudgetAlertConfig(
+            yellow_threshold=self._decimal_or_default(
+                rule.threshold_value, Decimal("80")
+            ),
+            orange_threshold=self._decimal_or_default(rule.threshold_min, Decimal("90")),
+            red_threshold=self._decimal_or_default(rule.threshold_max, Decimal("100")),
+        )
+
+    @staticmethod
+    def _decimal_or_default(value: Optional[str], default: Decimal) -> Decimal:
+        if value in (None, ""):
+            return default
+        try:
+            return Decimal(str(value))
+        except (InvalidOperation, ValueError):
+            return default
 
     def _build_alert_message(self, status: BudgetStatusResponse) -> Tuple[str, str]:
         """构建预警标题和内容"""

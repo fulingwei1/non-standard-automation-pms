@@ -13,6 +13,7 @@ from app.models.organization import Department
 from app.models.project import Project
 from app.models.timesheet import Timesheet
 from app.models.user import User
+from app.services.project_status_normalization import is_project_open_expr
 
 
 class AnalysisReportMixin:
@@ -131,11 +132,7 @@ class AnalysisReportMixin:
         if project_id:
             projects = db.query(Project).filter(Project.id == project_id).all()
         else:
-            projects = (
-                db.query(Project)
-                .filter(Project.is_active, Project.status.in_(["IN_PROGRESS", "ON_HOLD"]))
-                .all()
-            )
+            projects = db.query(Project).filter(is_project_open_expr(Project)).all()
 
         project_data = []
         total_budget = 0

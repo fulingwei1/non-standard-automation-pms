@@ -32,6 +32,7 @@ from app.schemas.material_procurement_optimization import (
     DuplicatePurchaseCheckRequest,
     ShortageWasteCalculationRequest,
 )
+from app.services.project_status_normalization import is_project_cancelled_expr
 
 
 class MaterialProcurementOptimizationService:
@@ -413,9 +414,6 @@ class MaterialProcurementOptimizationService:
 
     def get_slow_moving_analysis(self) -> Dict[str, Any]:
         today = datetime.now()
-        date_90 = today - timedelta(days=90)
-        date_180 = today - timedelta(days=180)
-        date_365 = today - timedelta(days=365)
 
         items: List[Dict[str, Any]] = []
         materials = self.db.query(Material).filter(Material.is_active.is_(True)).all()
@@ -696,7 +694,10 @@ class MaterialProcurementOptimizationService:
             .join(Project, Project.id == BomHeader.project_id)
             .filter(
                 BomItem.material_id == material_id,
-                Project.status.in_(["CANCELLED", "STOPPED", "CLOSED"]),
+                or_(
+                    is_project_cancelled_expr(Project),
+                    func.upper(func.coalesce(Project.status, "")).in_(["STOPPED", "CLOSED"]),
+                ),
             )
             .count()
         )

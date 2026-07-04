@@ -22,6 +22,7 @@ from app.schemas.pmo import (
     RiskWallResponse,
     WeeklyReportResponse,
 )
+from app.services.project_status_normalization import project_status_bucket
 
 
 class PmoCockpitService:
@@ -274,6 +275,17 @@ class PmoCockpitService:
 
         # 按部门统计
         by_department = self._get_resources_by_department()
+        employees = self._get_resource_overview_employees()
+        employees_with_conflicts = sum(1 for employee in employees if employee["has_conflict"])
+        total_conflicts = sum(len(employee["conflicts"]) for employee in employees)
+        avg_utilization = (
+            round(
+                sum(employee["current_allocation"] for employee in employees) / len(employees),
+                1,
+            )
+            if employees
+            else 0.0
+        )
 
         return ResourceOverviewResponse(
             total_resources=total_resources,
@@ -281,6 +293,11 @@ class PmoCockpitService:
             available_resources=available_resources,
             overloaded_resources=overloaded_resources,
             by_department=by_department,
+            total_employees=len(employees),
+            employees_with_conflicts=employees_with_conflicts,
+            total_conflicts=total_conflicts,
+            avg_utilization=avg_utilization,
+            employees=employees,
         )
 
     # ==================== 私有辅助方法 ====================
@@ -289,12 +306,13 @@ class PmoCockpitService:
         """按状态统计项目"""
         projects_by_status = {}
         status_counts = (
-            self.db.query(Project.status, func.count(Project.id))
-            .group_by(Project.status)
+            self.db.query(Project.status, Project.stage, Project.is_archived, func.count(Project.id))
+            .group_by(Project.status, Project.stage, Project.is_archived)
             .all()
         )
-        for status, count in status_counts:
-            projects_by_status[status or "UNKNOWN"] = count
+        for status, stage, is_archived, count in status_counts:
+            bucket = project_status_bucket(status, stage, is_archived)
+            projects_by_status[bucket] = projects_by_status.get(bucket, 0) + count
         return projects_by_status
 
     def _get_projects_by_stage(self) -> Dict[str, int]:
@@ -461,6 +479,133 @@ class PmoCockpitService:
                 overloaded_count += 1
 
         return overloaded_count
+
+    def _get_resource_overview_employees(self) -> List[Dict[str, Any]]:
+        """Build timeline rows consumed by the PMO resource overview page."""
+        rows = (
+            self.db.query(PmoResourceAllocation, User, Project)
+            .join(User, PmoResourceAllocation.resource_id == User.id)
+            .join(Project, PmoResourceAllocation.project_id == Project.id)
+            .filter(PmoResourceAllocation.status.in_(["PLANNED", "ACTIVE"]))
+            .order_by(User.real_name, User.username, PmoResourceAllocation.start_date)
+            .all()
+        )
+
+        employees_by_id: Dict[int, Dict[str, Any]] = {}
+        for allocation, user, project in rows:
+            employee = employees_by_id.setdefault(
+                user.id,
+                {
+                    "user_id": user.id,
+                    "real_name": allocation.resource_name or user.real_name or user.username,
+                    "department": allocation.resource_dept or user.department or "未分配",
+                    "current_allocation": 0,
+                    "total_projects": 0,
+                    "has_conflict": False,
+                    "conflicts": [],
+                    "allocations": [],
+                },
+            )
+            employee["allocations"].append(
+                {
+                    "id": allocation.id,
+                    "project_id": project.id,
+                    "project_name": project.project_name,
+                    "project_code": project.project_code,
+                    "role": allocation.resource_role,
+                    "stage": project.stage,
+                    "status": allocation.status,
+                    "start_date": self._date_to_iso(allocation.start_date),
+                    "end_date": self._date_to_iso(allocation.end_date),
+                    "allocation_pct": int(allocation.allocation_percent or 0),
+                    "planned_hours": allocation.planned_hours or 0,
+                    "actual_hours": allocation.actual_hours or 0,
+                }
+            )
+
+        employees = list(employees_by_id.values())
+        for employee in employees:
+            allocations = employee["allocations"]
+            employee["total_projects"] = len({item["project_id"] for item in allocations})
+            employee["current_allocation"] = self._calculate_current_allocation(allocations)
+            employee["conflicts"] = self._calculate_allocation_conflicts(allocations)
+            employee["has_conflict"] = bool(employee["conflicts"])
+
+        return sorted(employees, key=lambda item: (item["department"], item["real_name"]))
+
+    @staticmethod
+    def _date_to_iso(value: Optional[date]) -> Optional[str]:
+        return value.isoformat() if value else None
+
+    @staticmethod
+    def _parse_iso_date(value: Optional[str]) -> Optional[date]:
+        if not value:
+            return None
+        return date.fromisoformat(value)
+
+    @classmethod
+    def _calculate_current_allocation(cls, allocations: List[Dict[str, Any]]) -> int:
+        today = date.today()
+        current_allocations = []
+        for allocation in allocations:
+            start = cls._parse_iso_date(allocation.get("start_date"))
+            end = cls._parse_iso_date(allocation.get("end_date"))
+            if start and end and start <= today <= end:
+                current_allocations.append(allocation)
+
+        target_allocations = current_allocations or allocations
+        return sum(int(item.get("allocation_pct") or 0) for item in target_allocations)
+
+    @classmethod
+    def _calculate_allocation_conflicts(
+        cls, allocations: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        dated_allocations = []
+        for allocation in allocations:
+            start = cls._parse_iso_date(allocation.get("start_date"))
+            end = cls._parse_iso_date(allocation.get("end_date"))
+            if start and end and start <= end:
+                dated_allocations.append((allocation, start, end))
+
+        if not dated_allocations:
+            total = sum(int(item.get("allocation_pct") or 0) for item in allocations)
+            if total <= 100:
+                return []
+            return [
+                {
+                    "start_date": None,
+                    "end_date": None,
+                    "total_allocation": total,
+                    "projects": [item["project_name"] for item in allocations],
+                }
+            ]
+
+        boundaries = set()
+        for _, start, end in dated_allocations:
+            boundaries.add(start)
+            boundaries.add(end + timedelta(days=1))
+
+        conflicts = []
+        ordered_boundaries = sorted(boundaries)
+        for segment_start, next_boundary in zip(ordered_boundaries, ordered_boundaries[1:]):
+            segment_end = next_boundary - timedelta(days=1)
+            active = [
+                allocation
+                for allocation, start, end in dated_allocations
+                if start <= segment_start and end >= segment_end
+            ]
+            total = sum(int(item.get("allocation_pct") or 0) for item in active)
+            if total > 100:
+                conflicts.append(
+                    {
+                        "start_date": segment_start.isoformat(),
+                        "end_date": segment_end.isoformat(),
+                        "total_allocation": total,
+                        "projects": [item["project_name"] for item in active],
+                    }
+                )
+
+        return conflicts
 
     def _get_resources_by_department(self) -> List[Dict[str, Any]]:
         """按部门统计资源"""

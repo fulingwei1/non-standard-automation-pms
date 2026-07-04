@@ -15,6 +15,7 @@ from app.models import (
     MaterialReadiness,
     Project,
 )
+from app.services.project_status_normalization import is_project_open_expr
 from app.services.resource_allocation_service import ResourceAllocationService
 
 
@@ -244,7 +245,10 @@ class SchedulingSuggestionService:
             project_ids: 指定项目ID列表，None表示所有待排产项目
         """
         # 1. 获取所有待排产项目
-        query = db.query(Project).filter(Project.status.in_(["S4", "S5"]))  # 加工制造、装配调试阶段
+        query = db.query(Project).filter(
+            Project.stage.in_(["S4", "S5"]),
+            is_project_open_expr(Project),
+        )
 
         if project_ids:
             query = query.filter(Project.id.in_(project_ids))

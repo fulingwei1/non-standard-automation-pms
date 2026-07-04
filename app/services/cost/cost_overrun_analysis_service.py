@@ -18,6 +18,7 @@ from app.models.project import FinancialProjectCost, Project
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.services.hourly_rate_service import HourlyRateService
+from app.services.project_status_normalization import is_project_open_expr
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +26,17 @@ logger = logging.getLogger(__name__)
 class CostOverrunAnalysisService:
     """成本过高分析服务"""
 
+    APPROVED_TIMESHEET_STATUS = "APPROVED"
+
     def __init__(self, db: Session):
         self.db = db
         self.hourly_rate_service = HourlyRateService()
+
+    def _approved_timesheet_query(self, project_id: int):
+        return self.db.query(Timesheet).filter(
+            Timesheet.project_id == project_id,
+            Timesheet.status == self.APPROVED_TIMESHEET_STATUS,
+        )
 
     def analyze_reasons(
         self,
@@ -37,7 +46,7 @@ class CostOverrunAnalysisService:
     ) -> Dict[str, Any]:
         """成本超支原因分析"""
         # 查询有成本超支的项目
-        projects = self.db.query(Project).filter(Project.status.notin_(["ST30", "ST99"]))
+        projects = self.db.query(Project).filter(is_project_open_expr(Project))
 
         if project_id:
             projects = projects.filter(Project.id == project_id)
@@ -149,7 +158,7 @@ class CostOverrunAnalysisService:
                 person_stats[project.pm_id]["reasons"]["成本控制不力"] += 1
 
             # 归责到工程师（工时超支）
-            timesheets = self.db.query(Timesheet).filter(Timesheet.project_id == project_id).all()
+            timesheets = self._approved_timesheet_query(project_id).all()
             for ts in timesheets:
                 if ts.user_id:
                     person_stats[ts.user_id]["overrun_count"] += 1
@@ -337,7 +346,7 @@ class CostOverrunAnalysisService:
 
     def _calculate_labor_cost(self, project_id: int) -> Decimal:
         """计算工时成本"""
-        timesheets = self.db.query(Timesheet).filter(Timesheet.project_id == project_id).all()
+        timesheets = self._approved_timesheet_query(project_id).all()
 
         total_cost = Decimal("0")
         for ts in timesheets:
@@ -368,7 +377,10 @@ class CostOverrunAnalysisService:
         """计算实际工时"""
         total_hours = (
             self.db.query(func.sum(Timesheet.hours))
-            .filter(Timesheet.project_id == project_id)
+            .filter(
+                Timesheet.project_id == project_id,
+                Timesheet.status == self.APPROVED_TIMESHEET_STATUS,
+            )
             .scalar()
             or 0
         )

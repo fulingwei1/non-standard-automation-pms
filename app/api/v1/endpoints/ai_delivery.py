@@ -8,8 +8,10 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.project_status_normalization import project_delivery_scope_expr
 
 router = APIRouter(prefix="/ai-delivery", tags=["AI交付风险"])
 
@@ -22,13 +24,22 @@ def delivery_risk(
     """扫描执行中项目 → 逾期/进度滞后/缺料/健康度 → 风险清单 + AI 一句话归因。"""
     from app.services.ai_client_service import AIClientService
 
-    rows = db.execute(text(
-        "SELECT id, project_code, project_name, progress_pct, planned_end_date, health, material_status "
-        "FROM projects WHERE status='EXECUTING' "
-        "ORDER BY planned_end_date ASC LIMIT 200")).all()
+    rows = (
+        db.query(Project)
+        .filter(project_delivery_scope_expr(Project))
+        .order_by(Project.planned_end_date.asc())
+        .limit(200)
+        .all()
+    )
     risks = []
     for r in rows:
-        pid, code, name, prog, pend, health, mat = r[0], r[1], r[2], float(r[3] or 0), r[4], r[5], r[6]
+        pid = r.id
+        code = r.project_code
+        name = r.project_name
+        prog = float(r.progress_pct or 0)
+        pend = r.planned_end_date
+        health = r.health
+        mat = r.material_status
         reasons = []
         sev = "low"
         # 逾期

@@ -15,6 +15,9 @@ from app.models.organization import Department
 from app.models.project import Project
 from app.models.timesheet import Timesheet
 from app.models.user import User
+from app.services.hourly_rate_service import HourlyRateService
+from app.services.project_status_normalization import is_project_open_expr
+from app.services.report_labor_cost import calculate_timesheet_labor_cost
 
 
 class AnalysisReportGenerator:
@@ -28,8 +31,8 @@ class AnalysisReportGenerator:
         # LOW: < 12天
     }
 
-    # 默认时薪（元）
-    DEFAULT_HOURLY_RATE = 100
+    # Compatibility alias for legacy callers; cost reports use per-user config.
+    DEFAULT_HOURLY_RATE = HourlyRateService.DEFAULT_HOURLY_RATE
 
     @staticmethod
     def generate_workload_analysis(
@@ -252,14 +255,7 @@ class AnalysisReportGenerator:
         if project_id:
             return db.query(Project).filter(Project.id == project_id).all()
         else:
-            return (
-                db.query(Project)
-                .filter(
-                    Project.is_active,
-                    Project.status.in_(["IN_PROGRESS", "ON_HOLD"]),
-                )
-                .all()
-            )
+            return db.query(Project).filter(is_project_open_expr(Project)).all()
 
     @staticmethod
     def _calculate_project_costs(
@@ -288,8 +284,7 @@ class AnalysisReportGenerator:
             )
             labor_hours = sum(float(t.hours or 0) for t in timesheets)
 
-            # 估算人工成本
-            estimated_labor_cost = labor_hours * AnalysisReportGenerator.DEFAULT_HOURLY_RATE
+            estimated_labor_cost = float(calculate_timesheet_labor_cost(db, timesheets))
             total_actual += estimated_labor_cost
 
             variance = budget - estimated_labor_cost

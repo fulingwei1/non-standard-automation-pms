@@ -16,6 +16,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
+from app.services.project_status_normalization import project_status_bucket
 from app.services.statistics.base import SyncStatisticsService
 
 
@@ -30,12 +31,16 @@ class ProjectStatistics(SyncStatisticsService):
 def calculate_status_statistics(query) -> Dict[str, int]:
     """计算状态统计（SQL GROUP BY 替代全量加载）"""
     rows = (
-        query.with_entities(Project.status, func.count(Project.id))
+        query.with_entities(Project.status, Project.stage, Project.is_archived, func.count(Project.id))
         .filter(Project.status.isnot(None))
-        .group_by(Project.status)
+        .group_by(Project.status, Project.stage, Project.is_archived)
         .all()
     )
-    return {str(r[0]): r[1] for r in rows}
+    stats: Dict[str, int] = {}
+    for status, stage, is_archived, count in rows:
+        bucket = project_status_bucket(status, stage, is_archived)
+        stats[bucket] = stats.get(bucket, 0) + count
+    return stats
 
 
 def calculate_stage_statistics(query) -> Dict[str, int]:

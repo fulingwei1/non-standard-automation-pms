@@ -19,6 +19,7 @@ from app.models.project import (
     ProjectCostBenchmark,
     SimilarityLevelEnum,
 )
+from app.services.project_status_normalization import is_project_completed_expr
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +109,7 @@ class CostBenchmarkService:
             .filter(
                 and_(
                     Project.id != project_id,
-                    Project.status.in_(["COMPLETED", "ACCEPTED", "WARRANTY"]),
+                    is_project_completed_expr(Project),
                 )
             )
             .all()

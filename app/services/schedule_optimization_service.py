@@ -10,6 +10,9 @@ from typing import Any, Dict, List
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
+from app.services.project_status_normalization import is_project_completed_expr
+
+MIN_SIMILAR_PROJECTS = 3
 
 
 class ScheduleOptimizationService:
@@ -33,6 +36,8 @@ class ScheduleOptimizationService:
 
         # 1. 查找相似历史项目
         similar_projects = self._find_similar_projects(project)
+        if len(similar_projects) < MIN_SIMILAR_PROJECTS:
+            return self._unavailable_result(project, len(similar_projects))
 
         # 2. 分析各环节优化潜力
         optimization_analysis = self._analyze_phases_optimization(project, similar_projects)
@@ -49,6 +54,8 @@ class ScheduleOptimizationService:
         time_savings = self._calculate_time_savings(optimization_analysis)
 
         return {
+            "status": "success",
+            "data_source": "historical_projects",
             "project_id": project_id,
             "project_name": project.project_name,
             "similar_projects_count": len(similar_projects),
@@ -61,6 +68,35 @@ class ScheduleOptimizationService:
             ),
         }
 
+    def _unavailable_result(self, project: Project, sample_count: int) -> Dict[str, Any]:
+        """样本不足时不输出模板优化数字。"""
+        return {
+            "status": "unavailable",
+            "reason": "insufficient_similar_projects",
+            "message": "相似历史项目样本不足，无法生成可信优化分析",
+            "project_id": project.id,
+            "project_name": project.project_name,
+            "similar_projects_count": sample_count,
+            "minimum_required": MIN_SIMILAR_PROJECTS,
+            "optimization_analysis": {},
+            "reusable_content": {
+                "design_documents": [],
+                "bom_templates": [],
+                "procurement_lists": [],
+                "test_procedures": [],
+                "documentation": [],
+            },
+            "automation_suggestions": [],
+            "time_savings": {
+                "total_current_days": 0,
+                "total_optimizable_days": 0,
+                "total_savings_days": 0,
+                "savings_percentage": 0,
+                "by_phase": {},
+            },
+            "overall_optimization_score": 0,
+        }
+
     def _find_similar_projects(self, project: Project) -> List[Project]:
         """查找相似历史项目"""
 
@@ -70,7 +106,7 @@ class ScheduleOptimizationService:
                 Project.product_category == project.product_category,
                 Project.industry == project.industry,
                 Project.id != project.id,
-                Project.status.in_(["COMPLETED", "DELIVERED"]),
+                is_project_completed_expr(Project),
             )
             .order_by(Project.created_at.desc())
             .limit(5)

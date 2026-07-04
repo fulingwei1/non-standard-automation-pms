@@ -40,6 +40,8 @@ def generate_schedule(
 
     if "error" in schedule:
         raise HTTPException(status_code=404, detail=schedule["error"])
+    if schedule.get("status") == "unavailable":
+        raise HTTPException(status_code=422, detail=schedule["message"])
 
     return schedule
 
@@ -62,6 +64,10 @@ def generate_both_modes(
 
     if "error" in normal_schedule:
         raise HTTPException(status_code=404, detail=normal_schedule["error"])
+    if normal_schedule.get("status") == "unavailable":
+        raise HTTPException(status_code=422, detail=normal_schedule["message"])
+    if intensive_schedule.get("status") == "unavailable":
+        raise HTTPException(status_code=422, detail=intensive_schedule["message"])
 
     return {
         "project_id": project_id,

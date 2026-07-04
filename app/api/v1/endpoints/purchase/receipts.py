@@ -22,6 +22,7 @@ from app.models.purchase import (
 )
 from app.models.user import User
 from app.services.inventory.inbound_service import InboundService
+from app.services.cost.cost_collection_service import CostCollectionService
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404
 
@@ -128,6 +129,8 @@ def _refresh_order_receipt_progress(order: PurchaseOrder) -> None:
         order.status = "RECEIVED"
     elif total_received_qty > Decimal("0"):
         order.status = "PARTIAL_RECEIVED"
+    elif order.status in {"RECEIVING", "PARTIAL_RECEIVED", "PARTIALLY_RECEIVED", "RECEIVED"}:
+        order.status = "APPROVED"
 
 
 def _serialize_receipt_item(item: GoodsReceiptItem) -> dict[str, Any]:
@@ -314,8 +317,63 @@ def create_goods_receipt(
         order_item.received_qty = (order_item.received_qty or Decimal("0")) + received_qty
 
     _refresh_order_receipt_progress(order)
+    CostCollectionService.collect_from_purchase_order(
+        db, order.id, created_by=current_user.id, cost_date=receipt.receipt_date
+    )
     db.commit()
     return ResponseModel(code=200, message="收货单创建成功", data={"id": receipt.id})
+
+
+@router.post("/goods-receipts/{receipt_id}/cancel")
+def cancel_goods_receipt(
+    receipt_id: int,
+    payload: Optional[Dict[str, Any]] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """作废收货单，并冲减订单已收数量与项目采购成本。"""
+    receipt = db.query(GoodsReceipt).filter(GoodsReceipt.id == receipt_id).first()
+    if not receipt:
+        raise HTTPException(status_code=404, detail="收货单不存在")
+
+    if receipt.status in {"CANCELLED", "VOID", "DELETED"}:
+        return ResponseModel(
+            code=200,
+            message="收货单已作废",
+            data=_serialize_receipt(receipt, include_items=True),
+        )
+
+    order = receipt.order
+    if not order:
+        raise HTTPException(status_code=400, detail="收货单未关联采购订单")
+
+    for receipt_item in receipt.items.all():
+        order_item = receipt_item.order_item
+        if not order_item:
+            continue
+        current_received = order_item.received_qty or Decimal("0")
+        reverse_qty = receipt_item.received_qty or Decimal("0")
+        order_item.received_qty = max(current_received - reverse_qty, Decimal("0"))
+        db.add(order_item)
+
+    reason = (payload or {}).get("reason")
+    receipt.status = "CANCELLED"
+    if reason:
+        remark = receipt.remark or ""
+        receipt.remark = f"{remark}\n作废原因：{reason}".strip()
+    db.add(receipt)
+
+    _refresh_order_receipt_progress(order)
+    CostCollectionService.collect_from_purchase_order(
+        db, order.id, created_by=current_user.id, cost_date=receipt.receipt_date
+    )
+    db.commit()
+    db.refresh(receipt)
+    return ResponseModel(
+        code=200,
+        message="收货单已作废并冲减采购成本",
+        data=_serialize_receipt(receipt, include_items=True),
+    )
 
 
 @router.put("/goods-receipts/{receipt_id}/receive")
@@ -338,6 +396,9 @@ def update_goods_receipt_status(
     if status == "RECEIVED":
         receipt.warehoused_at = datetime.now()
         receipt.warehoused_by = current_user.id
+        CostCollectionService.collect_from_purchase_order(
+            db, receipt.order_id, created_by=current_user.id, cost_date=receipt.receipt_date
+        )
     db.commit()
     db.refresh(receipt)
     return ResponseModel(code=200, message="收货状态已更新", data=_serialize_receipt(receipt))

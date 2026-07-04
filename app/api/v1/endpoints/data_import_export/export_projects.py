@@ -23,6 +23,7 @@ from app.schemas.data_import_export import (
 )
 from app.services.data_scope import DataScopeService
 from app.services.import_export_engine import ExcelExportEngine
+from app.services.project_status_normalization import apply_project_status_filter
 
 router = APIRouter()
 
@@ -48,7 +49,7 @@ def export_project_list(
     if filters.get("stage"):
         query = query.filter(Project.stage == filters["stage"])
     if filters.get("status"):
-        query = query.filter(Project.status == filters["status"])
+        query = apply_project_status_filter(query, filters["status"], Project)
     if filters.get("health"):
         query = query.filter(Project.health == filters["health"])
     if filters.get("pm_id"):
