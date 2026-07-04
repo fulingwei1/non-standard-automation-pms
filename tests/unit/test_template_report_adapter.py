@@ -36,7 +36,9 @@ class TestTemplateReportAdapter:
         template = MagicMock()
         self.db.query.return_value.filter.return_value.first.return_value = template
 
-        with patch("app.services.template_report.template_report_service") as mock_svc:
+        with patch(
+            "app.services.report_framework.adapters.template.template_report_service"
+        ) as mock_svc:
             mock_svc.generate_from_template.return_value = {"data": "ok"}
             result = self.adapter.generate_data({"template_id": 1, "project_id": 10})
 

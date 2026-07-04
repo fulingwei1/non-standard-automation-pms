@@ -20,6 +20,44 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
+def _table_columns(rows: Any) -> list[dict[str, Any]]:
+    if rows and isinstance(rows, list) and isinstance(rows[0], dict):
+        return [{"field": key, "label": key} for key in rows[0].keys()]
+    return []
+
+
+def _table_section(section_id: str, title: str, rows: Any) -> dict[str, Any]:
+    data = rows if isinstance(rows, list) else []
+    return {
+        "id": section_id,
+        "title": title,
+        "type": "table",
+        "data": data,
+        "columns": _table_columns(data),
+    }
+
+
+def _build_legacy_report_sections(report_data: Any, report_title: str) -> list[dict[str, Any]]:
+    sections = []
+    if isinstance(report_data, dict):
+        if "summary" in report_data:
+            sections.append(
+                {
+                    "id": "summary",
+                    "title": "汇总",
+                    "type": "metrics",
+                    "items": [
+                        {"label": k, "value": v} for k, v in report_data["summary"].items()
+                    ],
+                }
+            )
+        if "details" in report_data:
+            sections.append(_table_section("details", "明细", report_data["details"]))
+    else:
+        sections.append(_table_section("data", report_title, report_data))
+    return sections
+
+
 @router.post("/export", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def export_report(
     *,
@@ -78,38 +116,7 @@ def export_report(
 
                 renderer = ExcelRenderer()
                 # 将report_data转换为sections格式
-                sections = []
-                if isinstance(report_data, dict):
-                    if "summary" in report_data:
-                        sections.append(
-                            {
-                                "id": "summary",
-                                "title": "汇总",
-                                "type": "metrics",
-                                "items": [
-                                    {"label": k, "value": v}
-                                    for k, v in report_data["summary"].items()
-                                ],
-                            }
-                        )
-                    if "details" in report_data:
-                        sections.append(
-                            {
-                                "id": "details",
-                                "title": "明细",
-                                "type": "table",
-                                "source": report_data["details"],
-                            }
-                        )
-                else:
-                    sections = [
-                        {
-                            "id": "data",
-                            "title": report_title,
-                            "type": "table",
-                            "source": report_data,
-                        }
-                    ]
+                sections = _build_legacy_report_sections(report_data, report_title)
                 metadata = {"code": f"REPORT_{generation.id}", "name": report_title}
                 result = renderer.render(sections, metadata)
                 filepath = result.file_path or ""
@@ -117,38 +124,7 @@ def export_report(
                 from app.services.report_framework.renderers.pdf_renderer import PdfRenderer
 
                 renderer = PdfRenderer()
-                sections = []
-                if isinstance(report_data, dict):
-                    if "summary" in report_data:
-                        sections.append(
-                            {
-                                "id": "summary",
-                                "title": "汇总",
-                                "type": "metrics",
-                                "items": [
-                                    {"label": k, "value": v}
-                                    for k, v in report_data["summary"].items()
-                                ],
-                            }
-                        )
-                    if "details" in report_data:
-                        sections.append(
-                            {
-                                "id": "details",
-                                "title": "明细",
-                                "type": "table",
-                                "source": report_data["details"],
-                            }
-                        )
-                else:
-                    sections = [
-                        {
-                            "id": "data",
-                            "title": report_title,
-                            "type": "table",
-                            "source": report_data,
-                        }
-                    ]
+                sections = _build_legacy_report_sections(report_data, report_title)
                 metadata = {"code": f"REPORT_{generation.id}", "name": report_title}
                 result = renderer.render(sections, metadata)
                 filepath = result.file_path or ""
@@ -156,7 +132,6 @@ def export_report(
                 # CSV导出暂时使用简单实现
                 import csv
                 import os
-                from datetime import datetime
 
                 csv_dir = os.path.join(settings.UPLOAD_DIR, "exports")
                 os.makedirs(csv_dir, exist_ok=True)

@@ -6,10 +6,12 @@
 from datetime import date, timedelta
 from typing import Any, Dict
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models.project import Machine, Project, ProjectMilestone
+from app.models.project import FinancialProjectCost, Machine, Project, ProjectCost, ProjectMilestone
 from app.models.timesheet import Timesheet
+from app.services.cost.cost_basis import actual_project_cost_filter
 
 
 class ProjectReportMixin:
@@ -237,13 +239,18 @@ class ProjectReportMixin:
             )
 
         # 成本概况
+        actual_cost = ProjectReportMixin._sum_project_actual_cost(
+            db, project_id, start_date, end_date
+        )
+        planned_cost = float(project.budget_amount or 0) if hasattr(project, "budget_amount") else 0
+        cost_variance = planned_cost - actual_cost
         cost_summary = {
-            "planned_cost": (
-                float(project.budget_amount or 0) if hasattr(project, "budget_amount") else 0
+            "planned_cost": planned_cost,
+            "actual_cost": round(actual_cost, 2),
+            "cost_variance": round(cost_variance, 2),
+            "cost_variance_percent": (
+                round(cost_variance / planned_cost * 100, 2) if planned_cost > 0 else 0
             ),
-            "actual_cost": 0,  # 需要从成本模块获取
-            "cost_variance": 0,
-            "cost_variance_percent": 0,
         }
 
         return {
@@ -252,3 +259,30 @@ class ProjectReportMixin:
             "milestones": milestone_details,
             "cost": cost_summary,
         }
+
+    @staticmethod
+    def _sum_project_actual_cost(
+        db: Session, project_id: int, start_date: date, end_date: date
+    ) -> float:
+        project_cost_total = (
+            db.query(func.coalesce(func.sum(ProjectCost.amount), 0))
+            .filter(
+                ProjectCost.project_id == project_id,
+                ProjectCost.cost_date >= start_date,
+                ProjectCost.cost_date <= end_date,
+                actual_project_cost_filter(),
+            )
+            .scalar()
+            or 0
+        )
+        financial_cost_total = (
+            db.query(func.coalesce(func.sum(FinancialProjectCost.amount), 0))
+            .filter(
+                FinancialProjectCost.project_id == project_id,
+                FinancialProjectCost.cost_date >= start_date,
+                FinancialProjectCost.cost_date <= end_date,
+            )
+            .scalar()
+            or 0
+        )
+        return float(project_cost_total or 0) + float(financial_cost_total or 0)

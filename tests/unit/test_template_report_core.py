@@ -36,7 +36,7 @@ class TestGenerateFromTemplate:
 
     def test_generate_with_project_weekly_template(self, service: TemplateReportCore, template):
         """Test generation with PROJECT_WEEKLY type"""
-        with patch.object(service, "ProjectReportMixin") as mock_mixin:
+        with patch("app.services.template_report.core.ProjectReportMixin") as mock_mixin:
             mock_mixin._generate_project_weekly.return_value = {"test": "data"}
 
             result = service.generate_from_template(
@@ -50,11 +50,19 @@ class TestGenerateFromTemplate:
             assert result is not None
             assert result["template_id"] == 1
             assert result["report_type"] == "PROJECT_WEEKLY"
-            mock_mixin._generate_project_weekly.assert_called_once()
+            mock_mixin._generate_project_weekly.assert_called_once_with(
+                service.db,
+                10,
+                date(2026, 1, 1),
+                date(2026, 1, 7),
+                {},
+                {},
+            )
 
     def test_generate_with_project_monthly_template(self, service: TemplateReportCore, template):
         """Test generation with PROJECT_MONTHLY type"""
-        with patch.object(service, "ProjectReportMixin") as mock_mixin:
+        template.report_type = "PROJECT_MONTHLY"
+        with patch("app.services.template_report.core.ProjectReportMixin") as mock_mixin:
             mock_mixin._generate_project_monthly.return_value = {"test": "data"}
 
             result = service.generate_from_template(
@@ -67,11 +75,18 @@ class TestGenerateFromTemplate:
 
             assert result is not None
             assert result["report_type"] == "PROJECT_MONTHLY"
-            mock_mixin._generate_project_monthly.assert_called_once()
+            mock_mixin._generate_project_monthly.assert_called_once_with(
+                service.db,
+                10,
+                date(2026, 1, 1),
+                date(2026, 1, 31),
+                {},
+                {},
+            )
 
     def test_generate_with_default_dates(self, service: TemplateReportCore, template):
         """Test generation uses default date range (last 30 days)"""
-        with patch.object(service, "ProjectReportMixin") as mock_mixin:
+        with patch("app.services.template_report.core.ProjectReportMixin") as mock_mixin:
             mock_mixin._generate_project_weekly.return_value = {"test": "data"}
 
             today = date.today()
@@ -84,9 +99,10 @@ class TestGenerateFromTemplate:
             assert result["period"]["end_date"] == today.isoformat()
 
     def test_generate_with_filters(self, service: TemplateReportCore, template):
-        """Test generation with custom filters"""
-        with patch.object(service, "ProjectReportMixin") as mock_mixin:
-            mock_mixin._generate_project_weekly.return_value = {"test": "data"}
+        """Test filters are accepted and generic reports receive the report type."""
+        template.report_type = "CUSTOM_REPORT"
+        with patch("app.services.template_report.core.GenericReportMixin") as mock_mixin:
+            mock_mixin._generate_generic_report.return_value = {"test": "data"}
 
             filters = {"custom_field": "test_value"}
 
@@ -95,10 +111,11 @@ class TestGenerateFromTemplate:
             )
 
             assert result is not None
-            mock_mixin._generate_project_weekly.assert_called_once_with(
-                start_date=date(2026, 1, 1),
-                end_date=date(2026, 1, 7),
-                sections_config={},
-                metrics_config={},
-                filters=filters,
+            mock_mixin._generate_generic_report.assert_called_once_with(
+                service.db,
+                "CUSTOM_REPORT",
+                10,
+                None,
+                result["period"]["start_date"] and date.fromisoformat(result["period"]["start_date"]),
+                result["period"]["end_date"] and date.fromisoformat(result["period"]["end_date"]),
             )

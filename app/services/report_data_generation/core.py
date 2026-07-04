@@ -3,27 +3,66 @@
 报表数据生成服务 - 核心类和权限管理
 """
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
 from app.models.user import User
 
 
+IMPLEMENTED_REPORT_TYPE_DEFINITIONS: Dict[str, Dict[str, str]] = {
+    "PROJECT_WEEKLY": {
+        "type": "PROJECT_WEEKLY",
+        "name": "项目周报",
+        "description": "项目每周进展报告",
+    },
+    "PROJECT_MONTHLY": {
+        "type": "PROJECT_MONTHLY",
+        "name": "项目月报",
+        "description": "项目每月进展报告",
+    },
+    "DEPT_WEEKLY": {
+        "type": "DEPT_WEEKLY",
+        "name": "部门周报",
+        "description": "部门每周工作汇总",
+    },
+    "DEPT_MONTHLY": {
+        "type": "DEPT_MONTHLY",
+        "name": "部门月报",
+        "description": "部门每月工作汇总",
+    },
+    "COST_ANALYSIS": {
+        "type": "COST_ANALYSIS",
+        "name": "成本分析",
+        "description": "项目成本分析报告",
+    },
+    "WORKLOAD_ANALYSIS": {
+        "type": "WORKLOAD_ANALYSIS",
+        "name": "负荷分析",
+        "description": "人员负荷分析报告",
+    },
+}
+
+IMPLEMENTED_REPORT_TYPES = tuple(IMPLEMENTED_REPORT_TYPE_DEFINITIONS.keys())
+
+
 class ReportDataGenerationCore:
     """报表数据生成服务核心类"""
 
+    IMPLEMENTED_REPORT_TYPES = IMPLEMENTED_REPORT_TYPES
+    IMPLEMENTED_REPORT_TYPE_DEFINITIONS = IMPLEMENTED_REPORT_TYPE_DEFINITIONS
+
     # 角色-报表权限矩阵
     ROLE_REPORT_MATRIX = {
-        "PROJECT_MANAGER": ["PROJECT_WEEKLY", "PROJECT_MONTHLY", "COST_ANALYSIS", "RISK_REPORT"],
+        "PROJECT_MANAGER": ["PROJECT_WEEKLY", "PROJECT_MONTHLY", "COST_ANALYSIS"],
         "DEPARTMENT_MANAGER": ["DEPT_WEEKLY", "DEPT_MONTHLY", "WORKLOAD_ANALYSIS"],
-        "ADMINISTRATIVE_MANAGER": ["COMPANY_MONTHLY", "DEPT_MONTHLY", "WORKLOAD_ANALYSIS"],
+        "ADMINISTRATIVE_MANAGER": ["DEPT_MONTHLY", "WORKLOAD_ANALYSIS"],
         "HR_MANAGER": ["WORKLOAD_ANALYSIS", "DEPT_MONTHLY"],
-        "FINANCE_MANAGER": ["COST_ANALYSIS", "COMPANY_MONTHLY"],
+        "FINANCE_MANAGER": ["COST_ANALYSIS"],
         "ENGINEER": ["PROJECT_WEEKLY"],
-        "SALES_MANAGER": ["SALES_FUNNEL", "CONTRACT_ANALYSIS"],
-        "PROCUREMENT_MANAGER": ["PROCUREMENT_ANALYSIS", "MATERIAL_ANALYSIS"],
-        "CUSTOM": ["CUSTOM"],
+        "SALES_MANAGER": [],
+        "PROCUREMENT_MANAGER": [],
+        "CUSTOM": [],
     }
 
     @staticmethod

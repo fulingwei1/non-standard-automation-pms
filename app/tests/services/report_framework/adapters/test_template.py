@@ -140,7 +140,6 @@ class TestTemplateReportAdapter:
         result = adapter._convert_to_report_result(data, format="json")
 
         # 验证结果结构
-        assert "metadata" in result
-        assert "sections" in result
-        assert result["metadata"]["code"] == "TEST"
-        assert result["metadata"]["name"] == "测试报表"
+        assert result.metadata["code"] == "TEST"
+        assert result.metadata["name"] == "测试报表"
+        assert "sections" in result.data

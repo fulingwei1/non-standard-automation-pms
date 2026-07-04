@@ -14,6 +14,18 @@ from app.models.report_center import ReportTemplate
 from app.models.user import User
 from app.services.report_framework.adapters.base import BaseReportAdapter
 from app.services.report_framework.config_loader import ConfigLoader
+from app.services.template_report.core import TemplateReportCore
+
+
+class _TemplateReportCoreFacade:
+    """Backward-compatible facade for tests and older imports."""
+
+    @staticmethod
+    def generate_from_template(**kwargs: Any) -> Dict[str, Any]:
+        return TemplateReportCore.generate_from_template(**kwargs)
+
+
+template_report_service = _TemplateReportCoreFacade()
 
 
 class TemplateReportAdapter(BaseReportAdapter):
@@ -51,12 +63,9 @@ class TemplateReportAdapter(BaseReportAdapter):
         if not template:
             raise ValueError(f"报表模板不存在: {template_id}")
 
-        # 使用模板报表服务生成数据
-        from app.services.template_report import template_report_service
-
         report_data = template_report_service.generate_from_template(
-            self.db,
-            template,
+            db=self.db,
+            template=template,
             project_id=params.get("project_id"),
             department_id=params.get("department_id"),
             start_date=params.get("start_date"),

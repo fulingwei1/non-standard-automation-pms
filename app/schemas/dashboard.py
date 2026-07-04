@@ -7,22 +7,27 @@
 from datetime import date, datetime
 from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 
 class DashboardStatCard(BaseModel):
     """仪表盘统计卡片"""
 
+    model_config = ConfigDict(from_attributes=True)
+
     key: Optional[str] = Field(None, description="唯一键")
-    title: str = Field(..., description="标题")
+    title: str = Field(
+        ...,
+        validation_alias=AliasChoices("title", "label"),
+        description="标题",
+    )
     value: Union[float, int, str] = Field(..., description="数值或字符串")
     unit: Optional[str] = Field(None, description="单位")
     change: Optional[float] = Field(None, description="变化量")
     change_pct: Optional[float] = Field(None, description="变化率(%)")
-    trend: Optional[str] = Field(None, description="趋势: up/down/stable")
-
-    class Config:
-        from_attributes = True
+    trend: Optional[Union[str, float, int]] = Field(None, description="趋势: up/down/stable")
+    icon: Optional[str] = Field(None, description="图标")
+    color: Optional[str] = Field(None, description="颜色")
 
 
 class DashboardWidget(BaseModel):
@@ -240,6 +245,7 @@ class ProjectCostDashboardSchema(BaseModel):
 class ChartConfigSchema(BaseModel):
     """图表配置"""
 
+    id: Optional[int] = Field(None, description="配置ID")
     chart_type: str = Field(..., description="图表类型: bar/line/pie/area")
     title: str = Field(..., description="图表标题")
     x_axis: Optional[str] = Field(None, description="X轴字段")

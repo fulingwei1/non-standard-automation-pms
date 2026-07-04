@@ -6,10 +6,87 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { formatCurrency } from "../../lib/utils";
-import { reportCenterApi } from "../../services/api";
+import { reportCenterApi, salesStatisticsApi } from "../../services/api";
 
 const REVENUE_TARGET = 160000000;
 const PROFIT_TARGET = 15000000;
+
+const toFiniteNumber = (value, fallback = 0) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+};
+
+const firstFiniteNumber = (...values) => {
+  for (const value of values) {
+    const number = Number(value);
+    if (Number.isFinite(number)) {
+      return number;
+    }
+  }
+  return null;
+};
+
+const normalizeDeliveryPoint = (item, fallbackMonth = "当前区间") => ({
+  ...item,
+  month: item?.month || item?.date || fallbackMonth,
+  rate: firstFiniteNumber(item?.rate, item?.value, item?.on_time_rate) ?? 0,
+  on_time_projects: firstFiniteNumber(item?.on_time_projects, item?.onTimeProjects),
+  total_projects: firstFiniteNumber(item?.total_projects, item?.totalProjects, item?.total),
+});
+
+const normalizeDeliveryPayload = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload.map((item, index) => normalizeDeliveryPoint(item, `阶段${index + 1}`));
+  }
+  if (payload && typeof payload === "object") {
+    return [normalizeDeliveryPoint(payload)];
+  }
+  return [];
+};
+
+const unwrapApiPayload = (response) =>
+  response?.formatted || response?.data?.data || response?.data || {};
+
+const buildCostData = (summary = {}) => {
+  const actualCost = toFiniteNumber(summary.total_actual_cost);
+  const totalBudget = toFiniteNumber(summary.total_budget);
+  const rows = [];
+
+  if (actualCost > 0) {
+    rows.push({ category: "已用预算", amount: actualCost });
+  }
+
+  if (totalBudget > actualCost) {
+    rows.push({ category: "剩余预算", amount: totalBudget - actualCost });
+  } else if (totalBudget > 0 && actualCost > totalBudget) {
+    rows.push({ category: "超预算", amount: actualCost - totalBudget });
+  }
+
+  return rows;
+};
+
+const normalizeSalesFunnelPayload = (payload = {}) => {
+  if (Array.isArray(payload)) {
+    return payload.map((item, index) => ({
+      stage: item.stage || item.name || item.label || `阶段${index + 1}`,
+      value: firstFiniteNumber(item.value, item.count, item.total) ?? 0,
+    }));
+  }
+
+  const source = payload.funnel || payload.summary || payload;
+  return [
+    { stage: "线索", value: firstFiniteNumber(source.leads, source.leads_count) ?? 0 },
+    {
+      stage: "商机",
+      value: firstFiniteNumber(source.opportunities, source.opportunities_count) ?? 0,
+    },
+    { stage: "报价", value: firstFiniteNumber(source.quotes, source.quotes_count) ?? 0 },
+    {
+      stage: "合同",
+      value: firstFiniteNumber(source.contracts, source.contracts_count) ?? 0,
+    },
+  ];
+};
 
 export function useExecutiveDashboard() {
   const [loading, setLoading] = useState(true);
@@ -25,35 +102,43 @@ export function useExecutiveDashboard() {
   const [healthData, setHealthData] = useState({});
   const [deliveryData, setDeliveryData] = useState([]);
   const [utilizationData, setUtilizationData] = useState([]);
-  const [costData] = useState([]);
+  const [costData, setCostData] = useState([]);
   const [trendData, setTrendData] = useState([]);
   const [milestoneData, setMilestoneData] = useState({
     completionRate: 0,
     healthIndex: 0,
   });
-  const [salesFunnelData] = useState([]);
+  const [salesFunnelData, setSalesFunnelData] = useState([]);
   const [error, setError] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [exportFormat, setExportFormat] = useState("");
 
-  const processHealthData = useCallback((data) => {
-    if (data.health_distribution) {
-      setHealthData(data.health_distribution);
+  const applyHealthDistribution = useCallback((distribution) => {
+    if (distribution && typeof distribution === "object") {
+      setHealthData(distribution);
 
-      const total = Object.values(data.health_distribution).reduce(
+      const total = Object.values(distribution).reduce(
         (sum, val) => sum + val,
         0
       );
       if (total > 0) {
-        const h1Count = data.health_distribution.H1 || 0;
-        const h2Count = data.health_distribution.H2 || 0;
-        const h3Count = data.health_distribution.H3 || 0;
+        const h1Count = distribution.H1 || 0;
+        const h2Count = distribution.H2 || 0;
+        const h3Count = distribution.H3 || 0;
         const healthIndex = Math.round(
           (h1Count * 100 + h2Count * 70 + h3Count * 30) / total
         );
         setMilestoneData((prev) => ({ ...prev, healthIndex }));
       }
     }
+  }, []);
+
+  const processHealthData = useCallback((data) => {
+    if (data.health_distribution) {
+      applyHealthDistribution(data.health_distribution);
+    }
+
+    setCostData(buildCostData(data.summary || {}));
 
     if (data.monthly) {
       const monthly = data.monthly;
@@ -81,7 +166,7 @@ export function useExecutiveDashboard() {
         setTrendData([]);
       }
     }
-  }, []);
+  }, [applyHealthDistribution]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -90,7 +175,7 @@ export function useExecutiveDashboard() {
         setError(null);
 
         const dashboardRes = await reportCenterApi.getExecutiveDashboard();
-        const dashboardPayload = dashboardRes.formatted || dashboardRes.data?.data || dashboardRes.data || {};
+        const dashboardPayload = unwrapApiPayload(dashboardRes);
 
         if (dashboardPayload) {
           setDashboardData(dashboardPayload);
@@ -101,19 +186,8 @@ export function useExecutiveDashboard() {
           const deliveryRes = await reportCenterApi.getDeliveryRate({
             time_range: timeRange,
           });
-          const deliveryPayload = deliveryRes.formatted || deliveryRes.data?.data || deliveryRes.data || {};
-          if (Array.isArray(deliveryPayload)) {
-            setDeliveryData(deliveryPayload);
-          } else if (deliveryPayload && typeof deliveryPayload === "object") {
-            setDeliveryData([
-              {
-                month: "当前区间",
-                rate: Number(deliveryPayload.on_time_rate || 0),
-              },
-            ]);
-          } else {
-            setDeliveryData([]);
-          }
+          const deliveryPayload = unwrapApiPayload(deliveryRes);
+          setDeliveryData(normalizeDeliveryPayload(deliveryPayload));
         } catch (err) {
           console.error("Failed to load delivery rate data:", err);
         }
@@ -142,9 +216,17 @@ export function useExecutiveDashboard() {
         }
 
         try {
-          await reportCenterApi.getHealthDistribution();
+          const healthRes = await reportCenterApi.getHealthDistribution();
+          applyHealthDistribution(unwrapApiPayload(healthRes));
         } catch (err) {
           console.error("Failed to load health distribution:", err);
+        }
+
+        try {
+          const funnelRes = await salesStatisticsApi.funnel();
+          setSalesFunnelData(normalizeSalesFunnelPayload(unwrapApiPayload(funnelRes)));
+        } catch (err) {
+          console.error("Failed to load sales funnel data:", err);
         }
       } catch (err) {
         console.error("Failed to load executive dashboard:", err);
@@ -155,17 +237,63 @@ export function useExecutiveDashboard() {
     };
 
     fetchData();
-  }, [timeRange, processHealthData]);
+  }, [timeRange, processHealthData, applyHealthDistribution]);
 
   const kpiCards = useMemo(() => {
     const summary = dashboardData.summary || {};
-    const rawRevenue = Number(summary.total_contract_amount || 0);
-    const rawProfit = Number(summary.total_contract_amount || 0) - Number(summary.total_actual_cost || 0);
-    // 经营展示口径：Q1 阶段按全年目标 30% 封顶，避免演示数据异常放大
-    const revenue = Math.min(rawRevenue, REVENUE_TARGET * 0.3);
-    const profit = Math.min(rawProfit, PROFIT_TARGET * 0.3);
+    const revenue = toFiniteNumber(summary.total_contract_amount);
+    const actualCost = toFiniteNumber(summary.total_actual_cost);
+    const explicitGrossProfit =
+      summary.gross_profit ?? summary.total_gross_profit ?? summary.profit;
+    const grossProfit =
+      explicitGrossProfit !== undefined && explicitGrossProfit !== null
+        ? toFiniteNumber(explicitGrossProfit)
+        : revenue - actualCost;
     const revenueRate = REVENUE_TARGET > 0 ? (revenue / REVENUE_TARGET) * 100 : 0;
-    const profitRate = PROFIT_TARGET > 0 ? (profit / PROFIT_TARGET) * 100 : 0;
+    const profitRate = PROFIT_TARGET > 0 ? (grossProfit / PROFIT_TARGET) * 100 : 0;
+    const activeProjects = toFiniteNumber(summary.active_projects);
+    const totalProjects = toFiniteNumber(summary.total_projects);
+    const projectGrowth = firstFiniteNumber(summary.project_growth);
+    const latestDelivery =
+      deliveryData.length > 0 ? deliveryData[deliveryData.length - 1] : null;
+    const previousDelivery =
+      deliveryData.length > 1 ? deliveryData[deliveryData.length - 2] : null;
+    const deliveryRate = firstFiniteNumber(
+      summary.on_time_delivery_rate,
+      dashboardData?.monthly?.on_time_rate,
+      latestDelivery?.rate,
+      latestDelivery?.value,
+      latestDelivery?.on_time_rate
+    );
+    const deliveryRateChange = firstFiniteNumber(summary.delivery_rate_change);
+    const previousDeliveryRate = firstFiniteNumber(
+      previousDelivery?.rate,
+      previousDelivery?.value,
+      previousDelivery?.on_time_rate
+    );
+    const onTimeProjects = firstFiniteNumber(latestDelivery?.on_time_projects);
+    const totalDeliveryProjects = firstFiniteNumber(latestDelivery?.total_projects);
+    const deliveryDelta =
+      deliveryRate !== null && previousDeliveryRate !== null
+        ? deliveryRate - previousDeliveryRate
+        : null;
+
+    let deliveryChange = "暂无趋势";
+    let deliveryChangeType = "up";
+    let deliverySubText = "交付数据";
+    if (deliveryRateChange !== null) {
+      deliveryChange = `${deliveryRateChange}%`;
+      deliveryChangeType = deliveryRateChange >= 0 ? "up" : "down";
+      deliverySubText = "较上月";
+    } else if (deliveryDelta !== null) {
+      deliveryChange = `${deliveryDelta.toFixed(1)}%`;
+      deliveryChangeType = deliveryDelta >= 0 ? "up" : "down";
+      deliverySubText = "较上一期";
+    } else if (onTimeProjects !== null && totalDeliveryProjects > 0) {
+      deliveryChange = `${onTimeProjects}/${totalDeliveryProjects}`;
+      deliveryChangeType = deliveryRate === null || deliveryRate >= 80 ? "up" : "down";
+      deliverySubText = "按期/总数";
+    }
 
     return [
       {
@@ -173,39 +301,39 @@ export function useExecutiveDashboard() {
         value: formatCurrency(revenue),
         change: `目标${formatCurrency(REVENUE_TARGET)} · 达成${revenueRate.toFixed(1)}%`,
         changeType: revenueRate >= 100 ? "up" : "down",
-        subText: "2026目标对比（Q1口径）",
+        subText: "2026目标对比",
         icon: DollarSign,
         color: "blue",
       },
       {
-        title: "净利润",
-        value: formatCurrency(profit),
+        title: "项目毛利",
+        value: formatCurrency(grossProfit),
         change: `目标${formatCurrency(PROFIT_TARGET)} · 达成${profitRate.toFixed(1)}%`,
         changeType: profitRate >= 100 ? "up" : "down",
-        subText: "2026目标对比（Q1口径）",
+        subText: "合同额减实际成本",
         icon: TrendingUp,
         color: "green",
       },
       {
         title: "活跃项目",
-        value: summary.active_projects || 0,
-        change: `${summary.project_growth || 0}%`,
-        changeType: (summary.project_growth || 0) >= 0 ? "up" : "down",
-        subText: "较上月",
+        value: activeProjects,
+        change: projectGrowth !== null ? `${projectGrowth}%` : `${totalProjects}`,
+        changeType: projectGrowth === null || projectGrowth >= 0 ? "up" : "down",
+        subText: projectGrowth !== null ? "较上月" : "项目总数",
         icon: Briefcase,
         color: "orange",
       },
       {
         title: "交付准时率",
-        value: `${summary.on_time_delivery_rate || dashboardData?.monthly?.on_time_rate || 0}%`,
-        change: `${summary.delivery_rate_change || 0}%`,
-        changeType: (summary.delivery_rate_change || 0) >= 0 ? "up" : "down",
-        subText: "较上月",
+        value: deliveryRate === null ? "暂无数据" : `${deliveryRate}%`,
+        change: deliveryChange,
+        changeType: deliveryChangeType,
+        subText: deliverySubText,
         icon: CheckCircle2,
         color: "purple",
       },
     ];
-  }, [dashboardData]);
+  }, [dashboardData, deliveryData]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -221,22 +349,16 @@ export function useExecutiveDashboard() {
           .catch(() => ({ data: [] })),
       ]);
 
-      const dashboardPayload = dashboardRes.formatted || dashboardRes.data?.data || dashboardRes.data || {};
+      const dashboardPayload = unwrapApiPayload(dashboardRes);
       if (dashboardPayload) {
         setDashboardData(dashboardPayload);
         processHealthData(dashboardPayload);
       }
 
-      const deliveryPayload = deliveryRes.formatted || deliveryRes.data?.data || deliveryRes.data || {};
-      if (Array.isArray(deliveryPayload)) {
-        setDeliveryData(deliveryPayload);
-      } else if (deliveryPayload && typeof deliveryPayload === "object") {
-        setDeliveryData([{ month: "当前区间", rate: Number(deliveryPayload.on_time_rate || 0) }]);
-      } else {
-        setDeliveryData([]);
-      }
+      const deliveryPayload = unwrapApiPayload(deliveryRes);
+      setDeliveryData(normalizeDeliveryPayload(deliveryPayload));
 
-      const utilPayload = utilRes.formatted || utilRes.data?.data || utilRes.data || {};
+      const utilPayload = unwrapApiPayload(utilRes);
       if (Array.isArray(utilPayload)) {
         setUtilizationData(utilPayload);
       } else if (utilPayload?.utilization_list) {
@@ -251,6 +373,9 @@ export function useExecutiveDashboard() {
       } else {
         setUtilizationData([]);
       }
+
+      const funnelRes = await salesStatisticsApi.funnel();
+      setSalesFunnelData(normalizeSalesFunnelPayload(unwrapApiPayload(funnelRes)));
     } catch (err) {
       console.error("Failed to refresh:", err);
       setError(err);

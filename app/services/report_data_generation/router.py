@@ -81,10 +81,4 @@ class ReportRouterMixin:
             return AnalysisReportMixin.generate_cost_analysis(db, project_id, start_date, end_date)
 
         else:
-            return {
-                "report_type": report_type,
-                "summary": {},
-                "details": [],
-                "charts": [],
-                "message": "该报表类型待实现",
-            }
+            return {"error": f"报表类型 {report_type} 尚未实现或未开放"}

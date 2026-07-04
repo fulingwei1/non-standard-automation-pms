@@ -23,6 +23,7 @@ from app.schemas.report_center import (
     ReportTypeResponse,
     RoleReportMatrixResponse,
 )
+from app.services.report_data_generation.core import ReportDataGenerationCore
 
 router = APIRouter()
 
@@ -70,17 +71,7 @@ def get_report_types(
     """
     获取报表类型列表（周报/月报/成本等）
     """
-    types = [
-        {"type": "PROJECT_WEEKLY", "name": "项目周报", "description": "项目每周进展报告"},
-        {"type": "PROJECT_MONTHLY", "name": "项目月报", "description": "项目每月进展报告"},
-        {"type": "DEPT_WEEKLY", "name": "部门周报", "description": "部门每周工作汇总"},
-        {"type": "DEPT_MONTHLY", "name": "部门月报", "description": "部门每月工作汇总"},
-        {"type": "COMPANY_MONTHLY", "name": "公司月报", "description": "公司每月经营报告"},
-        {"type": "COST_ANALYSIS", "name": "成本分析", "description": "项目成本分析报告"},
-        {"type": "WORKLOAD_ANALYSIS", "name": "负荷分析", "description": "人员负荷分析报告"},
-        {"type": "RISK_REPORT", "name": "风险报告", "description": "项目风险分析报告"},
-        {"type": "CUSTOM", "name": "自定义报表", "description": "用户自定义报表"},
-    ]
+    types = list(ReportDataGenerationCore.IMPLEMENTED_REPORT_TYPE_DEFINITIONS.values())
 
     return ReportTypeResponse(types=types)
 
@@ -96,8 +87,6 @@ def get_role_report_matrix(
     """
     角色-报表权限矩阵（权限配置）
     """
-    from app.services.report_data_generation.core import ReportDataGenerationCore
-
     matrix = ReportDataGenerationCore.ROLE_REPORT_MATRIX
 
     return RoleReportMatrixResponse(matrix=matrix)

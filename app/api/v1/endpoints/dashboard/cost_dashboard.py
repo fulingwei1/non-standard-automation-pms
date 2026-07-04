@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.dashboard_chart_config import DashboardChartConfig
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.dashboard import (
@@ -35,6 +36,19 @@ def _get_cache_service():
     """获取缓存服务实例"""
     redis_url = os.getenv("REDIS_URL", None)
     return get_cache_service(redis_url=redis_url, ttl=300)
+
+
+def _chart_config_schema(record: DashboardChartConfig) -> ChartConfigSchema:
+    return ChartConfigSchema(
+        id=record.id,
+        chart_type=record.chart_type,
+        title=record.title,
+        x_axis=record.x_axis,
+        y_axis=record.y_axis,
+        data_source=record.data_source,
+        filters=record.filters,
+        custom_metrics=record.custom_metrics,
+    )
 
 
 @router.get("/overview", response_model=ResponseModel[CostOverviewSchema])
@@ -124,6 +138,27 @@ def get_cost_alerts(
     data = cache.get_or_set(cache_key, fetch_data, force_refresh=force_refresh)
 
     return ResponseModel(code=200, message="success", data=data)
+
+
+@router.get("/chart-config/{config_id}", response_model=ResponseModel[ChartConfigSchema])
+def get_chart_config(
+    *,
+    db: Session = Depends(deps.get_db),
+    config_id: int,
+    current_user: User = Depends(security.require_permission("dashboard:view")),
+) -> Any:
+    """
+    获取图表配置
+    """
+    record = (
+        db.query(DashboardChartConfig)
+        .filter(DashboardChartConfig.id == config_id, DashboardChartConfig.is_active)
+        .first()
+    )
+    if not record:
+        raise HTTPException(status_code=404, detail="图表配置不存在")
+
+    return ResponseModel(code=200, message="success", data=_chart_config_schema(record))
 
 
 @router.get("/{project_id}", response_model=ResponseModel[ProjectCostDashboardSchema])
@@ -248,32 +283,20 @@ def save_chart_config(
 
     支持自定义指标和筛选条件
     """
-    # 简化版：直接返回配置（实际应保存到数据库）
-    return ResponseModel(code=200, message="图表配置已保存", data=chart_config.dict())
-
-
-@router.get("/chart-config/{config_id}", response_model=ResponseModel[ChartConfigSchema])
-def get_chart_config(
-    *,
-    db: Session = Depends(deps.get_db),
-    config_id: int,
-    current_user: User = Depends(security.require_permission("dashboard:view")),
-) -> Any:
-    """
-    获取图表配置
-    """
-    # 简化版：返回示例配置
-    example_config = {
-        "chart_type": "bar",
-        "title": "月度成本对比",
-        "x_axis": "month",
-        "y_axis": "cost",
-        "data_source": "monthly_costs",
-        "filters": {},
-        "custom_metrics": ["budget", "actual_cost", "variance"],
-    }
-
-    return ResponseModel(code=200, message="success", data=example_config)
+    record = DashboardChartConfig(
+        user_id=getattr(current_user, "id", None),
+        chart_type=chart_config.chart_type,
+        title=chart_config.title,
+        x_axis=chart_config.x_axis,
+        y_axis=chart_config.y_axis,
+        data_source=chart_config.data_source,
+        filters=chart_config.filters,
+        custom_metrics=chart_config.custom_metrics,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return ResponseModel(code=200, message="图表配置已保存", data=_chart_config_schema(record))
 
 
 @router.delete("/cache")
