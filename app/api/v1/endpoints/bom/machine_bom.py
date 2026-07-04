@@ -16,9 +16,18 @@ from app.models.material import BomHeader, BomItem, Material
 from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.material import BomCreate, BomItemResponse, BomResponse
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+# BOM 数据权限配置
+BOM_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="created_by",
+    additional_owner_fields=["approved_by"],
+    project_field="project_id",
+)
 
 
 @router.get("/", response_model=List[BomResponse])
@@ -33,13 +42,18 @@ def get_machine_bom_list(
     """
     get_or_404(db, Machine, machine_id, "机台不存在")
 
+    query = db.query(BomHeader).options(
+        joinedload(BomHeader.project),
+        joinedload(BomHeader.machine),
+    )
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, BomHeader, current_user, BOM_DATA_SCOPE_CONFIG
+    )
+
     bom_headers = (
-        db.query(BomHeader)
-        .options(
-            joinedload(BomHeader.project),
-            joinedload(BomHeader.machine),
-        )
-        .filter(BomHeader.machine_id == machine_id)
+        query.filter(BomHeader.machine_id == machine_id)
         .order_by(BomHeader.created_at.desc())
         .all()
     )

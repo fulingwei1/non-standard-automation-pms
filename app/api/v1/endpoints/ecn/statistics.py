@@ -18,10 +18,19 @@ from app.models.ecn import Ecn, EcnLog
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.ecn import EcnListResponse
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 
 from .utils import get_user_display_name
 
 router = APIRouter()
+
+# ECN 数据权限配置
+ECN_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="created_by",
+    additional_owner_fields=["applicant_id", "final_approver_id"],
+    project_field="project_id",
+)
 
 
 @router.get("/ecns/{ecn_id}/logs", response_model=List[dict], status_code=status.HTTP_200_OK)
@@ -80,6 +89,11 @@ def read_project_ecns(
         raise HTTPException(status_code=404, detail="项目不存在")
 
     query = db.query(Ecn).filter(Ecn.project_id == project_id)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, Ecn, current_user, ECN_DATA_SCOPE_CONFIG
+    )
 
     if ecn_status:
         query = query.filter(Ecn.status == ecn_status)

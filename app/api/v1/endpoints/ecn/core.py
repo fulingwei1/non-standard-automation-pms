@@ -30,6 +30,8 @@ from app.schemas.ecn import (
     EcnSubmit,
     EcnUpdate,
 )
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.services.ecn.ecn_auto_assign_service import auto_assign_evaluation
 from app.services.ecn.notification import (
     notify_evaluation_assigned,
@@ -39,6 +41,13 @@ from app.utils.db_helpers import get_or_404
 from .utils import build_ecn_list_response, build_ecn_response, generate_ecn_no
 
 router = APIRouter()
+
+# ECN 数据权限配置
+ECN_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="created_by",
+    additional_owner_fields=["applicant_id", "final_approver_id"],
+    project_field="project_id",
+)
 
 
 @router.get("/ecns", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
@@ -57,6 +66,11 @@ def read_ecns(
     获取ECN列表
     """
     query = db.query(Ecn)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, Ecn, current_user, ECN_DATA_SCOPE_CONFIG
+    )
 
     # 关键词搜索
     query = apply_keyword_filter(query, Ecn, keyword, ["ecn_no", "ecn_title"])
