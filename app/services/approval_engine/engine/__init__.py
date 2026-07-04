@@ -12,6 +12,7 @@ from .approve import ApprovalProcessMixin
 from .core import ApprovalEngineCore
 from .query import ApprovalQueryMixin
 from .submit import ApprovalSubmitMixin
+from .timeout import ApprovalTimeoutMixin
 
 
 class ApprovalEngineService(
@@ -20,6 +21,7 @@ class ApprovalEngineService(
     ApprovalProcessMixin,
     ApprovalActionsMixin,
     ApprovalQueryMixin,
+    ApprovalTimeoutMixin,
 ):
     """审批引擎核心服务（组合所有功能模块）"""
 

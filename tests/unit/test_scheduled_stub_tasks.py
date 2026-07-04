@@ -39,37 +39,11 @@ class TestStubTasks:
         result = check_issue_timeout_escalation()
         self._assert_stub_result(result, "check_issue_timeout_escalation")
 
-    def test_generate_shortage_alerts(self):
-        from app.utils.scheduled_tasks.stub_tasks import generate_shortage_alerts
-
-        result = generate_shortage_alerts()
-        self._assert_stub_result(result, "generate_shortage_alerts")
-
-    def test_auto_trigger_urgent_purchase_from_shortage_alerts(self):
-        from app.utils.scheduled_tasks.stub_tasks import (
-            auto_trigger_urgent_purchase_from_shortage_alerts,
-        )
-
-        result = auto_trigger_urgent_purchase_from_shortage_alerts()
-        self._assert_stub_result(result, "auto_trigger_urgent_purchase_from_shortage_alerts")
-
     def test_daily_kit_check(self):
         from app.utils.scheduled_tasks.stub_tasks import daily_kit_check
 
         result = daily_kit_check()
         self._assert_stub_result(result, "daily_kit_check")
-
-    def test_generate_shortage_daily_report(self):
-        from app.utils.scheduled_tasks.stub_tasks import generate_shortage_daily_report
-
-        result = generate_shortage_daily_report()
-        self._assert_stub_result(result, "generate_shortage_daily_report")
-
-    def test_check_equipment_maintenance_reminder(self):
-        from app.utils.scheduled_tasks.stub_tasks import check_equipment_maintenance_reminder
-
-        result = check_equipment_maintenance_reminder()
-        self._assert_stub_result(result, "check_equipment_maintenance_reminder")
 
     def test_check_cost_overrun_alerts(self):
         from app.utils.scheduled_tasks.stub_tasks import check_cost_overrun_alerts

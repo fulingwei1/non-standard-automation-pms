@@ -5,6 +5,23 @@
 
 OTHER_TASKS = [
     {
+        "id": "daily_database_backup",
+        "name": "每日数据库备份",
+        "module": "app.utils.scheduled_tasks",
+        "callable": "daily_database_backup_task",
+        "cron": {"hour": 2, "minute": 30},
+        "owner": "Backend Platform",
+        "category": "Backup",
+        "description": "每天凌晨 2:30 自动备份当前数据库；SQLite 环境使用 Python 直接生成压缩 SQL dump。",
+        "enabled": True,
+        "dependencies_tables": ["sqlite_database"],
+        "risk_level": "HIGH",
+        "sla": {
+            "max_execution_time_seconds": 3600,
+            "retry_on_failure": True,
+        },
+    },
+    {
         "id": "daily_spec_match_check",
         "name": "每日规格匹配检查",
         "module": "app.utils.scheduled_tasks",
@@ -109,7 +126,7 @@ OTHER_TASKS = [
     {
         "id": "check_ecn_overdue",
         "name": "ECN 超时检查",
-        "module": "app.services.ecn_scheduler",
+        "module": "app.services.ecn.ecn_scheduler",
         "callable": "run_ecn_scheduler",
         "cron": {"hour": 9, "minute": 0},
         "owner": "ECN Team",

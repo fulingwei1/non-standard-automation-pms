@@ -122,6 +122,24 @@ def bind_presale_context_to_project(db: Session, project: Project) -> None:
         solution.project_id = project.id
 
 
+def resolve_contract_delivery_date(
+    contract: Contract, quote_version: Optional[QuoteVersion] = None
+):
+    """Resolve the delivery date from current contract/quote schema variants."""
+    contract_deadline = getattr(contract, "delivery_deadline", None)
+    if contract_deadline:
+        return contract_deadline
+
+    contract_delivery_date = getattr(contract, "delivery_date", None)
+    if contract_delivery_date:
+        return contract_delivery_date
+
+    if quote_version and quote_version.delivery_date:
+        return quote_version.delivery_date
+
+    return None
+
+
 class ContractStatusHandler:
     """合同签订事件处理器"""
 
@@ -166,6 +184,7 @@ class ContractStatusHandler:
             )
 
         salesperson_id = contract.sales_owner_id or (opportunity.owner_id if opportunity else None)
+        planned_end_date = resolve_contract_delivery_date(contract, quote_version)
 
         # 如果项目已存在，更新项目信息
         if contract.project_id:
@@ -179,6 +198,7 @@ class ContractStatusHandler:
                 project.status = "ST08"
                 project.contract_date = contract.signing_date
                 project.contract_amount = contract.contract_amount or project.contract_amount
+                project.planned_end_date = planned_end_date or project.planned_end_date
                 if quote_version and quote_version.cost_total is not None:
                     project.budget_amount = quote_version.cost_total
                 if opportunity:
@@ -225,8 +245,6 @@ class ContractStatusHandler:
                 fallback_name = f"{customer.customer_name}项目"
             else:
                 fallback_name = f"项目-{contract.contract_code}"
-
-        planned_end_date = getattr(contract, "delivery_deadline", None)
 
         # 获取线索ID（通过商机关联）
         lead_id = opportunity.lead_id if opportunity else None

@@ -508,9 +508,9 @@ class TestQuoteApprovalAdapterSubmitForApproval(unittest.TestCase):
         self.db.commit.assert_called_once()
 
         call_args = mock_engine.submit.call_args
-        self.assertEqual(call_args.kwargs["template_code"], "SALES_QUOTE")
+        self.assertEqual(call_args.kwargs["template_code"], "SALES_QUOTE_APPROVAL")
         self.assertEqual(call_args.kwargs["entity_type"], "QUOTE")
-        self.assertEqual(call_args.kwargs["entity_id"], 1)
+        self.assertEqual(call_args.kwargs["entity_id"], 10)
         self.assertEqual(call_args.kwargs["initiator_id"], 20)
         self.assertEqual(call_args.kwargs["title"], "测试审批")
         self.assertEqual(call_args.kwargs["summary"], "测试摘要")

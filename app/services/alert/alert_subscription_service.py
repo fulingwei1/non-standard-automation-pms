@@ -106,7 +106,11 @@ class AlertSubscriptionService:
         if not rule:
             rule = alert.rule
             if not rule:
-                return {"user_ids": [], "channels": ["SYSTEM"], "subscriptions": []}
+                return {
+                    "user_ids": sorted(self._default_user_ids(alert)),
+                    "channels": ["SYSTEM"],
+                    "subscriptions": [],
+                }
 
         # 匹配订阅配置
         subscriptions = self.match_subscriptions(alert, rule)
@@ -135,11 +139,13 @@ class AlertSubscriptionService:
             if rule.notify_users:
                 user_ids.update(rule.notify_users)
             else:
-                # 如果没有配置，返回空列表（不发送通知）
-                # TODO: 完善实现 - 根据规则类型获取默认接收人（如项目负责人）
-                logger.info(
-                    "订阅默认接收人: 暂未配置 (rule_id=%s, rule_name=%s)", rule.id, rule.name
-                )
+                user_ids.update(self._default_user_ids(alert))
+                if not user_ids:
+                    logger.info(
+                        "订阅默认接收人: 未找到项目负责人或处理人 (rule_id=%s, rule_name=%s)",
+                        rule.id,
+                        getattr(rule, "rule_name", None) or getattr(rule, "name", None),
+                    )
 
             # 使用规则配置的默认通知渠道
             if rule.notify_channels:
@@ -152,6 +158,24 @@ class AlertSubscriptionService:
             "channels": list(channels) if channels else ["SYSTEM"],
             "subscriptions": subscriptions,
         }
+
+    def _default_user_ids(self, alert: AlertRecord) -> Set[int]:
+        """Collect default alert recipients from business ownership fields."""
+        user_ids: Set[int] = set()
+
+        for attr in ("handler_id", "acknowledged_by", "created_by", "updated_by"):
+            value = getattr(alert, attr, None)
+            if isinstance(value, int):
+                user_ids.add(value)
+
+        project = getattr(alert, "project", None)
+        if project:
+            for attr in ("pm_id", "project_manager_id", "owner_id"):
+                value = getattr(project, attr, None)
+                if isinstance(value, int):
+                    user_ids.add(value)
+
+        return user_ids
 
     def _check_level_match(self, alert_level: str, min_level: str) -> bool:
         """

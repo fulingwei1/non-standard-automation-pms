@@ -78,6 +78,10 @@ def _resolve_callable(task: Dict[str, Any]) -> Callable[..., Any]:
     return getattr(module, task["callable"])
 
 
+def _record_registration_failure(task_id: str) -> None:
+    record_job_failure(task_id, 0.0, datetime.now(timezone.utc).isoformat())
+
+
 def _wrap_job_callable(func: Callable[..., Any], task: Dict[str, Any]) -> Callable[..., Any]:
     """Wrap actual task function to emit structured start/end logs with duration."""
     task_context = {
@@ -168,11 +172,11 @@ def _load_task_config_from_db(task_id: str) -> Optional[Dict[str, Any]]:
         with get_db_session() as db:
             config = (
                 db.query(SchedulerTaskConfig)
-                .filter(SchedulerTaskConfig.task_id == task_id, SchedulerTaskConfig.is_enabled)
+                .filter(SchedulerTaskConfig.task_id == task_id)
                 .first()
             )
 
-            if config:
+            if config is not None:
                 # JSONType会自动处理JSON序列化/反序列化
                 cron_config = config.cron_config if config.cron_config else {}
                 return {"enabled": config.is_enabled, "cron": cron_config}
@@ -214,6 +218,7 @@ def init_scheduler():
             job_callable = _wrap_job_callable(base_callable, task)
         except Exception as exc:
             logger.error(f"加载调度任务 {task_id} 失败: {exc}")
+            _record_registration_failure(task_id)
             continue
 
         try:
@@ -228,6 +233,7 @@ def init_scheduler():
             job_count += 1
         except Exception as exc:
             logger.error(f"注册调度任务 {task_id} 失败: {exc}")
+            _record_registration_failure(task_id)
 
     # 启动调度器
     scheduler.start()

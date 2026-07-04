@@ -270,6 +270,7 @@ class ApprovalRouterService:
         context: Dict[str, Any],
     ) -> List[int]:
         """解析角色对应的用户"""
+        from app.models.project import ProjectMember
         from app.models.user import Role, User, UserRole
 
         role_codes = config.get("role_codes", [])
@@ -278,6 +279,23 @@ class ApprovalRouterService:
 
         if not role_codes:
             return []
+
+        project_id = self._extract_project_id(context)
+        if project_id:
+            project_members = (
+                self.db.query(ProjectMember.user_id)
+                .join(User, ProjectMember.user_id == User.id)
+                .filter(
+                    ProjectMember.project_id == project_id,
+                    ProjectMember.role_code.in_(role_codes),
+                    ProjectMember.is_active.is_(True),
+                    User.is_active.is_(True),
+                )
+                .order_by(ProjectMember.is_lead.desc(), ProjectMember.id.asc())
+                .all()
+            )
+            if project_members:
+                return [member.user_id for member in project_members]
 
         # 查询拥有指定角色的用户
         users = (
@@ -292,6 +310,28 @@ class ApprovalRouterService:
         )
 
         return [u.id for u in users]
+
+    def _extract_project_id(self, context: Dict[str, Any]) -> Optional[int]:
+        """从审批上下文中提取项目ID。"""
+        candidates = [
+            context.get("project_id"),
+            (context.get("form_data") or {}).get("project_id"),
+            (context.get("entity_data") or {}).get("project_id"),
+            ((context.get("form_data") or {}).get("entity") or {}).get("project_id"),
+        ]
+
+        entity = context.get("entity") or {}
+        if entity.get("type") in {"PROJECT", "Project", "project"}:
+            candidates.append(entity.get("id"))
+
+        for candidate in candidates:
+            if candidate in (None, ""):
+                continue
+            try:
+                return int(candidate)
+            except (TypeError, ValueError):
+                continue
+        return None
 
     def _resolve_department_head(self, context: Dict[str, Any]) -> List[int]:
         """解析部门主管"""

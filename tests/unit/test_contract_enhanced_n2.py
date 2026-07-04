@@ -85,7 +85,7 @@ class TestApproveContract:
         db.query.side_effect = query_side
 
         ContractEnhancedService.approve_contract(db, 1, 1, user_id=1)
-        assert contract.status == "approved"
+        assert contract.status == "APPROVED"
 
 
 # ======================= reject_contract =======================
@@ -130,7 +130,7 @@ class TestRejectContract:
         ContractEnhancedService.reject_contract(db, 1, 1, user_id=2, opinion="不合规")
         assert approval.approval_status == "rejected"
         assert approval.approver_id == 2
-        assert contract.status == "draft"
+        assert contract.status == "DRAFT"
         db.commit.assert_called_once()
 
 
@@ -158,7 +158,7 @@ class TestMarkAsSigned:
         c.status = "approved"
         db.query.return_value.filter.return_value.first.return_value = c
         ContractEnhancedService.mark_as_signed(db, 1)
-        assert c.status == "signed"
+        assert c.status == "SIGNED"
         db.commit.assert_called_once()
 
 
@@ -186,7 +186,7 @@ class TestMarkAsExecuting:
         c.status = "signed"
         db.query.return_value.filter.return_value.first.return_value = c
         ContractEnhancedService.mark_as_executing(db, 1)
-        assert c.status == "executing"
+        assert c.status == "EXECUTING"
 
 
 # ======================= mark_as_completed =======================
@@ -213,7 +213,7 @@ class TestMarkAsCompleted:
         c.status = "executing"
         db.query.return_value.filter.return_value.first.return_value = c
         ContractEnhancedService.mark_as_completed(db, 1)
-        assert c.status == "completed"
+        assert c.status == "COMPLETED"
 
 
 # ======================= void_contract =======================
@@ -240,7 +240,7 @@ class TestVoidContract:
         c.status = "draft"
         db.query.return_value.filter.return_value.first.return_value = c
         ContractEnhancedService.void_contract(db, 1)
-        assert c.status == "voided"
+        assert c.status == "CANCELLED"
         db.commit.assert_called_once()
 
     def test_voids_executing_contract(self):
@@ -249,7 +249,7 @@ class TestVoidContract:
         c.status = "executing"
         db.query.return_value.filter.return_value.first.return_value = c
         ContractEnhancedService.void_contract(db, 1)
-        assert c.status == "voided"
+        assert c.status == "CANCELLED"
 
 
 # ======================= get_pending_approvals =======================

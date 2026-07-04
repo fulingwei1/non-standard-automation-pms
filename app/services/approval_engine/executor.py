@@ -8,6 +8,7 @@
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.approval import (
@@ -156,6 +157,20 @@ class ApprovalNodeExecutor:
         task.eval_data = eval_data
         task.status = "COMPLETED"
         task.completed_at = datetime.now()
+        self.db.flush()
+
+        if task.assignee_type == "ADDED_BEFORE":
+            if action == "APPROVE" and self._activate_original_task_after_before_sign(task):
+                return False, None
+            return True, None
+
+        if task.assignee_type == "ADDED_AFTER":
+            if action == "APPROVE" and self._count_pending_added_tasks(task, "ADDED_AFTER") > 0:
+                return False, None
+            return True, None
+
+        if action == "APPROVE" and self._activate_after_sign_tasks(task):
+            return False, None
 
         node = task.node
         approval_mode = node.approval_mode or "SINGLE"
@@ -195,6 +210,73 @@ class ApprovalNodeExecutor:
             return True, None  # 所有人都已通过
 
         return True, None
+
+    def _count_pending_added_tasks(self, task: ApprovalTask, assignee_type: str) -> int:
+        count = (
+            self.db.query(ApprovalTask)
+            .filter(
+                ApprovalTask.instance_id == task.instance_id,
+                ApprovalTask.node_id == task.node_id,
+                ApprovalTask.task_order == task.task_order,
+                ApprovalTask.assignee_type == assignee_type,
+                ApprovalTask.status == "PENDING",
+            )
+            .count()
+        )
+        return count if isinstance(count, int) else 0
+
+    def _activate_original_task_after_before_sign(self, task: ApprovalTask) -> bool:
+        if self._count_pending_added_tasks(task, "ADDED_BEFORE") > 0:
+            return True
+
+        original_task = (
+            self.db.query(ApprovalTask)
+            .filter(
+                ApprovalTask.instance_id == task.instance_id,
+                ApprovalTask.node_id == task.node_id,
+                ApprovalTask.task_order == task.task_order,
+                or_(
+                    ApprovalTask.assignee_type == "NORMAL",
+                    ApprovalTask.assignee_type.is_(None),
+                ),
+                ApprovalTask.status == "SKIPPED",
+            )
+            .order_by(ApprovalTask.id.asc())
+            .first()
+        )
+        if not original_task:
+            return False
+
+        original_task.status = "PENDING"
+        node = task.node
+        if node.timeout_hours and not original_task.due_at:
+            original_task.due_at = datetime.now() + timedelta(hours=node.timeout_hours)
+        return True
+
+    def _activate_after_sign_tasks(self, task: ApprovalTask) -> bool:
+        after_tasks = (
+            self.db.query(ApprovalTask)
+            .filter(
+                ApprovalTask.instance_id == task.instance_id,
+                ApprovalTask.node_id == task.node_id,
+                ApprovalTask.task_order == task.task_order,
+                ApprovalTask.assignee_type == "ADDED_AFTER",
+                ApprovalTask.status == "SKIPPED",
+            )
+            .order_by(ApprovalTask.id.asc())
+            .all()
+        )
+        if not isinstance(after_tasks, list):
+            return False
+        if not after_tasks:
+            return False
+
+        node = task.node
+        for after_task in after_tasks:
+            after_task.status = "PENDING"
+            if node.timeout_hours and not after_task.due_at:
+                after_task.due_at = datetime.now() + timedelta(hours=node.timeout_hours)
+        return True
 
     def _process_countersign(
         self,
@@ -410,19 +492,23 @@ class ApprovalNodeExecutor:
 
         elif timeout_action == "AUTO_PASS":
             # 自动通过
-            task.action = "APPROVE"
-            task.comment = "系统自动通过（超时）"
-            task.status = "COMPLETED"
-            task.completed_at = datetime.now()
-            return "AUTO_PASS", None
+            can_proceed, error = self.process_approval(
+                task,
+                "APPROVE",
+                comment="系统自动通过（超时）",
+            )
+            task._timeout_can_proceed = can_proceed
+            return "AUTO_PASS", error
 
         elif timeout_action == "AUTO_REJECT":
             # 自动驳回
-            task.action = "REJECT"
-            task.comment = "系统自动驳回（超时）"
-            task.status = "COMPLETED"
-            task.completed_at = datetime.now()
-            return "AUTO_REJECT", None
+            can_proceed, error = self.process_approval(
+                task,
+                "REJECT",
+                comment="系统自动驳回（超时）",
+            )
+            task._timeout_can_proceed = can_proceed
+            return "AUTO_REJECT", error
 
         elif timeout_action == "ESCALATE":
             # 升级处理（转给上级）

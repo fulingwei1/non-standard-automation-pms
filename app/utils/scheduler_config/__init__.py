@@ -11,10 +11,12 @@ This module aggregates all scheduled tasks from various categories.
 """
 
 from .alerting import ALERTING_TASKS
+from .approval import APPROVAL_TASKS
 from .finance import FINANCE_TASKS
 from .issue_management import ISSUE_MANAGEMENT_TASKS
 from .milestone import MILESTONE_TASKS
 from .other import OTHER_TASKS
+from .otd import OTD_TASKS
 from .production import PRODUCTION_TASKS
 from .project_health import PROJECT_HEALTH_TASKS
 from .risk import RISK_TASKS
@@ -33,8 +35,10 @@ SCHEDULER_TASKS = (
     + FINANCE_TASKS
     + SCHEDULE_TASKS
     + ALERTING_TASKS
+    + APPROVAL_TASKS
     + TIMESHEET_TASKS
     + OTHER_TASKS
+    + OTD_TASKS
 )
 
 __all__ = ["SCHEDULER_TASKS"]

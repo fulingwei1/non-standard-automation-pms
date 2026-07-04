@@ -29,6 +29,12 @@ from .alert_tasks import (
     send_alert_notifications,
 )
 
+# ==================== 通用审批任务 ====================
+from .approval_tasks import (
+    process_approval_timeout_warnings,
+    process_approval_timeouts,
+)
+
 # ==================== 基础模块 ====================
 from .base import (
     log_task_result,
@@ -99,11 +105,18 @@ from .risk_tasks import (
 from .otd_tasks import (
     daily_otd_scan,
 )
+from .margin_tasks import (
+    daily_margin_snapshot,
+)
 
 # ==================== AI 日报/周报推送 ====================
 from .ai_report_tasks import (
     push_daily_reports,
     push_weekly_reports,
+)
+
+from .equipment_maintenance_tasks import (
+    check_equipment_maintenance_reminder,
 )
 
 # ==================== 销售任务 ====================
@@ -117,12 +130,12 @@ from .sales_tasks import (
 # ==================== 存根任务（待实现）====================
 from .shortage_tasks import (  # noqa: F401  # APPR-04 已回填真实现
     auto_trigger_urgent_purchase_from_shortage_alerts,
+    generate_shortage_daily_report,
     generate_shortage_alerts,
 )
 from .stub_tasks import (
     check_cost_overrun_alerts,
     check_delivery_delay,
-    check_equipment_maintenance_reminder,
     check_issue_timeout_escalation,
     check_outsourcing_delivery_alerts,
     check_presale_workorder_timeout,
@@ -133,7 +146,6 @@ from .stub_tasks import (
     sync_kitting_rate_hourly,
     generate_job_duty_tasks,
     generate_monthly_reports_task,
-    generate_shortage_daily_report,
 )
 
 # ==================== 工时任务 ====================
@@ -194,6 +206,9 @@ SCHEDULED_TASKS = {
     "send_alert_notifications": send_alert_notifications,
     "calculate_response_metrics": calculate_response_metrics,
     "check_sla_warnings_task": check_sla_warnings_task,
+    # 通用审批任务
+    "process_approval_timeout_warnings": process_approval_timeout_warnings,
+    "process_approval_timeouts": process_approval_timeouts,
     # HR任务
     "check_contract_expiry_reminder": check_contract_expiry_reminder,
     "check_employee_confirmation_reminder": check_employee_confirmation_reminder,
@@ -209,6 +224,7 @@ SCHEDULED_TASKS = {
     "check_high_risk_projects": check_high_risk_projects,
     # OTD 项目交付智能体
     "daily_otd_scan": daily_otd_scan,
+    "daily_margin_snapshot": daily_margin_snapshot,
 }
 
 # ==================== 任务分组 ====================
@@ -284,6 +300,13 @@ TASK_GROUPS = {
             "calculate_response_metrics",
         ],
     },
+    "approval": {
+        "name": "通用审批",
+        "tasks": [
+            "process_approval_timeout_warnings",
+            "process_approval_timeouts",
+        ],
+    },
     "hr": {
         "name": "人力资源",
         "tasks": [
@@ -317,6 +340,7 @@ TASK_GROUPS = {
         "name": "OTD 项目交付智能体",
         "tasks": [
             "daily_otd_scan",
+            "daily_margin_snapshot",
         ],
     },
 }
@@ -427,6 +451,9 @@ __all__ = [
     "retry_failed_notifications",
     "send_alert_notifications",
     "calculate_response_metrics",
+    # 通用审批
+    "process_approval_timeout_warnings",
+    "process_approval_timeouts",
     # HR
     "check_contract_expiry_reminder",
     "check_employee_confirmation_reminder",
@@ -444,6 +471,7 @@ __all__ = [
     "check_high_risk_projects",
     # OTD 项目交付智能体
     "daily_otd_scan",
+    "daily_margin_snapshot",
     # AI 日报/周报
     "push_daily_reports",
     "push_weekly_reports",

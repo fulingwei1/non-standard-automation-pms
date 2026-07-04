@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from uuid import uuid4
@@ -8,7 +8,14 @@ import pytest
 from app.api.v1.endpoints.business_support_orders.delivery_orders.crud import (
     ship_delivery_order,
 )
-from app.models.business_support import DeliveryOrder, InvoiceRequest, SalesOrder
+from app.models.business_support import (
+    DeliveryOrder,
+    DeliveryOrderItem,
+    InvoiceRequest,
+    SalesOrder,
+    SalesOrderItem,
+)
+from app.models.production import QualityInspection, WorkOrder
 from app.models.project import Customer, Project, ProjectPaymentPlan
 from app.models.sales import Contract
 
@@ -37,6 +44,9 @@ async def test_shipping_delivery_order_creates_delivery_payment_invoice_request(
         stage="S6",
         status="ST06",
         health="H1",
+        material_status="齐套",
+        kitting_rate=Decimal("100.0"),
+        shortage_items_count=0,
     )
     db_session.add(project)
     db_session.flush()
@@ -67,6 +77,18 @@ async def test_shipping_delivery_order_creates_delivery_payment_invoice_request(
     db_session.add(order)
     db_session.flush()
 
+    order_item = SalesOrderItem(
+        sales_order_id=order.id,
+        item_name="测试设备",
+        item_spec="ATE-DEL",
+        qty=Decimal("1.00"),
+        unit="台",
+        unit_price=Decimal("100000.00"),
+        amount=Decimal("100000.00"),
+    )
+    db_session.add(order_item)
+    db_session.flush()
+
     delivery_order = DeliveryOrder(
         delivery_no=f"DO-DEL-{suffix}",
         order_id=order.id,
@@ -81,6 +103,49 @@ async def test_shipping_delivery_order_creates_delivery_payment_invoice_request(
         delivery_status="approved",
     )
     db_session.add(delivery_order)
+    db_session.flush()
+
+    delivery_item = DeliveryOrderItem(
+        delivery_order_id=delivery_order.id,
+        sales_order_item_id=order_item.id,
+        item_name=order_item.item_name,
+        item_spec=order_item.item_spec,
+        delivery_qty=Decimal("1.00"),
+        unit=order_item.unit,
+        unit_price=order_item.unit_price,
+        amount=order_item.amount,
+        quality_status="PASS",
+    )
+    db_session.add(delivery_item)
+
+    work_order = WorkOrder(
+        work_order_no=f"WO-DEL-{suffix}",
+        task_name="测试设备装配",
+        task_type="ASSEMBLY",
+        project_id=project.id,
+        plan_qty=1,
+        completed_qty=1,
+        qualified_qty=1,
+        status="COMPLETED",
+        progress=100,
+        created_by=1,
+    )
+    db_session.add(work_order)
+    db_session.flush()
+
+    inspection = QualityInspection(
+        inspection_no=f"QI-DEL-{suffix}",
+        work_order_id=work_order.id,
+        inspection_type="FQC",
+        inspection_date=datetime.now(),
+        inspector_id=1,
+        inspection_qty=1,
+        qualified_qty=1,
+        defect_qty=0,
+        inspection_result="PASS",
+        created_by=1,
+    )
+    db_session.add(inspection)
 
     plan = ProjectPaymentPlan(
         project_id=project.id,

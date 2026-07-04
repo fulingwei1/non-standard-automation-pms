@@ -48,6 +48,7 @@ class TestApprovalsInstancesAPI:
             "title": "采购申请审批",
             "description": "总金额5万元的采购申请",
             "priority": "normal",
+            "approver_id": 1,
             "data": {"amount": 50000.0, "items_count": 3},
         }
 

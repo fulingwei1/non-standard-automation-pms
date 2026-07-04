@@ -17,6 +17,32 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
+def _format_scheduler_job(job: Any, scheduler_name: str, include_func: bool = False) -> dict:
+    item = {
+        "id": job.id,
+        "name": job.name,
+        "scheduler": scheduler_name,
+        "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
+        "trigger": str(job.trigger) if job.trigger else None,
+    }
+    if include_func:
+        item["func"] = job.func.__name__ if job.func else None
+    return item
+
+
+def _get_scheduler_sources():
+    from app.utils.scheduler import scheduler as main_scheduler
+
+    sources = [("main", main_scheduler)]
+    try:
+        from app.scheduler_progress import scheduler as progress_scheduler
+
+        sources.append(("progress", progress_scheduler))
+    except ImportError:
+        pass
+    return sources
+
+
 @router.get("/status", response_model=ResponseModel)
 def get_scheduler_status(
     current_user: User = Depends(get_current_active_user),
@@ -26,25 +52,18 @@ def get_scheduler_status(
     返回调度器运行状态和已注册的任务列表
     """
     try:
-        from app.utils.scheduler import scheduler
-
-        jobs = scheduler.get_jobs()
-
+        scheduler_sources = _get_scheduler_sources()
         job_list = []
-        for job in jobs:
-            job_list.append(
-                {
-                    "id": job.id,
-                    "name": job.name,
-                    "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
-                    "trigger": str(job.trigger) if job.trigger else None,
-                }
-            )
+        running = False
+        for scheduler_name, scheduler in scheduler_sources:
+            running = running or bool(scheduler.running)
+            for job in scheduler.get_jobs():
+                job_list.append(_format_scheduler_job(job, scheduler_name))
 
         return ResponseModel(
             code=200,
             message="success",
-            data={"running": scheduler.running, "job_count": len(jobs), "jobs": job_list},
+            data={"running": running, "job_count": len(job_list), "jobs": job_list},
         )
     except ImportError:
         return ResponseModel(
@@ -64,24 +83,13 @@ def get_scheduler_jobs(
     获取所有已注册的任务列表
     """
     try:
-        from app.utils.scheduler import scheduler
-
-        jobs = scheduler.get_jobs()
-
         job_list = []
-        for job in jobs:
-            job_list.append(
-                {
-                    "id": job.id,
-                    "name": job.name,
-                    "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
-                    "trigger": str(job.trigger) if job.trigger else None,
-                    "func": job.func.__name__ if job.func else None,
-                }
-            )
+        for scheduler_name, scheduler in _get_scheduler_sources():
+            for job in scheduler.get_jobs():
+                job_list.append(_format_scheduler_job(job, scheduler_name, include_func=True))
 
         return ResponseModel(
-            code=200, message="success", data={"total": len(jobs), "jobs": job_list}
+            code=200, message="success", data={"total": len(job_list), "jobs": job_list}
         )
     except ImportError:
         return ResponseModel(

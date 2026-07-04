@@ -5,9 +5,6 @@ These routes keep older `/approvals/*` clients away from dynamic `{id}` routes
 while the unified approval engine remains the source of truth.
 """
 
-from datetime import datetime
-from uuid import uuid4
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -16,15 +13,43 @@ from app.core import security
 from app.models.approval import (
     ApprovalFlowDefinition,
     ApprovalInstance,
+    ApprovalNodeDefinition,
     ApprovalTask,
     ApprovalTemplate,
 )
 from app.models.user import User
+from app.services.approval_engine import ApprovalEngineService
 
 router = APIRouter()
 
 
-def _ensure_compat_template(db: Session, current_user: User) -> tuple[ApprovalTemplate, ApprovalFlowDefinition]:
+def _normalize_approver_ids(payload: dict) -> list[int]:
+    raw_ids = payload.get("approver_ids")
+    if raw_ids is None:
+        raw_ids = payload.get("approver_id") or payload.get("approver")
+    if raw_ids is None:
+        return []
+    if not isinstance(raw_ids, (list, tuple, set)):
+        raw_ids = [raw_ids]
+
+    approver_ids: list[int] = []
+    for raw_id in raw_ids:
+        if raw_id in (None, ""):
+            continue
+        try:
+            approver_id = int(raw_id)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="审批人ID必须是数字")
+        if approver_id not in approver_ids:
+            approver_ids.append(approver_id)
+    return approver_ids
+
+
+def _ensure_compat_template(
+    db: Session,
+    current_user: User,
+    approver_ids: list[int],
+) -> tuple[ApprovalTemplate, ApprovalFlowDefinition]:
     template = (
         db.query(ApprovalTemplate)
         .filter(ApprovalTemplate.template_code == "LEGACY_APPROVAL_COMPAT")
@@ -67,6 +92,36 @@ def _ensure_compat_template(db: Session, current_user: User) -> tuple[ApprovalTe
         db.add(flow)
         db.flush()
 
+    approval_mode = "SINGLE" if len(approver_ids) == 1 else "OR_SIGN"
+    node = (
+        db.query(ApprovalNodeDefinition)
+        .filter(
+            ApprovalNodeDefinition.flow_id == flow.id,
+            ApprovalNodeDefinition.node_type == "APPROVAL",
+            ApprovalNodeDefinition.is_active,
+        )
+        .order_by(ApprovalNodeDefinition.node_order.asc(), ApprovalNodeDefinition.id.asc())
+        .first()
+    )
+    if not node:
+        node = ApprovalNodeDefinition(
+            flow_id=flow.id,
+            node_code="LEGACY_APPROVAL_COMPAT_APPROVAL",
+            node_name="旧审批兼容审批",
+            node_order=1,
+            node_type="APPROVAL",
+            approval_mode=approval_mode,
+            approver_type="FIXED_USER",
+            approver_config={"user_ids": approver_ids},
+            is_active=True,
+        )
+        db.add(node)
+    else:
+        node.approval_mode = approval_mode
+        node.approver_type = "FIXED_USER"
+        node.approver_config = {"user_ids": approver_ids}
+    db.flush()
+
     return template, flow
 
 
@@ -90,24 +145,40 @@ def create_legacy_instance(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("approval:create")),
 ):
-    template, flow = _ensure_compat_template(db, current_user)
-    instance = ApprovalInstance(
-        instance_no=f"AP{datetime.now().strftime('%y%m%d')}{uuid4().hex[:8].upper()}",
-        template_id=template.id,
-        flow_id=flow.id,
-        entity_type=payload.get("business_type") or payload.get("entity_type") or "LEGACY",
-        entity_id=payload.get("business_id") or payload.get("entity_id") or 0,
-        initiator_id=current_user.id,
-        initiator_name=current_user.real_name or current_user.username,
-        form_data=payload.get("data") or payload.get("form_data") or {},
-        status="PENDING",
-        urgency=(payload.get("priority") or "NORMAL").upper(),
-        title=payload.get("title") or "审批申请",
-        summary=payload.get("description"),
-        submitted_at=datetime.now(),
-    )
-    db.add(instance)
-    db.commit()
+    template_code = payload.get("template_code") or "LEGACY_APPROVAL_COMPAT"
+    if template_code == "LEGACY_APPROVAL_COMPAT":
+        approver_ids = _normalize_approver_ids(payload)
+        if not approver_ids:
+            raise HTTPException(status_code=400, detail="旧审批兼容创建必须提供审批人")
+
+        existing_users = {
+            user_id
+            for (user_id,) in db.query(User.id)
+            .filter(User.id.in_(approver_ids), User.is_active.is_(True))
+            .all()
+        }
+        missing_users = [user_id for user_id in approver_ids if user_id not in existing_users]
+        if missing_users:
+            raise HTTPException(status_code=400, detail=f"审批人不存在或已停用: {missing_users}")
+
+        _ensure_compat_template(db, current_user, approver_ids)
+
+    engine = ApprovalEngineService(db)
+    try:
+        instance = engine.submit(
+            template_code=template_code,
+            entity_type=payload.get("business_type") or payload.get("entity_type") or "LEGACY",
+            entity_id=payload.get("business_id") or payload.get("entity_id") or 0,
+            form_data=payload.get("data") or payload.get("form_data") or {},
+            initiator_id=current_user.id,
+            title=payload.get("title") or "审批申请",
+            summary=payload.get("description"),
+            urgency=(payload.get("priority") or "NORMAL").upper(),
+            cc_user_ids=payload.get("cc_user_ids"),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     db.refresh(instance)
     return _instance_payload(instance)
 

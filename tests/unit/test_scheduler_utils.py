@@ -5,17 +5,27 @@ Covers: job_listener, _resolve_callable, _wrap_job_callable, shutdown_scheduler
 """
 
 import json
+from contextlib import contextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 from unittest.mock import MagicMock, call, patch
 
 import pytest
 
+from app.models.scheduler_config import SchedulerTaskConfig
 from app.utils.scheduler import (
+    _load_task_config_from_db,
     _resolve_callable,
     _wrap_job_callable,
+    init_scheduler,
     job_listener,
     shutdown_scheduler,
 )
+
+
+@contextmanager
+def _patched_db_session(db_session):
+    yield db_session
 
 
 class TestJobListener:
@@ -116,6 +126,111 @@ class TestResolveCallable:
         }
         with pytest.raises(AttributeError):
             _resolve_callable(task)
+
+    def test_registered_ecn_overdue_job_resolves_real_callable(self):
+        """APPR-16: enabled ECN overdue job must not point at a dead module path."""
+        from app.services.ecn.ecn_scheduler import run_ecn_scheduler
+        from app.utils.scheduler_config import SCHEDULER_TASKS
+
+        task = next(task for task in SCHEDULER_TASKS if task["id"] == "check_ecn_overdue")
+
+        assert _resolve_callable(task) is run_ecn_scheduler
+
+
+class TestSchedulerDbConfig:
+    """APPR-22: DB-disabled scheduler jobs must stay disabled after restart."""
+
+    def test_load_task_config_keeps_disabled_db_config(self, db_session):
+        config = SchedulerTaskConfig(
+            task_id="appr22_disabled_job",
+            task_name="APPR22 Disabled Job",
+            module="app.utils.scheduler_metrics",
+            callable_name="record_job_success",
+            owner="qa",
+            category="test",
+            is_enabled=False,
+            cron_config={"hour": 1, "minute": 0},
+        )
+        db_session.add(config)
+        db_session.commit()
+
+        with patch(
+            "app.utils.scheduler.get_db_session",
+            return_value=_patched_db_session(db_session),
+        ):
+            loaded = _load_task_config_from_db("appr22_disabled_job")
+
+        assert loaded == {"enabled": False, "cron": {"hour": 1, "minute": 0}}
+
+    def test_init_scheduler_does_not_resurrect_db_disabled_job(self, db_session):
+        task = {
+            "id": "appr22_restart_disabled_job",
+            "name": "APPR22 Restart Disabled Job",
+            "module": "app.utils.scheduler_metrics",
+            "callable": "record_job_success",
+            "enabled": True,
+            "cron": {"hour": 2, "minute": 0},
+        }
+        config = SchedulerTaskConfig(
+            task_id=task["id"],
+            task_name=task["name"],
+            module=task["module"],
+            callable_name=task["callable"],
+            owner="qa",
+            category="test",
+            is_enabled=False,
+            cron_config={"hour": 3, "minute": 0},
+        )
+        db_session.add(config)
+        db_session.commit()
+
+        with (
+            patch("app.utils.scheduler.SCHEDULER_TASKS", [task]),
+            patch(
+                "app.utils.scheduler.get_db_session",
+                return_value=_patched_db_session(db_session),
+            ),
+            patch("app.utils.scheduler.scheduler") as mock_scheduler,
+        ):
+            init_scheduler()
+
+        mock_scheduler.add_job.assert_not_called()
+
+    def test_init_scheduler_records_failure_for_unresolvable_task(self):
+        task = {
+            "id": "appr22_missing_module_job",
+            "name": "APPR22 Missing Module Job",
+            "module": "app.missing.scheduler_module",
+            "callable": "run_missing_task",
+            "enabled": True,
+            "cron": {"hour": 4, "minute": 0},
+        }
+
+        with (
+            patch("app.utils.scheduler.SCHEDULER_TASKS", [task]),
+            patch("app.utils.scheduler._load_task_config_from_db", return_value=None),
+            patch("app.utils.scheduler.scheduler") as mock_scheduler,
+            patch("app.utils.scheduler.record_job_failure") as mock_failure,
+        ):
+            init_scheduler()
+
+        mock_scheduler.add_job.assert_not_called()
+        mock_failure.assert_called_once()
+        assert mock_failure.call_args[0][0] == "appr22_missing_module_job"
+
+
+class TestSchedulerStartup:
+    """APPR-22: scheduler startup import failures must be visible."""
+
+    def test_main_scheduler_import_error_is_logged(self):
+        project_root = Path(__file__).resolve().parents[2]
+        source = (project_root / "app/main.py").read_text(encoding="utf-8")
+        scheduler_block = source[
+            source.index("# 初始化定时任务调度器（如果启用）") : source.index('@app.get("/")')
+        ]
+
+        assert "定时任务调度器导入失败" in scheduler_block
+        assert "except ImportError:\n    pass" not in scheduler_block
 
 
 class TestWrapJobCallable:

@@ -156,6 +156,32 @@ class ApprovalEngineCore:
                 cc_source="FLOW",
             )
 
+    def _build_instance_context(self, instance: ApprovalInstance) -> Dict[str, Any]:
+        """Build runtime routing context for an existing approval instance."""
+        form_data = instance.form_data or {}
+        context: Dict[str, Any] = {
+            "form_data": form_data,
+            "initiator": {
+                "id": instance.initiator_id,
+                "dept_id": instance.initiator_dept_id,
+            },
+            "entity": {"type": instance.entity_type, "id": instance.entity_id},
+        }
+
+        from ..adapters import get_adapter
+
+        try:
+            adapter = get_adapter(instance.entity_type, self.db)
+        except ValueError:
+            return context
+
+        entity_data = adapter.get_entity_data(instance.entity_id) or {}
+        context["adapter"] = adapter
+        context["entity_data"] = entity_data
+        context["entity"] = {**context["entity"], **entity_data}
+        context["form_data"] = {**form_data, "entity": entity_data}
+        return context
+
     def _advance_to_next_node(
         self,
         instance: ApprovalInstance,
@@ -164,6 +190,12 @@ class ApprovalEngineCore:
         """流转到下一节点"""
         if current_task:
             current_node = current_task.node
+            if not current_node and current_task.node_id:
+                current_node = (
+                    self.db.query(ApprovalNodeDefinition)
+                    .filter(ApprovalNodeDefinition.id == current_task.node_id)
+                    .first()
+                )
         else:
             current_node = (
                 self.db.query(ApprovalNodeDefinition)
@@ -175,13 +207,7 @@ class ApprovalEngineCore:
             return
 
         # 构建上下文
-        context = {
-            "form_data": instance.form_data,
-            "initiator": {
-                "id": instance.initiator_id,
-                "dept_id": instance.initiator_dept_id,
-            },
-        }
+        context = self._build_instance_context(instance)
 
         # 获取下一节点
         next_nodes = self.router.get_next_nodes(current_node, context)
@@ -238,13 +264,7 @@ class ApprovalEngineCore:
         instance.current_node_id = target_node.id
 
         # 创建新任务
-        context = {
-            "form_data": instance.form_data,
-            "initiator": {
-                "id": instance.initiator_id,
-                "dept_id": instance.initiator_dept_id,
-            },
-        }
+        context = self._build_instance_context(instance)
         self._create_node_tasks(instance, target_node, context)
 
     def _get_task_approval_mode(self, task: ApprovalTask) -> str:
