@@ -35,6 +35,8 @@ class Quote(Base, TimestampMixin):
     __tablename__ = "quotes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    # 多租户支持（TEN-03 铺开）
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     quote_code = Column(String(20), unique=True, nullable=False, comment="报价编码")
     opportunity_id = Column(
         Integer, ForeignKey("opportunities.id"), nullable=False, comment="商机ID"
@@ -138,6 +140,8 @@ class QuoteVersion(Base, TimestampMixin):
     __tablename__ = "quote_versions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    # 多租户支持（TEN-03 铺开）
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")
     version_no = Column(String(10), nullable=False, comment="版本号")
     quote_code = Column(String(50), comment="版本报价编码（兼容历史字段）")

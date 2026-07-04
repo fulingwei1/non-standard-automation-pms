@@ -118,6 +118,8 @@ class Opportunity(Base, TimestampMixin):
     __tablename__ = "opportunities"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    # 多租户支持（TEN-03 铺开）
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     opp_code = Column(String(20), unique=True, nullable=False, comment="商机编码")
     lead_id = Column(Integer, ForeignKey("leads.id"), comment="线索ID")
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, comment="客户ID")
