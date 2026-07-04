@@ -674,3 +674,125 @@ class TestProductionCompatibilityEndpoints:
         assert ranking[0]["rank"] == 1
         assert ranking[0]["output"] == 12
         assert ranking[0]["quality_rate"] == 91.67
+
+    def test_material_requisitions_data_scope_own_vs_all(
+        self, client: TestClient, admin_token: str, normal_user_token: str, db
+    ):
+        """PERM-17: 领料单列表按数据权限过滤（OWN 只见自己申请的，ALL/超管全见）。"""
+        if not admin_token or not normal_user_token:
+            pytest.skip("Auth tokens not available")
+
+        admin = _admin_user(db)
+        normal_user = db.query(User).filter(User.username == "user").first()
+        assert normal_user is not None and admin is not None
+        suffix = uuid.uuid4().hex[:8]
+        scope_marker = f"ST{suffix}"
+
+        own_requisition = MaterialRequisition(
+            requisition_no=f"MR-OWN-{suffix}",
+            applicant_id=normal_user.id,
+            apply_time=datetime.now(),
+            status=scope_marker,
+        )
+        other_requisition = MaterialRequisition(
+            requisition_no=f"MR-OTH-{suffix}",
+            applicant_id=admin.id,
+            apply_time=datetime.now(),
+            status=scope_marker,
+        )
+        db.add_all([own_requisition, other_requisition])
+        db.commit()
+        db.refresh(own_requisition)
+        db.refresh(other_requisition)
+
+        # OWN 数据权限的普通用户（无角色，默认降级为 OWN）只能看到自己申请的领料单
+        own_resp = client.get(
+            f"{settings.API_V1_PREFIX}/production/material-requisitions",
+            params={"page": 1, "page_size": 50, "status": scope_marker},
+            headers=_auth_headers(normal_user_token),
+        )
+        assert own_resp.status_code == 200, own_resp.text
+        own_ids = {item["id"] for item in own_resp.json()["items"]}
+        assert own_ids == {own_requisition.id}
+
+        # 超管 / ALL 数据权限用户可以看到全部领料单
+        admin_resp = client.get(
+            f"{settings.API_V1_PREFIX}/production/material-requisitions",
+            params={"page": 1, "page_size": 50, "status": scope_marker},
+            headers=_auth_headers(admin_token),
+        )
+        assert admin_resp.status_code == 200, admin_resp.text
+        admin_ids = {item["id"] for item in admin_resp.json()["items"]}
+        assert admin_ids == {own_requisition.id, other_requisition.id}
+
+    def test_work_reports_data_scope_own_vs_all(
+        self, client: TestClient, admin_token: str, normal_user_token: str, db
+    ):
+        """PERM-17: 报工记录列表按数据权限过滤（OWN 只见自己审核的，ALL/超管全见）。
+
+        WorkReport.worker_id 关联的是工人档案（Worker.id），无法直接与
+        current_user.id 比较，因此过滤配置以 approved_by（审核人）作为所有者字段。
+        """
+        if not admin_token or not normal_user_token:
+            pytest.skip("Auth tokens not available")
+
+        admin = _admin_user(db)
+        normal_user = db.query(User).filter(User.username == "user").first()
+        assert normal_user is not None and admin is not None
+        suffix = uuid.uuid4().hex[:8]
+        scope_marker = f"ST{suffix}"
+
+        work_order = WorkOrder(
+            work_order_no=f"WR-SCOPE-WO-{suffix}",
+            task_name="数据权限测试工单",
+            task_type="ASSEMBLY",
+        )
+        worker = Worker(
+            worker_no=f"WR-SCOPE-WK-{suffix}",
+            worker_name="数据权限测试工人",
+        )
+        db.add_all([work_order, worker])
+        db.commit()
+        db.refresh(work_order)
+        db.refresh(worker)
+
+        own_report = WorkReport(
+            report_no=f"WR-OWN-{suffix}",
+            work_order_id=work_order.id,
+            worker_id=worker.id,
+            report_type=scope_marker,
+            report_time=datetime.now(),
+            status="APPROVED",
+            approved_by=normal_user.id,
+        )
+        other_report = WorkReport(
+            report_no=f"WR-OTH-{suffix}",
+            work_order_id=work_order.id,
+            worker_id=worker.id,
+            report_type=scope_marker,
+            report_time=datetime.now(),
+            status="APPROVED",
+            approved_by=admin.id,
+        )
+        db.add_all([own_report, other_report])
+        db.commit()
+        db.refresh(own_report)
+        db.refresh(other_report)
+
+        own_resp = client.get(
+            f"{settings.API_V1_PREFIX}/production/work-reports",
+            params={"page": 1, "page_size": 50, "report_type": scope_marker},
+            headers=_auth_headers(normal_user_token),
+        )
+        assert own_resp.status_code == 200, own_resp.text
+        own_ids = {item["id"] for item in own_resp.json()["items"]}
+        assert own_ids == {own_report.id}
+
+        admin_resp = client.get(
+            f"{settings.API_V1_PREFIX}/production/work-reports",
+            params={"page": 1, "page_size": 50, "report_type": scope_marker},
+            headers=_auth_headers(admin_token),
+        )
+        assert admin_resp.status_code == 200, admin_resp.text
+        admin_ids = {item["id"] for item in admin_resp.json()["items"]}
+        assert admin_ids == {own_report.id, other_report.id}

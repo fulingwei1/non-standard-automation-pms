@@ -16,12 +16,21 @@ from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.common import PaginatedResponse
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.services.inventory.outbound_service import OutboundService
 from app.services.inventory.stock_update_service import InsufficientStockError
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 DEFAULT_ISSUE_LOCATION = "默认仓库"
+
+# 领料单数据权限配置
+MATERIAL_REQUISITION_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="applicant_id",
+    additional_owner_fields=["approved_by", "issued_by"],
+    project_field="project_id",
+)
 
 
 def _inventory_tenant_id(user: User) -> int:
@@ -130,6 +139,11 @@ def read_material_requisitions(
 ) -> Any:
     """获取领料单列表（兼容旧前端路径）。"""
     query = db.query(MaterialRequisition)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, MaterialRequisition, current_user, MATERIAL_REQUISITION_DATA_SCOPE_CONFIG
+    )
 
     if work_order_id:
         get_or_404(db, WorkOrder, work_order_id, detail="工单不存在")

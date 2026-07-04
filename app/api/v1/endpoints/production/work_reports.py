@@ -24,12 +24,24 @@ from app.schemas.production import (
     WorkReportStartRequest,
 )
 from app.services.production.work_order_state_machine import validate_transition
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 
 from .utils import generate_report_no
 from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+# 报工记录数据权限配置
+# 注意：WorkReport.worker_id 关联的是 Worker.id（工人档案主键），而非 User.id，
+# 无法直接与 current_user.id 比较，因此不纳入 owner_field；
+# 仅以 approved_by（审核人，User 外键）作为所有者字段。
+# 工人本人查看自己报工记录走 /work-reports/my（已按 Worker.user_id 显式过滤，不受影响）。
+WORK_REPORT_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="approved_by",
+    project_field=None,
+)
 
 
 def _validate_work_order_transition(work_order: WorkOrder, target_status: str) -> None:
@@ -311,6 +323,11 @@ def read_work_reports(
     获取报工记录列表
     """
     query = db.query(WorkReport)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, WorkReport, current_user, WORK_REPORT_DATA_SCOPE_CONFIG
+    )
 
     if work_order_id:
         query = query.filter(WorkReport.work_order_id == work_order_id)
