@@ -36,7 +36,19 @@ class TestPresentationGenerator:
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "test.pptx"
 
-            result = generator.generate(output_path=str(output_path))
+            result = generator.generate(
+                output_path=str(output_path),
+                deck_spec={
+                    "title": "测试演示文稿",
+                    "slides": [
+                        {
+                            "type": "content",
+                            "title": "摘要",
+                            "content": ["测试内容"],
+                        }
+                    ],
+                },
+            )
 
             # 应该返回路径或成功标志
             assert result is not None or output_path.exists()

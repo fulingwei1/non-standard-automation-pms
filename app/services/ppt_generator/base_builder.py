@@ -10,8 +10,8 @@ from .config import PresentationConfig
 class BaseSlideBuilder:
     """基础幻灯片构建器"""
 
-    def __init__(self, presentation: Presentation):
-        self.prs = presentation
+    def __init__(self, presentation: Presentation = None):
+        self.prs = presentation or Presentation()
         self.config = PresentationConfig()
 
     def add_title_slide(self, title: str, subtitle: str = ""):

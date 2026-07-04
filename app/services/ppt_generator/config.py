@@ -2,7 +2,7 @@
 PPT配置文件 - 颜色和样式定义
 """
 
-from .compat import Presentation, RgbColor, Inches, Pt
+from .compat import RgbColor, Inches, Pt
 
 
 class PresentationConfig:
@@ -26,6 +26,16 @@ class PresentationConfig:
     TABLE_HEADER_FONT_SIZE = Pt(14)
     TABLE_CELL_FONT_SIZE = Pt(12)
     PAGE_NUMBER_FONT_SIZE = Pt(12)
+    fonts = {
+        "title": TITLE_FONT_SIZE,
+        "subtitle": SUBTITLE_FONT_SIZE,
+        "heading": HEADING_FONT_SIZE,
+        "section_title": SECTION_TITLE_FONT_SIZE,
+        "content": CONTENT_FONT_SIZE,
+        "table_header": TABLE_HEADER_FONT_SIZE,
+        "table_cell": TABLE_CELL_FONT_SIZE,
+        "page_number": PAGE_NUMBER_FONT_SIZE,
+    }
 
     # 尺寸
     SLIDE_WIDTH = Inches(10)
