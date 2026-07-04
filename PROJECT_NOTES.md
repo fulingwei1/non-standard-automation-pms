@@ -1,5 +1,17 @@
 # PROJECT_NOTES
 
+## 2026-07-04 继续：提升方案 P4 先行——质量门禁三件套进 CI（棘轮机制）
+
+- 背景：SYSTEM_IMPROVEMENT_PLAN（本地文档，*_PLAN.md 被 gitignore）第 1 周动作：把两天来靠自觉的治理纪律变成机器强制。全部纯新增文件+hooks 软提醒，与并行会话在途大扫荡零碰撞。
+- 三个守卫（`scripts/ci_guard_*.py`，纯 stdlib，`--update-baseline` 收紧棘轮）：
+  - **权限覆盖率棘轮**：复用 audit_permission_coverage 静态扫描；NONE 端点不得超基线、PERMISSION 占比不得回退。当前基线：2997 端点 / NONE 143 / PERMISSION 34.4%。
+  - **幽灵表检测**：模型有 `__tablename__` 但全仓无构造/INSERT 写入 → 幽灵；只拦基线外新增。**摸底发现现存 109 张幽灵表**（P1 数据治理的完整靶单，含 ShortageDailyReport/resource_conflicts 等审计已知项）。
+  - **AI mock 写库闸**：调 `.generate_solution(` 且 `db.add(` 的文件必须引用 `is_mock_response`；现存 5 处豁免登记在基线（P5 待治理清单）。
+- `.github/workflows/guard-quality-gates.yml`：PR + main push 触发三守卫（沿用 guard-stub-defaults 模式，零依赖）。
+- `hooks/commit-msg`：新增软提醒（不拦截）——fix 提交未引用审计 ID 时提示补充，配合台账"修复 PR 必引 ID"规则。
+- 验证：三守卫本地全绿；hook 两条路径（无 ID 提醒/有 ID 通过）实测正常。
+- 基线文件（scripts/*_baseline.json）随修复进展用 --update-baseline 收紧，形成只升不降的棘轮。
+
 ## 2026-07-04 继续：功能审计 ADMIN-07 修复（行政管理四件套做实）
 
 - 修复项：`ADMIN-07`，admin_compat 整文件硬编码（A4 复印纸/固定车辆/写死费用统计），前端 adminApi 全部写操作 404。

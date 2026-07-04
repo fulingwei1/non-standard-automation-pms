@@ -1,0 +1,9 @@
+{
+  "exempt": [
+    "app/api/v1/endpoints/ai_admin.py",
+    "app/api/v1/endpoints/ai_engineering.py",
+    "app/services/presale/presale_agent_orchestrator.py",
+    "app/services/project_review_ai/knowledge_syncer.py",
+    "app/services/schedule_prediction_service.py"
+  ]
+}

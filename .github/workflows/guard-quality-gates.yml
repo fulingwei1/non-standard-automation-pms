@@ -1,0 +1,34 @@
+name: guard-quality-gates
+
+# 质量门禁三件套（棘轮机制：只许升不许降）
+# - 权限覆盖率：NONE 端点不得新增，PERMISSION 占比不得回退
+# - 幽灵表：不得新增"有模型无业务写入方"的表
+# - AI mock 闸：调 AI 且写库的文件必须引用 is_mock_response
+# 基线收紧：各脚本 --update-baseline
+
+on:
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'scripts/ci_guard_*.py'
+      - 'scripts/*_baseline.json'
+      - '.github/workflows/guard-quality-gates.yml'
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'app/**'
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 权限覆盖率棘轮
+        run: python scripts/ci_guard_permission_coverage.py
+      - name: 幽灵表检测
+        run: python scripts/ci_guard_ghost_tables.py
+      - name: AI mock 写库闸
+        run: python scripts/ci_guard_ai_mock.py

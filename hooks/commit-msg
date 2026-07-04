@@ -60,5 +60,13 @@ if echo "$commit_msg" | head -n 1 | grep -qE "\.$"; then
     echo ""
 fi
 
+# 审计台账联动提醒（软约束）：fix 提交建议引用问题 ID（如 SALES-06 / PERM-15），
+# 便于 FUNCTIONAL_AUDIT_TRACKER.md 状态随 PR 同步。仅提醒不拦截。
+if echo "$commit_msg" | head -n 1 | grep -qE "^fix" && ! echo "$commit_msg" | grep -qE "[A-Z]{2,6}-[0-9]+"; then
+    echo "⚠️  提醒: fix 提交未引用审计问题 ID（如 fix(SALES-06): ...）；"
+    echo "    若对应台账问题请补充 ID，便于台账状态联动。"
+    echo ""
+fi
+
 echo "✅ Commit message format validated successfully"
 exit 0
