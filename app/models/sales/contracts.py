@@ -26,6 +26,7 @@ class ContractTemplate(Base, TimestampMixin):
 
     __tablename__ = "contract_templates"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
     template_name = Column(String(200), nullable=False, comment="模板名称")
     contract_type = Column(String(50), comment="合同类型")
@@ -66,6 +67,7 @@ class ContractTemplateVersion(Base, TimestampMixin):
 
     __tablename__ = "contract_template_versions"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_id = Column(
         Integer, ForeignKey("contract_templates.id"), nullable=False, comment="模板ID"
     )

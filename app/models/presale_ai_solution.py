@@ -113,6 +113,7 @@ class PresaleAISolutionTemplate(Base):
     __tablename__ = "presale_solution_templates"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     name = Column(String(200), nullable=False, comment="模板名称")
     code = Column(String(100), unique=True, comment="模板编码")
 
@@ -175,6 +176,7 @@ class PresaleAIGenerationLog(Base):
     __tablename__ = "presale_ai_generation_log"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     solution_id = Column(Integer, ForeignKey("presale_ai_solution.id"), comment="方案ID")
 
     # 请求信息

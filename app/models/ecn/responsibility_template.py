@@ -65,6 +65,7 @@ class EcnSolutionTemplate(Base, TimestampMixin):
     __tablename__ = "ecn_solution_templates"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 模板基本信息
     template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")

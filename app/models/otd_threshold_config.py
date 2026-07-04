@@ -52,6 +52,7 @@ class OtdThresholdConfig(Base, TimestampMixin):
     __tablename__ = "otd_threshold_configs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     name = Column(String(100), nullable=False, comment="配置名称")
     code = Column(String(50), unique=True, nullable=False, comment="配置编码")
     description = Column(Text, comment="配置描述")

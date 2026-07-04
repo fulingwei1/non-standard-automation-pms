@@ -30,6 +30,7 @@ class ManagementRhythmConfig(Base, TimestampMixin):
     __tablename__ = "management_rhythm_config"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 节律信息
     rhythm_level = Column(
@@ -416,6 +417,7 @@ class MeetingReportConfig(Base, TimestampMixin):
     __tablename__ = "meeting_report_config"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 配置信息
     config_name = Column(String(200), nullable=False, comment="配置名称")

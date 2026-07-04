@@ -57,6 +57,7 @@ class SchedulerTaskConfig(Base, TimestampMixin):
     __tablename__ = "scheduler_task_configs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     task_id = Column(
         String(100), unique=True, nullable=False, comment="任务ID（对应scheduler_config.py中的id）"
     )

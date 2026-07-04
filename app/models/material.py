@@ -26,6 +26,7 @@ class MaterialCategory(Base, TimestampMixin):
     __tablename__ = "material_categories"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     category_code = Column(String(50), unique=True, nullable=False, comment="分类编码")
     category_name = Column(String(100), nullable=False, comment="分类名称")
     parent_id = Column(Integer, ForeignKey("material_categories.id"), comment="父分类ID")

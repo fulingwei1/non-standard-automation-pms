@@ -48,6 +48,7 @@ class WorkLog(Base, TimestampMixin):
     __tablename__ = "work_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 人员信息
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="提交人ID")
@@ -96,6 +97,7 @@ class WorkLogConfig(Base, TimestampMixin):
     __tablename__ = "work_log_configs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 适用范围
     user_id = Column(
@@ -135,6 +137,7 @@ class WorkLogMention(Base, TimestampMixin):
     __tablename__ = "work_log_mentions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联工作日志
     work_log_id = Column(Integer, ForeignKey("work_logs.id"), nullable=False, comment="工作日志ID")

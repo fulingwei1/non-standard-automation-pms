@@ -35,6 +35,7 @@ class StageTemplate(Base, TimestampMixin):
     __tablename__ = "stage_templates"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
     template_name = Column(String(100), nullable=False, comment="模板名称")
     description = Column(Text, comment="模板描述")
@@ -160,6 +161,7 @@ class StageTemplateChangeLog(Base, TimestampMixin):
     __tablename__ = "stage_template_change_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_id = Column(
         Integer,
         ForeignKey("stage_templates.id", ondelete="CASCADE"),

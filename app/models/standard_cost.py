@@ -26,6 +26,7 @@ class StandardCost(Base, TimestampMixin):
     __tablename__ = "standard_costs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     cost_code = Column(String(50), nullable=False, comment="成本项编码")
     cost_name = Column(String(200), nullable=False, comment="成本项名称")
 
@@ -92,6 +93,7 @@ class StandardCostHistory(Base, TimestampMixin):
     __tablename__ = "standard_cost_history"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     standard_cost_id = Column(
         Integer, ForeignKey("standard_costs.id"), nullable=False, comment="标准成本ID"
     )

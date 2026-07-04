@@ -104,7 +104,37 @@ _tenant_scoped_classes_cache = None
 # test_role_tenant_isolation_contracts.py 的既有回归用例证实了同样约定）。
 # 未在此列表的可空 tenant_id 模型（如 User：NULL=超级管理员账号）维持严格
 # 相等过滤，不把 NULL 行当共享数据放行。
-_SHARED_WHEN_NULL_MODEL_NAMES = frozenset({"Role", "ApiPermission", "DataScopeRule", "MenuPermission"})
+#
+# TEN-03 全量铺开第五批新增：以下 72 个模型是模板/规则/字典/配置类表——
+# 语义上是"可复用的定义"而非某个租户独占的业务记录（合同模板、奖金规则、
+# 工序字典等）。这批表加 tenant_id 时特意没有像业务实体表那样把存量数据
+# 回填成 tenant_id=1（见 migrations/
+# 20260705_ten03_batch5_shared_default_tenant_id_sqlite.sql 的说明），而是
+# 保持 NULL=系统默认、所有租户共享可见，套用与 Role 等表完全相同的模式；
+# 后续如果某个租户想有自己的定制模板/规则，创建时显式传 tenant_id 即可，
+# 与共享默认数据共存不冲突。RoleApiPermission/RoleMenu 是 Role 的关联表，
+# Role 本身已是 NULL=共享语义，这两张关联表跟随同样的约定。
+_SHARED_WHEN_NULL_MODEL_NAMES = frozenset({
+    "Role", "ApiPermission", "DataScopeRule", "MenuPermission",
+    "AcceptanceTemplate", "AlertRule", "AlertRuleTemplate", "ApprovalRoutingRule",
+    "ApprovalTemplate", "ApprovalTemplateVersion", "AssemblyTemplate", "AssessmentTemplate",
+    "BenchmarkConfiguration", "BonusRule", "CategoryStageMapping", "ContractTemplate",
+    "ContractTemplateVersion", "CostAlertRule", "CpqRuleSet", "CultureWallConfig",
+    "DashboardChartConfig", "EcnSolutionTemplate", "EcnType", "EngineerDimensionConfig",
+    "EvaluationWeightConfig", "HourlyRateConfig", "HrTagDict", "ImportTemplate",
+    "IssueTemplate", "JobDutyTemplate", "JobLevel", "ManagementRhythmConfig",
+    "MarginAlertConfig", "MaterialAlertRule", "MaterialCategory", "MeetingReportConfig",
+    "OtdThresholdConfig", "PermissionGroup", "PresaleAIConfig", "PresaleAISolutionTemplate",
+    "PresaleSolutionTemplate", "ProcessDict", "ProjectCostAllocationRule", "ProjectRoleConfig",
+    "ProjectRoleType", "ProjectTemplate", "ProjectTemplateVersion", "QualityAlertRule",
+    "QuotationTemplate", "QuoteCostTemplate", "QuoteTemplate", "QuoteTemplateVersion",
+    "RdCostAllocationRule", "RdCostType", "RdProjectCategory", "ReportTemplate",
+    "RoleApiPermission", "RoleMenu", "SalesRankingConfig", "SatisfactionSurveyTemplate",
+    "SchedulerTaskConfig", "ScoringRule", "ShortageAlertRule", "SolutionCreditConfig",
+    "SolutionTemplate", "StageDwellTimeConfig", "StageGateConfig", "StageTemplate",
+    "StandardCost", "StandardCostHistory", "TechnicalParameterTemplate", "TemplateCategory",
+    "TemplateCheckItem", "TimesheetRule", "WbsTemplate", "WbsTemplateTask",
+})
 
 
 def _tenant_scoped_classes():

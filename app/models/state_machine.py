@@ -25,6 +25,7 @@ class StateTransitionLog(Base, TimestampMixin):
     __tablename__ = "state_transition_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     entity_type = Column(String(50), nullable=False, comment="实体类型：ISSUE/ECN/PROJECT等")
     entity_id = Column(Integer, nullable=False, comment="实体ID")
     from_state = Column(String(50), nullable=False, comment="源状态")

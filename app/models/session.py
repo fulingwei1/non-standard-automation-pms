@@ -36,6 +36,7 @@ class UserSession(Base, TimestampMixin):
     __tablename__ = "user_sessions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 用户信息
     user_id = Column(

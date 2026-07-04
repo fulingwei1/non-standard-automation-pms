@@ -58,6 +58,7 @@ class AssemblyTemplate(Base, TimestampMixin):
     __tablename__ = "mes_assembly_template"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
     template_name = Column(String(200), nullable=False, comment="模板名称")
     equipment_type = Column(String(50), nullable=False, comment="设备类型")
@@ -88,6 +89,7 @@ class CategoryStageMapping(Base, TimestampMixin):
     __tablename__ = "mes_category_stage_mapping"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     category_id = Column(Integer, ForeignKey("material_categories.id"), comment="物料分类ID")
     category_code = Column(String(50), nullable=False, comment="物料分类编码/关键词")
     category_name = Column(String(100), comment="分类名称")
@@ -360,6 +362,7 @@ class ShortageAlertRule(Base, TimestampMixin):
     __tablename__ = "mes_shortage_alert_rule"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     rule_code = Column(String(50), unique=True, nullable=False, comment="规则编码")
     rule_name = Column(String(200), nullable=False, comment="规则名称")
     alert_level = Column(String(10), nullable=False, comment="预警级别")

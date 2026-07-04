@@ -89,6 +89,7 @@ class ApprovalDelegateLog(Base, TimestampMixin):
     __tablename__ = "approval_delegate_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     delegate_config_id = Column(
         Integer, ForeignKey("approval_delegates.id"), nullable=False, comment="代理配置ID"
     )

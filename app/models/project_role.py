@@ -39,6 +39,7 @@ class ProjectRoleType(Base, TimestampMixin):
     __tablename__ = "project_role_types"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     role_code = Column(String(50), unique=True, nullable=False, comment="角色编码")
     role_name = Column(String(100), nullable=False, comment="角色名称")
     role_category = Column(
@@ -91,6 +92,7 @@ class ProjectRoleConfig(Base, TimestampMixin):
     __tablename__ = "project_role_configs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(
         Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, comment="项目ID"
     )

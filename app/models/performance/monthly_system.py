@@ -100,6 +100,7 @@ class EvaluationWeightConfig(Base, TimestampMixin):
     __tablename__ = "evaluation_weight_config"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     dept_manager_weight = Column(Integer, nullable=False, default=50, comment="部门经理权重 (%)")
     project_manager_weight = Column(Integer, nullable=False, default=50, comment="项目经理权重 (%)")
     effective_date = Column(Date, nullable=False, comment="生效日期")

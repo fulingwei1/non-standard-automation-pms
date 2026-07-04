@@ -104,6 +104,7 @@ class ScoringRule(Base, TimestampMixin):
 
     __tablename__ = "scoring_rules"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     version = Column(String(20), unique=True, nullable=False, comment="版本号")
     rules_json = Column(Text, nullable=False, comment="完整规则配置(JSON)")
     is_active = Column(Boolean, default=False, comment="是否启用")

@@ -385,6 +385,7 @@ class PresaleSolutionTemplate(Base, TimestampMixin):
     __tablename__ = "presale_solution_template"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_no = Column(String(50), unique=True, nullable=False, comment="模板编号")
 
     # 模板信息

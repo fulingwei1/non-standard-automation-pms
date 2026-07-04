@@ -83,6 +83,7 @@ class HrTagDict(Base, TimestampMixin):
     __tablename__ = "hr_tag_dict"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     tag_code = Column(String(50), unique=True, nullable=False, comment="标签编码")
     tag_name = Column(String(100), nullable=False, comment="标签名称")
     tag_type = Column(
@@ -308,6 +309,7 @@ class HrAIMatchingLog(Base):
     __tablename__ = "hr_ai_matching_log"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     request_id = Column(String(50), nullable=False, comment="匹配请求ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     staffing_need_id = Column(

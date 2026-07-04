@@ -153,6 +153,7 @@ class SatisfactionSurveyTemplate(Base, TimestampMixin):
     __tablename__ = "satisfaction_survey_templates"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_name = Column(String(100), nullable=False, comment="模板名称")
     template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
 

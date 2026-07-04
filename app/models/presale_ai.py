@@ -128,6 +128,7 @@ class PresaleAIConfig(Base):
     __tablename__ = "presale_ai_config"
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ai_function = Column(String(50), nullable=False, unique=True, comment="AI功能名称")
     enabled = Column(Boolean, default=True, comment="是否启用")
     model_name = Column(String(100), nullable=True, comment="模型名称")
@@ -155,6 +156,7 @@ class PresaleAIWorkflowLog(Base):
     __tablename__ = "presale_ai_workflow_log"
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     presale_ticket_id = Column(Integer, nullable=False, comment="售前工单ID")
     workflow_step = Column(Enum(WorkflowStepEnum), nullable=False, comment="工作流步骤")
     status = Column(Enum(WorkflowStatusEnum), default=WorkflowStatusEnum.PENDING, comment="状态")
@@ -182,6 +184,7 @@ class PresaleAIAuditLog(Base):
     __tablename__ = "presale_ai_audit_log"
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     action = Column(String(100), nullable=False, comment="操作类型")
     ai_function = Column(String(50), nullable=True, comment="AI功能")

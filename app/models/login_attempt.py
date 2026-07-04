@@ -6,7 +6,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 
 from app.models.base import Base
 
@@ -17,6 +17,7 @@ class LoginAttempt(Base):
     __tablename__ = "login_attempts"
 
     id = Column(Integer, primary_key=True, index=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     username = Column(String(50), nullable=False, index=True, comment="用户名")
     ip_address = Column(String(45), nullable=False, index=True, comment="IP地址（支持IPv6）")
     user_agent = Column(Text, comment="用户代理（浏览器信息）")

@@ -150,6 +150,7 @@ class TargetBreakdownLog(Base, TimestampMixin):
     __tablename__ = "target_breakdown_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="日志ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     parent_target_id = Column(
         Integer,
         ForeignKey("sales_targets_v2.id", ondelete="CASCADE"),

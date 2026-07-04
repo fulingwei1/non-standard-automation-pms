@@ -122,6 +122,7 @@ class BenchmarkConfiguration(Base, TimestampMixin):
     __tablename__ = "benchmark_configurations"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 配置名称
     name = Column(String(100), nullable=False, comment="配置名称")

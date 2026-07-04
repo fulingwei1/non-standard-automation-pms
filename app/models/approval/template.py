@@ -28,6 +28,7 @@ class ApprovalTemplate(Base, TimestampMixin):
     __tablename__ = "approval_templates"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
     template_name = Column(String(100), nullable=False, comment="模板名称")
     category = Column(String(20), comment="分类：HR/FINANCE/PROJECT/BUSINESS/ADMIN")
@@ -110,6 +111,7 @@ class ApprovalTemplateVersion(Base, TimestampMixin):
     __tablename__ = "approval_template_versions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_id = Column(
         Integer, ForeignKey("approval_templates.id"), nullable=False, comment="模板ID"
     )

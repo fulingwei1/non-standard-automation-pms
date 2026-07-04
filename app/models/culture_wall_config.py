@@ -4,7 +4,7 @@
 用于管理员配置文化墙的显示内容和可见角色
 """
 
-from sqlalchemy import JSON, Boolean, Column, Index, Integer, String
+from sqlalchemy import Boolean, Column, ForeignKey, Index, Integer, JSON, String
 
 from app.models.base import Base, TimestampMixin
 
@@ -15,6 +15,7 @@ class CultureWallConfig(Base, TimestampMixin):
     __tablename__ = "culture_wall_config"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 配置名称
     config_name = Column(String(100), nullable=False, unique=True, comment="配置名称")

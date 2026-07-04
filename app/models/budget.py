@@ -130,6 +130,7 @@ class ProjectCostAllocationRule(Base, TimestampMixin):
     __tablename__ = "project_cost_allocation_rules"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     rule_name = Column(String(100), nullable=False, comment="规则名称")
     rule_type = Column(
         String(20), nullable=False, comment="分摊类型：PROPORTION/MANUAL（按比例/手工）"

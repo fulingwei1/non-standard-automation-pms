@@ -176,6 +176,7 @@ class ProjectStatusLog(Base):
     __tablename__ = "project_status_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), nullable=True, comment="设备ID（可选）")
 

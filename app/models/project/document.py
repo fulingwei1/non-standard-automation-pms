@@ -72,6 +72,7 @@ class ProjectTemplate(Base, TimestampMixin):
     __tablename__ = "project_templates"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
     template_name = Column(String(200), nullable=False, comment="模板名称")
     description = Column(Text, comment="模板描述")
@@ -129,6 +130,7 @@ class ProjectTemplateVersion(Base, TimestampMixin):
     __tablename__ = "project_template_versions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_id = Column(
         Integer, ForeignKey("project_templates.id"), nullable=False, comment="模板ID"
     )

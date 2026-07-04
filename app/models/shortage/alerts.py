@@ -33,6 +33,7 @@ class AlertHandleLog(Base, TimestampMixin):
     __tablename__ = "mat_alert_log"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     alert_id = Column(Integer, nullable=False, comment="预警ID")
 
     # 操作信息

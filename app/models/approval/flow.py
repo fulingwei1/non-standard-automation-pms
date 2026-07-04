@@ -239,6 +239,7 @@ class ApprovalRoutingRule(Base, TimestampMixin):
     __tablename__ = "approval_routing_rules"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_id = Column(
         Integer, ForeignKey("approval_templates.id"), nullable=False, comment="模板ID"
     )

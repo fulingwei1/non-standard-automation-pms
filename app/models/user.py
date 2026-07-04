@@ -243,6 +243,7 @@ class RoleApiPermission(Base):
     __tablename__ = "role_api_permissions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=False, comment="角色ID")
     permission_id = Column(
         Integer, ForeignKey("api_permissions.id"), nullable=False, comment="API权限ID"
@@ -302,6 +303,7 @@ class PermissionAudit(Base, TimestampMixin):
     __tablename__ = "permission_audits"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     operator_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="操作人ID")
     action = Column(String(50), nullable=False, comment="操作类型")
     target_type = Column(String(20), nullable=False, comment="目标类型（user/role/permission）")
@@ -368,6 +370,7 @@ class SolutionCreditConfig(Base):
     __tablename__ = "solution_credit_configs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     config_key = Column(String(50), unique=True, nullable=False, comment="配置键")
     config_value = Column(String(200), nullable=False, comment="配置值")
     description = Column(Text, comment="配置说明")

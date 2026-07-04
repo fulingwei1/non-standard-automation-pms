@@ -55,6 +55,7 @@ class User2FABackupCode(Base):
     __tablename__ = "user_2fa_backup_codes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, comment="用户ID"
     )

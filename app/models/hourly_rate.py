@@ -26,6 +26,7 @@ class HourlyRateConfig(Base, TimestampMixin):
     __tablename__ = "hourly_rate_configs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 配置类型
     config_type = Column(

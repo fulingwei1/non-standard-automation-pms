@@ -27,6 +27,7 @@ class AcceptanceTemplate(Base, TimestampMixin):
     __tablename__ = "acceptance_templates"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
     template_name = Column(String(200), nullable=False, comment="模板名称")
     acceptance_type = Column(String(20), nullable=False, comment="FAT/SAT/FINAL")
@@ -55,6 +56,7 @@ class TemplateCategory(Base, TimestampMixin):
     __tablename__ = "template_categories"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_id = Column(
         Integer, ForeignKey("acceptance_templates.id"), nullable=False, comment="所属模板"
     )
@@ -78,6 +80,7 @@ class TemplateCheckItem(Base, TimestampMixin):
     __tablename__ = "template_check_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     category_id = Column(
         Integer, ForeignKey("template_categories.id"), nullable=False, comment="所属分类"
     )

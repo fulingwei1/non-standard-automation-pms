@@ -309,6 +309,7 @@ class QuoteCostTemplate(Base, TimestampMixin):
     __tablename__ = "quote_cost_templates"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
     template_name = Column(String(200), nullable=False, comment="模板名称")
     template_type = Column(String(50), comment="模板类型：STANDARD/CUSTOM/PROJECT")
@@ -562,6 +563,7 @@ class CpqRuleSet(Base, TimestampMixin):
     __tablename__ = "cpq_rule_sets"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     rule_code = Column(String(50), unique=True, nullable=False, comment="规则集编码")
     rule_name = Column(String(200), nullable=False, comment="规则集名称")
     description = Column(Text, comment="描述")
@@ -593,6 +595,7 @@ class QuoteTemplate(Base, TimestampMixin):
     __tablename__ = "quote_templates"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
     template_name = Column(String(200), nullable=False, comment="模板名称")
     category = Column(String(50), comment="模板分类")
@@ -632,6 +635,7 @@ class QuoteTemplateVersion(Base, TimestampMixin):
     __tablename__ = "quote_template_versions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_id = Column(
         Integer, ForeignKey("quote_templates.id"), nullable=False, comment="模板ID"
     )

@@ -12,6 +12,7 @@ class DashboardChartConfig(Base, TimestampMixin):
     __tablename__ = "dashboard_chart_configs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True, comment="创建用户ID")
     chart_type = Column(String(50), nullable=False, comment="图表类型")
     title = Column(String(200), nullable=False, comment="图表标题")

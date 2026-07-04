@@ -150,6 +150,7 @@ class StageGateConfig(Base, TimestampMixin):
     __tablename__ = "stage_gate_configs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 阶段门标识
     gate_type = Column(
@@ -264,6 +265,7 @@ class StageDwellTimeConfig(Base, TimestampMixin):
     __tablename__ = "stage_dwell_time_configs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联阶段
     stage_id = Column(
@@ -390,6 +392,7 @@ class FunnelTransitionLog(Base, TimestampMixin):
     __tablename__ = "funnel_transition_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 实体信息
     entity_type = Column(String(20), nullable=False, comment="实体类型")

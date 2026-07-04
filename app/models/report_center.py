@@ -81,6 +81,7 @@ class ReportTemplate(Base, TimestampMixin):
     __tablename__ = "report_template"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
     template_name = Column(String(100), nullable=False, comment="模板名称")
     report_type = Column(String(30), nullable=False, comment="报表类型")
@@ -384,6 +385,7 @@ class ImportTemplate(Base, TimestampMixin):
     __tablename__ = "import_template"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
     template_name = Column(String(100), nullable=False, comment="模板名称")
     import_type = Column(String(50), nullable=False, comment="导入类型")

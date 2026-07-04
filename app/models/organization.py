@@ -533,6 +533,7 @@ class JobLevel(Base, TimestampMixin):
     __tablename__ = "job_levels"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     level_code = Column(String(20), unique=True, nullable=False, comment="职级编码")
     level_name = Column(String(50), nullable=False, comment="职级名称")
     level_category = Column(String(10), nullable=False, comment="序列: P/M/T")

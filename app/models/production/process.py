@@ -2,7 +2,7 @@
 """
 工序字典模型
 """
-from sqlalchemy import Boolean, Column, Index, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, Column, ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
@@ -14,6 +14,7 @@ class ProcessDict(Base, TimestampMixin):
     __tablename__ = "process_dict"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     process_code = Column(String(50), unique=True, nullable=False, comment="工序编码")
     process_name = Column(String(100), nullable=False, comment="工序名称")
     process_type = Column(String(20), nullable=False, default="OTHER", comment="工序类型")

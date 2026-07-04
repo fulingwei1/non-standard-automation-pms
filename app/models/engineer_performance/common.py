@@ -61,6 +61,7 @@ class EngineerDimensionConfig(Base, TimestampMixin):
     __tablename__ = "engineer_dimension_config"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 配置维度
     job_type = Column(String(20), nullable=False, comment="岗位类型")
@@ -196,6 +197,7 @@ class KnowledgeReuseLog(Base):
     __tablename__ = "knowledge_reuse_log"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     contribution_id = Column(
         Integer, ForeignKey("knowledge_contribution.id"), nullable=False, comment="贡献ID"
     )

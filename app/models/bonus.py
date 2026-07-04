@@ -32,6 +32,7 @@ class BonusRule(Base, TimestampMixin):
     __tablename__ = "bonus_rules"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     rule_code = Column(String(50), unique=True, nullable=False, comment="规则编码")
     rule_name = Column(String(200), nullable=False, comment="规则名称")
     bonus_type = Column(String(20), nullable=False, comment="奖金类型")

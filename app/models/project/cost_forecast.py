@@ -196,6 +196,7 @@ class CostAlertRule(Base, TimestampMixin):
     __tablename__ = "cost_alert_rules"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 规则名称
     rule_name = Column(String(200), nullable=False, comment="规则名称")

@@ -194,6 +194,7 @@ class SalesRankingConfig(Base, TimestampMixin):
 
     __tablename__ = "sales_ranking_configs"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     metrics = Column(JSON, nullable=False, comment="指标配置(JSON数组)")
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人ID")
     updated_by = Column(Integer, ForeignKey("users.id"), comment="最后更新人ID")

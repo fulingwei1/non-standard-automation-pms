@@ -13,6 +13,7 @@ class EcnType(Base, TimestampMixin):
     __tablename__ = "ecn_types"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     type_code = Column(String(20), unique=True, nullable=False, comment="类型编码")
     type_name = Column(String(50), nullable=False, comment="类型名称")
     description = Column(Text, comment="描述")

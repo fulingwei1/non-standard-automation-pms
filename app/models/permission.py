@@ -133,6 +133,7 @@ class PermissionGroup(Base, TimestampMixin):
     __tablename__ = "permission_groups"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     group_code = Column(String(50), unique=True, nullable=False)
     group_name = Column(String(100), nullable=False)
     parent_id = Column(Integer, ForeignKey("permission_groups.id", ondelete="SET NULL"))
@@ -218,6 +219,7 @@ class RoleMenu(Base):
     __tablename__ = "role_menus"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     role_id = Column(Integer, ForeignKey("roles.id", ondelete="CASCADE"), nullable=False)
     menu_id = Column(Integer, ForeignKey("menu_permissions.id", ondelete="CASCADE"), nullable=False)
     is_active = Column(Boolean, default=True)

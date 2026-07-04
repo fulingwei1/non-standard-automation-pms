@@ -314,6 +314,7 @@ class ProjectDeliveryChangeLog(Base, TimestampMixin):
     __tablename__ = "project_delivery_change_logs"
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键 ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     schedule_id = Column(
         Integer,
         ForeignKey("project_delivery_schedules.id", ondelete="CASCADE"),

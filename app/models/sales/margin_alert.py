@@ -54,6 +54,7 @@ class MarginAlertConfig(Base, TimestampMixin):
     __tablename__ = "margin_alert_configs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 配置标识
     name = Column(String(100), nullable=False, comment="配置名称")

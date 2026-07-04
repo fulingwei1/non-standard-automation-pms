@@ -14,6 +14,7 @@ class EcnLog(Base, TimestampMixin):
     __tablename__ = "ecn_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
     log_type = Column(String(20), nullable=False, comment="日志类型")
     log_action = Column(String(50), nullable=False, comment="操作动作")

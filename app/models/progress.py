@@ -37,6 +37,7 @@ class WbsTemplate(Base, TimestampMixin):
     __tablename__ = "wbs_templates"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_code = Column(String(20), unique=True, nullable=False, comment="模板编码")
     template_name = Column(String(100), nullable=False, comment="模板名称")
     project_type = Column(String(20), comment="项目类型")
@@ -61,6 +62,7 @@ class WbsTemplateTask(Base):
     __tablename__ = "wbs_template_tasks"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_id = Column(Integer, ForeignKey("wbs_templates.id"), nullable=False, comment="模板ID")
     task_name = Column(String(200), comment="任务名称")
     stage = Column(String(20), comment="阶段（S1-S9）")
@@ -264,6 +266,7 @@ class ProgressLog(Base):
     __tablename__ = "progress_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     task_id = Column(Integer, ForeignKey("task_unified.id"), nullable=False, comment="任务ID")
     progress_percent = Column(Integer, comment="进度百分比")
     update_note = Column(Text, comment="更新说明")

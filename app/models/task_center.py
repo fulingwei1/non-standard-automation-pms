@@ -220,6 +220,7 @@ class JobDutyTemplate(Base, TimestampMixin):
     __tablename__ = "job_duty_template"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     position_id = Column(Integer, nullable=False, comment="岗位ID")
     position_name = Column(String(100), comment="岗位名称")
     department_id = Column(Integer, comment="部门ID")
@@ -260,6 +261,7 @@ class TaskOperationLog(Base):
     __tablename__ = "task_operation_log"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     task_id = Column(Integer, ForeignKey("task_unified.id"), nullable=False, comment="任务ID")
     operation_type = Column(String(50), nullable=False, comment="操作类型")
     operation_desc = Column(Text, comment="操作描述")

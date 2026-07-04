@@ -31,6 +31,7 @@ class ProductionProgressLog(Base, TimestampMixin):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     work_order_id = Column(Integer, ForeignKey("work_order.id"), nullable=False, comment="工单ID")
     workstation_id = Column(Integer, ForeignKey("workstation.id"), nullable=True, comment="工位ID")
 

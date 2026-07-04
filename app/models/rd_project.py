@@ -31,6 +31,7 @@ class RdProjectCategory(Base, TimestampMixin):
     __tablename__ = "rd_project_category"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     category_code = Column(String(20), unique=True, nullable=False, comment="分类编码")
     category_name = Column(String(50), nullable=False, comment="分类名称")
     category_type = Column(
@@ -137,6 +138,7 @@ class RdCostType(Base, TimestampMixin):
     __tablename__ = "rd_cost_type"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     type_code = Column(String(20), unique=True, nullable=False, comment="费用类型编码")
     type_name = Column(String(50), nullable=False, comment="费用类型名称")
     category = Column(
@@ -247,6 +249,7 @@ class RdCostAllocationRule(Base, TimestampMixin):
     __tablename__ = "rd_cost_allocation_rule"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     rule_name = Column(String(100), nullable=False, comment="规则名称")
     rule_type = Column(
         String(20), nullable=False, comment="分摊类型：PROPORTION/MANUAL（按比例/手工）"
