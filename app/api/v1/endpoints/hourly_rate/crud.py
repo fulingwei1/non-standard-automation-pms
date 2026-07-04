@@ -3,6 +3,7 @@
 时薪配置CRUD操作
 """
 
+from datetime import date, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -23,6 +24,12 @@ from app.schemas.hourly_rate import (
 )
 
 router = APIRouter()
+
+
+def _append_remark(existing: Optional[str], note: str) -> str:
+    if existing:
+        return f"{existing}\n{note}"
+    return note
 
 
 def _build_config_response(config: HourlyRateConfig) -> HourlyRateConfigResponse:
@@ -185,15 +192,54 @@ def update_hourly_rate_config(
         raise HTTPException(status_code=404, detail="时薪配置不存在")
 
     update_data = config_in.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        if hasattr(config, field):
-            setattr(config, field, value)
+    if not update_data:
+        return _build_config_response(config)
 
+    if update_data.get("is_active") is False and not (
+        {"hourly_rate", "effective_date"} & set(update_data)
+    ):
+        stop_date = date.today() - timedelta(days=1)
+        config.is_active = False
+        if config.expiry_date is None or config.expiry_date > stop_date:
+            config.expiry_date = stop_date
+        config.remark = _append_remark(
+            update_data.get("remark", config.remark),
+            f"已停用：{date.today().isoformat()} by user {current_user.id}",
+        )
+        db.add(config)
+        db.commit()
+        db.refresh(config)
+        return _build_config_response(config)
+
+    new_effective_date = update_data.get("effective_date") or config.effective_date or date.today()
+    old_expiry_date = new_effective_date - timedelta(days=1)
+    if config.expiry_date is None or config.expiry_date > old_expiry_date:
+        config.expiry_date = old_expiry_date
+    config.remark = _append_remark(
+        config.remark,
+        f"已被新版本取代：{date.today().isoformat()} by user {current_user.id}",
+    )
+
+    version_data = {
+        "config_type": config.config_type,
+        "user_id": config.user_id,
+        "role_id": config.role_id,
+        "dept_id": config.dept_id,
+        "hourly_rate": update_data.get("hourly_rate", config.hourly_rate),
+        "effective_date": new_effective_date,
+        "expiry_date": update_data.get("expiry_date"),
+        "is_active": update_data.get("is_active", True),
+        "remark": update_data.get("remark", config.remark),
+        "created_by": current_user.id,
+    }
+
+    new_config = HourlyRateConfig(**version_data)
     db.add(config)
+    db.add(new_config)
     db.commit()
-    db.refresh(config)
+    db.refresh(new_config)
 
-    return _build_config_response(config)
+    return _build_config_response(new_config)
 
 
 @router.delete("/{config_id:int}", status_code=status.HTTP_200_OK)
@@ -210,7 +256,15 @@ def delete_hourly_rate_config(
     if not config:
         raise HTTPException(status_code=404, detail="时薪配置不存在")
 
-    db.delete(config)
+    stop_date = date.today() - timedelta(days=1)
+    config.is_active = False
+    if config.expiry_date is None or config.expiry_date > stop_date:
+        config.expiry_date = stop_date
+    config.remark = _append_remark(
+        config.remark,
+        f"已停用：{date.today().isoformat()} by user {current_user.id}",
+    )
+    db.add(config)
     db.commit()
 
-    return ResponseModel(code=200, message="时薪配置已删除")
+    return ResponseModel(code=200, message="时薪配置已停用", data={"id": config_id})

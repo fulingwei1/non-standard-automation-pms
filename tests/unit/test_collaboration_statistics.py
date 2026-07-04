@@ -31,6 +31,20 @@ class TestRatingStatistics:
         result = stats.get_average_collaboration_score(1, 1)
         assert result == Decimal("85.00")
 
+    def test_get_average_score_uses_rating_weight(self):
+        stats, db = self._make_stats()
+        real_rating = MagicMock()
+        real_rating.total_score = Decimal("100")
+        real_rating.rating_weight = Decimal("1.00")
+        auto_rating = MagicMock()
+        auto_rating.total_score = Decimal("75")
+        auto_rating.rating_weight = Decimal("0.50")
+        db.query.return_value.filter.return_value.all.return_value = [real_rating, auto_rating]
+
+        result = stats.get_average_collaboration_score(1, 1)
+
+        assert result == Decimal("91.67")
+
     def test_get_rating_statistics_empty(self):
         stats, db = self._make_stats()
         db.query.return_value.filter.return_value.all.return_value = []

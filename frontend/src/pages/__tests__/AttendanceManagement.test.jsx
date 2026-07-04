@@ -159,7 +159,7 @@ describe('AttendanceManagement', () => {
     });
 
     expect(screen.getByText('员工考勤管理')).toBeInTheDocument();
-    expect(screen.getByText('员工考勤记录、统计分析、请假管理、加班管理')).toBeInTheDocument();
+    expect(screen.getByText('员工考勤记录、统计分析')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /导出报表/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /统计分析/i })).toBeInTheDocument();
 
@@ -196,19 +196,16 @@ describe('AttendanceManagement', () => {
     expect(screen.getByText('测试部')).toBeInTheDocument();
   });
 
-  it('可以切换到考勤记录、请假管理和加班管理标签页', async () => {
+  it('只展示已接入的部门统计和考勤记录标签页', async () => {
     renderPage();
 
     await screen.findByText('研发部');
 
+    expect(screen.queryByRole('button', { name: '请假管理' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '加班管理' })).not.toBeInTheDocument();
+
     fireEvent.click(screen.getByRole('button', { name: '考勤记录' }));
     expect(screen.getByText('暂无考勤明细记录（当前仅展示部门考勤统计）')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: '请假管理' }));
-    expect(screen.getByText('请假申请')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: '加班管理' }));
-    expect(screen.getByText('暂无加班申请数据')).toBeInTheDocument();
   });
 
   it('接口失败时会记录降级日志并保持空态汇总', async () => {

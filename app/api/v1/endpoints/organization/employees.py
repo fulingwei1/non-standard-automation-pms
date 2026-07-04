@@ -112,6 +112,33 @@ def update_employee(
     return success_response(data=emp_response, message="员工更新成功")
 
 
+@router.delete("/employees/{emp_id}")
+def delete_employee(
+    *,
+    db: Session = Depends(deps.get_db),
+    emp_id: int,
+    _current_user: User = Depends(security.require_permission("hr:update")),
+) -> Any:
+    """软删除员工：保留历史资料，停用员工档案。"""
+    employee = db.query(Employee).filter(Employee.id == emp_id).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+    employee.is_active = False
+    employee.employment_status = "resigned"
+    db.add(employee)
+    db.commit()
+
+    return success_response(
+        data={
+            "id": employee.id,
+            "is_active": employee.is_active,
+            "employment_status": employee.employment_status,
+        },
+        message="员工已停用",
+    )
+
+
 @router.get("/{emp_id}/assignments")
 def get_employee_assignments(
     *,

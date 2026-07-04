@@ -10,6 +10,31 @@ from sqlalchemy import desc
 from app.models.engineer_performance import CollaborationRating
 from app.models.performance import PerformancePeriod
 
+DEFAULT_RATING_WEIGHT = Decimal("1.00")
+
+
+def _rating_weight(rating: CollaborationRating) -> Decimal:
+    raw_weight = getattr(rating, "rating_weight", None)
+    try:
+        weight = Decimal(str(raw_weight))
+    except Exception:
+        return DEFAULT_RATING_WEIGHT
+    if weight <= 0:
+        return DEFAULT_RATING_WEIGHT
+    return weight
+
+
+def _weighted_average_score(ratings: list[CollaborationRating]) -> Decimal:
+    weighted_total = Decimal("0.00")
+    weight_total = Decimal("0.00")
+    for rating in ratings:
+        weight = _rating_weight(rating)
+        weighted_total += Decimal(str(rating.total_score)) * weight
+        weight_total += weight
+    if weight_total <= 0:
+        return Decimal("75.0")
+    return Decimal(str(round(weighted_total / weight_total, 2)))
+
 
 class RatingStatistics:
     """评价统计分析"""
@@ -42,10 +67,7 @@ class RatingStatistics:
         if not ratings:
             return Decimal("75.0")  # 默认值
 
-        total = sum(r.total_score for r in ratings)
-        avg = total / len(ratings)
-
-        return Decimal(str(round(avg, 2)))
+        return _weighted_average_score(ratings)
 
     def get_rating_statistics(self, period_id: int) -> Dict[str, Any]:
         """
@@ -72,9 +94,7 @@ class RatingStatistics:
 
         # 计算平均得分
         completed = [r for r in all_ratings if r.total_score is not None]
-        avg_score = (
-            sum(float(r.total_score) for r in completed) / len(completed) if completed else 0.0
-        )
+        avg_score = float(_weighted_average_score(completed)) if completed else 0.0
 
         # 按岗位类型统计
         job_type_stats = {}

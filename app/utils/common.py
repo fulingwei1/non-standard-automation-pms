@@ -30,7 +30,10 @@ def clean_name(name: Any) -> Optional[str]:
     """清理姓名中的特殊字符"""
     if pd.isna(name):
         return None
-    return str(name).replace("\n", "").strip()
+    result = str(name).replace("\n", "").strip()
+    if result in ("/", "NaN", ""):
+        return None
+    return result
 
 
 def clean_phone(phone: Any) -> Optional[str]:

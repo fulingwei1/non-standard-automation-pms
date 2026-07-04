@@ -4,6 +4,7 @@
 基于绩效结果计算奖金
 """
 
+from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
@@ -33,6 +34,9 @@ class PerformanceBonusCalculator(BonusCalculatorBase):
         Returns:
             BonusCalculation: 计算记录，如果不满足条件则返回None
         """
+        if performance_result.total_score is None or not performance_result.level:
+            return None
+
         # 检查触发条件
         context = {"performance_result": performance_result}
         if not self.check_trigger_condition(bonus_rule, context):
@@ -45,28 +49,39 @@ class PerformanceBonusCalculator(BonusCalculatorBase):
         # 计算奖金
         calculated_amount = base_amount * coefficient
 
-        # 创建计算记录
-        calculation = BonusCalculation(
-            calculation_code=self.generate_calculation_code(),
-            rule_id=bonus_rule.id,
-            period_id=performance_result.period_id,
-            user_id=performance_result.user_id,
-            performance_result_id=performance_result.id,
-            calculated_amount=calculated_amount,
-            calculation_detail={
-                "base_amount": float(base_amount),
-                "coefficient": float(coefficient),
-                "performance_level": performance_result.level,
-                "performance_score": (
-                    float(performance_result.total_score) if performance_result.total_score else 0
-                ),
-            },
-            calculation_basis={
-                "type": "performance",
-                "period_id": performance_result.period_id,
-                "performance_result_id": performance_result.id,
-            },
-            status="CALCULATED",
+        calculation = (
+            self.db.query(BonusCalculation)
+            .filter(
+                BonusCalculation.rule_id == bonus_rule.id,
+                BonusCalculation.performance_result_id == performance_result.id,
+            )
+            .first()
         )
+        if calculation and calculation.status != "CALCULATED":
+            return calculation
+
+        if calculation is None:
+            calculation = BonusCalculation(
+                calculation_code=self.generate_calculation_code(),
+                rule_id=bonus_rule.id,
+                period_id=performance_result.period_id,
+                user_id=performance_result.user_id,
+                performance_result_id=performance_result.id,
+                status="CALCULATED",
+            )
+
+        calculation.calculated_amount = calculated_amount
+        calculation.calculation_detail = {
+            "base_amount": float(base_amount),
+            "coefficient": float(coefficient),
+            "performance_level": performance_result.level,
+            "performance_score": float(performance_result.total_score),
+        }
+        calculation.calculation_basis = {
+            "type": "performance",
+            "period_id": performance_result.period_id,
+            "performance_result_id": performance_result.id,
+        }
+        calculation.calculated_at = datetime.now()
 
         return calculation

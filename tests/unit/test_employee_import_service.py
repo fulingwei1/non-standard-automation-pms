@@ -15,6 +15,7 @@ from app.services.employee_import_service import (
     get_department_name,
     import_employees_from_dataframe,
     is_active_employee,
+    validate_excel_file,
 )
 
 
@@ -109,6 +110,21 @@ class TestGenerateEmployeeCode:
         existing = set()
         code = generate_employee_code(1, existing)
         assert code.startswith("EMP-")
+
+
+class TestValidateExcelFile:
+    def test_accepts_excel_extensions(self):
+        validate_excel_file("employees.xlsx")
+        validate_excel_file("employees.xls")
+
+    def test_rejects_non_excel_extensions(self):
+        from fastapi import HTTPException
+
+        with pytest.raises(HTTPException) as exc:
+            validate_excel_file("employees.csv")
+
+        assert exc.value.status_code == 400
+        assert "Excel" in exc.value.detail
 
 
 class TestImportEmployees:

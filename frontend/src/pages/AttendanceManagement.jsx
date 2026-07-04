@@ -21,21 +21,18 @@ import {
   CardHeader,
   CardTitle,
   Button,
-  Badge,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
   Progress } from
 "../components/ui";
-import { cn } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 
 
 import { adminApi } from "../services/api";
 
 export default function AttendanceManagement() {
-  const mockLeaveApplications = [];
   const [_searchText, _setSearchText] = useState("");
   const [dateFilter, _setDateFilter] = useState("today");
   const [_loading, setLoading] = useState(false);
@@ -78,7 +75,7 @@ export default function AttendanceManagement() {
 
       <PageHeader
         title="员工考勤管理"
-        description="员工考勤记录、统计分析、请假管理、加班管理"
+        description="员工考勤记录、统计分析"
         actions={
         <div className="flex gap-2">
             <Button variant="outline">
@@ -167,8 +164,6 @@ export default function AttendanceManagement() {
         <TabsList>
           <TabsTrigger value="statistics">部门统计</TabsTrigger>
           <TabsTrigger value="records">考勤记录</TabsTrigger>
-          <TabsTrigger value="leave">请假管理</TabsTrigger>
-          <TabsTrigger value="overtime">加班管理</TabsTrigger>
         </TabsList>
 
         <TabsContent value="statistics" className="space-y-4">
@@ -238,80 +233,6 @@ export default function AttendanceManagement() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="leave" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>请假申请</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {(mockLeaveApplications || []).map((app) =>
-                <div
-                  key={app.id}
-                  className="p-4 bg-slate-800/40 rounded-lg border border-slate-700/50">
-
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="font-medium text-white">
-                            {app.employee}
-                          </span>
-                          <Badge variant="outline">{app.department}</Badge>
-                          <Badge
-                          variant="outline"
-                          className={cn(
-                            app.status === "pending" &&
-                            "bg-amber-500/20 text-amber-400 border-amber-500/30",
-                            app.status === "approved" &&
-                            "bg-green-500/20 text-green-400 border-green-500/30"
-                          )}>
-
-                            {app.status === "pending" ? "待审批" : "已批准"}
-                          </Badge>
-                        </div>
-                        <div className="text-sm text-slate-400 space-y-1">
-                          <p>
-                            类型: {app.type} · 天数: {app.days} 天
-                          </p>
-                          <p>
-                            时间: {app.startDate} 至 {app.endDate}
-                          </p>
-                          <p>原因: {app.reason}</p>
-                          <p className="text-xs text-slate-500">
-                            提交时间: {app.submitTime}
-                          </p>
-                        </div>
-                      </div>
-                      {app.status === "pending" &&
-                    <div className="flex gap-2">
-                          <Button size="sm" variant="outline">
-                            批准
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            拒绝
-                          </Button>
-                    </div>
-                    }
-                    </div>
-                </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="overtime">
-          <Card>
-            <CardHeader>
-              <CardTitle>加班管理</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-slate-400 text-sm py-6 text-center">
-                暂无加班申请数据
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </motion.div>);
 

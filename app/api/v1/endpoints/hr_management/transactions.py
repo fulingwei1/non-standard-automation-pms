@@ -171,12 +171,21 @@ def approve_hr_transaction(
     # 根据事务类型执行相应操作
     employee = transaction.employee
     profile = employee.hr_profile
+    deactivated_user_count = 0
 
     if transaction.transaction_type == "resignation":
         employee.is_active = False
         employee.employment_status = "resigned"
         if profile:
             profile.resignation_date = transaction.resignation_date
+        bound_users = (
+            db.query(User)
+            .filter(User.employee_id == employee.id, User.is_active.is_(True))
+            .all()
+        )
+        for user in bound_users:
+            user.is_active = False
+            deactivated_user_count += 1
 
     elif transaction.transaction_type == "confirmation":
         employee.employment_type = "regular"
@@ -206,7 +215,11 @@ def approve_hr_transaction(
     transaction.status = "completed"
     db.commit()
 
-    return {"success": True, "message": "事务审批完成"}
+    return {
+        "success": True,
+        "message": "事务审批完成",
+        "deactivated_user_count": deactivated_user_count,
+    }
 
 
 @router.get("/transactions/statistics")

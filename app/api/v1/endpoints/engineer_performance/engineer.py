@@ -8,9 +8,10 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db
 from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.models.engineer_performance import EngineerProfile
 from app.models.performance import PerformancePeriod, PerformanceResult
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -97,6 +98,98 @@ async def update_profile(
         raise HTTPException(status_code=404, detail="工程师档案不存在")
 
     return ResponseModel(code=200, message="更新成功", data={"id": profile.id})
+
+
+def _performance_result_payload(result: PerformanceResult) -> dict:
+    return {
+        "result_id": result.id,
+        "user_id": result.user_id,
+        "period_id": result.period_id,
+        "user_name": result.user_name,
+        "job_type": result.job_type,
+        "job_level": result.job_level,
+        "total_score": float(result.total_score or 0),
+        "level": result.level,
+        "dimension_scores": {
+            "technical": float(result.workload_score or 0),
+            "execution": float(result.task_score or 0),
+            "cost_quality": float(result.quality_score or 0),
+            "knowledge": float(result.growth_score or 0),
+            "collaboration": float(result.collaboration_score or 0),
+        },
+        "dept_rank": result.dept_rank,
+        "company_rank": result.company_rank,
+        "calculated_at": result.calculated_at.isoformat() if result.calculated_at else None,
+    }
+
+
+@router.post("/calculate/batch", summary="批量计算并保存工程师绩效")
+async def calculate_batch_performance(
+    period_id: int = Query(..., description="考核周期ID"),
+    job_type: Optional[str] = Query(None, description="岗位类型"),
+    job_level: Optional[str] = Query(None, description="职级"),
+    department_id: Optional[int] = Query(None, description="部门ID"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("performance:manage")),
+):
+    """批量计算工程师绩效并落库到 performance_result。"""
+    period = db.query(PerformancePeriod).filter(PerformancePeriod.id == period_id).first()
+    if not period:
+        raise HTTPException(status_code=404, detail="考核周期不存在")
+
+    query = db.query(EngineerProfile).join(User, User.id == EngineerProfile.user_id).filter(
+        User.is_active.is_(True)
+    )
+    if job_type:
+        query = query.filter(EngineerProfile.job_type == job_type)
+    if job_level:
+        query = query.filter(EngineerProfile.job_level == job_level)
+    if department_id is not None:
+        query = query.filter(User.department_id == department_id)
+
+    service = EngineerPerformanceService(db)
+    succeeded = []
+    failed = []
+    for profile in query.order_by(EngineerProfile.user_id).all():
+        try:
+            result = service.calculate_and_save_result(profile.user_id, period_id)
+            succeeded.append(_performance_result_payload(result))
+        except Exception as exc:
+            db.rollback()
+            failed.append({"user_id": profile.user_id, "error": str(exc)})
+
+    return ResponseModel(
+        code=200,
+        message="绩效批量计算完成",
+        data={
+            "period_id": period_id,
+            "succeeded": len(succeeded),
+            "failed": len(failed),
+            "items": succeeded,
+            "errors": failed,
+        },
+    )
+
+
+@router.post("/calculate/{user_id}", summary="计算并保存指定工程师绩效")
+async def calculate_engineer_performance(
+    user_id: int,
+    period_id: int = Query(..., description="考核周期ID"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("performance:manage")),
+):
+    """计算指定工程师绩效并落库到 performance_result。"""
+    service = EngineerPerformanceService(db)
+    try:
+        result = service.calculate_and_save_result(user_id, period_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return ResponseModel(
+        code=200,
+        message="绩效计算完成",
+        data=_performance_result_payload(result),
+    )
 
 
 @router.get("/{user_id}", summary="获取工程师绩效详情")

@@ -694,8 +694,10 @@ from app.models.admin_office import (  # noqa: E402,F401
 from app.models.ai_feedback import AIOutputFeedback  # noqa: E402,F401
 from app.models.ai_job import AIGenerationJob  # noqa: E402,F401
 
-# OTD 智能体：阈值配置表（注册进 metadata，create_all 自动建表）
+# OTD 智能体：阈值配置表 + 风险快照表（注册进 metadata，create_all 自动建表）
 from app.models.otd_threshold_config import OtdThresholdConfig  # noqa: E402,F401
+from app.models.otd_risk_snapshot import OTDRiskSnapshot  # noqa: E402,F401
+from app.models.project_margin_snapshot import ProjectMarginSnapshot  # noqa: E402,F401
 
 # 工程师排班：能力、任务占用、负载预警（注册进 metadata，冲突检测依赖）
 from app.models.engineer_capacity import (  # noqa: E402,F401

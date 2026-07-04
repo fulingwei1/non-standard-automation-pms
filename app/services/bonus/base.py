@@ -7,6 +7,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
+import uuid
 
 from sqlalchemy.orm import Session
 
@@ -17,13 +18,22 @@ from app.models.enums import PerformanceLevelEnum
 class BonusCalculatorBase:
     """奖金计算器基类"""
 
+    BONUS_TYPE_ALIAS_GROUPS = (
+        ("PERFORMANCE_BASED", "PERFORMANCE", "PERFORMANCE_BONUS"),
+        ("PROJECT_BASED", "PROJECT", "PROJECT_BONUS"),
+        ("MILESTONE_BASED", "MILESTONE", "MILESTONE_BONUS"),
+        ("TEAM_BASED", "TEAM", "TEAM_BONUS"),
+        ("SALES_BASED", "SALES", "SALES_BONUS"),
+        ("PRESALE_BASED", "PRESALE", "PRESALE_BONUS"),
+    )
+
     def __init__(self, db: Session):
         self.db = db
 
     def generate_calculation_code(self) -> str:
         """生成计算单号"""
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        return f"BC{timestamp}"
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
+        return f"BC{timestamp}{uuid.uuid4().hex[:6].upper()}"
 
     def check_trigger_condition(self, bonus_rule: BonusRule, context: Dict[str, Any]) -> bool:
         """
@@ -93,15 +103,22 @@ class BonusCalculatorBase:
         Returns:
             Decimal: 系数
         """
+        normalized_level = getattr(level, "value", level)
+        normalized_level = str(normalized_level or "").upper()
         coefficients = {
-            PerformanceLevelEnum.EXCELLENT: Decimal("1.5"),
-            PerformanceLevelEnum.GOOD: Decimal("1.2"),
-            PerformanceLevelEnum.QUALIFIED: Decimal("1.0"),
-            PerformanceLevelEnum.NEEDS_IMPROVEMENT: Decimal("0.8"),
-            PerformanceLevelEnum.AVERAGE: Decimal("1.0"),
-            PerformanceLevelEnum.POOR: Decimal("0.8"),
+            "S": Decimal("1.5"),
+            "A": Decimal("1.2"),
+            "B": Decimal("1.0"),
+            "C": Decimal("0.8"),
+            "D": Decimal("0"),
+            PerformanceLevelEnum.EXCELLENT.value: Decimal("1.5"),
+            PerformanceLevelEnum.GOOD.value: Decimal("1.2"),
+            PerformanceLevelEnum.QUALIFIED.value: Decimal("1.0"),
+            PerformanceLevelEnum.NEEDS_IMPROVEMENT.value: Decimal("0.8"),
+            PerformanceLevelEnum.AVERAGE.value: Decimal("1.0"),
+            PerformanceLevelEnum.POOR.value: Decimal("0"),
         }
-        return coefficients.get(level, Decimal("1.0"))
+        return coefficients.get(normalized_level, Decimal("1.0"))
 
     def get_role_coefficient(self, role_code: str, bonus_rule: BonusRule) -> Decimal:
         """
@@ -153,9 +170,15 @@ class BonusCalculatorBase:
         )
 
         if bonus_type:
-            query = query.filter(BonusRule.bonus_type == bonus_type)
+            query = query.filter(BonusRule.bonus_type.in_(self._bonus_type_values(bonus_type)))
 
         # 按优先级排序
         query = query.order_by(BonusRule.priority.desc())
 
         return query.all()
+
+    def _bonus_type_values(self, bonus_type: str) -> tuple[str, ...]:
+        for group in self.BONUS_TYPE_ALIAS_GROUPS:
+            if bonus_type in group:
+                return group
+        return (bonus_type,)

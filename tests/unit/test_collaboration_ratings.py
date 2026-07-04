@@ -113,3 +113,5 @@ class TestRatingManager:
         assert count == 2
         assert r1.communication_score == 3
         assert r1.total_score == Decimal("75.0")
+        assert r1.is_auto_completed is True
+        assert r1.rating_weight == Decimal("0.50")

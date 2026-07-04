@@ -74,7 +74,8 @@ class RuleEngineMixin:
             matched_project = user_projects[0]  # 使用最常用的项目
 
         # 4. 判断工作类型（使用节假日工具）
-        work_type = get_work_type(work_date)
+        db = getattr(self, "db", None)
+        work_type = get_work_type(work_date, db=db) if db is not None else get_work_type(work_date)
 
         # 5. 构建工作项
         if extracted_hours:

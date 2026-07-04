@@ -19,6 +19,8 @@ from app.models.bonus import BonusCalculation, TeamBonusAllocation
 from app.models.user import User
 from app.services.import_export_engine import ImportExportEngine
 
+MONEY_TOLERANCE = Decimal("0.01")
+
 
 def validate_file_type(filename: str) -> None:
     """
@@ -285,7 +287,7 @@ def parse_allocation_sheet(
     Returns:
         Tuple[List[Dict], Dict[int, List[str]]]: (有效行数据, 错误字典)
     """
-    valid_rows = []
+    valid_entries = []
     parse_errors = {}
 
     for idx, row in df.iterrows():
@@ -295,6 +297,61 @@ def parse_allocation_sheet(
         if errors:
             parse_errors[row_num] = errors
         else:
-            valid_rows.append(data)
+            valid_entries.append((row_num, data))
 
+    invalid_rows = _validate_allocation_totals(valid_entries, parse_errors, db)
+    valid_rows = [data for row_num, data in valid_entries if row_num not in invalid_rows]
     return valid_rows, parse_errors
+
+
+def _to_money(value: Any) -> Decimal:
+    return Decimal(str(value or 0)).quantize(MONEY_TOLERANCE)
+
+
+def _validate_allocation_totals(
+    valid_entries: List[Tuple[int, Dict[str, Any]]],
+    parse_errors: Dict[int, List[str]],
+    db: Session,
+) -> set[int]:
+    """校验同一奖金分配/计算记录的 Excel 发放合计，避免超发或少发。"""
+    grouped: Dict[Tuple[str, int], List[Tuple[int, Dict[str, Any]]]] = {}
+    for row_num, data in valid_entries:
+        if data.get("team_allocation_id"):
+            key = ("team", int(data["team_allocation_id"]))
+        else:
+            key = ("calculation", int(data["calculation_id"]))
+        grouped.setdefault(key, []).append((row_num, data))
+
+    invalid_rows: set[int] = set()
+    for (kind, record_id), rows in grouped.items():
+        distributed_total = sum(
+            (_to_money(data["distributed_amount"]) for _, data in rows),
+            Decimal("0.00"),
+        )
+        if kind == "team":
+            allocation = (
+                db.query(TeamBonusAllocation)
+                .filter(TeamBonusAllocation.id == record_id)
+                .first()
+            )
+            expected_total = _to_money(getattr(allocation, "total_bonus_amount", 0))
+            expected_label = "团队总奖金"
+        else:
+            calculation = (
+                db.query(BonusCalculation).filter(BonusCalculation.id == record_id).first()
+            )
+            expected_total = _to_money(getattr(calculation, "calculated_amount", 0))
+            expected_label = "计算金额"
+
+        if abs(distributed_total - expected_total) <= MONEY_TOLERANCE:
+            continue
+
+        message = (
+            f"发放金额合计必须等于{expected_label} {expected_total:.2f}，"
+            f"当前合计 {distributed_total:.2f}"
+        )
+        for row_num, _ in rows:
+            parse_errors.setdefault(row_num, []).append(message)
+            invalid_rows.add(row_num)
+
+    return invalid_rows

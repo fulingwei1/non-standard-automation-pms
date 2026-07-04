@@ -39,16 +39,21 @@ def get_user_hourly_rate(
         except ValueError:
             raise HTTPException(status_code=400, detail="日期格式错误，应为YYYY-MM-DD")
 
-    hourly_rate = HourlyRateService.get_user_hourly_rate(db, user_id, work_date_obj)
+    rate_detail = HourlyRateService.get_user_hourly_rate_detail(
+        db, user_id, work_date_obj
+    )
 
     return ResponseModel(
         code=200,
         message="success",
         data={
             "user_id": user_id,
-            "hourly_rate": float(hourly_rate),
+            "hourly_rate": float(rate_detail.hourly_rate),
             "work_date": work_date or str(date.today()),
-            "source": "配置",
+            "source": rate_detail.source,
+            "config_id": rate_detail.config_id,
+            "is_fallback": rate_detail.is_fallback,
+            "fallback_reason": rate_detail.fallback_reason,
         },
     )
 

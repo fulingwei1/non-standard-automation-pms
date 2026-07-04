@@ -10,15 +10,31 @@
 4. 默认配置 - 系统默认时薪
 """
 
+import logging
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import Dict, List, Optional
 
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.models.hourly_rate import HourlyRateConfig
 from app.models.organization import Department
 from app.models.user import User, UserRole
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class HourlyRateResolution:
+    """Resolved hourly-rate value plus trace metadata."""
+
+    hourly_rate: Decimal
+    source: str
+    config_id: Optional[int] = None
+    is_fallback: bool = False
+    fallback_reason: Optional[str] = None
 
 
 class HourlyRateService:
@@ -26,6 +42,169 @@ class HourlyRateService:
 
     # 默认时薪（当没有配置时使用）
     DEFAULT_HOURLY_RATE = Decimal("100")  # 默认100元/小时
+
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
+
+    @staticmethod
+    def _valid_rate_window_filter(work_date: date):
+        """配置在指定日期可用于计算；历史已停用版本仍可回看。"""
+        return and_(
+            (
+                HourlyRateConfig.effective_date.is_(None)
+                | (HourlyRateConfig.effective_date <= work_date)
+            ),
+            (
+                HourlyRateConfig.expiry_date.is_(None)
+                | (HourlyRateConfig.expiry_date >= work_date)
+            ),
+            or_(
+                HourlyRateConfig.is_active.is_(True),
+                and_(
+                    HourlyRateConfig.is_active.is_(False),
+                    HourlyRateConfig.expiry_date.isnot(None),
+                    HourlyRateConfig.expiry_date >= work_date,
+                ),
+            ),
+        )
+
+    @staticmethod
+    def _pick_latest_config(query):
+        return (
+            query.order_by(
+                HourlyRateConfig.effective_date.desc().nullslast(),
+                HourlyRateConfig.updated_at.desc().nullslast(),
+                HourlyRateConfig.id.desc(),
+            )
+            .first()
+        )
+
+    @staticmethod
+    def get_user_hourly_rate_detail(
+        db: Session, user_id: int, work_date: Optional[date] = None
+    ) -> HourlyRateResolution:
+        """
+        获取用户时薪与来源（按优先级：用户配置 > 角色配置 > 部门配置 > 默认配置）
+
+        Args:
+            db: 数据库会话
+            user_id: 用户ID
+            work_date: 工作日期（用于判断配置是否在有效期内，默认今天）
+
+        Returns:
+            时薪解析结果
+        """
+        if work_date is None:
+            work_date = date.today()
+
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            logger.warning(
+                "时薪配置用户未找到，使用系统兜底: user_id=%s work_date=%s rate=%s",
+                user_id,
+                work_date,
+                HourlyRateService.DEFAULT_HOURLY_RATE,
+            )
+            return HourlyRateResolution(
+                hourly_rate=HourlyRateService.DEFAULT_HOURLY_RATE,
+                source="系统兜底",
+                is_fallback=True,
+                fallback_reason="USER_NOT_FOUND",
+            )
+
+        # 1. 优先查找用户配置
+        user_config = HourlyRateService._pick_latest_config(
+            db.query(HourlyRateConfig)
+            .filter(
+                HourlyRateConfig.config_type == "USER",
+                HourlyRateConfig.user_id == user_id,
+                HourlyRateService._valid_rate_window_filter(work_date),
+            )
+        )
+
+        if user_config:
+            return HourlyRateResolution(
+                hourly_rate=user_config.hourly_rate,
+                source="用户配置",
+                config_id=user_config.id,
+            )
+
+        # 2. 查找角色配置（用户可能有多个角色，取第一个有效的）
+        user_roles = db.query(UserRole).filter(UserRole.user_id == user_id).all()
+        for user_role in user_roles:
+            role_config = HourlyRateService._pick_latest_config(
+                db.query(HourlyRateConfig)
+                .filter(
+                    HourlyRateConfig.config_type == "ROLE",
+                    HourlyRateConfig.role_id == user_role.role_id,
+                    HourlyRateService._valid_rate_window_filter(work_date),
+                )
+            )
+
+            if role_config:
+                return HourlyRateResolution(
+                    hourly_rate=role_config.hourly_rate,
+                    source="角色配置",
+                    config_id=role_config.id,
+                )
+
+        # 3. 查找部门配置
+        # 通过User.department字符串字段或Employee的部门信息查找对应的Department
+        dept_config = None
+
+        # 3.1 尝试通过User.department字段匹配
+        if user.department:
+            dept = (
+                db.query(Department)
+                .filter(Department.dept_name == user.department, Department.is_active)
+                .first()
+            )
+            if dept:
+                dept_config = HourlyRateService._pick_latest_config(
+                    db.query(HourlyRateConfig)
+                    .filter(
+                        HourlyRateConfig.config_type == "DEPT",
+                        HourlyRateConfig.dept_id == dept.id,
+                        HourlyRateService._valid_rate_window_filter(work_date),
+                    )
+                )
+
+        if dept_config:
+            return HourlyRateResolution(
+                hourly_rate=dept_config.hourly_rate,
+                source="部门配置",
+                config_id=dept_config.id,
+            )
+
+        # 4. 查找默认配置
+        default_config = HourlyRateService._pick_latest_config(
+            db.query(HourlyRateConfig)
+            .filter(
+                HourlyRateConfig.config_type == "DEFAULT",
+                HourlyRateService._valid_rate_window_filter(work_date),
+            )
+        )
+
+        if default_config:
+            return HourlyRateResolution(
+                hourly_rate=default_config.hourly_rate,
+                source="默认配置",
+                config_id=default_config.id,
+            )
+
+        # 5. 使用默认值
+        logger.warning(
+            "时薪配置全级未命中，使用系统兜底: user_id=%s work_date=%s rate=%s",
+            user_id,
+            work_date,
+            HourlyRateService.DEFAULT_HOURLY_RATE,
+        )
+        return HourlyRateResolution(
+            hourly_rate=HourlyRateService.DEFAULT_HOURLY_RATE,
+            source="系统兜底",
+            is_fallback=True,
+            fallback_reason="NO_ACTIVE_CONFIG",
+        )
 
     @staticmethod
     def get_user_hourly_rate(
@@ -42,119 +221,9 @@ class HourlyRateService:
         Returns:
             时薪（元/小时）
         """
-        if work_date is None:
-            work_date = date.today()
-
-        user = db.query(User).filter(User.id == user_id).first()
-        if not user:
-            return HourlyRateService.DEFAULT_HOURLY_RATE
-
-        # 1. 优先查找用户配置
-        user_config = (
-            db.query(HourlyRateConfig)
-            .filter(
-                HourlyRateConfig.config_type == "USER",
-                HourlyRateConfig.user_id == user_id,
-                HourlyRateConfig.is_active,
-                (
-                    HourlyRateConfig.effective_date.is_(None)
-                    | (HourlyRateConfig.effective_date <= work_date)
-                ),
-                (
-                    HourlyRateConfig.expiry_date.is_(None)
-                    | (HourlyRateConfig.expiry_date >= work_date)
-                ),
-            )
-            .order_by(HourlyRateConfig.effective_date.desc().nullslast())
-            .first()
-        )
-
-        if user_config:
-            return user_config.hourly_rate
-
-        # 2. 查找角色配置（用户可能有多个角色，取第一个有效的）
-        user_roles = db.query(UserRole).filter(UserRole.user_id == user_id).all()
-        for user_role in user_roles:
-            role_config = (
-                db.query(HourlyRateConfig)
-                .filter(
-                    HourlyRateConfig.config_type == "ROLE",
-                    HourlyRateConfig.role_id == user_role.role_id,
-                    HourlyRateConfig.is_active,
-                    (
-                        HourlyRateConfig.effective_date.is_(None)
-                        | (HourlyRateConfig.effective_date <= work_date)
-                    ),
-                    (
-                        HourlyRateConfig.expiry_date.is_(None)
-                        | (HourlyRateConfig.expiry_date >= work_date)
-                    ),
-                )
-                .order_by(HourlyRateConfig.effective_date.desc().nullslast())
-                .first()
-            )
-
-            if role_config:
-                return role_config.hourly_rate
-
-        # 3. 查找部门配置
-        # 通过User.department字符串字段或Employee的部门信息查找对应的Department
-        dept_config = None
-
-        # 3.1 尝试通过User.department字段匹配
-        if user.department:
-            dept = (
-                db.query(Department)
-                .filter(Department.dept_name == user.department, Department.is_active)
-                .first()
-            )
-            if dept:
-                dept_config = (
-                    db.query(HourlyRateConfig)
-                    .filter(
-                        HourlyRateConfig.config_type == "DEPT",
-                        HourlyRateConfig.dept_id == dept.id,
-                        HourlyRateConfig.is_active,
-                        (
-                            HourlyRateConfig.effective_date.is_(None)
-                            | (HourlyRateConfig.effective_date <= work_date)
-                        ),
-                        (
-                            HourlyRateConfig.expiry_date.is_(None)
-                            | (HourlyRateConfig.expiry_date >= work_date)
-                        ),
-                    )
-                    .order_by(HourlyRateConfig.effective_date.desc().nullslast())
-                    .first()
-                )
-
-        if dept_config:
-            return dept_config.hourly_rate
-
-        # 4. 查找默认配置
-        default_config = (
-            db.query(HourlyRateConfig)
-            .filter(
-                HourlyRateConfig.config_type == "DEFAULT",
-                HourlyRateConfig.is_active,
-                (
-                    HourlyRateConfig.effective_date.is_(None)
-                    | (HourlyRateConfig.effective_date <= work_date)
-                ),
-                (
-                    HourlyRateConfig.expiry_date.is_(None)
-                    | (HourlyRateConfig.expiry_date >= work_date)
-                ),
-            )
-            .order_by(HourlyRateConfig.effective_date.desc().nullslast())
-            .first()
-        )
-
-        if default_config:
-            return default_config.hourly_rate
-
-        # 5. 使用默认值
-        return HourlyRateService.DEFAULT_HOURLY_RATE
+        return HourlyRateService.get_user_hourly_rate_detail(
+            db, user_id, work_date
+        ).hourly_rate
 
     @staticmethod
     def get_users_hourly_rates(

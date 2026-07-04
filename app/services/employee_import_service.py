@@ -63,6 +63,20 @@ def find_other_columns(columns: List[str]) -> Dict[str, Optional[str]]:
     return {"position": position_col, "phone": phone_col, "status": status_col}
 
 
+def validate_excel_file(filename: str) -> None:
+    """
+    验证Excel文件类型
+
+    Raises:
+        HTTPException: 如果文件类型无效
+    """
+    from fastapi import HTTPException
+
+    normalized = (filename or "").lower()
+    if not normalized.endswith((".xlsx", ".xls")):
+        raise HTTPException(status_code=400, detail="请上传Excel文件（.xlsx或.xls格式）")
+
+
 from app.utils.common import (
     clean_name,
 )

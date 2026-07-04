@@ -48,6 +48,13 @@ class CultureWallContentUpdate(BaseModel):
     related_department_id: Optional[int] = None
 
 
+class CultureWallContentReview(BaseModel):
+    """审核文化墙内容"""
+
+    approved: bool = Field(..., description="是否审核通过并发布")
+    review_note: Optional[str] = Field(None, description="审核意见")
+
+
 class CultureWallContentResponse(BaseModel):
     """文化墙内容响应"""
 

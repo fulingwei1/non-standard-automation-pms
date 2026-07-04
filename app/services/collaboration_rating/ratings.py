@@ -2,6 +2,7 @@
 """
 跨部门协作评价服务 - 评价管理
 """
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
@@ -164,6 +165,10 @@ class RatingManager:
         )  # 转换为百分制（5分制转100分制）
 
         rating.total_score = Decimal(str(round(total_score, 2)))
+        rating.rating_weight = Decimal("1.00")
+        rating.is_auto_completed = False
+        rating.auto_completed_at = None
+        rating.auto_completion_reason = None
 
         self.db.commit()
         self.db.refresh(rating)
@@ -194,10 +199,14 @@ class RatingManager:
         return query.all()
 
     def auto_complete_missing_ratings(
-        self, period_id: int, default_score: Decimal = Decimal("75.0")
+        self,
+        period_id: int,
+        default_score: Decimal = Decimal("75.0"),
+        default_weight: Decimal = Decimal("0.50"),
+        reason: str = "AUTO_COMPLETED_MISSING_RATING",
     ) -> int:
         """
-        自动完成缺失的评价（使用默认值）
+        自动完成缺失的评价（使用降权默认值并显式打标）
 
         Args:
             period_id: 考核周期ID
@@ -223,6 +232,10 @@ class RatingManager:
             rating.delivery_score = 3
             rating.interface_score = 3
             rating.total_score = default_score
+            rating.rating_weight = default_weight
+            rating.is_auto_completed = True
+            rating.auto_completed_at = datetime.utcnow()
+            rating.auto_completion_reason = reason
             count += 1
 
         self.db.commit()

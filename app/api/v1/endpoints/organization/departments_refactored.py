@@ -244,6 +244,46 @@ def update_department(
     return success_response(data=dept_response, message="部门更新成功")
 
 
+@router.delete("/departments/{dept_id}")
+def delete_department(
+    *,
+    db: Session = Depends(deps.get_db),
+    dept_id: int,
+    _current_user: User = Depends(security.require_permission("hr:update")),
+) -> Any:
+    """软删除部门：无子部门、无在职员工时停用部门。"""
+    department = db.query(Department).filter(Department.id == dept_id).first()
+    if not department:
+        raise HTTPException(status_code=404, detail="部门不存在")
+
+    active_children = (
+        db.query(func.count(Department.id))
+        .filter(Department.parent_id == dept_id, Department.is_active)
+        .scalar()
+        or 0
+    )
+    if active_children:
+        raise HTTPException(status_code=400, detail="部门下存在启用子部门，不能删除")
+
+    active_employees = (
+        db.query(func.count(Employee.id))
+        .filter(Employee.department == department.dept_name, Employee.is_active)
+        .scalar()
+        or 0
+    )
+    if active_employees:
+        raise HTTPException(status_code=400, detail="部门下存在在职员工，不能删除")
+
+    department.is_active = False
+    db.add(department)
+    db.commit()
+
+    return success_response(
+        data={"id": department.id, "is_active": department.is_active},
+        message="部门已停用",
+    )
+
+
 @router.get("/departments/{dept_id}/users")
 def get_department_users(
     *,

@@ -124,6 +124,10 @@ class CollaborationRating(Base, TimestampMixin):
 
     # 总分
     total_score = Column(Numeric(4, 2), comment="总分")
+    rating_weight = Column(Numeric(4, 2), default=1, nullable=False, comment="评分权重")
+    is_auto_completed = Column(Boolean, default=False, nullable=False, comment="是否自动补齐")
+    auto_completed_at = Column(DateTime, comment="自动补齐时间")
+    auto_completion_reason = Column(Text, comment="自动补齐原因")
 
     # 评价备注
     comment = Column(Text, comment="评价备注")

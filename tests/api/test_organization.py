@@ -211,6 +211,20 @@ class TestDepartmentCRUD:
 class TestEmployeeCRUD:
     """员工 CRUD 测试"""
 
+    def test_import_employees_rejects_non_excel_file(self, client: TestClient, admin_token: str):
+        """员工导入端点应直接拒绝非 Excel 文件，而不是运行时导入崩溃。"""
+        if not admin_token:
+            pytest.skip("Admin token not available")
+
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/org/employees/import",
+            files={"file": ("employees.csv", b"name\nzhangsan\n", "text/csv")},
+            headers=_auth_headers(admin_token),
+        )
+
+        assert response.status_code == 400
+        assert "Excel" in response.json()["detail"]
+
     def test_list_employees(self, client: TestClient, admin_token: str):
         """测试获取员工列表"""
         if not admin_token:

@@ -6,7 +6,7 @@
 """
 
 from datetime import date
-from typing import Dict, Optional, Set
+from typing import Any, Dict, Optional, Set
 
 # 中国法定节假日配置（按年份）
 # 格式: {年份: {日期: 节假日名称}}
@@ -103,7 +103,7 @@ WORKDAY_ADJUSTMENTS: Dict[int, Set[date]] = {
 }
 
 
-def is_holiday(check_date: date) -> bool:
+def is_holiday(check_date: date, db: Optional[Any] = None) -> bool:
     """
     检查指定日期是否为法定节假日
 
@@ -113,12 +113,18 @@ def is_holiday(check_date: date) -> bool:
     Returns:
         bool: 如果是节假日返回 True，否则返回 False
     """
+    if db is not None:
+        from app.models.holiday import HolidayService
+
+        if HolidayService.is_holiday(db, check_date):
+            return True
+
     year = check_date.year
     year_holidays = CHINESE_HOLIDAYS.get(year, {})
     return check_date in year_holidays
 
 
-def get_holiday_name(check_date: date) -> Optional[str]:
+def get_holiday_name(check_date: date, db: Optional[Any] = None) -> Optional[str]:
     """
     获取指定日期的节假日名称
 
@@ -128,12 +134,19 @@ def get_holiday_name(check_date: date) -> Optional[str]:
     Returns:
         Optional[str]: 节假日名称，如果不是节假日返回 None
     """
+    if db is not None:
+        from app.models.holiday import HolidayService
+
+        holiday_name = HolidayService.get_holiday_name(db, check_date)
+        if holiday_name:
+            return holiday_name
+
     year = check_date.year
     year_holidays = CHINESE_HOLIDAYS.get(year, {})
     return year_holidays.get(check_date)
 
 
-def is_workday_adjustment(check_date: date) -> bool:
+def is_workday_adjustment(check_date: date, db: Optional[Any] = None) -> bool:
     """
     检查指定日期是否为调休工作日（周末需要上班）
 
@@ -143,12 +156,18 @@ def is_workday_adjustment(check_date: date) -> bool:
     Returns:
         bool: 如果是调休工作日返回 True，否则返回 False
     """
+    if db is not None:
+        from app.models.holiday import HolidayService
+
+        if HolidayService.is_workday(db, check_date):
+            return True
+
     year = check_date.year
     year_adjustments = WORKDAY_ADJUSTMENTS.get(year, set())
     return check_date in year_adjustments
 
 
-def get_work_type(check_date: date) -> str:
+def get_work_type(check_date: date, db: Optional[Any] = None) -> str:
     """
     获取指定日期的工作类型
 
@@ -159,11 +178,11 @@ def get_work_type(check_date: date) -> str:
         str: 工作类型 - "NORMAL"（正常工作日）, "WEEKEND"（周末）, "HOLIDAY"（节假日）
     """
     # 先检查是否是法定节假日
-    if is_holiday(check_date):
+    if is_holiday(check_date, db=db):
         return "HOLIDAY"
 
     # 检查是否是调休工作日（周末但需要上班）
-    if is_workday_adjustment(check_date):
+    if is_workday_adjustment(check_date, db=db):
         return "NORMAL"
 
     # 检查是否是周末
