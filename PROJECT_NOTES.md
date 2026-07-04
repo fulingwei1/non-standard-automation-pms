@@ -4272,3 +4272,30 @@
   - `import app.main` 路由清单确认 `DELETE /api/v1/org/employees/{emp_id}` 与 `DELETE /api/v1/org/departments/{dept_id}` 已注册。
 - 边界：本轮不做 HR-03/HR-05 的部门 ID 化和数据清洗；部门仍按旧 `Employee.department` 字符串判断是否有在职员工。
 - 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `HR-04` 已改为 `已验证`。
+
+## 2026-07-04 维护：根目录清理与报告归档
+
+- 清理目标：减少 `/Users/flw/non-standard-automation-pm` 根目录报告/阶段性文档堆积，保留代码、配置、启动脚本和核心入口文件。
+- 已归档：
+  - 根目录验收报告、审计报告、路线图、Backlog、矩阵、设计稿、`PERMISSION_COVERAGE_AUDIT.json` 等 45 个文件已移至 `docs/root-docs-archive/20260704/`。
+  - `FUNCTIONAL_AUDIT_TRACKER.md` 也已移至 `docs/root-docs-archive/20260704/FUNCTIONAL_AUDIT_TRACKER.md`；后续更新功能审计台账请写这个新路径。
+  - `RELEASE_GUIDE.md` 已移至 `docs/deployment/RELEASE_GUIDE.md`。
+  - `DB-SYNC-README.md` 已移至 `docs/development/DB-SYNC-README.md`。
+- 已删除/移走的本地产物：
+  - 根目录重复 `app.db` 已移至废纸篓；开发默认数据库仍是 `data/app.db`。
+  - `.gstack/db-backups`、`.gstack/qa-reports`、`.gstack/tmp`、`frontend/dist`、`frontend/test-results`、`.ruff_cache`、`.pytest_cache` 和旧 `__pycache__` 已移至废纸篓。
+- 保留根目录：
+  - `AGENTS.md`、`README.md`、`CHANGELOG.md`、`PROJECT_NOTES.md`、`pyproject.toml`、`pytest.ini`、`ruff.toml`、`requirements-dev.txt`、`vercel.json`、启动/同步脚本，以及源码/数据/迁移/测试目录。
+- 未清理的大头：
+  - `frontend/node_modules` 和 `.venv` 当时有 Vite/pytest 进程占用，先不动；如停掉服务后需要进一步瘦身，可删除后重新安装依赖。
+
+## 2026-07-04 维护：过时文档归档
+
+- 清理目标：减少 `docs/` 下“实施完成/交付总结/最终报告/阶段状态”类一次性文档对当前资料入口的干扰。
+- 已归档：
+  - 34 个明显过时的一次性文档已通过 `git mv` 移至 `docs/archive/stale-docs-20260704/`，并新增 `docs/archive/stale-docs-20260704/README.md` 记录归档标准与清单。
+  - 重点归档类型包括旧进度台账、旧交付总结、旧代码质量报告、AI Agent 子任务实施报告、权限/2FA/EVM/售前 AI/工时提醒等阶段性完成报告。
+- 暂不归档：
+  - `docs/api/` 的 API summary 文档虽然日期较老且多处写有 `2025-01-XX`，但需要和真实路由对账后再处理。
+  - `docs/design/`、`docs/deployment/`、`docs/security/` 中仍可能作为规范、运行手册或安全要求使用的文档，先保留。
+  - `docs/root-docs-archive/20260704/` 是本轮根目录清理新收纳的验收/审计材料，不重复归档。
