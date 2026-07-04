@@ -154,6 +154,62 @@ class TestTenantQueryScopeBypass:
         assert found_probe is not None, "无 tenant_id 字段的模型不应被过滤成空结果"
 
 
+class TestTenantIdAutoPopulate:
+    """TEN-03 铺开配套：新建对象带 tenant_id 字段但未显式赋值时自动补全。"""
+
+    def test_new_object_gets_tenant_id_from_context(self, db):
+        suffix = uuid.uuid4().hex[:8]
+        tenant = _make_tenant(db, suffix)
+        set_current_tenant_id(tenant.id)
+        set_current_user_is_superuser(False)
+
+        user = User(
+            username=f"ten02_autofill_{suffix}",
+            password_hash="x",
+            is_active=True,
+            is_superuser=False,
+        )
+        db.add(user)
+        db.commit()
+
+        assert user.tenant_id == tenant.id
+
+    def test_explicit_tenant_id_not_overridden(self, db):
+        suffix = uuid.uuid4().hex[:8]
+        tenant_a = _make_tenant(db, f"a{suffix}")
+        tenant_b = _make_tenant(db, f"b{suffix}")
+        set_current_tenant_id(tenant_a.id)
+        set_current_user_is_superuser(False)
+
+        user = User(
+            username=f"ten02_explicit_{suffix}",
+            password_hash="x",
+            is_active=True,
+            is_superuser=False,
+            tenant_id=tenant_b.id,
+        )
+        db.add(user)
+        db.commit()
+
+        assert user.tenant_id == tenant_b.id
+
+    def test_no_context_leaves_tenant_id_none(self, db):
+        suffix = uuid.uuid4().hex[:8]
+        set_current_tenant_id(None)
+        set_current_user_is_superuser(True)
+
+        user = User(
+            username=f"ten02_nocontext_{suffix}",
+            password_hash="x",
+            is_active=True,
+            is_superuser=True,
+        )
+        db.add(user)
+        db.commit()
+
+        assert user.tenant_id is None
+
+
 class TestTenantQueryScopeEnforceMode:
     """已认证非超管却无租户（不应出现的存量异常态）：strict 拒绝 / log 放行。"""
 

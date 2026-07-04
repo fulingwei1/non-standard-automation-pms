@@ -104,6 +104,8 @@ class Contract(Base, TimestampMixin):
 
     __tablename__ = "contracts"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    # 多租户支持（TEN-03 铺开）
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     contract_code = Column(String(50), unique=True, nullable=False, comment="合同编码（内部）")
     contract_name = Column(String(200), nullable=False, comment="合同名称")
     contract_type = Column(String(20), nullable=False, comment="合同类型: sales/purchase/framework")

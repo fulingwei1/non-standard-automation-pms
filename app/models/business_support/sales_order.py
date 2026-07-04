@@ -26,6 +26,8 @@ class SalesOrder(Base, TimestampMixin):
     __tablename__ = "sales_orders"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    # 多租户支持（TEN-03 铺开）
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     order_no = Column(String(50), unique=True, nullable=False, comment="订单编号")
 
     # 关联

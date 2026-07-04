@@ -67,6 +67,17 @@ TEN-02: 框架级租户查询过滤（SQLAlchemy 2.0 正确实现）
 
 当前生产代码没有需要绕过此过滤的真实场景，故不提供逃生舱（原 TenantQuery 的
 `_skip_tenant_filter` 属性随旧实现一并移除）。
+
+**写入侧配套（TEN-03 铺开新表时新增）**：新加 tenant_id 的表如果没有任何
+代码显式在创建时赋值，新建的行会是 tenant_id=NULL——查询侧的框架级过滤对
+非共享模型是严格相等匹配，NULL 永远不等于任何具体租户 ID，等于这行数据
+对它自己的创建者也是不可见的（不是隔离，是丢数据）。与其去找全仓每一个
+创建 Customer/Contract/Invoice/SalesOrder 等对象的地方手工加
+`tenant_id=current_user.tenant_id`（存在遗漏风险，以后新增创建入口也可能
+忘记加），改为在 `before_flush` 上做一次性、通用的自动补全：任何新增对象
+只要有 tenant_id 字段且当前是 None，就用当前请求的租户上下文自动填上；
+已经显式赋值的（比如超管代建租户用户时的 `tenant_id=user_tenant_id`）不受
+影响；无租户上下文（后台任务/超管操作/未认证请求）时保持 None，不强行瞎填。
 """
 
 import logging
@@ -150,3 +161,14 @@ def _apply_tenant_query_filter(execute_state):
         for cls in _tenant_scoped_classes()
     ]
     execute_state.statement = execute_state.statement.options(*options)
+
+
+@event.listens_for(OrmSession, "before_flush")
+def _auto_populate_tenant_id(session, flush_context, instances):
+    """新建对象若带 tenant_id 字段且未显式赋值，用当前租户上下文自动补全。"""
+    tenant_id = get_current_tenant_id()
+    if tenant_id is None:
+        return
+    for obj in session.new:
+        if hasattr(obj, "tenant_id") and getattr(obj, "tenant_id", None) is None:
+            obj.tenant_id = tenant_id

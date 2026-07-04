@@ -26,6 +26,8 @@ class Invoice(Base, TimestampMixin):
 
     __tablename__ = "invoices"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    # 多租户支持（TEN-03 铺开）
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     invoice_code = Column(String(30), unique=True, nullable=False, comment="发票编码")
     contract_id = Column(Integer, ForeignKey("contracts.id"), nullable=False, comment="合同ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")

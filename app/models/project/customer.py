@@ -20,6 +20,8 @@ class Customer(Base, TimestampMixin):
     __tablename__ = "customers"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    # 多租户支持（TEN-03 铺开）
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     customer_code = Column(String(50), unique=True, nullable=False, comment="客户编码")
     customer_name = Column(String(200), nullable=False, comment="客户名称")
     short_name = Column(String(50), comment="客户简称")
