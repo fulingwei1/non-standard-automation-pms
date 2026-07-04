@@ -29,9 +29,39 @@ from .change_request import (  # noqa: F401
     ChangeNotification,
     ChangeRequest,
 )
+from .dashboard_chart_config import DashboardChartConfig  # noqa: F401
 
 # 枚举补充导出（向后兼容）
 from .enums import ApprovalRecordStatusEnum, DataScopeEnum  # noqa: F401
+from .engineer_performance import (  # noqa: F401
+    CodeModule,
+    CodeReviewRecord,
+    CollaborationRating,
+    ComponentSelection,
+    DesignReuseRecord,
+    DesignReview,
+    ElectricalDrawingVersion,
+    ElectricalFaultRecord,
+    EngineerDimensionConfig,
+    EngineerProfile,
+    KnowledgeContribution,
+    KnowledgeReuseLog,
+    MechanicalDebugIssue,
+    PlcModuleLibrary,
+    PlcProgramVersion,
+    TestBugRecord,
+)
+from .after_sales import (  # noqa: F401
+    AfterSalesFeedback,
+    AfterSalesFieldService,
+    AfterSalesKnowledge,
+    AfterSalesMaintenance,
+    AfterSalesSLA,
+    AfterSalesSatisfaction,
+    AfterSalesSparePart,
+    AfterSalesSupportTicket,
+    AfterSalesWarranty,
+)
 
 # Import models from complete directory instead of deprecated main
 from .exports.complete import *
@@ -173,6 +203,7 @@ __all__ = [
     "LoginAttempt",
     "User2FASecret",
     "User2FABackupCode",
+    "DashboardChartConfig",
     # Project
     "Project",
     "Machine",
@@ -323,6 +354,23 @@ __all__ = [
     "ProjectContribution",
     "PerformanceRankingSnapshot",
     "PerformanceAdjustmentHistory",
+    # Engineer Performance
+    "EngineerProfile",
+    "EngineerDimensionConfig",
+    "CollaborationRating",
+    "KnowledgeContribution",
+    "KnowledgeReuseLog",
+    "DesignReview",
+    "MechanicalDebugIssue",
+    "DesignReuseRecord",
+    "TestBugRecord",
+    "CodeReviewRecord",
+    "CodeModule",
+    "ElectricalDrawingVersion",
+    "PlcProgramVersion",
+    "PlcModuleLibrary",
+    "ComponentSelection",
+    "ElectricalFaultRecord",
     # New Performance System
     "MonthlyWorkSummary",
     "PerformanceEvaluationRecord",
@@ -421,6 +469,15 @@ __all__ = [
     "InvoiceRequest",
     "CustomerSupplierRegistration",
     # Service
+    "AfterSalesFeedback",
+    "AfterSalesMaintenance",
+    "AfterSalesSupportTicket",
+    "AfterSalesWarranty",
+    "AfterSalesSparePart",
+    "AfterSalesFieldService",
+    "AfterSalesSLA",
+    "AfterSalesSatisfaction",
+    "AfterSalesKnowledge",
     "ServiceTicket",
     "ServiceTicketProject",
     "ServiceTicketCcUser",
@@ -623,9 +680,43 @@ from app.models.project_delivery import (
     ProjectDeliveryDependency,
 )
 
+# 行政管理（ADMIN-07 做实）
+from app.models.admin_office import (  # noqa: E402,F401
+    AdminAsset,
+    AdminExpense,
+    AdminSupply,
+    AdminSupplyRequest,
+    AdminVehicle,
+    AdminVehicleRequest,
+)
+
 # AI 基建：后台任务与产出反馈（注册进 metadata，隔离测试库 create_all 需要）
 from app.models.ai_feedback import AIOutputFeedback  # noqa: E402,F401
 from app.models.ai_job import AIGenerationJob  # noqa: E402,F401
+
+# OTD 智能体：阈值配置表（注册进 metadata，create_all 自动建表）
+from app.models.otd_threshold_config import OtdThresholdConfig  # noqa: E402,F401
+
+# 工程师排班：能力、任务占用、负载预警（注册进 metadata，冲突检测依赖）
+from app.models.engineer_capacity import (  # noqa: E402,F401
+    EngineerCapacity,
+    EngineerTaskAssignment,
+    WorkloadWarning,
+)
+
+# 现场调试：历史库中已有 field_* 表，注册模型后隔离测试库也能 create_all
+from app.models.field_commissioning import FieldCheckin, FieldIssue, FieldTask  # noqa: E402,F401
+
+__all__.extend(
+    [
+        "EngineerCapacity",
+        "EngineerTaskAssignment",
+        "WorkloadWarning",
+        "FieldTask",
+        "FieldCheckin",
+        "FieldIssue",
+    ]
+)
 
 try:
     from app.models.base import _ensure_sqlite_schema, get_engine

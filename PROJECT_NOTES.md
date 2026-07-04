@@ -1,5 +1,50 @@
 # PROJECT_NOTES
 
+## 2026-07-04 继续：功能审计 ADMIN-07 修复（行政管理四件套做实）
+
+- 修复项：`ADMIN-07`，admin_compat 整文件硬编码（A4 复印纸/固定车辆/写死费用统计），前端 adminApi 全部写操作 404。
+- 代码面：
+  - 新增 `models/admin_office.py` 六张真表：用品/用品申领/车辆/用车申请/资产/费用（已注册 models/__init__）；迁移 `20260704_admin_office_sqlite.sql` 已应用 data/app.db。
+  - `admin_compat.py` 重写为真库实现，对齐前端 adminApi 既有调用面：
+    - 用品：list/inventory/get + 申领单（PENDING）→ 审批扣库存（不足 400）/驳回不扣；
+    - 车辆：list/available/get + 用车申请 → 审批置 IN_USE（可用列表自动排除）；
+    - 资产：CRUD（编号自动生成）+ 按状态/分类真实统计；
+    - 费用：列表 + 按周期（月/季/年）真实聚合；
+    - 响应保留 camelCase 兼容键；/stats 仍委托 collect_admin_stats（ADMIN-05 范围不重复动）。
+- 验证：红灯 6 项 → 绿灯 `tests/unit/test_admin_office_real.py` 6 passed；admin_stats 套件回归过；TestClient 动态验证路由挂载 401 权限门；`import app.main` 通过。
+- 备注：`test_batch5_route_contracts` 的 /admin/stats 失败来自并行会话未提交的备份代码读 `/var/backups/pms`（HEAD 上通过），归其处理；会议室预定端点前端有封装但历史即缺，另行排期。
+
+## 2026-07-04 继续：功能审计 HR-08 修复（考勤页请假/加班入口止损）
+
+- 修复项：`HR-08`。考勤页展示“请假管理/加班管理”标签，但对应正式请假、加班、补卡域没有接入；页面等于给用户一个看似存在的功能入口。
+- 红测：
+  - 更新 `frontend/src/pages/__tests__/AttendanceManagement.test.jsx`，先要求页头只描述“员工考勤记录、统计分析”，并且页面不再出现“请假管理/加班管理”两个按钮。旧页面测试失败，证明假入口仍在。
+- 代码面：
+  - `AttendanceManagement.jsx` 移除未接入的“请假管理/加班管理”Tabs 和空壳内容。
+  - 页头描述收敛为“员工考勤记录、统计分析”。
+  - 部门统计里的“请假人数”字段保留为考勤统计字段，不再包装成请假管理工作流。
+- 验证：
+  - `npm --prefix frontend test -- --run src/pages/__tests__/AttendanceManagement.test.jsx` -> 5 passed。
+  - `npm exec eslint src/pages/AttendanceManagement.jsx src/pages/__tests__/AttendanceManagement.test.jsx`（workdir=frontend）-> 通过。
+  - `git diff --check` 相关文件通过。
+- 边界：本轮是前端止损下架入口；完整请假/加班/补卡域仍需后续补模型、审批与排产输入。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `HR-08` 已改为 `已验证`。
+
+## 2026-07-04 继续：功能审计 HR-09 修复（节假日 DB 配置进入消费链）
+
+- 修复项：`HR-09`。系统有 `Holiday/HolidayService` 和 DB 配置，但工作日志规则引擎实际调用 `holiday_utils.get_work_type()` 的硬编码静态日历，DB 中新增/调整的节假日不会进入工时类型判断。
+- 红测：
+  - 新增 `tests/unit/test_holiday_db_consumption_hr09.py`，在 DB 写入一个硬编码表没有的 `2031-07-04` 公司假期；旧规则引擎返回 `NORMAL`，证明 DB 配置未被消费。
+- 代码面：
+  - `holiday_utils.is_holiday/get_holiday_name/is_workday_adjustment/get_work_type` 增加可选 `db` 参数；传入 DB 时优先读取 `HolidayService`，无命中再回落静态中国节假日/调休日历。
+  - `work_log_ai/rule_engine.py` 在实例有 `self.db` 时把 DB 传给 `get_work_type()`；没有 DB 的纯函数/旧测试路径保持原调用形态。
+- 验证：
+  - `.venv/bin/python -m pytest -q tests/unit/test_holiday_db_consumption_hr09.py tests/unit/test_l3_holiday_utils.py tests/unit/test_holiday_model.py` -> 69 passed。
+  - `.venv/bin/python -m pytest -q tests/unit/test_rule_engine.py` -> 19 passed。
+  - `ruff check`、`py_compile`、`git diff --check` 相关文件通过。
+- 边界：本轮打通 DB 配置消费链；静态国家节假日日历仍作为无 DB 场景兜底保留。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `HR-09` 已改为 `已验证`。
+
 ## 2026-07-04 继续：功能审计 PROJ-23 修复（SAT 验收通过自动移交售后）
 
 - 修复项：`PROJ-23`（详#18），验收域与售后域零联动——SAT 验收通过后质保、设备档案全靠售后人工重建。前置 AS-10（机台 SN/客户/质保字段）与 PROD-16 已由并行会话修复，本项接线正当其时。
@@ -521,7 +566,7 @@
   - `PYTHONPATH=. pytest -q tests/unit/test_service_ticket_escalation_as12.py` -> 2 passed。
   - 相邻回归：`PYTHONPATH=. pytest -q tests/unit/test_service_ticket_escalation_as12.py tests/unit/test_device_archive_as10.py tests/unit/test_service_ticket_state_machine_as05.py tests/unit/test_ecn_bom_auto_sync_prod07.py` -> 8 passed。
   - 静态：`ruff check app/api/v1/endpoints/service/tickets/issues.py app/api/v1/endpoints/itr.py app/services/itr_service.py tests/unit/test_service_ticket_escalation_as12.py`、`python -m py_compile ...`、`git diff --check` 均通过。
-- 残留边界：`PROJ-23`（验收通过后自动售后/ITR 移交）仍是单独验收钩子问题，未在本轮顺手标绿。
+- 后续更新：`PROJ-23` 已在 2026-07-04 后续主链路补验中标绿；`transfer_to_after_sales()` now 落 ACTIVE 质保档、保养计划，并回填项目/机台质保与客户归属。
 
 ## 2026-07-04 继续：功能审计 PROD-07 修复（ECN 审批/执行自动同步 BOM）
 
@@ -538,7 +583,7 @@
   - ECN 相邻状态机：`PYTHONPATH=. pytest -q tests/unit/test_ecn_bom_auto_sync_prod07.py tests/unit/test_state_machines_depth.py -k 'EcnStateMachine or ecn'` -> 9 passed。
   - BOM/工单组合回归：`PYTHONPATH=. pytest -q tests/unit/test_bom_version_management.py tests/unit/test_ecn_bom_auto_sync_prod07.py tests/audit_p0/test_p0_12_bom_workorder_broken.py tests/unit/test_work_order_bom_snapshot.py` -> 8 passed。
   - 静态：`ruff check app/services/ecn/integration/ecn_integration_service.py app/services/approval_engine/adapters/ecn.py app/api/v1/endpoints/ecn/execution.py app/api/v1/endpoints/ecn/state_machine.py tests/unit/test_ecn_bom_auto_sync_prod07.py`、`python -m py_compile ...`、`git diff --check` 均通过。
-- 残留边界：采购同步里的 `MODIFY` 分支仍为空，受影响采购单自动处理归 `PROD-20`；本轮只闭合 ECN → BOM 自动生效。
+- 后续更新：`PROD-20` 已在 2026-07-04 后续补齐采购影响传导；`sync_to_purchase()` now 会从受影响物料反查采购订单行并把 `MODIFY` 标记为采购待评审。
 
 ## 2026-07-04 继续：功能审计 PROD-06 修复（BOM 多版本修订）
 
@@ -3984,3 +4029,224 @@
   - `.venv/bin/python -m ruff check app/api/v1/endpoints/sales/invoices/operations.py app/api/v1/endpoints/sales/invoices/basic.py tests/api/test_sales_invoice_gate_contracts.py` 通过。
   - `.venv/bin/python -m py_compile app/api/v1/endpoints/sales/invoices/operations.py app/api/v1/endpoints/sales/invoices/basic.py tests/api/test_sales_invoice_gate_contracts.py` 通过。
 - 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `SALES-19` 已改为 `已验证`。
+
+## 2026-07-04 继续：PROJ-23 终验收后售后移交主链路补齐
+
+- 修复目标：验收完成主链路不能只生成定期保养计划；需要形成可查询的售后移交事实，包括 ACTIVE 质保档、项目质保字段、机台质保/客户归属，避免售后人工重建。
+- 红测：
+  - 新增 `tests/unit/test_project_after_sales_handover_proj23.py`。
+  - 红灯确认：旧 `ProjectDataFlowService.transfer_to_after_sales()` 只返回 4 条保养计划，`AfterSalesWarranty` 为 0，返回结构也没有 `warranty_created/warranty_id`。
+  - 红灯确认：重复移交时保养计划能跳过，但质保档仍为 0，无法证明移交幂等。
+- 代码面：
+  - `project_data_flow_service.transfer_to_after_sales()` now 创建或复用 `AfterSalesWarranty(status=ACTIVE)`，质保开始日期取 `project.warranty_start_date / actual_end_date / planned_end_date / today`，质保月数缺省 12。
+  - 项目 `warranty_period_months/warranty_start_date/warranty_end_date` 只补空，不覆盖已有人工字段。
+  - 机台 `warranty/customer_id` 只补空；返回 `warranty_created/warranty_id/warranty_no/warranty_start/warranty_end/machines_backfilled`。
+  - 定期保养计划继续沿用原 1/3/6/12 个月口径，并和质保移交共用同一个起算日。
+- 验证：
+  - `.venv/bin/python -m pytest -q tests/unit/test_project_after_sales_handover_proj23.py` 通过（2 个用例）。
+  - `.venv/bin/python -m pytest -q tests/unit/test_acceptance_aftersales_handover.py` 通过（4 个用例）。
+  - `.venv/bin/python -m pytest -q tests/unit/test_acceptance_completion_service.py tests/unit/test_equipment_maintenance_reminder_as14.py` 通过（22 个用例）。
+  - `.venv/bin/python -m ruff check app/services/project_data_flow_service.py tests/unit/test_project_after_sales_handover_proj23.py` 通过。
+  - `.venv/bin/python -m py_compile app/services/project_data_flow_service.py tests/unit/test_project_after_sales_handover_proj23.py` 通过。
+- 边界：ITR 当前是验收/工单/问题的 read model，没有独立移交表；本轮保证验收后售后事实落库，ITR 继续读取验收上下文。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `PROJ-23` 已改为 `已验证`。
+
+## 2026-07-04 继续：PROJ-24 项目复盘 AI 降级语义止损
+
+- 修复目标：项目复盘生成遇到 AI mock/降级响应时，不能把预售方案类演示内容当作真实复盘 AI 结果写入。
+- 红测：
+  - 扩展 `tests/unit/test_review_report_generator.py`。
+  - 红灯确认：`AIClientService.generate_solution()` 返回 `model=glm-5-mock` 和“非标自动化生产线方案”类内容时，旧生成器仍写 `ai_generated=True`，且复盘摘要混入预售方案文案。
+- 代码面：
+  - `ProjectReviewReportGenerator` 接入 `is_mock_response()`，识别 `*-mock` 后写 `ai_generated=False/ai_generated_at=None`。
+  - `ai_metadata` 保留真实返回模型与 token 用量，并追加 `degraded=True/degraded_reason=AI_REVIEW_UNAVAILABLE`。
+  - 降级内容改为基于项目名称、工期、成本、变更次数等字段生成规则复盘底稿；不再解析或入库预售方案 mock 文本。
+- 验证：
+  - `.venv/bin/python -m pytest -q tests/unit/test_review_report_generator.py::TestProjectReviewReportGenerator::test_generate_report_marks_mock_ai_response_as_degraded` 红后绿通过。
+  - `.venv/bin/python -m pytest -q tests/unit/test_review_report_generator.py tests/unit/test_report_generator_coverage.py` 通过（31 个用例）。
+  - `ALIBABA_API_KEY= AI_DEFAULT_MODEL= ZHIPU_API_KEY= OPENAI_API_KEY= KIMI_API_KEY= .venv/bin/python -m pytest -q tests/api/test_project_review_api.py::TestReviewsAPI::test_generate_review_report` 通过。
+  - `.venv/bin/python -m pytest -q tests/api/test_batch7_route_contracts.py::test_project_reviews_list_coerces_legacy_null_defaults tests/api/test_batch7_route_contracts.py::test_sqlite_schema_patch_adds_project_review_ai_columns` 通过（2 个用例）。
+  - `.venv/bin/python -m ruff check app/services/project_review_ai/report_generator.py tests/unit/test_review_report_generator.py` 通过。
+  - `.venv/bin/python -m py_compile app/services/project_review_ai/report_generator.py tests/unit/test_review_report_generator.py` 通过。
+- 边界：本机 `.env/.env.local` 有真实阿里百炼 key 时，原 API 测试会实际出网并因外部模型耗时超过 30 秒断言失败；离线验证已用空 key 覆盖，确认 mock/degraded 链路和路由契约可用。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `PROJ-24` 已改为 `已验证`。
+
+## 2026-07-04 继续：PROJ-26 自动组队接入立项与动态经验分
+
+- 修复目标：自动组队不能只看项目表少量字段；立项审批里的预计工时、资源要求、技术难度要进入角色/工时建议，工程师经验维度也不能固定给满 20 分。
+- 红测：
+  - 新增 `tests/unit/test_team_generation_proj26.py`。
+  - 红灯确认：项目存在已批准 `PmoProjectInitiation(estimated_hours=320, resource_requirements=视觉/软件...)` 时，旧 `generate_team_plan()` 不返回立项来源、不会补视觉/软件角色，也没有按 320 小时分摊。
+  - 红灯确认：同一工程师有/无历史完成任务时，旧 `_calculate_role_match()` 得分同为 100，经验维度固定满分。
+- 代码面：
+  - `TeamGenerationService._analyze_project_requirements()` 回查已批准立项，带出 `source/initiation_id/estimated_hours/resource_requirements/technical_difficulty/project_level`。
+  - `_determine_roles()` 根据立项资源要求补充电气、机械、视觉、软件、测试角色，并按立项预计总工时归一分摊到本次角色。
+  - `_calculate_role_match()` 的经验 20 分 now 来自历史 `EngineerTaskAssignment`：完成数量、质量评分、准时率、返工率；缺历史时回退 `EngineerCapacity` 能力画像。
+  - 兼容原合同金额估算路径；无立项或旧库缺表时仍可按项目字段生成基础方案。
+- 验证：
+  - `.venv/bin/python -m pytest -q tests/unit/test_team_generation_proj26.py` 通过（2 个用例）。
+  - `.venv/bin/python -m pytest -q tests/unit/test_team_generation_service_coverage.py tests/unit/test_final_zero_coverage_auto.py::TestTeamGenerationService` 通过（2 个用例）。
+  - `.venv/bin/python -m pytest -q tests/api/test_openapi_route_contracts.py::test_batch3_dynamic_detail_routes_are_registered` 通过。
+  - `.venv/bin/python -m ruff check app/services/team_generation_service.py tests/unit/test_team_generation_proj26.py` 通过。
+  - `.venv/bin/python -m py_compile app/services/team_generation_service.py tests/unit/test_team_generation_proj26.py` 通过。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `PROJ-26` 已改为 `已验证`。
+
+## 2026-07-04 继续：PROD-18 生产排程显式工单依赖
+
+- 修复目标：生产排程不能只按优先级/资源空闲排单；当后置工单依赖前置工单时，后置开始时间必须晚于前置完工，甘特图也要回显依赖关系。
+- 红测：
+  - 新增 `tests/unit/test_production_schedule_dependencies_prod18.py`。
+  - 红灯确认：`constraints={"dependencies": {"后置工单": ["前置工单"]}}` 时，旧贪心算法仍因后置工单 `URGENT` 把它排到前置前面。
+  - 红灯确认：排程记录已有依赖元数据时，旧 `generate_gantt_data()` 仍返回 `dependencies=[]`。
+- 代码面：
+  - `ProductionScheduleService` 新增依赖解析，兼容 `constraints.dependencies` 的 dict/list 形式，以及工单对象上的 `depends_on_work_order_ids/predecessor_work_order_ids/dependencies` 动态字段。
+  - 贪心排程先按优先级排序，再做依赖拓扑校正；排每个工单时取所有前置工单结束时间作为最早可开工时间。
+  - 每条后置排程写入 `constraints_met={"dependencies": {"predecessors": [...], "enforced": True}}`。
+  - 启发式优化交换后再次执行依赖时间校正，避免优化步骤把依赖打散。
+  - 甘特图按 `constraints_met.dependencies.predecessors` 把前置工单 ID 映射为前置排程任务 ID，前端不再拿空依赖。
+- 验证：
+  - `.venv/bin/python -m pytest -q tests/unit/test_production_schedule_dependencies_prod18.py` 通过（2 个用例）。
+  - `.venv/bin/python -m pytest -q tests/unit/test_production_schedule_n2.py` 通过（44 个用例）。
+  - `.venv/bin/python -m ruff check app/services/production_schedule_service.py tests/unit/test_production_schedule_dependencies_prod18.py` 通过。
+  - `.venv/bin/python -m py_compile app/services/production_schedule_service.py tests/unit/test_production_schedule_dependencies_prod18.py` 通过。
+  - `tests/test_production_schedule.py` 当前因历史导入 `ResourceConflict` 重命名在模块级 skip，未作为本轮失败。
+- 边界：本轮是短期闭环，让现有单工单模型通过显式依赖约束可用；完整工艺路线、同一工单多工序拆解和依赖维护 UI 仍需后续专项。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `PROD-18` 已改为 `已验证`。
+
+## 2026-07-04 继续：PROD-19 委外交付超交拦截与收货确认
+
+- 修复目标：外协订单需要能挂生产工单；创建交付不能超过订单剩余数量；交付后需要有收货确认端点，把实收数量、收货人、订单状态串起来。
+- 红测：
+  - 新增 `tests/unit/test_outsourcing_delivery_prod19.py`。
+  - 红灯确认：`OutsourcingOrderCreate` 不接收 `work_order_id`。
+  - 红灯确认：已交 4 / 订单 10 时继续交付 7 未被挡住，并且返回阶段还会因 `vendor.vendor_name` 字段漂移崩溃。
+  - 红灯确认：`receive_outsourcing_delivery()` 不存在。
+  - 红灯确认：创建订单走到金额计算时 `Decimal * float` 报错，且无法落 `work_order_id`。
+- 代码面：
+  - `OutsourcingOrder` 增加 `work_order_id`、`work_order` 关系和索引；新增迁移 `migrations/20260704_outsourcing_work_order_receipt_sqlite.sql`。
+  - `OutsourcingOrderCreate/Response/ListResponse` 增加 `work_order_id`；创建订单时校验工单存在且属于同项目。
+  - 订单金额税额计算改为 Decimal 全链路，避免运行时 TypeError。
+  - 交付创建前先验证全部明细剩余数量，超交返回 400 `交付数量超出订单剩余数量`，避免先写库后失败。
+  - 新增 `PUT /outsourcing-deliveries/{delivery_id}/receive`，默认按交付数量全量收货，也支持 payload 指定实收数量；写 `received_quantity/received_at/received_by`，并同步订单明细与订单 `RECEIVED/IN_PROGRESS` 状态。
+  - 交付响应统一用 `Vendor.supplier_name`，修复旧 `vendor_name` 漂移。
+- 验证：
+  - `.venv/bin/python -m pytest -q tests/unit/test_outsourcing_delivery_prod19.py` 红后绿通过（4 个用例）。
+  - `.venv/bin/python -m pytest -q tests/unit/test_outsourcing_delivery_prod19.py tests/unit/test_schemas_import_coverage.py tests/api/test_null_response_defaults.py::test_list_endpoints_coerce_legacy_null_response_fields tests/api/test_batch14_route_contracts.py::test_batch5_outsourcing_readonly_routes_tolerate_legacy_nulls tests/api/test_path_param_route_contracts.py::test_outsourcing_task_qualification_and_document_routes_tolerate_legacy_nulls` 通过；schema import 模块里历史缺失模块按原逻辑 skip。
+  - `.venv/bin/python -m ruff check app/models/outsourcing.py app/schemas/outsourcing.py app/api/v1/endpoints/outsourcing/orders.py app/api/v1/endpoints/outsourcing/deliveries.py tests/unit/test_outsourcing_delivery_prod19.py` 通过。
+  - `.venv/bin/python -m py_compile app/models/outsourcing.py app/schemas/outsourcing.py app/api/v1/endpoints/outsourcing/orders.py app/api/v1/endpoints/outsourcing/deliveries.py tests/unit/test_outsourcing_delivery_prod19.py` 通过。
+  - `import app.main` 路由清单确认 `PUT /api/v1/outsourcing-deliveries/{delivery_id}/receive` 已注册。
+  - `git diff --check -- app/models/outsourcing.py app/schemas/outsourcing.py app/api/v1/endpoints/outsourcing/orders.py app/api/v1/endpoints/outsourcing/deliveries.py tests/unit/test_outsourcing_delivery_prod19.py migrations/20260704_outsourcing_work_order_receipt_sqlite.sql` 通过。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `PROD-19` 已改为 `已验证`。
+
+## 2026-07-04 继续：PROD-20 ECN 到采购影响传导
+
+- 修复目标：ECN 影响采购不能依赖人工先建 `EcnAffectedOrder`；`MODIFY` 分支不能空 `pass` 后把影响单标成已处理。
+- 红测：
+  - 新增 `tests/unit/test_ecn_purchase_sync_prod20.py`。
+  - 红灯确认：只有 `EcnAffectedMaterial(material_id=...)` 和有效采购订单行时，旧 `sync_to_purchase()` 返回 `updated_count=0` 且没有生成采购影响单。
+  - 红灯确认：已有 `EcnAffectedOrder(action_type=MODIFY)` 时，旧逻辑只把影响单标为 `PROCESSED`，采购单没有任何 ECN 待处理痕迹。
+- 代码面：
+  - `EcnIntegrationService.sync_to_purchase()` 先调用 `_ensure_purchase_affected_orders()`，按受影响物料反查非 `CANCELLED/DRAFT` 的采购订单行，按采购单幂等生成 `EcnAffectedOrder(order_type=PURCHASE, action_type=MODIFY)`。
+  - 影响描述 now 汇总物料编码、变更类型、数量/规格/供应商/成本影响。
+  - `MODIFY` 不自动改采购数量/价格，也不改采购单主状态；改为写 `EcnAffectedOrder.status=CHANGE_REQUIRED`、处理人/时间和默认处理说明，采购单 `remark` 追加 `[ECN ...] 采购需评审...`，让采购人员在原状态下处理变更。
+  - `CANCEL` 分支保留取消采购单行为，并补 ECN 备注；返回结果增加 `created_count/cancelled_count/change_required_count`。
+- 验证：
+  - `.venv/bin/python -m pytest -q tests/unit/test_ecn_purchase_sync_prod20.py` 红后绿通过（2 个用例）。
+  - `.venv/bin/python -m pytest -q tests/unit/test_ecn_purchase_sync_prod20.py tests/unit/test_ecn_integration_service_coverage.py tests/unit/test_ecn_material_impact_service_coverage.py tests/unit/test_ecn_bom_auto_sync_prod07.py` 通过（25 个用例）。
+  - `.venv/bin/python -m ruff check app/services/ecn/integration/ecn_integration_service.py tests/unit/test_ecn_purchase_sync_prod20.py` 通过。
+  - `.venv/bin/python -m py_compile app/services/ecn/integration/ecn_integration_service.py tests/unit/test_ecn_purchase_sync_prod20.py` 通过。
+  - `import app.main` 路由清单确认 `POST /api/v1/ecns/{ecn_id}/sync-to-purchase` 与 `POST /api/v1/ecns/batch-sync-to-purchase` 已注册。
+  - `git diff --check -- app/services/ecn/integration/ecn_integration_service.py tests/unit/test_ecn_purchase_sync_prod20.py` 通过。
+- 边界：本轮不直接改采购单行数量/价格，避免绕过采购确认；后续若要自动改行项目，应先定义采购变更审批/重签规则。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `PROD-20` 已改为 `已验证`。
+
+## 2026-07-04 继续：PROD-21 移动扫码开工离线队列与 iOS 降级
+
+- 修复目标：车间移动端扫码开工不能在网络抖动时直接失败丢操作；iOS/无 `BarcodeDetector` 的浏览器不能只弹 alert 中断扫码流程。
+- 红测：
+  - 新增 `frontend/src/pages/mobile/__tests__/mobileScanStartHelpers.test.js`。
+  - 红灯确认：离线开工队列 helper 不存在，无法写入/重放本地待同步开工请求。
+- 代码面：
+  - 新增 `mobileScanStartHelpers.js`：
+    - `enqueueOfflineStartWorkReport()` 将离线开工写入 `localStorage` 的 `mobile.scanStart.offlineStartQueue.v1` 队列，保留工单 ID、工单号、任务名、备注、客户端 ID 和排队时间。
+    - `flushOfflineStartWorkReports()` 联网后顺序补传，成功移除，失败保留。
+    - `isLikelyOfflineStartError()` 识别离线/网络错误，避免把 500 等服务端错误误入本地队列。
+    - `getCameraScanUnavailableMessage()` 对 iOS/无 `BarcodeDetector` 给手动输入/系统相机降级提示。
+  - `MobileScanStart.jsx` 接入离线队列：开工 API 网络失败时暂存本地并提示“联网后自动补传”；页面加载和 `online` 事件会尝试补传队列。
+  - 相机扫码遇到无 `BarcodeDetector` 不再 `alert()`，改为页面错误提示，保留扫码枪/键盘输入通道。
+- 验证：
+  - `npm run test:run -- src/pages/mobile/__tests__/mobileScanStartHelpers.test.js` 红后绿通过（4 个用例）。
+  - `npx eslint src/pages/mobile/MobileScanStart.jsx src/pages/mobile/mobileScanStartHelpers.js src/pages/mobile/__tests__/mobileScanStartHelpers.test.js` 通过。
+  - `npm run build` 通过；仍有项目既有的大 chunk/重复动态导入 warning，非本轮新增失败。
+  - `git diff --check -- frontend/src/pages/mobile/MobileScanStart.jsx frontend/src/pages/mobile/mobileScanStartHelpers.js frontend/src/pages/mobile/__tests__/mobileScanStartHelpers.test.js FUNCTIONAL_AUDIT_TRACKER.md PROJECT_NOTES.md` 通过。
+- 边界：本轮未引入图片二维码解码库；iOS 页面内拍照后自动识别仍需后续引入 jsQR/原生扫码桥接。当前已保证手工/扫码枪输入和离线开工不中断。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `PROD-21` 已改为 `已验证`。
+
+## 2026-07-04 继续：PROD-23 状态机治理双轨收口
+
+- 修复目标：采购订单状态不能由直提/直审、旧 `PurchaseService`、统一审批适配器各自直接赋值；生产报工开工/完工审批也不能用内联 if 绕过已有工单状态机。
+- 红测：
+  - 新增 `tests/unit/test_state_governance_prod23.py`。
+  - 红灯确认：`submit_purchase_order()` 和 `approve_purchase_order()` 不调用共享采购状态迁移 helper。
+  - 红灯确认：`start_work_report()` 和完工报工审批不调用 `work_order_state_machine.validate_transition()`，即使状态机拦截也会继续写状态。
+- 代码面：
+  - 新增 `app/services/purchase/order_state_machine.py`，集中定义 `PURCHASE_ORDER_TRANSITIONS`、`validate_purchase_order_transition()`、`transition_purchase_order_status()`。
+  - `orders_refactored.py` 提交/审批、`PurchaseService.submit/approve`、`approval_engine/adapters/purchase.py` 的 submit/approved/rejected/withdrawn 回调统一走采购订单状态机。
+  - `work_reports.py` 新增 `_validate_work_order_transition()`，开工报工进入 `STARTED`、完工报工审批进入 `COMPLETED` 时统一复用已有工单状态机。
+- 验证：
+  - `.venv/bin/python -m pytest -q tests/unit/test_state_governance_prod23.py` 红后绿通过（4 个用例）。
+  - `.venv/bin/python -m pytest -q tests/unit/test_state_governance_prod23.py tests/unit/test_state_machines_depth.py::TestPurchaseOrderMachine tests/unit/test_api_p6_coverage.py::TestWorkReports` 通过（24 个用例）。
+  - `.venv/bin/python -m pytest -q tests/api/test_purchase_workflow_contracts.py` 通过（2 个用例）。
+  - `.venv/bin/python -m pytest -q tests/api/test_purchase_receipts_workflow_contracts.py` 通过（6 个用例）。
+  - `.venv/bin/python -m pytest -q tests/integration/test_purchase_api.py::TestPurchaseOrdersAPI::test_submit_purchase_order tests/integration/test_purchase_api.py::TestPurchaseOrdersAPI::test_approve_purchase_order` 通过（2 个用例）。
+  - `.venv/bin/python -m ruff check app/services/purchase/order_state_machine.py app/api/v1/endpoints/purchase/orders_refactored.py app/services/purchase/purchase_service.py app/services/approval_engine/adapters/purchase.py app/api/v1/endpoints/production/work_reports.py tests/unit/test_state_governance_prod23.py` 通过。
+  - `.venv/bin/python -m py_compile app/services/purchase/order_state_machine.py app/api/v1/endpoints/purchase/orders_refactored.py app/services/purchase/purchase_service.py app/services/approval_engine/adapters/purchase.py app/api/v1/endpoints/production/work_reports.py` 通过。
+  - `import app.main` 路由清单确认采购 submit/approve、采购 workflow submit/action、报工 start/approve 路由均已注册。
+- 边界：采购收货状态流转仍保留在收货业务函数内，本轮只收口审批/提交双轨；后续若要全采购生命周期中央状态机，可把收货 `PARTIAL_RECEIVED/RECEIVED/CLOSED` 也迁入同一 helper。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `PROD-23` 已改为 `已验证`。
+
+## 2026-07-04 继续：PROD-24 委外成本按质检合格量确认
+
+- 修复目标：委外订单审批通过不能直接把订单全额计入项目实际成本；实际成本应随质检合格数量确认，不合格/未检数量不能提前入账。
+- 红测：
+  - 新增 `tests/unit/test_outsourcing_cost_collection_prod24.py`。
+  - 红灯确认：订单 10 件、单价 100、合格 6 件时，旧 `collect_from_outsourcing_order()` 仍按订单总额 1000 入账，而不是 600。
+  - 红灯确认：合格量为 0 且已有旧 1000 元外协成本时，旧逻辑继续保留全额成本，不会冲减项目实际成本。
+- 代码面：
+  - `CostCollectionService._outsourcing_qualified_cost_basis()` 读取真实 `OutsourcingOrderItem` 明细，按 `qualified_quantity * unit_price` 汇总外协实际成本。
+  - 税额按确认成本占订单总额比例折算；成本描述追加 `合格数量：已合格/订单数量`，方便审计。
+  - 合格确认成本为 0 时不创建 `ProjectCost`；如已有历史成本，则删除并调用 `_recalculate_project_actual_cost()` 重算项目实际成本。
+  - 非真实 SQLAlchemy 订单对象（旧 MagicMock 单测/降级调用）保留订单总额兜底，避免误伤既有 mock 覆盖。
+- 验证：
+  - `.venv/bin/python -m pytest -q tests/unit/test_outsourcing_cost_collection_prod24.py` 红后绿通过（2 个用例）。
+  - `.venv/bin/python -m pytest -q tests/unit/test_outsourcing_cost_collection_prod24.py tests/unit/test_cost_collection_service_coverage.py::TestCollectFromOutsourcingOrder tests/unit/test_cost_collection_n3.py::TestCollectFromOutsourcingOrder tests/unit/test_cost_forecast_branches.py::TestCostCollectionOutsourcingOrder` 通过（12 个用例）。
+  - `.venv/bin/python -m pytest -q tests/services/test_cost_collection_business_docs.py` 通过（10 个用例）。
+  - `.venv/bin/python -m pytest -q tests/unit/test_outsourcing_delivery_prod19.py` 通过（4 个用例）。
+  - `.venv/bin/python -m pytest -q tests/api/test_outsourcing.py::TestOutsourcingInspections` 通过 1 个、skip 1 个（旧测试无交付数据时按原逻辑 skip）。
+  - `.venv/bin/python -m ruff check app/services/cost/cost_collection_service.py tests/unit/test_outsourcing_cost_collection_prod24.py` 通过。
+  - `.venv/bin/python -m py_compile app/services/cost/cost_collection_service.py tests/unit/test_outsourcing_cost_collection_prod24.py` 通过。
+- 边界：本轮未改付款条件和应付账款确认；只是把项目实际成本从“审批全额”改为“质检合格确认”。如后续要做暂估/应付，需要单独建成本基础或付款计划口径。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `PROD-24` 已改为 `已验证`。
+
+## 2026-07-04 继续：HR-04 组织员工/部门删除接口补齐
+
+- 修复目标：前端 `employeeApi.delete()` / `departmentApi.delete()` 已固定调用 `/org/employees/{id}` 和 `/org/departments/{id}`，后端必须注册对应 DELETE 路由，不能继续 405。
+- 红测：
+  - 新增 `tests/api/test_org_delete_hr04.py`。
+  - 红灯确认：`DELETE /api/v1/org/employees/{id}` 返回 405，员工无法从前端删除。
+  - 红灯确认：`DELETE /api/v1/org/departments/{id}` 返回 405，部门无法从前端删除。
+  - 红灯确认：有在职员工的部门删除应被拦截，而不是盲删。
+- 代码面：
+  - `organization/employees.py` 新增 `DELETE /employees/{emp_id}`，采用软停用：`is_active=False`、`employment_status=resigned`，保留员工历史资料。
+  - `organization/departments_refactored.py` 新增 `DELETE /departments/{dept_id}`，采用软停用：`is_active=False`。
+  - 部门删除前检查启用子部门和在职员工，存在则 400，避免破坏组织/员工历史关系。
+  - 删除权限按软状态更新处理，沿用现有 `hr:update` 权限，不新增未种子的 `hr:delete`。
+- 验证：
+  - `.venv/bin/python -m pytest -q tests/api/test_org_delete_hr04.py` 红后绿通过（3 个用例）。
+  - `.venv/bin/python -m pytest -q tests/api/test_org_delete_hr04.py tests/api/test_organization.py tests/api/test_org_api.py` 通过（19 passed、2 skipped；skip 为既有 schema/旧 API mismatch）。
+  - `.venv/bin/python -m pytest -q tests/api/test_hr_bonus_permission_contracts.py::test_org_employee_and_hr_profile_endpoints_require_hr_permissions` 通过。
+  - `.venv/bin/python -m ruff check app/api/v1/endpoints/organization/employees.py app/api/v1/endpoints/organization/departments_refactored.py tests/api/test_org_delete_hr04.py` 通过。
+  - `.venv/bin/python -m py_compile app/api/v1/endpoints/organization/employees.py app/api/v1/endpoints/organization/departments_refactored.py tests/api/test_org_delete_hr04.py` 通过。
+  - `import app.main` 路由清单确认 `DELETE /api/v1/org/employees/{emp_id}` 与 `DELETE /api/v1/org/departments/{dept_id}` 已注册。
+- 边界：本轮不做 HR-03/HR-05 的部门 ID 化和数据清洗；部门仍按旧 `Employee.department` 字符串判断是否有在职员工。
+- 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `HR-04` 已改为 `已验证`。
