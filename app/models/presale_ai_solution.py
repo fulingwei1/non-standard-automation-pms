@@ -17,6 +17,7 @@ class PresaleAISolution(Base):
     __tablename__ = "presale_ai_solution"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     presale_ticket_id = Column(Integer, nullable=False, comment="售前工单ID")
     requirement_analysis_id = Column(
         Integer, ForeignKey("presale_ai_requirement_analysis.id"), comment="需求分析ID"

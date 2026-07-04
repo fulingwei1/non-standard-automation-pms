@@ -40,6 +40,7 @@ class EarnedValueData(Base, TimestampMixin):
     __tablename__ = "earned_value_data"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 项目关联
     project_id = Column(
@@ -174,6 +175,7 @@ class EarnedValueSnapshot(Base, TimestampMixin):
     __tablename__ = "earned_value_snapshots"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 快照信息
     snapshot_code = Column(

@@ -26,6 +26,7 @@ class ProjectMilestone(Base, TimestampMixin):
     __tablename__ = "project_milestones"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(
         Integer, ForeignKey("projects.id"), nullable=True, comment="项目ID"
     )
@@ -71,6 +72,7 @@ class ProjectPaymentPlan(Base, TimestampMixin):
     __tablename__ = "project_payment_plans"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(
         Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
     )
@@ -153,6 +155,7 @@ class ProjectCost(Base, TimestampMixin):
     __tablename__ = "project_costs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(
         Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
     )
@@ -218,6 +221,7 @@ class FinancialProjectCost(Base, TimestampMixin):
     __tablename__ = "financial_project_costs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 项目关联
     project_id = Column(

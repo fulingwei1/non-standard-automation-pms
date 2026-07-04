@@ -24,6 +24,7 @@ class StrategyReview(Base, TimestampMixin):
     __tablename__ = "strategy_reviews"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     strategy_id = Column(Integer, ForeignKey("strategies.id"), nullable=False, comment="关联战略")
 
     # 审视信息
@@ -82,6 +83,7 @@ class StrategyCalendarEvent(Base, TimestampMixin):
     __tablename__ = "strategy_calendar_events"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     strategy_id = Column(Integer, ForeignKey("strategies.id"), nullable=False, comment="关联战略")
 
     # 事件基本信息

@@ -74,6 +74,7 @@ class StageDefinition(Base, TimestampMixin):
     __tablename__ = "stage_definitions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_id = Column(
         Integer,
         ForeignKey("stage_templates.id", ondelete="CASCADE"),
@@ -112,6 +113,7 @@ class NodeDefinition(Base, TimestampMixin):
     __tablename__ = "node_definitions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     stage_definition_id = Column(
         Integer,
         ForeignKey("stage_definitions.id", ondelete="CASCADE"),

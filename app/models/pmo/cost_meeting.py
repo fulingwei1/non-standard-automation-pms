@@ -15,6 +15,7 @@ class PmoProjectCost(Base, TimestampMixin):
     __tablename__ = "pmo_project_cost"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
 
     # 成本类别
@@ -53,6 +54,7 @@ class PmoMeeting(Base, TimestampMixin):
     __tablename__ = "pmo_meeting"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID(可为空表示跨项目会议)")
 
     # 会议信息

@@ -25,6 +25,7 @@ class AcceptanceTracking(Base, TimestampMixin):
     __tablename__ = "acceptance_tracking"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     acceptance_order_id = Column(
         Integer, ForeignKey("acceptance_orders.id"), nullable=False, comment="验收单ID"
     )
@@ -110,6 +111,7 @@ class AcceptanceTrackingRecord(Base, TimestampMixin):
     __tablename__ = "acceptance_tracking_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     tracking_id = Column(
         Integer, ForeignKey("acceptance_tracking.id"), nullable=False, comment="跟踪记录ID"
     )

@@ -28,6 +28,7 @@ class ChangeImpactAnalysis(Base, TimestampMixin):
     __tablename__ = "change_impact_analysis"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     change_request_id = Column(
         Integer, ForeignKey("change_requests.id"), nullable=False, comment="变更请求ID"
     )
@@ -132,6 +133,7 @@ class ChangeResponseSuggestion(Base, TimestampMixin):
     __tablename__ = "change_response_suggestions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     change_request_id = Column(
         Integer, ForeignKey("change_requests.id"), nullable=False, comment="变更请求ID"
     )

@@ -27,6 +27,7 @@ class PresaleExpense(Base, TimestampMixin):
     __tablename__ = "presale_expenses"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 项目关联
     project_id = Column(

@@ -27,6 +27,7 @@ class CustomerCommunication(Base, TimestampMixin):
     __tablename__ = "customer_communications"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     communication_no = Column(String(50), unique=True, nullable=False, comment="沟通记录号")
 
     # 沟通方式
@@ -92,6 +93,7 @@ class CustomerSatisfaction(Base, TimestampMixin):
     __tablename__ = "customer_satisfactions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     survey_no = Column(String(50), unique=True, nullable=False, comment="调查号")
 
     # 调查类型

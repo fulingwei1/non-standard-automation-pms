@@ -25,6 +25,7 @@ class DesignReview(Base, TimestampMixin):
     __tablename__ = "design_review"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
     designer_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="设计者ID")
 
@@ -64,6 +65,7 @@ class MechanicalDebugIssue(Base, TimestampMixin):
     __tablename__ = "mechanical_debug_issue"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
     responsible_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="责任人ID")
     reporter_id = Column(Integer, ForeignKey("users.id"), comment="报告人ID")
@@ -106,6 +108,7 @@ class DesignReuseRecord(Base, TimestampMixin):
     __tablename__ = "design_reuse_record"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="目标项目ID")
     designer_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="设计者ID")
 

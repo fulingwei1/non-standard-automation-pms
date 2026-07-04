@@ -64,6 +64,7 @@ class InstallationDispatchOrder(Base, TimestampMixin):
     __tablename__ = "installation_dispatch_orders"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     order_no = Column(String(50), unique=True, nullable=False, comment="派工单号")
 
     # 关联信息

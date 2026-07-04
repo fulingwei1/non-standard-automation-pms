@@ -53,6 +53,7 @@ class RdProject(Base, TimestampMixin):
     __tablename__ = "rd_project"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_no = Column(String(50), unique=True, nullable=False, comment="研发项目编号")
     project_name = Column(String(200), nullable=False, comment="研发项目名称")
 
@@ -164,6 +165,7 @@ class RdCost(Base, TimestampMixin):
     __tablename__ = "rd_cost"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     cost_no = Column(String(50), unique=True, nullable=False, comment="费用编号")
 
     # 关联信息
@@ -283,6 +285,7 @@ class RdReportRecord(Base, TimestampMixin):
     __tablename__ = "rd_report_record"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     report_no = Column(String(50), unique=True, nullable=False, comment="报表编号")
     report_type = Column(
         String(50),

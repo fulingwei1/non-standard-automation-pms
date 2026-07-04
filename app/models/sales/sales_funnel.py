@@ -90,6 +90,7 @@ class SalesFunnelStage(Base, TimestampMixin):
     __tablename__ = "sales_funnel_stages"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 阶段标识
     stage_code = Column(String(50), unique=True, nullable=False, comment="阶段编码")
@@ -202,6 +203,7 @@ class StageGateResult(Base, TimestampMixin):
     __tablename__ = "stage_gate_results"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联信息
     entity_type = Column(String(20), nullable=False, comment="实体类型")
@@ -312,6 +314,7 @@ class StageDwellTimeAlert(Base, TimestampMixin):
     __tablename__ = "stage_dwell_time_alerts"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联信息
     entity_type = Column(String(20), nullable=False, comment="实体类型")
@@ -446,6 +449,7 @@ class FunnelSnapshot(Base, TimestampMixin):
     __tablename__ = "funnel_snapshots"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 快照时间
     snapshot_date = Column(DateTime, nullable=False, comment="快照日期")

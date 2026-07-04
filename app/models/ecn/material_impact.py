@@ -29,6 +29,7 @@ class EcnMaterialDisposition(Base, TimestampMixin):
     __tablename__ = "ecn_material_dispositions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
     affected_material_id = Column(
         Integer, ForeignKey("ecn_affected_materials.id"), comment="受影响物料记录ID"
@@ -104,6 +105,7 @@ class EcnExecutionProgress(Base, TimestampMixin):
     __tablename__ = "ecn_execution_progress"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
 
     # 阶段信息
@@ -163,6 +165,7 @@ class EcnStakeholder(Base, TimestampMixin):
     __tablename__ = "ecn_stakeholders"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
 

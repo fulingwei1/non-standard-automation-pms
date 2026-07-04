@@ -24,6 +24,7 @@ class StrategyComparison(Base, TimestampMixin):
     __tablename__ = "strategy_comparisons"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 对比年份
     current_strategy_id = Column(

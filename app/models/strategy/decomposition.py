@@ -24,6 +24,7 @@ class DepartmentObjective(Base, TimestampMixin):
     __tablename__ = "department_objectives"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     strategy_id = Column(Integer, ForeignKey("strategies.id"), nullable=False, comment="关联战略")
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=False, comment="部门ID")
 
@@ -87,6 +88,7 @@ class PersonalKPI(Base, TimestampMixin):
     __tablename__ = "personal_kpis"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="员工ID")
 
     # 时间

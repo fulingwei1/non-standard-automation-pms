@@ -35,6 +35,7 @@ class MaterialBatch(Base, TimestampMixin):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     batch_no = Column(String(100), unique=True, nullable=False, comment="批次号")
     material_id = Column(Integer, ForeignKey("materials.id"), nullable=False, comment="物料ID")
 
@@ -97,6 +98,7 @@ class MaterialConsumption(Base, TimestampMixin):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     consumption_no = Column(String(100), unique=True, nullable=False, comment="消耗单号")
 
     # 物料信息
@@ -164,6 +166,7 @@ class MaterialAlert(Base, TimestampMixin):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     alert_no = Column(String(100), unique=True, nullable=False, comment="预警单号")
 
     # 物料信息

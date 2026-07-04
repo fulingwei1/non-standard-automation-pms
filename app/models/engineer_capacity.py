@@ -34,6 +34,7 @@ class EngineerCapacity(Base, TimestampMixin):
     __tablename__ = "engineer_capacity"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     engineer_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="工程师 ID")
     engineer_name = Column(String(100), comment="工程师姓名")
     department_id = Column(Integer, comment="部门 ID")
@@ -122,6 +123,7 @@ class EngineerTaskAssignment(Base, TimestampMixin):
     __tablename__ = "engineer_task_assignments"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     assignment_no = Column(String(50), unique=True, comment="分配单号")
 
     # 任务信息
@@ -180,6 +182,7 @@ class WorkloadWarning(Base, TimestampMixin):
     __tablename__ = "workload_warnings"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     warning_no = Column(String(50), unique=True, comment="预警单号")
 
     # 预警对象

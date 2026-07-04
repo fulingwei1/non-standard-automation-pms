@@ -126,6 +126,23 @@ class TestTenantQueryScopeBypass:
 
         assert ids == {user_a.id, user_b.id}
 
+    def test_superuser_with_own_tenant_id_still_bypasses(self, db, two_tenant_users):
+        """超管账号自己也挂着真实 tenant_id 时（本地管理员/租户内提权账号），
+        必须仍然无条件跨租户不过滤——不能因为 tenant_id 上下文不是 None 就
+        误判成普通租户用户（已用 tests/api/test_purchase.py::
+        test_superuser_with_tenant_can_approve_own_purchase_order 复现过这个
+        真实回归：先判断 tenant_id is not None 再判断 is_superuser 的顺序，
+        会让这类账号看不到自己创建的数据）。"""
+        user_a, user_b = two_tenant_users
+        set_current_tenant_id(user_a.tenant_id)
+        set_current_user_is_superuser(True)
+
+        ids = {
+            u.id for u in db.query(User).filter(User.id.in_([user_a.id, user_b.id])).all()
+        }
+
+        assert ids == {user_a.id, user_b.id}
+
     def test_no_request_context_bypasses_filter(self, db, two_tenant_users):
         """后台任务/脚本场景：无请求上下文（is_superuser 上下文变量保持默认 None）不过滤。"""
         user_a, user_b = two_tenant_users

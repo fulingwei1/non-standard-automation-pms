@@ -55,6 +55,7 @@ class Timesheet(Base, TimestampMixin):
     __tablename__ = "timesheet"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     timesheet_no = Column(String(50), comment="工时单号")
 
     # 人员信息
@@ -166,6 +167,7 @@ class TimesheetBatch(Base, TimestampMixin):
     __tablename__ = "timesheet_batch"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     batch_no = Column(String(50), unique=True, nullable=False, comment="批次编号")
 
     # 人员信息
@@ -215,6 +217,7 @@ class TimesheetSummary(Base, TimestampMixin):
     __tablename__ = "timesheet_summary"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 汇总维度
     summary_type = Column(
@@ -270,6 +273,7 @@ class OvertimeApplication(Base, TimestampMixin):
     __tablename__ = "overtime_application"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     application_no = Column(String(50), unique=True, nullable=False, comment="申请编号")
 
     # 申请人

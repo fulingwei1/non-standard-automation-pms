@@ -26,6 +26,7 @@ class DeliveryOrder(Base, TimestampMixin):
     __tablename__ = "delivery_orders"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     delivery_no = Column(String(50), unique=True, nullable=False, comment="送货单号")
 
     # 关联
@@ -113,6 +114,7 @@ class DeliveryOrderItem(Base, TimestampMixin):
     __tablename__ = "delivery_order_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     delivery_order_id = Column(
         Integer, ForeignKey("delivery_orders.id"), nullable=False, comment="发货单ID"
     )

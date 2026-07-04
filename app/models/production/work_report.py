@@ -25,6 +25,7 @@ class WorkReport(Base, TimestampMixin):
     __tablename__ = "work_report"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     report_no = Column(String(50), unique=True, nullable=False, comment="报工单号")
     work_order_id = Column(Integer, ForeignKey("work_order.id"), nullable=False, comment="工单ID")
     worker_id = Column(Integer, ForeignKey("worker.id"), nullable=False, comment="工人ID")

@@ -30,6 +30,7 @@ class WorkOrderBom(Base, TimestampMixin):
     __tablename__ = "mat_work_order_bom"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     work_order_id = Column(Integer, ForeignKey("work_order.id"), nullable=False, comment="工单ID")
     work_order_no = Column(String(32), comment="工单号")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=True, comment="项目ID")
@@ -74,6 +75,7 @@ class MaterialRequirement(Base, TimestampMixin):
     __tablename__ = "mat_material_requirement"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     requirement_no = Column(String(32), unique=True, nullable=False, comment="需求编号")
 
     # 来源信息
@@ -125,6 +127,7 @@ class KitCheck(Base, TimestampMixin):
     __tablename__ = "mat_kit_check"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     check_no = Column(String(32), unique=True, nullable=False, comment="检查编号")
 
     # 检查对象

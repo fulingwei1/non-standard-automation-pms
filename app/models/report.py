@@ -152,6 +152,7 @@ class ReportArchive(Base, TimestampMixin):
     __tablename__ = "report_archive"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联模板
     template_id = Column(
@@ -199,6 +200,7 @@ class ReportRecipient(Base, TimestampMixin):
     __tablename__ = "report_recipient"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联模板
     template_id = Column(

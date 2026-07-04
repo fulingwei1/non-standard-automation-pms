@@ -24,6 +24,7 @@ class Contact(Base, TimestampMixin):
     __tablename__ = "contacts"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联客户
     customer_id = Column(

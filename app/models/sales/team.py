@@ -35,6 +35,7 @@ class SalesTeam(Base, TimestampMixin):
     __tablename__ = "sales_teams"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     team_code = Column(String(20), unique=True, nullable=False, comment="团队编码")
     team_name = Column(String(100), nullable=False, comment="团队名称")
     description = Column(Text, comment="团队描述")
@@ -95,6 +96,7 @@ class SalesTeamMember(Base, TimestampMixin):
     __tablename__ = "sales_team_members"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     team_id = Column(
         Integer, ForeignKey("sales_teams.id", ondelete="CASCADE"), nullable=False, comment="团队ID"
     )
@@ -149,6 +151,7 @@ class TeamPerformanceSnapshot(Base, TimestampMixin):
     __tablename__ = "team_performance_snapshots"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     team_id = Column(
         Integer, ForeignKey("sales_teams.id", ondelete="CASCADE"), nullable=False, comment="团队ID"
     )
@@ -209,6 +212,7 @@ class TeamPKRecord(Base, TimestampMixin):
     __tablename__ = "team_pk_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     pk_name = Column(String(100), nullable=False, comment="PK名称")
     pk_type = Column(
         String(20), nullable=False, comment="PK类型：CONTRACT_AMOUNT/COLLECTION_AMOUNT/LEAD_COUNT"

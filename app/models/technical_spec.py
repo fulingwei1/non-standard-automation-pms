@@ -25,6 +25,7 @@ class TechnicalSpecRequirement(Base, TimestampMixin):
     __tablename__ = "technical_spec_requirements"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     document_id = Column(Integer, ForeignKey("project_documents.id"), comment="关联技术规格书文档")
 
@@ -71,6 +72,7 @@ class SpecMatchRecord(Base, TimestampMixin):
     __tablename__ = "spec_match_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     spec_requirement_id = Column(
         Integer, ForeignKey("technical_spec_requirements.id"), comment="规格要求ID"

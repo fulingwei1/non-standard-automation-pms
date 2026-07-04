@@ -98,6 +98,7 @@ class PresaleSupportTicket(Base, TimestampMixin):
     __tablename__ = "presale_support_ticket"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ticket_no = Column(String(50), unique=True, nullable=False, comment="工单编号")
 
     # 申请信息
@@ -201,6 +202,7 @@ class PresaleTicketDeliverable(Base, TimestampMixin):
     __tablename__ = "presale_ticket_deliverable"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ticket_id = Column(
         Integer, ForeignKey("presale_support_ticket.id"), nullable=False, comment="工单ID"
     )
@@ -238,6 +240,7 @@ class PresaleTicketProgress(Base):
     __tablename__ = "presale_ticket_progress"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ticket_id = Column(
         Integer, ForeignKey("presale_support_ticket.id"), nullable=False, comment="工单ID"
     )
@@ -268,6 +271,7 @@ class PresaleSolution(Base, TimestampMixin):
     __tablename__ = "presale_solution"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     solution_no = Column(String(50), unique=True, nullable=False, comment="方案编号")
 
     # 方案信息
@@ -346,6 +350,7 @@ class PresaleSolutionCost(Base, TimestampMixin):
     __tablename__ = "presale_solution_cost"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     solution_id = Column(
         Integer, ForeignKey("presale_solution.id"), nullable=False, comment="方案ID"
     )
@@ -419,6 +424,7 @@ class PresaleWorkload(Base, TimestampMixin):
     __tablename__ = "presale_workload"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="人员ID")
     stat_date = Column(Date, nullable=False, comment="统计日期")
 
@@ -452,6 +458,7 @@ class PresaleCustomerTechProfile(Base, TimestampMixin):
     __tablename__ = "presale_customer_tech_profile"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     customer_id = Column(Integer, nullable=False, unique=True, comment="客户ID")
 
     # 基本信息
@@ -490,6 +497,7 @@ class PresaleTenderRecord(Base, TimestampMixin):
     __tablename__ = "presale_tender_record"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ticket_id = Column(Integer, ForeignKey("presale_support_ticket.id"), comment="关联工单ID")
     opportunity_id = Column(Integer, comment="关联商机ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="关联项目ID")

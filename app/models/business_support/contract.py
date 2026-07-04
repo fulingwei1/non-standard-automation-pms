@@ -25,6 +25,7 @@ class ContractReview(Base, TimestampMixin):
     __tablename__ = "contract_reviews"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     contract_id = Column(Integer, ForeignKey("contracts.id"), nullable=False, comment="合同ID")
     review_type = Column(String(20), comment="审核类型：business/legal/finance")
     review_status = Column(
@@ -54,6 +55,7 @@ class ContractSealRecord(Base, TimestampMixin):
     __tablename__ = "contract_seal_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     contract_id = Column(Integer, ForeignKey("contracts.id"), nullable=False, comment="合同ID")
     seal_status = Column(
         String(20), default="pending", comment="盖章状态：pending/sealed/sent/received/archived"

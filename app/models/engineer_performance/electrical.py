@@ -27,6 +27,7 @@ class ElectricalDrawingVersion(Base, TimestampMixin):
     __tablename__ = "electrical_drawing_version"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
     designer_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="设计者ID")
 
@@ -63,6 +64,7 @@ class PlcProgramVersion(Base, TimestampMixin):
     __tablename__ = "plc_program_version"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
     programmer_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="程序员ID")
 
@@ -100,6 +102,7 @@ class PlcModuleLibrary(Base, TimestampMixin):
     __tablename__ = "plc_module_library"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     contributor_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="贡献者ID")
 
     # 模块信息
@@ -141,6 +144,7 @@ class ComponentSelection(Base, TimestampMixin):
     __tablename__ = "component_selection"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
     engineer_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="工程师ID")
 
@@ -176,6 +180,7 @@ class ElectricalFaultRecord(Base, TimestampMixin):
     __tablename__ = "electrical_fault_record"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
     responsible_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="责任人ID")
     reporter_id = Column(Integer, ForeignKey("users.id"), comment="报告人ID")

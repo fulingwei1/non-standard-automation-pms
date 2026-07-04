@@ -79,6 +79,7 @@ class QualificationLevel(Base, TimestampMixin):
     __tablename__ = "qualification_level"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     level_code = Column(
         String(20),
         unique=True,
@@ -117,6 +118,7 @@ class PositionCompetencyModel(Base, TimestampMixin):
     __tablename__ = "position_competency_model"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     position_type = Column(String(50), nullable=False, comment="岗位类型")
     position_subtype = Column(String(50), comment="岗位子类型 (ME/EE/SW/TE等)")
     level_id = Column(
@@ -167,6 +169,7 @@ class EmployeeQualification(Base, TimestampMixin):
     __tablename__ = "employee_qualification"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID")
     position_type = Column(String(50), nullable=False, comment="岗位类型")
     current_level_id = Column(
@@ -217,6 +220,7 @@ class QualificationAssessment(Base, TimestampMixin):
     __tablename__ = "qualification_assessment"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID")
     qualification_id = Column(
         Integer, ForeignKey("employee_qualification.id"), comment="任职资格ID"

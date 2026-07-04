@@ -26,6 +26,7 @@ class PmoChangeRequest(Base, TimestampMixin):
     __tablename__ = "pmo_change_request"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     change_no = Column(String(50), unique=True, nullable=False, comment="变更编号")
 
@@ -77,6 +78,7 @@ class PmoProjectRisk(Base, TimestampMixin):
     __tablename__ = "pmo_project_risk"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     risk_no = Column(String(50), unique=True, nullable=False, comment="风险编号")
 

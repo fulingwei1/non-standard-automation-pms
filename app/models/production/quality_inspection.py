@@ -31,6 +31,7 @@ class QualityInspection(Base, TimestampMixin):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     inspection_no = Column(String(50), unique=True, nullable=False, comment="质检单号")
     work_order_id = Column(Integer, ForeignKey("work_order.id"), nullable=True, comment="工单ID")
     material_id = Column(Integer, ForeignKey("materials.id"), nullable=True, comment="物料ID")
@@ -99,6 +100,7 @@ class DefectAnalysis(Base, TimestampMixin):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     inspection_id = Column(
         Integer, ForeignKey("quality_inspection.id"), nullable=False, comment="质检记录ID"
     )
@@ -214,6 +216,7 @@ class ReworkOrder(Base, TimestampMixin):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     rework_order_no = Column(String(50), unique=True, nullable=False, comment="返工单号")
     original_work_order_id = Column(
         Integer, ForeignKey("work_order.id"), nullable=False, comment="原工单ID"

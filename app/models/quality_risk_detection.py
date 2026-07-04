@@ -89,6 +89,7 @@ class QualityRiskDetection(Base, TimestampMixin):
     __tablename__ = "quality_risk_detection"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联信息
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
@@ -163,6 +164,7 @@ class QualityTestRecommendation(Base, TimestampMixin):
     __tablename__ = "quality_test_recommendations"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联信息
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")

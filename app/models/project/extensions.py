@@ -48,6 +48,7 @@ class ProjectFinancial(Base, TimestampMixin):
     __tablename__ = "project_financials"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(
         Integer, ForeignKey("projects.id"), unique=True, nullable=False, comment="项目ID"
     )
@@ -99,6 +100,7 @@ class ProjectERP(Base, TimestampMixin):
     __tablename__ = "project_erp"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(
         Integer, ForeignKey("projects.id"), unique=True, nullable=False, comment="项目ID"
     )
@@ -152,6 +154,7 @@ class ProjectWarranty(Base, TimestampMixin):
     __tablename__ = "project_warranties"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(
         Integer, ForeignKey("projects.id"), unique=True, nullable=False, comment="项目ID"
     )
@@ -212,6 +215,7 @@ class ProjectImplementation(Base, TimestampMixin):
     __tablename__ = "project_implementations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(
         Integer, ForeignKey("projects.id"), unique=True, nullable=False, comment="项目ID"
     )
@@ -262,6 +266,7 @@ class ProjectPresale(Base, TimestampMixin):
     __tablename__ = "project_presales"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(
         Integer, ForeignKey("projects.id"), unique=True, nullable=False, comment="项目ID"
     )

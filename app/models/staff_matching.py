@@ -120,6 +120,7 @@ class HrEmployeeTagEvaluation(Base, TimestampMixin):
     __tablename__ = "hr_employee_tag_evaluation"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID")
     tag_id = Column(Integer, ForeignKey("hr_tag_dict.id"), nullable=False, comment="标签ID")
     score = Column(Integer, nullable=False, comment="评分1-5")
@@ -155,6 +156,7 @@ class HrEmployeeProfile(Base, TimestampMixin):
     __tablename__ = "hr_employee_profile"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_id = Column(
         Integer, ForeignKey("employees.id"), unique=True, nullable=False, comment="员工ID"
     )
@@ -205,6 +207,7 @@ class HrProjectPerformance(Base, TimestampMixin):
     __tablename__ = "hr_project_performance"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     role_code = Column(String(50), nullable=False, comment="角色编码")
@@ -252,6 +255,7 @@ class MesProjectStaffingNeed(Base, TimestampMixin):
     __tablename__ = "mes_project_staffing_need"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     role_code = Column(String(50), nullable=False, comment="角色编码")
     role_name = Column(String(100), comment="角色名称")

@@ -26,6 +26,7 @@ class ProjectRiskHistory(Base, TimestampMixin):
     __tablename__ = "project_risk_history"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
 
     # 风险等级变化
@@ -65,6 +66,7 @@ class ProjectRiskSnapshot(Base, TimestampMixin):
     __tablename__ = "project_risk_snapshot"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
 
     # 快照时间

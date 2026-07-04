@@ -2,7 +2,7 @@
 售前AI知识库案例模型
 """
 
-from sqlalchemy import BLOB, DECIMAL, JSON, TIMESTAMP, Boolean, Column, Integer, String, Text
+from sqlalchemy import BLOB, Boolean, Column, DECIMAL, ForeignKey, Integer, JSON, String, TIMESTAMP, Text
 from sqlalchemy.sql import func
 
 from app.models.base import Base
@@ -14,6 +14,7 @@ class PresaleKnowledgeCase(Base):
     __tablename__ = "presale_knowledge_case"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="案例ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     case_name = Column(String(200), nullable=False, comment="案例名称")
     source_project_id = Column(Integer, nullable=True, comment="来源项目ID（关联projects表，用于回溯真实成本/技术细节）")
     industry = Column(String(100), nullable=True, comment="行业分类")

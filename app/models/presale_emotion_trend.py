@@ -14,6 +14,7 @@ class PresaleEmotionTrend(Base):
     __tablename__ = "presale_emotion_trend"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     presale_ticket_id = Column(
         Integer,
         ForeignKey("presale_support_ticket.id"),

@@ -25,6 +25,7 @@ class ProductionException(Base, TimestampMixin):
     __tablename__ = "production_exception"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     exception_no = Column(String(50), unique=True, nullable=False, comment="异常编号")
     exception_type = Column(String(20), nullable=False, comment="异常类型")
     exception_level = Column(String(20), nullable=False, default="MINOR", comment="异常级别")

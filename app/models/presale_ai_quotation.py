@@ -56,6 +56,7 @@ class PresaleAIQuotation(Base):
     __tablename__ = "presale_ai_quotation"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     presale_ticket_id = Column(Integer, nullable=False, comment="售前工单ID")
     customer_id = Column(Integer, nullable=True, comment="客户ID")
     quotation_number = Column(String(50), unique=True, nullable=False, comment="报价单编号")
@@ -141,6 +142,7 @@ class QuotationApproval(Base):
     __tablename__ = "quotation_approvals"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     quotation_id = Column(
         Integer, ForeignKey("presale_ai_quotation.id"), nullable=False, comment="报价单ID"
     )
@@ -172,6 +174,7 @@ class QuotationVersion(Base):
     __tablename__ = "quotation_versions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     quotation_id = Column(
         Integer, ForeignKey("presale_ai_quotation.id"), nullable=False, comment="报价单ID"
     )

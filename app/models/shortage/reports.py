@@ -16,6 +16,7 @@ class ShortageReport(Base, TimestampMixin):
     __tablename__ = "shortage_reports"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     report_no = Column(String(50), unique=True, nullable=False, comment="上报单号")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), nullable=True, comment="机台ID")

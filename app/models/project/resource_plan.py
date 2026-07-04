@@ -46,6 +46,7 @@ class ProjectStageResourcePlan(Base, TimestampMixin):
     __tablename__ = "project_stage_resource_plan"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     stage_code = Column(String(10), nullable=False, comment="阶段编码 S1-S9")
 
@@ -110,6 +111,7 @@ class ResourceConflict(Base, TimestampMixin):
     __tablename__ = "resource_conflicts"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="员工ID")
 
     # 冲突的两个资源计划

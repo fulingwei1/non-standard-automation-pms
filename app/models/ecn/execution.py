@@ -23,6 +23,7 @@ class EcnTask(Base, TimestampMixin):
     __tablename__ = "ecn_tasks"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
     task_no = Column(Integer, nullable=True, comment="任务序号")
     task_name = Column(String(200), nullable=False, comment="任务名称")

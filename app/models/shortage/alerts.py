@@ -72,6 +72,7 @@ class ShortageDailyReport(Base, TimestampMixin):
     __tablename__ = "mat_shortage_daily_report"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     report_date = Column(Date, unique=True, nullable=False, comment="报告日期")
 
     # 预警统计

@@ -2,7 +2,7 @@
 """
 ECN模型 - 配置类
 """
-from sqlalchemy import JSON, Boolean, Column, Index, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, Column, ForeignKey, Index, Integer, JSON, Numeric, String, Text
 
 from ..base import Base, TimestampMixin
 
@@ -31,6 +31,7 @@ class EcnApprovalMatrix(Base, TimestampMixin):
     __tablename__ = "ecn_approval_matrix"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_type = Column(String(20), comment="ECN类型")
     condition_type = Column(String(20), default="ALWAYS", comment="条件类型")
     condition_min = Column(Numeric(14, 2), comment="条件下限")

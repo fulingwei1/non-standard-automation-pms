@@ -64,6 +64,7 @@ class PresaleAIUsageStats(Base):
     __tablename__ = "presale_ai_usage_stats"
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     ai_function = Column(Enum(AIFunctionEnum), nullable=False)
     usage_count = Column(Integer, default=0, comment="使用次数")
@@ -95,6 +96,7 @@ class PresaleAIFeedback(Base):
     __tablename__ = "presale_ai_feedback"
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     ai_function = Column(String(50), nullable=False, comment="AI功能名称")
     presale_ticket_id = Column(Integer, nullable=True, comment="关联售前工单ID")

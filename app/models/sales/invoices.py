@@ -99,6 +99,7 @@ class ReceivableDispute(Base, TimestampMixin):
 
     __tablename__ = "receivable_disputes"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     payment_id = Column(
         Integer, ForeignKey("project_payment_plans.id"), nullable=False, comment="付款节点ID"
     )
@@ -120,6 +121,7 @@ class InvoiceApproval(Base, TimestampMixin):
 
     __tablename__ = "invoice_approvals"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=False, comment="发票ID")
     approval_level = Column(Integer, nullable=False, comment="审批层级")
     approval_role = Column(String(50), nullable=False, comment="审批角色")

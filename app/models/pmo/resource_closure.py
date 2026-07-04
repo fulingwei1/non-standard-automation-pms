@@ -15,6 +15,7 @@ class PmoResourceAllocation(Base, TimestampMixin):
     __tablename__ = "pmo_resource_allocation"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     task_id = Column(Integer, comment="任务ID")
 
@@ -48,6 +49,7 @@ class PmoProjectClosure(Base, TimestampMixin):
     __tablename__ = "pmo_project_closure"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(
         Integer, ForeignKey("projects.id"), nullable=False, unique=True, comment="项目ID"
     )

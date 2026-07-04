@@ -38,6 +38,7 @@ class OTDRiskSnapshot(Base, TimestampMixin):
     __tablename__ = "otd_risk_snapshots"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(
         Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
     )

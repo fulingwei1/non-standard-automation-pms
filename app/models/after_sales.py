@@ -28,6 +28,7 @@ class AfterSalesFeedback(Base, TimestampMixin):
     __tablename__ = "after_sales_feedback"
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键 ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="关联项目 ID")
     customer_id = Column(Integer, ForeignKey("customers.id"), comment="客户 ID")
     
@@ -60,6 +61,7 @@ class AfterSalesMaintenance(Base, TimestampMixin):
     __tablename__ = "after_sales_maintenance"
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键 ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="关联项目 ID")
     customer_id = Column(Integer, ForeignKey("customers.id"), comment="客户 ID")
     
@@ -92,6 +94,7 @@ class AfterSalesSupportTicket(Base, TimestampMixin):
     __tablename__ = "after_sales_support_tickets"
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键 ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="关联项目 ID")
     customer_id = Column(Integer, ForeignKey("customers.id"), comment="客户 ID")
     
@@ -128,6 +131,7 @@ class AfterSalesWarranty(Base, TimestampMixin):
     __tablename__ = "after_sales_warranty"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目 ID")
     customer_id = Column(Integer, ForeignKey("customers.id"), comment="客户 ID")
     
@@ -162,6 +166,7 @@ class AfterSalesSparePart(Base, TimestampMixin):
     __tablename__ = "after_sales_spare_parts"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目 ID")
     
     # 备件信息
@@ -194,6 +199,7 @@ class AfterSalesFieldService(Base, TimestampMixin):
     __tablename__ = "after_sales_field_services"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目 ID")
     customer_id = Column(Integer, ForeignKey("customers.id"), comment="客户 ID")
     ticket_id = Column(Integer, ForeignKey("after_sales_support_tickets.id"), comment="关联工单 ID")
@@ -252,6 +258,7 @@ class AfterSalesSLA(Base, TimestampMixin):
     __tablename__ = "after_sales_sla"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目 ID")
     ticket_id = Column(Integer, ForeignKey("after_sales_support_tickets.id"), comment="工单 ID")
     
@@ -276,6 +283,7 @@ class AfterSalesSatisfaction(Base, TimestampMixin):
     __tablename__ = "after_sales_satisfaction"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目 ID")
     customer_id = Column(Integer, ForeignKey("customers.id"), comment="客户 ID")
     ticket_id = Column(Integer, ForeignKey("after_sales_support_tickets.id"), nullable=True, comment="工单 ID")
@@ -303,6 +311,7 @@ class AfterSalesKnowledge(Base, TimestampMixin):
     __tablename__ = "after_sales_knowledge"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     
     # 知识信息
     title = Column(String(200), comment="标题")

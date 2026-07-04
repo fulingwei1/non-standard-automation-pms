@@ -73,6 +73,7 @@ class ProjectStage(Base, TimestampMixin):
     S9 = _StageValue("S9")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="所属项目")
     stage_code = Column(String(20), nullable=False, comment="阶段编码：S1-S9")
     stage_name = Column(String(50), nullable=False, comment="阶段名称")
@@ -140,6 +141,7 @@ class ProjectStatus(Base, TimestampMixin):
     __tablename__ = "project_statuses"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     stage_id = Column(
         Integer, ForeignKey("project_stages.id"), nullable=False, comment="所属阶段ID"
     )

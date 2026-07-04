@@ -43,6 +43,7 @@ class Department(Base, TimestampMixin):
     __tablename__ = "departments"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     dept_code = Column(String(20), unique=True, nullable=False, comment="部门编码")
     dept_name = Column(String(50), nullable=False, comment="部门名称")
     parent_id = Column(Integer, ForeignKey("departments.id"), comment="父部门ID")
@@ -71,6 +72,7 @@ class Employee(Base, TimestampMixin):
     __tablename__ = "employees"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_code = Column(String(10), unique=True, nullable=False, comment="工号")
     name = Column(String(50), nullable=False, comment="姓名")
     department = Column(String(50), comment="部门")  # Legacy string field
@@ -103,6 +105,7 @@ class EmployeeHrProfile(Base, TimestampMixin):
     __tablename__ = "employee_hr_profiles"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_id = Column(
         Integer,
         ForeignKey("employees.id"),
@@ -171,6 +174,7 @@ class HrTransaction(Base, TimestampMixin):
     __tablename__ = "hr_transactions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID")
     transaction_type = Column(
         String(20),
@@ -252,6 +256,7 @@ class EmployeeContract(Base, TimestampMixin):
     __tablename__ = "employee_contracts"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID")
     contract_no = Column(String(50), comment="合同编号")
     contract_type = Column(
@@ -310,6 +315,7 @@ class ContractReminder(Base, TimestampMixin):
     __tablename__ = "contract_reminders"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     contract_id = Column(
         Integer, ForeignKey("employee_contracts.id"), nullable=False, comment="合同ID"
     )
@@ -357,6 +363,7 @@ class SalaryRecord(Base, TimestampMixin):
     __tablename__ = "salary_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID")
 
     # 薪资信息
@@ -437,6 +444,7 @@ class OrganizationUnit(Base, TimestampMixin):
     __tablename__ = "organization_units"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     unit_code = Column(String(50), unique=True, nullable=False, comment="组织编码")
     unit_name = Column(String(100), nullable=False, comment="组织名称")
     unit_type = Column(
@@ -490,6 +498,7 @@ class Position(Base, TimestampMixin):
     __tablename__ = "positions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     position_code = Column(String(50), unique=True, nullable=False, comment="岗位编码")
     position_name = Column(String(100), nullable=False, comment="岗位名称")
     position_category = Column(
@@ -545,6 +554,7 @@ class EmployeeOrgAssignment(Base, TimestampMixin):
     __tablename__ = "employee_org_assignments"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_id = Column(
         Integer,
         ForeignKey("employees.id", ondelete="CASCADE"),
@@ -584,6 +594,7 @@ class PositionRole(Base):
     __tablename__ = "position_roles"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     position_id = Column(Integer, ForeignKey("positions.id", ondelete="CASCADE"), nullable=False)
     role_id = Column(Integer, ForeignKey("roles.id", ondelete="CASCADE"), nullable=False)
     is_active = Column(Boolean, default=True)

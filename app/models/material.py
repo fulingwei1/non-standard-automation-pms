@@ -49,6 +49,7 @@ class Material(Base, TimestampMixin):
     __tablename__ = "materials"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     material_code = Column(String(50), unique=True, nullable=False, comment="物料编码")
     material_name = Column(String(200), nullable=False, comment="物料名称")
     category_id = Column(Integer, ForeignKey("material_categories.id"), comment="分类ID")
@@ -104,6 +105,7 @@ class MaterialSupplier(Base, TimestampMixin):
     __tablename__ = "material_suppliers"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     material_id = Column(Integer, ForeignKey("materials.id"), nullable=False, comment="物料ID")
     supplier_id = Column(Integer, ForeignKey("vendors.id"), nullable=False, comment="供应商ID")
 
@@ -140,6 +142,7 @@ class BomHeader(Base, TimestampMixin):
     __tablename__ = "bom_headers"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     bom_no = Column(String(50), nullable=False, comment="BOM编号")
     bom_name = Column(String(200), nullable=False, comment="BOM名称")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
@@ -185,6 +188,7 @@ class BomItem(Base, TimestampMixin):
     __tablename__ = "bom_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     bom_id = Column(Integer, ForeignKey("bom_headers.id"), nullable=False, comment="BOM ID")
     item_no = Column(Integer, nullable=False, comment="行号")
     parent_item_id = Column(Integer, ForeignKey("bom_items.id"), comment="父级行ID")
@@ -243,6 +247,7 @@ class MaterialShortage(Base, TimestampMixin):
     __tablename__ = "material_shortages"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     bom_item_id = Column(Integer, ForeignKey("bom_items.id"), comment="BOM行ID")
     material_id = Column(Integer, ForeignKey("materials.id"), nullable=False, comment="物料ID")

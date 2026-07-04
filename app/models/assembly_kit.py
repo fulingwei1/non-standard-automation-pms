@@ -30,6 +30,7 @@ class AssemblyStage(Base, TimestampMixin):
     __tablename__ = "mes_assembly_stage"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     stage_code = Column(String(20), unique=True, nullable=False, comment="阶段编码")
     stage_name = Column(String(50), nullable=False, comment="阶段名称")
     stage_order = Column(Integer, nullable=False, comment="阶段顺序(1-6)")
@@ -124,6 +125,7 @@ class BomItemAssemblyAttrs(Base, TimestampMixin):
     __tablename__ = "bom_item_assembly_attrs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     bom_item_id = Column(
         Integer,
         ForeignKey("bom_items.id", ondelete="CASCADE"),
@@ -188,6 +190,7 @@ class MaterialReadiness(Base, TimestampMixin):
     __tablename__ = "mes_material_readiness"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     readiness_no = Column(String(50), unique=True, nullable=False, comment="分析单号")
 
     # 分析对象
@@ -269,6 +272,7 @@ class ShortageDetail(Base, TimestampMixin):
     __tablename__ = "mes_shortage_detail"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     readiness_id = Column(
         Integer,
         ForeignKey("mes_material_readiness.id", ondelete="CASCADE"),
@@ -396,6 +400,7 @@ class SchedulingSuggestion(Base, TimestampMixin):
     __tablename__ = "mes_scheduling_suggestion"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     suggestion_no = Column(String(50), unique=True, nullable=False, comment="建议单号")
     readiness_id = Column(
         Integer, ForeignKey("mes_material_readiness.id"), comment="关联齐套分析ID"
@@ -455,6 +460,7 @@ class KitRateSnapshot(Base):
     __tablename__ = "mes_kit_rate_snapshot"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 快照对象
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")

@@ -36,6 +36,7 @@ class ExpediteRecord(Base, TimestampMixin):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联信息
     shortage_id = Column(Integer, ForeignKey("material_shortages.id"), comment="缺料预警ID")
@@ -107,6 +108,7 @@ class MaterialAlternative(Base, TimestampMixin):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     original_material_id = Column(
         Integer, ForeignKey("materials.id"), nullable=False, comment="原物料ID"

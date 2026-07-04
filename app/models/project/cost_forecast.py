@@ -34,6 +34,7 @@ class CostForecast(Base, TimestampMixin):
     __tablename__ = "cost_forecasts"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 项目关联
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
@@ -115,6 +116,7 @@ class CostAlert(Base, TimestampMixin):
     __tablename__ = "cost_alerts"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 项目关联
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")

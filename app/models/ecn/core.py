@@ -25,6 +25,7 @@ class Ecn(Base, TimestampMixin):
     __tablename__ = "ecn"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_no = Column(String(50), nullable=False, comment="ECN编号")
     ecn_title = Column(String(200), nullable=False, comment="ECN标题")
     ecn_type = Column(String(20), nullable=True, comment="变更类型")

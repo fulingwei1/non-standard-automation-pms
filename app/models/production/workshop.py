@@ -23,6 +23,7 @@ class Workshop(Base, TimestampMixin):
     __tablename__ = "workshop"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     workshop_code = Column(String(50), unique=True, nullable=False, comment="车间编码")
     workshop_name = Column(String(100), nullable=False, comment="车间名称")
     workshop_type = Column(String(20), nullable=False, default="OTHER", comment="车间类型")
@@ -50,6 +51,7 @@ class Workstation(Base, TimestampMixin):
     __tablename__ = "workstation"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     workstation_code = Column(String(50), unique=True, nullable=False, comment="工位编码")
     workstation_name = Column(String(100), nullable=False, comment="工位名称")
     workshop_id = Column(Integer, ForeignKey("workshop.id"), nullable=False, comment="所属车间ID")

@@ -13,6 +13,7 @@ class FieldTask(Base, TimestampMixin):
     __tablename__ = "field_tasks"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     task_no = Column(String(50), unique=True, nullable=False, comment="现场任务编号")
     customer_name = Column(String(200), nullable=False, comment="客户名称")
     project_name = Column(String(200), nullable=False, comment="项目名称")
@@ -41,6 +42,7 @@ class FieldCheckin(Base, TimestampMixin):
     __tablename__ = "field_checkins"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     task_id = Column(Integer, ForeignKey("field_tasks.id"), nullable=False, comment="任务ID")
     user_id = Column(String(100), nullable=False, comment="签到用户")
     latitude = Column(Float, nullable=False, comment="纬度")
@@ -58,6 +60,7 @@ class FieldIssue(Base, TimestampMixin):
     __tablename__ = "field_issues"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     task_id = Column(Integer, ForeignKey("field_tasks.id"), nullable=False, comment="任务ID")
     description = Column(Text, nullable=False, comment="问题描述")
     photo_url = Column(Text, comment="现场图片")

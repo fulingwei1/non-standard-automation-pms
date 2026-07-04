@@ -25,6 +25,7 @@ class EcnAffectedMaterial(Base, TimestampMixin):
     __tablename__ = "ecn_affected_materials"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
     material_id = Column(Integer, ForeignKey("materials.id"), comment="物料ID")
     bom_item_id = Column(Integer, ForeignKey("bom_items.id"), comment="BOM行ID")
@@ -83,6 +84,7 @@ class EcnAffectedOrder(Base, TimestampMixin):
     __tablename__ = "ecn_affected_orders"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
     order_type = Column(String(20), nullable=False, comment="订单类型")
     order_id = Column(Integer, nullable=False, comment="订单ID")
@@ -112,6 +114,7 @@ class EcnBomImpact(Base, TimestampMixin):
     __tablename__ = "ecn_bom_impacts"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
 
     # 关联信息
@@ -161,6 +164,7 @@ class EcnBomChange(Base, TimestampMixin):
     __tablename__ = "ecn_bom_changes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
     bom_id = Column(Integer, ForeignKey("bom_headers.id"), comment="BOM ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")

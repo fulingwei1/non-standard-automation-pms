@@ -28,6 +28,7 @@ class EngineerProfile(Base, TimestampMixin):
     __tablename__ = "engineer_profile"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(
         Integer, ForeignKey("users.id"), unique=True, nullable=False, comment="关联用户ID"
     )
@@ -106,6 +107,7 @@ class CollaborationRating(Base, TimestampMixin):
     __tablename__ = "collaboration_rating"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     period_id = Column(
         Integer, ForeignKey("performance_period.id"), nullable=False, comment="考核周期ID"
     )
@@ -154,6 +156,7 @@ class KnowledgeContribution(Base, TimestampMixin):
     __tablename__ = "knowledge_contribution"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     contributor_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="贡献者ID")
 
     # 贡献类型

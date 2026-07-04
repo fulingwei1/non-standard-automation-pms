@@ -27,6 +27,7 @@ class CultureWallContent(Base, TimestampMixin):
     __tablename__ = "culture_wall_content"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 内容类型
     content_type = Column(
@@ -85,6 +86,7 @@ class PersonalGoal(Base, TimestampMixin):
     __tablename__ = "personal_goal"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
 
     # 目标信息
@@ -133,6 +135,7 @@ class CultureWallReadRecord(Base, TimestampMixin):
     __tablename__ = "culture_wall_read_record"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     content_id = Column(
         Integer,
         ForeignKey("culture_wall_content.id", ondelete="CASCADE"),

@@ -262,6 +262,7 @@ class UserRole(Base):
     __tablename__ = "user_roles"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=False, comment="角色ID")
 
@@ -322,6 +323,7 @@ class SolutionCreditTransaction(Base):
     __tablename__ = "solution_credit_transactions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
 
     # 交易类型

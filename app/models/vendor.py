@@ -30,6 +30,7 @@ class Vendor(Base, TimestampMixin, VendorBaseMixin):
     __tablename__ = "vendors"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 覆盖 VendorBaseMixin 中的字段，添加 unique 约束
     supplier_code = Column(String(50), unique=True, nullable=False, comment="供应商编码")

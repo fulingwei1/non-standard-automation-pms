@@ -28,6 +28,7 @@ class ApprovalInstance(Base, TimestampMixin):
     __tablename__ = "approval_instances"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     instance_no = Column(
         String(50), unique=True, nullable=False, comment="审批单号（如AP202601200001）"
     )

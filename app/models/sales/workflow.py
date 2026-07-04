@@ -26,6 +26,7 @@ class ApprovalWorkflow(Base, TimestampMixin):
 
     __tablename__ = "approval_workflows"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     workflow_type = Column(String(20), nullable=False, comment="工作流类型：QUOTE/CONTRACT/INVOICE")
     workflow_name = Column(String(100), nullable=False, comment="工作流名称")
     description = Column(Text, comment="工作流描述")
@@ -54,6 +55,7 @@ class ApprovalWorkflowStep(Base, TimestampMixin):
 
     __tablename__ = "approval_workflow_steps"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     workflow_id = Column(
         Integer, ForeignKey("approval_workflows.id"), nullable=False, comment="工作流ID"
     )
@@ -83,6 +85,7 @@ class ApprovalRecord(Base, TimestampMixin):
 
     __tablename__ = "approval_records"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     entity_type = Column(String(20), nullable=False, comment="实体类型：QUOTE/CONTRACT/INVOICE")
     entity_id = Column(Integer, nullable=False, comment="实体ID")
     workflow_id = Column(
@@ -119,6 +122,7 @@ class ApprovalHistory(Base, TimestampMixin):
 
     __tablename__ = "approval_history"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     approval_record_id = Column(
         Integer, ForeignKey("approval_records.id"), nullable=False, comment="审批记录ID"
     )
@@ -150,6 +154,7 @@ class SalesTarget(Base, TimestampMixin):
 
     __tablename__ = "sales_targets"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     target_scope = Column(String(20), nullable=False, comment="目标范围：PERSONAL/TEAM/DEPARTMENT")
     user_id = Column(Integer, ForeignKey("users.id"), comment="用户ID（个人目标）")
     department_id = Column(Integer, ForeignKey("departments.id"), comment="部门ID（部门目标）")

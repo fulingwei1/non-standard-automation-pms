@@ -15,6 +15,7 @@ class PaymentReminder(Base, TimestampMixin):
     __tablename__ = "payment_reminders"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     contract_id = Column(Integer, ForeignKey("contracts.id"), nullable=False, comment="合同ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
     payment_node = Column(String(50), comment="付款节点：prepayment/delivery/acceptance/warranty")

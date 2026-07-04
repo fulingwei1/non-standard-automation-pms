@@ -27,6 +27,7 @@ class MaterialArrival(Base, TimestampMixin):
     __tablename__ = "material_arrivals"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     arrival_no = Column(String(50), unique=True, nullable=False, comment="到货跟踪单号")
     shortage_report_id = Column(
         Integer, ForeignKey("shortage_reports.id"), nullable=True, comment="关联缺料上报ID"
@@ -88,6 +89,7 @@ class ArrivalFollowUp(Base, TimestampMixin):
     __tablename__ = "arrival_follow_ups"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     arrival_id = Column(
         Integer, ForeignKey("material_arrivals.id"), nullable=False, comment="到货跟踪ID"
     )

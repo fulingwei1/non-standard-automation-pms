@@ -2,7 +2,7 @@
 """
 绩效模型 - 周期和指标
 """
-from sqlalchemy import JSON, Boolean, Column, Date, Index, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, Column, Date, ForeignKey, Index, Integer, JSON, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
 from ..base import Base, TimestampMixin
@@ -14,6 +14,7 @@ class PerformancePeriod(Base, TimestampMixin):
     __tablename__ = "performance_period"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     period_code = Column(String(20), unique=True, nullable=False, comment="周期编码")
     period_name = Column(String(100), nullable=False, comment="周期名称")
     period_type = Column(String(20), nullable=False, comment="周期类型")
@@ -50,6 +51,7 @@ class PerformanceIndicator(Base, TimestampMixin):
     __tablename__ = "performance_indicator"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     indicator_code = Column(String(50), unique=True, nullable=False, comment="指标编码")
     indicator_name = Column(String(100), nullable=False, comment="指标名称")
     indicator_type = Column(String(20), nullable=False, comment="指标类型")

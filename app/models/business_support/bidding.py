@@ -26,6 +26,7 @@ class BiddingProject(Base, TimestampMixin):
     __tablename__ = "bidding_projects"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     bidding_no = Column(String(50), unique=True, nullable=False, comment="投标编号")
     project_name = Column(String(500), nullable=False, comment="项目名称")
     customer_id = Column(Integer, ForeignKey("customers.id"), comment="客户ID")
@@ -110,6 +111,7 @@ class BiddingDocument(Base, TimestampMixin):
     __tablename__ = "bidding_documents"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     bidding_project_id = Column(
         Integer, ForeignKey("bidding_projects.id"), nullable=False, comment="投标项目ID"
     )

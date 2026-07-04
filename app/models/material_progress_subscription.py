@@ -23,6 +23,7 @@ class MaterialProgressSubscription(Base, TimestampMixin):
     __tablename__ = "material_progress_subscriptions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
 

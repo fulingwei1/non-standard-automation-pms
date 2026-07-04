@@ -27,6 +27,7 @@ class TestBugRecord(Base, TimestampMixin):
     __tablename__ = "test_bug_record"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
     reporter_id = Column(Integer, ForeignKey("users.id"), comment="报告人ID")
     assignee_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="处理人ID")
@@ -72,6 +73,7 @@ class CodeReviewRecord(Base, TimestampMixin):
     __tablename__ = "code_review_record"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
     author_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="作者ID")
     reviewer_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="评审人ID")
@@ -108,6 +110,7 @@ class CodeModule(Base, TimestampMixin):
     __tablename__ = "code_module"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     contributor_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="贡献者ID")
 
     # 模块信息

@@ -28,6 +28,7 @@ class Pitfall(Base, TimestampMixin):
     __tablename__ = "pitfalls"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     pitfall_no = Column(String(50), unique=True, nullable=False, comment="踩坑编号")
 
     # === 必填字段（降低录入门槛）===
@@ -93,6 +94,7 @@ class PitfallRecommendation(Base, TimestampMixin):
     __tablename__ = "pitfall_recommendations"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     pitfall_id = Column(Integer, ForeignKey("pitfalls.id"), nullable=False, comment="踩坑ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
 
@@ -124,6 +126,7 @@ class PitfallLearningProgress(Base, TimestampMixin):
     __tablename__ = "pitfall_learning_progress"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
     pitfall_id = Column(Integer, ForeignKey("pitfalls.id"), nullable=False, comment="踩坑ID")
 

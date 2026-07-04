@@ -15,6 +15,7 @@ class DocumentArchive(Base, TimestampMixin):
     __tablename__ = "document_archives"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     archive_no = Column(String(50), unique=True, nullable=False, comment="归档编号")
     document_type = Column(String(50), comment="文件类型：contract/acceptance/invoice/other")
     related_type = Column(String(50), comment="关联类型：contract/project/acceptance")

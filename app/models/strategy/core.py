@@ -26,6 +26,7 @@ class Strategy(Base, TimestampMixin):
     __tablename__ = "strategies"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     code = Column(String(50), unique=True, nullable=False, comment="战略编码，如 STR-2026")
     name = Column(String(200), nullable=False, comment="战略名称")
     vision = Column(Text, comment="愿景描述")
@@ -78,6 +79,7 @@ class CSF(Base, TimestampMixin):
     __tablename__ = "csfs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     strategy_id = Column(Integer, ForeignKey("strategies.id"), nullable=False, comment="关联战略")
 
     # 基本信息
@@ -129,6 +131,7 @@ class KPI(Base, TimestampMixin):
     __tablename__ = "kpis"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     csf_id = Column(Integer, ForeignKey("csfs.id"), nullable=False, comment="关联 CSF")
 
     # 基本信息
@@ -201,6 +204,7 @@ class KPIHistory(Base, TimestampMixin):
     __tablename__ = "kpi_history"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     kpi_id = Column(Integer, ForeignKey("kpis.id"), nullable=False, comment="关联 KPI")
 
     # 快照时间
@@ -247,6 +251,7 @@ class KPIDataSource(Base, TimestampMixin):
     __tablename__ = "kpi_data_sources"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     kpi_id = Column(Integer, ForeignKey("kpis.id"), nullable=False, comment="关联 KPI")
 
     # 数据源类型

@@ -30,6 +30,7 @@ class ProjectSchedulePrediction(Base):
     __tablename__ = "project_schedule_prediction"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, nullable=False, index=True, comment="项目ID")
     prediction_date = Column(DateTime, nullable=False, default=datetime.now, comment="预测时间")
 
@@ -96,6 +97,7 @@ class CatchUpSolution(Base):
     __tablename__ = "catch_up_solutions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, nullable=False, index=True, comment="项目ID")
     prediction_id = Column(
         Integer,
@@ -181,6 +183,7 @@ class ScheduleAlert(Base):
     __tablename__ = "schedule_alerts"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, nullable=False, index=True, comment="项目ID")
     prediction_id = Column(
         Integer,

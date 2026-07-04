@@ -14,6 +14,7 @@ class AdminSupply(Base, TimestampMixin):
     __tablename__ = "admin_supplies"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     name = Column(String(100), nullable=False, comment="用品名称")
     category = Column(String(50), comment="分类")
     specification = Column(String(200), comment="规格")
@@ -32,6 +33,7 @@ class AdminSupplyRequest(Base, TimestampMixin):
     __tablename__ = "admin_supply_requests"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     supply_id = Column(Integer, ForeignKey("admin_supplies.id"), nullable=False, comment="用品ID")
     quantity = Column(Integer, nullable=False, comment="申领数量")
     reason = Column(Text, comment="申领事由")
@@ -48,6 +50,7 @@ class AdminVehicle(Base, TimestampMixin):
     __tablename__ = "admin_vehicles"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     plate_no = Column(String(20), unique=True, nullable=False, comment="车牌号")
     model = Column(String(100), comment="车型")
     seats = Column(Integer, comment="座位数")
@@ -62,6 +65,7 @@ class AdminVehicleRequest(Base, TimestampMixin):
     __tablename__ = "admin_vehicle_requests"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     vehicle_id = Column(Integer, ForeignKey("admin_vehicles.id"), comment="车辆ID（可待分配）")
     use_date = Column(Date, nullable=False, comment="用车日期")
     destination = Column(String(200), comment="目的地")
@@ -79,6 +83,7 @@ class AdminAsset(Base, TimestampMixin):
     __tablename__ = "admin_assets"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     asset_no = Column(String(50), unique=True, nullable=False, comment="资产编号")
     name = Column(String(100), nullable=False, comment="资产名称")
     category = Column(String(50), comment="分类")
@@ -98,6 +103,7 @@ class AdminExpense(Base, TimestampMixin):
     __tablename__ = "admin_expenses"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     expense_no = Column(String(50), unique=True, comment="费用编号")
     category = Column(String(50), nullable=False, comment="费用类别")
     amount = Column(Numeric(12, 2), nullable=False, comment="金额")

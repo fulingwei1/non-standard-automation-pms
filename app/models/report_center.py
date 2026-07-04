@@ -127,6 +127,7 @@ class ReportDefinition(Base, TimestampMixin):
     __tablename__ = "report_definition"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     report_code = Column(String(50), unique=True, nullable=False, comment="报表编码")
     report_name = Column(String(100), nullable=False, comment="报表名称")
 
@@ -176,6 +177,7 @@ class ReportGeneration(Base, TimestampMixin):
     __tablename__ = "report_generation"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 报表信息
     report_definition_id = Column(Integer, ForeignKey("report_definition.id"), comment="报表定义ID")
@@ -227,6 +229,7 @@ class ReportSubscription(Base, TimestampMixin):
     __tablename__ = "report_subscription"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 订阅人
     subscriber_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="订阅人ID")
@@ -274,6 +277,7 @@ class DataImportTask(Base, TimestampMixin):
     __tablename__ = "data_import_task"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     task_no = Column(String(50), unique=True, nullable=False, comment="任务编号")
 
     # 导入类型
@@ -328,6 +332,7 @@ class DataExportTask(Base, TimestampMixin):
     __tablename__ = "data_export_task"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     task_no = Column(String(50), unique=True, nullable=False, comment="任务编号")
 
     # 导出类型

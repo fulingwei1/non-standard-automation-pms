@@ -235,6 +235,7 @@ class TaskDependency(Base):
     __tablename__ = "task_dependencies"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     task_id = Column(Integer, ForeignKey("task_unified.id"), nullable=False, comment="任务ID")
     depends_on_task_id = Column(
         Integer, ForeignKey("task_unified.id"), nullable=False, comment="依赖的任务ID"
@@ -287,6 +288,7 @@ class ScheduleBaseline(Base, TimestampMixin):
     __tablename__ = "schedule_baselines"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     baseline_no = Column(String(10), default="V1", comment="基线编号")
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人ID")
@@ -312,6 +314,7 @@ class BaselineTask(Base):
     __tablename__ = "baseline_tasks"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     baseline_id = Column(
         Integer, ForeignKey("schedule_baselines.id"), nullable=False, comment="基线ID"
     )
@@ -336,6 +339,7 @@ class ProgressReport(Base, TimestampMixin):
     __tablename__ = "progress_reports"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     report_type = Column(String(20), nullable=False, comment="报告类型：daily/weekly")
     report_date = Column(Date, nullable=False, comment="报告日期")
 

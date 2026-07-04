@@ -28,6 +28,7 @@ class SalesRegion(Base, TimestampMixin):
     __tablename__ = "sales_regions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="区域ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     region_code = Column(String(50), unique=True, nullable=False, comment="区域编码")
     region_name = Column(String(100), nullable=False, comment="区域名称")
     parent_region_id = Column(

@@ -37,6 +37,7 @@ class ChangeRequest(Base, TimestampMixin):
     __tablename__ = 'change_requests'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     change_code = Column(String(50), unique=True, nullable=False, comment='变更编号')
     project_id = Column(Integer, ForeignKey('projects.id'), nullable=False, comment='项目ID')
 
@@ -201,6 +202,7 @@ class ChangeApprovalRecord(Base, TimestampMixin):
     __tablename__ = 'change_approval_records'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     change_request_id = Column(
         Integer,
         ForeignKey('change_requests.id'),
@@ -249,6 +251,7 @@ class ChangeNotification(Base, TimestampMixin):
     __tablename__ = 'change_notifications'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     change_request_id = Column(
         Integer,
         ForeignKey('change_requests.id'),

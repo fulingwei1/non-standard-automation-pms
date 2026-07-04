@@ -40,6 +40,7 @@ class PresaleAICostEstimation(Base):
     __tablename__ = "presale_ai_cost_estimation"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     presale_ticket_id = Column(Integer, nullable=False, index=True, comment="售前工单ID")
 
     # === 【保留】原字段，用于向后兼容 ===
@@ -118,6 +119,7 @@ class PresaleCostHistory(Base):
     __tablename__ = "presale_cost_history"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, nullable=True, comment="项目ID")
     project_name = Column(String(200), nullable=True, comment="项目名称")
 
@@ -152,6 +154,7 @@ class PresaleCostOptimizationRecord(Base):
     __tablename__ = "presale_cost_optimization_record"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     estimation_id = Column(Integer, ForeignKey("presale_ai_cost_estimation.id"), nullable=False)
 
     # 优化建议

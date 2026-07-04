@@ -26,6 +26,7 @@ class PipelineBreakRecord(Base, TimestampMixin):
     __tablename__ = "pipeline_break_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     pipeline_id = Column(String(50), nullable=False, comment="流程ID（线索/商机/报价/合同ID）")
     pipeline_type = Column(
         String(20), nullable=False, comment="流程类型：LEAD/OPPORTUNITY/QUOTE/CONTRACT"
@@ -61,6 +62,7 @@ class PipelineHealthSnapshot(Base, TimestampMixin):
     __tablename__ = "pipeline_health_snapshots"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     pipeline_id = Column(String(50), nullable=False, comment="流程ID")
     pipeline_type = Column(
         String(20), nullable=False, comment="流程类型：LEAD/OPPORTUNITY/QUOTE/CONTRACT"
@@ -86,6 +88,7 @@ class AccountabilityRecord(Base, TimestampMixin):
     __tablename__ = "accountability_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     pipeline_id = Column(String(50), nullable=False, comment="流程ID")
     pipeline_type = Column(String(20), nullable=False, comment="流程类型")
     issue_type = Column(

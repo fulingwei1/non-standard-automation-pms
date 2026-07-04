@@ -31,6 +31,7 @@ class ExceptionKnowledge(Base, TimestampMixin):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 知识条目基本信息
     title = Column(String(200), nullable=False, comment="知识标题")

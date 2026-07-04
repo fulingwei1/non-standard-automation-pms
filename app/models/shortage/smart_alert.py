@@ -35,6 +35,7 @@ class ShortageAlert(Base, TimestampMixin):
     __tablename__ = "shortage_alerts_enhanced"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     alert_no = Column(String(50), unique=True, nullable=False, comment="预警单号")
 
     # 关联信息
@@ -144,6 +145,7 @@ class ShortageHandlingPlan(Base, TimestampMixin):
     __tablename__ = "shortage_handling_plans"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     plan_no = Column(String(50), unique=True, nullable=False, comment="方案编号")
 
     # 关联预警
@@ -248,6 +250,7 @@ class MaterialDemandForecast(Base, TimestampMixin):
     __tablename__ = "material_demand_forecasts"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     forecast_no = Column(String(50), unique=True, nullable=False, comment="预测编号")
 
     # 预测目标

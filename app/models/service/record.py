@@ -26,6 +26,7 @@ class ServiceRecord(Base, TimestampMixin):
     __tablename__ = "service_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     record_no = Column(String(50), unique=True, nullable=False, comment="记录号")
 
     # 服务类型

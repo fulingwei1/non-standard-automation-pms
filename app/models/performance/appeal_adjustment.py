@@ -18,6 +18,7 @@ class PerformanceAppeal(Base, TimestampMixin):
     __tablename__ = "performance_appeal"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     result_id = Column(
         Integer, ForeignKey("performance_result.id"), nullable=False, comment="绩效结果ID"
     )
@@ -60,6 +61,7 @@ class PerformanceAdjustmentHistory(Base, TimestampMixin):
     __tablename__ = "performance_adjustment_history"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     result_id = Column(
         Integer, ForeignKey("performance_result.id"), nullable=False, comment="绩效结果ID"
     )

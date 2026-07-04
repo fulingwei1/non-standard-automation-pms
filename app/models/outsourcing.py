@@ -27,6 +27,7 @@ class OutsourcingOrder(Base, TimestampMixin):
     __tablename__ = "outsourcing_orders"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     order_no = Column(String(50), unique=True, nullable=False, comment="外协订单号")
     vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=False, comment="外协商ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
@@ -90,6 +91,7 @@ class OutsourcingOrderItem(Base, TimestampMixin):
     __tablename__ = "outsourcing_order_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     order_id = Column(
         Integer, ForeignKey("outsourcing_orders.id"), nullable=False, comment="外协订单ID"
     )
@@ -147,6 +149,7 @@ class OutsourcingDelivery(Base, TimestampMixin):
     __tablename__ = "outsourcing_deliveries"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     delivery_no = Column(String(50), unique=True, nullable=False, comment="交付单号")
     order_id = Column(
         Integer, ForeignKey("outsourcing_orders.id"), nullable=False, comment="外协订单ID"
@@ -192,6 +195,7 @@ class OutsourcingDeliveryItem(Base, TimestampMixin):
     __tablename__ = "outsourcing_delivery_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     delivery_id = Column(
         Integer, ForeignKey("outsourcing_deliveries.id"), nullable=False, comment="交付单ID"
     )
@@ -230,6 +234,7 @@ class OutsourcingInspection(Base, TimestampMixin):
     __tablename__ = "outsourcing_inspections"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     inspection_no = Column(String(50), unique=True, nullable=False, comment="质检单号")
     delivery_id = Column(
         Integer, ForeignKey("outsourcing_deliveries.id"), nullable=False, comment="交付单ID"
@@ -284,6 +289,7 @@ class OutsourcingPayment(Base, TimestampMixin):
     __tablename__ = "outsourcing_payments"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     payment_no = Column(String(50), unique=True, nullable=False, comment="付款单号")
     vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=False, comment="外协商ID")
     order_id = Column(Integer, ForeignKey("outsourcing_orders.id"), comment="外协订单ID")
@@ -327,6 +333,7 @@ class OutsourcingEvaluation(Base, TimestampMixin):
     __tablename__ = "outsourcing_evaluations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=False, comment="外协商ID")
     order_id = Column(Integer, ForeignKey("outsourcing_orders.id"), comment="关联订单")
     eval_period = Column(String(20), comment="评价周期")
@@ -364,6 +371,7 @@ class OutsourcingProgress(Base, TimestampMixin):
     __tablename__ = "outsourcing_progress"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     order_id = Column(
         Integer, ForeignKey("outsourcing_orders.id"), nullable=False, comment="外协订单ID"
     )

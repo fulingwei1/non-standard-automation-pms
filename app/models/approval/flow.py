@@ -26,6 +26,7 @@ class ApprovalFlowDefinition(Base, TimestampMixin):
     __tablename__ = "approval_flow_definitions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_id = Column(
         Integer, ForeignKey("approval_templates.id"), nullable=False, comment="模板ID"
     )
@@ -69,6 +70,7 @@ class ApprovalNodeDefinition(Base, TimestampMixin):
     __tablename__ = "approval_node_definitions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     flow_id = Column(
         Integer, ForeignKey("approval_flow_definitions.id"), nullable=False, comment="流程ID"
     )

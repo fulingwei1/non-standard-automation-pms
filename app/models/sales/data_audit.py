@@ -44,6 +44,7 @@ class SalesDataAuditRequest(Base):
     __tablename__ = "sales_data_audit_requests"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 业务实体标识
     entity_type = Column(

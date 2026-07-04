@@ -26,6 +26,7 @@ class PurchaseOrder(Base, TimestampMixin):
     __tablename__ = "purchase_orders"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     order_no = Column(String(50), unique=True, nullable=False, comment="订单编号")
     supplier_id = Column(Integer, ForeignKey("vendors.id"), nullable=False, comment="供应商ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
@@ -97,6 +98,7 @@ class PurchaseOrderItem(Base, TimestampMixin):
     __tablename__ = "purchase_order_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     order_id = Column(Integer, ForeignKey("purchase_orders.id"), nullable=False, comment="订单ID")
     item_no = Column(Integer, nullable=False, comment="行号")
 
@@ -147,6 +149,7 @@ class GoodsReceipt(Base, TimestampMixin):
     __tablename__ = "goods_receipts"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     receipt_no = Column(String(50), unique=True, nullable=False, comment="收货单号")
     order_id = Column(
         Integer, ForeignKey("purchase_orders.id"), nullable=False, comment="采购订单ID"
@@ -198,6 +201,7 @@ class GoodsReceiptItem(Base, TimestampMixin):
     __tablename__ = "goods_receipt_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     receipt_id = Column(
         Integer, ForeignKey("goods_receipts.id"), nullable=False, comment="收货单ID"
     )
@@ -243,6 +247,7 @@ class PurchaseRequest(Base, TimestampMixin):
     __tablename__ = "purchase_requests"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     request_no = Column(String(50), unique=True, nullable=False, comment="申请单号")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
@@ -311,6 +316,7 @@ class PurchaseRequestItem(Base, TimestampMixin):
     __tablename__ = "purchase_request_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     request_id = Column(
         Integer, ForeignKey("purchase_requests.id"), nullable=False, comment="申请单ID"
     )

@@ -113,6 +113,7 @@ class MarginAlertRecord(Base, TimestampMixin):
     __tablename__ = "margin_alert_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联信息
     quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")

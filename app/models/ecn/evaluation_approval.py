@@ -25,6 +25,7 @@ class EcnEvaluation(Base, TimestampMixin):
     __tablename__ = "ecn_evaluations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
     eval_dept = Column(String(50), nullable=False, comment="评估部门")
 
@@ -69,6 +70,7 @@ class EcnApproval(Base, TimestampMixin):
     __tablename__ = "ecn_approvals"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
     approval_level = Column(Integer, nullable=False, comment="审批层级")
     approval_role = Column(String(50), nullable=False, comment="审批角色")

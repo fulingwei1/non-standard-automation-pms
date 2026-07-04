@@ -24,6 +24,7 @@ class CustomerRelationshipScore(Base, TimestampMixin):
     __tablename__ = "customer_relationship_scores"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     customer_id = Column(Integer, ForeignKey("customers.id", ondelete="CASCADE"), nullable=False, comment="客户ID")
     opportunity_id = Column(Integer, ForeignKey("opportunities.id", ondelete="SET NULL"), comment="关联商机")
 

@@ -24,6 +24,7 @@ class Worker(Base, TimestampMixin):
     __tablename__ = "worker"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     worker_no = Column(String(50), unique=True, nullable=False, comment="工号")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True, comment="关联用户ID")
     worker_name = Column(String(50), nullable=False, comment="姓名")
@@ -59,6 +60,7 @@ class WorkerSkill(Base, TimestampMixin):
     __tablename__ = "worker_skill"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     worker_id = Column(Integer, ForeignKey("worker.id"), nullable=False, comment="工人ID")
     process_id = Column(Integer, ForeignKey("process_dict.id"), nullable=False, comment="工序ID")
     skill_level = Column(String(20), nullable=False, default="JUNIOR", comment="技能等级")

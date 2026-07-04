@@ -107,6 +107,7 @@ class SalesOrderItem(Base, TimestampMixin):
     __tablename__ = "sales_order_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     sales_order_id = Column(
         Integer, ForeignKey("sales_orders.id"), nullable=False, comment="销售订单ID"
     )

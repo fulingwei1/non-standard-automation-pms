@@ -28,6 +28,7 @@ class MaterialRequisition(Base, TimestampMixin):
     __tablename__ = "material_requisition"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     requisition_no = Column(String(50), unique=True, nullable=False, comment="领料单号")
     work_order_id = Column(
         Integer, ForeignKey("work_order.id"), nullable=True, comment="关联工单ID"
@@ -72,6 +73,7 @@ class MaterialRequisitionItem(Base, TimestampMixin):
     __tablename__ = "material_requisition_item"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     requisition_id = Column(
         Integer, ForeignKey("material_requisition.id"), nullable=False, comment="领料单ID"
     )
@@ -100,6 +102,7 @@ class ProductionDailyReport(Base, TimestampMixin):
     __tablename__ = "production_daily_report"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     report_date = Column(Date, nullable=False, comment="报告日期")
     workshop_id = Column(
         Integer, ForeignKey("workshop.id"), nullable=True, comment="车间ID(空表示全厂)"

@@ -25,6 +25,7 @@ class AnnualKeyWork(Base, TimestampMixin):
     __tablename__ = "annual_key_works"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     csf_id = Column(Integer, ForeignKey("csfs.id"), nullable=False, comment="关联 CSF")
 
     # 基本信息
@@ -102,6 +103,7 @@ class AnnualKeyWorkProjectLink(Base, TimestampMixin):
     __tablename__ = "annual_key_work_project_links"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     annual_work_id = Column(
         Integer, ForeignKey("annual_key_works.id"), nullable=False, comment="重点工作ID"
     )

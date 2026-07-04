@@ -275,6 +275,7 @@ class QuoteItem(Base):
     __tablename__ = "quote_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     quote_version_id = Column(
         Integer, ForeignKey("quote_versions.id"), nullable=False, comment="报价版本ID"
     )
@@ -349,6 +350,7 @@ class QuoteCostApproval(Base, TimestampMixin):
     __tablename__ = "quote_cost_approvals"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")
     quote_version_id = Column(
         Integer, ForeignKey("quote_versions.id"), nullable=False, comment="报价版本ID"
@@ -405,6 +407,7 @@ class QuoteCostHistory(Base):
     __tablename__ = "quote_cost_histories"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")
     quote_version_id = Column(
         Integer, ForeignKey("quote_versions.id"), nullable=False, comment="报价版本ID"
@@ -446,6 +449,7 @@ class PurchaseMaterialCost(Base, TimestampMixin):
     __tablename__ = "purchase_material_costs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 物料信息
     material_code = Column(String(50), comment="物料编码")
@@ -511,6 +515,7 @@ class MaterialCostUpdateReminder(Base, TimestampMixin):
     __tablename__ = "material_cost_update_reminders"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 提醒配置
     reminder_type = Column(

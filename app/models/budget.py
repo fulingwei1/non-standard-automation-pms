@@ -28,6 +28,7 @@ class ProjectBudget(Base, TimestampMixin):
     __tablename__ = "project_budgets"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     budget_no = Column(String(50), unique=True, nullable=False, comment="预算编号")
 
     # 关联项目
@@ -91,6 +92,7 @@ class ProjectBudgetItem(Base, TimestampMixin):
     __tablename__ = "project_budget_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     budget_id = Column(Integer, ForeignKey("project_budgets.id"), nullable=False, comment="预算ID")
 
     # 明细信息

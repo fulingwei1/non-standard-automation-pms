@@ -14,6 +14,7 @@ class MaterialSubstitution(Base, TimestampMixin):
     __tablename__ = "material_substitutions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     substitution_no = Column(String(50), unique=True, nullable=False, comment="替代单号")
     shortage_report_id = Column(
         Integer, ForeignKey("shortage_reports.id"), nullable=True, comment="关联缺料上报ID"
@@ -86,6 +87,7 @@ class MaterialTransfer(Base, TimestampMixin):
     __tablename__ = "material_transfers"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     transfer_no = Column(String(50), unique=True, nullable=False, comment="调拨单号")
     shortage_report_id = Column(
         Integer, ForeignKey("shortage_reports.id"), nullable=True, comment="关联缺料上报ID"

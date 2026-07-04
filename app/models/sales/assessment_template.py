@@ -156,6 +156,7 @@ class AssessmentItem(Base, TimestampMixin):
     __tablename__ = "assessment_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     template_id = Column(
         Integer,
         ForeignKey("assessment_templates.id"),
@@ -213,6 +214,7 @@ class AssessmentRisk(Base, TimestampMixin):
     __tablename__ = "assessment_risks"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联评估
     assessment_id = Column(
@@ -296,6 +298,7 @@ class AssessmentVersion(Base, TimestampMixin):
     __tablename__ = "assessment_versions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联原始评估
     assessment_id = Column(

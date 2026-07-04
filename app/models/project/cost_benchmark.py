@@ -44,6 +44,7 @@ class ProjectCostBenchmark(Base, TimestampMixin):
     __tablename__ = "project_cost_benchmarks"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 当前项目
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="当前项目ID")

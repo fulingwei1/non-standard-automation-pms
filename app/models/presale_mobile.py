@@ -26,6 +26,7 @@ class PresaleMobileAssistantChat(Base, TimestampMixin):
     __tablename__ = "presale_mobile_assistant_chat"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
     presale_ticket_id = Column(
         Integer, ForeignKey("presale_support_ticket.id"), nullable=True, comment="售前工单ID"
@@ -50,6 +51,7 @@ class PresaleVisitRecord(Base, TimestampMixin):
     __tablename__ = "presale_visit_record"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     presale_ticket_id = Column(
         Integer, ForeignKey("presale_support_ticket.id"), nullable=False, comment="售前工单ID"
     )
@@ -86,6 +88,7 @@ class PresaleMobileQuickEstimate(Base, TimestampMixin):
     __tablename__ = "presale_mobile_quick_estimate"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     presale_ticket_id = Column(
         Integer, ForeignKey("presale_support_ticket.id"), nullable=True, comment="售前工单ID"
     )
@@ -110,6 +113,7 @@ class PresaleMobileOfflineData(Base, TimestampMixin):
     __tablename__ = "presale_mobile_offline_data"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
     data_type = Column(String(50), nullable=False, comment="数据类型：chat/visit/estimate")
     local_id = Column(String(100), comment="本地临时ID")

@@ -130,6 +130,18 @@ def _apply_tenant_query_filter(execute_state):
     ):
         return
 
+    # 超级管理员必须最先判断、无条件跨租户不过滤——不能先看 tenant_id 是否
+    # 有值。TEN-06 的 evaluate_tenant_access 就是 is_superuser 优先于
+    # tenant_id 判断，超管账号完全可能同时挂着一个真实 tenant_id（例如本地
+    # 管理员/租户内提权账号），这种账号登录后 tenant_id 上下文不是 None。
+    # 早期实现顺序反了，先判断 tenant_id is not None 就直接进入严格过滤，
+    # 导致这类"超管但有 tenant_id"的账号被当成普通租户用户，看不到自己创建
+    # 的数据（已用 tests/api/test_purchase.py::
+    # test_superuser_with_tenant_can_approve_own_purchase_order 复现）。
+    is_superuser = get_current_user_is_superuser()
+    if is_superuser:
+        return
+
     tenant_id = get_current_tenant_id()
     if tenant_id is not None:
         options = []
@@ -142,9 +154,8 @@ def _apply_tenant_query_filter(execute_state):
         execute_state.statement = execute_state.statement.options(*options)
         return
 
-    is_superuser = get_current_user_is_superuser()
-    if is_superuser is None or is_superuser:
-        # 无请求上下文（后台任务/脚本/未认证白名单请求）或超级管理员：不过滤
+    if is_superuser is None:
+        # 无请求上下文（后台任务/脚本/未认证白名单请求）：不过滤
         return
 
     # 已认证非超管却没有租户——不应出现的存量异常状态，与 TEN-06 请求层口径一致

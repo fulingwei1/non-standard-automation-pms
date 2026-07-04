@@ -105,6 +105,7 @@ class AcceptanceOrder(Base, TimestampMixin):
     __tablename__ = "acceptance_orders"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     order_no = Column(String(50), unique=True, nullable=False, comment="验收单号")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
@@ -177,6 +178,7 @@ class AcceptanceOrderItem(Base, TimestampMixin):
     __tablename__ = "acceptance_order_items"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     order_id = Column(
         Integer, ForeignKey("acceptance_orders.id"), nullable=False, comment="验收单ID"
     )
@@ -229,6 +231,7 @@ class AcceptanceIssue(Base, TimestampMixin):
     __tablename__ = "acceptance_issues"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     issue_no = Column(String(50), unique=True, nullable=False, comment="问题编号")
     order_id = Column(
         Integer, ForeignKey("acceptance_orders.id"), nullable=False, comment="验收单ID"
@@ -285,6 +288,7 @@ class IssueFollowUp(Base, TimestampMixin):
     __tablename__ = "issue_follow_ups"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     issue_id = Column(Integer, ForeignKey("acceptance_issues.id"), nullable=False, comment="问题ID")
     action_type = Column(String(20), nullable=False, comment="操作类型")
     action_content = Column(Text, nullable=False, comment="操作内容")
@@ -305,6 +309,7 @@ class AcceptanceSignature(Base, TimestampMixin):
     __tablename__ = "acceptance_signatures"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     order_id = Column(
         Integer, ForeignKey("acceptance_orders.id"), nullable=False, comment="验收单ID"
     )
@@ -330,6 +335,7 @@ class AcceptanceReport(Base, TimestampMixin):
     __tablename__ = "acceptance_reports"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     order_id = Column(
         Integer, ForeignKey("acceptance_orders.id"), nullable=False, comment="验收单ID"
     )

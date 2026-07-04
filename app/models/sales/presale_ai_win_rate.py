@@ -6,9 +6,9 @@ from datetime import datetime
 from enum import Enum
 
 from sqlalchemy import (
-    JSON,
     Column,
     DateTime,
+    JSON,
 )
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import (
@@ -38,6 +38,7 @@ class PresaleAIWinRate(Base, TimestampMixin):
     __tablename__ = "presale_ai_win_rate"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     presale_ticket_id = Column(Integer, nullable=False, index=True, comment="售前工单ID")
 
     # 预测结果
@@ -83,6 +84,7 @@ class PresaleWinRateHistory(Base, TimestampMixin):
     __tablename__ = "presale_win_rate_history"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     presale_ticket_id = Column(Integer, nullable=False, index=True, comment="售前工单ID")
 
     # 预测信息

@@ -30,6 +30,7 @@ class TechnicalReview(Base, TimestampMixin):
     __tablename__ = "technical_reviews"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     review_no = Column(
         String(50), unique=True, nullable=False, comment="评审编号：RV-PDR-202501-0001"
     )
@@ -111,6 +112,7 @@ class ReviewParticipant(Base):
     __tablename__ = "review_participants"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     review_id = Column(
         Integer, ForeignKey("technical_reviews.id"), nullable=False, comment="评审ID"
     )
@@ -148,6 +150,7 @@ class ReviewMaterial(Base, TimestampMixin):
     __tablename__ = "review_materials"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     review_id = Column(
         Integer, ForeignKey("technical_reviews.id"), nullable=False, comment="评审ID"
     )
@@ -177,6 +180,7 @@ class ReviewChecklistRecord(Base):
     __tablename__ = "review_checklist_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     review_id = Column(
         Integer, ForeignKey("technical_reviews.id"), nullable=False, comment="评审ID"
     )
@@ -215,6 +219,7 @@ class ReviewIssue(Base, TimestampMixin):
     __tablename__ = "review_issues"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     review_id = Column(
         Integer, ForeignKey("technical_reviews.id"), nullable=False, comment="评审ID"
     )

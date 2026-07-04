@@ -35,6 +35,7 @@ class ProjectChangeImpact(Base, TimestampMixin):
     __tablename__ = "project_change_impacts"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # ── 双向关联 ──
     ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")

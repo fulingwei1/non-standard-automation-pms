@@ -53,6 +53,7 @@ class SalesTargetV2(Base, TimestampMixin):
     __tablename__ = "sales_targets_v2"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="目标ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 目标期间
     target_period = Column(

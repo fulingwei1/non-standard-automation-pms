@@ -26,6 +26,7 @@ class PmoProjectInitiation(Base, TimestampMixin):
     __tablename__ = "pmo_project_initiation"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     application_no = Column(String(50), unique=True, nullable=False, comment="申请编号")
     project_id = Column(
         Integer, ForeignKey("projects.id"), nullable=True, comment="项目ID(审批通过后关联)"
@@ -86,6 +87,7 @@ class PmoProjectPhase(Base, TimestampMixin):
     __tablename__ = "pmo_project_phase"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
 
     # 阶段信息

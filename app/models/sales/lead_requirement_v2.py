@@ -35,6 +35,7 @@ class LeadRequirementBasicV2(Base, TimestampMixin):
     __tablename__ = "lead_requirement_basic_v2"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     lead_id = Column(Integer, ForeignKey("leads.id"), nullable=False, unique=True, comment="线索ID")
 
     # 基础信息
@@ -100,6 +101,7 @@ class LeadRequirementTechnicalV2(Base, TimestampMixin):
     __tablename__ = "lead_requirement_technical_v2"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     basic_id = Column(
         Integer,
         ForeignKey("lead_requirement_basic_v2.id", ondelete="CASCADE"),
@@ -166,6 +168,7 @@ class LeadRequirementFacilityV2(Base, TimestampMixin):
     __tablename__ = "lead_requirement_facility_v2"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     basic_id = Column(
         Integer,
         ForeignKey("lead_requirement_basic_v2.id", ondelete="CASCADE"),

@@ -32,6 +32,7 @@ class Lead(Base, TimestampMixin):
     __tablename__ = "leads"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     lead_code = Column(String(20), unique=True, nullable=False, comment="线索编码")
     source = Column(String(50), comment="来源")
     customer_name = Column(String(100), comment="客户名称")
@@ -89,6 +90,7 @@ class LeadFollowUp(Base, TimestampMixin):
     __tablename__ = "lead_follow_ups"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     lead_id = Column(Integer, ForeignKey("leads.id"), nullable=False, comment="线索ID")
     follow_up_type = Column(
         String(20), nullable=False, comment="跟进类型：CALL/EMAIL/VISIT/MEETING/OTHER"
@@ -174,6 +176,7 @@ class OpportunityRequirement(Base, TimestampMixin):
     __tablename__ = "opportunity_requirements"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     opportunity_id = Column(
         Integer, ForeignKey("opportunities.id"), nullable=False, comment="商机ID"
     )

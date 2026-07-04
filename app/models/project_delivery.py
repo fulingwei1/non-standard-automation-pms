@@ -35,6 +35,7 @@ class ProjectDeliverySchedule(Base, TimestampMixin):
     __tablename__ = "project_delivery_schedules"
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键 ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     schedule_no = Column(String(50), unique=True, nullable=False, comment="计划编号 PDS-2026-001")
     schedule_name = Column(String(200), nullable=False, comment="计划名称")
     
@@ -120,6 +121,7 @@ class ProjectDeliveryTask(Base, TimestampMixin):
     __tablename__ = "project_delivery_tasks"
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键 ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     schedule_id = Column(
         Integer,
         ForeignKey("project_delivery_schedules.id", ondelete="CASCADE"),
@@ -204,6 +206,7 @@ class ProjectDeliveryLongCyclePurchase(Base, TimestampMixin):
     __tablename__ = "project_delivery_long_cycle_purchases"
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键 ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     schedule_id = Column(
         Integer,
         ForeignKey("project_delivery_schedules.id", ondelete="CASCADE"),
@@ -254,6 +257,7 @@ class ProjectDeliveryMechanicalDesign(Base, TimestampMixin):
     __tablename__ = "project_delivery_mechanical_designs"
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键 ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     schedule_id = Column(
         Integer,
         ForeignKey("project_delivery_schedules.id", ondelete="CASCADE"),
@@ -364,6 +368,7 @@ class ProjectDeliveryDependency(Base, TimestampMixin):
     __tablename__ = "project_delivery_dependencies"
     
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键 ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     schedule_id = Column(
         Integer,
         ForeignKey("project_delivery_schedules.id", ondelete="CASCADE"),

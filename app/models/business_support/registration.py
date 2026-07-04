@@ -15,6 +15,7 @@ class CustomerSupplierRegistration(Base, TimestampMixin):
     __tablename__ = "customer_supplier_registrations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     registration_no = Column(String(100), unique=True, nullable=False, comment="入驻编号")
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, comment="客户ID")
     customer_name = Column(String(200), comment="客户名称")

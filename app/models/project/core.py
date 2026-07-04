@@ -468,6 +468,7 @@ class Machine(Base, TimestampMixin):
     __tablename__ = "machines"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="所属项目")
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=True, comment="客户ID")
     machine_code = Column(String(50), nullable=False, comment="设备编码")

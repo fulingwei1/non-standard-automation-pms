@@ -42,6 +42,7 @@ class Issue(Base, TimestampMixin):
     __tablename__ = "issues"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     issue_no = Column(String(50), unique=True, nullable=True, comment="问题编号")
 
     # 关联信息
@@ -201,6 +202,7 @@ class IssueFollowUpRecord(Base, TimestampMixin):
     __tablename__ = "issue_follow_up_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     issue_id = Column(Integer, ForeignKey("issues.id"), nullable=False, comment="问题ID")
 
     # 跟进信息
@@ -238,6 +240,7 @@ class IssueStatisticsSnapshot(Base, TimestampMixin):
     __tablename__ = "issue_statistics_snapshots"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     snapshot_date = Column(Date, nullable=False, comment="快照日期")
 
     # 总体统计

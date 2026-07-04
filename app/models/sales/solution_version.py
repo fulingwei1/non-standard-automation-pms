@@ -37,6 +37,7 @@ class SolutionVersion(Base, TimestampMixin):
     __tablename__ = "solution_versions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     solution_id = Column(
         Integer,
         ForeignKey("presale_ai_solution.id", ondelete="CASCADE"),

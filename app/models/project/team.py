@@ -25,6 +25,7 @@ class ProjectMember(Base, TimestampMixin):
     __tablename__ = "project_members"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
     role_code = Column(String(50), nullable=False, comment="角色编码（兼容旧版）")
@@ -102,6 +103,7 @@ class ProjectMemberContribution(Base, TimestampMixin):
     __tablename__ = "project_member_contributions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
     period = Column(String(7), nullable=False, comment="统计周期 YYYY-MM")

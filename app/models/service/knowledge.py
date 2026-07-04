@@ -15,6 +15,7 @@ class KnowledgeBase(Base, TimestampMixin):
     __tablename__ = "knowledge_base"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     article_no = Column(String(50), unique=True, nullable=False, comment="文章编号")
 
     # 基本信息

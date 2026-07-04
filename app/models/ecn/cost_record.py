@@ -37,6 +37,7 @@ class EcnCostRecord(Base, TimestampMixin):
     __tablename__ = "ecn_cost_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")

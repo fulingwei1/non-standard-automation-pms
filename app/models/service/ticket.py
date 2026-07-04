@@ -15,6 +15,7 @@ class ServiceTicket(Base, TimestampMixin):
     __tablename__ = "service_tickets"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ticket_no = Column(String(50), unique=True, nullable=False, comment="工单号")
 
     # 关联信息
@@ -101,6 +102,7 @@ class ServiceTicketProject(Base, TimestampMixin):
     __tablename__ = "service_ticket_projects"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ticket_id = Column(
         Integer,
         ForeignKey("service_tickets.id", ondelete="CASCADE"),
@@ -130,6 +132,7 @@ class ServiceTicketCcUser(Base, TimestampMixin):
     __tablename__ = "service_ticket_cc_users"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ticket_id = Column(
         Integer,
         ForeignKey("service_tickets.id", ondelete="CASCADE"),

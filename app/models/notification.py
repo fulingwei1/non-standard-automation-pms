@@ -26,6 +26,7 @@ class Notification(Base, TimestampMixin):
     __tablename__ = "notifications"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="接收用户ID")
 
     # 通知类型
@@ -75,6 +76,7 @@ class NotificationSettings(Base, TimestampMixin):
     __tablename__ = "notification_settings"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False, comment="用户ID")
 
     # 通知渠道偏好

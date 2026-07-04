@@ -30,6 +30,7 @@ class ProjectEvaluation(Base, TimestampMixin):
     __tablename__ = "project_evaluations"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     evaluation_code = Column(String(50), unique=True, nullable=False, comment="评价编号")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
 
@@ -131,6 +132,7 @@ class ProjectEvaluationDimension(Base, TimestampMixin):
     __tablename__ = "project_evaluation_dimensions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     dimension_code = Column(String(50), unique=True, nullable=False, comment="维度编码")
     dimension_name = Column(String(100), nullable=False, comment="维度名称")
     dimension_type = Column(String(20), nullable=False, comment="维度类型")

@@ -86,6 +86,7 @@ class BonusCalculation(Base, TimestampMixin):
     __tablename__ = "bonus_calculations"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     calculation_code = Column(String(50), unique=True, nullable=False, comment="计算单号")
     rule_id = Column(Integer, ForeignKey("bonus_rules.id"), nullable=False, comment="规则ID")
 
@@ -150,6 +151,7 @@ class BonusDistribution(Base, TimestampMixin):
     __tablename__ = "bonus_distributions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     distribution_code = Column(String(50), unique=True, nullable=False, comment="发放单号")
     calculation_id = Column(
         Integer, ForeignKey("bonus_calculations.id"), nullable=False, comment="计算记录ID"
@@ -197,6 +199,7 @@ class TeamBonusAllocation(Base, TimestampMixin):
     __tablename__ = "team_bonus_allocations"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     period_id = Column(Integer, ForeignKey("performance_period.id"), comment="周期ID")
     total_bonus_amount = Column(Numeric(14, 2), nullable=False, comment="团队总奖金")
@@ -231,6 +234,7 @@ class BonusAllocationSheet(Base, TimestampMixin):
     __tablename__ = "bonus_allocation_sheets"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     sheet_code = Column(String(50), unique=True, nullable=False, comment="明细表编号")
     sheet_name = Column(String(200), nullable=False, comment="明细表名称")
 

@@ -24,6 +24,7 @@ class Equipment(Base, TimestampMixin):
     __tablename__ = "equipment"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     equipment_code = Column(String(50), unique=True, nullable=False, comment="设备编码")
     equipment_name = Column(String(100), nullable=False, comment="设备名称")
     model = Column(String(100), nullable=True, comment="型号规格")
@@ -57,6 +58,7 @@ class EquipmentMaintenance(Base, TimestampMixin):
     __tablename__ = "equipment_maintenance"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     equipment_id = Column(Integer, ForeignKey("equipment.id"), nullable=False, comment="设备ID")
     maintenance_type = Column(String(20), nullable=False, comment="类型:maintenance/repair")
     maintenance_date = Column(Date, nullable=False, comment="保养/维修日期")

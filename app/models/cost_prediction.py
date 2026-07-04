@@ -38,6 +38,7 @@ class CostPrediction(Base, TimestampMixin):
     __tablename__ = "cost_prediction"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 项目关联
     project_id = Column(
@@ -187,6 +188,7 @@ class CostOptimizationSuggestion(Base, TimestampMixin):
     __tablename__ = "cost_optimization_suggestions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联成本预测
     prediction_id = Column(

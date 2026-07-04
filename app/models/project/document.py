@@ -25,6 +25,7 @@ class ProjectDocument(Base, TimestampMixin):
     __tablename__ = "project_documents"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=True, comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
     rd_project_id = Column(Integer, ForeignKey("rd_project.id"), comment="研发项目ID")

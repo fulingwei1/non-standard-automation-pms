@@ -15,6 +15,7 @@ class MonthlyWorkSummary(Base, TimestampMixin):
     __tablename__ = "monthly_work_summary"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="员工ID")
     period = Column(String(7), nullable=False, comment="评价周期 (格式: YYYY-MM)")
 
@@ -52,6 +53,7 @@ class PerformanceEvaluationRecord(Base, TimestampMixin):
     __tablename__ = "performance_evaluation_record"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     summary_id = Column(
         Integer, ForeignKey("monthly_work_summary.id"), nullable=False, comment="工作总结ID"
     )

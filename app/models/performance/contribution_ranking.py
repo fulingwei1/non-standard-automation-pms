@@ -15,6 +15,7 @@ class ProjectContribution(Base, TimestampMixin):
     __tablename__ = "project_contribution"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     period_id = Column(
         Integer, ForeignKey("performance_period.id"), nullable=False, comment="考核周期ID"
     )
@@ -50,6 +51,7 @@ class PerformanceRankingSnapshot(Base, TimestampMixin):
     __tablename__ = "performance_ranking_snapshot"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     period_id = Column(
         Integer, ForeignKey("performance_period.id"), nullable=False, comment="考核周期ID"
     )

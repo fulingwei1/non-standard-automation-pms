@@ -25,6 +25,7 @@ class EcnResponsibility(Base, TimestampMixin):
     __tablename__ = "ecn_responsibilities"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
 
     # 责任部门

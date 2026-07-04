@@ -31,6 +31,7 @@ class WorkstationStatus(Base, TimestampMixin):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     workstation_id = Column(
         Integer, ForeignKey("workstation.id"), unique=True, nullable=False, comment="工位ID"
     )

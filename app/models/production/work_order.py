@@ -24,6 +24,7 @@ class WorkOrder(Base, TimestampMixin):
     __tablename__ = "work_order"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     work_order_no = Column(String(50), unique=True, nullable=False, comment="工单编号")
     task_name = Column(String(200), nullable=False, comment="任务名称")
     task_type = Column(String(20), nullable=False, default="OTHER", comment="工单类型")

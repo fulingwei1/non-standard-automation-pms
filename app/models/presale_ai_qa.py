@@ -2,7 +2,7 @@
 售前AI智能问答记录模型
 """
 
-from sqlalchemy import DECIMAL, JSON, TIMESTAMP, Column, Integer, Text
+from sqlalchemy import Column, DECIMAL, ForeignKey, Integer, JSON, TIMESTAMP, Text
 from sqlalchemy.sql import func
 
 from app.models.base import Base
@@ -14,6 +14,7 @@ class PresaleAIQA(Base):
     __tablename__ = "presale_ai_qa"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="问答ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     question = Column(Text, nullable=False, comment="问题")
     answer = Column(Text, nullable=True, comment="答案")
     matched_cases = Column(JSON, nullable=True, comment="关联的案例IDs")

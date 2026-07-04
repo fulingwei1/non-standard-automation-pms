@@ -236,6 +236,7 @@ class ContractDeliverable(Base, TimestampMixin):
 
     __tablename__ = "contract_deliverables"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     contract_id = Column(Integer, ForeignKey("contracts.id"), nullable=False, comment="合同ID")
     deliverable_name = Column(String(100), comment="交付物名称")
     deliverable_type = Column(String(50), comment="交付物类型")
@@ -253,6 +254,7 @@ class ContractAmendment(Base, TimestampMixin):
 
     __tablename__ = "contract_amendments"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     contract_id = Column(Integer, ForeignKey("contracts.id"), nullable=False, comment="合同ID")
     amendment_no = Column(String(50), unique=True, nullable=False, comment="变更编号")
     amendment_type = Column(
@@ -293,6 +295,7 @@ class ContractApproval(Base, TimestampMixin):
 
     __tablename__ = "contract_approvals"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     contract_id = Column(Integer, ForeignKey("contracts.id"), nullable=False, comment="合同ID")
     approval_level = Column(Integer, nullable=False, comment="审批层级")
     approval_role = Column(String(50), nullable=False, comment="审批角色")
@@ -322,6 +325,7 @@ class ContractTerm(Base, TimestampMixin):
 
     __tablename__ = "contract_terms"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     contract_id = Column(Integer, ForeignKey("contracts.id"), nullable=False, comment="合同ID")
     term_type = Column(
         String(20),
@@ -343,6 +347,7 @@ class ContractAttachment(Base, TimestampMixin):
 
     __tablename__ = "contract_attachments"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     contract_id = Column(Integer, ForeignKey("contracts.id"), nullable=False, comment="合同ID")
     file_name = Column(String(200), nullable=False, comment="文件名")
     file_path = Column(String(500), nullable=False, comment="文件路径")

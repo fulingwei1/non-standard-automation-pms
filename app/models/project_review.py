@@ -30,6 +30,7 @@ class ProjectReview(Base, TimestampMixin):
     __tablename__ = "project_reviews"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     review_no = Column(String(50), unique=True, nullable=False, comment="复盘编号")
 
     # 关联项目
@@ -111,6 +112,7 @@ class ProjectLesson(Base, TimestampMixin):
     __tablename__ = "project_lessons"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     review_id = Column(
         Integer, ForeignKey("project_reviews.id"), nullable=False, comment="复盘报告ID"
     )
@@ -171,6 +173,7 @@ class ProjectBestPractice(Base, TimestampMixin):
     __tablename__ = "project_best_practices"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     review_id = Column(
         Integer, ForeignKey("project_reviews.id"), nullable=False, comment="复盘报告ID"
     )

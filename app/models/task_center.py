@@ -93,6 +93,7 @@ class TaskUnified(Base, TimestampMixin):
     __tablename__ = "task_unified"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     task_code = Column(String(50), unique=True, nullable=False, comment="任务编号")
 
     # 任务基本信息
@@ -287,6 +288,7 @@ class TaskComment(Base):
     __tablename__ = "task_comment"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     task_id = Column(Integer, ForeignKey("task_unified.id"), nullable=False, comment="任务ID")
     content = Column(Text, nullable=False, comment="评论内容")
     comment_type = Column(String(20), default="COMMENT", comment="评论类型")
@@ -314,6 +316,7 @@ class TaskReminder(Base, TimestampMixin):
     __tablename__ = "task_reminder"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     task_id = Column(Integer, ForeignKey("task_unified.id"), nullable=False, comment="任务ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
 
@@ -341,6 +344,7 @@ class TaskApprovalWorkflow(Base, TimestampMixin):
     __tablename__ = "task_approval_workflows"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     task_id = Column(Integer, ForeignKey("task_unified.id"), nullable=False, comment="任务ID")
     submitted_by = Column(Integer, ForeignKey("users.id"), nullable=False, comment="提交人ID")
     submitted_at = Column(DateTime, nullable=False, default=datetime.now, comment="提交时间")
@@ -395,6 +399,7 @@ class TaskCompletionProof(Base, TimestampMixin):
     __tablename__ = "task_completion_proofs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     task_id = Column(Integer, ForeignKey("task_unified.id"), nullable=False, comment="任务ID")
 
     proof_type = Column(

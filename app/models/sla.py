@@ -32,6 +32,7 @@ class SLAPolicy(Base, TimestampMixin):
     __tablename__ = "sla_policies"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     policy_name = Column(String(100), nullable=False, comment="策略名称")
     policy_code = Column(String(50), unique=True, nullable=False, comment="策略编码")
 
@@ -86,6 +87,7 @@ class SLAMonitor(Base, TimestampMixin):
     __tablename__ = "sla_monitors"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联信息
     ticket_id = Column(Integer, ForeignKey("service_tickets.id"), nullable=False, comment="工单ID")

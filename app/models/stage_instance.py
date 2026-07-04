@@ -35,6 +35,7 @@ class ProjectStageInstance(Base, TimestampMixin):
     __tablename__ = "project_stage_instances"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(
         Integer,
         ForeignKey("projects.id", ondelete="CASCADE"),
@@ -100,6 +101,7 @@ class ProjectNodeInstance(Base, TimestampMixin):
     __tablename__ = "project_node_instances"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(
         Integer,
         ForeignKey("projects.id", ondelete="CASCADE"),
@@ -192,6 +194,7 @@ class NodeTask(Base, TimestampMixin):
     __tablename__ = "node_tasks"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     node_instance_id = Column(
         Integer,
         ForeignKey("project_node_instances.id", ondelete="CASCADE"),

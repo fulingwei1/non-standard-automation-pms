@@ -110,6 +110,7 @@ class RoleDataScope(Base):
     __tablename__ = "role_data_scopes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     role_id = Column(Integer, ForeignKey("roles.id", ondelete="CASCADE"), nullable=False)
     resource_type = Column(String(50), nullable=False)
     scope_rule_id = Column(

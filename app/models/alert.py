@@ -108,6 +108,7 @@ class AlertRecord(Base, TimestampMixin):
     __tablename__ = "alert_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     alert_no = Column(String(50), unique=True, nullable=False, comment="预警编号")
     rule_id = Column(Integer, ForeignKey("alert_rules.id"), nullable=False, comment="触发的规则ID")
 
@@ -177,6 +178,7 @@ class AlertNotification(Base, TimestampMixin):
     __tablename__ = "alert_notifications"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     alert_id = Column(Integer, ForeignKey("alert_records.id"), nullable=False, comment="预警记录ID")
 
     # 通知信息
@@ -214,6 +216,7 @@ class ExceptionEvent(Base, TimestampMixin):
     __tablename__ = "exception_events"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     event_no = Column(String(50), unique=True, nullable=False, comment="异常编号")
 
     # 异常来源
@@ -301,6 +304,7 @@ class ExceptionAction(Base, TimestampMixin):
     __tablename__ = "exception_actions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     event_id = Column(
         Integer, ForeignKey("exception_events.id"), nullable=False, comment="异常事件ID"
     )
@@ -333,6 +337,7 @@ class ExceptionEscalation(Base, TimestampMixin):
     __tablename__ = "exception_escalations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     event_id = Column(
         Integer, ForeignKey("exception_events.id"), nullable=False, comment="异常事件ID"
     )
@@ -361,6 +366,7 @@ class AlertStatistics(Base, TimestampMixin):
     __tablename__ = "alert_statistics"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     stat_date = Column(Date, nullable=False, comment="统计日期")
     stat_type = Column(String(20), nullable=False, comment="统计类型")
 
@@ -400,6 +406,7 @@ class ProjectHealthSnapshot(Base, TimestampMixin):
     __tablename__ = "project_health_snapshots"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     snapshot_date = Column(Date, nullable=False, comment="快照日期")
 
@@ -445,6 +452,7 @@ class AlertSubscription(Base, TimestampMixin):
     __tablename__ = "alert_subscriptions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
 
     # 订阅范围

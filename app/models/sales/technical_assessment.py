@@ -29,6 +29,7 @@ class TechnicalAssessment(Base, TimestampMixin):
 
     __tablename__ = "technical_assessments"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     source_type = Column(String(20), nullable=False, comment="来源类型：LEAD/OPPORTUNITY")
     source_id = Column(Integer, nullable=False, comment="来源ID（Lead.id 或 Opportunity.id）")
     evaluator_id = Column(Integer, ForeignKey("users.id"), comment="评估人ID（技术工程师）")
@@ -125,6 +126,7 @@ class FailureCase(Base, TimestampMixin):
 
     __tablename__ = "failure_cases"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     case_code = Column(String(50), unique=True, nullable=False, comment="案例编号")
     project_name = Column(String(200), nullable=False, comment="项目名称")
     industry = Column(String(50), nullable=False, comment="行业")
@@ -161,6 +163,7 @@ class LeadRequirementDetail(Base, TimestampMixin):
 
     __tablename__ = "lead_requirement_details"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     lead_id = Column(Integer, ForeignKey("leads.id"), nullable=False, comment="线索ID")
     customer_factory_location = Column(String(200), comment="客户工厂/地点")
     target_object_type = Column(String(100), comment="被测对象类型")
@@ -237,6 +240,7 @@ class RequirementFreeze(Base, TimestampMixin):
 
     __tablename__ = "requirement_freezes"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     source_type = Column(String(20), nullable=False, comment="来源类型：LEAD/OPPORTUNITY")
     source_id = Column(Integer, nullable=False, comment="来源ID")
     freeze_type = Column(String(50), nullable=False, comment="冻结点类型")
@@ -263,6 +267,7 @@ class OpenItem(Base, TimestampMixin):
 
     __tablename__ = "open_items"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     source_type = Column(String(20), nullable=False, comment="来源类型：LEAD/OPPORTUNITY")
     source_id = Column(Integer, nullable=False, comment="来源ID")
     item_code = Column(String(50), unique=True, nullable=False, comment="未决事项编号")
@@ -295,6 +300,7 @@ class AIClarification(Base, TimestampMixin):
 
     __tablename__ = "ai_clarifications"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     source_type = Column(String(20), nullable=False, comment="来源类型：LEAD/OPPORTUNITY")
     source_id = Column(Integer, nullable=False, comment="来源ID")
     round = Column(Integer, nullable=False, comment="澄清轮次")
@@ -315,6 +321,7 @@ class QuoteApproval(Base, TimestampMixin):
 
     __tablename__ = "quote_approvals"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")
     approval_level = Column(Integer, nullable=False, comment="审批层级")
     approval_role = Column(String(50), nullable=False, comment="审批角色")

@@ -25,6 +25,7 @@ class Reconciliation(Base, TimestampMixin):
     __tablename__ = "reconciliations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     reconciliation_no = Column(String(50), unique=True, nullable=False, comment="对账单号")
 
     # 客户

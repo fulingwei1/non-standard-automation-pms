@@ -32,6 +32,7 @@ class EquipmentOEERecord(Base, TimestampMixin):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 关联信息
     equipment_id = Column(Integer, ForeignKey("equipment.id"), nullable=False, comment="设备ID")

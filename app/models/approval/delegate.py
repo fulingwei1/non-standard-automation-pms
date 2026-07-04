@@ -27,6 +27,7 @@ class ApprovalDelegate(Base, TimestampMixin):
     __tablename__ = "approval_delegates"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 原审批人
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="原审批人ID")

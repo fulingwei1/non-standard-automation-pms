@@ -85,6 +85,7 @@ class StrategicMeeting(Base, TimestampMixin):
     __tablename__ = "strategic_meeting"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目ID(可为空表示跨项目会议)")
     related_project_ids = Column(JSON, comment="关联项目ID列表（JSON数组，支持多项目关联）")
     rhythm_config_id = Column(
@@ -229,6 +230,7 @@ class MeetingActionItem(Base, TimestampMixin):
     __tablename__ = "meeting_action_item"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     meeting_id = Column(
         Integer,
         ForeignKey("strategic_meeting.id", ondelete="CASCADE"),
@@ -279,6 +281,7 @@ class RhythmDashboardSnapshot(Base, TimestampMixin):
     __tablename__ = "rhythm_dashboard_snapshot"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 节律信息
     rhythm_level = Column(
@@ -333,6 +336,7 @@ class MeetingReport(Base, TimestampMixin):
     __tablename__ = "meeting_report"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 报告信息
     report_no = Column(String(50), unique=True, nullable=False, comment="报告编号")
@@ -489,6 +493,7 @@ class ReportMetricDefinition(Base, TimestampMixin):
     __tablename__ = "report_metric_definition"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     # 指标基本信息
     metric_code = Column(String(50), unique=True, nullable=False, comment="指标编码")
