@@ -13,6 +13,7 @@
 """
 
 from .adapters.base import ApprovalAdapter
+from .adapters.budget import ProjectBudgetApprovalAdapter
 from .adapters.contract import ContractApprovalAdapter
 from .adapters.ecn import EcnApprovalAdapter
 from .adapters.invoice import InvoiceApprovalAdapter
@@ -48,6 +49,7 @@ __all__ = [
     "InvoiceApprovalAdapter",
     "ProjectApprovalAdapter",
     "TimesheetApprovalAdapter",
+    "ProjectBudgetApprovalAdapter",
     # Visibility
     "ParticipantRole",
     "check_instance_visible",
@@ -66,4 +68,5 @@ ADAPTER_REGISTRY = {
     "INVOICE": InvoiceApprovalAdapter,
     "PROJECT": ProjectApprovalAdapter,
     "TIMESHEET": TimesheetApprovalAdapter,
+    "PROJECT_BUDGET": ProjectBudgetApprovalAdapter,
 }

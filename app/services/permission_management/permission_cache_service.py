@@ -63,20 +63,36 @@ class PermissionCacheService:
     # ==================== 用户权限缓存 ====================
 
     def get_user_permissions(
-        self, user_id: int, tenant_id: Optional[int] = None
+        self,
+        user_id: int,
+        tenant_id: Optional[int] = None,
+        revision: Optional[int] = None,
     ) -> Optional[Set[str]]:
         """获取用户权限缓存
 
         Args:
             user_id: 用户ID
             tenant_id: 租户ID（可选，用于租户隔离）
+            revision: 当前数据库权限缓存修订号；不匹配时视为未命中
         """
         key = self._build_key(CACHE_PREFIX_USER_PERMISSIONS, tenant_id, user_id)
         data = self._cache.get(key)
-        return set(data) if data else None
+        if not data:
+            return None
+        if isinstance(data, dict) and "permissions" in data:
+            if revision is not None and data.get("revision") != revision:
+                return None
+            return set(data.get("permissions") or [])
+        if revision is not None:
+            return None
+        return set(data)
 
     def set_user_permissions(
-        self, user_id: int, permissions: Set[str], tenant_id: Optional[int] = None
+        self,
+        user_id: int,
+        permissions: Set[str],
+        tenant_id: Optional[int] = None,
+        revision: Optional[int] = None,
     ) -> bool:
         """设置用户权限缓存
 
@@ -84,9 +100,13 @@ class PermissionCacheService:
             user_id: 用户ID
             permissions: 权限编码集合
             tenant_id: 租户ID（可选）
+            revision: 当前数据库权限缓存修订号
         """
         key = self._build_key(CACHE_PREFIX_USER_PERMISSIONS, tenant_id, user_id)
-        return self._cache.set(key, list(permissions), PERMISSION_CACHE_TTL)
+        payload: Any = list(permissions)
+        if revision is not None:
+            payload = {"permissions": list(permissions), "revision": revision}
+        return self._cache.set(key, payload, PERMISSION_CACHE_TTL)
 
     def invalidate_user_permissions(self, user_id: int, tenant_id: Optional[int] = None) -> bool:
         """使用户权限缓存失效

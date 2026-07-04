@@ -336,6 +336,9 @@ class PermissionManagementService:
         tenant_id: int,
     ) -> None:
         """清除角色权限及相关用户权限缓存。"""
+        from app.core.permission_engine import bump_permission_cache_revision
+
+        bump_permission_cache_revision(self.db, tenant_id)
         cache_service = get_permission_cache_service()
         user_ids = [user_id for (user_id,) in self.db.query(UserRole.user_id).filter(UserRole.role_id == role_id).all()]
         cache_service.invalidate_role_and_users(role_id, user_ids=user_ids, tenant_id=tenant_id)

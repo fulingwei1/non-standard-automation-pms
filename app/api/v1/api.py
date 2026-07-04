@@ -281,6 +281,10 @@ def create_api_router() -> APIRouter:
         api_router.include_router(presale_ai_quotation_router, tags=["presale-ai"])
         from app.api.v1.endpoints.ai_jobs import router as ai_jobs_router
         api_router.include_router(ai_jobs_router)
+        from app.api.v1.endpoints.presale_agent_metrics import router as presale_agent_metrics_router
+        api_router.include_router(presale_agent_metrics_router)
+        from app.api.v1.endpoints.presale_agent_revisions import router as presale_agent_revisions_router
+        api_router.include_router(presale_agent_revisions_router)
         from app.api.v1.endpoints.ai_feedback import router as ai_feedback_router
         api_router.include_router(ai_feedback_router)
         from app.api.v1.endpoints.sales.activity_minutes import router as sales_minutes_router
@@ -289,6 +293,12 @@ def create_api_router() -> APIRouter:
         api_router.include_router(ai_modules_router)
         from app.api.v1.endpoints.ai_delivery import router as ai_delivery_router
         api_router.include_router(ai_delivery_router)
+        from app.api.v1.endpoints.otd import router as otd_router
+        api_router.include_router(otd_router)
+        from app.api.v1.endpoints.otd_thresholds import router as otd_thresholds_router
+        api_router.include_router(otd_thresholds_router)
+        from app.api.v1.endpoints.margin_dashboard import router as margin_dashboard_router
+        api_router.include_router(margin_dashboard_router)
         from app.api.v1.endpoints.ai_engineering import router as ai_engineering_router
         api_router.include_router(ai_engineering_router)
         from app.api.v1.endpoints.ai_more import router as ai_more_router
@@ -470,16 +480,6 @@ def create_api_router() -> APIRouter:
         print(f"✗ 绩效合约模块加载失败：{e}")
         if STRICT_API_ROUTER:
             raise RuntimeError(f"关键模块加载失败[performance-contract]: {e}") from e
-
-    # ==================== AI战略辅助 ====================
-    try:
-        from app.api.v1.endpoints.ai_strategy import router as ai_strategy_router
-        api_router.include_router(ai_strategy_router, prefix="/ai-strategy", tags=["AI战略辅助"])
-        print("✓ AI战略辅助模块加载成功")
-    except Exception as e:
-        print(f"✗ AI战略辅助模块加载失败：{e}")
-        if STRICT_API_ROUTER:
-            raise RuntimeError(f"关键模块加载失败[ai-strategy]: {e}") from e
 
     # ==================== 人事管理 ====================
     try:
@@ -817,7 +817,9 @@ def create_api_router() -> APIRouter:
     # ==================== 商务支持 ====================
     try:
         from app.api.v1.endpoints.business_support import router as business_support_router
-        api_router.include_router(business_support_router, tags=["business-support"])
+        api_router.include_router(
+            business_support_router, prefix="/business-support", tags=["business-support"]
+        )
         print("✓ 商务支持模块加载成功")
     except Exception as e:
         print(f"✗ 商务支持模块加载失败：{e}")
@@ -1044,15 +1046,15 @@ def create_api_router() -> APIRouter:
         if STRICT_API_ROUTER:
             raise RuntimeError(f"关键模块加载失败[backup]: {e}") from e
 
-    # ==================== 变更影响 ====================
+    # ==================== 项目变更影响 ====================
     try:
-        from app.api.v1.endpoints.change_impact import router as change_impact_router
-        api_router.include_router(change_impact_router, prefix="/change-impact", tags=["change-impact"])
-        print("✓ 变更影响模块加载成功")
+        from app.api.v1.endpoints.projects.change_impact import router as project_change_impact_router
+        api_router.include_router(project_change_impact_router, prefix="", tags=["project-change-impact"])
+        print("✓ 项目变更影响模块加载成功")
     except Exception as e:
-        print(f"✗ 变更影响模块加载失败：{e}")
+        print(f"✗ 项目变更影响模块加载失败：{e}")
         if STRICT_API_ROUTER:
-            raise RuntimeError(f"关键模块加载失败[change-impact]: {e}") from e
+            raise RuntimeError(f"关键模块加载失败[project-change-impact]: {e}") from e
 
     # ==================== 文化墙配置 ====================
     try:
@@ -1104,15 +1106,9 @@ def create_api_router() -> APIRouter:
         if STRICT_API_ROUTER:
             raise RuntimeError(f"关键模块加载失败[presale-ai-requirement]: {e}") from e
 
-    # ==================== 预售移动端 ====================
-    try:
-        from app.api.v1.endpoints.presale.mobile import router as presale_mobile_router
-        api_router.include_router(presale_mobile_router, prefix="/presale-mobile", tags=["presale-mobile"])
-        print("✓ 预售移动端模块加载成功")
-    except Exception as e:
-        print(f"✗ 预售移动端模块加载失败：{e}")
-        if STRICT_API_ROUTER:
-            raise RuntimeError(f"关键模块加载失败[presale-mobile]: {e}") from e
+    # ==================== 预售移动端（已下线） ====================
+    # 2026-07-04 PRE-15: 该路由整域为演示/硬编码实现且前端零消费，停止挂载。
+    # 真实移动端生产任务入口使用 /mobile/*，售前移动助手需做实时 AI/语音/估价能力后再重新设计。
 
     # ==================== 项目贡献 ====================
     try:
@@ -1144,14 +1140,8 @@ def create_api_router() -> APIRouter:
         if STRICT_API_ROUTER:
             raise RuntimeError(f"关键模块加载失败[quality-risk]: {e}") from e
 
-    # ==================== 资源调度 ====================
+    # ==================== 资源辅助模块 ====================
     try:
-        from app.api.v1.endpoints.resource_scheduling import router as resource_scheduling_router
-        api_router.include_router(resource_scheduling_router, prefix="/resource-scheduling", tags=["resource-scheduling"])
-
-        from app.api.v1.endpoints.resource_overview import router as resource_overview_router
-        api_router.include_router(resource_overview_router, prefix="/resource-overview", tags=["resource-overview"])
-
         from app.api.v1.endpoints.margin_prediction import router as margin_prediction_router
         api_router.include_router(margin_prediction_router, prefix="/margin-prediction", tags=["margin-prediction"])
 

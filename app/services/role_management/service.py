@@ -1109,10 +1109,22 @@ class RoleManagementService:
     def _invalidate_permission_cache(self, role_id: int, tenant_id: Optional[int]) -> None:
         """清除角色权限缓存"""
         try:
+            from app.core.permission_engine import bump_permission_cache_revision
             from app.services.permission_management.permission_cache_service import get_permission_cache_service
 
+            bump_permission_cache_revision(self.db, tenant_id)
             cache_service = get_permission_cache_service()
-            cache_service.invalidate_role_and_users(role_id, tenant_id=tenant_id)
+            user_ids = [
+                user_id
+                for (user_id,) in self.db.query(UserRole.user_id)
+                .filter(UserRole.role_id == role_id)
+                .all()
+            ]
+            cache_service.invalidate_role_and_users(
+                role_id,
+                user_ids=user_ids,
+                tenant_id=tenant_id,
+            )
         except Exception as e:
             logger.warning(f"清除权限缓存失败: {e}")
 

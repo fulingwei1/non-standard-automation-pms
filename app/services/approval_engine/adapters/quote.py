@@ -72,13 +72,21 @@ class QuoteApprovalAdapter(ApprovalAdapter):
                 .first()
             )
 
+        owner_name = None
+        if quote.owner:
+            for attr in ("real_name", "username", "name"):
+                value = getattr(quote.owner, attr, None)
+                if isinstance(value, str) and value:
+                    owner_name = value
+                    break
+
         data = {
             "quote_code": quote.quote_code,
             "status": quote.status,
             "customer_id": quote.customer_id,
             "customer_name": quote.customer.name if quote.customer else None,
             "owner_id": quote.owner_id,
-            "owner_name": (quote.owner.real_name or quote.owner.username) if quote.owner else None,
+            "owner_name": owner_name,
         }
 
         if version:
@@ -226,20 +234,24 @@ class QuoteApprovalAdapter(ApprovalAdapter):
             )
 
         # 构建表单数据
+        quote_total = (
+            float(quote_version.quote_total)
+            if quote_version and quote_version.quote_total
+            else 0
+        )
+        margin_percent = (
+            float(quote_version.margin_percent)
+            if quote_version and quote_version.margin_percent
+            else 0
+        )
         form_data = {
             "quote_id": quote_version.quote_id,
             "quote_version_id": quote_version.id,
             "quote_code": quote_version.quote_code if quote_version else "",
-            "quote_total": (
-                float(quote_version.quote_total)
-                if quote_version and quote_version.quote_total
-                else 0
-            ),
-            "margin_percent": (
-                float(quote_version.margin_percent)
-                if quote_version and quote_version.margin_percent
-                else 0
-            ),
+            "quote_total": quote_total,
+            "total_price": quote_total,
+            "margin_percent": margin_percent,
+            "gross_margin": margin_percent,
             "status": quote_version.status if quote_version else "DRAFT",
         }
 
@@ -251,9 +263,9 @@ class QuoteApprovalAdapter(ApprovalAdapter):
         engine = engine_cls(self.db)
 
         instance = engine.submit(
-            template_code="SALES_QUOTE",
+            template_code="SALES_QUOTE_APPROVAL",
             entity_type="QUOTE",
-            entity_id=quote_version.id,
+            entity_id=quote_version.quote_id,
             form_data=form_data,
             initiator_id=initiator_id,
             title=title or f"报价审批 - {quote_version.quote_code if quote_version else ''}",

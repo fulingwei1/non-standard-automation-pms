@@ -106,6 +106,7 @@ class ApprovalSubmitMixin:
         if adapter:
             entity_data = adapter.get_entity_data(entity_id)
             context["entity_data"] = entity_data
+            context["entity"] = {**context["entity"], **entity_data}
             # 合并到form_data供条件路由使用
             context["form_data"] = {**form_data, "entity": entity_data}
 

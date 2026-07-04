@@ -147,13 +147,16 @@ def _role_user_ids(db: Session, role_id: int) -> list[int]:
 
 def _invalidate_role_permission_cache(
     *,
+    db: Session,
     role_id: int,
     tenant_id: int | None,
     user_ids: list[int],
 ) -> None:
     try:
+        from app.core.permission_engine import bump_permission_cache_revision
         from app.services.permission_cache_service import get_permission_cache_service
 
+        bump_permission_cache_revision(db, tenant_id)
         get_permission_cache_service().invalidate_role_and_users(
             role_id,
             user_ids=user_ids,
@@ -517,6 +520,7 @@ def update_role(
     db.refresh(role)
     if permissions_changed:
         _invalidate_role_permission_cache(
+            db=db,
             role_id=role.id,
             tenant_id=role.tenant_id,
             user_ids=affected_user_ids,
@@ -530,14 +534,36 @@ def delete_role(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("role:delete")),
 ) -> Any:
+    from app.services.session_service import SessionService
+
     role = _ensure_role_writable(db, role_id, current_user)
+    role_tenant_id = role.tenant_id
+    affected_user_ids = _role_user_ids(db, role.id)
     db.query(RoleApiPermission).filter(RoleApiPermission.role_id == role.id).delete(
         synchronize_session=False
     )
     db.query(UserRole).filter(UserRole.role_id == role.id).delete(synchronize_session=False)
     db.query(Role).filter(Role.id == role.id).delete(synchronize_session=False)
     db.commit()
-    return success_response(data={"id": role_id}, message="删除角色成功")
+
+    _invalidate_role_permission_cache(
+        db=db,
+        role_id=role_id,
+        tenant_id=role_tenant_id,
+        user_ids=affected_user_ids,
+    )
+    revoked_session_count = 0
+    for user_id in affected_user_ids:
+        revoked_session_count += SessionService.revoke_all_sessions(db, user_id)
+
+    return success_response(
+        data={
+            "id": role_id,
+            "affected_user_count": len(affected_user_ids),
+            "revoked_session_count": revoked_session_count,
+        },
+        message="删除角色成功",
+    )
 
 
 @router.put("/{role_id}/permissions", status_code=status.HTTP_200_OK)
@@ -554,6 +580,7 @@ def update_role_permissions(
     db.commit()
     role = _ensure_role_visible(db, role_id, current_user)
     _invalidate_role_permission_cache(
+        db=db,
         role_id=role.id,
         tenant_id=role.tenant_id,
         user_ids=affected_user_ids,

@@ -42,6 +42,7 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
         # 系统接口
         "/health",
         "/api/health",
+        "/metrics",
         "/",
         # API文档 - 仅在 _is_whitelisted 中通过 DEBUG 条件放行
         # "/docs",

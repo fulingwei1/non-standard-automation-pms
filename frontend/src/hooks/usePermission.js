@@ -426,6 +426,7 @@ export const PERMISSIONS = {
   // 预警管理
   ALERT: {
     READ: 'alert:read',
+    MANAGE: 'alert:manage',
   },
 
   // 问题管理

@@ -185,6 +185,7 @@ def replace_user_roles(
 
     if not role_ids:
         # 角色被清空，失效缓存
+        _bump_user_permission_cache_revision(db, target_user.tenant_id)
         _invalidate_user_cache(user_id, old_role_ids, [], target_user.tenant_id)
         return
 
@@ -192,7 +193,18 @@ def replace_user_roles(
         db.add(UserRole(user_id=user_id, role_id=role_id))
 
     # 角色变更，使用户权限缓存失效
+    _bump_user_permission_cache_revision(db, target_user.tenant_id)
     _invalidate_user_cache(user_id, old_role_ids, unique_ids, target_user.tenant_id)
+
+
+def _bump_user_permission_cache_revision(db: Session, tenant_id: Optional[int]) -> None:
+    """用户角色关系变更时递增权限缓存修订号，跟随外层事务提交。"""
+    try:
+        from app.core.permission_engine import bump_permission_cache_revision
+
+        bump_permission_cache_revision(db, tenant_id, commit=False)
+    except Exception as e:
+        logger.warning(f"Failed to bump user permission cache revision: {e}")
 
 
 def _invalidate_user_cache(
