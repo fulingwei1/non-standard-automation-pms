@@ -1,5 +1,15 @@
 # PROJECT_NOTES
 
+## 2026-07-04 继续：TEN-06 修复（租户 fail-closed 地基）——多租户已拍板启动
+
+- **业务决策**：多租户确定要做，租户管理入口放超级管理员设置（TEN-01 管理 API 已由并行会话补好）。台账最短路径：TEN-06（本条）→ TEN-02 查询层（等 models/base.py 释放）→ TEN-03 按域加列（先 Project 域）。
+- 代码面：
+  - `tenant_middleware.py` 新增 `evaluate_tenant_access` 决策函数 + `get_enforce_mode`：超管跨租户放行（tenant_id 允许 NULL）、有租户放行、未认证由前置白名单管；无租户的非超管按 `TENANT_ENFORCE_MODE` 处理——默认 `log`（放行+告警，灰度观测），`strict` 即 fail-closed 403（TENANT_REQUIRED，提示联系超管分配租户）。
+  - 归户迁移 `20260704_tenant_user_backfill_sqlite.sql`（已应用 data/app.db）：非超管 NULL → 默认 active 租户（id=1 金凯博）；超管保留 NULL。归户后 195 用户仅剩 2 超管 NULL。
+- 验证：红灯 7 项 → 绿灯 `tests/unit/test_tenant_fail_closed.py` 7 passed（含 strict 环境变量下复跑）；带认证流回归 14 passed；`import app.main` 通过。
+- **切换 strict 的前提清单**：①各环境跑归户迁移；②灰度期观察 no-tenant 告警日志归零；③测试环境 TENANT_ENFORCE_MODE=strict 全量回归。切换后新用户创建必须带 tenant_id（超管租户控制台负责）。
+- 后续（多租户 Batch 计划）：TEN-02 with_loader_criteria 全局过滤 → TEN-03 Project 域加列灰度 → 销售/采购/财务域 → TEN-07 配额/生命周期执行。
+
 ## 2026-07-04 继续：提升方案 P4 先行——质量门禁三件套进 CI（棘轮机制）
 
 - 背景：SYSTEM_IMPROVEMENT_PLAN（本地文档，*_PLAN.md 被 gitignore）第 1 周动作：把两天来靠自觉的治理纪律变成机器强制。全部纯新增文件+hooks 软提醒，与并行会话在途大扫荡零碰撞。

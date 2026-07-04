@@ -9,13 +9,42 @@
 """
 
 import logging
+import os
 from contextvars import ContextVar
-from typing import Optional
+from typing import Optional, Tuple
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
+
+
+def get_enforce_mode() -> str:
+    """租户隔离执行模式（TEN-06）。
+
+    - log（默认）：无租户的非超管放行但记告警——灰度观测期；
+    - strict：拒绝（fail-closed）——存量用户归户迁移验证后切换。
+    """
+    mode = os.getenv("TENANT_ENFORCE_MODE", "log").lower()
+    return mode if mode in ("log", "strict") else "log"
+
+
+def evaluate_tenant_access(user, mode: str) -> Tuple[bool, str]:
+    """租户访问决策（TEN-06 fail-closed 核心）。
+
+    超管跨租户（tenant_id 允许为 NULL）；未认证请求由前置认证中间件的
+    白名单管辖，这里放行；无租户的非超管按模式处理。
+    """
+    if user is None:
+        return True, "unauthenticated"
+    if getattr(user, "is_superuser", False):
+        return True, "superuser"
+    if getattr(user, "tenant_id", None) is not None:
+        return True, "tenant"
+    if mode == "strict":
+        return False, "no-tenant"
+    return True, "no-tenant(log)"
 
 # 线程安全的租户上下文变量
 _current_tenant_id: ContextVar[Optional[int]] = ContextVar("current_tenant_id", default=None)
@@ -57,6 +86,29 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
         try:
             # 尝试从已认证的用户获取 tenant_id
             user = getattr(request.state, "user", None)
+
+            # TEN-06：租户访问决策（fail-closed 可控）
+            mode = get_enforce_mode()
+            allowed, reason = evaluate_tenant_access(user, mode)
+            if not allowed:
+                logger.warning(
+                    "Tenant fail-closed: user_id=%s 无租户归属被拒绝 path=%s",
+                    getattr(user, "id", None), request.url.path,
+                )
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "code": "TENANT_REQUIRED",
+                        "message": "账号未归属任何租户，请联系超级管理员分配租户",
+                    },
+                )
+            if reason == "no-tenant(log)":
+                logger.warning(
+                    "Tenant fail-open(灰度): user_id=%s 无租户归属放行 path=%s "
+                    "（TENANT_ENFORCE_MODE=strict 后将拒绝）",
+                    getattr(user, "id", None), request.url.path,
+                )
+
             if user:
                 tenant_id = getattr(user, "tenant_id", None)
                 # 设置到 request.state 方便后续访问

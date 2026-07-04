@@ -315,7 +315,7 @@
 | TEN-03 | 96.8% 业务表无 tenant_id；projects.tenant_id 是幽灵列 | P1 | 待修 | DB 实测 557 表仅 18 表有 tenant_id | 先 Project 3-4d/全量 2-3 周 | 静态已证 | customers/sales_orders/contracts/invoices 全无 |
 | TEN-04 | 业务域查询层租户过滤≈0（项目/销售/采购/财务/报表 0 处） | P1 | 待修 | 显式 filter 仅 15 文件~65 处全在角色/权限/用户/库存 | 并入 02/03 | 静态已证 | — |
 | TEN-05 | 隔离装饰器/工具全家 0 使用死代码 | P2 | 待修 | 隔离装饰器 | 删 0.5d | 静态已证 | — |
-| TEN-06 | 无租户上下文全链 fail-open+存量违反自身不变量 | P1 | 待修 | 中间件无 user 置 None 放行；TenantQuery 无 tenant 仅 warning | 1-2d | 静态已证 | DB 178/195 用户 tenant_id=NULL 且 163 非超管畅通；修 fail-closed |
+| TEN-06 | 无租户上下文全链 fail-open+存量违反自身不变量 | P1 | 已修待验 | tenant_middleware.py evaluate_tenant_access；migrations/20260704_tenant_user_backfill_sqlite.sql；tests/unit/test_tenant_fail_closed.py | 1-2d | 静态已证；✅契约测试回归（2026-07-04） | **多租户已拍板做（超管设置管理）**；存量非超管已归户默认租户（195 用户仅剩 2 超管 NULL）；TENANT_ENFORCE_MODE 默认 log 灰度（放行+告警），归户验证后切 strict 即 fail-closed 403；TenantQuery 侧随 TEN-02 收口 |
 | TEN-07 | 配额/套餐/生命周期全不执行（暂停/过期租户照常登录） | P2 | 待修 | max_users/SUSPENDED/expired_at 无调用方 | 1-2d | 静态已证 | — |
 | TEN-08 | 租户上下文注入机制（中间件已注册顺序正确） | — | 已验证 | TenantContextMiddleware，main.py:70 | — | 静态已证（正面确认） | 作 F11 复用基座 |
 
