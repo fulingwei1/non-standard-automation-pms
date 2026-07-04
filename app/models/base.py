@@ -1350,15 +1350,16 @@ def get_session_factory():
     global _SessionLocal
     if _SessionLocal is None:
         engine = get_engine()
-        # 导入 TenantQuery - 框架级租户过滤
-        from app.core.database.tenant_query import TenantQuery
+        # TEN-02: 注册框架级租户查询过滤（do_orm_execute + with_loader_criteria）。
+        # 原 query_cls=TenantQuery 只重写了 __iter__，SQLAlchemy 2.0 下 .all()/
+        # .first()/.count() 等常用方法都绕过它，过滤形同虚设，已废弃删除。
+        import app.core.database.tenant_scope  # noqa: F401  (导入即注册事件监听)
 
         _SessionLocal = sessionmaker(
             autocommit=False,
             autoflush=False,
             bind=engine,
             class_=RuntimePatchedSession,
-            query_cls=TenantQuery,  # 使用租户感知的Query类
         )
     return _SessionLocal
 

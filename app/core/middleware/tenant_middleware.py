@@ -49,6 +49,13 @@ def evaluate_tenant_access(user, mode: str) -> Tuple[bool, str]:
 # 线程安全的租户上下文变量
 _current_tenant_id: ContextVar[Optional[int]] = ContextVar("current_tenant_id", default=None)
 
+# 当前请求是否为超级管理员（TEN-02 查询层过滤用）。
+# None = 无请求上下文（后台任务/脚本等系统级调用，不受 ORM 层过滤约束）；
+# True/False = 有已认证用户，是否超管。
+_current_user_is_superuser: ContextVar[Optional[bool]] = ContextVar(
+    "current_user_is_superuser", default=None
+)
+
 
 def get_current_tenant_id() -> Optional[int]:
     """获取当前请求的租户ID
@@ -66,6 +73,20 @@ def set_current_tenant_id(tenant_id: Optional[int]) -> None:
         tenant_id: 租户ID
     """
     _current_tenant_id.set(tenant_id)
+
+
+def get_current_user_is_superuser() -> Optional[bool]:
+    """获取当前请求用户是否为超级管理员。
+
+    Returns:
+        None：无请求上下文（后台任务/脚本）；True/False：已认证用户的超管标志。
+    """
+    return _current_user_is_superuser.get()
+
+
+def set_current_user_is_superuser(value: Optional[bool]) -> None:
+    """设置当前请求用户是否为超级管理员。"""
+    _current_user_is_superuser.set(value)
 
 
 class TenantContextMiddleware(BaseHTTPMiddleware):
@@ -116,13 +137,16 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
 
                 # 设置到上下文变量（支持嵌套调用）
                 set_current_tenant_id(tenant_id)
+                set_current_user_is_superuser(getattr(user, "is_superuser", False))
 
                 logger.debug(
                     f"Tenant context set: tenant_id={tenant_id}, "
                     f"user_id={user.id}, path={request.url.path}"
                 )
             else:
-                # 未认证请求（白名单路径）
+                # 未认证请求（白名单路径，由前置认证中间件放行）：
+                # is_superuser 保持默认 None（不同于"已认证非超管无租户"的 False），
+                # 查询层按无上下文的系统调用处理，不做租户过滤。
                 request.state.tenant_id = None
                 set_current_tenant_id(None)
 
@@ -133,6 +157,7 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
         finally:
             # 清理上下文（防止上下文泄露）
             set_current_tenant_id(None)
+            set_current_user_is_superuser(None)
 
 
 class TenantAwareQuery:

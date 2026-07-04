@@ -2,10 +2,9 @@
 """
 数据库核心模块
 
-提供租户感知的数据库查询功能。
+租户查询过滤见 app.core.database.tenant_scope（TEN-02，
+基于 do_orm_execute + with_loader_criteria 的框架级实现）。
 """
-
-from .tenant_query import TenantQuery, create_tenant_aware_session
 
 # Backward-compatible re-export so tests importing SessionLocal from here still work
 try:
@@ -15,7 +14,5 @@ except ImportError:
     SessionLocal = None
 
 __all__ = [
-    "TenantQuery",
-    "create_tenant_aware_session",
     "SessionLocal",
 ]

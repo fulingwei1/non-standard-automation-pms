@@ -29,6 +29,10 @@ class Project(Base, TimestampMixin):
     __tablename__ = "projects"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    # 多租户支持（TEN-03）：DB 早在初期建表迁移就加了这一列和索引，但模型
+    # 一直没声明，ORM 完全看不到它——是个彻头彻尾的幽灵列，任何代码都无法
+    # 通过 Project.tenant_id 读写。现补上声明，交给 TEN-02 的框架级过滤接管。
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_code = Column(String(50), unique=True, nullable=False, comment="项目编码")
     project_name = Column(String(200), nullable=False, comment="项目名称")
     short_name = Column(String(50), comment="项目简称")
@@ -102,6 +106,9 @@ class Project(Base, TimestampMixin):
 
     # 优先级与标签
     priority = Column(String(20), default="NORMAL", comment="优先级")
+    # 项目等级（毛利率管控用，对应手册红线）：
+    # S=全新平台开发(底线40%) / A=重大定制(35%) / B=改型升级(30%) / C=标准品(25%)
+    project_level = Column(String(2), comment="项目等级 S/A/B/C")
     tags = Column(Text, comment="标签")
 
     # 描述
