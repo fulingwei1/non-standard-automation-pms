@@ -176,6 +176,111 @@ def test_issue_allows_approved_unified_approval_instance(
     assert invoice.due_date == issue_date + timedelta(days=30)
 
 
+def test_void_paid_invoice_creates_red_credit_without_deleting_payment(
+    client: TestClient,
+    admin_token: str,
+    db_session: Session,
+):
+    admin = db_session.query(User).filter(User.username == "admin").first()
+    project = db_session.query(Project).first()
+    assert admin is not None
+    assert project is not None
+
+    invoice, _ = _seed_invoice(
+        db_session,
+        admin=admin,
+        project=project,
+        prefix="INV-GATE-VOID",
+        invoice_status="ISSUED",
+        approval_status=None,
+    )
+    invoice.paid_amount = Decimal("1000.00")
+    invoice.payment_status = "PAID"
+    invoice.paid_date = date.today()
+    db_session.commit()
+
+    response = client.put(
+        f"{settings.API_V1_PREFIX}/sales/invoices/{invoice.id}/void",
+        headers=_auth_headers(admin_token),
+        params={"reason": "客户信息开错"},
+    )
+
+    assert response.status_code == 200, response.text
+    data = response.json()["data"]
+
+    db_session.expire_all()
+    original = db_session.get(Invoice, invoice.id)
+    red_invoice = (
+        db_session.query(Invoice)
+        .filter(Invoice.contract_id == original.contract_id)
+        .filter(Invoice.invoice_type == "RED_CREDIT")
+        .one()
+    )
+
+    assert original.status == "CANCELLED"
+    assert original.paid_amount == Decimal("1000.00")
+    assert "红冲发票" in (original.remark or "")
+    assert red_invoice.status == "ISSUED"
+    assert red_invoice.amount == Decimal("-1000.00")
+    assert red_invoice.total_amount == Decimal("-1000.00")
+    assert red_invoice.paid_amount == Decimal("-1000.00")
+    assert red_invoice.payment_status == "REVERSED"
+    assert "客户信息开错" in (red_invoice.remark or "")
+    assert data["red_invoice_id"] == red_invoice.id
+    assert data["red_invoice_code"] == red_invoice.invoice_code
+
+
+def test_invoice_amount_limit_ignores_red_credit_invoice_amounts(
+    client: TestClient,
+    admin_token: str,
+    db_session: Session,
+):
+    admin = db_session.query(User).filter(User.username == "admin").first()
+    project = db_session.query(Project).first()
+    assert admin is not None
+    assert project is not None
+
+    invoice, _ = _seed_invoice(
+        db_session,
+        admin=admin,
+        project=project,
+        prefix="INV-GATE-RED",
+        contract_total=Decimal("1000.00"),
+        invoice_amount=Decimal("800.00"),
+        invoice_status="ISSUED",
+        approval_status=None,
+    )
+    red_invoice = Invoice(
+        invoice_code=f"INV-RED-{uuid4().hex[:8].upper()}",
+        contract_id=invoice.contract_id,
+        invoice_type="RED_CREDIT",
+        amount=Decimal("-800.00"),
+        total_amount=Decimal("-800.00"),
+        paid_amount=Decimal("-800.00"),
+        status="ISSUED",
+        payment_status="REVERSED",
+        issue_date=date.today(),
+        buyer_name=invoice.buyer_name,
+        remark=f"红冲发票，原发票: {invoice.invoice_code}",
+    )
+    db_session.add(red_invoice)
+    db_session.commit()
+
+    response = client.post(
+        f"{settings.API_V1_PREFIX}/sales/invoices",
+        headers=_auth_headers(admin_token),
+        json={
+            "invoice_no": f"INV-RED-NEW-{uuid4().hex[:6].upper()}",
+            "contract_id": invoice.contract_id,
+            "amount": 300,
+            "buyer_name": invoice.buyer_name,
+        },
+    )
+
+    assert response.status_code == 400, response.text
+    assert "累计开票金额" in response.text
+
+
 def test_issue_rejects_cancelled_invoice_even_with_approved_instance(
     client: TestClient,
     admin_token: str,

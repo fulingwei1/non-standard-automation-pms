@@ -32,6 +32,7 @@ from app.services.sales.presale_quote_context import (
     resolve_presale_ticket_id_for_quote,
     resolve_presale_solution_for_quote,
 )
+from app.services.sales.tax_basis import build_tax_breakdown
 from app.api.v1.endpoints.sales.utils.quote_item_validation import (
     validate_quote_item_quantity_price,
 )
@@ -234,10 +235,21 @@ def create_quote_from_template(
     )
     cost_total = _to_decimal(pricing_rules.get("cost_total") or pricing_rules.get("total_cost"))
 
+    tax_breakdown = build_tax_breakdown(
+        {**pricing_rules, **template_data},
+        fallback_total=total_price,
+    )
+    if not total_price and tax_breakdown["amount_with_tax"] > 0:
+        total_price = tax_breakdown["amount_with_tax"]
+
     quote_version = QuoteVersion(
         quote_id=quote.id,
         version_no=str(version.version_no or "V1"),
         total_price=total_price,
+        amount_without_tax=tax_breakdown["amount_without_tax"],
+        tax_rate=tax_breakdown["tax_rate"],
+        tax_amount=tax_breakdown["tax_amount"],
+        amount_with_tax=tax_breakdown["amount_with_tax"],
         cost_total=cost_total,
         lead_time_days=pricing_rules.get("lead_time_days"),
         risk_terms=pricing_rules.get("risk_terms"),
@@ -273,6 +285,14 @@ def create_quote_from_template(
 
     if not quote_version.total_price:
         quote_version.total_price = calculated_total
+    if not quote_version.amount_with_tax and quote_version.total_price:
+        quote_version.amount_with_tax = quote_version.total_price
+    if (
+        not quote_version.amount_without_tax
+        and quote_version.total_price
+        and not quote_version.tax_amount
+    ):
+        quote_version.amount_without_tax = quote_version.total_price
     if not quote_version.cost_total:
         quote_version.cost_total = calculated_cost
     if quote_version.total_price and quote_version.total_price > 0:
@@ -372,6 +392,12 @@ def create_quote(
         version_payload=version_payload,
         presale_solution=presale_solution,
     )
+    tax_breakdown = build_tax_breakdown(
+        {**quote_data, **version_payload},
+        fallback_total=total_price,
+    )
+    if not total_price and tax_breakdown["amount_with_tax"] > 0:
+        total_price = tax_breakdown["amount_with_tax"]
     items = version_payload.get("items") or []
     if presale_solution and not items and (total_price > 0 or cost_total > 0):
         items = [build_solution_quote_item(presale_solution, total_price, cost_total)]
@@ -408,6 +434,10 @@ def create_quote(
         quote_id=quote.id,
         version_no=version_payload.get("version_no") or "V1",
         total_price=total_price,
+        amount_without_tax=tax_breakdown["amount_without_tax"],
+        tax_rate=tax_breakdown["tax_rate"],
+        tax_amount=tax_breakdown["tax_amount"],
+        amount_with_tax=tax_breakdown["amount_with_tax"],
         cost_total=cost_total,
         gross_margin=_to_decimal(version_payload.get("gross_margin")),
         lead_time_days=lead_time_days,
@@ -446,6 +476,14 @@ def create_quote(
     if not version_total_price:
         version_total_price = total_price_calc
         version.total_price = version_total_price
+    if not version.amount_with_tax and version_total_price:
+        version.amount_with_tax = version_total_price
+    if (
+        not version.amount_without_tax
+        and version_total_price
+        and not version.tax_amount
+    ):
+        version.amount_without_tax = version_total_price
     if not version_cost_total:
         version_cost_total = total_cost_calc
         version.cost_total = version_cost_total
@@ -475,6 +513,10 @@ def create_quote(
             "id": version.id,
             "version_no": version.version_no,
             "total_price": float(version.total_price or 0),
+            "amount_without_tax": float(version.amount_without_tax or 0),
+            "tax_rate": float(version.tax_rate or 0),
+            "tax_amount": float(version.tax_amount or 0),
+            "amount_with_tax": float(version.amount_with_tax or 0),
             "cost_total": float(version.cost_total or 0),
             "gross_margin": float(version.gross_margin or 0),
             "lead_time_days": version.lead_time_days,

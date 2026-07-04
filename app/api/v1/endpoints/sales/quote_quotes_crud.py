@@ -151,6 +151,18 @@ def get_quote_detail(
             "id": current_version.id,
             "version_no": current_version.version_no,
             "total_price": float(current_version.total_price) if current_version.total_price else None,
+            "amount_without_tax": (
+                float(current_version.amount_without_tax)
+                if current_version.amount_without_tax
+                else 0
+            ),
+            "tax_rate": float(current_version.tax_rate) if current_version.tax_rate else 0,
+            "tax_amount": float(current_version.tax_amount) if current_version.tax_amount else 0,
+            "amount_with_tax": (
+                float(current_version.amount_with_tax)
+                if current_version.amount_with_tax
+                else 0
+            ),
             "cost_total": float(current_version.cost_total) if current_version.cost_total else None,
             "gross_margin": float(current_version.gross_margin) if current_version.gross_margin else None,
             "lead_time_days": current_version.lead_time_days,

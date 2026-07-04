@@ -26,6 +26,7 @@ from app.services.sales.presale_quote_context import (
     resolve_presale_solution_for_quote,
     to_decimal,
 )
+from app.services.sales.tax_basis import build_tax_breakdown
 from app.utils.db_helpers import get_or_404
 
 
@@ -70,6 +71,10 @@ def get_quote_versions(
             "id": v.id,
             "version_no": v.version_no,
             "total_price": float(v.total_price) if v.total_price else None,
+            "amount_without_tax": float(v.amount_without_tax) if v.amount_without_tax else 0,
+            "tax_rate": float(v.tax_rate) if v.tax_rate else 0,
+            "tax_amount": float(v.tax_amount) if v.tax_amount else 0,
+            "amount_with_tax": float(v.amount_with_tax) if v.amount_with_tax else 0,
             "cost_total": float(v.cost_total) if v.cost_total else None,
             "gross_margin": float(v.gross_margin) if v.gross_margin else None,
             "lead_time_days": v.lead_time_days,
@@ -144,6 +149,10 @@ def get_quote_version_detail(
         "quote_id": version.quote_id,
         "version_no": version.version_no,
         "total_price": float(version.total_price) if version.total_price else None,
+        "amount_without_tax": float(version.amount_without_tax) if version.amount_without_tax else 0,
+        "tax_rate": float(version.tax_rate) if version.tax_rate else 0,
+        "tax_amount": float(version.tax_amount) if version.tax_amount else 0,
+        "amount_with_tax": float(version.amount_with_tax) if version.amount_with_tax else 0,
         "cost_total": float(version.cost_total) if version.cost_total else None,
         "gross_margin": float(version.gross_margin) if version.gross_margin else None,
         "lead_time_days": version.lead_time_days,
@@ -201,6 +210,9 @@ def create_quote_version(
         version_payload=version_data,
         presale_solution=presale_solution,
     )
+    tax_breakdown = build_tax_breakdown(version_data, fallback_total=total_price)
+    if not total_price and tax_breakdown["amount_with_tax"] > 0:
+        total_price = tax_breakdown["amount_with_tax"]
     items = version_data.get("items") or []
     if presale_solution and not items and (total_price > 0 or cost_total > 0):
         items = [build_solution_quote_item(presale_solution, total_price, cost_total)]
@@ -222,6 +234,10 @@ def create_quote_version(
         quote_id=quote_id,
         version_no=version_no,
         total_price=total_price,
+        amount_without_tax=tax_breakdown["amount_without_tax"],
+        tax_rate=tax_breakdown["tax_rate"],
+        tax_amount=tax_breakdown["tax_amount"],
+        amount_with_tax=tax_breakdown["amount_with_tax"],
         cost_total=cost_total,
         gross_margin=version_data.get("gross_margin"),
         lead_time_days=lead_time_days,
@@ -258,6 +274,10 @@ def create_quote_version(
     if not total_price:
         total_price = total_price_calc
         version.total_price = total_price
+    if not version.amount_with_tax and total_price:
+        version.amount_with_tax = total_price
+    if not version.amount_without_tax and total_price and not version.tax_amount:
+        version.amount_without_tax = total_price
     if not cost_total:
         cost_total = total_cost_calc
         version.cost_total = cost_total
@@ -281,6 +301,11 @@ def create_quote_version(
         data={
             "id": version.id,
             "version_no": version.version_no,
+            "total_price": float(version.total_price or 0),
+            "amount_without_tax": float(version.amount_without_tax or 0),
+            "tax_rate": float(version.tax_rate or 0),
+            "tax_amount": float(version.tax_amount or 0),
+            "amount_with_tax": float(version.amount_with_tax or 0),
             "solution_id": version.presale_solution_id,
             "presale_solution_id": version.presale_solution_id,
             "presale_ticket_id": version.presale_ticket_id,

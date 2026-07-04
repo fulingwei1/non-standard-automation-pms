@@ -76,6 +76,8 @@ def _ensure_invoice_amount_within_contract(
     query = db.query(func.coalesce(func.sum(Invoice.amount), 0)).filter(
         Invoice.contract_id == contract.id,
         func.upper(func.coalesce(Invoice.status, "")) != InvoiceStatusEnum.CANCELLED.value,
+        func.upper(func.coalesce(Invoice.invoice_type, "")) != "RED_CREDIT",
+        Invoice.amount > 0,
     )
     if exclude_invoice_id is not None:
         query = query.filter(Invoice.id != exclude_invoice_id)

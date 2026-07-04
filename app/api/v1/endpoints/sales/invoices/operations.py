@@ -5,7 +5,7 @@
 
 import logging
 from datetime import date, timedelta
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
@@ -19,12 +19,73 @@ from app.models.sales import Invoice
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import InvoiceIssueRequest
+from app.utils.number_generator import generate_sequential_no
 
 logger = logging.getLogger(__name__)
 
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+RED_CREDIT_INVOICE_TYPE = "RED_CREDIT"
+REVERSED_PAYMENT_STATUS = "REVERSED"
+
+
+def _money(value: Any) -> Decimal:
+    return Decimal(str(value or 0)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def _append_remark(invoice: Invoice, line: str) -> None:
+    invoice.remark = f"{invoice.remark or ''}\n{line}".strip()
+
+
+def _generate_red_credit_invoice_code(db: Session) -> str:
+    return generate_sequential_no(
+        db=db,
+        model_class=Invoice,
+        no_field="invoice_code",
+        prefix="INV-R",
+        date_format="%y%m%d",
+        separator="-",
+        seq_length=3,
+    )
+
+
+def _create_red_credit_invoice(db: Session, invoice: Invoice, reason: Optional[str]) -> Invoice:
+    paid_amount = _money(invoice.paid_amount)
+    original_amount = _money(invoice.amount)
+    original_tax_amount = _money(invoice.tax_amount) if invoice.tax_amount is not None else None
+    original_total_amount = _money(
+        invoice.total_amount if invoice.total_amount is not None else invoice.amount
+    )
+    reason_text = reason or "未填写"
+
+    red_invoice = Invoice(
+        invoice_code=_generate_red_credit_invoice_code(db),
+        contract_id=invoice.contract_id,
+        project_id=invoice.project_id,
+        payment_id=invoice.payment_id,
+        invoice_type=RED_CREDIT_INVOICE_TYPE,
+        amount=-original_amount,
+        tax_rate=invoice.tax_rate,
+        tax_amount=-original_tax_amount if original_tax_amount is not None else None,
+        total_amount=-original_total_amount,
+        status=InvoiceStatusEnum.ISSUED.value,
+        payment_status=REVERSED_PAYMENT_STATUS,
+        issue_date=date.today(),
+        paid_amount=-paid_amount,
+        paid_date=invoice.paid_date,
+        buyer_name=invoice.buyer_name,
+        buyer_tax_no=invoice.buyer_tax_no,
+        approval_status="APPROVED",
+        remark=(
+            f"红冲发票，原发票: {invoice.invoice_code}({invoice.id}); "
+            f"作废原因: {reason_text}"
+        ),
+    )
+    db.add(red_invoice)
+    db.flush()
+    return red_invoice
 
 
 def _latest_invoice_approval_instance(db: Session, invoice: Invoice) -> ApprovalInstance | None:
@@ -155,15 +216,28 @@ def _void_invoice_logic(db: Session, invoice_id: int, reason: Optional[str]) -> 
     ]:
         raise HTTPException(status_code=400, detail="只有已开票或已审批的发票才能作废")
 
-    # 如果已收款，不能作废
-    if invoice.paid_amount and invoice.paid_amount > 0:
-        raise HTTPException(status_code=400, detail="已收款的发票不能作废，请先处理收款")
+    red_invoice = None
+    if invoice.status == InvoiceStatusEnum.ISSUED.value:
+        red_invoice = _create_red_credit_invoice(db, invoice, reason)
 
     invoice.status = InvoiceStatusEnum.CANCELLED.value
     if reason:
-        invoice.remark = (invoice.remark or "") + f"\n作废原因: {reason}"
+        _append_remark(invoice, f"作废原因: {reason}")
+    if red_invoice:
+        _append_remark(invoice, f"红冲发票: {red_invoice.invoice_code}")
 
     db.commit()
+
+    if red_invoice:
+        return ResponseModel(
+            code=200,
+            message="发票已作废并生成红冲发票",
+            data={
+                "invoice_id": invoice.id,
+                "red_invoice_id": red_invoice.id,
+                "red_invoice_code": red_invoice.invoice_code,
+            },
+        )
 
     return ResponseModel(code=200, message="发票已作废")
 
