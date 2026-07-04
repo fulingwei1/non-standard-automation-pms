@@ -271,6 +271,210 @@ class AIClientService:
         print(f"Qwen(Bailian) API Error after retries: {last_err}")
         return self._mock_response(prompt, model)
 
+    def chat_with_tools(
+        self,
+        messages: list,
+        tools: list,
+        tool_executor: callable,
+        model: str = None,
+        temperature: float = 0.3,
+        max_tokens: int = 1500,
+        max_rounds: int = 5,
+    ) -> Dict[str, Any]:
+        """
+        多轮 tool calling 循环（OpenAI 兼容协议，百炼/智谱都支持）。
+
+        模型自主决定调哪个工具 → 执行 → 把结果喂回模型 → 再推理，直到模型给出最终答案或达到轮次上限。
+
+        Args:
+            messages: 初始消息列表 [{"role":"system"/"user", "content":"..."}]
+            tools: 工具定义列表（OpenAI function 格式）
+                [{"type":"function", "function":{"name":"...", "description":"...", "parameters":{json_schema}}}]
+            tool_executor: callable(tool_name: str, args: dict) -> str
+                执行工具，返回字符串结果。由调用方实现（通常查 ToolRegistry）。
+            model: 默认 qwen_fast_model（结构化任务用快模型）
+            max_rounds: 最大工具调用轮次（防止无限循环，默认 5）
+
+        Returns:
+            {"content": "最终回答", "tool_calls": [{"tool":..., "args":..., "result":...}], "rounds": N, "model": ...}
+        """
+        if not self.qwen_api_key:
+            return {"content": "", "tool_calls": [], "rounds": 0, "error": "ALIBABA_API_KEY 未配置"}
+
+        use_model = model or self.qwen_fast_model
+        url = f"{self.qwen_base_url}/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.qwen_api_key}",
+            "Content-Type": "application/json",
+        }
+
+        all_tool_calls = []
+        msgs = list(messages)  # 不修改入参
+
+        for round_idx in range(max_rounds):
+            payload = {
+                "model": use_model,
+                "messages": msgs,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "tools": tools,
+                "tool_choice": "auto",
+            }
+            try:
+                t0 = time.time()
+                with httpx.Client() as client:
+                    resp = client.post(url, headers=headers, json=payload, timeout=self.qwen_timeout)
+                    resp.raise_for_status()
+                    data = resp.json()
+                elapsed = round(time.time() - t0, 2)
+                usage = data.get("usage", {})
+                _ai_logger.info(
+                    "[AI用量] tools-call model=%s round=%s tokens=%s 耗时=%ss",
+                    use_model, round_idx + 1, usage.get("total_tokens"), elapsed,
+                )
+            except Exception as e:
+                _ai_logger.warning("[AI用量] tools-call 失败 round=%s error=%s", round_idx + 1, str(e)[:150])
+                return {
+                    "content": "", "tool_calls": all_tool_calls,
+                    "rounds": round_idx, "error": str(e)[:200], "model": use_model,
+                }
+
+            choice = data["choices"][0]
+            msg = choice["message"]
+
+            # 没有工具调用 → 模型给出最终答案，循环结束
+            if not msg.get("tool_calls"):
+                return {
+                    "content": msg.get("content", ""),
+                    "tool_calls": all_tool_calls,
+                    "rounds": round_idx + 1,
+                    "model": use_model,
+                    "usage": usage,
+                }
+
+            # 有工具调用 → 执行每个工具，把结果作为 tool 角色消息追加
+            # 先把 assistant 的 tool_calls 消息原样追加（协议要求）
+            msgs.append({
+                "role": "assistant",
+                "content": msg.get("content") or "",
+                "tool_calls": msg["tool_calls"],
+            })
+
+            for tc in msg["tool_calls"]:
+                fn = tc["function"]
+                tool_name = fn["name"]
+                import json as _json
+                try:
+                    args = _json.loads(fn["arguments"]) if fn.get("arguments") else {}
+                except Exception:
+                    args = {}
+
+                # 执行工具（调用方提供的 executor）
+                try:
+                    result = tool_executor(tool_name, args)
+                    if not isinstance(result, str):
+                        result = _json.dumps(result, ensure_ascii=False, default=str)
+                except Exception as e:
+                    result = f"工具执行失败: {e}"
+
+                all_tool_calls.append({
+                    "tool": tool_name, "args": args, "result": result[:800],
+                    "round": round_idx + 1,
+                })
+                _ai_logger.info("[AI工具] round=%s tool=%s args=%s result_len=%s",
+                                round_idx + 1, tool_name, str(args)[:80], len(result))
+
+                # 追加 tool 角色消息（协议要求 tool_call_id 对应）
+                msgs.append({
+                    "role": "tool",
+                    "tool_call_id": tc["id"],
+                    "content": result,
+                })
+
+        # 达到轮次上限仍未给出最终答案，强制要求总结
+        _ai_logger.warning("[AI工具] 达到最大轮次 %s，强制收尾", max_rounds)
+        msgs.append({
+            "role": "user",
+            "content": "已达到工具调用上限。请基于已获取的信息，直接给出最终结论，不要再调用工具。",
+        })
+        payload = {
+            "model": use_model, "messages": msgs,
+            "temperature": temperature, "max_tokens": max_tokens,
+        }
+        try:
+            with httpx.Client() as client:
+                resp = client.post(url, headers=headers, json=payload, timeout=self.qwen_timeout)
+                resp.raise_for_status()
+                data = resp.json()
+            return {
+                "content": data["choices"][0]["message"]["content"],
+                "tool_calls": all_tool_calls, "rounds": max_rounds,
+                "model": use_model, "forced_finish": True,
+            }
+        except Exception as e:
+            return {
+                "content": "", "tool_calls": all_tool_calls, "rounds": max_rounds,
+                "error": f"收尾失败: {e}", "model": use_model,
+            }
+
+    def embed_texts(self, texts: list, model: str = "text-embedding-v3") -> Dict[str, Any]:
+        """
+        文本向量化（百炼 text-embedding-v3，OpenAI 兼容协议）。
+
+        用于售前弹药库语义检索。走百炼标准兼容端点（非 coding 端点），
+        复用 ALIBABA_API_KEY。失败时返回 {"ok": False}，调用方自行回退 hash 向量。
+
+        Args:
+            texts: 文本列表（单次最多 25 条，每条 <= 2048 tokens）
+            model: embedding 模型，默认 text-embedding-v3（1024 维）
+
+        Returns:
+            {"ok": True, "embeddings": [[float,...],...], "model": ..., "usage": {...}}
+            {"ok": False, "error": "..."}
+        """
+        import requests
+
+        if not self.qwen_api_key:
+            return {"ok": False, "error": "ALIBABA_API_KEY 未配置"}
+        if not texts:
+            return {"ok": True, "embeddings": [], "model": model}
+
+        url = "https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings"
+        headers = {
+            "Authorization": f"Bearer {self.qwen_api_key}",
+            "Content-Type": "application/json",
+        }
+        try:
+            resp = requests.post(
+                url,
+                headers=headers,
+                json={
+                    "model": model,
+                    "input": texts[:25],  # 百炼单次上限 25 条
+                    "encoding_format": "float",
+                },
+                timeout=30,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            # 按 index 排序确保顺序与输入一致
+            embs = sorted(data.get("data", []), key=lambda x: x.get("index", 0))
+            embeddings = [e["embedding"] for e in embs]
+            _ai_logger.info(
+                "[AI用量] embedding model=%s count=%s dim=%s",
+                model, len(embeddings),
+                len(embeddings[0]) if embeddings else 0,
+            )
+            return {
+                "ok": True,
+                "embeddings": embeddings,
+                "model": model,
+                "usage": data.get("usage"),
+            }
+        except Exception as e:
+            _ai_logger.warning("[AI用量] embedding 失败: %s", str(e)[:200])
+            return {"ok": False, "error": str(e)[:200]}
+
     def analyze_image(self, prompt: str, image_b64: str, mime: str = "image/jpeg",
                       max_tokens: int = 2000) -> Dict[str, Any]:
         """多模态：图纸/现场照片理解（通义千问视觉模型 qwen3.7-plus）。

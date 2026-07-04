@@ -69,7 +69,9 @@ def _run_job(job_id: int, job_type: str, params: Dict[str, Any], user_id: Option
         session.commit()
 
         handler = _HANDLERS[job_type]
-        result = handler(session, params, user_id)
+        # 注入 job_id 到 params 副本，供 handler 做埋点关联（不影响原 params）
+        params_with_job = {**params, "_job_id": job_id}
+        result = handler(session, params_with_job, user_id)
 
         job = session.query(AIGenerationJob).filter(AIGenerationJob.id == job_id).first()
         job.status = "SUCCESS"
@@ -296,3 +298,16 @@ def _handle_parse_meeting_minutes(session, params: Dict[str, Any], user_id: Opti
 
 
 register_handler("parse_meeting_minutes", _handle_parse_meeting_minutes)
+
+
+def _handle_presale_agent(session, params: Dict[str, Any], user_id: Optional[int]) -> Dict[str, Any]:
+    """售前智能体（6 步固定编排：需求理解→弹药检索→方案→BOM→报价→风险）。"""
+    from app.services.presale.presale_agent_orchestrator import run_presale_agent
+
+    # job_id 由 _run_job 注入到 params 的 _job_id 字段（用于埋点关联）
+    job_id = params.get("_job_id")
+    clean_params = {k: v for k, v in params.items() if k != "_job_id"}
+    return run_presale_agent(session, clean_params, user_id, job_id=job_id)
+
+
+register_handler("presale_agent", _handle_presale_agent)

@@ -9,9 +9,9 @@ import sys
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.core.database import SessionLocal
+from app.models.base import SessionLocal
 from app.schemas.presale_ai_knowledge import KnowledgeCaseCreate
-from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+from app.services.presale.presale_ai_knowledge_service import PresaleAIKnowledgeService
 
 # ============= 示例案例数据 =============
 
@@ -637,19 +637,28 @@ SAMPLE_CASES = [
 
 
 def import_cases():
-    """导入案例到数据库"""
+    """导入案例到数据库（幂等：同名案例已存在则跳过）"""
     db = SessionLocal()
     service = PresaleAIKnowledgeService(db)
+
+    # 已存在的案例名，用于去重
+    from app.models.presale_knowledge_case import PresaleKnowledgeCase
+    existing_names = {c.case_name for c in db.query(PresaleKnowledgeCase.case_name).all()}
+    skipped_count = 0
 
     success_count = 0
     fail_count = 0
 
     print("=" * 80)
     print("开始导入AI知识库案例...")
-    print(f"总计案例数: {len(SAMPLE_CASES)}")
+    print(f"总计案例数: {len(SAMPLE_CASES)}（已存在 {len(existing_names)} 条将跳过）")
     print("=" * 80)
 
     for i, case_data in enumerate(SAMPLE_CASES, 1):
+        if case_data.get("case_name") in existing_names:
+            skipped_count += 1
+            print(f"[{i}/{len(SAMPLE_CASES)}] ⏭️  跳过已存在: {case_data.get('case_name')}")
+            continue
         try:
             case_create = KnowledgeCaseCreate(**case_data)
             case = service.create_case(case_create)
@@ -668,8 +677,10 @@ def import_cases():
     print("=" * 80)
     print("导入完成!")
     print(f"✅ 成功: {success_count}")
+    print(f"⏭️  跳过(已存在): {skipped_count}")
     print(f"❌ 失败: {fail_count}")
-    print(f"📊 成功率: {success_count / len(SAMPLE_CASES) * 100:.1f}%")
+    if success_count + skipped_count > 0:
+        print(f"📊 成功率: {success_count / (success_count + skipped_count) * 100:.1f}%")
     print("=" * 80)
 
 

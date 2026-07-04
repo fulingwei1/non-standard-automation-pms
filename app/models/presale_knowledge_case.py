@@ -15,6 +15,7 @@ class PresaleKnowledgeCase(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="案例ID")
     case_name = Column(String(200), nullable=False, comment="案例名称")
+    source_project_id = Column(Integer, nullable=True, comment="来源项目ID（关联projects表，用于回溯真实成本/技术细节）")
     industry = Column(String(100), nullable=True, comment="行业分类")
     equipment_type = Column(String(100), nullable=True, comment="设备类型")
     customer_name = Column(String(200), nullable=True, comment="客户名称")
@@ -40,6 +41,7 @@ class PresaleKnowledgeCase(Base):
         return {
             "id": self.id,
             "case_name": self.case_name,
+            "source_project_id": self.source_project_id,
             "industry": self.industry,
             "equipment_type": self.equipment_type,
             "customer_name": self.customer_name,
