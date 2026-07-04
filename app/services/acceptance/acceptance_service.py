@@ -118,10 +118,12 @@ class AcceptanceService:
         db.add(order)
         await db.commit()
 
-        # 6. 如果验收类型是SAT（现场验收），更新项目状态
+        # 6. 如果验收类型是SAT（现场验收），更新项目状态并移交售后
         if order.acceptance_type == "SAT":
             # SAT验收通过，进入质保阶段
             await AcceptanceService._update_project_to_warranty(db, order.project_id, completed_by)
+            # PROJ-23：自动移交售后（质保建档 + 项目/机台质保期回填，幂等）
+            await AcceptanceService._handover_to_after_sales(db, order.project_id, completed_by)
 
         await db.commit()
 
@@ -151,15 +153,97 @@ class AcceptanceService:
         if not project:
             raise ValueError(f"项目不存在: {project_id}")
 
-        # 进入质保阶段
-        if project.stage == "S8" or project.status == "ST08":
-            project.stage = "S9"  # 质保结项
-            project.status = "ST30"  # 已完结
+        # 阶段推进必须走阶段门；这里仅在项目已通过阶段门进入 S9 后补质保字段。
+        if project.stage == "S9" or project.status == "ST30":
+            project.stage = "S9"
+            project.status = "ST30"
             project.end_date = date.today()
             project.health_status = "H4"  # 已完结
+        else:
+            logger.warning(
+                "验收服务不直接推进项目 %s 至 S9，请先通过阶段门完成 S8→S9",
+                project_id,
+            )
 
         db.add(project)
         await db.commit()
+
+    @staticmethod
+    async def _handover_to_after_sales(
+        db: AsyncSession,
+        project_id: int,
+        completed_by: int,
+    ):
+        """SAT 验收通过 → 售后移交（PROJ-23）。
+
+        动作：创建 ACTIVE 质保记录（质保期取项目质保月数，缺省 12 个月）、
+        回填项目质保起止日期与机台质保/客户归属（只补空不覆盖）。幂等：
+        项目已有 ACTIVE 质保则直接返回既有记录。
+        """
+        from dateutil.relativedelta import relativedelta
+        from sqlalchemy import select as _select
+
+        from app.models.after_sales import AfterSalesWarranty
+        from app.models.project import Machine
+
+        project = await db.get(Project, project_id)
+        if not project:
+            return None
+
+        existing = (
+            await db.execute(
+                _select(AfterSalesWarranty).where(
+                    AfterSalesWarranty.project_id == project_id,
+                    AfterSalesWarranty.status == "ACTIVE",
+                )
+            )
+        ).scalars().first()
+        if existing:
+            return existing
+
+        months = project.warranty_period_months or 12
+        start = date.today()
+        end = start + relativedelta(months=months)
+
+        warranty = AfterSalesWarranty(
+            project_id=project_id,
+            customer_id=project.customer_id,
+            warranty_no=f"WAR-{project_id}-{start.strftime('%Y%m%d')}",
+            warranty_type="STANDARD",
+            warranty_start=start,
+            warranty_end=end,
+            warranty_months=months,
+            scope=f"SAT 验收通过自动移交（验收完成人 ID {completed_by}）",
+            status="ACTIVE",
+        )
+        db.add(warranty)
+
+        # 项目质保字段回填（只补空）
+        if not project.warranty_period_months:
+            project.warranty_period_months = months
+        if not project.warranty_start_date:
+            project.warranty_start_date = start
+        if not project.warranty_end_date:
+            project.warranty_end_date = end
+        db.add(project)
+
+        # 机台质保/客户归属回填（只补空）
+        machines = (
+            await db.execute(_select(Machine).where(Machine.project_id == project_id))
+        ).scalars().all()
+        for machine in machines:
+            if not machine.warranty:
+                machine.warranty = f"{start.isoformat()} ~ {end.isoformat()}（{months}个月）"
+            if not machine.customer_id:
+                machine.customer_id = project.customer_id
+            db.add(machine)
+
+        await db.commit()
+        logger.info(
+            "[售后移交] 项目 %s SAT 验收通过：质保 %s（%s~%s），机台 %s 台已回填",
+            project_id, warranty.warranty_no, start, end, len(machines),
+        )
+        return warranty
 
     @staticmethod
     async def _send_invoice_notification(
