@@ -21,8 +21,14 @@ from app.models.warehouse import (
     Warehouse,
 )
 from app.models.user import User
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 
 router = APIRouter()
+
+# 入库单/出库单数据权限配置（无项目字段，仅按创建人过滤）
+INBOUND_ORDER_DATA_SCOPE_CONFIG = DataScopeConfig(owner_field="created_by", project_field=None)
+OUTBOUND_ORDER_DATA_SCOPE_CONFIG = DataScopeConfig(owner_field="created_by", project_field=None)
 
 
 # ===== Schemas =====
@@ -415,6 +421,9 @@ def list_inbound(
     current_user: User = Depends(security.require_permission("inventory:view")),
 ):
     q = db.query(InboundOrder)
+    q = DataScopeService.filter_by_scope(
+        db, q, InboundOrder, current_user, INBOUND_ORDER_DATA_SCOPE_CONFIG
+    )
     if status:
         q = q.filter(InboundOrder.status == status)
     if order_type:
@@ -470,6 +479,7 @@ def create_inbound(
         remark=data.remark,
         total_quantity=total_qty,
         status="DRAFT",
+        created_by=current_user.id,
     )
     db.add(o)
     db.flush()
@@ -510,6 +520,9 @@ def list_outbound(
     current_user: User = Depends(security.require_permission("inventory:view")),
 ):
     q = db.query(OutboundOrder)
+    q = DataScopeService.filter_by_scope(
+        db, q, OutboundOrder, current_user, OUTBOUND_ORDER_DATA_SCOPE_CONFIG
+    )
     if status:
         q = q.filter(OutboundOrder.status == status)
     if order_type:
@@ -566,6 +579,7 @@ def create_outbound(
         is_urgent=data.is_urgent,
         total_quantity=total_qty,
         status="DRAFT",
+        created_by=current_user.id,
     )
     db.add(o)
     db.flush()

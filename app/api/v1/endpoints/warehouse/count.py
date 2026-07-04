@@ -12,8 +12,13 @@ from app.core import security
 from app.models.base import get_db
 from app.models.user import User
 from app.models.warehouse import StockCountItem, StockCountOrder
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 
 router = APIRouter()
+
+# 盘点单数据权限配置（无项目字段，仅按创建人过滤）
+COUNT_ORDER_DATA_SCOPE_CONFIG = DataScopeConfig(owner_field="created_by", project_field=None)
 
 
 class CountItemCreate(BaseModel):
@@ -91,6 +96,9 @@ def list_count_orders(
     current_user: User = Depends(security.require_permission("inventory:view")),
 ):
     q = db.query(StockCountOrder)
+    q = DataScopeService.filter_by_scope(
+        db, q, StockCountOrder, current_user, COUNT_ORDER_DATA_SCOPE_CONFIG
+    )
     if status:
         q = q.filter(StockCountOrder.status == status)
     total = q.count()
@@ -135,6 +143,7 @@ def create_count_order(
         remark=data.remark,
         total_items=len(data.items),
         status="DRAFT",
+        created_by=current_user.id,
     )
     db.add(o)
     db.flush()

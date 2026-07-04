@@ -17,7 +17,17 @@ from app.models.inventory_tracking import (
     StockCountTask,
 )
 from app.models.material import Material
+from app.models.user import User
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.services.inventory_management_service import InventoryManagementService
+
+# 盘点任务数据权限配置：盘点任务无项目字段，按创建人/盘点人/审批人过滤
+STOCK_COUNT_TASK_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="created_by",
+    additional_owner_fields=["assigned_to", "approved_by"],
+    project_field=None,
+)
 
 
 class StockCountService:
@@ -130,10 +140,20 @@ class StockCountService:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
         limit: int = 50,
+        current_user: Optional[User] = None,
     ) -> List[StockCountTask]:
-        """查询盘点任务列表"""
+        """查询盘点任务列表
+
+        current_user: 传入后按数据权限范围过滤（ALL 范围/超级管理员不受影响）；
+        不传则保持历史行为不过滤（供内部/无用户上下文调用场景使用）。
+        """
 
         query = self.db.query(StockCountTask).filter(StockCountTask.tenant_id == self.tenant_id)
+
+        if current_user is not None:
+            query = DataScopeService.filter_by_scope(
+                self.db, query, StockCountTask, current_user, STOCK_COUNT_TASK_DATA_SCOPE_CONFIG
+            )
 
         if status:
             query = query.filter(StockCountTask.status == status)

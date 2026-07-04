@@ -472,7 +472,11 @@ def get_count_tasks(
     service = StockCountService(db, current_user.tenant_id)
 
     tasks = service.get_count_tasks(
-        status=status, start_date=start_date, end_date=end_date, limit=limit
+        status=status,
+        start_date=start_date,
+        end_date=end_date,
+        limit=limit,
+        current_user=current_user,
     )
 
     return tasks
