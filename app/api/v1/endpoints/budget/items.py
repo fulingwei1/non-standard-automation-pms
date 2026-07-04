@@ -18,7 +18,10 @@ from app.schemas.budget import (
     ProjectBudgetItemUpdate,
 )
 from app.schemas.common import ResponseModel
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.utils.db_helpers import get_or_404
+
+from .utils import BUDGET_DATA_SCOPE_CONFIG
 
 router = APIRouter()
 
@@ -32,8 +35,19 @@ def get_budget_items(
 ) -> Any:
     """
     获取预算明细列表
+
+    预算明细本身没有独立的所有者/项目字段，通过对所属预算应用数据权限
+    过滤（PERM-17）来间接限定明细的可见范围。
     """
-    get_or_404(db, ProjectBudget, budget_id, "预算不存在")
+    budget_query = DataScopeService.filter_by_scope(
+        db,
+        db.query(ProjectBudget).filter(ProjectBudget.id == budget_id),
+        ProjectBudget,
+        current_user,
+        BUDGET_DATA_SCOPE_CONFIG,
+    )
+    if budget_query.first() is None:
+        raise HTTPException(status_code=404, detail="预算不存在")
 
     items = (
         db.query(ProjectBudgetItem)

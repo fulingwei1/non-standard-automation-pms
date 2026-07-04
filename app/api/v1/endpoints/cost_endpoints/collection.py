@@ -26,11 +26,22 @@ from app.services.cost.cost_basis import (
     actual_project_cost_filter,
 )
 from app.services.cost.cost_collection_service import CostCollectionService
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 
 router = APIRouter()
 
 
 AUTO_SOURCE_TYPES = ("PURCHASE_ORDER", "BOM_COST", "WORK_ORDER", "LABOR_COST")
+
+# 按项目归集明细数据权限配置（PERM-17）
+# by-project 按项目逐行输出汇总数据，可直接对 Project 本身应用数据权限：
+# project_field="id" 表示用用户可访问的项目ID集合限制 Project.id 本身。
+PROJECT_COST_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="created_by",
+    additional_owner_fields=["pm_id"],
+    project_field="id",
+)
 
 
 def _source_type_expr():
@@ -191,8 +202,7 @@ def get_collection_by_project(
     manual_condition = ProjectCost.source_type.is_(None) | (
         ~source_type.in_(AUTO_SOURCE_TYPES)
     )
-    rows = (
-        db.query(
+    query = db.query(
             Project.id,
             Project.project_name,
             Project.project_code,
@@ -240,9 +250,16 @@ def get_collection_by_project(
                 0,
             ).label("manual_cost"),
         )
-        .join(ProjectCost, ProjectCost.project_id == Project.id)
-        .filter(Project.is_active.is_(True))
-        .group_by(Project.id)
+    query = query.join(ProjectCost, ProjectCost.project_id == Project.id).filter(
+        Project.is_active.is_(True)
+    )
+    # 应用数据权限过滤（PERM-17）：按项目逐行输出，OWN/PROJECT/DEPT 范围的用户
+    # 只能看到自己创建/管理或可访问项目的归集明细。
+    query = DataScopeService.filter_by_scope(
+        db, query, Project, current_user, PROJECT_COST_DATA_SCOPE_CONFIG
+    )
+    rows = (
+        query.group_by(Project.id)
         .having(func.count(ProjectCost.id) > 0)
         .order_by(actual_total_cost.desc())
         .all()

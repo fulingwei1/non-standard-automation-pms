@@ -27,9 +27,10 @@ from app.schemas.budget import (
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.services.approval_engine import ApprovalEngineService
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.utils.db_helpers import get_or_404
 
-from .utils import generate_budget_no, generate_budget_version
+from .utils import BUDGET_DATA_SCOPE_CONFIG, generate_budget_no, generate_budget_version
 
 router = APIRouter()
 PROJECT_BUDGET_APPROVAL_ENTITY_TYPE = "PROJECT_BUDGET"
@@ -124,6 +125,11 @@ def list_budgets(
     """
     query = db.query(ProjectBudget)
 
+    # 应用数据权限过滤（PERM-17）
+    query = DataScopeService.filter_by_scope(
+        db, query, ProjectBudget, current_user, BUDGET_DATA_SCOPE_CONFIG
+    )
+
     if project_id:
         query = query.filter(ProjectBudget.project_id == project_id)
     if budget_status:
@@ -171,6 +177,10 @@ def get_project_budgets(
     project = get_or_404(db, Project, project_id, "项目不存在")
 
     query = db.query(ProjectBudget).filter(ProjectBudget.project_id == project_id)
+    # 应用数据权限过滤（PERM-17）
+    query = DataScopeService.filter_by_scope(
+        db, query, ProjectBudget, current_user, BUDGET_DATA_SCOPE_CONFIG
+    )
     if budget_status:
         query = query.filter(ProjectBudget.status == budget_status)
 

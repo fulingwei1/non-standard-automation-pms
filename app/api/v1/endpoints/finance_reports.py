@@ -16,8 +16,19 @@ from app.models.project.financial import ProjectPaymentPlan
 from app.models.sales.contracts import Contract
 from app.models.sales.invoices import Invoice
 from app.services.cost.cost_basis import actual_project_cost_filter
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 
 router = APIRouter()
+
+# 项目盈利榜数据权限配置（PERM-17）
+# project-profitability 按项目逐行输出，可以直接对 Project 本身应用数据权限：
+# project_field="id" 表示用用户可访问的项目ID集合限制 Project.id 本身。
+PROJECT_PROFIT_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="created_by",
+    additional_owner_fields=["pm_id"],
+    project_field="id",
+)
 
 
 def _money(value: Any) -> float:
@@ -295,12 +306,14 @@ def get_project_profitability(
     db: Session = Depends(deps.get_db),
     current_user=Depends(deps.get_current_user),
 ):
+    query = db.query(Project).filter(Project.is_active)
+    # 应用数据权限过滤（PERM-17）：按项目逐行输出，OWN/PROJECT/DEPT 范围的用户
+    # 只能看到自己创建/管理或可访问项目的盈利数据。
+    query = DataScopeService.filter_by_scope(
+        db, query, Project, current_user, PROJECT_PROFIT_DATA_SCOPE_CONFIG
+    )
     projects = (
-        db.query(Project)
-        .filter(Project.is_active)
-        .order_by(Project.updated_at.desc(), Project.id.desc())
-        .limit(limit)
-        .all()
+        query.order_by(Project.updated_at.desc(), Project.id.desc()).limit(limit).all()
     )
 
     rows = []

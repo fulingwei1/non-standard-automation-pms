@@ -10,6 +10,16 @@ from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_like_filter
 from app.models.budget import ProjectBudget
+from app.services.data_scope.config import DataScopeConfig
+
+# 项目预算数据权限配置（PERM-17）：
+# - 所有者：预算创建人 / 提交人 / 审批人
+# - 项目关联：project_id，用于 PROJECT/DEPT 范围过滤
+BUDGET_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="created_by",
+    additional_owner_fields=["submitted_by", "approved_by"],
+    project_field="project_id",
+)
 
 
 def generate_budget_no(db: Session) -> str:
