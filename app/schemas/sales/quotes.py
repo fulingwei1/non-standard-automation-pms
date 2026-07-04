@@ -98,6 +98,10 @@ class QuoteVersionCreate(BaseModel):
     version_no: str = Field(max_length=20, description="版本号")
     version_description: Optional[str] = Field(default=None, description="版本说明")
     total_amount: Decimal = Field(ge=0, description="总金额")
+    amount_without_tax: Optional[Decimal] = Field(default=None, ge=0, description="不含税金额")
+    tax_rate: Optional[Decimal] = Field(default=None, ge=0, description="税率")
+    tax_amount: Optional[Decimal] = Field(default=None, ge=0, description="税额")
+    amount_with_tax: Optional[Decimal] = Field(default=None, ge=0, description="含税金额")
     valid_until: Optional[date] = Field(default=None, description="有效期至")
     terms: Optional[str] = Field(default=None, description="条款")
     remark: Optional[str] = Field(default=None, description="备注")
@@ -111,6 +115,10 @@ class QuoteVersionResponse(TimestampSchema):
     version_no: str = Field(description="版本号")
     version_description: Optional[str] = Field(default=None, description="版本说明")
     total_amount: Decimal = Field(description="总金额")
+    amount_without_tax: Optional[Decimal] = Field(default=None, description="不含税金额")
+    tax_rate: Optional[Decimal] = Field(default=None, description="税率")
+    tax_amount: Optional[Decimal] = Field(default=None, description="税额")
+    amount_with_tax: Optional[Decimal] = Field(default=None, description="含税金额")
     valid_until: Optional[date] = Field(default=None, description="有效期至")
     terms: Optional[str] = Field(default=None, description="条款")
     remark: Optional[str] = Field(default=None, description="备注")
@@ -130,8 +138,10 @@ class QuoteCreate(BaseModel):
     currency: Optional[str] = Field(default="CNY", description="货币")
     exchange_rate: Optional[Decimal] = Field(default=1.0, description="汇率")
     total_amount: Optional[Decimal] = Field(default=None, description="总金额")
+    amount_without_tax: Optional[Decimal] = Field(default=None, description="不含税金额")
     tax_rate: Optional[Decimal] = Field(default=None, description="税率")
     tax_amount: Optional[Decimal] = Field(default=None, description="税额")
+    amount_with_tax: Optional[Decimal] = Field(default=None, description="含税金额")
     valid_until: Optional[date] = Field(default=None, description="有效期至")
     delivery_terms: Optional[str] = Field(default=None, description="交货条款")
     payment_terms: Optional[str] = Field(default=None, description="付款条款")
@@ -151,8 +161,10 @@ class QuoteUpdate(BaseModel):
     currency: Optional[str] = None
     exchange_rate: Optional[Decimal] = None
     total_amount: Optional[Decimal] = None
+    amount_without_tax: Optional[Decimal] = None
     tax_rate: Optional[Decimal] = None
     tax_amount: Optional[Decimal] = None
+    amount_with_tax: Optional[Decimal] = None
     valid_until: Optional[date] = None
     delivery_terms: Optional[str] = None
     payment_terms: Optional[str] = None
@@ -174,8 +186,10 @@ class QuoteResponse(TimestampSchema):
     currency: Optional[str] = Field(default="CNY", description="货币")
     exchange_rate: Optional[Decimal] = Field(default=1.0, description="汇率")
     total_amount: Optional[Decimal] = Field(default=None, description="总金额")
+    amount_without_tax: Optional[Decimal] = Field(default=None, description="不含税金额")
     tax_rate: Optional[Decimal] = Field(default=None, description="税率")
     tax_amount: Optional[Decimal] = Field(default=None, description="税额")
+    amount_with_tax: Optional[Decimal] = Field(default=None, description="含税金额")
     valid_until: Optional[date] = Field(default=None, description="有效期至")
     delivery_terms: Optional[str] = Field(default=None, description="交货条款")
     payment_terms: Optional[str] = Field(default=None, description="付款条款")

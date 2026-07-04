@@ -119,6 +119,10 @@ class ContractBase(BaseModel):
     contract_type: str = Field(..., description="合同类型: sales/purchase/framework")
     customer_id: int = Field(..., description="客户ID")
     total_amount: Decimal = Field(..., description="合同总额")
+    amount_without_tax: Optional[Decimal] = Field(None, description="不含税金额")
+    tax_rate: Optional[Decimal] = Field(None, description="税率")
+    tax_amount: Optional[Decimal] = Field(None, description="税额")
+    amount_with_tax: Optional[Decimal] = Field(None, description="含税金额")
 
 
 class ContractCreate(ContractBase):
@@ -162,6 +166,10 @@ class ContractUpdate(BaseModel):
     project_id: Optional[int] = None
 
     total_amount: Optional[Decimal] = None
+    amount_without_tax: Optional[Decimal] = None
+    tax_rate: Optional[Decimal] = None
+    tax_amount: Optional[Decimal] = None
+    amount_with_tax: Optional[Decimal] = None
     received_amount: Optional[Decimal] = None
 
     signing_date: Optional[date] = None
@@ -234,6 +242,10 @@ class ContractListResponse(BaseModel):
     contract_type: str
     customer_id: int
     total_amount: Decimal
+    amount_without_tax: Optional[Decimal] = None
+    tax_rate: Optional[Decimal] = None
+    tax_amount: Optional[Decimal] = None
+    amount_with_tax: Optional[Decimal] = None
     received_amount: Decimal
     unreceived_amount: Optional[Decimal] = None
     status: str

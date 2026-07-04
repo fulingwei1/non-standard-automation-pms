@@ -117,6 +117,10 @@ class Contract(Base, TimestampMixin):
 
     # 金额信息
     total_amount = Column(Numeric(15, 2), nullable=False, comment="合同总额")
+    amount_without_tax = Column(Numeric(15, 2), comment="不含税金额")
+    tax_rate = Column(Numeric(5, 2), default=0, comment="税率(%)")
+    tax_amount = Column(Numeric(15, 2), default=0, comment="税额")
+    amount_with_tax = Column(Numeric(15, 2), comment="含税金额")
     received_amount = Column(Numeric(15, 2), default=0, comment="已收款")
     unreceived_amount = Column(Numeric(15, 2), comment="未收款")
 
@@ -134,8 +138,8 @@ class Contract(Base, TimestampMixin):
     # 状态管理
     status = Column(
         String(20),
-        default="draft",
-        comment="状态: draft/pending_approval/approving/approved/signed/executing/completed/voided",
+        default="DRAFT",
+        comment="状态: DRAFT/PENDING_APPROVAL/APPROVED/REJECTED/SIGNED/EXECUTING/COMPLETED/CANCELLED",
     )
 
     # 责任人

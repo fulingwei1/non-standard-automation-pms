@@ -173,6 +173,10 @@ class QuoteVersion(Base, TimestampMixin):
 
     # 定价信息
     total_price = Column(Numeric(12, 2), comment="报价总价")
+    amount_without_tax = Column(Numeric(12, 2), comment="不含税金额")
+    tax_rate = Column(Numeric(5, 2), default=0, comment="税率(%)")
+    tax_amount = Column(Numeric(12, 2), default=0, comment="税额")
+    amount_with_tax = Column(Numeric(12, 2), comment="含税金额")
     cost_total = Column(Numeric(12, 2), comment="成本总计（从估算同步）")
     gross_margin = Column(Numeric(5, 2), comment="毛利率")
 

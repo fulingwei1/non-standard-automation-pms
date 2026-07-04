@@ -71,6 +71,10 @@ class ContractCreate(BaseModel):
         validation_alias=AliasChoices("contract_amount", "total_amount"),
         description="合同金额",
     )
+    amount_without_tax: Optional[Decimal] = Field(default=None, description="不含税金额")
+    tax_rate: Optional[Decimal] = Field(default=None, description="税率")
+    tax_amount: Optional[Decimal] = Field(default=None, description="税额")
+    amount_with_tax: Optional[Decimal] = Field(default=None, description="含税金额")
     signed_date: Optional[date] = Field(
         default=None,
         validation_alias=AliasChoices("signed_date", "sign_date"),
@@ -100,6 +104,10 @@ class ContractUpdate(BaseModel):
     customer_id: Optional[int] = None
     project_id: Optional[int] = None
     contract_amount: Optional[Decimal] = None
+    amount_without_tax: Optional[Decimal] = None
+    tax_rate: Optional[Decimal] = None
+    tax_amount: Optional[Decimal] = None
+    amount_with_tax: Optional[Decimal] = None
     signed_date: Optional[date] = None
     status: Optional[str] = None
     payment_terms_summary: Optional[str] = None
@@ -121,6 +129,10 @@ class ContractResponse(TimestampSchema):
     customer_id: int = Field(description="客户ID")
     project_id: Optional[int] = Field(default=None, description="项目ID")
     contract_amount: Optional[Decimal] = Field(default=None, description="合同金额")
+    amount_without_tax: Optional[Decimal] = Field(default=None, description="不含税金额")
+    tax_rate: Optional[Decimal] = Field(default=None, description="税率")
+    tax_amount: Optional[Decimal] = Field(default=None, description="税额")
+    amount_with_tax: Optional[Decimal] = Field(default=None, description="含税金额")
     signed_date: Optional[date] = Field(default=None, description="签订日期")
     status: Optional[str] = Field(default=None, description="状态")
     payment_terms_summary: Optional[str] = Field(default=None, description="付款条款摘要")
