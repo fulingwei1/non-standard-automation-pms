@@ -119,6 +119,7 @@ def complete_acceptance(
         check_auto_stage_transition_after_acceptance,
         handle_acceptance_status_transition,
         handle_progress_integration,
+        trigger_after_sales_maintenance_plan,
         trigger_bonus_calculation,
         trigger_invoice_on_acceptance,
         trigger_warranty_period,
@@ -157,6 +158,9 @@ def complete_acceptance(
 
     # AR007: 如果终验收通过，自动触发质保期
     trigger_warranty_period(db, order, complete_in.overall_result)
+
+    # 终验收通过后自动转售后并生成定期保养计划
+    trigger_after_sales_maintenance_plan(db, order, complete_in.overall_result)
 
     # 如果验收通过，自动触发奖金计算
     trigger_bonus_calculation(db, order, complete_in.overall_result)

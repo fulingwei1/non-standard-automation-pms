@@ -6,7 +6,7 @@
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -201,3 +201,7 @@ class Customer360Response(BaseModel):
     invoices: List[Customer360InvoiceItem] = []
     payment_plans: List[Customer360PaymentPlanItem] = []
     communications: List[Customer360CommunicationItem] = []
+    orders: List[dict[str, Any]] = []
+    payments: List[dict[str, Any]] = []
+    satisfactions: List[dict[str, Any]] = []
+    services: List[dict[str, Any]] = []

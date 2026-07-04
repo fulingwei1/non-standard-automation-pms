@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.common.crud import BaseCRUDService, SortOrder
 from app.common.crud.exceptions import raise_already_exists, raise_not_found
 from app.models.material import BomHeader
-from app.models.project import Machine
+from app.models.project import Machine, Project
 from app.schemas.project import MachineCreate, MachineResponse, MachineUpdate
 from app.services.machine_service import (
     VALID_HEALTH,
@@ -88,7 +88,17 @@ class ProjectMachineService(
         return True
 
     def _before_create(self, obj_in: MachineCreate) -> MachineCreate:
-        payload = obj_in.model_copy(update={"project_id": self.project_id})
+        project = self.db.query(Project).filter(Project.id == self.project_id).first()
+        customer_id = obj_in.customer_id
+        if customer_id is None and project is not None:
+            customer_id = project.customer_id
+        if project is not None and project.customer_id and customer_id != project.customer_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="设备客户必须与项目客户一致",
+            )
+
+        payload = obj_in.model_copy(update={"project_id": self.project_id, "customer_id": customer_id})
         machine_no_provided = "machine_no" in obj_in.model_fields_set
 
         if payload.machine_code:
@@ -120,6 +130,13 @@ class ProjectMachineService(
             raise_not_found(self.resource_name, object_id)
 
         update_data = obj_in.model_dump(exclude_unset=True)
+        if "customer_id" in update_data and update_data["customer_id"] is not None:
+            project = self.db.query(Project).filter(Project.id == self.project_id).first()
+            if project is not None and project.customer_id and update_data["customer_id"] != project.customer_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="设备客户必须与项目客户一致",
+                )
 
         if "machine_code" in update_data and update_data["machine_code"]:
             self._ensure_unique_code(update_data["machine_code"], current_id=object_id)

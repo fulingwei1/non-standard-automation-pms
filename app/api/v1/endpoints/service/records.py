@@ -27,7 +27,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.core.config import settings
-from app.models.project import Customer, Project
+from app.models.project import Customer, Machine, Project
 from app.models.service import ServiceRecord
 from app.models.service.enums import ServiceRecordStatusEnum, normalize_service_record_status
 from app.models.user import User
@@ -76,6 +76,9 @@ def _serialize_service_record(item: ServiceRecord) -> dict[str, Any]:
         "service_type": item.service_type,
         "project_id": item.project_id,
         "project_name": item.project_name,
+        "machine_id": item.machine_id,
+        "machine_name": getattr(item, "machine_name", None),
+        "machine_serial_no": getattr(item, "machine_serial_no", None),
         "machine_no": item.machine_no,
         "customer_id": item.customer_id,
         "customer_name": item.customer_name,
@@ -112,6 +115,11 @@ def _hydrate_service_record_names(db: Session, item: ServiceRecord) -> None:
         customer = db.query(Customer).filter(Customer.id == item.customer_id).first()
         if customer:
             item.customer_name = customer.customer_name
+    if item.machine_id:
+        machine = db.query(Machine).filter(Machine.id == item.machine_id).first()
+        if machine:
+            item.machine_name = machine.machine_name
+            item.machine_serial_no = machine.serial_no
     if item.service_engineer_id:
         engineer = db.query(User).filter(User.id == item.service_engineer_id).first()
         if engineer:
@@ -244,6 +252,16 @@ def create_service_record(
     if not customer:
         raise HTTPException(status_code=404, detail=f"客户不存在 (ID: {record_in.customer_id})")
 
+    machine = None
+    if record_in.machine_id:
+        machine = db.query(Machine).filter(Machine.id == record_in.machine_id).first()
+        if not machine:
+            raise HTTPException(status_code=404, detail=f"设备不存在 (ID: {record_in.machine_id})")
+        if machine.project_id != record_in.project_id:
+            raise HTTPException(status_code=400, detail="设备不属于该项目")
+        if machine.customer_id and machine.customer_id != record_in.customer_id:
+            raise HTTPException(status_code=400, detail="设备不属于该客户")
+
     # 验证服务工程师是否存在
     from app.models.user import User
 
@@ -257,7 +275,8 @@ def create_service_record(
         record_no=generate_record_no(db),
         service_type=record_in.service_type,
         project_id=record_in.project_id,
-        machine_no=record_in.machine_no,
+        machine_id=record_in.machine_id,
+        machine_no=record_in.machine_no or (str(machine.machine_no) if machine else None),
         customer_id=record_in.customer_id,
         location=record_in.location,
         service_date=record_in.service_date,
@@ -325,6 +344,16 @@ def update_service_record(
     if "status" in update_data and update_data["status"] is not None:
         status_value = normalize_service_record_status(update_data["status"])
         update_data["status"] = getattr(status_value, "value", status_value)
+    if "machine_id" in update_data and update_data["machine_id"] is not None:
+        machine = db.query(Machine).filter(Machine.id == update_data["machine_id"]).first()
+        if not machine:
+            raise HTTPException(status_code=404, detail=f"设备不存在 (ID: {update_data['machine_id']})")
+        if machine.project_id != record.project_id:
+            raise HTTPException(status_code=400, detail="设备不属于该项目")
+        if machine.customer_id and machine.customer_id != record.customer_id:
+            raise HTTPException(status_code=400, detail="设备不属于该客户")
+        if "machine_no" not in update_data:
+            update_data["machine_no"] = str(machine.machine_no)
 
     for field, value in update_data.items():
         setattr(record, field, value)

@@ -377,11 +377,19 @@ class TestAcceptanceCompletionServiceBranches:
 
         acceptance_order.acceptance_type = "FINAL"
 
-        trigger_warranty_period(
-            db_session,
-            acceptance_order,
-            overall_result="PASSED"
-        )
+        def _advance_to_s9(db, order, overall_result):
+            mock_project.stage = "S9"
+            return {"auto_advanced": True}
+
+        with patch(
+            "app.services.acceptance_completion_service.check_auto_stage_transition_after_acceptance",
+            side_effect=_advance_to_s9,
+        ):
+            trigger_warranty_period(
+                db_session,
+                acceptance_order,
+                overall_result="PASSED"
+            )
 
         # 验证项目更新到S9
         assert mock_project.stage == "S9"

@@ -20,6 +20,7 @@ class ServiceTicket(Base, TimestampMixin):
     # 关联信息
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, comment="客户ID")
+    machine_id = Column(Integer, ForeignKey("machines.id"), nullable=True, comment="设备/机台ID")
 
     # 问题信息
     problem_type = Column(String(20), nullable=False, comment="问题类型")
@@ -64,11 +65,13 @@ class ServiceTicket(Base, TimestampMixin):
     # 关系
     project = relationship("Project", foreign_keys=[project_id])
     customer = relationship("Customer", foreign_keys=[customer_id])
+    machine = relationship("Machine", foreign_keys=[machine_id])
     assignee = relationship("User", foreign_keys=[assigned_to_id])
 
     __table_args__ = (
         Index("idx_service_ticket_project", "project_id"),
         Index("idx_service_ticket_customer", "customer_id"),
+        Index("idx_service_ticket_machine", "machine_id"),
         Index("idx_service_ticket_status", "status"),
         {"comment": "服务工单表"},
     )

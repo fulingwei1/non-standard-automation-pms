@@ -3,7 +3,8 @@
 满意度调查管理 API endpoints
 """
 
-from datetime import date
+import logging
+from datetime import date, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -15,20 +16,169 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.service import CustomerSatisfaction
-from app.models.service.enums import SurveyStatusEnum, normalize_survey_status
+from app.models.service.enums import (
+    SurveyStatusEnum,
+    SurveyTypeEnum,
+    normalize_survey_status,
+)
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.service import (
     CustomerSatisfactionCreate,
     CustomerSatisfactionResponse,
+    CustomerSatisfactionSubmit,
     CustomerSatisfactionUpdate,
 )
+from app.services.notification.channels.base import (
+    NotificationChannel,
+    NotificationPriority,
+    NotificationRequest,
+)
+from app.services.notification.unified_notification_service import get_notification_service
 from app.utils.db_helpers import get_or_404, save_obj
 
 from .access import filter_owned_service_query, get_owned_service_object_or_404
 from .number_utils import generate_survey_no
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+
+def _as_int(value) -> Optional[int]:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _send_satisfaction_survey_notification(
+    db: Session,
+    survey: CustomerSatisfaction,
+    *,
+    actor: Optional[User] = None,
+    ticket_no: Optional[str] = None,
+    extra_user_ids: Optional[list[int]] = None,
+) -> dict:
+    recipient_ids = {user_id for user_id in (extra_user_ids or []) if isinstance(user_id, int)}
+    if actor and actor.id:
+        recipient_ids.add(actor.id)
+    if not recipient_ids:
+        return {"sent": 0, "sent_user_ids": []}
+
+    content_lines = [
+        f"调查编号: {survey.survey_no}",
+        f"客户: {survey.customer_name}",
+        f"项目: {survey.project_name or survey.project_code or '-'}",
+        f"发送方式: {survey.send_method or '-'}",
+    ]
+    if ticket_no:
+        content_lines.append(f"来源工单: {ticket_no}")
+
+    service = get_notification_service(db)
+    sent_user_ids: list[int] = []
+    for user_id in sorted(recipient_ids):
+        request = NotificationRequest(
+            recipient_id=user_id,
+            notification_type="SURVEY_SENT",
+            category="service",
+            title=f"满意度调查已发送: {survey.survey_no}",
+            content="\n".join(content_lines),
+            priority=NotificationPriority.NORMAL,
+            channels=[NotificationChannel.SYSTEM],
+            source_type="customer_satisfaction",
+            source_id=survey.id,
+            link_url=f"/service/surveys/{survey.id}",
+            extra_data={"survey_id": survey.id, "ticket_no": ticket_no},
+            force_send=True,
+        )
+        try:
+            result = service.send_notification(request)
+        except Exception as exc:
+            logger.error(
+                "满意度调查通知发送失败 survey_id=%s recipient_id=%s: %s",
+                survey.id,
+                user_id,
+                exc,
+                exc_info=True,
+            )
+            continue
+        if result.get("success"):
+            sent_user_ids.append(user_id)
+    return {"sent": len(sent_user_ids), "sent_user_ids": sent_user_ids}
+
+
+def mark_customer_satisfaction_sent(
+    db: Session,
+    survey: CustomerSatisfaction,
+    *,
+    actor: Optional[User] = None,
+    ticket_no: Optional[str] = None,
+    extra_user_ids: Optional[list[int]] = None,
+) -> CustomerSatisfaction:
+    if survey.status == SurveyStatusEnum.COMPLETED.value:
+        raise HTTPException(status_code=400, detail="调查已完成，无法发送")
+
+    survey.status = SurveyStatusEnum.SENT.value
+    survey.send_date = survey.send_date or date.today()
+    saved = save_obj(db, survey)
+    _send_satisfaction_survey_notification(
+        db,
+        saved,
+        actor=actor,
+        ticket_no=ticket_no,
+        extra_user_ids=extra_user_ids,
+    )
+    return saved
+
+
+def create_service_ticket_satisfaction_survey(
+    db: Session,
+    ticket,
+    *,
+    current_user: User,
+) -> CustomerSatisfaction:
+    customer = getattr(ticket, "customer", None)
+    project = getattr(ticket, "project", None)
+    send_method = "SYSTEM"
+    if getattr(customer, "contact_email", None):
+        send_method = "EMAIL"
+    elif getattr(customer, "contact_phone", None):
+        send_method = "SMS"
+
+    survey = CustomerSatisfaction(
+        survey_no=generate_survey_no(db),
+        survey_type=SurveyTypeEnum.SERVICE.value,
+        customer_name=getattr(customer, "customer_name", None) or f"客户{ticket.customer_id}",
+        customer_contact=getattr(customer, "contact_person", None),
+        customer_email=getattr(customer, "contact_email", None),
+        customer_phone=getattr(customer, "contact_phone", None),
+        project_code=getattr(project, "project_code", None),
+        project_name=getattr(project, "project_name", None),
+        survey_date=date.today(),
+        send_method=send_method,
+        deadline=date.today() + timedelta(days=7),
+        status=SurveyStatusEnum.DRAFT.value,
+        created_by=current_user.id,
+        created_by_name=current_user.real_name or current_user.username,
+    )
+    saved = save_obj(db, survey)
+
+    extra_user_ids = [
+        user_id
+        for user_id in {
+            getattr(ticket, "assigned_to_id", None),
+            _as_int(getattr(ticket, "reported_by", None)),
+            getattr(project, "pm_id", None),
+        }
+        if isinstance(user_id, int)
+    ]
+    return mark_customer_satisfaction_sent(
+        db,
+        saved,
+        actor=current_user,
+        ticket_no=getattr(ticket, "ticket_no", None),
+        extra_user_ids=extra_user_ids,
+    )
 
 
 @router.get("/statistics", response_model=dict, status_code=status.HTTP_200_OK)
@@ -268,10 +418,37 @@ def send_customer_satisfaction(
         owner_field="created_by",
     )
 
-    if survey.status == SurveyStatusEnum.COMPLETED.value:
-        raise HTTPException(status_code=400, detail="调查已完成，无法发送")
+    return mark_customer_satisfaction_sent(db, survey, actor=current_user)
 
-    survey.status = SurveyStatusEnum.SENT.value
-    survey.send_date = date.today()
+
+@router.post(
+    "/{survey_id}/submit",
+    response_model=CustomerSatisfactionResponse,
+    status_code=status.HTTP_200_OK,
+)
+def submit_customer_satisfaction(
+    *,
+    db: Session = Depends(deps.get_db),
+    survey_id: int,
+    survey_in: CustomerSatisfactionSubmit,
+) -> Any:
+    """
+    客户提交满意度调查。
+
+    该入口不要求员工登录，避免继续由员工代填满意度。
+    """
+    survey = get_or_404(db, CustomerSatisfaction, survey_id, "满意度调查不存在")
+
+    if survey.status == SurveyStatusEnum.COMPLETED.value:
+        raise HTTPException(status_code=400, detail="调查已完成，不能重复提交")
+    if survey.status not in {SurveyStatusEnum.SENT.value, SurveyStatusEnum.PENDING.value}:
+        raise HTTPException(status_code=400, detail="调查尚未发送，不能提交")
+
+    survey.status = SurveyStatusEnum.COMPLETED.value
+    survey.response_date = date.today()
+    survey.overall_score = survey_in.overall_score
+    survey.scores = survey_in.scores
+    survey.feedback = survey_in.feedback
+    survey.suggestions = survey_in.suggestions
 
     return save_obj(db, survey)

@@ -5,7 +5,6 @@
 包括：客户反馈、维修保养、技术支持工单
 """
 
-from datetime import date, datetime
 from sqlalchemy import (
     Boolean,
     Column,
@@ -14,6 +13,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    Numeric,
     String,
     Text,
 )
@@ -170,7 +170,7 @@ class AfterSalesSparePart(Base, TimestampMixin):
     part_spec = Column(String(500), comment="规格型号")
     quantity = Column(Integer, default=0, comment="库存数量")
     min_stock = Column(Integer, default=1, comment="最低库存")
-    unit_price = Column(String(20), comment="单价")
+    unit_price = Column(Numeric(12, 2), default=0, comment="单价")
     
     # 供应商
     supplier = Column(String(200), comment="供应商")
@@ -197,6 +197,7 @@ class AfterSalesFieldService(Base, TimestampMixin):
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目 ID")
     customer_id = Column(Integer, ForeignKey("customers.id"), comment="客户 ID")
     ticket_id = Column(Integer, ForeignKey("after_sales_support_tickets.id"), comment="关联工单 ID")
+    dispatch_order_id = Column(Integer, ForeignKey("installation_dispatch_orders.id"), comment="关联派工单 ID")
     
     # 服务信息
     service_no = Column(String(50), unique=True, comment="服务编号")
@@ -214,10 +215,15 @@ class AfterSalesFieldService(Base, TimestampMixin):
     engineer_name = Column(String(100), comment="工程师姓名")
     
     # 费用
-    travel_cost = Column(String(20), comment="差旅费用")
-    parts_cost = Column(String(20), comment="备件费用")
-    total_cost = Column(String(20), comment="总费用")
+    travel_cost = Column(Numeric(12, 2), default=0, comment="差旅费用")
+    parts_cost = Column(Numeric(12, 2), default=0, comment="备件费用")
+    service_fee = Column(Numeric(12, 2), default=0, comment="过保服务费")
+    total_cost = Column(Numeric(12, 2), default=0, comment="总费用")
     is_warranty = Column(Boolean, default=True, comment="是否质保内")
+    warranty_source = Column(String(30), comment="质保判断来源")
+    charge_required = Column(Boolean, default=False, comment="是否需要向客户收费")
+    charge_reason = Column(String(50), comment="收费原因")
+    charge_status = Column(String(20), default="NOT_REQUIRED", comment="收费状态")
     
     # 服务报告
     report_content = Column(Text, comment="服务报告")
@@ -230,11 +236,13 @@ class AfterSalesFieldService(Base, TimestampMixin):
     project = relationship("Project", foreign_keys=[project_id])
     customer = relationship("Customer", foreign_keys=[customer_id])
     engineer = relationship("User", foreign_keys=[engineer_id])
+    dispatch_order = relationship("InstallationDispatchOrder", foreign_keys=[dispatch_order_id])
     
     __table_args__ = (
         Index("idx_asfs_project", "project_id"),
         Index("idx_asfs_status", "status"),
         Index("idx_asfs_engineer", "engineer_id"),
+        Index("idx_asfs_dispatch_order", "dispatch_order_id"),
     )
 
 

@@ -151,6 +151,63 @@ def get_customer_360_overview(
         for comm in overview["communications"]
     ]
 
+    orders = [
+        {
+            "id": order.order_no or str(order.id),
+            "date": order.created_at.date() if order.created_at else None,
+            "product": order.project.project_name if order.project else order.project_no,
+            "amount": order.order_amount,
+            "status": order.order_status,
+            "deliveryDate": order.promised_date or order.required_date,
+        }
+        for order in overview.get("orders", [])
+    ]
+
+    payments = [
+        {
+            "id": f"PAY-{plan.id}",
+            "date": plan.actual_date or plan.planned_date,
+            "amount": plan.planned_amount,
+            "method": plan.payment_type,
+            "status": plan.status,
+            "orderId": plan.project.project_code if plan.project else plan.project_id,
+        }
+        for plan in overview.get("payments", [])
+    ]
+
+    satisfactions = [
+        {
+            "id": item.survey_no or str(item.id),
+            "date": item.response_date or item.survey_date,
+            "type": item.survey_type,
+            "score": item.overall_score,
+            "feedback": item.feedback,
+            "improvements": item.suggestions,
+        }
+        for item in overview.get("satisfactions", [])
+    ]
+
+    services = []
+    for ticket in overview.get("services", []):
+        response_time = None
+        if ticket.response_time and ticket.reported_time:
+            response_time = round(
+                (ticket.response_time - ticket.reported_time).total_seconds() / 3600,
+                2,
+            )
+        services.append(
+            {
+                "id": ticket.ticket_no or str(ticket.id),
+                "date": ticket.reported_time.date() if ticket.reported_time else None,
+                "type": ticket.problem_type or ticket.ticket_type,
+                "issue": ticket.problem_desc,
+                "resolution": ticket.solution,
+                "satisfaction": ticket.satisfaction,
+                "responseTime": response_time,
+                "status": ticket.status,
+            }
+        )
+
     return Customer360Response(
         basic_info=customer,
         summary=Customer360Summary(**summary),
@@ -161,4 +218,8 @@ def get_customer_360_overview(
         invoices=invoices,
         payment_plans=payment_plans,
         communications=communications,
+        orders=orders,
+        payments=payments,
+        satisfactions=satisfactions,
+        services=services,
     )

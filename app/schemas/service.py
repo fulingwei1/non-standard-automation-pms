@@ -29,6 +29,7 @@ class ServiceTicketCreate(BaseModel):
     project_id: int = Field(..., description="项目ID（主项目）")
     project_ids: Optional[List[int]] = Field(None, description="关联项目ID列表（支持多项目）")
     customer_id: int = Field(..., description="客户ID")
+    machine_id: Optional[int] = Field(None, description="设备/机台ID")
     problem_type: str = Field(..., description="问题类型")
     problem_desc: str = Field(..., description="问题描述")
     urgency: str = Field(..., description="紧急程度")
@@ -40,6 +41,7 @@ class ServiceTicketCreate(BaseModel):
 
 class ServiceTicketUpdate(BaseModel):
     """更新服务工单"""
+    machine_id: Optional[int] = Field(None, description="设备/机台ID")
     problem_desc: Optional[str] = Field(None, description="问题描述")
     urgency: Optional[str] = Field(None, description="紧急程度")
     status: Optional[ServiceTicketStatusEnum] = Field(None, description="状态")
@@ -74,6 +76,9 @@ class ServiceTicketResponse(BaseModel):
     project_name: Optional[str] = None
     customer_id: int
     customer_name: Optional[str] = None
+    machine_id: Optional[int] = None
+    machine_name: Optional[str] = None
+    machine_serial_no: Optional[str] = None
     problem_type: str
     problem_desc: str
     urgency: str
@@ -127,6 +132,7 @@ class ServiceRecordCreate(BaseModel):
     """创建服务记录"""
     service_type: str = Field(..., description="服务类型")
     project_id: int = Field(..., description="项目ID")
+    machine_id: Optional[int] = Field(None, description="设备/机台ID")
     machine_no: Optional[str] = Field(None, description="机台号")
     customer_id: int = Field(..., description="客户ID")
     location: Optional[str] = Field(None, description="服务地点")
@@ -155,6 +161,7 @@ class ServiceRecordCreate(BaseModel):
 
 class ServiceRecordUpdate(BaseModel):
     """更新服务记录"""
+    machine_id: Optional[int] = None
     service_content: Optional[str] = None
     service_result: Optional[str] = None
     issues_found: Optional[str] = None
@@ -175,6 +182,9 @@ class ServiceRecordResponse(BaseModel):
     service_type: str
     project_id: int
     project_name: Optional[str] = None
+    machine_id: Optional[int] = None
+    machine_name: Optional[str] = None
+    machine_serial_no: Optional[str] = None
     machine_no: Optional[str] = None
     customer_id: int
     customer_name: Optional[str] = None
@@ -298,6 +308,14 @@ class CustomerSatisfactionUpdate(BaseModel):
     suggestions: Optional[str] = None
 
     _normalize_status = field_validator("status", mode="before")(normalize_survey_status)
+
+
+class CustomerSatisfactionSubmit(BaseModel):
+    """客户提交满意度调查"""
+    overall_score: Decimal = Field(..., ge=1, le=5, description="总体满意度（1-5）")
+    scores: Optional[Dict] = Field(None, description="详细评分")
+    feedback: Optional[str] = Field(None, description="客户反馈")
+    suggestions: Optional[str] = Field(None, description="改进建议")
 
 
 class CustomerSatisfactionResponse(BaseModel):

@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from sqlalchemy import and_, desc, exc, or_, text
+from sqlalchemy import and_, desc, exc, or_
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter
@@ -69,7 +69,10 @@ def get_ticket_timeline(db: Session, ticket_id: int) -> Dict[str, Any]:
             )
 
     # 2. 关联问题 - 限制查询数量并使用配置参数
-    issue_filters = [and_(Issue.project_id == ticket.project_id, Issue.category == "CUSTOMER")]
+    issue_filters = [
+        Issue.service_ticket_id == ticket.id,
+        and_(Issue.project_id == ticket.project_id, Issue.category.in_(["CUSTOMER", "QUALITY"])),
+    ]
     if ticket.ticket_no:
         description_query = apply_keyword_filter(
             db.query(Issue.id),
@@ -424,7 +427,7 @@ def get_itr_dashboard_data(
     closed_tickets = ticket_query.filter(ServiceTicket.status == "CLOSED").count()
 
     # 问题统计
-    issue_query = db.query(Issue).filter(Issue.category == "CUSTOMER")
+    issue_query = db.query(Issue).filter(Issue.category.in_(["CUSTOMER", "QUALITY"]))
     if project_id:
         issue_query = issue_query.filter(Issue.project_id == project_id)
     if start_date:

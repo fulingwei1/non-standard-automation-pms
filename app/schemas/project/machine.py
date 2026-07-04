@@ -23,7 +23,10 @@ class MachineCreate(BaseModel):
     )
     machine_name: str = Field(max_length=200, description="设备名称")
     project_id: Optional[int] = Field(None, description="项目ID（可选，通常从路径中获取）")
+    customer_id: Optional[int] = Field(None, description="客户ID")
     machine_no: Optional[int] = 1
+    serial_no: Optional[str] = Field(None, max_length=100, description="客户侧设备序列号/SN")
+    warranty: Optional[str] = Field(None, max_length=100, description="质保信息")
     machine_type: Optional[str] = None
     specification: Optional[str] = None
     planned_start_date: Optional[date] = None
@@ -35,7 +38,10 @@ class MachineUpdate(BaseModel):
     """更新设备"""
 
     machine_name: Optional[str] = None
+    customer_id: Optional[int] = None
     machine_no: Optional[int] = None
+    serial_no: Optional[str] = None
+    warranty: Optional[str] = None
     machine_type: Optional[str] = None
     specification: Optional[str] = None
     stage: Optional[str] = None
@@ -65,6 +71,10 @@ class MachineResponse(TimestampSchema):
     machine_no: int
     project_id: int
     project_name: Optional[str] = None
+    customer_id: Optional[int] = None
+    customer_name: Optional[str] = None
+    serial_no: Optional[str] = None
+    warranty: Optional[str] = None
     machine_type: Optional[str] = None
     stage: str = "S1"
     status: str = "ST01"
@@ -91,6 +101,10 @@ class MachineResponse(TimestampSchema):
                 "machine_no",
                 "project_id",
                 "project_name",
+                "customer_id",
+                "customer_name",
+                "serial_no",
+                "warranty",
                 "machine_type",
                 "stage",
                 "status",

@@ -33,6 +33,7 @@ class ServiceRecord(Base, TimestampMixin):
 
     # 关联信息
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
+    machine_id = Column(Integer, ForeignKey("machines.id"), nullable=True, comment="设备/机台ID")
     machine_no = Column(String(50), comment="机台号")
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, comment="客户ID")
 
@@ -77,11 +78,13 @@ class ServiceRecord(Base, TimestampMixin):
 
     # 关系
     project = relationship("Project", foreign_keys=[project_id])
+    machine = relationship("Machine", foreign_keys=[machine_id])
     customer = relationship("Customer", foreign_keys=[customer_id])
     service_engineer = relationship("User", foreign_keys=[service_engineer_id])
 
     __table_args__ = (
         Index("idx_service_record_project", "project_id"),
+        Index("idx_service_record_machine", "machine_id"),
         Index("idx_service_record_customer", "customer_id"),
         Index("idx_service_record_date", "service_date"),
         {"comment": "现场服务记录表"},

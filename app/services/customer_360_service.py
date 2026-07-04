@@ -9,9 +9,10 @@ from typing import Any, Dict, List
 
 from sqlalchemy.orm import Session
 
+from app.models.business_support import SalesOrder
 from app.models.project import Customer, Project, ProjectPaymentPlan
 from app.models.sales import Contract, Invoice, Opportunity, Quote, QuoteVersion
-from app.models.service import CustomerCommunication
+from app.models.service import CustomerCommunication, CustomerSatisfaction, ServiceTicket
 
 
 def _decimal(value: Any) -> Decimal:
@@ -87,11 +88,35 @@ class Customer360Service:
             .all()
         )
 
+        orders = (
+            self.db.query(SalesOrder)
+            .filter(SalesOrder.customer_id == customer_id)
+            .order_by(SalesOrder.updated_at.desc())
+            .limit(10)
+            .all()
+        )
+
         communications = (
             self.db.query(CustomerCommunication)
             .filter(CustomerCommunication.customer_name == customer.customer_name)
             .order_by(CustomerCommunication.communication_date.desc())
             .limit(5)
+            .all()
+        )
+
+        satisfactions = (
+            self.db.query(CustomerSatisfaction)
+            .filter(CustomerSatisfaction.customer_name == customer.customer_name)
+            .order_by(CustomerSatisfaction.survey_date.desc())
+            .limit(10)
+            .all()
+        )
+
+        services = (
+            self.db.query(ServiceTicket)
+            .filter(ServiceTicket.customer_id == customer_id)
+            .order_by(ServiceTicket.updated_at.desc())
+            .limit(10)
             .all()
         )
 
@@ -108,7 +133,11 @@ class Customer360Service:
             "contracts": contracts,
             "invoices": invoices,
             "payment_plans": payment_plans,
+            "orders": orders,
+            "payments": payment_plans,
             "communications": communications,
+            "satisfactions": satisfactions,
+            "services": services,
         }
 
     def _build_summary(

@@ -459,7 +459,7 @@ class TestServiceTicketsService(unittest.TestCase):
 
         self.assertEqual(result.assigned_to, 2)
         self.assertEqual(result.assigned_to_id, 2)
-        self.assertEqual(result.status, "assigned")
+        self.assertEqual(result.status, "IN_PROGRESS")
         self.assertIsNotNone(result.assigned_time)
         self.db.commit.assert_called_once()
 
@@ -476,13 +476,13 @@ class TestServiceTicketsService(unittest.TestCase):
         """测试更新工单状态 - 更新为已完成"""
         mock_ticket = MagicMock(spec=ServiceTicket)
         mock_ticket.id = 1
-        mock_ticket.status = "IN_PROGRESS"
+        mock_ticket.status = "RESOLVED"
 
         with patch.object(self.service, "get_service_ticket", return_value=mock_ticket):
             with patch.object(self.service, "_send_ticket_notification"):
                 result = self.service.update_ticket_status(1, "COMPLETED")
 
-        self.assertEqual(result.status, "COMPLETED")
+        self.assertEqual(result.status, "CLOSED")
         self.assertIsNotNone(result.resolved_at)
         self.assertIsNotNone(result.resolved_time)
 
@@ -512,6 +512,7 @@ class TestServiceTicketsService(unittest.TestCase):
         """测试关闭工单 - 正常情况"""
         mock_ticket = MagicMock(spec=ServiceTicket)
         mock_ticket.id = 1
+        mock_ticket.status = "RESOLVED"
 
         close_data = MagicMock()
         close_data.resolution_summary = "问题已解决"
@@ -526,7 +527,7 @@ class TestServiceTicketsService(unittest.TestCase):
                 with patch.object(self.service, "_create_satisfaction_survey"):
                     result = self.service.close_ticket(1, close_data)
 
-        self.assertEqual(result.status, "completed")
+        self.assertEqual(result.status, "CLOSED")
         self.assertEqual(result.resolution_summary, "问题已解决")
         self.assertEqual(result.customer_satisfaction, 5)
         self.assertIsNotNone(result.resolved_at)
@@ -616,7 +617,7 @@ class TestServiceTicketsService(unittest.TestCase):
 
         # 应该分配给负载最小的engineer2
         self.assertEqual(mock_ticket.assigned_to_id, 20)
-        self.assertEqual(mock_ticket.status, "assigned")
+        self.assertEqual(mock_ticket.status, "IN_PROGRESS")
         self.db.commit.assert_called()
         self.db.refresh.assert_called()
 

@@ -21,7 +21,12 @@ from app.models.service import (
     CustomerSatisfaction,
     ServiceTicket,
 )
-from app.models.service.enums import ServiceTicketStatusEnum, normalize_service_ticket_status
+from app.models.service.enums import (
+    ServiceTicketStatusEnum,
+    normalized_service_ticket_status_value,
+    normalize_service_ticket_status,
+    validate_service_ticket_transition,
+)
 from app.models.user import User
 from app.schemas.service import (
     PaginatedResponse,
@@ -349,6 +354,7 @@ class ServiceTicketsService:
         return (
             self.db.query(ServiceTicket)
             .options(joinedload(ServiceTicket.customer))
+            .options(joinedload(ServiceTicket.machine))
             .filter(ServiceTicket.id == ticket_id)
             .first()
         )
@@ -371,6 +377,7 @@ class ServiceTicketsService:
             priority=getattr(ticket_data, "priority", None),
             ticket_type=getattr(ticket_data, "ticket_type", None),
             customer_id=getattr(ticket_data, "customer_id", None),
+            machine_id=getattr(ticket_data, "machine_id", None),
             project_id=getattr(ticket_data, "project_id", None),
             reported_by=getattr(ticket_data, "reported_by", None)
             or (str(current_user.id) if current_user else ""),
@@ -401,7 +408,7 @@ class ServiceTicketsService:
         )
         service_ticket.assigned_to = assignee_id
         service_ticket.assigned_to_id = assignee_id
-        service_ticket.status = "assigned"
+        service_ticket.status = ServiceTicketStatusEnum.IN_PROGRESS.value
         service_ticket.assigned_time = datetime.now()
         if hasattr(service_ticket, "response_time") and not getattr(service_ticket, "response_time", None):
             service_ticket.response_time = datetime.now()
@@ -423,33 +430,50 @@ class ServiceTicketsService:
             return None
 
         old_status = service_ticket.status
-        service_ticket.status = status
-        normalized_old_status = normalize_service_ticket_status(old_status)
-        normalized_new_status = normalize_service_ticket_status(status)
+        normalized_old_status = normalized_service_ticket_status_value(old_status)
+        normalized_new_status = normalized_service_ticket_status_value(status)
+        is_allowed, error_message = validate_service_ticket_transition(
+            normalized_old_status, normalized_new_status
+        )
+        if not is_allowed:
+            raise HTTPException(status_code=400, detail=error_message)
+
+        service_ticket.status = normalized_new_status
 
         # 设置解决时间
         if (
-            status in ["completed", "COMPLETED"]
-            or normalized_new_status in [ServiceTicketStatusEnum.RESOLVED, ServiceTicketStatusEnum.CLOSED]
-        ) and old_status not in ["completed", "COMPLETED"]:
-            service_ticket.resolved_at = datetime.now()
-            service_ticket.resolved_time = datetime.now()
+            normalized_new_status
+            in [ServiceTicketStatusEnum.RESOLVED.value, ServiceTicketStatusEnum.CLOSED.value]
+            and normalized_old_status
+            not in [ServiceTicketStatusEnum.RESOLVED.value, ServiceTicketStatusEnum.CLOSED.value]
+        ):
+            now = datetime.now()
+            service_ticket.resolved_at = now
+            service_ticket.resolved_time = now
+        elif normalized_new_status == ServiceTicketStatusEnum.CLOSED.value:
+            now = datetime.now()
+            if not isinstance(getattr(service_ticket, "resolved_at", None), datetime):
+                service_ticket.resolved_at = now
+            if not isinstance(getattr(service_ticket, "resolved_time", None), datetime):
+                service_ticket.resolved_time = now
 
         # 设置开始时间
         if (
-            status in ["in_progress", "IN_PROGRESS"]
-            or normalized_new_status == ServiceTicketStatusEnum.IN_PROGRESS
-        ) and (
-            old_status in ["pending", "assigned", "PENDING", "ASSIGNED"]
-            or normalized_old_status == ServiceTicketStatusEnum.PENDING
+            normalized_new_status == ServiceTicketStatusEnum.IN_PROGRESS.value
+            and normalized_old_status == ServiceTicketStatusEnum.PENDING.value
         ):
-            service_ticket.started_at = datetime.now()
+            now = datetime.now()
+            service_ticket.started_at = now
+            if hasattr(service_ticket, "response_time") and not getattr(
+                service_ticket, "response_time", None
+            ):
+                service_ticket.response_time = now
 
         self.db.commit()
         self.db.refresh(service_ticket)
 
         # 发送通知
-        self._send_ticket_notification(service_ticket, f"status_changed_to_{status}")
+        self._send_ticket_notification(service_ticket, f"status_changed_to_{normalized_new_status}")
 
         return service_ticket
 
@@ -461,7 +485,16 @@ class ServiceTicketsService:
         if not service_ticket:
             return None
 
-        service_ticket.status = "completed"
+        current_status = normalized_service_ticket_status_value(service_ticket.status)
+        if current_status == ServiceTicketStatusEnum.CLOSED.value:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="工单已关闭")
+        if current_status != ServiceTicketStatusEnum.RESOLVED.value:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="工单必须为 RESOLVED 后才能关闭",
+            )
+
+        service_ticket.status = ServiceTicketStatusEnum.CLOSED.value
         service_ticket.resolution_summary = getattr(
             close_data, "resolution_summary", None
         ) or getattr(close_data, "solution", None)
@@ -476,8 +509,11 @@ class ServiceTicketsService:
         ) or getattr(close_data, "satisfaction", None)
         service_ticket.feedback = service_ticket.customer_feedback
         service_ticket.satisfaction = service_ticket.customer_satisfaction
-        service_ticket.resolved_at = datetime.now()
-        service_ticket.resolved_time = datetime.now()
+        now = datetime.now()
+        if not isinstance(getattr(service_ticket, "resolved_at", None), datetime):
+            service_ticket.resolved_at = now
+        if not isinstance(getattr(service_ticket, "resolved_time", None), datetime):
+            service_ticket.resolved_time = now
 
         self.db.commit()
         self.db.refresh(service_ticket)
@@ -573,7 +609,7 @@ class ServiceTicketsService:
             if best_engineer:
                 service_ticket.assigned_to = str(best_engineer.id)
                 service_ticket.assigned_to_id = best_engineer.id
-                service_ticket.status = "assigned"
+                service_ticket.status = ServiceTicketStatusEnum.IN_PROGRESS.value
                 service_ticket.assigned_time = datetime.now()
                 if hasattr(service_ticket, "response_time") and not getattr(
                     service_ticket, "response_time", None

@@ -11,7 +11,7 @@ from pathlib import Path as FilePath
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import HTTPException, UploadFile
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_pagination
@@ -346,7 +346,13 @@ class MachineCustomService:
         Returns:
             服务历史数据
         """
-        query = self.db.query(ServiceRecord).filter(ServiceRecord.machine_no == machine.machine_no)
+        legacy_machine_no = str(machine.machine_no) if machine.machine_no is not None else None
+        query = self.db.query(ServiceRecord).filter(
+            or_(
+                ServiceRecord.machine_id == machine.id,
+                ServiceRecord.machine_no == legacy_machine_no,
+            )
+        )
 
         total = query.count()
         offset = (page - 1) * page_size

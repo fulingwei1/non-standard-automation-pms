@@ -16,6 +16,11 @@ from app.models.sla import SLAMonitor, SLAPolicy
 from app.utils.db_helpers import save_obj
 
 
+def _active_policy_filter():
+    """Legacy policies may have NULL is_active; treat NULL as active."""
+    return or_(SLAPolicy.is_active.is_(True), SLAPolicy.is_active.is_(None))
+
+
 def match_sla_policy(db: Session, problem_type: str, urgency: str) -> Optional[SLAPolicy]:
     """
     匹配SLA策略
@@ -33,7 +38,7 @@ def match_sla_policy(db: Session, problem_type: str, urgency: str) -> Optional[S
             and_(
                 SLAPolicy.problem_type == problem_type,
                 SLAPolicy.urgency == urgency,
-                SLAPolicy.is_active,
+                _active_policy_filter(),
             )
         )
         .order_by(SLAPolicy.priority)
@@ -50,7 +55,7 @@ def match_sla_policy(db: Session, problem_type: str, urgency: str) -> Optional[S
             and_(
                 SLAPolicy.problem_type == problem_type,
                 SLAPolicy.urgency.is_(None),
-                SLAPolicy.is_active,
+                _active_policy_filter(),
             )
         )
         .order_by(SLAPolicy.priority)
@@ -65,7 +70,9 @@ def match_sla_policy(db: Session, problem_type: str, urgency: str) -> Optional[S
         db.query(SLAPolicy)
         .filter(
             and_(
-                SLAPolicy.urgency == urgency, SLAPolicy.problem_type.is_(None), SLAPolicy.is_active
+                SLAPolicy.urgency == urgency,
+                SLAPolicy.problem_type.is_(None),
+                _active_policy_filter(),
             )
         )
         .order_by(SLAPolicy.priority)
@@ -79,7 +86,11 @@ def match_sla_policy(db: Session, problem_type: str, urgency: str) -> Optional[S
     policy = (
         db.query(SLAPolicy)
         .filter(
-            and_(SLAPolicy.problem_type.is_(None), SLAPolicy.urgency.is_(None), SLAPolicy.is_active)
+            and_(
+                SLAPolicy.problem_type.is_(None),
+                SLAPolicy.urgency.is_(None),
+                _active_policy_filter(),
+            )
         )
         .order_by(SLAPolicy.priority)
         .first()
@@ -187,7 +198,9 @@ def update_sla_monitor_status(
     db.commit()
 
 
-def sync_ticket_to_sla_monitor(db: Session, ticket: ServiceTicket) -> Optional[SLAMonitor]:
+def sync_ticket_to_sla_monitor(
+    db: Session, ticket: ServiceTicket, current_time: Optional[datetime] = None
+) -> Optional[SLAMonitor]:
     """
     同步工单状态到SLA监控记录
     """
@@ -210,7 +223,7 @@ def sync_ticket_to_sla_monitor(db: Session, ticket: ServiceTicket) -> Optional[S
         monitor.actual_resolve_time = ticket.resolved_time
 
     # 更新状态
-    update_sla_monitor_status(db, monitor)
+    update_sla_monitor_status(db, monitor, current_time)
 
     return monitor
 
@@ -229,7 +242,7 @@ def check_sla_warnings(db: Session, current_time: Optional[datetime] = None) -> 
         .join(SLAPolicy)
         .filter(
             and_(
-                SLAPolicy.is_active,
+                _active_policy_filter(),
                 or_(
                     # 响应预警：未响应且达到预警阈值且未发送过预警
                     and_(

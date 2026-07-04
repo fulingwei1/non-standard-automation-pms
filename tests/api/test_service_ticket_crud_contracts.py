@@ -56,9 +56,18 @@ def test_service_ticket_close_accepts_resolution_alias(
         headers=headers,
     )
     assert created.status_code == 201, created.text
+    ticket_id = created.json()["id"]
+
+    for next_status in ("IN_PROGRESS", "RESOLVED"):
+        transition = client.put(
+            f"{settings.API_V1_PREFIX}/service/tickets/{ticket_id}/status",
+            params={"status": next_status},
+            headers=headers,
+        )
+        assert transition.status_code == 200, transition.text
 
     response = client.put(
-        f"{settings.API_V1_PREFIX}/service/tickets/{created.json()['id']}/close",
+        f"{settings.API_V1_PREFIX}/service/tickets/{ticket_id}/close",
         json={"resolution": "远程复位后恢复正常", "satisfaction": 5},
         headers=headers,
     )

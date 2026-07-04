@@ -10,11 +10,10 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.service import ServiceTicket, ServiceTicketCcUser
+from app.models.service import ServiceTicketCcUser
 from app.models.service.enums import ServiceTicketStatusEnum
 from app.models.user import User
 from app.schemas.service import ServiceTicketAssign, ServiceTicketResponse
-from app.utils.db_helpers import get_or_404
 
 from ..access import ensure_project_ids_access_or_raise, ensure_service_ticket_access_or_raise
 
@@ -134,6 +133,7 @@ def assign_service_ticket(
     )
 
     # 更新抄送人员
+    cc_users = []
     if assign_in.cc_user_ids is not None:
         # 删除旧的抄送人员
         db.query(ServiceTicketCcUser).filter(ServiceTicketCcUser.ticket_id == ticket_id).delete()
@@ -141,14 +141,38 @@ def assign_service_ticket(
         # 添加新的抄送人员（排除处理人）
         for user_id in assign_in.cc_user_ids:
             if user_id != assign_in.assignee_id:
-                cc_user = ServiceTicketCcUser(
-                    ticket_id=ticket_id, user_id=user_id, notified_at=datetime.now()
-                )
+                cc_user = ServiceTicketCcUser(ticket_id=ticket_id, user_id=user_id)
                 db.add(cc_user)
+                cc_users.append(cc_user)
 
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
+
+    # 发送真实站内通知后再标记抄送通知时间
+    try:
+        from app.services.service.service_ticket_notifications import (
+            send_service_ticket_notification,
+        )
+
+        result = send_service_ticket_notification(
+            db,
+            ticket,
+            "assigned",
+            actor=current_user,
+            extra_user_ids=assign_in.cc_user_ids,
+        )
+        sent_user_ids = set(result.get("sent_user_ids", []))
+        notified_at = datetime.now()
+        for cc_user in cc_users:
+            if cc_user.user_id in sent_user_ids:
+                cc_user.notified_at = notified_at
+        if cc_users:
+            db.commit()
+    except Exception as e:
+        import logging
+
+        logging.error(f"发送服务工单派工通知失败: {e}", exc_info=True)
 
     # 同步SLA监控状态
     try:

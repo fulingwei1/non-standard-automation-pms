@@ -35,6 +35,16 @@ export default function FaultDiagnosis() {
             </div>
             {result && (
                 <div className="rounded-lg border p-4 space-y-3 text-sm">
+                    {result.degraded && (
+                        <div className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                            AI 诊断暂不可用，当前展示规则降级建议。
+                        </div>
+                    )}
+                    {result.context_sources && (
+                        <div className="text-xs text-muted-foreground">
+                            已参考历史工单 {result.context_sources.service_tickets || 0} 条，服务知识库 {result.context_sources.knowledge_base || 0} 条
+                        </div>
+                    )}
                     <div>
                         <div className="font-medium mb-1">可能原因</div>
                         {(result.possible_causes || []).map((c, i) => (

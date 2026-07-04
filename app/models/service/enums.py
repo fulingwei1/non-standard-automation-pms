@@ -15,6 +15,14 @@ class ServiceTicketStatusEnum(str, Enum):
     CLOSED = "CLOSED"  # 已关闭
 
 
+SERVICE_TICKET_STATUS_TRANSITIONS: dict[str, list[str]] = {
+    ServiceTicketStatusEnum.PENDING.value: [ServiceTicketStatusEnum.IN_PROGRESS.value],
+    ServiceTicketStatusEnum.IN_PROGRESS.value: [ServiceTicketStatusEnum.RESOLVED.value],
+    ServiceTicketStatusEnum.RESOLVED.value: [ServiceTicketStatusEnum.CLOSED.value],
+    ServiceTicketStatusEnum.CLOSED.value: [],
+}
+
+
 class ServiceTicketUrgencyEnum(str, Enum):
     """服务工单紧急程度"""
 
@@ -118,6 +126,52 @@ def normalize_service_ticket_status(value: Optional[Union[str, Enum]]) -> Option
             "completed": ServiceTicketStatusEnum.CLOSED.value,
         },
     )
+
+
+def normalized_service_ticket_status_value(
+    value: Optional[Union[str, Enum]],
+) -> Optional[str]:
+    normalized = normalize_service_ticket_status(value)
+    if normalized is None:
+        return None
+    if isinstance(normalized, Enum):
+        return str(normalized.value)
+    return str(normalized)
+
+
+def get_service_ticket_transition_rules() -> dict[str, list[str]]:
+    return {
+        current_status: list(next_statuses)
+        for current_status, next_statuses in SERVICE_TICKET_STATUS_TRANSITIONS.items()
+    }
+
+
+def validate_service_ticket_transition(
+    current_status: Optional[Union[str, Enum]],
+    new_status: Optional[Union[str, Enum]],
+) -> tuple[bool, str | None]:
+    normalized_current = normalized_service_ticket_status_value(current_status)
+    normalized_new = normalized_service_ticket_status_value(new_status)
+    valid_statuses = {status.value for status in ServiceTicketStatusEnum}
+
+    if normalized_new not in valid_statuses:
+        return False, f"无效的状态值: {normalized_new}"
+
+    if normalized_current not in valid_statuses:
+        return False, f"当前状态无效，不能转换: {normalized_current}"
+
+    if normalized_current == normalized_new:
+        return True, None
+
+    allowed_statuses = SERVICE_TICKET_STATUS_TRANSITIONS.get(normalized_current, [])
+    if normalized_new not in allowed_statuses:
+        allowed_text = ", ".join(allowed_statuses) if allowed_statuses else "无"
+        return (
+            False,
+            f"不允许的状态转换: {normalized_current} → {normalized_new}。允许的转换: {allowed_text}",
+        )
+
+    return True, None
 
 
 def normalize_service_record_status(value: Optional[Union[str, Enum]]) -> Optional[Union[str, Enum]]:

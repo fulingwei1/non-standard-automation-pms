@@ -13,8 +13,12 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.service import ServiceTicket
-from app.models.service.enums import ServiceTicketStatusEnum, normalize_service_ticket_status
+from app.models.service.enums import (
+    ServiceTicketStatusEnum,
+    get_service_ticket_transition_rules,
+    normalized_service_ticket_status_value,
+    validate_service_ticket_transition,
+)
 from app.models.user import User
 from app.schemas.service import ServiceTicketClose, ServiceTicketResponse
 from app.services.status_update_service import StatusUpdateService
@@ -45,6 +49,21 @@ def update_service_ticket_status(
     - SLA监控同步
     """
     ticket = ensure_service_ticket_access_or_raise(db, current_user, ticket_id)
+    normalized_status = normalized_service_ticket_status_value(status)
+    current_status = normalized_service_ticket_status_value(ticket.status)
+    is_allowed, error_message = validate_service_ticket_transition(current_status, normalized_status)
+    if not is_allowed:
+        raise HTTPException(status_code=400, detail=error_message)
+
+    if current_status == normalized_status:
+        if ticket.status != current_status:
+            ticket.status = current_status
+            db.add(ticket)
+            db.commit()
+            db.refresh(ticket)
+        return ticket
+
+    ticket.status = current_status
 
     # 创建历史记录回调
     def history_callback(entity, old_status, new_status, operator, reason):
@@ -72,12 +91,12 @@ def update_service_ticket_status(
 
     # 使用统一状态更新服务
     service = StatusUpdateService(db)
-    normalized_status = normalize_service_ticket_status(status)
     result = service.update_status(
         entity=ticket,
         new_status=normalized_status,
         operator=current_user,
         valid_statuses=[status_enum.value for status_enum in ServiceTicketStatusEnum],
+        transition_rules=get_service_ticket_transition_rules(),
         timestamp_fields={
             ServiceTicketStatusEnum.RESOLVED.value: "resolved_time",
             ServiceTicketStatusEnum.CLOSED.value: "resolved_time",
@@ -92,6 +111,20 @@ def update_service_ticket_status(
             status_code=400,
             detail="; ".join(result.errors) if result.errors else "状态更新失败",
         )
+
+    try:
+        from app.services.service.service_ticket_notifications import (
+            send_service_ticket_notification,
+        )
+
+        send_service_ticket_notification(
+            db,
+            result.entity,
+            f"status_changed_to_{normalized_status}",
+            actor=current_user,
+        )
+    except Exception as e:
+        logger.error(f"发送服务工单状态变更通知失败: {e}", exc_info=True)
 
     return result.entity
 
@@ -117,9 +150,15 @@ def close_service_ticket(
     - 知识自动提取
     """
     ticket = ensure_service_ticket_access_or_raise(db, current_user, ticket_id)
+    current_status = normalized_service_ticket_status_value(ticket.status)
 
-    if ticket.status == ServiceTicketStatusEnum.CLOSED.value:
+    if current_status == ServiceTicketStatusEnum.CLOSED.value:
         raise HTTPException(status_code=400, detail="工单已关闭")
+
+    if current_status != ServiceTicketStatusEnum.RESOLVED.value:
+        raise HTTPException(status_code=400, detail="工单必须为 RESOLVED 后才能关闭")
+
+    ticket.status = current_status
 
     # 更新关闭相关字段
     ticket.solution = close_in.solution
@@ -170,6 +209,7 @@ def close_service_ticket(
         new_status=ServiceTicketStatusEnum.CLOSED.value,
         operator=current_user,
         valid_statuses=[ServiceTicketStatusEnum.CLOSED.value],  # 只允许关闭状态
+        transition_rules=get_service_ticket_transition_rules(),
         timestamp_fields={
             ServiceTicketStatusEnum.CLOSED.value: "resolved_time",
         },
@@ -182,5 +222,27 @@ def close_service_ticket(
             status_code=400,
             detail="; ".join(result.errors) if result.errors else "关闭工单失败",
         )
+
+    try:
+        from app.services.service.service_ticket_notifications import (
+            send_service_ticket_notification,
+        )
+
+        send_service_ticket_notification(db, result.entity, "closed", actor=current_user)
+    except Exception as e:
+        logger.error(f"发送服务工单关闭通知失败: {e}", exc_info=True)
+
+    try:
+        from app.api.v1.endpoints.service.surveys import (
+            create_service_ticket_satisfaction_survey,
+        )
+
+        create_service_ticket_satisfaction_survey(
+            db,
+            result.entity,
+            current_user=current_user,
+        )
+    except Exception as e:
+        logger.error(f"创建服务工单回访调查失败: {e}", exc_info=True)
 
     return result.entity

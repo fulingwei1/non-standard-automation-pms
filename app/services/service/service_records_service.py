@@ -223,6 +223,7 @@ class ServiceRecordsService:
             record_no=self._build_record_no(record_data),
             service_type=getattr(record_data, "service_type", None) or "OTHER",
             project_id=getattr(record_data, "project_id", None) or 0,
+            machine_id=getattr(record_data, "machine_id", None),
             machine_no=getattr(record_data, "machine_no", None),
             customer_id=getattr(record_data, "customer_id", None) or 0,
             location=getattr(record_data, "location", None),

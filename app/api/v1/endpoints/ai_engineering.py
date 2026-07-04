@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
 """工程/售后类 AI：B1 BOM智能选型 · B4 售后故障诊断 · M3 配置式设计。"""
+import logging
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy import or_
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.service import KnowledgeBase, ServiceTicket
+from app.models.service.enums import KnowledgeBaseStatusEnum
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services import ai_job_service
 
 router = APIRouter(prefix="/ai-eng", tags=["AI工程/售后"])
+logger = logging.getLogger(__name__)
 
 
 def _ai(prompt: str, max_tokens: int = 1600):
@@ -211,17 +216,125 @@ class FaultReq(BaseModel):
     equipment_type: Optional[str] = None
 
 
+def _fault_search_keyword(req: FaultReq) -> str:
+    symptom = (req.symptom or "").strip()
+    if len(symptom) <= 80:
+        return symptom
+    return symptom[:80]
+
+
+def _fault_context(db: Session, req: FaultReq) -> dict:
+    keyword = _fault_search_keyword(req)
+    like_keyword = f"%{keyword}%"
+
+    tickets = (
+        db.query(ServiceTicket)
+        .filter(
+            or_(
+                ServiceTicket.problem_desc.like(like_keyword),
+                ServiceTicket.solution.like(like_keyword),
+                ServiceTicket.root_cause.like(like_keyword),
+                ServiceTicket.problem_type.like(like_keyword),
+            )
+        )
+        .order_by(ServiceTicket.reported_time.desc(), ServiceTicket.id.desc())
+        .limit(5)
+        .all()
+        if keyword
+        else []
+    )
+    articles = (
+        db.query(KnowledgeBase)
+        .filter(
+            KnowledgeBase.status == KnowledgeBaseStatusEnum.PUBLISHED.value,
+            or_(
+                KnowledgeBase.title.like(like_keyword),
+                KnowledgeBase.content.like(like_keyword),
+                KnowledgeBase.category.like(like_keyword),
+            ),
+        )
+        .order_by(KnowledgeBase.helpful_count.desc(), KnowledgeBase.view_count.desc())
+        .limit(5)
+        .all()
+        if keyword
+        else []
+    )
+
+    ticket_text = "\n".join(
+        (
+            f"- {ticket.ticket_no} [{ticket.problem_type}/{ticket.status}] "
+            f"现象:{ticket.problem_desc or ''}; 根因:{ticket.root_cause or ''}; "
+            f"方案:{ticket.solution or ''}"
+        )
+        for ticket in tickets
+    )
+    article_text = "\n".join(
+        f"- {article.title}（{article.category}）：{(article.content or '')[:300]}"
+        for article in articles
+    )
+
+    return {
+        "history": ticket_text or "（未检索到相似历史工单）",
+        "knowledge": article_text or "（未检索到相关服务知识库文章）",
+        "sources": {
+            "service_tickets": len(tickets),
+            "knowledge_base": len(articles),
+        },
+    }
+
+
+def _fault_rule_fallback(req: FaultReq, context_sources: dict) -> dict:
+    equipment = req.equipment_type or "非标自动化设备"
+    return {
+        "possible_causes": [
+            {
+                "cause": f"{equipment} 供电/气源/急停/安全门等基础条件异常",
+                "likelihood": "中",
+                "check": "先确认电源、气压、急停、安全门、互锁信号和报警码",
+            },
+            {
+                "cause": "PLC/驱动器/传感器信号链异常",
+                "likelihood": "中",
+                "check": "按输入信号、输出信号、执行机构逐段排查",
+            },
+        ],
+        "steps": [
+            "记录报警码、发生工位、发生频次和最近变更",
+            "断电挂牌后检查线缆、端子、气源和机械卡滞",
+            "上电后用 PLC/驱动器诊断界面逐点核对 I/O 与报警状态",
+            "对照历史工单和知识库执行相同故障的验证步骤",
+        ],
+        "safety": "涉及运动机构、强电、气动夹具时先断电泄压并挂牌，禁止带电拆线。",
+        "ai_generated": False,
+        "degraded": True,
+        "degraded_reason": "AI_DIAGNOSIS_UNAVAILABLE",
+        "context_sources": context_sources,
+    }
+
+
 @router.post("/fault-diagnosis", response_model=ResponseModel, summary="B4 售后故障诊断")
 def fault_diagnosis(req: FaultReq, db: Session = Depends(deps.get_db),
                     current_user: User = Depends(security.get_current_active_user)) -> Any:
     """现场/售后故障：现象 → AI 给可能原因 + 排查步骤（把老师傅经验做成可问的助手）。"""
+    context = _fault_context(db, req)
     prompt = ("你是非标自动化资深调试/售后工程师。根据故障现象给诊断，严格只输出 JSON：\n"
               '{"possible_causes":[{"cause":"可能原因","likelihood":"高|中|低","check":"排查方法"}],'
               '"steps":["按顺序的排查处理步骤"],"safety":"安全注意事项"}\n\n'
-              f"设备类型：{req.equipment_type or '非标自动化设备'}\n故障现象：{req.symptom}\n\n只返回合法 JSON。")
-    r = _ai(prompt)
+              f"设备类型：{req.equipment_type or '非标自动化设备'}\n故障现象：{req.symptom}\n\n"
+              f"历史服务工单：\n{context['history']}\n\n"
+              f"服务知识库：\n{context['knowledge']}\n\n只返回合法 JSON。")
+    try:
+        r = _ai(prompt)
+    except Exception as exc:  # noqa: BLE001 - AI unavailable should degrade visibly
+        logger.warning("AI 故障诊断调用失败，使用规则降级: %s", exc)
+        r = None
+
     if not isinstance(r, dict) or not (r.get("possible_causes") or r.get("steps")):
-        raise HTTPException(status_code=502, detail="AI 诊断失败，请补充故障描述")
+        fallback = _fault_rule_fallback(req, context["sources"])
+        return ResponseModel(code=200, message="AI 故障诊断暂不可用，已返回规则降级建议", data=fallback)
+    r["ai_generated"] = True
+    r["degraded"] = False
+    r["context_sources"] = context["sources"]
     return ResponseModel(code=200, message="AI 故障诊断完成", data=r)
 
 

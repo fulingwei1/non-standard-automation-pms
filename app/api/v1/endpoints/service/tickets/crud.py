@@ -12,13 +12,12 @@ from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
-from app.models.project import Customer, Project
+from app.models.project import Customer, Machine, Project
 from app.models.service import ServiceTicket
 from app.models.service.enums import ServiceTicketStatusEnum, normalize_service_ticket_status
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.service import ServiceTicketCreate, ServiceTicketResponse
-from app.utils.db_helpers import get_or_404
 from app.utils.permission_helpers import check_project_access_or_raise
 
 from ..access import (
@@ -125,6 +124,16 @@ def create_service_ticket(
     if not customer:
         raise HTTPException(status_code=404, detail=f"客户不存在 (ID: {ticket_in.customer_id})")
 
+    machine = None
+    if ticket_in.machine_id:
+        machine = db.query(Machine).filter(Machine.id == ticket_in.machine_id).first()
+        if not machine:
+            raise HTTPException(status_code=404, detail=f"设备不存在 (ID: {ticket_in.machine_id})")
+        if machine.project_id != ticket_in.project_id:
+            raise HTTPException(status_code=400, detail="设备不属于该项目")
+        if machine.customer_id and machine.customer_id != ticket_in.customer_id:
+            raise HTTPException(status_code=400, detail="设备不属于该客户")
+
     # 验证处理人（如果创建时指定）
     assignee = None
     if ticket_in.assignee_id:
@@ -143,6 +152,7 @@ def create_service_ticket(
         ticket_no=generate_ticket_no(db),
         project_id=ticket_in.project_id,  # 主项目
         customer_id=ticket_in.customer_id,
+        machine_id=ticket_in.machine_id,
         problem_type=ticket_in.problem_type,
         problem_desc=ticket_in.problem_desc,
         urgency=ticket_in.urgency,
@@ -191,15 +201,40 @@ def create_service_ticket(
         db.add(ticket_project)
 
     # 创建抄送人员
+    cc_users = []
     if ticket_in.cc_user_ids:
         for user_id in ticket_in.cc_user_ids:
             if user_id != ticket.assigned_to_id:  # 处理人不作为抄送人
-                cc_user = ServiceTicketCcUser(
-                    ticket_id=ticket.id, user_id=user_id, notified_at=datetime.now()
-                )
+                cc_user = ServiceTicketCcUser(ticket_id=ticket.id, user_id=user_id)
                 db.add(cc_user)
+                cc_users.append(cc_user)
 
     db.commit()
+
+    # 发送真实站内通知后再标记抄送通知时间
+    try:
+        from app.services.service.service_ticket_notifications import (
+            send_service_ticket_notification,
+        )
+
+        result = send_service_ticket_notification(
+            db,
+            ticket,
+            "created",
+            actor=current_user,
+            extra_user_ids=ticket_in.cc_user_ids,
+        )
+        sent_user_ids = set(result.get("sent_user_ids", []))
+        notified_at = datetime.now()
+        for cc_user in cc_users:
+            if cc_user.user_id in sent_user_ids:
+                cc_user.notified_at = notified_at
+        if cc_users:
+            db.commit()
+    except Exception as e:
+        import logging
+
+        logging.error(f"发送服务工单创建通知失败: {e}", exc_info=True)
 
     # 创建SLA监控记录
     try:
@@ -223,6 +258,11 @@ def create_service_ticket(
         customer = db.query(Customer).filter(Customer.id == ticket.customer_id).first()
         if customer:
             ticket.customer_name = customer.customer_name
+    if ticket.machine_id:
+        machine = db.query(Machine).filter(Machine.id == ticket.machine_id).first()
+        if machine:
+            ticket.machine_name = machine.machine_name
+            ticket.machine_serial_no = machine.serial_no
 
     return ticket
 
@@ -248,5 +288,10 @@ def read_service_ticket(
         customer = db.query(Customer).filter(Customer.id == ticket.customer_id).first()
         if customer:
             ticket.customer_name = customer.customer_name
+    if ticket.machine_id:
+        machine = db.query(Machine).filter(Machine.id == ticket.machine_id).first()
+        if machine:
+            ticket.machine_name = machine.machine_name
+            ticket.machine_serial_no = machine.serial_no
 
     return ticket
