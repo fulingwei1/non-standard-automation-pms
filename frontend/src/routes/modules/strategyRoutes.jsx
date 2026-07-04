@@ -10,7 +10,6 @@ const AnnualWorkList = lazyLoad(() => import("../../pages/AnnualWorkList"));
 const Decomposition = lazyLoad(() => import("../../pages/Decomposition"));
 const StrategyCalendar = lazyLoad(() => import("../../pages/StrategyCalendar"));
 const YearComparison = lazyLoad(() => import("../../pages/YearComparison"));
-const AIStrategyAssistant = lazyLoad(() => import("../../pages/AIStrategyAssistant"));
 const TeamGeneration = lazyLoad(() => import("../../pages/TeamGeneration"));
 const ExecutiveDashboard = lazyLoad(() => import("../../pages/executive-dashboard"));
 
@@ -106,16 +105,6 @@ export function StrategyRoutes() {
         element={
           <StrategyProtectedRoute>
             <YearComparison />
-          </StrategyProtectedRoute>
-        }
-      />
-
-      {/* AI战略辅助 */}
-      <Route
-        path="/strategy/ai-assistant"
-        element={
-          <StrategyProtectedRoute>
-            <AIStrategyAssistant />
           </StrategyProtectedRoute>
         }
       />

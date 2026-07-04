@@ -30,7 +30,6 @@ export const defaultNavGroups = [
       { name: "重点工作", path: "/strategy/annual-work", icon: "Briefcase", permission: "strategy:annual-work:read", permissionLabel: "重点工作" },
       { name: "战略分解", path: "/strategy/decomposition", icon: "GitBranch", permission: "strategy:decomposition:read", permissionLabel: "战略分解" },
       { name: "战略日历", path: "/strategy/calendar", icon: "Calendar", permission: "strategy:calendar:read", permissionLabel: "战略日历" },
-      { name: "AI战略助手", path: "/strategy/ai-assistant", icon: "Sparkles", permission: "strategy:dashboard:read", permissionLabel: "AI战略助手" },
       { name: "同比分析", path: "/strategy/comparison", icon: "TrendingUp", permission: "strategy:comparison:read", permissionLabel: "同比分析" },
       { name: "关键决策", path: "/key-decisions", icon: "Lightbulb", permission: "executive:decision:read", permissionLabel: "关键决策" },
       { name: "管理节拍", path: "/management-rhythm-dashboard", icon: "Activity", permission: "pmo:rhythm:read", permissionLabel: "管理节拍" }
@@ -99,7 +98,9 @@ export const defaultNavGroups = [
       },
       // 业务功能
       { name: "AI需求工作台", path: "/presales/ai-workbench", icon: "Sparkles", permission: "presales:task:read", permissionLabel: "AI需求工作台(分析/方案/报价)" },
+      { name: "售前智能体", path: "/presales/agent", icon: "Sparkles", permission: "presales:task:read", permissionLabel: "售前智能体(需求→方案→报价→风险)" },
       { name: "技术方案", path: "/presales/technical-solutions?tab=solutions", icon: "Lightbulb", permission: "presales:task:read", permissionLabel: "技术方案" },
+      { name: "优势产品", path: "/presales/advantage-products", icon: "Package", permission: "presales:task:read", permissionLabel: "优势产品" },
       { name: "成本估算", path: "/presales/technical-solutions?tab=cost", icon: "Calculator", permission: "presales:task:read", permissionLabel: "成本估算" },
       // 资源与工具
       { name: "模板库", path: "/presales/technical-solutions?tab=knowledge", icon: "Layers", permission: "presales:task:read", permissionLabel: "模板库" },

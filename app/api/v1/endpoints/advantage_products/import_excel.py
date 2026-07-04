@@ -18,7 +18,7 @@ router = APIRouter()
 @router.post("/import", response_model=AdvantageProductImportResult)
 async def import_from_excel(
     file: UploadFile = File(..., description="Excel 文件"),
-    clear_existing: bool = Query(True, description="是否先清空现有数据"),
+    clear_existing: bool = Query(False, description="是否先清空现有数据"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("advantage_product:create")),
 ):

@@ -1,28 +1,27 @@
 # -*- coding: utf-8 -*-
-"""
-知识自动沉淀模块路由聚合
+"""Disabled legacy knowledge routes.
 
-模块结构:
- ├── extraction.py    # 经验教训自动提取
- ├── induction.py     # 最佳实践归纳
- ├── alerts.py        # 坑点预警
- └── search.py        # 知识检索
+The active knowledge surfaces are /knowledge-base and /service/knowledge-base.
+This package used to aggregate unfinished auto-extraction routes that depend on
+legacy tables not present in the default database, so keep accidental mounts
+from exposing 500s or fake AI behavior.
 """
 
-from fastapi import APIRouter
-
-from . import alerts, extraction, induction, search
+from fastapi import APIRouter, HTTPException, status
 
 router = APIRouter()
 
-# 知识提取（项目结项时调用）
-router.include_router(extraction.router, tags=["knowledge-extraction"])
 
-# 最佳实践归纳
-router.include_router(induction.router, tags=["knowledge-induction"])
-
-# 坑点预警
-router.include_router(alerts.router, tags=["knowledge-alerts"])
-
-# 知识检索与管理
-router.include_router(search.router, tags=["knowledge-search"])
+@router.api_route(
+    "/{path:path}",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    include_in_schema=False,
+)
+def legacy_knowledge_disabled(path: str = ""):
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail=(
+            "Legacy knowledge auto-extraction routes are disabled; use "
+            "/knowledge-base or /service/knowledge-base."
+        ),
+    )

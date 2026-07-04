@@ -23,6 +23,10 @@ vi.mock("../../../pages/PresalesReviewCenter", async () => {
   };
 });
 
+vi.mock("../../../components/sales/AdvantageProducts", () => ({
+  default: () => <div>优势产品入口</div>,
+}));
+
 vi.mock("../../../pages/PresalesWorkstation", () => ({
   default: () => <div>售前执行旧视图</div>,
 }));
@@ -125,6 +129,16 @@ describe("PresalesRoutes", () => {
     expect(screen.getByText("销售协同")).toBeInTheDocument();
     expect(screen.getByText("售前执行")).toBeInTheDocument();
     expect(screen.getByText("经理调度")).toBeInTheDocument();
+  });
+
+  it("mounts the advantage products page as a reachable presales route", async () => {
+    render(
+      <MemoryRouter initialEntries={["/presales/advantage-products"]}>
+        <Routes>{PresalesRoutes()}</Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("优势产品入口")).toBeInTheDocument();
   });
 
   it("redirects the legacy presales workbench route to the unified entry", async () => {

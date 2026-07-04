@@ -4,9 +4,13 @@ PM介入时机判断API
 
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
+from app.api import deps
+from app.core import security
+from app.models.user import User
 from app.services.pm_involvement_service import PMInvolvementService
 
 router = APIRouter()
@@ -39,7 +43,10 @@ class PMInvolvementResult(BaseModel):
 
 
 @router.post("/judge-pm-involvement", response_model=PMInvolvementResult, summary="判断PM介入时机")
-async def judge_pm_involvement(project_data: ProjectDataInput):
+async def judge_pm_involvement(
+    project_data: ProjectDataInput,
+    current_user: User = Depends(security.require_permission("presale:manage")),
+):
     """
     判断PM介入时机
 
@@ -63,7 +70,12 @@ async def judge_pm_involvement(project_data: ProjectDataInput):
 
 
 @router.get("/similar-projects/{project_type}", summary="查询相似项目")
-async def get_similar_projects(project_type: str, industry: Optional[str] = None):
+async def get_similar_projects(
+    project_type: str,
+    industry: Optional[str] = None,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
     """
     查询历史相似项目数量
 
@@ -74,19 +86,26 @@ async def get_similar_projects(project_type: str, industry: Optional[str] = None
     - 成功率
     """
     try:
-        result = PMInvolvementService.get_similar_project_count(project_type, industry or "")
+        result = PMInvolvementService.get_similar_project_count(project_type, industry or "", db)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"查询失败：{str(e)}")
 
 
 @router.get("/check-standard-solution/{project_type}", summary="检查标准方案")
-async def check_standard_solution(project_type: str):
+async def check_standard_solution(
+    project_type: str,
+    industry: Optional[str] = None,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
     """
     检查是否有标准方案模板
     """
     try:
-        has_solution = PMInvolvementService.check_has_standard_solution(project_type)
+        has_solution = PMInvolvementService.check_has_standard_solution(
+            project_type, industry or "", db
+        )
         return {"项目类型": project_type, "有标准方案": has_solution}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"查询失败：{str(e)}")
@@ -95,21 +114,31 @@ async def check_standard_solution(project_type: str):
 @router.post(
     "/auto-judge/{ticket_id}", response_model=PMInvolvementResult, summary="自动判断（从工单）"
 )
-async def auto_judge_from_ticket(ticket_id: int):
+async def auto_judge_from_ticket(
+    ticket_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("presale:manage")),
+):
     """
     从售前工单自动判断PM介入时机
 
     自动获取工单信息并判断
     """
     try:
-        result = PMInvolvementService.auto_judge_from_ticket(ticket_id)
+        result = PMInvolvementService.auto_judge_from_ticket(ticket_id, db)
         return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"判断失败：{str(e)}")
 
 
 @router.post("/generate-notification", summary="生成通知消息")
-async def generate_notification(result: PMInvolvementResult, ticket_info: Dict):
+async def generate_notification(
+    result: PMInvolvementResult,
+    ticket_info: Dict,
+    current_user: User = Depends(security.require_permission("presale:manage")),
+):
     """
     生成PMO通知消息
 
@@ -129,7 +158,7 @@ async def generate_notification(result: PMInvolvementResult, ticket_info: Dict):
 
 # 测试端点
 @router.get("/test-examples", summary="获取测试示例")
-async def get_test_examples():
+async def get_test_examples(current_user: User = Depends(security.get_current_active_user)):
     """获取测试数据示例"""
     return {
         "高风险项目示例": {

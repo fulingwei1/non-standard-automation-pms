@@ -1,27 +1,33 @@
 # -*- coding: utf-8 -*-
-"""
-Resource Scheduling 模块路由
-这是一个兼容性文件，用于导入对应的路由
+"""Disabled legacy resource-scheduling compatibility shim.
+
+The real scheduling surface is /engineer-scheduling. This module used to guess
+non-existent import locations and fall back to a placeholder payload.
 """
 
-try:
-    # Attempt different possible locations for resource_scheduling
-    from .resourcescheduling import router
-except ImportError:
-    try:
-        from .resource import router
-    except ImportError:
-        try:
-            from .common.resource_scheduling import router
-        except ImportError:
-            try:
-                from .admin.resource_scheduling import router
-            except ImportError:
-                # Create a simple router as fallback
-                from fastapi import APIRouter
-                router = APIRouter()
-                @router.get('/')
-                def read_root():
-                    return {'message': 'resource_scheduling module placeholder'}
+from fastapi import APIRouter, HTTPException, status
 
-__all__ = ['router']
+router = APIRouter()
+
+
+@router.api_route(
+    "/",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    include_in_schema=False,
+)
+@router.api_route(
+    "/{path:path}",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    include_in_schema=False,
+)
+def legacy_resource_scheduling_disabled(path: str = ""):
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail=(
+            "Legacy /resource-scheduling placeholder is disabled; use "
+            "/engineer-scheduling."
+        ),
+    )
+
+
+__all__ = ["router", "legacy_resource_scheduling_disabled"]

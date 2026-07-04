@@ -236,13 +236,15 @@ export const cultureWallApi = {
     get: (id) => api.get(`/culture-wall/contents/${id}`),
     create: (data) => api.post("/culture-wall/contents", data),
     update: (id, data) => api.put(`/culture-wall/contents/${id}`, data),
+    review: (id, data) => api.post(`/culture-wall/contents/${id}/review`, data),
+    delete: (id) => api.delete(`/culture-wall/contents/${id}`),
   },
 
   // 个人目标
   goals: {
-    list: (params) => api.get("/personal-goals", { params }),
-    create: (data) => api.post("/personal-goals", data),
-    update: (id, data) => api.put(`/personal-goals/${id}`, data),
+    list: (params) => api.get("/culture-wall/personal-goals", { params }),
+    create: (data) => api.post("/culture-wall/personal-goals", data),
+    update: (id, data) => api.put(`/culture-wall/personal-goals/${id}`, data),
   },
 };
 

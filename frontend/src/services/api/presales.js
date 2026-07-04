@@ -128,7 +128,7 @@ export const advantageProductApi = {
   deleteProduct: (id) => api.delete(`/advantage-products/${id}`),
 
   // Excel 导入
-  importFromExcel: (file, clearExisting = true) => {
+  importFromExcel: (file, clearExisting = false) => {
     const formData = new FormData();
     formData.append("file", file);
     return api.post("/advantage-products/import", formData, {

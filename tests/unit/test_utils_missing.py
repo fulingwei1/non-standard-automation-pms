@@ -590,6 +590,39 @@ class TestAlertEscalationTask:
     @patch("app.utils.alert_escalation_task.get_db_session")
     @patch("app.utils.alert_escalation_task.AlertRuleEngine")
     @patch("app.utils.alert_escalation_task.AlertNotificationService")
+    def test_check_alert_timeout_escalation_query_targets_open_unescalated_alerts(
+        self, mock_notification_service, mock_engine, mock_db_session
+    ):
+        """Escalation scan must not turn the SQLAlchemy boolean column into raw False."""
+        from app.utils.alert_escalation_task import check_alert_timeout_escalation
+
+        captured_criteria = []
+
+        class _AlertQuery:
+            def filter(self, *criteria):
+                captured_criteria.extend(criteria)
+                return self
+
+            def all(self):
+                return []
+
+        mock_db = MagicMock(spec=Session)
+        mock_db.query.return_value = _AlertQuery()
+        mock_db_session.return_value.__enter__.return_value = mock_db
+
+        result = check_alert_timeout_escalation()
+
+        assert result["checked_count"] == 0
+        assert not any(criteria is False for criteria in captured_criteria), (
+            "AlertRecord.is_escalated must be expressed as SQL, not Python `not Column`"
+        )
+
+        status_values = getattr(captured_criteria[0].right, "value", [])
+        assert AlertStatusEnum.OPEN.value in status_values
+
+    @patch("app.utils.alert_escalation_task.get_db_session")
+    @patch("app.utils.alert_escalation_task.AlertRuleEngine")
+    @patch("app.utils.alert_escalation_task.AlertNotificationService")
     def test_check_alert_timeout_escalation(
         self, mock_notification_service, mock_engine, mock_db_session
     ):
@@ -605,7 +638,13 @@ class TestAlertEscalationTask:
             AlertLevelEnum.INFO.value: 8,
             AlertLevelEnum.WARNING.value: 4,
         }
-        mock_engine_instance.level_priority.return_value = 2
+        priorities = {
+            AlertLevelEnum.INFO.value: 1,
+            AlertLevelEnum.WARNING.value: 2,
+            AlertLevelEnum.CRITICAL.value: 3,
+            AlertLevelEnum.URGENT.value: 4,
+        }
+        mock_engine_instance.level_priority.side_effect = lambda level: priorities.get(level, 0)
         mock_engine.return_value = mock_engine_instance
 
         # Create test alert
@@ -627,5 +666,7 @@ class TestAlertEscalationTask:
 
         # Verify current behavior
         assert result["checked_count"] == 1
-        assert result["escalated_count"] == 0
-        assert alert.alert_level == AlertLevelEnum.INFO.value
+        assert result["escalated_count"] == 1
+        assert alert.alert_level == AlertLevelEnum.WARNING.value
+        assert alert.is_escalated is True
+        mock_notification_service.return_value.send_alert_notification.assert_called_once()

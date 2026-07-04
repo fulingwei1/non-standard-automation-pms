@@ -337,7 +337,7 @@ export default function AdvantageProducts({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <input
           type="text"
-          value={searchTerm || "unknown"}
+          value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="搜索产品名称或编码..."
           className={cn(

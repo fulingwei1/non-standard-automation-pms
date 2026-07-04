@@ -1,4 +1,6 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { setupApiTest, teardownApiTest } from "./_test-setup.js";
 
 describe("frontend API route contracts", () => {
@@ -38,12 +40,88 @@ describe("frontend API route contracts", () => {
       code: 200,
       data: { total_orders: 0 },
     });
+    mock.onPost("/api/v1/business-support-orders/delivery-orders/7/submit-approval").reply(200, {
+      code: 200,
+      data: { approval_instance_id: 1 },
+    });
 
     await businessSupportApi.deliveryOrders.list({ page: 1 });
     await businessSupportApi.deliveryOrders.statistics();
+    await businessSupportApi.deliveryOrders.submitApproval(7);
 
     expect(mock.history.get[0].url).toBe("/business-support-orders/delivery-orders");
     expect(mock.history.get[1].url).toBe("/business-support-orders/delivery-orders/statistics");
+    expect(mock.history.post[0].url).toBe(
+      "/business-support-orders/delivery-orders/7/submit-approval"
+    );
+  });
+
+  it("uses the PMO resource overview route instead of the legacy placeholder route", async () => {
+    const { resourceOverviewApi } = await import("../resourceOverview.js");
+    mock.onGet("/api/v1/pmo/resource-overview").reply(200, {
+      total_resources: 1,
+      employees: [],
+    });
+
+    await resourceOverviewApi.list({ only_assigned: true });
+
+    expect(mock.history.get[0].url).toBe("/pmo/resource-overview");
+    expect(mock.history.get[0].params).toEqual({ only_assigned: true });
+  });
+
+  it("uses registered project budget workflow routes", async () => {
+    const { budgetApi } = await import("../budget.js");
+    mock.onGet("/api/v1/budgets/").reply(200, { items: [], total: 0 });
+    mock.onPost("/api/v1/budgets/7/submit").reply(200, { id: 7, status: "SUBMITTED" });
+    mock.onPost("/api/v1/budgets/7/approve").reply(200, { id: 7, status: "APPROVED" });
+
+    await budgetApi.list({ page: 1 });
+    await budgetApi.submit(7);
+    await budgetApi.approve(7, { approved: true, approval_note: "ok" });
+
+    expect(mock.history.get[0].url).toBe("/budgets/");
+    expect(mock.history.get[0].params).toEqual({ page: 1 });
+    expect(mock.history.post[0].url).toBe("/budgets/7/submit");
+    expect(mock.history.post[1].url).toBe("/budgets/7/approve");
+    expect(JSON.parse(mock.history.post[1].data)).toEqual({
+      approved: true,
+      approval_note: "ok",
+    });
+  });
+
+  it("uses registered culture wall content and personal-goal routes", async () => {
+    const { cultureWallApi } = await import("../admin.js");
+    mock.onGet("/api/v1/culture-wall/summary").reply(200, { notices: [] });
+    mock.onGet("/api/v1/culture-wall/contents").reply(200, { items: [], total: 0 });
+    mock.onPost("/api/v1/culture-wall/contents").reply(200, { id: 1 });
+    mock.onPut("/api/v1/culture-wall/contents/1").reply(200, { id: 1 });
+    mock.onPost("/api/v1/culture-wall/contents/1/review").reply(200, { id: 1 });
+    mock.onDelete("/api/v1/culture-wall/contents/1").reply(200, { message: "ok" });
+    mock.onGet("/api/v1/culture-wall/personal-goals").reply(200, []);
+    mock.onPost("/api/v1/culture-wall/personal-goals").reply(200, { id: 2 });
+    mock.onPut("/api/v1/culture-wall/personal-goals/2").reply(200, { id: 2 });
+
+    await cultureWallApi.summary.get();
+    await cultureWallApi.contents.list({ content_type: "NOTICE" });
+    await cultureWallApi.contents.create({ title: "公告" });
+    await cultureWallApi.contents.update(1, { title: "更新公告" });
+    await cultureWallApi.contents.review(1, { approved: true });
+    await cultureWallApi.contents.delete(1);
+    await cultureWallApi.goals.list({ period: "2026-07" });
+    await cultureWallApi.goals.create({ title: "月度目标" });
+    await cultureWallApi.goals.update(2, { progress: 100 });
+
+    expect(mock.history.get[0].url).toBe("/culture-wall/summary");
+    expect(mock.history.get[1].url).toBe("/culture-wall/contents");
+    expect(mock.history.get[1].params).toEqual({ content_type: "NOTICE" });
+    expect(mock.history.get[2].url).toBe("/culture-wall/personal-goals");
+    expect(mock.history.get[2].params).toEqual({ period: "2026-07" });
+    expect(mock.history.post[0].url).toBe("/culture-wall/contents");
+    expect(mock.history.post[1].url).toBe("/culture-wall/contents/1/review");
+    expect(mock.history.post[2].url).toBe("/culture-wall/personal-goals");
+    expect(mock.history.put[0].url).toBe("/culture-wall/contents/1");
+    expect(mock.history.put[1].url).toBe("/culture-wall/personal-goals/2");
+    expect(mock.history.delete[0].url).toBe("/culture-wall/contents/1");
   });
 
   it("uses non-redirecting performance contract routes", async () => {
@@ -535,20 +613,117 @@ describe("frontend API route contracts", () => {
 
   it("uses engineer-scheduling report and warning routes registered by the backend", async () => {
     const { engineerSchedulingApi } = await import("../engineerScheduling.js");
+    mock.onGet("/api/v1/engineer-scheduling/workload-board").reply(200, {
+      items: [],
+      total: 0,
+    });
     mock.onGet("/api/v1/engineer-scheduling/projects/42/scheduling-report").reply(200, {
       total_tasks: 0,
     });
     mock.onPost("/api/v1/engineer-scheduling/warnings/generate").reply(200, {
       warnings: [],
     });
+    mock.onGet("/api/v1/engineer-scheduling/engineers/7/availability").reply(200, {
+      is_available: true,
+    });
+    mock.onPut("/api/v1/engineer-scheduling/assignments/9").reply(200, {
+      id: 9,
+    });
+    mock.onDelete("/api/v1/engineer-scheduling/assignments/9").reply(200, {
+      id: 9,
+    });
 
+    await engineerSchedulingApi.getWorkloadBoard();
     await engineerSchedulingApi.getSchedulingReport(42);
     await engineerSchedulingApi.generateWarnings({ project_id: 42 });
+    await engineerSchedulingApi.getEngineerAvailability(7, "2026-07-04", "2026-07-11");
+    await engineerSchedulingApi.updateAssignment(9, 60);
+    await engineerSchedulingApi.deleteAssignment(9);
 
-    expect(mock.history.get[0].url).toBe(
+    expect(mock.history.get[0].url).toBe("/engineer-scheduling/workload-board");
+    expect(mock.history.get[1].url).toBe(
       "/engineer-scheduling/projects/42/scheduling-report",
     );
     expect(mock.history.post[0].url).toBe("/engineer-scheduling/warnings/generate");
     expect(mock.history.post[0].params).toEqual({ project_id: 42 });
+    expect(mock.history.get[2].url).toBe("/engineer-scheduling/engineers/7/availability");
+    expect(mock.history.get[2].params).toEqual({
+      start_date: "2026-07-04",
+      end_date: "2026-07-11",
+    });
+    expect(mock.history.put[0].url).toBe("/engineer-scheduling/assignments/9");
+    expect(mock.history.put[0].data).toBe(JSON.stringify({ allocation_pct: 60 }));
+    expect(mock.history.delete[0].url).toBe("/engineer-scheduling/assignments/9");
+  });
+
+  it("uses registered sales relationship maturity routes instead of embedded demo data", async () => {
+    const { relationshipMaturityApi } = await import("../relationshipMaturity.js");
+    mock.onGet("/api/v1/sales/relationship/relationship/customer/9/assessment").reply(200, {
+      customer_id: 9,
+      customer_name: "真实客户",
+    });
+    mock.onGet("/api/v1/sales/relationship/relationship/portfolio-analysis").reply(200, {
+      total_customers: 0,
+      key_accounts: [],
+    });
+
+    await relationshipMaturityApi.assessment(9, { opportunity_id: 3 });
+    await relationshipMaturityApi.portfolio();
+
+    expect(mock.history.get[0].url).toBe(
+      "/sales/relationship/relationship/customer/9/assessment",
+    );
+    expect(mock.history.get[0].params).toEqual({ opportunity_id: 3 });
+    expect(mock.history.get[1].url).toBe(
+      "/sales/relationship/relationship/portfolio-analysis",
+    );
+  });
+
+  it("imports advantage products without clearing existing data by default", async () => {
+    const { advantageProductApi } = await import("../presales.js");
+    const file = new File(["fake"], "advantage-products.xlsx", {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    mock.onPost("/api/v1/advantage-products/import").reply(200, {
+      success: true,
+      products_created: 0,
+    });
+
+    await advantageProductApi.importFromExcel(file);
+
+    expect(mock.history.post[0].url).toBe("/advantage-products/import");
+    expect(mock.history.post[0].params).toEqual({ clear_existing: false });
+  });
+
+  it("uploads document FormData to the multipart upload route", async () => {
+    const { documentApi } = await import("../projects.js");
+    const formData = new FormData();
+    const file = new File(["hello"], "project-doc.pdf", {
+      type: "application/pdf",
+    });
+    formData.append("file", file);
+    formData.append("project_id", "42");
+    formData.append("description", "现场资料");
+
+    mock.onPost(/\/api\/v1\/documents\/?.*/).reply(200, {
+      data: { id: 1 },
+    });
+
+    await documentApi.create(formData);
+
+    expect(mock.history.post[0].url).toBe("/documents/upload");
+    expect(mock.history.post[0].data).toBe(formData);
+  });
+
+  it("does not expose the legacy requirement-surveys API that has no backend", () => {
+    const barrel = readFileSync(resolve(process.cwd(), "src/services/api.js"), "utf8");
+
+    expect(barrel).not.toContain("./api/survey.js");
+    expect(existsSync(resolve(process.cwd(), "src/services/api/survey.js"))).toBe(false);
+    expect(
+      existsSync(
+        resolve(process.cwd(), "src/pages/RequirementSurvey/hooks/useRequirementSurvey.js"),
+      ),
+    ).toBe(false);
   });
 });

@@ -1,27 +1,23 @@
 # -*- coding: utf-8 -*-
-"""
-AI Strategy 模块路由
-这是一个兼容性文件，用于导入对应的路由
+"""Legacy AI strategy route shim.
+
+The real strategy module is mounted under /strategy. This legacy module is kept
+for import-time compatibility only and must not be mounted by app/api/v1/api.py.
 """
 
-try:
-    # Attempt different possible locations for ai_strategy
-    from .ai_strategy.ai_strategy import router
-except ImportError:
-    try:
-        from .ai import router
-    except ImportError:
-        try:
-            from .strategy import router
-        except ImportError:
-            try:
-                from .ai_assistant import router
-            except ImportError:
-                # Create a simple router as fallback
-                from fastapi import APIRouter
-                router = APIRouter()
-                @router.get('/')
-                def read_root():
-                    return {'message': 'ai_strategy module placeholder'}
+from fastapi import APIRouter, HTTPException
 
-__all__ = ['router']
+
+router = APIRouter()
+
+
+@router.api_route("/", methods=["GET", "POST", "PUT", "PATCH", "DELETE"], status_code=501)
+@router.api_route("/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"], status_code=501)
+def legacy_ai_strategy_disabled(path: str = ""):
+    raise HTTPException(
+        status_code=501,
+        detail="AI strategy assistant is not implemented. Use /strategy for supported strategy APIs.",
+    )
+
+
+__all__ = ["router", "legacy_ai_strategy_disabled"]

@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.core import security
 from app.services.solution_credit_service import SolutionCreditService
 
 from .schemas import OperationResponse
@@ -57,10 +58,12 @@ async def internal_deduct_for_generation(
 async def internal_refund_credits(
     related_type: str = Query(..., description="关联类型"),
     related_id: int = Query(..., description="关联ID"),
-    amount: Optional[int] = Query(None, description="退还数量，默认为生成消耗数"),
+    amount: Optional[int] = Query(
+        None, ge=1, le=1000, description="退还数量，默认为生成消耗数"
+    ),
     remark: Optional[str] = Query(None, description="备注"),
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user=Depends(security.require_permission("solution_credit:manage")),
 ):
     """
     【内部调用】退还积分（生成失败时）

@@ -7,14 +7,56 @@
 from datetime import date
 from typing import Any, Optional
 
-from fastapi import APIRouter, Body, Depends, Path, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.sales import Customer, CustomerRelationshipScore, Opportunity
 from app.models.user import User
+from app.services.relationship_scoring_service import (
+    MATURITY_LEVELS,
+    RelationshipScoringService,
+)
 
 router = APIRouter()
+
+
+def _get_customer(db: Session, customer_id: int) -> Optional[Customer]:
+    return db.query(Customer).filter(Customer.id == customer_id).first()
+
+
+def _get_opportunity(db: Session, opportunity_id: Optional[int]) -> Optional[Opportunity]:
+    if not opportunity_id:
+        return None
+    return db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
+
+
+def _customer_name(customer: Any) -> str:
+    return (
+        getattr(customer, "customer_name", None)
+        or getattr(customer, "name", None)
+        or getattr(customer, "short_name", None)
+        or f"客户#{getattr(customer, 'id', '未知')}"
+    )
+
+
+def _score_level_key(level: str) -> str:
+    suffix = {
+        "L1": "initial",
+        "L2": "developing",
+        "L3": "mature",
+        "L4": "strategic",
+        "L5": "partnership",
+    }.get(level, "unknown")
+    return f"{level}_{suffix}"
+
+
+def _safe_float(value: Any) -> float:
+    try:
+        return float(value or 0)
+    except (TypeError, ValueError):
+        return 0.0
 
 
 # ========== 1. 关系成熟度评估模型 ==========
@@ -300,219 +342,22 @@ def get_customer_relationship_assessment(
     - 改进建议
     """
 
-    assessment = {
-        "customer_id": customer_id,
-        "customer_name": "宁德时代",
-        "opportunity_id": opportunity_id,
-        "opportunity_name": "FCT 测试线项目",
-        "assessment_date": date.today().isoformat(),
-        # 各维度得分
-        "dimension_scores": {
-            "decision_chain": {
-                "name": "决策链覆盖度",
-                "weight": 20,
-                "score": 16,
-                "max_score": 20,
-                "details": {
-                    "EB": {
-                        "covered": True,
-                        "name": "王五 - 总经理",
-                        "relationship": 70,
-                        "score": 4,
-                    },
-                    "TB": {
-                        "covered": True,
-                        "name": "张三 - 技术总监",
-                        "relationship": 85,
-                        "score": 5,
-                    },
-                    "PB": {
-                        "covered": True,
-                        "name": "李四 - 采购经理",
-                        "relationship": 60,
-                        "score": 3,
-                    },
-                    "UB": {
-                        "covered": True,
-                        "name": "赵六 - 生产经理",
-                        "relationship": 75,
-                        "score": 3,
-                    },
-                    "Coach": {
-                        "covered": True,
-                        "name": "钱七 - 设备工程师",
-                        "relationship": 90,
-                        "score": 3,
-                    },
-                },
-                "gap_analysis": "PB 关系需加强（当前 60 分，目标 80 分）",
-            },
-            "interaction_frequency": {
-                "name": "互动频率",
-                "weight": 15,
-                "score": 12,
-                "max_score": 15,
-                "details": {
-                    "last_7_days": 3,
-                    "last_30_days": 12,
-                    "avg_per_week": 2.8,
-                    "contact_methods": {
-                        "visit": 5,
-                        "call": 8,
-                        "wechat": 15,
-                        "email": 3,
-                        "meeting": 4,
-                    },
-                },
-                "level": "每周 2 次以上",
-            },
-            "relationship_depth": {
-                "name": "关系深度",
-                "weight": 20,
-                "score": 14,
-                "max_score": 20,
-                "level": "L4 - 信任",
-                "evidence": [
-                    "客户主动分享内部信息",
-                    "技术总监支持我们的方案",
-                    "邀请参与前期规划",
-                ],
-                "next_level_requirement": "需要达成战略合作，获得排他支持",
-            },
-            "information_access": {
-                "name": "信息获取度",
-                "weight": 15,
-                "score": 13,
-                "max_score": 15,
-                "details": {
-                    "budget": {"known": True, "value": "300-350 万", "score": 4},
-                    "decision_process": {
-                        "known": True,
-                        "process": "技术评审→商务谈判→高层审批",
-                        "score": 4,
-                    },
-                    "timeline": {"known": True, "deadline": "2025-03-31", "score": 3},
-                    "competitors": {"known": True, "list": ["竞品 A", "竞品 B"], "score": 2},
-                    "pain_points": {"known": True, "points": ["测试精度", "交付周期"], "score": 2},
-                },
-            },
-            "support_level": {
-                "name": "支持度",
-                "weight": 20,
-                "score": 16,
-                "max_score": 20,
-                "details": {
-                    "EB": {"attitude": "neutral", "score": 4},
-                    "TB": {"attitude": "supportive", "score": 6},
-                    "PB": {"attitude": "neutral", "score": 2},
-                    "UB": {"attitude": "supportive", "score": 2},
-                    "internal_champion": True,
-                },
-                "risks": ["EB 态度中立，需争取支持", "PB 可能倾向竞品"],
-            },
-            "executive_engagement": {
-                "name": "高层互动",
-                "weight": 10,
-                "score": 7,
-                "max_score": 10,
-                "level": "VP 级交流",
-                "history": [
-                    {"date": "2025-01-15", "event": "我司副总拜访客户技术副总"},
-                    {"date": "2024-11-20", "event": "邀请客户总监参观公司"},
-                ],
-                "next_step": "安排 CEO 互访，提升至 CEO 级别",
-            },
-        },
-        # 总体评估
-        "overall_assessment": {
-            "total_score": 78,
-            "max_score": 100,
-            "maturity_level": "L4",
-            "maturity_level_name": "战略级",
-            "estimated_win_rate": 72,
-            "confidence": 85,
-            "trend": "improving",
-            "score_change_30d": 5,
-        },
-        # 雷达图数据
-        "radar_data": [
-            {"dimension": "决策链", "score": 16, "max": 20, "percentage": 80},
-            {"dimension": "互动频率", "score": 12, "max": 15, "percentage": 80},
-            {"dimension": "关系深度", "score": 14, "max": 20, "percentage": 70},
-            {"dimension": "信息获取", "score": 13, "max": 15, "percentage": 87},
-            {"dimension": "支持度", "score": 16, "max": 20, "percentage": 80},
-            {"dimension": "高层互动", "score": 7, "max": 10, "percentage": 70},
-        ],
-        # 改进建议
-        "improvement_recommendations": [
-            {
-                "priority": 1,
-                "dimension": "支持度",
-                "current_score": 16,
-                "target_score": 20,
-                "action": "争取 EB（总经理）明确支持",
-                "specific_actions": [
-                    "安排我司 CEO 拜访客户总经理",
-                    "准备高层交流会议题",
-                    "强调战略合作价值",
-                ],
-                "expected_impact": "+4 分，赢单率提升 5%",
-                "deadline": "2 周内",
-            },
-            {
-                "priority": 2,
-                "dimension": "关系深度",
-                "current_score": 14,
-                "target_score": 18,
-                "action": "从信任级提升至伙伴级",
-                "specific_actions": [
-                    "签署战略合作协议",
-                    "邀请参与产品联合开发",
-                    "提供 VIP 服务支持",
-                ],
-                "expected_impact": "+4 分，赢单率提升 3%",
-                "deadline": "1 个月内",
-            },
-            {
-                "priority": 3,
-                "dimension": "高层互动",
-                "current_score": 7,
-                "target_score": 10,
-                "action": "提升至 CEO 级别互动",
-                "specific_actions": [
-                    "安排双方 CEO 会面",
-                    "签署合作备忘录",
-                ],
-                "expected_impact": "+3 分，赢单率提升 2%",
-                "deadline": "1 个月内",
-            },
-        ],
-        # 风险预警
-        "risk_alerts": [
-            {
-                "type": "WARNING",
-                "title": "PB 态度中立",
-                "description": "采购经理李四态度中立，可能倾向竞品",
-                "impact": "可能影响价格谈判",
-                "mitigation": "准备 TCO 分析，强调长期价值",
-            },
-            {
-                "type": "INFO",
-                "title": "EB 未明确支持",
-                "description": "总经理王五尚未明确表态支持",
-                "impact": "决策阶段可能存在变数",
-                "mitigation": "安排高层拜访，争取支持",
-            },
-        ],
-        # 历史趋势
-        "historical_trend": [
-            {"date": "2024-12-01", "score": 65, "level": "L3"},
-            {"date": "2025-01-01", "score": 70, "level": "L3"},
-            {"date": "2025-02-01", "score": 73, "level": "L4"},
-            {"date": "2025-03-01", "score": 78, "level": "L4"},
-        ],
-    }
+    customer = _get_customer(db, customer_id)
+    if not customer:
+        raise HTTPException(status_code=404, detail="客户不存在")
 
+    opportunity = _get_opportunity(db, opportunity_id)
+    service = RelationshipScoringService(db)
+    assessment = service.calculate_customer_score(
+        customer_id=customer_id,
+        opportunity_id=opportunity_id,
+        save_to_db=False,
+    )
+    assessment["customer_name"] = _customer_name(customer)
+    assessment["opportunity_name"] = getattr(opportunity, "opp_name", None)
+    get_history = getattr(service, "get_customer_score_history", None)
+    assessment["historical_trend"] = get_history(customer_id) if get_history else []
+    assessment["data_source"] = "relationship_scoring_service"
     return assessment
 
 
@@ -534,6 +379,9 @@ def create_relationship_improvement_plan(
     根据当前得分和目标得分，生成具体行动计划
     """
 
+    gap = target_score - current_score
+    first_target = current_score + gap * 0.3
+
     plan = {
         "customer_id": customer_id,
         "current_score": current_score,
@@ -546,14 +394,14 @@ def create_relationship_improvement_plan(
                 "focus": "决策链补全",
                 "actions": [
                     {
-                        "action": "拜访采购经理李四",
+                        "action": "补齐未覆盖的采购、技术、使用和经济决策角色",
                         "owner": "销售经理",
-                        "expected_outcome": "了解采购关注点",
+                        "expected_outcome": "形成客户决策链清单和下一步跟进计划",
                     },
                     {
-                        "action": "与技术总监深度交流",
-                        "owner": "技术总监",
-                        "expected_outcome": "获得技术认可",
+                        "action": "整理客户预算、时间表、验收标准和竞品信息",
+                        "owner": "销售经理",
+                        "expected_outcome": "补齐关系评分所需关键信息",
                     },
                 ],
             },
@@ -561,9 +409,13 @@ def create_relationship_improvement_plan(
                 "week": 2,
                 "focus": "高层互动",
                 "actions": [
-                    {"action": "安排 CEO 互访", "owner": "CEO", "expected_outcome": "建立高层关系"},
                     {
-                        "action": "准备战略合作方案",
+                        "action": "安排双方管理层沟通",
+                        "owner": "销售负责人",
+                        "expected_outcome": "明确高层关注点和合作价值",
+                    },
+                    {
+                        "action": "准备客户专属合作方案",
                         "owner": "销售总监",
                         "expected_outcome": "明确合作价值",
                     },
@@ -599,13 +451,13 @@ def create_relationship_improvement_plan(
             },
         ],
         "milestones": [
-            {"week": 2, "target_score": current_score + gap * 0.3, "description": "完成高层互访"},
+            {"week": 2, "target_score": first_target, "description": "完成关键角色补齐和高层沟通"},
             {"week": 4, "target_score": target_score, "description": "达成战略合作"},
         ],
         "success_metrics": [
-            "EB 明确表态支持",
-            "签署战略合作协议",
-            "获得排他性承诺",
+            "关键决策角色覆盖率提升",
+            "客户预算/决策流程/时间表信息完整",
+            "至少一个关键角色明确支持",
         ],
     }
 
@@ -626,100 +478,112 @@ def get_relationship_portfolio_analysis(
     帮助领导了解整体客户关系健康度
     """
 
-    portfolio = {
-        "total_customers": 45,
+    score_records = (
+        db.query(CustomerRelationshipScore)
+        .order_by(CustomerRelationshipScore.score_date.desc(), CustomerRelationshipScore.id.desc())
+        .all()
+    )
+    latest_by_customer: dict[int, CustomerRelationshipScore] = {}
+    for record in score_records:
+        customer_id = getattr(record, "customer_id", None)
+        if customer_id and customer_id not in latest_by_customer:
+            latest_by_customer[customer_id] = record
+
+    latest_records = list(latest_by_customer.values())
+    total_customers = len(latest_records)
+
+    distribution: dict[str, dict[str, Any]] = {}
+    for level, config in MATURITY_LEVELS.items():
+        key = _score_level_key(level)
+        distribution[key] = {
+            "level": level,
+            "name": config["name"],
+            "count": 0,
+            "percentage": 0,
+            "avg_win_rate": 0,
+        }
+
+    key_accounts = []
+    for record in latest_records:
+        level = getattr(record, "maturity_level", None) or "L1"
+        if level not in MATURITY_LEVELS:
+            level = "L1"
+        dist = distribution[_score_level_key(level)]
+        dist["count"] += 1
+        dist["avg_win_rate"] += getattr(record, "estimated_win_rate", None) or 0
+
+        customer = _get_customer(db, record.customer_id)
+        customer_name = _customer_name(customer) if customer else f"客户#{record.customer_id}"
+        revenue_potential = _safe_float(getattr(customer, "annual_revenue", 0))
+        key_accounts.append(
+            {
+                "customer_id": record.customer_id,
+                "customer_name": customer_name,
+                "maturity_level": level,
+                "score": getattr(record, "total_score", 0) or 0,
+                "estimated_win_rate": getattr(record, "estimated_win_rate", 0) or 0,
+                "revenue_potential": revenue_potential,
+                "score_date": str(getattr(record, "score_date", "")),
+            }
+        )
+
+    for item in distribution.values():
+        if total_customers:
+            item["percentage"] = round(item["count"] / total_customers * 100, 1)
+        if item["count"]:
+            item["avg_win_rate"] = round(item["avg_win_rate"] / item["count"], 1)
+
+    healthy_count = sum(
+        1 for record in latest_records if (getattr(record, "maturity_level", "") or "") in {"L3", "L4", "L5"}
+    )
+    at_risk_count = total_customers - healthy_count
+    average_score = (
+        round(sum((getattr(r, "total_score", 0) or 0) for r in latest_records) / total_customers, 1)
+        if total_customers
+        else 0
+    )
+    key_accounts.sort(key=lambda item: item["score"], reverse=True)
+
+    needs_attention = [
+        {
+            **item,
+            "issue": "关系成熟度低",
+            "recommended_action": "补齐决策链并提升关键角色互动频率",
+        }
+        for item in key_accounts
+        if item["maturity_level"] in {"L1", "L2"}
+    ][:5]
+
+    return {
+        "total_customers": total_customers,
         "assessment_date": date.today().isoformat(),
-        # 成熟度分布
-        "maturity_distribution": {
-            "L1_initial": {"count": 8, "percentage": 17.8, "avg_win_rate": 15},
-            "L2_developing": {"count": 15, "percentage": 33.3, "avg_win_rate": 35},
-            "L3_mature": {"count": 12, "percentage": 26.7, "avg_win_rate": 55},
-            "L4_strategic": {"count": 7, "percentage": 15.6, "avg_win_rate": 75},
-            "L5_partnership": {"count": 3, "percentage": 6.7, "avg_win_rate": 90},
-        },
-        # 健康度评估
+        "data_source": "customer_relationship_scores",
+        "maturity_distribution": distribution,
         "health_assessment": {
-            "healthy_count": 22,  # L3+
-            "healthy_percentage": 48.9,
-            "at_risk_count": 23,  # L1/L2
-            "at_risk_percentage": 51.1,
-            "overall_health_score": 62,
+            "healthy_count": healthy_count,
+            "healthy_percentage": round(healthy_count / total_customers * 100, 1) if total_customers else 0,
+            "at_risk_count": at_risk_count,
+            "at_risk_percentage": round(at_risk_count / total_customers * 100, 1) if total_customers else 0,
+            "overall_health_score": average_score,
         },
-        # 重点客户列表
-        "key_accounts": [
-            {
-                "customer_id": 1,
-                "customer_name": "宁德时代",
-                "maturity_level": "L4",
-                "score": 78,
-                "revenue_potential": 50000000,
-                "trend": "improving",
-                "strategic_value": "HIGH",
-            },
-            {
-                "customer_id": 2,
-                "customer_name": "比亚迪",
-                "maturity_level": "L4",
-                "score": 82,
-                "revenue_potential": 40000000,
-                "trend": "stable",
-                "strategic_value": "HIGH",
-            },
-            {
-                "customer_id": 3,
-                "customer_name": "中创新航",
-                "maturity_level": "L3",
-                "score": 65,
-                "revenue_potential": 30000000,
-                "trend": "improving",
-                "strategic_value": "MEDIUM",
-            },
-        ],
-        # 需要关注的客户
-        "needs_attention": [
-            {
-                "customer_id": 10,
-                "customer_name": "欣旺达",
-                "maturity_level": "L2",
-                "score": 42,
-                "revenue_potential": 25000000,
-                "issue": "高潜力但关系成熟度低",
-                "recommended_action": "增加拜访频率，识别关键人",
-            },
-            {
-                "customer_id": 11,
-                "customer_name": "蜂巢能源",
-                "maturity_level": "L2",
-                "score": 38,
-                "revenue_potential": 20000000,
-                "issue": "决策链不完整",
-                "recommended_action": "识别 EB/TB，建立联系",
-            },
-        ],
-        # 改进建议
+        "key_accounts": key_accounts[:10],
+        "needs_attention": needs_attention,
         "strategic_recommendations": [
             {
                 "priority": 1,
-                "action": "提升 L2 客户至 L3",
-                "target_customers": 15,
-                "expected_impact": "整体赢单率提升 15%",
-                "resources_needed": "增加销售拜访，技术支持",
+                "action": "优先提升 L1/L2 客户关系成熟度",
+                "target_customers": at_risk_count,
+                "expected_impact": "提高低成熟度客户推进质量",
+                "resources_needed": "销售拜访、技术支持、决策链补齐",
             },
             {
                 "priority": 2,
-                "action": "巩固 L4 客户关系",
-                "target_customers": 7,
-                "expected_impact": "防止竞品挖角，锁定 75% 赢单率",
-                "resources_needed": "高层互访，战略合作",
-            },
-            {
-                "priority": 3,
-                "action": "培育 L1 客户成长",
-                "target_customers": 8,
-                "expected_impact": "建立 pipeline，长期价值",
-                "resources_needed": "基础拜访，需求调研",
+                "action": "维护 L4/L5 高成熟度客户",
+                "target_customers": sum(
+                    1 for record in latest_records if (getattr(record, "maturity_level", "") or "") in {"L4", "L5"}
+                ),
+                "expected_impact": "降低关键客户流失和竞品切入风险",
+                "resources_needed": "高层沟通、持续复盘、专属服务",
             },
         ],
     }
-
-    return portfolio

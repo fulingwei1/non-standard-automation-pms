@@ -3,14 +3,16 @@
 文档CRUD操作（重构版）
 使用统一响应格式
 """
+from pathlib import Path
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.config import settings
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.core.schemas import list_response, paginated_response, success_response
 from app.models.project import Machine, Project, ProjectDocument
@@ -21,10 +23,14 @@ from app.schemas.project import (
 )
 from app.services.data_scope.config import DataScopeConfig
 from app.services.data_scope.data_scope_service import DataScopeService
+from app.services.file_upload_service import FileUploadService
 from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+DOCUMENT_UPLOAD_DIR = Path(settings.UPLOAD_DIR) / "documents"
+DOCUMENT_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # 文档数据权限配置
 DOCUMENT_DATA_SCOPE_CONFIG = DataScopeConfig(
@@ -47,6 +53,14 @@ def _build_document_response(document: ProjectDocument) -> ProjectDocumentRespon
     return ProjectDocumentResponse.model_validate(data)
 
 
+def _is_truthy_optional(value: Any) -> bool:
+    return value is not None and value != ""
+
+
+def _exclude_demo_file_paths(query):
+    return query.filter(ProjectDocument.file_path.notlike("/demo/%"))
+
+
 @router.get("/")
 def read_documents(
     db: Session = Depends(deps.get_db),
@@ -67,6 +81,7 @@ def read_documents(
     query = DataScopeService.filter_by_scope(
         db, query, ProjectDocument, current_user, DOCUMENT_DATA_SCOPE_CONFIG
     )
+    query = _exclude_demo_file_paths(query)
 
     if project_id:
         query = query.filter(ProjectDocument.project_id == project_id)
@@ -107,6 +122,7 @@ def get_project_documents(
     get_or_404(db, Project, project_id, "项目不存在")
 
     query = db.query(ProjectDocument).filter(ProjectDocument.project_id == project_id)
+    query = _exclude_demo_file_paths(query)
 
     if machine_id:
         query = query.filter(ProjectDocument.machine_id == machine_id)
@@ -120,6 +136,84 @@ def get_project_documents(
     return list_response(
         items=items,
         message="获取项目文档列表成功"
+    )
+
+
+@router.post("/upload", status_code=status.HTTP_201_CREATED)
+async def upload_document_file(
+    *,
+    db: Session = Depends(deps.get_db),
+    file: UploadFile = File(..., description="上传的文档文件"),
+    project_id: int = Form(..., description="关联项目ID"),
+    machine_id: Optional[int] = Form(None, description="关联机台ID"),
+    doc_type: str = Form("OTHER", description="文档类型"),
+    doc_category: Optional[str] = Form(None, description="文档分类"),
+    doc_name: Optional[str] = Form(None, description="文档名称"),
+    doc_no: Optional[str] = Form(None, description="文档编号"),
+    version: str = Form("1.0", description="版本号"),
+    description: Optional[str] = Form(None, description="描述"),
+    current_user: User = Depends(security.require_permission("document:create")),
+) -> Any:
+    """
+    上传文档文件并创建文档记录。
+    """
+    get_or_404(db, Project, project_id, "项目不存在")
+
+    if _is_truthy_optional(machine_id):
+        machine = (
+            db.query(Machine)
+            .filter(Machine.id == machine_id, Machine.project_id == project_id)
+            .first()
+        )
+        if not machine:
+            raise HTTPException(status_code=404, detail="机台不存在或不属于该项目")
+
+    filename = file.filename or "uploaded_document"
+    upload_service = FileUploadService(
+        upload_dir=DOCUMENT_UPLOAD_DIR,
+        max_file_size=50 * 1024 * 1024,
+    )
+
+    is_valid_ext, ext_error = upload_service.validate_file_extension(filename)
+    if not is_valid_ext:
+        raise HTTPException(status_code=400, detail=ext_error)
+
+    content = await file.read()
+    is_valid_size, size_error = upload_service.validate_file_size(len(content))
+    if not is_valid_size:
+        raise HTTPException(status_code=400, detail=size_error)
+
+    _, relative_path = upload_service.save_file(
+        content,
+        filename,
+        subdir=str(project_id),
+        use_date_subdir=True,
+    )
+
+    file_ext = Path(filename).suffix.lower().lstrip(".")
+    document = ProjectDocument(
+        project_id=project_id,
+        machine_id=machine_id,
+        doc_type=doc_type or "OTHER",
+        doc_category=doc_category,
+        doc_name=doc_name or filename,
+        doc_no=doc_no,
+        version=version or "1.0",
+        file_path=relative_path,
+        file_name=filename,
+        file_size=len(content),
+        file_type=file.content_type or file_ext or None,
+        description=description,
+        uploaded_by=current_user.id,
+        status="DRAFT",
+    )
+    db.add(document)
+    db.commit()
+    db.refresh(document)
+
+    return success_response(
+        data=_build_document_response(document),
+        message="文档上传成功",
     )
 
 
@@ -195,7 +289,7 @@ def create_project_document(
     db: Session = Depends(deps.get_db),
     project_id: int,
     doc_in: ProjectDocumentCreate,
-    current_user: User = Depends(security.require_permission("document:read")),
+    current_user: User = Depends(security.require_permission("document:create")),
 ) -> Any:
     """
     为项目创建文档记录

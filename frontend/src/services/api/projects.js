@@ -307,5 +307,16 @@ export const settlementApi = {
 
 export const documentApi = {
   list: (params) => api.get("/documents/", { params }),
-  create: (data) => api.post("/documents/", data),
+  create: (data) => {
+    if (typeof FormData !== "undefined" && data instanceof FormData) {
+      return api.post("/documents/upload", data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    }
+    return api.post("/documents/", data);
+  },
+  upload: (formData) =>
+    api.post("/documents/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
 };

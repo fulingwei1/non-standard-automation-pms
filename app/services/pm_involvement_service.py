@@ -3,7 +3,14 @@ PM介入时机判断服务
 基于符哥2026-02-15确认的策略
 """
 
-from typing import Dict
+from typing import Dict, Optional
+
+from sqlalchemy import func, or_
+from sqlalchemy.orm import Session
+
+from app.models.presale import PresaleSolutionTemplate, PresaleSupportTicket
+from app.models.project import Project
+from app.models.sales import Lead, Opportunity
 
 
 class PMInvolvementService:
@@ -13,6 +20,11 @@ class PMInvolvementService:
     LARGE_PROJECT_THRESHOLD = 100  # 大项目金额阈值（万元）
     SIMILAR_PROJECT_MIN = 3  # 相似项目数量最低要求
     RISK_FACTOR_THRESHOLD = 2  # 风险因素触发数
+    SUCCESS_STATUSES = {"COMPLETED", "COMPLETE", "FINISHED", "DONE", "CLOSED", "S9", "ST30"}
+    FAILED_STATUSES = {"FAILED", "FAIL", "CANCELLED", "CANCELED", "LOST", "TERMINATED", "ST99"}
+
+    def __init__(self, db: Optional[Session] = None):
+        self.db = db
 
     @classmethod
     def judge_pm_involvement_timing(cls, project_data: Dict) -> Dict:
@@ -112,7 +124,9 @@ class PMInvolvementService:
             }
 
     @classmethod
-    def get_similar_project_count(cls, project_type: str, industry: str) -> Dict:
+    def get_similar_project_count(
+        cls, project_type: str, industry: str = "", db: Optional[Session] = None
+    ) -> Dict:
         """
         查询历史相似项目数量和失败数量
 
@@ -128,12 +142,46 @@ class PMInvolvementService:
                 "成功率": 0.8
             }
         """
-        # TODO: 从数据库查询历史项目
-        # 这里先返回模拟数据
-        return {"总数": 0, "成功数": 0, "失败数": 0, "成功率": 0.0}
+        project_type = (project_type or "").strip()
+        industry = (industry or "").strip()
+        if db is None or not project_type:
+            return {"总数": 0, "成功数": 0, "失败数": 0, "成功率": 0.0}
+
+        query = db.query(Project).filter(Project.project_type == project_type)
+        if industry:
+            query = query.filter(Project.industry == industry)
+
+        total = query.count()
+        if total == 0:
+            return {"总数": 0, "成功数": 0, "失败数": 0, "成功率": 0.0}
+
+        status_expr = func.upper(func.coalesce(Project.status, ""))
+        stage_expr = func.upper(func.coalesce(Project.stage, ""))
+
+        success_filter = or_(
+            status_expr.in_(cls.SUCCESS_STATUSES),
+            stage_expr.in_(cls.SUCCESS_STATUSES),
+        )
+        failed_filter = or_(
+            status_expr.in_(cls.FAILED_STATUSES),
+            stage_expr.in_(cls.FAILED_STATUSES),
+        )
+
+        success_count = query.filter(success_filter).count()
+        failed_count = query.filter(failed_filter).count()
+        success_rate = success_count / total if total else 0.0
+
+        return {
+            "总数": total,
+            "成功数": success_count,
+            "失败数": failed_count,
+            "成功率": success_rate,
+        }
 
     @classmethod
-    def check_has_standard_solution(cls, project_type: str) -> bool:
+    def check_has_standard_solution(
+        cls, project_type: str, industry: str = "", db: Optional[Session] = None
+    ) -> bool:
         """
         检查是否有标准方案模板
 
@@ -143,11 +191,31 @@ class PMInvolvementService:
         Returns:
             True/False
         """
-        # TODO: 从方案模板库查询
-        return False
+        project_type = (project_type or "").strip()
+        industry = (industry or "").strip()
+        if db is None or not project_type:
+            return False
+
+        query = db.query(PresaleSolutionTemplate).filter(
+            PresaleSolutionTemplate.is_active.is_(True),
+            or_(
+                PresaleSolutionTemplate.test_type == project_type,
+                PresaleSolutionTemplate.name.ilike(f"%{project_type}%"),
+            ),
+        )
+        if industry:
+            query = query.filter(
+                or_(
+                    PresaleSolutionTemplate.industry == industry,
+                    PresaleSolutionTemplate.industry.is_(None),
+                    PresaleSolutionTemplate.industry == "",
+                )
+            )
+
+        return query.first() is not None
 
     @classmethod
-    def auto_judge_from_ticket(cls, ticket_id: int) -> Dict:
+    def auto_judge_from_ticket(cls, ticket_id: int, db: Optional[Session] = None) -> Dict:
         """
         从售前工单自动判断PM介入时机
 
@@ -157,18 +225,43 @@ class PMInvolvementService:
         Returns:
             判断结果
         """
-        # TODO: 从数据库获取工单信息
-        # ticket = db.query(PresaleTicket).filter_by(id=ticket_id).first()
+        if db is None:
+            raise ValueError("缺少数据库会话，无法从工单自动判断")
 
-        # 模拟数据
+        ticket = db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).first()
+        if not ticket:
+            raise ValueError("售前工单不存在")
+
+        opportunity = None
+        if ticket.opportunity_id:
+            opportunity = db.query(Opportunity).filter(Opportunity.id == ticket.opportunity_id).first()
+
+        lead = None
+        lead_id = ticket.lead_id or (opportunity.lead_id if opportunity else None)
+        if lead_id:
+            lead = db.query(Lead).filter(Lead.id == lead_id).first()
+
+        project_type = (
+            getattr(opportunity, "project_type", None)
+            or getattr(opportunity, "equipment_type", None)
+            or ticket.title
+            or ""
+        )
+        industry = (getattr(lead, "industry", None) or "").strip()
+        similar_projects = cls.get_similar_project_count(project_type, industry, db)
+        has_standard_solution = cls.check_has_standard_solution(project_type, industry, db)
+
+        estimated_amount = getattr(opportunity, "est_amount", None) if opportunity else None
+        amount_wan = float(estimated_amount or 0) / 10000
+
         project_data = {
-            "项目金额": 0,
-            "项目类型": "",
-            "行业": "",
-            "是否首次做": False,
-            "历史相似项目数": 0,
-            "失败项目数": 0,
-            "是否有标准方案": False,
+            "项目金额": amount_wan,
+            "项目类型": project_type,
+            "行业": industry,
+            "是否首次做": similar_projects["总数"] == 0,
+            "历史相似项目数": similar_projects["总数"],
+            "失败项目数": similar_projects["失败数"],
+            "是否有标准方案": has_standard_solution,
             "技术创新点": [],
         }
 

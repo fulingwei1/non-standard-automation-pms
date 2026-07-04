@@ -1,27 +1,23 @@
 # -*- coding: utf-8 -*-
-"""
-Resource Overview 模块路由
-这是一个兼容性文件，用于导入对应的路由
+"""Legacy resource overview route shim.
+
+The live PMO resource overview endpoint is /pmo/resource-overview. This module
+is kept for import-time compatibility only and must not be mounted by api.py.
 """
 
-try:
-    # Attempt different possible locations for resource_overview
-    from .resourceoverview import router
-except ImportError:
-    try:
-        from .resource import router
-    except ImportError:
-        try:
-            from .common.resource_overview import router
-        except ImportError:
-            try:
-                from .admin.resource_overview import router
-            except ImportError:
-                # Create a simple router as fallback
-                from fastapi import APIRouter
-                router = APIRouter()
-                @router.get('/')
-                def read_root():
-                    return {'message': 'resource_overview module placeholder'}
+from fastapi import APIRouter, HTTPException
 
-__all__ = ['router']
+
+router = APIRouter()
+
+
+@router.api_route("/", methods=["GET", "POST", "PUT", "PATCH", "DELETE"], status_code=501)
+@router.api_route("/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"], status_code=501)
+def legacy_resource_overview_disabled(path: str = ""):
+    raise HTTPException(
+        status_code=501,
+        detail="Legacy resource overview is disabled. Use /pmo/resource-overview.",
+    )
+
+
+__all__ = ["router", "legacy_resource_overview_disabled"]

@@ -15,7 +15,9 @@ from fastapi import APIRouter, Depends, Path
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.core import security
 from app.core.schemas.response import SuccessResponse, success_response
+from app.models.user import User
 from app.schemas.best_practice import (
     ABCClassificationRequest,
     ABCClassificationResponse,
@@ -50,6 +52,7 @@ project_router = APIRouter()
 def abc_classification(
     request: ABCClassificationRequest = None,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("material:update")),
 ) -> Any:
     if request is None:
         request = ABCClassificationRequest()
@@ -80,6 +83,7 @@ def abc_classification(
 def supplier_auto_reclassify(
     request: SupplierReclassifyRequest = None,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("supplier:update")),
 ) -> Any:
     if request is None:
         request = SupplierReclassifyRequest()
@@ -115,6 +119,7 @@ def supplier_auto_reclassify(
 def shortage_escalation(
     request: ShortageEscalationRequest = None,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("material:update")),
 ) -> Any:
     if request is None:
         request = ShortageEscalationRequest()
@@ -145,6 +150,7 @@ def set_kitting_targets(
     request: KittingTargetsRequest,
     project_id: int = Path(..., description="项目 ID"),
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("project:update")),
 ) -> Any:
     service = BestPracticeService(db)
     try:

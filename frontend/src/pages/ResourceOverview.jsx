@@ -317,17 +317,14 @@ export default function ResourceOverview() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const params = { only_assigned: true };
-      if (department) params.department = department;
-      if (onlyConflicts) params.only_conflicts = true;
-      const res = await resourceOverviewApi.list(params);
+      const res = await resourceOverviewApi.list({ only_assigned: true });
       setData(res.data || res);
     } catch (err) {
       console.error("Failed to load resource overview:", err);
     } finally {
       setLoading(false);
     }
-  }, [department, onlyConflicts]);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -377,9 +374,9 @@ export default function ResourceOverview() {
 
   // Departments from data
   const departments = useMemo(() => {
-    if (!data?.employees) return [];
     const set = new Set();
-    data.employees.forEach((e) => e.department && set.add(e.department));
+    (data?.employees || []).forEach((e) => e.department && set.add(e.department));
+    (data?.by_department || []).forEach((item) => item.department_name && set.add(item.department_name));
     return [...set].sort();
   }, [data]);
 
@@ -392,7 +389,16 @@ export default function ResourceOverview() {
     });
   };
 
-  const employees = data?.employees || [];
+  const allEmployees = data?.employees || [];
+  const employees = useMemo(
+    () =>
+      allEmployees.filter((employee) => {
+        if (department && employee.department !== department) return false;
+        if (onlyConflicts && !employee.has_conflict) return false;
+        return true;
+      }),
+    [allEmployees, department, onlyConflicts],
+  );
 
   return (
     <motion.div
@@ -410,8 +416,9 @@ export default function ResourceOverview() {
       <motion.div variants={fadeIn} className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
           icon={Users}
-          label="参与项目人员"
-          value={data?.total_employees || 0}
+          label="资源总数"
+          value={data?.total_resources || 0}
+          sub={`${data?.allocated_resources || data?.total_employees || 0} 人已分配`}
           color="text-blue-400"
         />
         <StatCard
@@ -436,7 +443,7 @@ export default function ResourceOverview() {
         <StatCard
           icon={Flame}
           label="过载人员"
-          value={employees.filter((e) => e.current_allocation > 100).length}
+          value={data?.overloaded_resources ?? employees.filter((e) => e.current_allocation > 100).length}
           sub="当前分配 > 100%"
           color="text-orange-400"
         />
@@ -447,14 +454,14 @@ export default function ResourceOverview() {
         {/* Department filter */}
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-slate-400" />
-          <select
-            className="bg-surface-1 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            value={department || "unknown"}
-            onChange={(e) => setDepartment(e.target.value)}
-          >
-            <option value="">全部部门</option>
-            {departments.map((d) => (
-              <option key={d} value={d || "unknown"}>
+            <select
+              className="bg-surface-1 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+            >
+              <option value="">全部部门</option>
+              {departments.map((d) => (
+              <option key={d} value={d}>
                 {d}
               </option>
             ))}
@@ -498,6 +505,20 @@ export default function ResourceOverview() {
         ) : employees.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
             {onlyConflicts ? "没有发现资源冲突 🎉" : "暂无资源分配数据"}
+            {!onlyConflicts && data?.by_department?.length > 0 && (
+              <div className="mt-6 mx-auto max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                {data.by_department.map((item) => (
+                  <div key={item.department_id} className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
+                    <div className="text-sm text-slate-200">{item.department_name}</div>
+                    <div className="mt-2 grid grid-cols-3 gap-2 text-[11px] text-slate-400">
+                      <span>总数 {item.total_resources}</span>
+                      <span>已分配 {item.allocated_resources}</span>
+                      <span>可用 {item.available_resources}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <>

@@ -315,6 +315,7 @@ class ProjectContributionService:
                         if c.user
                         else f"User {c.user_id}"
                     ),
+                    "period": c.period,
                     "task_count": c.task_count,
                     "actual_hours": float(c.actual_hours or 0),
                     "deliverable_count": c.deliverable_count,
@@ -352,6 +353,7 @@ class ProjectContributionService:
                         if c.user
                         else f"User {c.user_id}"
                     ),
+                    "period": c.period,
                     "contribution_score": float(c.contribution_score or 0),
                 }
                 for c in top_contributors

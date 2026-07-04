@@ -14,11 +14,14 @@ const PresalesManagerWorkstation = lazyLoad(() => import("../../pages/PresalesMa
 const PresalesReviewCenter = lazyLoad(() => import("../../pages/PresalesReviewCenter"));
 const SolutionDetail = lazyLoad(() => import("../../pages/SolutionDetail"));
 const KnowledgeBase = lazyLoad(() => import("../../pages/KnowledgeBase"));
+const PresaleAgent = lazyLoad(() => import("../../pages/PresaleAgent"));
+const AdvantageProducts = lazyLoad(() => import("../../components/sales/AdvantageProducts"));
 
 export function PresalesRoutes() {
   return (
     <>
       <Route path="/presales/workbench" element={<PresalesWorkbench />} />
+      <Route path="/presales/agent" element={<PresaleAgent />} />
       <Route path="/presales/ai-workbench" element={<PresaleAIWorkbench />} />
       <Route path="/presales/workbench/sales" element={<SalesPresaleWorkbench />} />
       <Route path="/presales/workbench/execution" element={<PresalesWorkstation />} />
@@ -30,6 +33,7 @@ export function PresalesRoutes() {
         element={<PresalesManagerWorkstation />}
       />
       <Route path="/presales/technical-solutions" element={<PresalesReviewCenter />} />
+      <Route path="/presales/advantage-products" element={<AdvantageProducts />} />
       <Route path="/presales/cost-estimation" element={<PresalesCenterRedirect tab="cost" />} />
       <Route path="/presales-tasks" element={<PresalesCenterRedirect tab="reviews" />} />
       <Route path="/presales/assessments" element={<PresalesCenterRedirect tab="reviews" />} />
