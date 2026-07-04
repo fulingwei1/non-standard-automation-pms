@@ -1,191 +1,110 @@
 #!/bin/bash
-# 备份验证脚本
-# 用途: 验证备份文件的完整性和可恢复性
+# Verify a compressed SQLite SQL dump.
 
-set -e
+set -euo pipefail
 
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/pms}"
-DB_HOST="${DB_HOST:-localhost}"
-DB_PORT="${DB_PORT:-3306}"
-DB_USER="${DB_USER:-pms_user}"
-DB_PASS="${MYSQL_PASSWORD}"
+PYTHON_BIN="${PYTHON_BIN:-python3}"
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
 error_exit() {
-    log "❌ 错误: $1"
+    log "ERROR: $1"
     exit 1
 }
 
 show_usage() {
-    echo "用法: $0 [备份文件路径]"
-    echo ""
-    echo "不提供文件路径时，验证最新的备份"
-    echo ""
-    echo "示例:"
-    echo "  $0                                              # 验证最新备份"
-    echo "  $0 /var/backups/pms/pms_20260215_020000.sql.gz # 验证指定备份"
+    echo "Usage: $0 [backup_file]"
+    echo "Without a file, the latest ${BACKUP_DIR}/pms_*.sql.gz is verified."
     exit 1
 }
 
-# ==================== 主程序 ====================
-log "========== 备份验证工具 =========="
+log "========== SQLite backup verification =========="
 
-# 查找要验证的文件
-if [ -z "$1" ]; then
-    # 查找最新的数据库备份
+if ! command -v "${PYTHON_BIN}" >/dev/null 2>&1; then
+    error_exit "Python executable not found: ${PYTHON_BIN}"
+fi
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+    show_usage
+fi
+
+if [ -z "${1:-}" ]; then
     BACKUP_FILE=$(find "${BACKUP_DIR}" -name "pms_*.sql.gz" -type f 2>/dev/null | sort -r | head -n 1)
-    
     if [ -z "${BACKUP_FILE}" ]; then
-        error_exit "未找到备份文件"
+        error_exit "No backup file found"
     fi
-    
-    log "自动选择最新备份: ${BACKUP_FILE}"
 else
     BACKUP_FILE="$1"
-    
-    # 自动添加路径
     if [ ! -f "${BACKUP_FILE}" ] && [[ "${BACKUP_FILE}" != /* ]]; then
         BACKUP_FILE="${BACKUP_DIR}/${BACKUP_FILE}"
     fi
 fi
 
-# 检查文件是否存在
 if [ ! -f "${BACKUP_FILE}" ]; then
-    error_exit "备份文件不存在: ${BACKUP_FILE}"
+    error_exit "Backup file does not exist: ${BACKUP_FILE}"
 fi
 
-log "验证文件: ${BACKUP_FILE}"
-
-# ==================== 验证项目 ====================
-
-# 1. 文件大小检查
-FILE_SIZE=$(stat -f%z "${BACKUP_FILE}" 2>/dev/null || stat -c%s "${BACKUP_FILE}" 2>/dev/null || echo "0")
-FILE_SIZE_MB=$((FILE_SIZE / 1024 / 1024))
-
-log "1️⃣  文件大小检查"
-if [ "${FILE_SIZE}" -eq 0 ]; then
-    log "  ❌ 失败: 文件为空"
-    exit 1
-elif [ "${FILE_SIZE_MB}" -lt 1 ]; then
-    log "  ⚠️  警告: 文件过小 (${FILE_SIZE_MB}MB)，可能不完整"
-else
-    log "  ✅ 通过: ${FILE_SIZE_MB}MB"
+if [ ! -s "${BACKUP_FILE}" ]; then
+    error_exit "Backup file is empty: ${BACKUP_FILE}"
 fi
 
-# 2. MD5校验
-log "2️⃣  MD5完整性检查"
-if [ -f "${BACKUP_FILE}.md5" ]; then
-    if command -v md5sum &> /dev/null; then
-        if md5sum -c "${BACKUP_FILE}.md5" 2>/dev/null; then
-            log "  ✅ 通过: MD5校验成功"
-        else
-            log "  ❌ 失败: MD5校验失败"
-            exit 1
-        fi
-    elif command -v md5 &> /dev/null; then
-        EXPECTED_MD5=$(cat "${BACKUP_FILE}.md5")
-        ACTUAL_MD5=$(md5 -q "${BACKUP_FILE}")
-        
-        if [ "${EXPECTED_MD5}" = "${ACTUAL_MD5}" ]; then
-            log "  ✅ 通过: MD5校验成功"
-        else
-            log "  ❌ 失败: MD5不匹配"
-            log "    期望: ${EXPECTED_MD5}"
-            log "    实际: ${ACTUAL_MD5}"
-            exit 1
-        fi
-    fi
-else
-    log "  ⚠️  跳过: MD5文件不存在"
+log "Verifying file: ${BACKUP_FILE}"
+
+if ! VERIFY_OUTPUT=$("${PYTHON_BIN}" - "${BACKUP_FILE}" <<'PY'
+import gzip
+import hashlib
+import sqlite3
+import sys
+from pathlib import Path
+
+backup_file = Path(sys.argv[1])
+md5_file = Path(str(backup_file) + ".md5")
+
+if not md5_file.exists():
+    print(f"Missing checksum file: {md5_file}", file=sys.stderr)
+    sys.exit(1)
+
+checksum_parts = md5_file.read_text(encoding="utf-8").strip().split()
+expected = checksum_parts[0] if checksum_parts else ""
+if not expected:
+    print(f"Empty checksum file: {md5_file}", file=sys.stderr)
+    sys.exit(1)
+
+actual = hashlib.md5(backup_file.read_bytes()).hexdigest()
+if expected != actual:
+    print(f"MD5 mismatch: expected {expected}, actual {actual}", file=sys.stderr)
+    sys.exit(1)
+
+try:
+    with gzip.open(backup_file, "rt", encoding="utf-8") as fh:
+        sql_dump = fh.read()
+except Exception as exc:
+    print(f"Invalid gzip or text dump: {exc}", file=sys.stderr)
+    sys.exit(1)
+
+conn = sqlite3.connect(":memory:")
+try:
+    conn.executescript(sql_dump)
+    integrity = conn.execute("PRAGMA integrity_check").fetchone()[0]
+    if integrity != "ok":
+        print(f"SQLite integrity_check failed: {integrity}", file=sys.stderr)
+        sys.exit(1)
+    table_count = conn.execute(
+        "SELECT COUNT(*) FROM sqlite_master WHERE type='table'"
+    ).fetchone()[0]
+finally:
+    conn.close()
+
+insert_count = sql_dump.count("INSERT INTO")
+print(f"SQLite backup OK; tables={table_count}; inserts={insert_count}")
+PY
+); then
+    error_exit "${VERIFY_OUTPUT:-SQLite backup verification failed}"
 fi
 
-# 3. GZIP格式检查
-log "3️⃣  GZIP格式检查"
-if gunzip -t "${BACKUP_FILE}" 2>/dev/null; then
-    log "  ✅ 通过: GZIP格式正确"
-else
-    log "  ❌ 失败: GZIP文件损坏"
-    exit 1
-fi
-
-# 4. SQL内容检查
-log "4️⃣  SQL内容检查"
-FIRST_LINE=$(gunzip < "${BACKUP_FILE}" | head -n 1)
-
-if [[ "${FIRST_LINE}" == *"MySQL dump"* ]] || [[ "${FIRST_LINE}" == "-- MySQL dump"* ]]; then
-    log "  ✅ 通过: 有效的MySQL导出文件"
-else
-    log "  ❌ 失败: 不是有效的MySQL导出文件"
-    exit 1
-fi
-
-# 5. 表结构检查
-log "5️⃣  数据库表检查"
-TABLE_COUNT=$(gunzip < "${BACKUP_FILE}" | grep -c "CREATE TABLE" || echo "0")
-
-if [ "${TABLE_COUNT}" -eq 0 ]; then
-    log "  ❌ 失败: 未找到表结构"
-    exit 1
-else
-    log "  ✅ 通过: 包含 ${TABLE_COUNT} 个表"
-fi
-
-# 6. 数据检查
-log "6️⃣  数据内容检查"
-INSERT_COUNT=$(gunzip < "${BACKUP_FILE}" | grep -c "INSERT INTO" || echo "0")
-
-if [ "${INSERT_COUNT}" -eq 0 ]; then
-    log "  ⚠️  警告: 未找到INSERT语句，可能是空数据库"
-else
-    log "  ✅ 通过: 包含 ${INSERT_COUNT} 条INSERT语句"
-fi
-
-# 7. 可恢复性测试（可选，需要测试数据库）
-log "7️⃣  可恢复性测试"
-if [ -n "${VERIFY_RESTORE}" ] && [ "${VERIFY_RESTORE}" = "true" ]; then
-    TEST_DB="pms_verify_test_$$"
-    
-    log "  创建测试数据库: ${TEST_DB}"
-    mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASS}" \
-        -e "CREATE DATABASE IF NOT EXISTS ${TEST_DB}" 2>/dev/null || {
-        log "  ⚠️  跳过: 无法连接数据库"
-    }
-    
-    if mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASS}" \
-        -e "USE ${TEST_DB}" 2>/dev/null; then
-        
-        log "  正在导入测试..."
-        if gunzip < "${BACKUP_FILE}" | mysql -h"${DB_HOST}" -P"${DB_PORT}" \
-            -u"${DB_USER}" -p"${DB_PASS}" "${TEST_DB}" 2>/dev/null; then
-            
-            log "  ✅ 通过: 可成功恢复"
-        else
-            log "  ❌ 失败: 恢复测试失败"
-        fi
-        
-        # 清理测试数据库
-        mysql -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASS}" \
-            -e "DROP DATABASE ${TEST_DB}" 2>/dev/null
-    fi
-else
-    log "  ⚠️  跳过: 需要设置 VERIFY_RESTORE=true"
-fi
-
-# ==================== 汇总报告 ====================
-echo ""
-log "========================================="
-log "✅ 备份验证通过！"
-log "========================================="
-echo ""
-log "备份信息:"
-log "  文件: ${BACKUP_FILE}"
-log "  大小: ${FILE_SIZE_MB}MB"
-log "  表数量: ${TABLE_COUNT}"
-log "  数据行: ~${INSERT_COUNT}"
-log "  创建时间: $(stat -f%Sm "${BACKUP_FILE}" 2>/dev/null || stat -c%y "${BACKUP_FILE}" 2>/dev/null || echo "未知")"
-echo ""
-
+log "${VERIFY_OUTPUT}"
+log "========== Verification passed =========="
 exit 0

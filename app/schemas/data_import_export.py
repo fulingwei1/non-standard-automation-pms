@@ -68,6 +68,10 @@ class ImportUploadResponse(BaseModel):
     task_code: str
     status: str
     message: str
+    imported_count: int = 0
+    updated_count: int = 0
+    failed_count: int = 0
+    failed_rows: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 # ==================== 数据导出 ====================

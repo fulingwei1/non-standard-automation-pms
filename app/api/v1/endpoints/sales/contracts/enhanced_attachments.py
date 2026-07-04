@@ -4,7 +4,6 @@
 从 enhanced.py 拆分
 """
 
-from pathlib import Path
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -19,6 +18,7 @@ from app.schemas.sales.contract_enhanced import (
     ContractAttachmentResponse,
 )
 from app.services.sales.contract_enhanced import ContractEnhancedService
+from .attachment_security import resolve_contract_attachment_path
 
 router = APIRouter()
 
@@ -74,11 +74,9 @@ def download_attachment(
     attachment = db.query(ContractAttachment).filter(ContractAttachment.id == attachment_id).first()
     if not attachment:
         raise HTTPException(status_code=404, detail="附件不存在")
-    file_path = Path(attachment.file_path).expanduser()
-    if not file_path.is_file():
-        raise HTTPException(status_code=404, detail="附件文件不存在")
+    file_path = resolve_contract_attachment_path(attachment.file_path)
     return FileResponse(
-        path=file_path,
+        path=str(file_path),
         filename=attachment.file_name,
         media_type=attachment.file_type or "application/octet-stream",
     )

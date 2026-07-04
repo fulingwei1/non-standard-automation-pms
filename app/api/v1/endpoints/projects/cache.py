@@ -60,6 +60,7 @@ def clear_cache(
     *,
     db: Session = Depends(deps.get_db),
     cache_type: Optional[str] = None,
+    pattern: Optional[str] = None,
     current_user: User = Depends(security.require_permission("admin:cache:clear")),
 ) -> Any:
     """
@@ -67,35 +68,60 @@ def clear_cache(
 
     Args:
         cache_type: 缓存类型（可选）
-            - None: 清理所有缓存
+            - None/"project"/"all": 清理项目命名空间缓存
             - "project_list": 清理项目列表缓存
             - "project_detail": 清理项目详情缓存
-            - "user": 清理用户缓存
+            - "project_statistics": 清理项目统计缓存
+        pattern: 兼容旧前端参数，仅允许 project:* 相关白名单模式
     """
     try:
         from app.services.cache_service import CacheService
 
         cache_service = CacheService()
+        requested_scope = (cache_type or pattern or "project").strip()
 
-        if cache_type == "project_list":
-            cache_service.invalidate_project_list()
+        if requested_scope in {"project", "all", "project:*"}:
+            normalized_scope = "project"
+            deleted_count = cache_service.invalidate_all_project_cache()
+            message = "项目缓存已清理"
+        elif requested_scope in {"project_list", "project:list", "project:list:*"}:
+            normalized_scope = "project_list"
+            deleted_count = cache_service.invalidate_project_list()
             message = "项目列表缓存已清理"
-        elif cache_type == "project_detail":
-            # 清理所有项目详情缓存
-            cache_service.invalidate_all_project_details()
+        elif requested_scope in {"project_detail", "project:detail", "project:detail:*"}:
+            normalized_scope = "project_detail"
+            deleted_count = cache_service.delete_pattern("project:detail:*")
             message = "项目详情缓存已清理"
-        elif cache_type == "user":
-            cache_service.invalidate_user_cache()
-            message = "用户缓存已清理"
+        elif requested_scope in {"project_statistics", "project:statistics", "project:statistics:*"}:
+            normalized_scope = "project_statistics"
+            deleted_count = cache_service.invalidate_project_statistics()
+            message = "项目统计缓存已清理"
         else:
-            cache_service.clear_all()
-            message = "所有缓存已清理"
+            return ResponseModel(
+                code=400,
+                message="不支持的缓存范围",
+                data={
+                    "requested": requested_scope,
+                    "allowed": [
+                        "project",
+                        "project_list",
+                        "project_detail",
+                        "project_statistics",
+                        "project:*",
+                        "project:list:*",
+                        "project:detail:*",
+                        "project:statistics:*",
+                    ],
+                },
+            )
 
         return ResponseModel(
             code=200,
             message=message,
             data={
-                "cache_type": cache_type or "all",
+                "cache_type": normalized_scope,
+                "requested": requested_scope,
+                "deleted_count": deleted_count,
                 "cleared_at": datetime.now().isoformat(),
             },
         )

@@ -51,23 +51,39 @@ def upload_and_import_data(
             update_existing=update_existing,
         )
 
-        db.commit()
-
-        task_code = f"IMP-{datetime.now().strftime('%y%m%d%H%M%S')}"
-        import_task = DataImportTask(
-            task_code=task_code,
-            template_type=template_type,
-            file_url=file.filename,
-            status="COMPLETED" if result.get("failed_count", 0) == 0 else "PARTIAL",
-            requested_by=current_user.id,
-            import_options={"update_existing": update_existing},
-        )
-        db.add(import_task)
-        db.commit()
-
         imported = result.get("imported_count", 0)
         updated = result.get("updated_count", 0)
         failed = result.get("failed_count", 0)
+        failed_rows = result.get("failed_rows", [])
+        status_value = "COMPLETED" if failed == 0 else "PARTIAL"
+
+        task_no = f"IMP-{datetime.now().strftime('%y%m%d%H%M%S%f')}"
+        file_name = file.filename or "uploaded_import.xlsx"
+        import_task = DataImportTask(
+            task_no=task_no,
+            import_type=template_type.upper(),
+            target_table=template_type.upper(),
+            file_name=file_name,
+            file_path=file_name,
+            file_size=len(file_content),
+            status=status_value,
+            total_rows=imported + updated + failed,
+            success_rows=imported + updated,
+            failed_rows=failed,
+            skipped_rows=0,
+            validation_errors=failed_rows,
+            imported_by=current_user.id,
+            started_at=datetime.now(),
+            completed_at=datetime.now(),
+            error_message="; ".join(
+                str(row.get("error") or row.get("message") or row)
+                for row in failed_rows[:5]
+            )
+            if failed_rows
+            else None,
+        )
+        db.add(import_task)
+        db.commit()
 
         message = f"导入完成：成功导入 {imported} 条"
         if updated > 0:
@@ -77,9 +93,13 @@ def upload_and_import_data(
 
         return ImportUploadResponse(
             task_id=import_task.id,
-            task_code=import_task.task_code,
-            status="COMPLETED" if failed == 0 else "PARTIAL",
+            task_code=import_task.task_no,
+            status=status_value,
             message=message,
+            imported_count=imported,
+            updated_count=updated,
+            failed_count=failed,
+            failed_rows=failed_rows,
         )
 
     except HTTPException:

@@ -24,17 +24,8 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  # MySQL 监控
-  - job_name: 'mysql'
-    static_configs:
-      - targets: ['mysql:3306']
-    # 需要安装 mysqld_exporter
-
-  # Redis 监控
-  - job_name: 'redis'
-    static_configs:
-      - targets: ['redis:6379']
-    # 需要安装 redis_exporter
+  # MySQL / Redis 需要 exporter，不能直接抓业务端口 3306/6379。
+  # 部署 mysqld_exporter / redis_exporter 后再添加对应 scrape job。
 
   # Node Exporter（系统指标）
   - job_name: 'node'

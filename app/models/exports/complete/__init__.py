@@ -272,6 +272,7 @@ __all__ = [
     "SalesOrder",
     "SalesOrderItem",
     "DeliveryOrder",
+    "DeliveryOrderItem",
     "AcceptanceTracking",
     "AcceptanceTrackingRecord",
     "Reconciliation",

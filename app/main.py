@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -159,8 +160,10 @@ try:
             stop_progress_scheduler()
         shutdown_scheduler()
 
-except ImportError:
-    pass
+except ImportError as e:
+    import logging
+
+    logging.getLogger(__name__).error(f"定时任务调度器导入失败: {e}")
 
 
 @app.get("/")
@@ -168,17 +171,124 @@ def root():
     return {"message": "Welcome to Non-standard Automation Project Management System API"}
 
 
+def _probe_database():
+    try:
+        from sqlalchemy import text
+
+        from app.models.base import get_engine
+
+        engine = get_engine()
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return {"status": "up"}
+    except Exception as exc:
+        return {"status": "down", "error": str(exc)}
+
+
+def _probe_scheduler():
+    try:
+        from app.utils.scheduler import scheduler
+
+        running = bool(getattr(scheduler, "running", False))
+        jobs = scheduler.get_jobs() if running else []
+        return {
+            "status": "up" if running else "disabled",
+            "running": running,
+            "job_count": len(jobs),
+        }
+    except Exception as exc:
+        return {"status": "down", "error": str(exc), "running": False, "job_count": 0}
+
+
+def _probe_redis():
+    try:
+        from app.utils.redis_client import get_redis_client
+
+        client = get_redis_client()
+        if client is None:
+            return {"status": "disabled", "configured": False}
+        client.ping()
+        return {"status": "up", "configured": True}
+    except Exception as exc:
+        return {"status": "down", "configured": True, "error": str(exc)}
+
+
+def _build_health_payload(api_style: bool = False):
+    dependencies = {
+        "database": _probe_database(),
+        "scheduler": _probe_scheduler(),
+        "redis": _probe_redis(),
+    }
+    required_ok = dependencies["database"]["status"] == "up" and dependencies["scheduler"][
+        "status"
+    ] in {"up", "disabled"}
+    optional_ok = dependencies["redis"]["status"] in {"up", "disabled"}
+    is_healthy = required_ok and optional_ok
+
+    payload = {
+        "status": ("healthy" if api_style else "ok") if is_healthy else "degraded",
+        "version": settings.APP_VERSION,
+        "dependencies": dependencies,
+    }
+    if api_style:
+        payload["timestamp"] = datetime.now(timezone.utc).isoformat()
+    return payload
+
+
+def _metric_label(value: str) -> str:
+    return value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+
+
+def _build_prometheus_metrics() -> str:
+    payload = _build_health_payload(api_style=False)
+    dependencies = payload["dependencies"]
+    app_up = 1 if payload["status"] == "ok" else 0
+    version = _metric_label(str(payload["version"]))
+
+    lines = [
+        "# HELP pms_app_health Application health status, 1 means ok.",
+        "# TYPE pms_app_health gauge",
+        f'pms_app_health{{version="{version}"}} {app_up}',
+        "# HELP pms_dependency_up Dependency status, 1 means available.",
+        "# TYPE pms_dependency_up gauge",
+    ]
+    for name, dependency in dependencies.items():
+        status = dependency.get("status", "unknown")
+        up = 1 if status in {"up", "disabled"} else 0
+        lines.append(
+            f'pms_dependency_up{{name="{_metric_label(name)}",status="{_metric_label(status)}"}} {up}'
+        )
+
+    scheduler = dependencies.get("scheduler", {})
+    lines.extend(
+        [
+            "# HELP pms_scheduler_running Scheduler running flag.",
+            "# TYPE pms_scheduler_running gauge",
+            f"pms_scheduler_running {1 if scheduler.get('running') else 0}",
+            "# HELP pms_scheduler_jobs Configured scheduler job count.",
+            "# TYPE pms_scheduler_jobs gauge",
+            f"pms_scheduler_jobs {int(scheduler.get('job_count') or 0)}",
+        ]
+    )
+    return "\n".join(lines) + "\n"
+
+
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "version": settings.APP_VERSION}
+    return _build_health_payload(api_style=False)
 
 
 @app.get("/api/health")
 def api_health_check():
-    return {
-        "status": "healthy",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
+    return _build_health_payload(api_style=True)
+
+
+@app.get("/metrics", include_in_schema=False)
+def prometheus_metrics():
+    return PlainTextResponse(
+        _build_prometheus_metrics(),
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
 
 
 if __name__ == "__main__":
