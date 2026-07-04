@@ -215,20 +215,17 @@ class GenericFilterService:
 
         if data_scope == DataScopeEnum.ALL.value:
             return True
-        elif data_scope == DataScopeEnum.CUSTOMER.value:
-            # 客户门户：只能看自己客户的项目
-            # 这里需要根据业务逻辑实现，暂时返回True
-            return True
-        else:
-            # 其他范围：通过项目间接访问客户
-            # 检查是否有该客户的项目且用户有权限
-            user_project_ids = UserScopeService.get_user_project_ids(db, user.id)
-            if not user_project_ids:
-                return False
 
-            projects = (
-                db.query(Project.customer_id)
-                .filter(Project.id.in_(user_project_ids), Project.customer_id == customer_id)
-                .first()
-            )
-            return projects is not None
+        # CUSTOMER（客户门户）尚无独立的客户归属数据模型，与
+        # app/core/sales_permissions.py 的既定口径保持一致："客户门户降级为个人"，
+        # 即按用户参与的项目间接校验客户访问权限，不能因为标记为 CUSTOMER 就放行。
+        user_project_ids = UserScopeService.get_user_project_ids(db, user.id)
+        if not user_project_ids:
+            return False
+
+        projects = (
+            db.query(Project.customer_id)
+            .filter(Project.id.in_(user_project_ids), Project.customer_id == customer_id)
+            .first()
+        )
+        return projects is not None

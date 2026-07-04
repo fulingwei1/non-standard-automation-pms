@@ -245,10 +245,55 @@ class TestCheckCustomerAccess:
             result = GenericFilterService.check_customer_access(mock_db, user, customer_id=5)
         assert result is True
 
-    @pytest.mark.skip(reason="DataScopeEnum.CUSTOMER 未定义 - 服务代码 bug，待修复")
-    def test_no_projects_returns_false(self, mock_db):
-        pass
+    def test_customer_scope_no_projects_returns_false(self, mock_db):
+        """CUSTOMER 数据域尚无客户门户归属模型，必须降级为按项目校验而非放行。"""
+        from app.models.enums import DataScopeEnum
+        from app.services.data_scope.generic_filter import GenericFilterService
 
-    @pytest.mark.skip(reason="DataScopeEnum.CUSTOMER 未定义 - 服务代码 bug，待修复")
-    def test_subordinate_scope_with_projects_checks_customer(self, mock_db):
-        pass
+        user = make_user(is_superuser=False)
+
+        with patch(
+            "app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope",
+            return_value=DataScopeEnum.CUSTOMER.value,
+        ), patch(
+            "app.services.data_scope.generic_filter.UserScopeService.get_user_project_ids",
+            return_value=set(),
+        ):
+            result = GenericFilterService.check_customer_access(mock_db, user, customer_id=5)
+        assert result is False
+
+    def test_customer_scope_with_matching_project_has_access(self, mock_db):
+        """CUSTOMER 用户对参与项目所属客户仍应放行（降级为项目口径，与 sales_permissions 一致）。"""
+        from app.models.enums import DataScopeEnum
+        from app.services.data_scope.generic_filter import GenericFilterService
+
+        user = make_user(is_superuser=False)
+        mock_db.query.return_value.filter.return_value.first.return_value = (5,)
+
+        with patch(
+            "app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope",
+            return_value=DataScopeEnum.CUSTOMER.value,
+        ), patch(
+            "app.services.data_scope.generic_filter.UserScopeService.get_user_project_ids",
+            return_value={101},
+        ):
+            result = GenericFilterService.check_customer_access(mock_db, user, customer_id=5)
+        assert result is True
+
+    def test_customer_scope_with_unrelated_project_denied(self, mock_db):
+        """CUSTOMER 用户参与的项目都不属于目标客户时必须拒绝，不能因为有 CUSTOMER 标记就放行。"""
+        from app.models.enums import DataScopeEnum
+        from app.services.data_scope.generic_filter import GenericFilterService
+
+        user = make_user(is_superuser=False)
+        mock_db.query.return_value.filter.return_value.first.return_value = None
+
+        with patch(
+            "app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope",
+            return_value=DataScopeEnum.CUSTOMER.value,
+        ), patch(
+            "app.services.data_scope.generic_filter.UserScopeService.get_user_project_ids",
+            return_value={101},
+        ):
+            result = GenericFilterService.check_customer_access(mock_db, user, customer_id=999)
+        assert result is False
