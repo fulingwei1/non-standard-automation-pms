@@ -23,7 +23,8 @@ class WebhookChannelHandler(ChannelHandler):
     """Webhook通知处理器"""
 
     def send(self, request: NotificationRequest) -> NotificationResult:
-        if not self.is_enabled():
+        webhook_url = self._webhook_url()
+        if not webhook_url:
             return NotificationResult(
                 channel=self.channel, success=False, error_message="Webhook未配置"
             )
@@ -35,7 +36,7 @@ class WebhookChannelHandler(ChannelHandler):
 
         message = self._build_message(request)
         try:
-            response = requests.post(settings.WECHAT_WEBHOOK_URL, json=message, timeout=10)
+            response = requests.post(webhook_url, json=message, timeout=10)
             if response.status_code == 200:
                 return NotificationResult(
                     channel=self.channel,
@@ -60,4 +61,11 @@ class WebhookChannelHandler(ChannelHandler):
         }
 
     def is_enabled(self) -> bool:
-        return bool(settings.WECHAT_WEBHOOK_URL)
+        return bool(self._webhook_url())
+
+    def _webhook_url(self) -> str | None:
+        for name in ("WEBHOOK_URL", "WECHAT_WEBHOOK_URL"):
+            value = getattr(settings, name, None)
+            if isinstance(value, str) and value:
+                return value
+        return None

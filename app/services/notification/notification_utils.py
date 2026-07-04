@@ -46,17 +46,24 @@ def resolve_channels(alert: AlertRecord) -> list:
 def resolve_recipients(db: Session, alert: AlertRecord) -> Dict[int, Dict[str, Optional[User]]]:
     """Return user_id -> {'user': User, 'settings': NotificationSettings or None} map."""
     user_ids = set()
-    if alert.project and alert.project.pm_id:
-        user_ids.add(alert.project.pm_id)
-    if alert.handler_id:
-        user_ids.add(alert.handler_id)
-    if alert.rule and alert.rule.notify_users:
-        for uid in alert.rule.notify_users:
+    project = getattr(alert, "project", None)
+    if project:
+        for attr in ("pm_id", "project_manager_id", "owner_id"):
+            value = getattr(project, attr, None)
+            if isinstance(value, int):
+                user_ids.add(value)
+    for attr in ("handler_id", "acknowledged_by", "created_by", "updated_by"):
+        value = getattr(alert, attr, None)
+        if isinstance(value, int):
+            user_ids.add(value)
+    rule = getattr(alert, "rule", None)
+    if rule and rule.notify_users:
+        for uid in rule.notify_users:
             if isinstance(uid, int):
                 user_ids.add(uid)
 
     if not user_ids:
-        user_ids.add(1)
+        return {}
 
     users = db.query(User).filter(User.id.in_(user_ids)).filter(User.is_active).all()
     settings_map = {}
