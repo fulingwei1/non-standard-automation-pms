@@ -111,7 +111,7 @@ class TestMapOldChannelToNew:
         from app.services.notification_service import NotificationChannel, NotificationService
 
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService(db_session)
+            svc = NotificationService(MagicMock())
         result = svc._map_old_channel_to_new(NotificationChannel.WEB)
         assert result == UC.SYSTEM
 
@@ -120,7 +120,7 @@ class TestMapOldChannelToNew:
         from app.services.notification_service import NotificationChannel, NotificationService
 
         with patch("app.services.notification_service.settings", _make_settings()):
-            svc = NotificationService(db_session)
+            svc = NotificationService(MagicMock())
         result = svc._map_old_channel_to_new(NotificationChannel.EMAIL)
         assert result == UC.EMAIL
 

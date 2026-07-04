@@ -9,6 +9,9 @@ smtplib / 无短信网关）的情况下，只 logger.info 就返回 success=Tru
 附带：SELECT count(*) FROM alert_records WHERE status='PENDING' 佐证约 841 条积压。
 """
 from unittest.mock import MagicMock
+import importlib.util
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -68,3 +71,131 @@ def test_alert_records_backlog_documented(sandbox_conn):
     ).fetchone()[0]
     # 这是对现状的取证，不随修复消失；仅要求量级显著
     assert n > 500, f"预期 PENDING 预警大量积压，实际 {n}"
+
+
+def test_notification_queue_defaults_to_sync_dispatch_even_when_redis_exists(monkeypatch):
+    """未显式启用队列 worker 时，即使 Redis 存在也不能把通知丢进无人消费队列。"""
+    from app.utils.scheduled_tasks.base import enqueue_or_dispatch_notification
+
+    dispatcher = MagicMock()
+    request = SimpleNamespace(recipient_id=1, channels=["EMAIL"])
+    dispatcher.build_notification_request.return_value = request
+    dispatcher.dispatch.return_value = True
+
+    notification = MagicMock()
+    notification.id = 1
+    notification.alert_id = 2
+    notification.notify_channel = "EMAIL"
+
+    monkeypatch.setattr(
+        "app.services.notification.notification_queue.get_redis_client",
+        lambda: MagicMock(),
+    )
+
+    result = enqueue_or_dispatch_notification(
+        dispatcher,
+        notification,
+        alert=MagicMock(),
+        user=MagicMock(),
+    )
+
+    assert result == {"queued": False, "sent": True}
+    dispatcher.dispatch.assert_called_once()
+
+
+def test_notification_worker_script_imports_current_modules():
+    """worker 脚本不能引用已不存在的 app.services.notification_queue 等旧路径。"""
+    script_path = Path(__file__).parents[2] / "scripts" / "notification_worker.py"
+    spec = importlib.util.spec_from_file_location("notification_worker_audit", script_path)
+    module = importlib.util.module_from_spec(spec)
+
+    spec.loader.exec_module(module)
+
+    assert hasattr(module, "main")
+
+
+def test_alert_notification_task_moves_alert_out_of_pending_after_attempt(monkeypatch):
+    """通知生成/发送已尝试后，AlertRecord 不能继续停在 PENDING 堵住后续窗口。"""
+    from app.utils.scheduled_tasks import alert_tasks
+
+    alert = MagicMock()
+    alert.id = 1
+    alert.status = "PENDING"
+    alert.triggered_at = None
+
+    db = MagicMock()
+    pending_alert_query = MagicMock()
+    pending_alert_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+        alert
+    ]
+    pending_notification_query = MagicMock()
+    pending_notification_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+    db.query.side_effect = [pending_alert_query, pending_notification_query]
+
+    class _Ctx:
+        def __enter__(self):
+            return db
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    dispatcher = MagicMock()
+    dispatcher.dispatch_alert_notifications.return_value = {
+        "created": 1,
+        "queued": 0,
+        "sent": 1,
+        "failed": 0,
+    }
+
+    monkeypatch.setattr(alert_tasks, "get_db_session", lambda: _Ctx())
+    monkeypatch.setattr(alert_tasks, "NotificationDispatcher", lambda _db: dispatcher)
+
+    result = alert_tasks.send_alert_notifications()
+
+    assert result["opened_alerts"] == 1
+    assert alert.status == "OPEN"
+    db.commit.assert_called_once()
+
+
+def test_alert_notification_task_prioritizes_oldest_pending_alerts(monkeypatch):
+    """积压处理必须从最老 PENDING 开始，避免旧预警永久饿死。"""
+    from app.models.alert import AlertRecord
+    from app.utils.scheduled_tasks import alert_tasks
+
+    captured_order_by = []
+
+    class _PendingAlertQuery:
+        def filter(self, *args, **kwargs):
+            return self
+
+        def order_by(self, *clauses):
+            captured_order_by.extend(str(clause) for clause in clauses)
+            return self
+
+        def limit(self, _limit):
+            return self
+
+        def all(self):
+            return []
+
+    class _PendingNotificationQuery(_PendingAlertQuery):
+        pass
+
+    db = MagicMock()
+    db.query.side_effect = [_PendingAlertQuery(), _PendingNotificationQuery()]
+
+    class _Ctx:
+        def __enter__(self):
+            return db
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(alert_tasks, "get_db_session", lambda: _Ctx())
+    monkeypatch.setattr(alert_tasks, "NotificationDispatcher", lambda _db: MagicMock())
+
+    alert_tasks.send_alert_notifications()
+
+    assert any("triggered_at ASC" in clause for clause in captured_order_by), (
+        f"预警积压查询应按最老优先，实际 order_by={captured_order_by}"
+    )

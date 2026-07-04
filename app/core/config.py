@@ -179,6 +179,7 @@ class Settings(BaseSettings):
     MAX_PAGE_SIZE: int = 1000
 
     # Notification channels
+    NOTIFICATION_QUEUE_ENABLED: bool = False
     EMAIL_ENABLED: bool = False
     EMAIL_FROM: Optional[str] = None
     EMAIL_SMTP_SERVER: Optional[str] = None
@@ -198,6 +199,7 @@ class Settings(BaseSettings):
     SMS_MAX_PER_DAY: int = 100  # 每天最多发送短信数
     SMS_MAX_PER_HOUR: int = 20  # 每小时最多发送短信数
 
+    WEBHOOK_URL: Optional[str] = None
     WECHAT_WEBHOOK_URL: Optional[str] = None
     WECHAT_ENABLED: bool = False
 

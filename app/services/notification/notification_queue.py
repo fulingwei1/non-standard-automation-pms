@@ -16,6 +16,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
+from app.core.config import settings
 from app.utils.redis_client import get_redis_client
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,10 @@ def enqueue_notification(payload: Dict[str, Any]) -> bool:
         "enqueue_at": "...",
     }
     """
+    if not bool(getattr(settings, "NOTIFICATION_QUEUE_ENABLED", False)):
+        logger.info("通知队列未启用，回退同步发送")
+        return False
+
     redis_client = get_redis_client()
     if not redis_client:
         logger.warning("Redis未配置，无法使用通知队列")
@@ -49,6 +54,9 @@ def enqueue_notification(payload: Dict[str, Any]) -> bool:
 
 
 def dequeue_notification(block: bool = True, timeout: int = 5) -> Optional[Dict[str, Any]]:
+    if not bool(getattr(settings, "NOTIFICATION_QUEUE_ENABLED", False)):
+        return None
+
     redis_client = get_redis_client()
     if not redis_client:
         return None

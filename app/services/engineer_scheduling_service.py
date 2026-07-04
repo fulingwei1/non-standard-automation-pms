@@ -9,12 +9,13 @@
 4. 风险预警与决策支持
 """
 
-from typing import Any, Dict, List, Optional
-from datetime import date, timedelta, datetime
 from collections import defaultdict
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
 from app.models.engineer_capacity import (
     EngineerCapacity,
@@ -31,20 +32,85 @@ class EngineerSchedulingService:
     def __init__(self, db: Session):
         self.db = db
 
+    def ensure_task_assignment_table(self) -> None:
+        """幂等创建冲突检测依赖表，SQLite 下保留时间戳默认值。"""
+        bind = self.db.get_bind()
+        if str(bind.url).startswith("sqlite"):
+            ddl_statements = (
+                """
+                CREATE TABLE IF NOT EXISTS engineer_task_assignments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    assignment_no VARCHAR(50) UNIQUE,
+                    engineer_id INTEGER NOT NULL,
+                    project_id INTEGER NOT NULL,
+                    machine_id INTEGER,
+                    task_type VARCHAR(50),
+                    task_description TEXT,
+                    estimated_hours FLOAT DEFAULT 0,
+                    actual_hours FLOAT DEFAULT 0,
+                    planned_start_date DATE,
+                    planned_end_date DATE,
+                    actual_start_date DATE,
+                    actual_end_date DATE,
+                    status VARCHAR(20) DEFAULT 'PENDING',
+                    priority INTEGER DEFAULT 50,
+                    quality_score FLOAT,
+                    is_on_time BOOLEAN DEFAULT 1,
+                    has_rework BOOLEAN DEFAULT 0,
+                    has_conflict BOOLEAN DEFAULT 0,
+                    conflict_description TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+                """,
+                """
+                CREATE INDEX IF NOT EXISTS idx_task_assign_engineer
+                ON engineer_task_assignments(engineer_id)
+                """,
+                """
+                CREATE INDEX IF NOT EXISTS idx_task_assign_project
+                ON engineer_task_assignments(project_id)
+                """,
+                """
+                CREATE INDEX IF NOT EXISTS idx_task_assign_status
+                ON engineer_task_assignments(status)
+                """,
+                """
+                CREATE INDEX IF NOT EXISTS idx_task_assign_dates
+                ON engineer_task_assignments(planned_start_date, planned_end_date)
+                """,
+            )
+            with bind.begin() as conn:
+                for ddl in ddl_statements:
+                    conn.execute(text(ddl))
+            return
+
+        EngineerTaskAssignment.__table__.create(bind=bind, checkfirst=True)
+
     def _query_task_assignments(self, *filters) -> List[EngineerTaskAssignment]:
         """
-        安全查询任务分配表。
+        查询任务分配表。
 
-        兼容精简/历史数据库未创建 engineer_task_assignments 表的情况，
-        避免页面直接 500。
+        engineer_task_assignments 是冲突检测的事实表，缺表时不能静默返回
+        “无冲突”；这里用模型 DDL 幂等补表后再执行查询。
         """
+        self.ensure_task_assignment_table()
         try:
             return self.db.query(EngineerTaskAssignment).filter(*filters).all()
-        except OperationalError as exc:
-            message = str(exc).lower()
-            if "no such table" in message and "engineer_task_assignments" in message:
-                return []
+        except OperationalError:
             raise
+
+    @staticmethod
+    def _coerce_date(value: Any) -> Optional[date]:
+        if value is None or value == "":
+            return None
+        if isinstance(value, date) and not isinstance(value, datetime):
+            return value
+        if isinstance(value, datetime):
+            return value.date()
+        if isinstance(value, str):
+            return date.fromisoformat(value)
+        raise ValueError("日期必须是 YYYY-MM-DD")
 
     def _get_engineer_capacity(self, engineer_id: int) -> Optional[EngineerCapacity]:
         """安全获取工程师能力模型，兼容缺表场景。"""
@@ -326,11 +392,15 @@ class EngineerSchedulingService:
             冲突列表
         """
         
-        new_start = new_task.get('planned_start_date')
-        new_end = new_task.get('planned_end_date')
+        new_start = self._coerce_date(
+            new_task.get('planned_start_date') or new_task.get('start_date')
+        )
+        new_end = self._coerce_date(new_task.get('planned_end_date') or new_task.get('end_date'))
         
         if not new_start or not new_end:
             return []
+        if new_end < new_start:
+            raise ValueError("planned_end_date 不能早于 planned_start_date")
         
         # 查询同一时间段内的现有任务
         existing_tasks = self._query_task_assignments(

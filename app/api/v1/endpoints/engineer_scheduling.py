@@ -19,6 +19,12 @@ from app.services.engineer_scheduling_service import EngineerSchedulingService
 router = APIRouter()
 
 
+def _coerce_optional_query_date(value: Optional[str]) -> Optional[date]:
+    if isinstance(value, str) and value:
+        return EngineerSchedulingService._coerce_date(value)
+    return None
+
+
 @router.post("/assignments", summary="创建工程师任务分配")
 def create_assignment(
     payload: dict = Body(..., description="分配信息"),
@@ -37,11 +43,12 @@ def create_assignment(
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
 
-    engineer = db.query(User).filter(User.id == engineer_id, User.is_active == True).first()
+    engineer = db.query(User).filter(User.id == engineer_id, User.is_active.is_(True)).first()
     if not engineer:
         raise HTTPException(status_code=404, detail="工程师不存在")
 
-    EngineerTaskAssignment.__table__.create(bind=db.get_bind(), checkfirst=True)
+    scheduling_service = EngineerSchedulingService(db)
+    scheduling_service.ensure_task_assignment_table()
 
     existing = (
         db.query(EngineerTaskAssignment)
@@ -89,6 +96,174 @@ def create_assignment(
         "status": assignment.status,
         "allocation_pct": allocation_pct,
         "message": "分配成功",
+    }
+
+
+@router.put("/assignments/{assignment_id}", summary="更新工程师任务分配")
+def update_assignment(
+    assignment_id: int = Path(..., description="分配 ID"),
+    payload: dict = Body(..., description="分配更新信息"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """更新工程师分配的常用排产字段。"""
+    scheduling_service = EngineerSchedulingService(db)
+    scheduling_service.ensure_task_assignment_table()
+
+    assignment = (
+        db.query(EngineerTaskAssignment)
+        .filter(EngineerTaskAssignment.id == assignment_id)
+        .first()
+    )
+    if not assignment:
+        raise HTTPException(status_code=404, detail="分配不存在")
+
+    if "status" in payload:
+        assignment.status = str(payload["status"])
+    if "estimated_hours" in payload:
+        assignment.estimated_hours = float(payload["estimated_hours"] or 0)
+    if "planned_start_date" in payload or "start_date" in payload:
+        assignment.planned_start_date = EngineerSchedulingService._coerce_date(
+            payload.get("planned_start_date") or payload.get("start_date")
+        )
+    if "planned_end_date" in payload or "end_date" in payload:
+        assignment.planned_end_date = EngineerSchedulingService._coerce_date(
+            payload.get("planned_end_date") or payload.get("end_date")
+        )
+    if (
+        assignment.planned_start_date
+        and assignment.planned_end_date
+        and assignment.planned_end_date < assignment.planned_start_date
+    ):
+        raise HTTPException(status_code=400, detail="planned_end_date 不能早于 planned_start_date")
+
+    db.commit()
+    db.refresh(assignment)
+
+    return {
+        "id": assignment.id,
+        "assignment_no": assignment.assignment_no,
+        "project_id": assignment.project_id,
+        "engineer_id": assignment.engineer_id,
+        "status": assignment.status,
+        "allocation_pct": payload.get("allocation_pct"),
+        "estimated_hours": assignment.estimated_hours,
+        "planned_start_date": assignment.planned_start_date,
+        "planned_end_date": assignment.planned_end_date,
+        "message": "更新成功",
+    }
+
+
+@router.delete("/assignments/{assignment_id}", summary="删除工程师任务分配")
+def delete_assignment(
+    assignment_id: int = Path(..., description="分配 ID"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """取消一条工程师分配，保留审计记录。"""
+    scheduling_service = EngineerSchedulingService(db)
+    scheduling_service.ensure_task_assignment_table()
+
+    assignment = (
+        db.query(EngineerTaskAssignment)
+        .filter(EngineerTaskAssignment.id == assignment_id)
+        .first()
+    )
+    if not assignment:
+        raise HTTPException(status_code=404, detail="分配不存在")
+
+    assignment.status = "CANCELLED"
+    db.commit()
+
+    return {"id": assignment_id, "status": "CANCELLED", "message": "删除成功"}
+
+
+@router.get("/workload-board", summary="获取工程师负载看板")
+def get_workload_board(
+    start_date: Optional[str] = Query(None, description="开始日期"),
+    end_date: Optional[str] = Query(None, description="结束日期"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """返回前端调度看板需要的工程师负载列表。"""
+    start = _coerce_optional_query_date(start_date)
+    end = _coerce_optional_query_date(end_date)
+    if start and end and end < start:
+        raise HTTPException(status_code=400, detail="end_date 不能早于 start_date")
+
+    service = EngineerSchedulingService(db)
+    engineers = (
+        db.query(User)
+        .filter(User.is_active.is_(True))
+        .order_by(User.id.asc())
+        .limit(100)
+        .all()
+    )
+
+    items = []
+    for engineer in engineers:
+        workload = service.analyze_engineer_workload(engineer.id, start, end)
+        items.append(
+            {
+                "engineer_id": engineer.id,
+                "engineer_name": engineer.real_name or engineer.username,
+                "department": engineer.department,
+                "total_tasks": workload["total_tasks"],
+                "total_hours": workload["total_hours"],
+                "available_hours_per_week": workload["available_hours_per_week"],
+                "workload_ratio": workload["workload_ratio"],
+                "workload_status": workload["workload_status"],
+                "warning_level": workload["warning_level"],
+                "unique_projects": workload["unique_projects"],
+            }
+        )
+
+    return {
+        "items": items,
+        "total": len(items),
+        "summary": {
+            "engineer_count": len(items),
+            "overload_count": sum(1 for item in items if item["workload_status"] == "OVERLOAD"),
+            "idle_count": sum(1 for item in items if item["workload_status"] == "IDLE"),
+        },
+    }
+
+
+@router.get("/engineers/{engineer_id}/availability", summary="获取工程师可用时间")
+def get_engineer_availability(
+    engineer_id: int = Path(..., description="工程师 ID"),
+    start_date: Optional[str] = Query(None, description="开始日期"),
+    end_date: Optional[str] = Query(None, description="结束日期"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """按已有任务负载估算工程师可用性。"""
+    engineer = db.query(User).filter(User.id == engineer_id, User.is_active.is_(True)).first()
+    if not engineer:
+        raise HTTPException(status_code=404, detail="工程师不存在")
+
+    start = _coerce_optional_query_date(start_date)
+    end = _coerce_optional_query_date(end_date)
+    if start and end and end < start:
+        raise HTTPException(status_code=400, detail="end_date 不能早于 start_date")
+
+    service = EngineerSchedulingService(db)
+    workload = service.analyze_engineer_workload(engineer_id, start, end)
+    availability_pct = max(0, round((1 - min(workload["workload_ratio"], 1)) * 100, 2))
+
+    is_available = workload["workload_status"] != "OVERLOAD"
+    return {
+        "engineer_id": engineer_id,
+        "engineer_name": engineer.real_name or engineer.username,
+        "start_date": workload["analysis_period"]["start"],
+        "end_date": workload["analysis_period"]["end"],
+        "available": is_available,
+        "is_available": is_available,
+        "availability_pct": availability_pct,
+        "available_hours_per_week": workload["available_hours_per_week"],
+        "booked_hours_per_week": workload["max_weekly_hours"],
+        "workload_status": workload["workload_status"],
+        "warning_level": workload["warning_level"],
     }
 
 
@@ -141,8 +316,8 @@ def analyze_workload(
     - 预警级别
     """
 
-    start = date.fromisoformat(start_date) if start_date else None
-    end = date.fromisoformat(end_date) if end_date else None
+    start = _coerce_optional_query_date(start_date)
+    end = _coerce_optional_query_date(end_date)
 
     service = EngineerSchedulingService(db)
     workload = service.analyze_engineer_workload(engineer_id, start, end)
@@ -166,7 +341,10 @@ def detect_conflicts(
     - planned_end_date: 计划结束日期
     """
     service = EngineerSchedulingService(db)
-    conflicts = service.detect_task_conflicts(engineer_id, task_data)
+    try:
+        conflicts = service.detect_task_conflicts(engineer_id, task_data)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {
         "engineer_id": engineer_id,
         "conflict_count": len(conflicts),

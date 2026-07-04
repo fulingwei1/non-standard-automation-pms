@@ -6,7 +6,9 @@
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
+from decimal import Decimal
+from math import ceil
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -19,7 +21,9 @@ from app.core.state_machine.exceptions import (
     PermissionDeniedError,
 )
 from app.core.state_machine.installation_dispatch import InstallationDispatchStateMachine
+from app.models.engineer_capacity import EngineerTaskAssignment
 from app.models.installation_dispatch import InstallationDispatchOrder
+from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.installation_dispatch import (
@@ -35,6 +39,180 @@ from .orders import read_installation_dispatch_order
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+def _dispatch_assignment_no(order_id: int) -> str:
+    return f"IDISPATCH-{order_id}"
+
+
+def _dispatch_planned_end(order: InstallationDispatchOrder):
+    estimated_hours = float(order.estimated_hours or 8)
+    days = max(1, ceil(estimated_hours / 8))
+    return order.scheduled_date + timedelta(days=days - 1)
+
+
+def _find_dispatch_assignment(db: Session, order_id: int) -> EngineerTaskAssignment | None:
+    return (
+        db.query(EngineerTaskAssignment)
+        .filter(EngineerTaskAssignment.assignment_no == _dispatch_assignment_no(order_id))
+        .first()
+    )
+
+
+def _ensure_no_dispatch_conflict(
+    db: Session,
+    order: InstallationDispatchOrder,
+    assigned_to_id: int,
+) -> EngineerTaskAssignment | None:
+    from app.services.engineer_scheduling_service import EngineerSchedulingService
+
+    service = EngineerSchedulingService(db)
+    service.ensure_task_assignment_table()
+    existing_assignment = _find_dispatch_assignment(db, order.id)
+    planned_end = _dispatch_planned_end(order)
+    conflicts = service.detect_task_conflicts(
+        assigned_to_id,
+        {
+            "id": existing_assignment.id if existing_assignment else None,
+            "project_id": order.project_id,
+            "task_type": order.task_type,
+            "planned_start_date": order.scheduled_date,
+            "planned_end_date": planned_end,
+        },
+    )
+    if conflicts:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": "派工人员存在时间冲突",
+                "conflict_count": len(conflicts),
+                "conflicts": conflicts,
+            },
+        )
+    return existing_assignment
+
+
+def _upsert_dispatch_assignment(
+    db: Session,
+    order: InstallationDispatchOrder,
+    assignee: User,
+    existing_assignment: EngineerTaskAssignment | None,
+) -> None:
+    planned_end = _dispatch_planned_end(order)
+    assignment = existing_assignment or EngineerTaskAssignment(
+        assignment_no=_dispatch_assignment_no(order.id)
+    )
+    assignment.engineer_id = assignee.id
+    assignment.project_id = order.project_id
+    assignment.machine_id = order.machine_id
+    assignment.task_type = order.task_type
+    assignment.task_description = order.task_description or order.task_title
+    assignment.estimated_hours = float(order.estimated_hours or 8)
+    assignment.planned_start_date = order.scheduled_date
+    assignment.planned_end_date = planned_end
+    assignment.status = "PENDING"
+    assignment.priority = {"URGENT": 100, "HIGH": 80, "NORMAL": 50, "LOW": 20}.get(
+        order.priority, 50
+    )
+    db.add(assignment)
+
+
+def _ensure_dispatch_assignment(
+    db: Session,
+    order: InstallationDispatchOrder,
+) -> EngineerTaskAssignment | None:
+    if not order.assigned_to_id:
+        return None
+    assignment = _find_dispatch_assignment(db, order.id)
+    if assignment:
+        return assignment
+
+    assignee = db.query(User).filter(User.id == order.assigned_to_id).first()
+    if not assignee:
+        return None
+    _upsert_dispatch_assignment(db, order, assignee, None)
+    db.flush()
+    return _find_dispatch_assignment(db, order.id)
+
+
+def _sync_dispatch_assignment_status(
+    db: Session,
+    order: InstallationDispatchOrder,
+    status_value: str,
+) -> EngineerTaskAssignment | None:
+    assignment = _ensure_dispatch_assignment(db, order)
+    if not assignment:
+        return None
+
+    assignment.status = status_value
+    if status_value == "IN_PROGRESS":
+        assignment.actual_start_date = (order.start_time or datetime.now()).date()
+    elif status_value == "COMPLETED":
+        assignment.actual_end_date = (order.end_time or datetime.now()).date()
+        assignment.actual_hours = float(order.actual_hours or order.estimated_hours or 0)
+        if not assignment.actual_start_date and order.start_time:
+            assignment.actual_start_date = order.start_time.date()
+    elif status_value == "CANCELLED":
+        assignment.actual_end_date = datetime.now().date()
+
+    db.add(assignment)
+    return assignment
+
+
+def _upsert_dispatch_timesheet(
+    db: Session,
+    order: InstallationDispatchOrder,
+    assignment: EngineerTaskAssignment | None,
+    current_user: User,
+) -> Timesheet | None:
+    if not order.assigned_to_id:
+        return None
+    hours = Decimal(str(order.actual_hours or order.estimated_hours or 0))
+    if hours <= 0:
+        return None
+
+    work_date = (order.end_time.date() if order.end_time else order.scheduled_date)
+    timesheet = (
+        db.query(Timesheet)
+        .filter(
+            Timesheet.user_id == order.assigned_to_id,
+            Timesheet.task_id == order.id,
+            Timesheet.assign_id == (assignment.id if assignment else None),
+        )
+        .first()
+        if assignment
+        else None
+    )
+    if not timesheet:
+        timesheet = Timesheet(
+            timesheet_no=f"TS-DISPATCH-{order.id}",
+            user_id=order.assigned_to_id,
+            task_id=order.id,
+            assign_id=assignment.id if assignment else None,
+            status="DRAFT",
+            created_by=current_user.id,
+        )
+
+    project = order.project
+    assignee = order.assigned_to
+    timesheet.user_name = (
+        (assignee.real_name or assignee.username)
+        if assignee
+        else order.assigned_to_name
+    )
+    timesheet.project_id = order.project_id
+    timesheet.project_code = project.project_code if project else None
+    timesheet.project_name = project.project_name if project else None
+    timesheet.work_date = work_date
+    timesheet.hours = hours
+    timesheet.overtime_type = "NORMAL"
+    timesheet.task_name = order.task_title
+    timesheet.work_content = order.task_description or order.task_title
+    timesheet.work_result = order.execution_notes or order.solution_provided
+    timesheet.progress_before = 0
+    timesheet.progress_after = 100
+    db.add(timesheet)
+    return timesheet
 
 
 @router.put(
@@ -63,6 +241,8 @@ def assign_installation_dispatch_order(
     if not assignee:
         raise HTTPException(status_code=404, detail="派工人员不存在")
 
+    existing_assignment = _ensure_no_dispatch_conflict(db, order, assign_in.assigned_to_id)
+
     # 使用状态机执行派工
     sm = InstallationDispatchStateMachine(order, db)
     try:
@@ -82,6 +262,7 @@ def assign_installation_dispatch_order(
         raise HTTPException(status_code=403, detail=str(e))
 
     db.add(order)
+    _upsert_dispatch_assignment(db, order, assignee, existing_assignment)
     db.commit()
     db.refresh(order)
 
@@ -117,6 +298,14 @@ def batch_assign_installation_dispatch_orders(
                 failed_orders.append({"order_id": order_id, "reason": "派工单不存在"})
                 continue
 
+            try:
+                existing_assignment = _ensure_no_dispatch_conflict(
+                    db, order, batch_assign_in.assigned_to_id
+                )
+            except HTTPException as e:
+                failed_orders.append({"order_id": order_id, "reason": e.detail})
+                continue
+
             # 使用状态机执行派工
             sm = InstallationDispatchStateMachine(order, db)
             try:
@@ -132,6 +321,7 @@ def batch_assign_installation_dispatch_orders(
                     remark=batch_assign_in.remark,
                 )
                 db.add(order)
+                _upsert_dispatch_assignment(db, order, assignee, existing_assignment)
                 success_count += 1
             except (InvalidStateTransitionError, PermissionDeniedError) as e:
                 failed_orders.append({"order_id": order_id, "reason": str(e)})
@@ -187,6 +377,7 @@ def start_installation_dispatch_order(
         raise HTTPException(status_code=403, detail=str(e))
 
     db.add(order)
+    _sync_dispatch_assignment_status(db, order, "IN_PROGRESS")
     db.commit()
     db.refresh(order)
 
@@ -272,6 +463,8 @@ def complete_installation_dispatch_order(
         raise HTTPException(status_code=403, detail=str(e))
 
     db.add(order)
+    assignment = _sync_dispatch_assignment_status(db, order, "COMPLETED")
+    _upsert_dispatch_timesheet(db, order, assignment, current_user)
     db.commit()
     db.refresh(order)
 
@@ -312,6 +505,7 @@ def cancel_installation_dispatch_order(
         raise HTTPException(status_code=403, detail=str(e))
 
     db.add(order)
+    _sync_dispatch_assignment_status(db, order, "CANCELLED")
     db.commit()
     db.refresh(order)
 

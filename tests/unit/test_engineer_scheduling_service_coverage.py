@@ -51,8 +51,8 @@ class TestEngineerSchedulingServiceSafeQuery:
         
         assert len(result) == 1
 
-    def test_query_task_assignments_table_missing(self, service):
-        """测试表不存在时返回空列表"""
+    def test_query_task_assignments_table_missing_raises_after_ensure(self, service):
+        """补表后仍查询失败时不再静默返回无冲突。"""
         exc = OperationalError("no such table: engineer_task_assignments", {}, None)
         
         service.db.query = Mock()
@@ -60,9 +60,8 @@ class TestEngineerSchedulingServiceSafeQuery:
         query_mock.filter.return_value.all.side_effect = exc
         service.db.query.return_value = query_mock
         
-        result = service._query_task_assignments()
-        
-        assert result == []
+        with pytest.raises(OperationalError):
+            service._query_task_assignments()
 
     def test_get_engineer_capacity_found(self, service):
         """测试找到工程师能力模型"""

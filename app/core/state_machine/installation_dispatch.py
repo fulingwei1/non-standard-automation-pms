@@ -163,7 +163,7 @@ class InstallationDispatchStateMachine(StateMachine):
         try:
             import logging
 
-            from app.api.v1.endpoints.service import generate_record_no
+            from app.api.v1.endpoints.service.number_utils import generate_record_no
             from app.models.project import Machine
             from app.models.service import ServiceRecord
 
