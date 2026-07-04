@@ -47,3 +47,41 @@ def test_stub_module_no_longer_exports_shortage_alerts():
     from app.utils.scheduled_tasks import stub_tasks
 
     assert "generate_shortage_alerts" not in stub_tasks.__all__, "stub 模块不应再导出已回填任务"
+
+
+def test_auto_trigger_urgent_purchase_calls_real_service():
+    from app.utils import scheduled_tasks
+
+    with patch(
+        "app.services.urgent_purchase_from_shortage_service.auto_trigger_urgent_purchase_for_alerts",
+        return_value={"checked_count": 3, "created_count": 1, "skipped_count": 2, "failed_count": 0},
+    ) as mocked:
+        result = scheduled_tasks.auto_trigger_urgent_purchase_from_shortage_alerts()
+
+    assert mocked.called, "任务未调用真实触发服务"
+    assert result["status"] == "success", f"仍是桩返回: {result}"
+    assert result["created_count"] == 1
+
+
+def test_auto_trigger_urgent_purchase_reports_error_on_failure():
+    from app.utils import scheduled_tasks
+
+    with patch(
+        "app.services.urgent_purchase_from_shortage_service.auto_trigger_urgent_purchase_for_alerts",
+        side_effect=RuntimeError("触发失败"),
+    ):
+        result = scheduled_tasks.auto_trigger_urgent_purchase_from_shortage_alerts()
+
+    assert result["status"] == "error"
+    assert "触发失败" in result.get("message", "")
+
+
+def test_auto_trigger_task_enabled_and_out_of_stub():
+    from app.utils.scheduled_tasks import stub_tasks
+    from app.utils.scheduler_config.shortage import SHORTAGE_TASKS
+
+    assert "auto_trigger_urgent_purchase_from_shortage_alerts" not in stub_tasks.__all__
+    task = next(
+        t for t in SHORTAGE_TASKS if t["id"] == "auto_trigger_urgent_purchase_from_shortage_alerts"
+    )
+    assert task["enabled"] is True, "PROD-15 已修，自动触发任务应解禁（申请进审批池，人审仍是闸门）"

@@ -1,5 +1,12 @@
 # PROJECT_NOTES
 
+## 2026-07-04 继续：台账对账 + APPR-04 第二个回填（紧急采购自动触发）
+
+- 台账对账：并行会话已修但台账行滞后的 5 项同步为"已修待验"——PROD-05（齐套率口径）、PROD-09（ECN 状态机跳步）、PROD-10（采购转单闸门）、PROD-15（现场缺料断链）、APPR-15（发货款触发器），均引 PROJECT_NOTES 对应验证记录；PROJ-11/14"修复中"状态准确未动。
+- APPR-04 第二个回填：PROD-15 做实解锁了前置——`auto_trigger_urgent_purchase_from_shortage_alerts` 移出 stub，接 `auto_trigger_urgent_purchase_for_alerts`（扫 CRITICAL/URGENT 缺料预警、按 related_po_no 去重、建 SUBMITTED 申请**进审批池**——自动化的是提单不是批准，人审仍是闸门）；调度解禁每日 7:30；异常返回 error 哨兵。
+- 验证：红灯 3 项 → 绿灯回填套件 7 passed；P0-10 + j3 全套 95 passed（4 项失败为已证实的通知类既有测试债）；`import app.main` 通过。
+- 缺料 3 件套至此回填 2/3；剩余：缺料日报（幽灵表需先定义写入口径）、维保计划（随 AS-14）。
+
 ## 2026-07-04 继续：功能审计 HR-17 修复（奖金审批主链路加固）
 
 - 修复项：`HR-17`（同 SALES-01 性质），奖金审批端点任意登录用户可批、可批自己的奖金、任意状态可流转；Excel 分配表导入直 APPROVED 无审批人痕迹。
@@ -1505,7 +1512,7 @@
 - 改动：
   - `app/api/v1/endpoints/pmo/closure.py`：创建结项前调用 `ClosureReadinessService(db).check_readiness(project_id)`；`ready=False` 时返回 400，detail 带准备度分数和缺项。
   - `tests/api/test_pmo.py`：新增未达 readiness 不得创建结项的 API 合约测试；旧 `_ensure_closure` helper 显式模拟 ready=True，并修正读结项接口 `200 null` 被误当已有记录的问题。
-  - `FUNCTIONAL_AUDIT_TRACKER.md`：`PROJ-06` 标为 `已验证`；全局 P0#8 标清 `PROJ-20` 仍待修，避免把变更审批回基线一起误判完成。
+  - `FUNCTIONAL_AUDIT_TRACKER.md`：`PROJ-06` 标为 `已验证`；当时全局 P0#8 标清 `PROJ-20` 仍待修，避免把变更审批回基线一起误判完成（`PROJ-20` 已在 2026-07-04 后续段落修复）。
 - 验证：
   - 红灯1：`.venv/bin/python -m pytest tests/audit_p0/test_p0_08_closure_gate_and_change_baseline.py::test_closure_blocked_when_not_ready -q` -> failed，未达 readiness 项目仍 HTTP 201。
   - 红灯2：`.venv/bin/python -m pytest tests/api/test_pmo.py::TestProjectClosures::test_create_closure_blocks_when_readiness_not_ready -q` -> failed，返回 201。
@@ -2863,3 +2870,45 @@
   - `PYTHONPATH=. pytest -q tests/unit/test_health_trend_service.py tests/unit/test_health_trend_service_coverage.py` 通过（12 个用例）。
   - `ruff check app/services/health_calculator.py app/services/health_trend_service.py app/utils/scheduled_tasks/project_scheduled_tasks.py app/utils/scheduled_tasks/project_health_tasks.py tests/unit/test_health_calculator.py tests/unit/test_project_scheduled_tasks.py tests/unit/test_project_health_tasks.py app/tests/services/project_management/test_health_calculator_branches.py` 通过。
   - `python -m py_compile app/services/health_calculator.py app/services/health_trend_service.py app/utils/scheduled_tasks/project_scheduled_tasks.py app/utils/scheduled_tasks/project_health_tasks.py tests/unit/test_health_calculator.py tests/unit/test_project_scheduled_tasks.py tests/unit/test_project_health_tasks.py app/tests/services/project_management/test_health_calculator_branches.py` 通过；`git diff --check` 通过。
+
+## 2026-07-04 继续：PROJ-20 变更审批回写项目基线
+
+- 修复目标：项目变更请求审批通过后不能只改变更单状态；必须把已审批的时间/成本影响落实到项目基线，拒绝/退回不能动项目。
+- 现场确认：
+  - `ProjectChangeRequestsService.approve_change_request()` 原来只写 `ChangeRequest` 审批字段和 `ChangeApprovalRecord`，不写 `Project`、`ProjectMilestone` 或 `ProjectCost`。
+  - `project_change_impact_service.execute_linkage()` 虽有 ECN 联动逻辑，但其模型强依赖 `ecn_id`，与普通 `ChangeRequest` 没有调用关系。
+- 红测：
+  - 新增 `tests/unit/test_project_change_baseline_proj20.py`，先失败在批准后查不到 `ProjectCost(source_type=CHANGE_REQUEST)`，且项目计划结束日/里程碑/实际成本未变化。
+- 代码面：
+  - `approve_change_request(...APPROVED...)` now 在同一事务调用 `_apply_approved_change_to_project_baseline()`。
+  - 时间影响：`time_impact` 或 `impact_details.schedule.delay_days` 会顺延 `Project.planned_end_date`。
+  - 里程碑影响：`impact_details.schedule.affected_milestones[].milestone_id` 指定时只更新指定里程碑；未指定时更新项目未完成里程碑。
+  - 成本影响：`cost_impact` 或 `impact_details.cost.total/additional/amount` 会创建 ACTUAL 口径 `ProjectCost`，source 追溯到 `CHANGE_REQUEST`，并同步累加 `Project.actual_cost`。
+  - 幂等保护：若同一变更已有成本记录则不重复累加；`impact_details.baseline_application` 记录应用时间、执行人、延期、里程碑更新和成本记录 ID。
+  - 拒绝审批路径保持只更新变更状态，不改项目基线。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/unit/test_project_change_baseline_proj20.py tests/unit/test_project_change_notifications_proj21.py` 通过（4 个用例）。
+  - `ruff check app/services/project_change_requests/service.py tests/unit/test_project_change_baseline_proj20.py tests/unit/test_project_change_notifications_proj21.py` 通过。
+  - `python -m py_compile app/services/project_change_requests/service.py tests/unit/test_project_change_baseline_proj20.py tests/unit/test_project_change_notifications_proj21.py` 通过；`git diff --check` 通过。
+
+## 2026-07-04 继续：PROJ-14 预算超支预警链路部分接实
+
+- 修复目标（本轮小切口）：成本归集后不能继续只调用简版 `CostAlertService.check_budget_execution()` 建预警记录；应接入富版 `BudgetAlertService.check_and_alert()`，让预算超支预警进入通知/动作中心链路。
+- 现场确认：
+  - `CostCollectionService._check_budget_alert()` 原来调用静态 `CostAlertService.check_budget_execution()`，只生成 `AlertRecord`。
+  - 富版 `BudgetAlertService.check_and_alert()` 已存在，会构建预算执行状态、按黄/橙/红分级、创建/更新预警，并调用 `_dispatch_notifications()` 通知项目经理和部门负责人。
+  - 成本归集中另有 ECN/BOM 两处直调旧服务，未统一走 helper。
+- 代码面：
+  - `CostCollectionService._check_budget_alert()` now 调 `BudgetAlertService(db).check_and_alert(project_id, trigger_source, source_id)`。
+  - ECN 和 BOM 成本归集 now 也统一走 `_check_budget_alert()`。
+  - 保留 `CostAlertService` legacy 导出作为旧测试/旧 patch 兼容目标，但实际链路不再使用它。
+  - `tests/services/test_cost_collection_business_docs.py` 的 patch 点切到 `BudgetAlertService.check_and_alert`，并新增断言：采购成本归集必须调用富版预算预警服务。
+- 仍未闭环：
+  - 采购/费用入口的预算超支软拦截尚未实现。
+  - 预算阈值仍主要来自 `BudgetAlertConfig` 默认值/调用方配置，未完成业务配置化入口。
+- 验证：
+  - `PYTHONPATH=. pytest -q tests/services/test_cost_collection_business_docs.py` 通过（7 个用例）。
+  - `PYTHONPATH=. pytest -q tests/unit/test_m2_cost_purchase_notification_strategy.py::TestCostCollectionService tests/unit/test_cost_collection_n3.py tests/unit/test_cost_collection_service_coverage.py` 通过（46 个用例）。
+  - `PYTHONPATH=. pytest -q tests/services/test_cost_collection_business_docs.py tests/unit/test_m2_cost_purchase_notification_strategy.py::TestCostCollectionService tests/unit/test_cost_collection_n3.py tests/unit/test_cost_collection_service_coverage.py` 通过（53 个用例）。
+  - `ruff check app/services/cost/cost_collection_service.py tests/services/test_cost_collection_business_docs.py` 通过。
+  - `python -m py_compile app/services/cost/cost_collection_service.py tests/services/test_cost_collection_business_docs.py` 通过；`git diff --check` 通过。

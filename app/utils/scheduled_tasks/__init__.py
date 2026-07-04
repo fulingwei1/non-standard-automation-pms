@@ -115,9 +115,11 @@ from .sales_tasks import (
 )
 
 # ==================== 存根任务（待实现）====================
-from .shortage_tasks import generate_shortage_alerts  # noqa: F401  # APPR-04 已回填真实现
-from .stub_tasks import (
+from .shortage_tasks import (  # noqa: F401  # APPR-04 已回填真实现
     auto_trigger_urgent_purchase_from_shortage_alerts,
+    generate_shortage_alerts,
+)
+from .stub_tasks import (
     check_cost_overrun_alerts,
     check_delivery_delay,
     check_equipment_maintenance_reminder,

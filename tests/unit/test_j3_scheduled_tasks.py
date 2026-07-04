@@ -384,13 +384,20 @@ class TestStubTasks:
         result = generate_job_duty_tasks()
         self._check_stub_result(result)
 
-    def test_auto_trigger_urgent_purchase_from_shortage_alerts(self):
-        from app.utils.scheduled_tasks.stub_tasks import (
-            auto_trigger_urgent_purchase_from_shortage_alerts,
+    def test_auto_trigger_urgent_purchase_is_no_longer_stub(self):
+        # APPR-04 回填：已接真实触发服务，移出 stub 模块
+        import pytest
+
+        with pytest.raises(ImportError):
+            from app.utils.scheduled_tasks.stub_tasks import (  # noqa: F401
+                auto_trigger_urgent_purchase_from_shortage_alerts,
+            )
+
+        from app.utils.scheduled_tasks import (
+            auto_trigger_urgent_purchase_from_shortage_alerts as real_task,
         )
 
-        result = auto_trigger_urgent_purchase_from_shortage_alerts()
-        self._check_stub_result(result)
+        assert real_task.__module__.endswith("shortage_tasks")
 
     def test_check_workload_overload_alerts(self):
         from app.utils.scheduled_tasks.stub_tasks import check_workload_overload_alerts

@@ -43,15 +43,6 @@ def check_issue_timeout_escalation():
 # ==================== 缺料管理 ====================
 
 
-@_stub_task("auto_trigger_urgent_purchase_from_shortage_alerts", "自动触发紧急采购")
-def auto_trigger_urgent_purchase_from_shortage_alerts():
-    """
-    自动触发紧急采购
-    根据缺料预警自动创建紧急采购申请
-    """
-    pass
-
-
 @_stub_task("daily_kit_check", "每日齐套检查")
 def daily_kit_check():
     """
@@ -217,7 +208,6 @@ def check_presale_workorder_timeout():
 # ==================== 导出 ====================
 __all__ = [
     "check_issue_timeout_escalation",
-    "auto_trigger_urgent_purchase_from_shortage_alerts",
     "daily_kit_check",
     "sync_kitting_rate_hourly",
     "generate_shortage_daily_report",
