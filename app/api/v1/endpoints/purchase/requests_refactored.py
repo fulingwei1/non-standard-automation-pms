@@ -22,6 +22,8 @@ from app.models.purchase import (
     PurchaseRequestItem,
 )
 from app.models.user import User
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 from .utils import (
@@ -34,6 +36,13 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+# 采购申请数据权限配置
+PURCHASE_REQUEST_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="created_by",
+    additional_owner_fields=["requested_by", "approved_by"],
+    project_field="project_id",
+)
+
 
 @router.get("/requests")
 def list_purchase_requests(
@@ -44,8 +53,14 @@ def list_purchase_requests(
     ),
     current_user: User = Depends(get_current_active_user),
 ):
-    """获取采购申请列表"""
+    """获取采购申请列表（按数据权限过滤）"""
     query = db.query(PurchaseRequest)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, PurchaseRequest, current_user, PURCHASE_REQUEST_DATA_SCOPE_CONFIG
+    )
+
     if status:
         query = query.filter(PurchaseRequest.status == status)
     total = query.count()

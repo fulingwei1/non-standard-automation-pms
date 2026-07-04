@@ -21,6 +21,8 @@ from app.models.purchase import (
     PurchaseOrderItem,
 )
 from app.models.user import User
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.services.inventory.inbound_service import InboundService
 from app.services.cost.cost_collection_service import CostCollectionService
 from app.schemas.common import ResponseModel
@@ -30,6 +32,13 @@ from .utils import decimal_value, generate_receipt_no
 
 router = APIRouter()
 DEFAULT_WAREHOUSE_LOCATION = "默认仓库"
+
+# 收货单数据权限配置（收货单本身无直接项目字段，仅按所有者过滤）
+GOODS_RECEIPT_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="created_by",
+    additional_owner_fields=["inspected_by", "warehoused_by"],
+    project_field=None,
+)
 
 
 def _date_value(value: Any) -> Optional[str]:
@@ -188,8 +197,14 @@ def list_goods_receipts(
     pagination: PaginationParams = Depends(get_pagination_query),
     current_user: User = Depends(get_current_active_user),
 ):
-    """获取收货单列表"""
+    """获取收货单列表（按数据权限过滤）"""
     query = db.query(GoodsReceipt)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, GoodsReceipt, current_user, GOODS_RECEIPT_DATA_SCOPE_CONFIG
+    )
+
     if order_id is not None:
         query = query.filter(GoodsReceipt.order_id == order_id)
     if status:

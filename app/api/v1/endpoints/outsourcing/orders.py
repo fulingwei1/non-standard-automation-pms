@@ -40,8 +40,16 @@ from app.schemas.outsourcing import (
     OutsourcingOrderResponse,
     OutsourcingOrderUpdate,
 )
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 
 router = APIRouter()
+
+# 外协订单数据权限配置
+OUTSOURCING_ORDER_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="created_by",
+    project_field="project_id",
+)
 
 from app.common.query_filters import apply_pagination
 
@@ -79,9 +87,14 @@ def read_outsourcing_orders(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    获取外协订单列表
+    获取外协订单列表（按数据权限过滤）
     """
     query = db.query(OutsourcingOrder)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, OutsourcingOrder, current_user, OUTSOURCING_ORDER_DATA_SCOPE_CONFIG
+    )
 
     # 应用关键词过滤（订单号/标题）
     from app.common.query_filters import apply_keyword_filter

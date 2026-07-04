@@ -22,11 +22,20 @@ from app.schemas.outsourcing import (
     OutsourcingPaymentCreate,
     OutsourcingPaymentResponse,
 )
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.utils.db_helpers import get_or_404
 
 from .utils import generate_payment_no
 
 router = APIRouter()
+
+# 外协付款数据权限配置（付款记录本身无直接项目字段，仅按所有者过滤）
+OUTSOURCING_PAYMENT_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="created_by",
+    additional_owner_fields=["approved_by"],
+    project_field=None,
+)
 
 
 @router.get(
@@ -44,9 +53,14 @@ def read_outsourcing_payments(
     current_user: User = Depends(security.require_permission("finance:read")),
 ) -> Any:
     """
-    获取外协付款记录列表
+    获取外协付款记录列表（按数据权限过滤）
     """
     query = db.query(OutsourcingPayment)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, OutsourcingPayment, current_user, OUTSOURCING_PAYMENT_DATA_SCOPE_CONFIG
+    )
 
     if vendor_id:
         query = query.filter(OutsourcingPayment.vendor_id == vendor_id)
