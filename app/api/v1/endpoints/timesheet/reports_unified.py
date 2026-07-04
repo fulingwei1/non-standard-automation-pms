@@ -17,8 +17,19 @@ from app.core import security
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 
 router = APIRouter()
+
+# 工时数据权限配置：所有者为实际填报人(user_id)，创建人(created_by)兼容代填场景，
+# 部门字段直接使用工时表冗余的 department_id
+TIMESHEET_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="user_id",
+    additional_owner_fields=["created_by"],
+    project_field="project_id",
+    dept_field="department_id",
+)
 
 
 def _build_base_filter(start_date: date, end_date: date, department_id, project_id, user_id):
@@ -37,18 +48,14 @@ def _build_base_filter(start_date: date, end_date: date, department_id, project_
     return filters
 
 
-def _report_summary(db: Session, filters):
+def _report_summary(db: Session, query):
     """汇总报表"""
-    result = (
-        db.query(
-            func.coalesce(func.sum(Timesheet.hours), 0).label("total_hours"),
-            func.count(func.distinct(Timesheet.user_id)).label("total_users"),
-            func.count(Timesheet.id).label("total_records"),
-            func.count(func.distinct(Timesheet.project_id)).label("total_projects"),
-        )
-        .filter(*filters)
-        .first()
-    )
+    result = query.with_entities(
+        func.coalesce(func.sum(Timesheet.hours), 0).label("total_hours"),
+        func.count(func.distinct(Timesheet.user_id)).label("total_users"),
+        func.count(Timesheet.id).label("total_records"),
+        func.count(func.distinct(Timesheet.project_id)).label("total_projects"),
+    ).first()
 
     return {
         "total_hours": float(result.total_hours) if result else 0,
@@ -58,14 +65,9 @@ def _report_summary(db: Session, filters):
     }
 
 
-def _report_detail(db: Session, filters):
+def _report_detail(db: Session, query):
     """明细报表"""
-    records = (
-        db.query(Timesheet)
-        .filter(*filters)
-        .order_by(Timesheet.work_date.desc(), Timesheet.user_id)
-        .all()
-    )
+    records = query.order_by(Timesheet.work_date.desc(), Timesheet.user_id).all()
 
     return [
         {
@@ -83,17 +85,16 @@ def _report_detail(db: Session, filters):
     ]
 
 
-def _report_by_project(db: Session, filters):
+def _report_by_project(db: Session, query):
     """按项目汇总"""
     rows = (
-        db.query(
+        query.with_entities(
             Timesheet.project_id,
             Timesheet.project_name,
             func.coalesce(func.sum(Timesheet.hours), 0).label("hours"),
             func.count(func.distinct(Timesheet.user_id)).label("users"),
             func.count(Timesheet.id).label("records"),
         )
-        .filter(*filters)
         .group_by(Timesheet.project_id, Timesheet.project_name)
         .order_by(func.sum(Timesheet.hours).desc())
         .all()
@@ -111,10 +112,10 @@ def _report_by_project(db: Session, filters):
     ]
 
 
-def _report_by_user(db: Session, filters):
+def _report_by_user(db: Session, query):
     """按用户汇总"""
     rows = (
-        db.query(
+        query.with_entities(
             Timesheet.user_id,
             Timesheet.user_name,
             Timesheet.department_name,
@@ -122,7 +123,6 @@ def _report_by_user(db: Session, filters):
             func.count(func.distinct(Timesheet.project_id)).label("projects"),
             func.count(Timesheet.id).label("records"),
         )
-        .filter(*filters)
         .group_by(Timesheet.user_id, Timesheet.user_name, Timesheet.department_name)
         .order_by(func.sum(Timesheet.hours).desc())
         .all()
@@ -172,9 +172,15 @@ def get_unified_timesheet_report(
     - by_user: 按用户汇总
     """
     filters = _build_base_filter(start_date, end_date, department_id, project_id, user_id)
+    query = db.query(Timesheet).filter(*filters)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, Timesheet, current_user, TIMESHEET_DATA_SCOPE_CONFIG
+    )
 
     builder = _REPORT_BUILDERS.get(report_type, _report_summary)
-    data = builder(db, filters)
+    data = builder(db, query)
 
     return ResponseModel(
         code=200,
@@ -204,8 +210,15 @@ def export_unified_timesheet_report(
     此端点返回报表数据供前端生成文件。
     """
     filters = _build_base_filter(start_date, end_date, None, None, None)
+    query = db.query(Timesheet).filter(*filters)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, Timesheet, current_user, TIMESHEET_DATA_SCOPE_CONFIG
+    )
+
     builder = _REPORT_BUILDERS.get(report_type, _report_summary)
-    data = builder(db, filters)
+    data = builder(db, query)
 
     return ResponseModel(
         code=200,

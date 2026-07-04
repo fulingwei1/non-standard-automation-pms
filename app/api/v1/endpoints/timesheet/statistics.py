@@ -29,9 +29,20 @@ from app.schemas.common import ResponseModel
 from app.schemas.timesheet import (
     TimesheetStatisticsResponse,
 )
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter(prefix="/statistics", tags=["statistics"])
+
+# 工时数据权限配置：所有者为实际填报人(user_id)，创建人(created_by)兼容代填场景，
+# 部门字段直接使用工时表冗余的 department_id
+TIMESHEET_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="user_id",
+    additional_owner_fields=["created_by"],
+    project_field="project_id",
+    dept_field="department_id",
+)
 
 # 共 3 个路由
 
@@ -256,6 +267,11 @@ def get_department_timesheet_summary(
     # 查询部门成员的工时记录
     query = db.query(Timesheet).filter(
         Timesheet.user_id.in_(user_ids), Timesheet.status == "APPROVED"
+    )
+
+    # 应用数据权限过滤：防止非管理该部门的用户越权查看他人部门汇总
+    query = DataScopeService.filter_by_scope(
+        db, query, Timesheet, current_user, TIMESHEET_DATA_SCOPE_CONFIG
     )
 
     if start_date:

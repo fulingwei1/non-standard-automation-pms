@@ -17,8 +17,19 @@ from app.core import security
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.data_scope_service import DataScopeService
 
 router = APIRouter()
+
+# 工时数据权限配置：所有者为实际填报人(user_id)，创建人(created_by)兼容代填场景，
+# 部门字段直接使用工时表冗余的 department_id
+TIMESHEET_DATA_SCOPE_CONFIG = DataScopeConfig(
+    owner_field="user_id",
+    additional_owner_fields=["created_by"],
+    project_field="project_id",
+    dept_field="department_id",
+)
 
 
 @router.get("/reports/summary", response_model=ResponseModel)
@@ -42,27 +53,29 @@ def get_timesheet_report_summary(
     if department_id:
         base_filter.append(Timesheet.department_id == department_id)
 
-    # 汇总统计
-    result = (
-        db.query(
-            func.coalesce(func.sum(Timesheet.hours), 0).label("total_hours"),
-            func.count(func.distinct(Timesheet.user_id)).label("total_users"),
-            func.count(Timesheet.id).label("total_records"),
-            func.count(func.distinct(Timesheet.project_id)).label("total_projects"),
-        )
-        .filter(*base_filter)
-        .first()
+    query = db.query(Timesheet).filter(*base_filter)
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, Timesheet, current_user, TIMESHEET_DATA_SCOPE_CONFIG
     )
+
+    # 汇总统计
+    result = query.with_entities(
+        func.coalesce(func.sum(Timesheet.hours), 0).label("total_hours"),
+        func.count(func.distinct(Timesheet.user_id)).label("total_users"),
+        func.count(Timesheet.id).label("total_records"),
+        func.count(func.distinct(Timesheet.project_id)).label("total_projects"),
+    ).first()
 
     # 按用户汇总
     user_rows = (
-        db.query(
+        query.with_entities(
             Timesheet.user_id,
             Timesheet.user_name,
             func.coalesce(func.sum(Timesheet.hours), 0).label("hours"),
             func.count(Timesheet.id).label("records"),
         )
-        .filter(*base_filter)
         .group_by(Timesheet.user_id, Timesheet.user_name)
         .order_by(func.sum(Timesheet.hours).desc())
         .all()
@@ -112,6 +125,11 @@ def get_timesheet_report_detail(
         Timesheet.work_date >= month_start,
         Timesheet.work_date <= month_end,
         Timesheet.status == "APPROVED",
+    )
+
+    # 应用数据权限过滤
+    query = DataScopeService.filter_by_scope(
+        db, query, Timesheet, current_user, TIMESHEET_DATA_SCOPE_CONFIG
     )
 
     if user_id:
