@@ -9,6 +9,7 @@ Excel模板生成服务
 import io
 from datetime import datetime
 from typing import Dict, List, Optional
+from urllib.parse import quote
 
 from fastapi.responses import StreamingResponse
 from openpyxl.styles import Alignment, Font, PatternFill
@@ -56,7 +57,7 @@ def create_template_excel(
     return StreamingResponse(
         io.BytesIO(output.read()),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"},
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
     )
 
 

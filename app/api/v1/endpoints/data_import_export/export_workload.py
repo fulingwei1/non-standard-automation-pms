@@ -6,6 +6,7 @@
 import io
 from datetime import timedelta
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
@@ -124,5 +125,5 @@ def export_workload(
     return StreamingResponse(
         io.BytesIO(output.read()),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"},
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
     )

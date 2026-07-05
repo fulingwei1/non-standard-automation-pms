@@ -5,6 +5,8 @@ These routes keep older `/approvals/*` clients away from dynamic `{id}` routes
 while the unified approval engine remains the source of truth.
 """
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 

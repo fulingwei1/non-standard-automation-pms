@@ -263,12 +263,13 @@ def get_pending_counts(
         .count()
     )
 
-    # 我发起的进行中数量
+    # 我发起的总数——注意这里刻意统计全部状态（不只 PENDING），跟"我发起的"
+    # 页签列表口径保持一致（列表本来就是显示全部历史，包含已通过/已驳回），
+    # 否则卡片数字和点进去看到的条数对不上（复现过：卡片显示1，列表显示2）
     initiated_pending_count = (
         db.query(ApprovalInstance)
         .filter(
             ApprovalInstance.initiator_id == current_user.id,
-            ApprovalInstance.status == "PENDING",
         )
         .count()
     )
