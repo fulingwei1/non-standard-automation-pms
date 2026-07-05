@@ -1,4 +1,5 @@
-import { Eye, Mail, MailOpen } from "lucide-react";
+import { Eye, Mail, MailOpen, Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -9,7 +10,9 @@ import { cn } from "../../lib/utils";
 import { formatDateTime } from "@/lib/formatters";
 import EmptyState from "./EmptyState";
 
-const CcList = ({ items, loading, goToDetail, handleMarkRead }) => (
+const CcList = ({ items, loading, goToDetail, handleMarkRead }) => {
+  const navigate = useNavigate();
+  return (
   <Card className="bg-slate-800/50 border-slate-700">
     <CardContent className="p-0">
       <Table>
@@ -66,15 +69,28 @@ const CcList = ({ items, loading, goToDetail, handleMarkRead }) => (
                       size="sm"
                       variant="ghost"
                       className="h-8 w-8 p-0"
+                      title="查看详情"
                       onClick={() => goToDetail(item.instance_id)}
                     >
                       <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 text-slate-400 hover:text-white"
+                      title="查看对应通知"
+                      onClick={() =>
+                        navigate(`/notifications?sourceType=approval&sourceId=${item.instance_id}`)
+                      }
+                    >
+                      <Bell className="h-4 w-4" />
                     </Button>
                     {!isRead && (
                       <Button
                         size="sm"
                         variant="ghost"
                         className="h-8 w-8 p-0 text-blue-500 hover:text-blue-400"
+                        title="标记已读"
                         onClick={() => handleMarkRead(item)}
                       >
                         <MailOpen className="h-4 w-4" />
@@ -96,6 +112,7 @@ const CcList = ({ items, loading, goToDetail, handleMarkRead }) => (
       />
     </CardContent>
   </Card>
-);
+  );
+};
 
 export default CcList;

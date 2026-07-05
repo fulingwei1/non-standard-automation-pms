@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell,
@@ -13,7 +14,8 @@ import {
   Clock,
   Trash2,
   Filter,
-  Search } from
+  Search,
+  ArrowRight } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -65,7 +67,7 @@ const getNotificationColor = (type, priority) => {
   return colors[type] || "text-slate-400 bg-slate-400/10";
 };
 
-function NotificationItem({ notification, onMarkRead, onDelete }) {
+function NotificationItem({ notification, onMarkRead, onDelete, onProcess }) {
   const Icon = getNotificationIcon(notification.type);
   const colorClass = getNotificationColor(
     notification.type,
@@ -80,8 +82,11 @@ function NotificationItem({ notification, onMarkRead, onDelete }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -100 }}
       whileHover={{ scale: 1.01 }}
+      onClick={() => {
+        if (!notification.read) {onMarkRead(notification.id);}
+      }}
       className={cn(
-        "group relative p-4 rounded-xl border transition-all duration-200",
+        "group relative p-4 rounded-xl border transition-all duration-200 cursor-pointer",
         notification.read ?
         "bg-surface-1/50 border-border/50" :
         "bg-surface-2 border-border shadow-lg shadow-black/10",
@@ -142,11 +147,28 @@ function NotificationItem({ notification, onMarkRead, onDelete }) {
 
         {/* Actions */}
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          {notification.linkUrl &&
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onProcess(notification);
+            }}
+            className="h-8 px-2 gap-1 text-accent hover:text-accent">
+
+              <span className="text-xs">处理</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+          }
           {!notification.read &&
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onMarkRead(notification.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMarkRead(notification.id);
+            }}
             className="h-8 w-8 p-0">
 
               <Check className="w-4 h-4" />
@@ -155,7 +177,10 @@ function NotificationItem({ notification, onMarkRead, onDelete }) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onDelete(notification.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(notification.id);
+            }}
             className="h-8 w-8 p-0 text-slate-400 hover:text-red-400">
 
             <Trash2 className="w-4 h-4" />
@@ -167,13 +192,23 @@ function NotificationItem({ notification, onMarkRead, onDelete }) {
 }
 
 export default function NotificationCenter() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // 从审批中心等外部页面跳过来定位某一条具体通知时用（如 ?sourceType=approval&sourceId=10）
+  const jumpSourceType = searchParams.get("sourceType");
+  const jumpSourceId = searchParams.get("sourceId");
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
+  // 默认展示全部（未读+已读），不能默认只看未读——已读消息一旦被隐藏，
+  // 历史记录就没地方找了（实测复现：全部处理完之后列表变空，"全部通知"
+  // 也显示 0，找不到任何历史）。未读/已读都在，靠下面的排序把未读排到最
+  // 前面区分优先级，想只看未读时用"未读"筛选按钮单独过滤。
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [showCcOnly, setShowCcOnly] = useState(false);
   const [page, _setPage] = useState(1);
   const [_total, setTotal] = useState(0);
 
@@ -210,6 +245,7 @@ export default function NotificationCenter() {
       priority: notification.priority?.toLowerCase() || "normal",
       relatedId: notification.source_id,
       relatedType: notification.source_type?.toLowerCase(),
+      linkUrl: notification.link_url || null,
       isCc: isCc, // 标记是否为抄送通知
       extraData: notification.extra_data || {}
     };
@@ -248,8 +284,14 @@ export default function NotificationCenter() {
   const loadUnreadCount = useCallback(async () => {
     try {
       const response = await notificationApi.getUnreadCount();
-      const data = response.data || response;
-      setUnreadCount(data.unread_count || 0);
+      // 这个接口的响应外面多包了一层 {success, code, message, data}，跟
+      // 通知列表接口（直接返回 {items, total, ...}）的形状不一样，两层都要拆。
+      const body = response.data || response;
+      const unread = body?.data?.unread_count ?? body?.unread_count ?? 0;
+      setUnreadCount(unread);
+      // 头部铃铛的未读红点是独立组件、只在挂载时拉一次数据，这里操作后
+      // 主动广播一下，让它跟着刷新，不然标记已读/删除后红点会一直卡着不动。
+      window.dispatchEvent(new CustomEvent("notifications:updated"));
     } catch (err) {
       console.error("Failed to load unread count:", err);
     }
@@ -260,11 +302,22 @@ export default function NotificationCenter() {
     loadUnreadCount();
   }, [loadNotifications, loadUnreadCount]);
 
-  const filteredNotifications = (notifications || []).filter((n) => {
+  const filteredNotifications = (notifications || [])
+  .filter((n) => {
+    if (jumpSourceId) {
+      return (
+        String(n.relatedId) === String(jumpSourceId) &&
+        (!jumpSourceType || n.relatedType === jumpSourceType.toLowerCase())
+      );
+    }
     if (search && !n.title?.includes(search) && !n.content?.includes(search))
     {return false;}
+    if (showCcOnly && !n.isCc) {return false;}
     return true;
-  });
+  })
+  // 未读排最前面优先处理；同为未读或同为已读的内部维持接口原有的时间顺序
+  // （数组排序是稳定排序，不会打乱同组内的相对顺序）。
+  .sort((a, b) => Number(a.read) - Number(b.read));
 
   const handleMarkRead = async (id) => {
     try {
@@ -293,6 +346,15 @@ export default function NotificationCenter() {
       await loadUnreadCount();
     } catch (err) {
       console.error("Failed to delete notification:", err);
+    }
+  };
+
+  const handleProcess = async (notification) => {
+    if (!notification.read) {
+      await handleMarkRead(notification.id);
+    }
+    if (notification.linkUrl) {
+      navigate(notification.linkUrl);
     }
   };
 
@@ -339,6 +401,16 @@ export default function NotificationCenter() {
             title="通知中心"
             description={`您有 ${unreadCount} 条未读通知`} />
 
+          {jumpSourceId && (
+            <div className="bg-accent/10 border border-accent/30 rounded-lg p-3 flex items-center justify-between">
+              <span className="text-sm text-slate-300">
+                从审批中心跳转过来，只显示与这条审批相关的通知
+              </span>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/notifications")}>
+                查看全部通知
+              </Button>
+            </div>
+          )}
 
           {/* Stats Cards */}
           <motion.div
@@ -421,7 +493,7 @@ export default function NotificationCenter() {
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
                         placeholder="搜索通知..."
-                        value={search || "unknown"}
+                        value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-9" />
 
@@ -436,6 +508,17 @@ export default function NotificationCenter() {
 
                       <Filter className="w-4 h-4 mr-1" />
                       未读
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowCcOnly(!showCcOnly)}
+                      className={cn(
+                        showCcOnly && "bg-accent/10 border-accent"
+                      )}>
+
+                      <Users className="w-4 h-4 mr-1" />
+                      抄送给我
                     </Button>
                   </div>
                 </div>
@@ -491,7 +574,8 @@ export default function NotificationCenter() {
                 key={notification.id}
                 notification={notification}
                 onMarkRead={handleMarkRead}
-                onDelete={handleDelete} />
+                onDelete={handleDelete}
+                onProcess={handleProcess} />
 
               ) :
 

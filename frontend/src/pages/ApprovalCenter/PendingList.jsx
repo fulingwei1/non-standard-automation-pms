@@ -1,4 +1,5 @@
-import { Eye, Check, X, CheckCircle2 } from "lucide-react";
+import { Eye, Check, X, CheckCircle2, Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -10,7 +11,9 @@ import { formatDateTime } from "@/lib/formatters";
 import { URGENCY_CONFIG, ENTITY_TYPE_CONFIG } from "./configMaps";
 import EmptyState from "./EmptyState";
 
-const PendingList = ({ items, loading, goToDetail, openQuickApproval }) => (
+const PendingList = ({ items, loading, goToDetail, openQuickApproval }) => {
+  const navigate = useNavigate();
+  return (
   <Card className="bg-slate-800/50 border-slate-700">
     <CardContent className="p-0">
       <Table>
@@ -70,6 +73,7 @@ const PendingList = ({ items, loading, goToDetail, openQuickApproval }) => (
                       size="sm"
                       variant="ghost"
                       className="h-8 w-8 p-0"
+                      title="查看详情"
                       onClick={() => goToDetail(instanceId)}
                     >
                       <Eye className="h-4 w-4" />
@@ -77,7 +81,19 @@ const PendingList = ({ items, loading, goToDetail, openQuickApproval }) => (
                     <Button
                       size="sm"
                       variant="ghost"
+                      className="h-8 w-8 p-0 text-slate-400 hover:text-white"
+                      title="查看对应通知"
+                      onClick={() =>
+                        navigate(`/notifications?sourceType=approval&sourceId=${instanceId}`)
+                      }
+                    >
+                      <Bell className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       className="h-8 w-8 p-0 text-emerald-500 hover:text-emerald-400"
+                      title="通过"
                       onClick={() => openQuickApproval(item, "approve")}
                     >
                       <Check className="h-4 w-4" />
@@ -86,6 +102,7 @@ const PendingList = ({ items, loading, goToDetail, openQuickApproval }) => (
                       size="sm"
                       variant="ghost"
                       className="h-8 w-8 p-0 text-red-500 hover:text-red-400"
+                      title="驳回"
                       onClick={() => openQuickApproval(item, "reject")}
                     >
                       <X className="h-4 w-4" />
@@ -106,6 +123,7 @@ const PendingList = ({ items, loading, goToDetail, openQuickApproval }) => (
       />
     </CardContent>
   </Card>
-);
+  );
+};
 
 export default PendingList;

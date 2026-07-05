@@ -39,6 +39,35 @@ const typeColors = {
   default: 'text-slate-400 bg-slate-500/20',
 };
 
+function formatTimeAgo(value) {
+  if (!value) {return '';}
+  const target = new Date(value);
+  if (Number.isNaN(target.getTime())) {return '';}
+  const diff = Date.now() - target.getTime();
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  if (diff < minute) {return '刚刚';}
+  if (diff < hour) {return `${Math.max(1, Math.floor(diff / minute))}分钟前`;}
+  if (diff < day) {return `${Math.floor(diff / hour)}小时前`;}
+  if (diff < 30 * day) {return `${Math.floor(diff / day)}天前`;}
+  return target.toLocaleDateString('zh-CN');
+}
+
+// 后端 /notifications 接口返回的是 content/created_at/is_read/notification_type，
+// 跟这个组件内部（含 mock 数据）用的 message/time/read/type 字段名不一致——
+// 之前没做转换，导致接真实接口时消息内容和时间都是空的，未读角标永远等于
+// 拉取条数（is_read 恒为 undefined，!undefined 恒为 true）。
+function normalizeNotification(item) {
+  return {
+    ...item,
+    type: (item.notification_type || item.type || '').toLowerCase(),
+    message: item.content ?? item.message ?? '',
+    time: item.created_at ? formatTimeAgo(item.created_at) : item.time || '',
+    read: item.is_read ?? item.read ?? false,
+  };
+}
+
 // 默认通知数据
 const defaultNotifications = [
   {
@@ -161,7 +190,7 @@ export default function NotificationPanel({ filter, limit = 5, data }) {
           const payload = response.data || response;
 
           if (payload?.items) {
-            const items = payload.items.slice(0, limit);
+            const items = payload.items.slice(0, limit).map(normalizeNotification);
             setNotifications(items);
             setUnreadCount((items || []).filter(n => !n.read).length);
             return;

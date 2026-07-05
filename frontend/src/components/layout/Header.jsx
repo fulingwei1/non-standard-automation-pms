@@ -90,20 +90,32 @@ export function Header({ sidebarCollapsed = false, user, onLogout }) {
   useEffect(() => {
     let active = true;
 
-    notificationApi.getUnreadCount()
-      .then((response) => {
-        if (active) {
-          setUnreadCount(extractUnreadCount(response));
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setUnreadCount(0);
-        }
-      });
+    const refreshUnreadCount = () => {
+      notificationApi.getUnreadCount()
+        .then((response) => {
+          if (active) {
+            setUnreadCount(extractUnreadCount(response));
+          }
+        })
+        .catch(() => {
+          if (active) {
+            setUnreadCount(0);
+          }
+        });
+    };
+
+    refreshUnreadCount();
+
+    // 未读数在挂载时只拉一次的话，用户在通知中心标记已读/删除后，头部小红点
+    // 不会跟着变化（Header 不会因为路由跳转重新挂载）——加轮询兜底 + 监听
+    // 通知页面动作后派发的事件做即时刷新。
+    const interval = setInterval(refreshUnreadCount, 30000);
+    window.addEventListener("notifications:updated", refreshUnreadCount);
 
     return () => {
       active = false;
+      clearInterval(interval);
+      window.removeEventListener("notifications:updated", refreshUnreadCount);
     };
   }, []);
 

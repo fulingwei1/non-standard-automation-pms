@@ -1,4 +1,5 @@
-import { Eye, FileText } from "lucide-react";
+import { Eye, FileText, Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -10,7 +11,9 @@ import { formatDateTime } from "@/lib/formatters";
 import { STATUS_CONFIG, ENTITY_TYPE_CONFIG } from "./configMaps";
 import EmptyState from "./EmptyState";
 
-const InitiatedList = ({ items, loading, goToDetail }) => (
+const InitiatedList = ({ items, loading, goToDetail }) => {
+  const navigate = useNavigate();
+  return (
   <Card className="bg-slate-800/50 border-slate-700">
     <CardContent className="p-0">
       <Table>
@@ -56,14 +59,28 @@ const InitiatedList = ({ items, loading, goToDetail }) => (
                   {formatDateTime(item.created_at)}
                 </TableCell>
                 <TableCell>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 w-8 p-0"
-                    onClick={() => goToDetail(item.id)}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0"
+                      title="查看详情"
+                      onClick={() => goToDetail(item.id)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 text-slate-400 hover:text-white"
+                      title="查看对应通知"
+                      onClick={() =>
+                        navigate(`/notifications?sourceType=approval&sourceId=${item.id}`)
+                      }
+                    >
+                      <Bell className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             );
@@ -79,6 +96,7 @@ const InitiatedList = ({ items, loading, goToDetail }) => (
       />
     </CardContent>
   </Card>
-);
+  );
+};
 
 export default InitiatedList;

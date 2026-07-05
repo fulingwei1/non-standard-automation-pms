@@ -125,7 +125,7 @@ const ApprovalDetailPage = () => {
   /**
    * 判断当前用户是否可以审批
    */
-  const canApprove = getCurrentUserTask() !== null;
+  const canApprove = Boolean(getCurrentUserTask());
 
   /**
    * 判断是否可以撤回（发起人且状态为 PENDING）
@@ -138,6 +138,7 @@ const ApprovalDetailPage = () => {
   const handleApprovalAction = async (action) => {
     const task = getCurrentUserTask();
     if (!task && action !== "withdraw") {
+      setError("没有待你处理的审批任务，可能已被处理或状态已变更，请刷新页面");
       return;
     }
 

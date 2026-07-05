@@ -574,6 +574,17 @@ export function getRoleConfig(roleCode) {
     return roleWidgetConfig[upperCode];
   }
 
+  // SUPER_ADMIN 是 useUserRoles() 给超级管理员账号强行注入的角色码（保证
+  // is_superuser 账号一定有个角色可用），但这里的配置表里从来没有单独定义
+  // 过 'SUPER_ADMIN' 这一项——之前一直落到下面的 DEFAULT（成员视图默认配置），
+  // 而 DEFAULT 的统计卡片组件没传 type，组件自己的默认值是 'sales'，于是超管
+  // 登录后工作台显示的是销售指标（活跃线索/商机数等，对超管来说自然全是 0），
+  // 不是真的没数据也不是权限问题，是配置查找 miss 掉进了错的默认分支。
+  // 复用已有的 ADMIN 配置即可，超管理应看到管理员视图。
+  if (upperCode === 'SUPER_ADMIN' && roleWidgetConfig['ADMIN']) {
+    return roleWidgetConfig['ADMIN'];
+  }
+
   // 返回默认配置
   return roleWidgetConfig['DEFAULT'];
 }
