@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.models.sales.leads import Opportunity
 from app.models.sales.contracts import Contract
+from app.models.sales.workflow import SalesTarget
 from app.models.enums.sales import OpportunityStageEnum
 from app.services.sales.contract.status_service import contract_status_query_values
 
@@ -81,7 +82,7 @@ class SalesForecastService:
         start_date, end_date = self._get_period_dates(year, quarter, period)
 
         # 1. 获取销售目标（从数据库或配置）
-        target = self._get_sales_target(year, quarter, period)
+        target, target_source = self._get_sales_target(year, quarter, period)
 
         # 2. 获取已完成业绩（已签约合同）
         actual_revenue = self._get_actual_revenue(start_date, end_date)
@@ -113,6 +114,7 @@ class SalesForecastService:
             "generated_at": date.today().isoformat(),
             "targets": {
                 "quarterly_target": target,
+                "target_source": target_source,
                 "actual_revenue": actual_revenue,
                 "completion_rate": round(completion_rate, 1),
                 "days_elapsed": (datetime.now() - start_date).days,
@@ -160,21 +162,94 @@ class SalesForecastService:
 
         return start_date, end_date
 
-    def _get_sales_target(self, year: int, quarter: int, period: str) -> float:
-        """获取销售目标"""
-        # TODO: 从数据库获取实际目标
-        # 这里使用默认值
-        annual_target = 200_000_000  # 2 亿年度目标
+    def _query_target(
+        self, target_period: str, period_value: str
+    ) -> Optional[float]:
+        """按周期精确匹配查目标：优先公司级，否则汇总非公司级（部门/团队/个人）"""
+        target_value = self.db.execute(
+            select(SalesTarget.target_value)
+            .where(
+                and_(
+                    SalesTarget.target_scope == "COMPANY",
+                    SalesTarget.target_type == "CONTRACT_AMOUNT",
+                    SalesTarget.target_period == target_period,
+                    SalesTarget.period_value == period_value,
+                    SalesTarget.status == "ACTIVE",
+                )
+            )
+            .order_by(SalesTarget.updated_at.desc(), SalesTarget.id.desc())
+            .limit(1)
+        ).scalar()
+        if target_value is not None:
+            return float(target_value)
+
+        aggregate_target = self.db.execute(
+            select(func.sum(SalesTarget.target_value)).where(
+                and_(
+                    SalesTarget.target_scope != "COMPANY",
+                    SalesTarget.target_type == "CONTRACT_AMOUNT",
+                    SalesTarget.target_period == target_period,
+                    SalesTarget.period_value == period_value,
+                    SalesTarget.status == "ACTIVE",
+                )
+            )
+        ).scalar()
+        if aggregate_target is not None:
+            return float(aggregate_target)
+        return None
+
+    def _get_sales_target(self, year: int, quarter: int, period: str) -> tuple[float, str]:
+        """获取销售目标
+
+        Returns:
+            (目标值, 数据来源)：数据来源为 CONFIGURED（该周期有真实配置的目标）、
+            DERIVED_FROM_YEARLY（该周期未配置，从当年真实年度目标按季节性因子换算）、
+            FALLBACK（连年度目标都没配置，用系统默认年度目标换算——不代表真实业务目标，
+            仅用于让预测页面在目标管理还没录入数据时不至于报错/留空）。
+        """
+        period_value_map = {
+            "yearly": str(year),
+            "quarterly": f"{year}-Q{quarter}",
+            "monthly": f"{year}-{quarter:02d}",
+        }
+        target_period_map = {
+            "yearly": "YEARLY",
+            "quarterly": "QUARTERLY",
+            "monthly": "MONTHLY",
+        }
+        period_value = period_value_map.get(period)
+        target_period = target_period_map.get(period)
+
+        if period_value and target_period:
+            try:
+                exact = self._query_target(target_period, period_value)
+                if exact is not None:
+                    return exact, "CONFIGURED"
+            except Exception as e:
+                logger.error(f"获取销售目标失败：{e}")
+
+        # 该周期没有配置目标：优先用当年真实的年度目标换算，而不是直接假设一个数字
+        annual_target = None
+        if period != "yearly":
+            try:
+                annual_target = self._query_target("YEARLY", str(year))
+            except Exception as e:
+                logger.error(f"获取年度销售目标失败：{e}")
+
+        source = "DERIVED_FROM_YEARLY"
+        if annual_target is None:
+            annual_target = 200_000_000  # 系统默认年度目标（无任何真实配置时的兜底，非业务真实值）
+            source = "FALLBACK"
 
         if period == "yearly":
-            return annual_target
+            return annual_target, source
         elif period == "quarterly":
             # 考虑季节性因子
             months_in_quarter = [(quarter - 1) * 3 + 1, (quarter - 1) * 3 + 2, (quarter - 1) * 3 + 3]
             quarter_factor = sum(self.SEASONAL_FACTORS.get(m, 1.0) for m in months_in_quarter) / 3
-            return (annual_target / 4) * quarter_factor
+            return (annual_target / 4) * quarter_factor, source
         else:  # monthly
-            return (annual_target / 12) * self.SEASONAL_FACTORS.get(quarter, 1.0)
+            return (annual_target / 12) * self.SEASONAL_FACTORS.get(quarter, 1.0), source
 
     def _get_actual_revenue(self, start_date: datetime, end_date: datetime) -> float:
         """获取已完成业绩（已签约合同金额）"""
