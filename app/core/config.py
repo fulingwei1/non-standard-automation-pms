@@ -62,6 +62,13 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False  # 生产环境默认为 False，开发环境可通过环境变量设置 DEBUG=true
 
+    # 多租户隔离执行模式（TEN-06）：log=灰度放行+告警，strict=无租户账号 403 拒绝。
+    # 运行时代码用 os.getenv 直接读取（app/core/middleware/tenant_middleware.py），
+    # 这里补成正式字段只是为了让它能出现在 .env.local 里而不被 pydantic 的
+    # extra_forbidden 校验拦下来（之前没声明这个字段，写进 .env.local 直接把
+    # 整个后端启动搞挂了）。
+    TENANT_ENFORCE_MODE: str = "log"
+
     # API配置
     API_V1_PREFIX: str = "/api/v1"
 
