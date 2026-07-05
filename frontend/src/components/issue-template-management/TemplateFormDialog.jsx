@@ -77,7 +77,7 @@ export default function TemplateFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(categoryConfigs).map(([key, config]) => (
-                    <SelectItem key={key} value={key || "unknown"}>
+                    <SelectItem key={key} value={key}>
                       {config.label}
                     </SelectItem>
                   ))}
@@ -95,7 +95,7 @@ export default function TemplateFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(issueTypeConfigs).map(([key, config]) => (
-                    <SelectItem key={key} value={key || "unknown"}>
+                    <SelectItem key={key} value={key}>
                       {config.label}
                     </SelectItem>
                   ))}
@@ -116,7 +116,7 @@ export default function TemplateFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(severityConfigs).map(([key, config]) => (
-                    <SelectItem key={key} value={key || "unknown"}>
+                    <SelectItem key={key} value={key}>
                       {config.label}
                     </SelectItem>
                   ))}
@@ -134,7 +134,7 @@ export default function TemplateFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(priorityConfigs).map(([key, config]) => (
-                    <SelectItem key={key} value={key || "unknown"}>
+                    <SelectItem key={key} value={key}>
                       {config.label}
                     </SelectItem>
                   ))}

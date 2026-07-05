@@ -36,13 +36,13 @@ export function EmployeeList({
                         />
                     </div>
                     <select
-                        value={filterDepartment || "unknown"}
+                        value={filterDepartment}
                         onChange={(e) => setFilterDepartment(e.target.value)}
                         className="h-10 px-3 rounded-md border border-white/10 bg-white/5 text-sm"
                     >
                         <option value="all">全部部门</option>
                         {(departments || []).map((d) => (
-                            <option key={d} value={d || "unknown"}>
+                            <option key={d} value={d}>
                                 {d}
                             </option>
                         ))}

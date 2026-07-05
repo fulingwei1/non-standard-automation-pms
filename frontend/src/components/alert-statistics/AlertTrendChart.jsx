@@ -445,7 +445,7 @@ export function AlertTrendChart({
               className="w-32" />
 
 
-            <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="trends">告警趋势</TabsTrigger>
                 <TabsTrigger value="resolution">解决率</TabsTrigger>

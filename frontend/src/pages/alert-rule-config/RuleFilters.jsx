@@ -34,7 +34,7 @@ export function RuleFilters({
               className="bg-surface-2"
             />
           </div>
-          <Select value={selectedType || "unknown"} onValueChange={setSelectedType}>
+          <Select value={selectedType} onValueChange={setSelectedType}>
             <SelectTrigger className="w-[150px] bg-surface-2">
               <SelectValue placeholder="规则类型" />
             </SelectTrigger>
@@ -47,7 +47,7 @@ export function RuleFilters({
               ))}
             </SelectContent>
           </Select>
-          <Select value={selectedTarget || "unknown"} onValueChange={setSelectedTarget}>
+          <Select value={selectedTarget} onValueChange={setSelectedTarget}>
             <SelectTrigger className="w-[150px] bg-surface-2">
               <SelectValue placeholder="监控对象" />
             </SelectTrigger>

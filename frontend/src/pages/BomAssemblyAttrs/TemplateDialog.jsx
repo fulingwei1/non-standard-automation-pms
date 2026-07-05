@@ -50,7 +50,7 @@ export function TemplateDialog({
           <div>
             <Label className="mb-2 block">选择模板</Label>
             <Select
-              value={selectedTemplate || "unknown"}
+              value={selectedTemplate}
               onValueChange={setSelectedTemplate}
             >
               <SelectTrigger>

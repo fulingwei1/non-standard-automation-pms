@@ -805,7 +805,7 @@ export default function OpportunityManagement({ embedded = false }) {
           </DropdownMenu>
           <div className="flex gap-2">
             <select
-              value={customerFilter || "unknown"}
+              value={customerFilter}
               onChange={(e) => setCustomerFilter(e.target.value)}
               className="px-3 py-1 border rounded text-sm bg-slate-900 text-slate-300"
             >
@@ -817,7 +817,7 @@ export default function OpportunityManagement({ embedded = false }) {
               ))}
             </select>
             <select
-              value={ownerFilter || "unknown"}
+              value={ownerFilter}
               onChange={(e) => setOwnerFilter(e.target.value)}
               className="px-3 py-1 border rounded text-sm bg-slate-900 text-slate-300"
             >

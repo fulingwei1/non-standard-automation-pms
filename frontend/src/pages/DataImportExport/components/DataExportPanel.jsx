@@ -30,7 +30,7 @@ export function DataExportPanel({
             <CardContent className="space-y-4">
                 <div>
                     <Label>导出类型</Label>
-                    <Select value={exportType || "unknown"} onValueChange={setExportType}>
+                    <Select value={exportType} onValueChange={setExportType}>
                         <SelectTrigger>
                             <SelectValue />
                         </SelectTrigger>

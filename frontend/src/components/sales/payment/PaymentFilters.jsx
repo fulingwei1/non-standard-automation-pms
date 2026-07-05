@@ -40,13 +40,13 @@ export default function PaymentFilters({
           <div className="flex items-center gap-2">
             {/* 类型筛选 */}
             <select
-              value={selectedType || "unknown"}
+              value={selectedType}
               onChange={(e) => onTypeChange?.(e.target.value)}
               className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">全部类型</option>
               {Object.entries(PAYMENT_TYPES).map(([key, type]) => (
-                <option key={key} value={key || "unknown"}>
+                <option key={key} value={key}>
                   {type.label}
                 </option>
               ))}
@@ -54,13 +54,13 @@ export default function PaymentFilters({
 
             {/* 状态筛选 */}
             <select
-              value={selectedStatus || "unknown"}
+              value={selectedStatus}
               onChange={(e) => onStatusChange?.(e.target.value)}
               className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">全部状态</option>
               {Object.entries(PAYMENT_STATUS).map(([key, status]) => (
-                <option key={key} value={key || "unknown"}>
+                <option key={key} value={key}>
                   {status.label}
                 </option>
               ))}

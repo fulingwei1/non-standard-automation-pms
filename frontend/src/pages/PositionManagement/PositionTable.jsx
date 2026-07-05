@@ -53,7 +53,7 @@ export default function PositionTable({
               onChange={(e) => setSearchKeyword(e.target.value)}
               className="max-w-sm"
             />
-            <Select value={filterCategory || "unknown"} onValueChange={setFilterCategory}>
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="筛选类别" />
               </SelectTrigger>

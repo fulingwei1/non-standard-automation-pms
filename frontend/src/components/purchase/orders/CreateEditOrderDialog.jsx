@@ -164,7 +164,7 @@ export default function CreateEditOrderDialog({
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-700">
                   {Object.entries(PAYMENT_TERMS_CONFIGS).map(([key, config]) =>
-                  <SelectItem key={key} value={key || "unknown"}>
+                  <SelectItem key={key} value={key}>
                       {config.label}
                   </SelectItem>
                   )}

@@ -94,7 +94,7 @@ export default function CreateDialog({
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white">
 
                 {Object.entries(stageConfig).map(([key, config]) =>
-                  <option key={key} value={key || "unknown"}>
+                  <option key={key} value={key}>
                     {config.label}
                   </option>
                 )}

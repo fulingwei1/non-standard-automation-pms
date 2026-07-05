@@ -75,7 +75,7 @@ export default function CommunicationTable({
 
           </div>
 
-          <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger>
               <SelectValue placeholder="状态" />
             </SelectTrigger>
@@ -88,7 +88,7 @@ export default function CommunicationTable({
             </SelectContent>
           </Select>
 
-          <Select value={filterPriority || "unknown"} onValueChange={setFilterPriority}>
+          <Select value={filterPriority} onValueChange={setFilterPriority}>
             <SelectTrigger>
               <SelectValue placeholder="优先级" />
             </SelectTrigger>
@@ -101,7 +101,7 @@ export default function CommunicationTable({
             </SelectContent>
           </Select>
 
-          <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+          <Select value={filterType} onValueChange={setFilterType}>
             <SelectTrigger>
               <SelectValue placeholder="沟通方式" />
             </SelectTrigger>
@@ -114,7 +114,7 @@ export default function CommunicationTable({
             </SelectContent>
           </Select>
 
-          <Select value={filterTopic || "unknown"} onValueChange={setFilterTopic}>
+          <Select value={filterTopic} onValueChange={setFilterTopic}>
             <SelectTrigger>
               <SelectValue placeholder="主题" />
             </SelectTrigger>
@@ -127,7 +127,7 @@ export default function CommunicationTable({
             </SelectContent>
           </Select>
 
-          <Select value={filterCustomer || "unknown"} onValueChange={setFilterCustomer}>
+          <Select value={filterCustomer} onValueChange={setFilterCustomer}>
             <SelectTrigger>
               <SelectValue placeholder="客户" />
             </SelectTrigger>

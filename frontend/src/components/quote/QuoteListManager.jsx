@@ -530,7 +530,7 @@ export const QuoteListManager = ({
                 <SelectContent>
                   <SelectItem value="all">全部状态</SelectItem>
                   {Object.entries(quoteStatusConfig).map(([key, config]) =>
-                  <SelectItem key={key} value={key || "unknown"}>{config.label}</SelectItem>
+                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -568,7 +568,7 @@ export const QuoteListManager = ({
               </Select>
 
               <Select
-                value={sortBy || "unknown"}
+                value={sortBy}
                 onValueChange={onSortChange}>
 
                 <SelectTrigger className="w-40 bg-slate-800/60 border-slate-700 text-white">

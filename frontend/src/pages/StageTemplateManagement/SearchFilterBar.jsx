@@ -30,7 +30,7 @@ export default function SearchFilterBar({
               className="pl-10 bg-white/5 border-white/10"
             />
           </div>
-          <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+          <Select value={filterType} onValueChange={setFilterType}>
             <SelectTrigger className="w-[180px] bg-white/5 border-white/10">
               <SelectValue placeholder="项目类型" />
             </SelectTrigger>
@@ -42,7 +42,7 @@ export default function SearchFilterBar({
               <SelectItem value="MAINTENANCE">维保项目</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={filterActive || "unknown"} onValueChange={setFilterActive}>
+          <Select value={filterActive} onValueChange={setFilterActive}>
             <SelectTrigger className="w-[120px] bg-white/5 border-white/10">
               <SelectValue placeholder="状态" />
             </SelectTrigger>

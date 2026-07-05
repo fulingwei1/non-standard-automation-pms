@@ -82,7 +82,7 @@ export default function CreateOpportunityDialog({
                 </SelectTrigger>
                 <SelectContent className="bg-surface-2 border-border">
                   {Object.entries(OPPORTUNITY_PRIORITY_CONFIGS).map(([key, config]) =>
-                  <SelectItem key={key} value={key || "unknown"}>
+                  <SelectItem key={key} value={key}>
                       {config.label}
                   </SelectItem>
                   )}
@@ -100,7 +100,7 @@ export default function CreateOpportunityDialog({
                 </SelectTrigger>
                 <SelectContent className="bg-surface-2 border-border">
                   {Object.entries(SALES_SOURCE_CONFIGS).map(([key, config]) =>
-                  <SelectItem key={key} value={key || "unknown"}>
+                  <SelectItem key={key} value={key}>
                       {config.label}
                   </SelectItem>
                   )}
@@ -118,7 +118,7 @@ export default function CreateOpportunityDialog({
                 </SelectTrigger>
                 <SelectContent className="bg-surface-2 border-border">
                   {Object.entries(OPPORTUNITY_TYPE_CONFIGS).map(([key, config]) =>
-                  <SelectItem key={key} value={key || "unknown"}>
+                  <SelectItem key={key} value={key}>
                       {config.label}
                   </SelectItem>
                   )}

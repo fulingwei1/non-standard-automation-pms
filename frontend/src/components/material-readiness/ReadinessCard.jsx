@@ -266,7 +266,7 @@ export function ReadinessCard({
                   {progress}%
                 </span>
               </div>
-              <Progress value={progress || "unknown"} className="h-2" />
+              <Progress value={progress} className="h-2" />
             </div>
 
             {/* 状态信息 */}

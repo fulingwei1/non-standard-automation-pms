@@ -151,7 +151,7 @@ export default function AccountabilityAnalysis() {
       </div>
       }
 
-      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="stage">按环节归责</TabsTrigger>
           <TabsTrigger value="person">按人员归责</TabsTrigger>

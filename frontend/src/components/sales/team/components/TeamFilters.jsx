@@ -71,7 +71,7 @@ export default function TeamFilters({
               {regionOptions.length > 0 && (
                 <datalist id="region-suggestions">
                   {(regionOptions || []).map((option) => (
-                    <option key={option} value={option || "unknown"} />
+                    <option key={option} value={option} />
                   ))}
                 </datalist>
               )}

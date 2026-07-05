@@ -150,7 +150,7 @@ export default function InventoryAnalysis() {
         </div>
 
         {/* Tab内容 */}
-        <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="bg-slate-800/50">
             <TabsTrigger value="turnover-rate">周转率分析</TabsTrigger>
             <TabsTrigger value="stale-materials">呆滞物料</TabsTrigger>

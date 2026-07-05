@@ -104,7 +104,7 @@ export default function TechnicalReviewDetail() {
 
             <div className="container mx-auto px-4 py-6">
                 <Tabs
-                    value={activeTab || "unknown"}
+                    value={activeTab}
                     onValueChange={setActiveTab}
                     className="space-y-6"
                 >

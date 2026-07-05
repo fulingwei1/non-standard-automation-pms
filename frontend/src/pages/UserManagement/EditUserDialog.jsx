@@ -114,7 +114,7 @@ export default function EditUserDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(USER_ROLE).map(([_key, value]) => (
-                      <SelectItem key={value} value={value || "unknown"}>
+                      <SelectItem key={value} value={value}>
                         {USER_ROLE_LABELS[value]}
                       </SelectItem>
                     ))}
@@ -138,7 +138,7 @@ export default function EditUserDialog({
                   <SelectContent>
                     {Object.entries(USER_DEPARTMENT).map(
                       ([_key, value]) => (
-                        <SelectItem key={value} value={value || "unknown"}>
+                        <SelectItem key={value} value={value}>
                           {USER_DEPARTMENT_LABELS[value]}
                         </SelectItem>
                       ),
@@ -159,7 +159,7 @@ export default function EditUserDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(USER_STATUS).map(([_key, value]) => (
-                      <SelectItem key={value} value={value || "unknown"}>
+                      <SelectItem key={value} value={value}>
                         {USER_STATUS_LABELS[value]}
                       </SelectItem>
                     ))}

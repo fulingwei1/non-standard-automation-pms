@@ -289,27 +289,27 @@ export const FeedbackList = ({
                 className="pl-10" />
 
             </div>
-            <Select value={selectedType || "unknown"} onValueChange={setSelectedType}>
+            <Select value={selectedType} onValueChange={setSelectedType}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="反馈类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(satisfactionConstants.feedbackTypeConfig).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={selectedStatus || "unknown"} onValueChange={setSelectedStatus}>
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger className="w-[130px]">
                 <SelectValue placeholder="处理状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(satisfactionConstants.feedbackStatusConfig).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.label}
                 </SelectItem>
                 )}

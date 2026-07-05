@@ -617,7 +617,7 @@ export function DispatchCard({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(priorityConfigs).map(([key, config]) => <SelectItem key={key} value={key || "unknown"}>
+                    {Object.entries(priorityConfigs).map(([key, config]) => <SelectItem key={key} value={key}>
                         {config.label}
                                                                             </SelectItem>
                     )}

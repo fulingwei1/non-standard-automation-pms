@@ -82,7 +82,7 @@ export default function ReportGeneration() {
           <div>
             <label className="block text-sm font-medium mb-2">选择模板</label>
             <select
-              value={selectedTemplate || "unknown"}
+              value={selectedTemplate}
               onChange={(e) => setSelectedTemplate(e.target.value)}
               className="w-full border border-gray-300 rounded px-3 py-2"
             >

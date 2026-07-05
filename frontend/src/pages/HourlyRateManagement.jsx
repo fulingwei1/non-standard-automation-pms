@@ -228,7 +228,7 @@ export default function HourlyRateManagement() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label>配置类型</Label>
-              <Select value={configType || "unknown"} onValueChange={setConfigType}>
+              <Select value={configType} onValueChange={setConfigType}>
                 <SelectTrigger>
                   <SelectValue placeholder="全部" />
                 </SelectTrigger>

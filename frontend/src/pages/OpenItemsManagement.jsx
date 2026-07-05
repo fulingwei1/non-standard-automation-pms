@@ -243,7 +243,7 @@ export default function OpenItemsManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(itemTypeConfig).map(([key, label]) =>
-                  <SelectItem key={key} value={key || "unknown"}>
+                  <SelectItem key={key} value={key}>
                       {label}
                   </SelectItem>
                   )}

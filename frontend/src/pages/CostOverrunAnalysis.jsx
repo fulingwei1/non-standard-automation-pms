@@ -150,7 +150,7 @@ export default function CostOverrunAnalysis() {
         </CardContent>
       </Card>
 
-      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="reasons">超支原因</TabsTrigger>
           <TabsTrigger value="accountability">归责分析</TabsTrigger>

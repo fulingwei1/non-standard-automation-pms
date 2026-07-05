@@ -109,7 +109,7 @@ export default function PresalesReviewCenter() {
         description="统一处理需求调研、技术方案、参数模板、成本估算、投标支持、知识模板与评审工单。"
       />
 
-      <Tabs value={activeTab || "unknown"} onValueChange={handleTabChange}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-7">
           {(tabs || []).map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
@@ -118,31 +118,31 @@ export default function PresalesReviewCenter() {
           ))}
         </TabsList>
 
-        <TabsContent value={TAB_SURVEYS || "unknown"} className="space-y-6">
+        <TabsContent value={TAB_SURVEYS} className="space-y-6">
           <RequirementSurvey embedded />
         </TabsContent>
 
-        <TabsContent value={TAB_SOLUTIONS || "unknown"} className="space-y-6">
+        <TabsContent value={TAB_SOLUTIONS} className="space-y-6">
           <PresaleProposals embedded />
         </TabsContent>
 
-        <TabsContent value={TAB_PARAMETERS || "unknown"} className="space-y-6">
+        <TabsContent value={TAB_PARAMETERS} className="space-y-6">
           <TechnicalParameterManagement embedded />
         </TabsContent>
 
-        <TabsContent value={TAB_COST || "unknown"} className="space-y-6">
+        <TabsContent value={TAB_COST} className="space-y-6">
           <PresalesCostEstimation embedded />
         </TabsContent>
 
-        <TabsContent value={TAB_BIDS || "unknown"} className="space-y-6">
+        <TabsContent value={TAB_BIDS} className="space-y-6">
           <BiddingCenter embedded />
         </TabsContent>
 
-        <TabsContent value={TAB_KNOWLEDGE || "unknown"} className="space-y-6">
+        <TabsContent value={TAB_KNOWLEDGE} className="space-y-6">
           <PresaleTemplates embedded />
         </TabsContent>
 
-        <TabsContent value={TAB_REVIEWS || "unknown"} className="space-y-6">
+        <TabsContent value={TAB_REVIEWS} className="space-y-6">
           <PresalesTasks embedded />
         </TabsContent>
       </Tabs>

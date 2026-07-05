@@ -43,7 +43,7 @@ export default function LessonsLearnedLibrary() {
             />
 
             <Tabs
-                value={activeTab || "unknown"}
+                value={activeTab}
                 onValueChange={setActiveTab}
                 className="space-y-6"
             >

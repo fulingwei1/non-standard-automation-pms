@@ -260,13 +260,13 @@ const CashFlowDetailTable = ({
             </SelectContent>
           </Select>
 
-          <Select value={period || "unknown"} onValueChange={setPeriod}>
+          <Select value={period} onValueChange={setPeriod}>
             <SelectTrigger className="w-32 bg-slate-800 border-slate-700 text-white">
               <SelectValue placeholder="选择期间" />
             </SelectTrigger>
             <SelectContent className="bg-slate-800">
               {Object.entries(timePeriods).map(([key, value]) =>
-              <SelectItem key={key} value={key || "unknown"}>{value.label}</SelectItem>
+              <SelectItem key={key} value={key}>{value.label}</SelectItem>
               )}
             </SelectContent>
           </Select>

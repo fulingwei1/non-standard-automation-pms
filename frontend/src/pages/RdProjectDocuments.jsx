@@ -288,7 +288,7 @@ export default function RdProjectDocuments() {
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(docTypeMap).map(([key, value]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {value.label}
                 </SelectItem>
                 )}
@@ -460,7 +460,7 @@ export default function RdProjectDocuments() {
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(docTypeMap).map(([key, value]) =>
-                      <SelectItem key={key} value={key || "unknown"}>
+                      <SelectItem key={key} value={key}>
                           {value.label}
                       </SelectItem>
                       )}

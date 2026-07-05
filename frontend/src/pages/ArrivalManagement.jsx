@@ -178,7 +178,7 @@ export default function ArrivalManagement() {
                   {Object.entries(statusConfigs)
                     .filter(([key]) => key && key !== "")
                     .map(([key, config]) => (
-                      <SelectItem key={key} value={key || "unknown"}>
+                      <SelectItem key={key} value={key}>
                         {config.label}
                       </SelectItem>
                     ))}

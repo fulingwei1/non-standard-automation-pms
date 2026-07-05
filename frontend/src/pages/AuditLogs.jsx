@@ -182,7 +182,7 @@ export default function AuditLogs() {
 
             <div>
               <Label>目标类型</Label>
-              <Select value={targetType || "unknown"} onValueChange={setTargetType}>
+              <Select value={targetType} onValueChange={setTargetType}>
                 <SelectTrigger>
                   <SelectValue placeholder="全部" />
                 </SelectTrigger>

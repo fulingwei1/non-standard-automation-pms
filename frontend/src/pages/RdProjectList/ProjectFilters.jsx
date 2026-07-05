@@ -36,7 +36,7 @@ export function ProjectFilters({
               />
             </div>
           </div>
-          <Select value={filterStatus || "unknown"} onValueChange={onFilterStatusChange}>
+          <Select value={filterStatus} onValueChange={onFilterStatusChange}>
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="项目状态" />
             </SelectTrigger>
@@ -50,7 +50,7 @@ export function ProjectFilters({
             </SelectContent>
           </Select>
           <Select
-            value={filterCategoryType || "unknown"}
+            value={filterCategoryType}
             onValueChange={onFilterCategoryTypeChange}
           >
             <SelectTrigger className="w-[150px]">

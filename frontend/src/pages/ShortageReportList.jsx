@@ -156,7 +156,7 @@ export default function ShortageReportList() {
                 className="pl-10" />
 
             </div>
-            <Select value={filterProject || "unknown"} onValueChange={setFilterProject}>
+            <Select value={filterProject} onValueChange={setFilterProject}>
               <SelectTrigger>
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
@@ -169,21 +169,21 @@ export default function ShortageReportList() {
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger>
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
             <Select
-              value={filterUrgentLevel || "unknown"}
+              value={filterUrgentLevel}
               onValueChange={setFilterUrgentLevel}>
 
               <SelectTrigger>
@@ -192,7 +192,7 @@ export default function ShortageReportList() {
               <SelectContent>
                 <SelectItem value="all">全部</SelectItem>
                 {Object.entries(urgentLevelConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.label}
                 </SelectItem>
                 )}

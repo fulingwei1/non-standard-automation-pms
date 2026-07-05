@@ -198,7 +198,7 @@ export default function ProjectTaskList() {
                             <SelectContent>
                                 <SelectItem value="all">全部状态</SelectItem>
                                 {Object.entries(statusConfigs).map(([key, config]) => (
-                                    <SelectItem key={key} value={key || "unknown"}>
+                                    <SelectItem key={key} value={key}>
                                         {config.label}
                                     </SelectItem>
                                 ))}
@@ -319,7 +319,7 @@ export default function ProjectTaskList() {
                                                     <div className="flex items-center justify-between text-xs">
                                                         <span>{progress}%</span>
                                                     </div>
-                                                    <Progress value={progress || "unknown"} className="h-1.5" />
+                                                    <Progress value={progress} className="h-1.5" />
                                                 </div>
                                             </TableCell>
                                             <TableCell>

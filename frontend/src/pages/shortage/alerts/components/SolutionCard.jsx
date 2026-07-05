@@ -131,7 +131,7 @@ const ScoreBar = ({ label, score }) => {
         </span>
       </div>
       <Progress 
-        value={score || "unknown"} 
+        value={score} 
         className="h-2"
         style={{ '--progress-background': color }}
       />

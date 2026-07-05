@@ -49,7 +49,7 @@ export default function InventoryList() {
             <Input placeholder="搜索物料编码/名称..." value={keyword || "unknown"} onChange={(e) => setKeyword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && fetchData()} className="pl-9" />
           </div>
-          <Select value={warehouseId || "unknown"} onValueChange={(v) => { setWarehouseId(v); setPage(1); }}>
+          <Select value={warehouseId} onValueChange={(v) => { setWarehouseId(v); setPage(1); }}>
             <SelectTrigger className="w-40"><SelectValue placeholder="全部仓库" /></SelectTrigger>
             <SelectContent><SelectItem value="all">全部仓库</SelectItem>
               {(warehouses || []).map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.warehouse_name}</SelectItem>)}</SelectContent>

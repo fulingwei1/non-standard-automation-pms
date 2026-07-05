@@ -116,7 +116,7 @@ export default function InformationGapAnalysis() {
               </label>
               <select
                 className="w-full px-3 py-2 border rounded-md"
-                value={entityType || "unknown"}
+                value={entityType}
                 onChange={(e) => setEntityType(e.target.value)}>
 
                 <option value="LEAD">线索</option>
@@ -157,7 +157,7 @@ export default function InformationGapAnalysis() {
         </CardContent>
       </Card>
 
-      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="missing">信息缺失</TabsTrigger>
           <TabsTrigger value="impact">影响分析</TabsTrigger>

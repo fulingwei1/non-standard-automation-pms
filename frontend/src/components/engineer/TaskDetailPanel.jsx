@@ -349,11 +349,11 @@ export default function TaskDetailPanel({
                   type="range"
                   min="0"
                   max="100"
-                  value={progress || "unknown"}
+                  value={progress}
                   onChange={(e) => setProgress(Number(e.target.value))}
                   className="w-full h-2 bg-surface-2 rounded-lg appearance-none cursor-pointer accent-primary"
                 />
-                <Progress value={progress || "unknown"} className="h-2 mt-2" />
+                <Progress value={progress} className="h-2 mt-2" />
               </div>
 
               {/* Hours Input */}

@@ -350,7 +350,7 @@ export default function ServiceKnowledgeBase() {
                 </div>
                 <div className="flex gap-2">
                   <select
-                    value={categoryFilter || "unknown"}
+                    value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
                     className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
 
@@ -362,7 +362,7 @@ export default function ServiceKnowledgeBase() {
                     <option value="其他">其他</option>
                   </select>
                   <select
-                    value={faqFilter || "unknown"}
+                    value={faqFilter}
                     onChange={(e) => setFaqFilter(e.target.value)}
                     className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
 

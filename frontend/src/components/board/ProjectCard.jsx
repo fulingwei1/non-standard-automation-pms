@@ -97,7 +97,7 @@ const ProjectCard = memo(function ProjectCard({
               <span>{progress}%</span>
             </div>
             <Progress
-              value={progress || "unknown"}
+              value={progress}
               className="h-1.5"
               indicatorClassName={cn(
                 progress < 30 && "bg-red-500",

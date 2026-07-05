@@ -59,7 +59,7 @@ export default function PaymentManagement() {
                 }
             />
 
-            <Tabs value={viewMode || "unknown"} onValueChange={setViewMode} className="space-y-6">
+            <Tabs value={viewMode} onValueChange={setViewMode} className="space-y-6">
                 <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="overview">统计概览</TabsTrigger>
                     <TabsTrigger value="list">付款列表</TabsTrigger>
@@ -146,11 +146,11 @@ export default function PaymentManagement() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <select value={selectedType || "unknown"} onChange={(e) => setSelectedType(e.target.value)} className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2">
+                                    <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2">
                                         <option value="all">全部类型</option>
                                         {Object.values(PAYMENT_TYPES).map((type) => <option key={type.key} value={type.key}>{type.label}</option>)}
                                     </select>
-                                    <select value={selectedStatus || "unknown"} onChange={(e) => setSelectedStatus(e.target.value)} className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2">
+                                    <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2">
                                         <option value="all">全部状态</option>
                                         {Object.values(PAYMENT_STATUS).map((status) => <option key={status.key} value={status.key}>{status.label}</option>)}
                                     </select>

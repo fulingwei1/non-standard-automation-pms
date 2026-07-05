@@ -60,7 +60,7 @@ export default function WorkOrderFilters({
       </div>
 
       {/* 状态筛选 */}
-      <Select value={filterStatus || "unknown"} onValueChange={onStatusChange}>
+      <Select value={filterStatus} onValueChange={onStatusChange}>
         <SelectTrigger className="w-[180px] bg-slate-800/50 border-slate-700/50 text-white">
           <SelectValue placeholder="筛选状态" />
         </SelectTrigger>

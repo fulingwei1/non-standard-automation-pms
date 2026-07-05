@@ -140,7 +140,7 @@ export default function FinancialReports() {
       <motion.div variants={fadeIn}>
         <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50">
           <CardHeader>
-            <Tabs value={selectedReport || "unknown"} onValueChange={setSelectedReport}>
+            <Tabs value={selectedReport} onValueChange={setSelectedReport}>
               <TabsList className="grid w-full grid-cols-5">
                 {(reportTypes || []).map((type) => {
                   const Icon = type.icon;

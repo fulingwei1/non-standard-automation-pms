@@ -123,27 +123,27 @@ export function EmployeeManager({
                 className="pl-10" />
 
             </div>
-            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="员工状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">全部状态</SelectItem>
                 {Object.entries(employeeStatusConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.icon} {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterDepartment || "unknown"} onValueChange={setFilterDepartment}>
+            <Select value={filterDepartment} onValueChange={setFilterDepartment}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="部门" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">全部部门</SelectItem>
                 {Object.entries(departmentConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.icon} {config.label}
                 </SelectItem>
                 )}

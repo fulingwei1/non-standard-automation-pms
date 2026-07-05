@@ -278,7 +278,7 @@ export const RatingChart = ({
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-1">
-                  <Progress value={percentage || "unknown"} className="h-3" />
+                  <Progress value={percentage} className="h-3" />
                 </div>
                 <div className="text-sm text-slate-600 w-16 text-right">
                   {item.count || 0}条
@@ -319,7 +319,7 @@ export const RatingChart = ({
               评分分析图表
             </CardTitle>
             <div className="flex items-center gap-2">
-              <Select value={selectedTimeRange || "unknown"} onValueChange={setSelectedTimeRange}>
+              <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
                 <SelectTrigger className="w-[120px]">
                   <SelectValue />
                 </SelectTrigger>

@@ -50,10 +50,10 @@ export default function OutboundList() {
             <Input placeholder="搜索单号/目标单号/部门..." value={keyword || "unknown"} onChange={(e) => setKeyword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && fetchData()} className="pl-9" />
           </div>
-          <Select value={statusFilter || "unknown"} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
             <SelectTrigger className="w-36"><SelectValue placeholder="全部状态" /></SelectTrigger>
             <SelectContent><SelectItem value="all">全部状态</SelectItem>
-              {Object.entries(STATUS_MAP).map(([k, v]) => <SelectItem key={k} value={k || "unknown"}>{v.label}</SelectItem>)}</SelectContent>
+              {Object.entries(STATUS_MAP).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent>
           </Select>
           <Button variant="outline" size="icon" onClick={fetchData}><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /></Button>
         </div>

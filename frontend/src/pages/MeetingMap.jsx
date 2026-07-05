@@ -102,7 +102,7 @@ export default function MeetingMap() {
               >
                 <option value="">全部</option>
                 {Object.entries(rhythmLevelConfig).map(([key, config]) => (
-                  <option key={key} value={key || "unknown"}>
+                  <option key={key} value={key}>
                     {config.label}
                   </option>
                 ))}

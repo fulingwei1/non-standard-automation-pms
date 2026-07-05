@@ -93,7 +93,7 @@ function HistoricalPrices() {
 
   return (
     <div className="space-y-4">
-      <Select value={productCategory || "unknown"} onValueChange={setProductCategory}>
+      <Select value={productCategory} onValueChange={setProductCategory}>
         <SelectTrigger className="w-[200px]">
           <SelectValue />
         </SelectTrigger>

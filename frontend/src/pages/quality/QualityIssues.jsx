@@ -139,7 +139,7 @@ export default function QualityIssues() {
               />
             </div>
             <select
-              value={status || "unknown"}
+              value={status}
               onChange={(e) => updateFilter("status", e.target.value)}
               className="px-3 py-2 rounded-lg bg-surface-300 border border-white/5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-violet-500"
             >
@@ -148,7 +148,7 @@ export default function QualityIssues() {
               ))}
             </select>
             <select
-              value={severity || "unknown"}
+              value={severity}
               onChange={(e) => updateFilter("severity", e.target.value)}
               className="px-3 py-2 rounded-lg bg-surface-300 border border-white/5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-violet-500"
             >

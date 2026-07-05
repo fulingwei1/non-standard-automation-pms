@@ -317,7 +317,7 @@ export default function BudgetManagement({ embedded = false }) {
                   className="pl-10 bg-slate-900/50 border-slate-700" />
 
               </div>
-              <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger className="bg-slate-900/50 border-slate-700">
                   <SelectValue placeholder="预算状态" />
                 </SelectTrigger>
@@ -329,7 +329,7 @@ export default function BudgetManagement({ embedded = false }) {
                 </SelectContent>
               </Select>
               <Select
-                value={filterUsageRate || "unknown"}
+                value={filterUsageRate}
                 onValueChange={setFilterUsageRate}>
 
                 <SelectTrigger className="bg-slate-900/50 border-slate-700">

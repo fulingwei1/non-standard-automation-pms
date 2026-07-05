@@ -45,7 +45,7 @@ export default function PaymentFilters({
           </div>
           <div className="flex items-center gap-2">
             <select
-              value={selectedType || "unknown"}
+              value={selectedType}
               onChange={(e) => onTypeChange && onTypeChange(e.target.value)}
               className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2"
             >
@@ -57,7 +57,7 @@ export default function PaymentFilters({
               ))}
             </select>
             <select
-              value={selectedStatus || "unknown"}
+              value={selectedStatus}
               onChange={(e) => onStatusChange && onStatusChange(e.target.value)}
               className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-2"
             >

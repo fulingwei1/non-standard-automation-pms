@@ -32,14 +32,14 @@ export default function TemplateFilters({
               className="pl-10"
             />
           </div>
-          <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+          <Select value={filterType} onValueChange={setFilterType}>
             <SelectTrigger>
               <SelectValue placeholder="选择类型" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部类型</SelectItem>
               {Object.entries(typeConfigs).map(([key, config]) => (
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                   {config.label}
                 </SelectItem>
               ))}

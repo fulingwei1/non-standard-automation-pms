@@ -110,7 +110,7 @@ export default function KPICard({ kpi, onUpdate, onCollect, color }) {
             </span>
           </div>
           <Progress
-            value={progress || "unknown"}
+            value={progress}
             className="h-2"
             indicatorClassName={
               status === "ON_TRACK"

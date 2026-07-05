@@ -183,7 +183,7 @@ export default function ProgressReport() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">报告类型</label>
-              <Select value={reportType || "unknown"} onValueChange={setReportType}>
+              <Select value={reportType} onValueChange={setReportType}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -260,7 +260,7 @@ export default function ProgressReport() {
                         更新进度
                       </Button>
                     </div>
-                    <Progress value={progress || "unknown"} className="h-2" />
+                    <Progress value={progress} className="h-2" />
                 </div>);
 
             })}
@@ -328,7 +328,7 @@ export default function ProgressReport() {
                     setProgressValue(parseInt(e.target.value) || 0)
                     } />
 
-                    <Progress value={progressValue || "unknown"} className="h-2" />
+                    <Progress value={progressValue} className="h-2" />
                   </div>
                 </div>
                 <div>

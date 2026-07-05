@@ -128,7 +128,7 @@ export default function PipelineBreakAnalysis() {
               </label>
               <select
                 className="w-full px-3 py-2 border rounded-md"
-                value={pipelineType || "unknown"}
+                value={pipelineType}
                 onChange={(e) => setPipelineType(e.target.value)}>
 
                 <option value="all">全部</option>
@@ -180,7 +180,7 @@ export default function PipelineBreakAnalysis() {
       </Card>
       }
 
-      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview">断链概览</TabsTrigger>
           <TabsTrigger value="stages">按环节分析</TabsTrigger>

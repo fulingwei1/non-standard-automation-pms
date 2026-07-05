@@ -45,7 +45,7 @@ export function ExceptionFilters({
           </div>
 
           {/* Project filter */}
-          <Select value={filterProject || "unknown"} onValueChange={setFilterProject}>
+          <Select value={filterProject} onValueChange={setFilterProject}>
             <SelectTrigger>
               <SelectValue placeholder="选择项目" />
             </SelectTrigger>
@@ -60,14 +60,14 @@ export function ExceptionFilters({
           </Select>
 
           {/* Type filter */}
-          <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+          <Select value={filterType} onValueChange={setFilterType}>
             <SelectTrigger>
               <SelectValue placeholder="选择类型" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部类型</SelectItem>
               {Object.entries(typeConfigs).map(([key, config]) => (
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                   {config.label}
                 </SelectItem>
               ))}
@@ -75,14 +75,14 @@ export function ExceptionFilters({
           </Select>
 
           {/* Level filter */}
-          <Select value={filterLevel || "unknown"} onValueChange={setFilterLevel}>
+          <Select value={filterLevel} onValueChange={setFilterLevel}>
             <SelectTrigger>
               <SelectValue placeholder="选择级别" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部级别</SelectItem>
               {Object.entries(levelConfigs).map(([key, config]) => (
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                   {config.label}
                 </SelectItem>
               ))}
@@ -90,14 +90,14 @@ export function ExceptionFilters({
           </Select>
 
           {/* Status filter */}
-          <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger>
               <SelectValue placeholder="选择状态" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部状态</SelectItem>
               {Object.entries(statusConfigs).map(([key, config]) => (
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                   {config.label}
                 </SelectItem>
               ))}

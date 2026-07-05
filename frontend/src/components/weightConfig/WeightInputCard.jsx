@@ -41,7 +41,7 @@ export const WeightInputCard = ({
             type="range"
             min="0"
             max="100"
-            value={weight || "unknown"}
+            value={weight}
             onChange={(e) => onChange(type, e.target.value)}
             className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
           />

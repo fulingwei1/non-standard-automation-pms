@@ -33,7 +33,7 @@ export default function FilterBar({
             </div>
             <div className="flex gap-2">
               <select
-                value={typeFilter || "unknown"}
+                value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white"
               >
@@ -45,7 +45,7 @@ export default function FilterBar({
                 ))}
               </select>
               <select
-                value={statusFilter || "unknown"}
+                value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white"
               >

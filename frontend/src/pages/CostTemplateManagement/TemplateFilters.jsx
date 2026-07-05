@@ -39,7 +39,7 @@ export default function TemplateFilters({
               />
             </div>
           </div>
-          <Select value={typeFilter || "unknown"} onValueChange={setTypeFilter}>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="模板类型" />
             </SelectTrigger>
@@ -53,7 +53,7 @@ export default function TemplateFilters({
             </SelectContent>
           </Select>
           <Select
-            value={equipmentFilter || "unknown"}
+            value={equipmentFilter}
             onValueChange={setEquipmentFilter}
           >
             <SelectTrigger className="w-40">
@@ -62,7 +62,7 @@ export default function TemplateFilters({
             <SelectContent>
               <SelectItem value="all">全部设备</SelectItem>
               {(equipmentTypes || []).map((type) => (
-                <SelectItem key={type} value={type || "unknown"}>
+                <SelectItem key={type} value={type}>
                   {type}
                 </SelectItem>
               ))}

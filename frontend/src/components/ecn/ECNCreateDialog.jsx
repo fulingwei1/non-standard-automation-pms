@@ -273,7 +273,7 @@ export function ECNCreateDialog({
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries(priorityConfigs).map(([value, config]) => (
-                          <SelectItem key={value} value={value || "unknown"}>
+                          <SelectItem key={value} value={value}>
                             <div className="flex items-center gap-2">
                               <Badge
                                 variant="secondary"

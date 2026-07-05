@@ -274,7 +274,7 @@ export default function PresaleExpenseManagement() {
               </CardTitle>
               <div className="flex items-center gap-2">
                 <select
-                value={groupBy || "unknown"}
+                value={groupBy}
                 onChange={(e) => setGroupBy(e.target.value)}
                 className="px-3 py-1 border rounded">
 

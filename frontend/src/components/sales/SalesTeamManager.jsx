@@ -234,7 +234,7 @@ export const SalesTeamManager = ({
                   <div className="flex items-center gap-3">
                     {onRankingTypeChange && (
                       <Select
-                        value={rankingType || "unknown"}
+                        value={rankingType}
                         onValueChange={onRankingTypeChange}
                       >
                         <SelectTrigger className="w-40 bg-slate-800 border-slate-700 text-white text-sm">

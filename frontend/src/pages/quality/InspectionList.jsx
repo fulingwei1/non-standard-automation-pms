@@ -146,7 +146,7 @@ export default function InspectionList() {
               />
             </div>
             <select
-              value={inspectionType || "unknown"}
+              value={inspectionType}
               onChange={(e) => updateFilter("inspection_type", e.target.value)}
               className="px-3 py-2 rounded-lg bg-surface-300 border border-white/5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-violet-500"
             >
@@ -155,7 +155,7 @@ export default function InspectionList() {
               ))}
             </select>
             <select
-              value={inspectionResult || "unknown"}
+              value={inspectionResult}
               onChange={(e) => updateFilter("inspection_result", e.target.value)}
               className="px-3 py-2 rounded-lg bg-surface-300 border border-white/5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-violet-500"
             >

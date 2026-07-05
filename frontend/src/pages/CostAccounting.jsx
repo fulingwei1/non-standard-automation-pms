@@ -405,7 +405,7 @@ export default function CostAccounting() {
 
               </div>
               <select
-                value={selectedProject || "unknown"}
+                value={selectedProject}
                 onChange={(e) => setSelectedProject(e.target.value)}
                 className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
@@ -417,19 +417,19 @@ export default function CostAccounting() {
                 )}
               </select>
               <select
-                value={selectedCostType || "unknown"}
+                value={selectedCostType}
                 onChange={(e) => setSelectedCostType(e.target.value)}
                 className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
                 <option value="all">全部类型</option>
                 {Object.entries(costTypeConfig).map(([key, val]) =>
-                <option key={key} value={key || "unknown"}>
+                <option key={key} value={key}>
                     {val.label}
                 </option>
                 )}
               </select>
               <select
-                value={selectedDateRange || "unknown"}
+                value={selectedDateRange}
                 onChange={(e) => setSelectedDateRange(e.target.value)}
                 className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
@@ -556,7 +556,7 @@ export default function CostAccounting() {
                         </div>
                       </div>
                       <Progress
-                        value={percentage || "unknown"}
+                        value={percentage}
                         className="h-2 bg-slate-700/50" />
 
                     </div>);
@@ -602,7 +602,7 @@ export default function CostAccounting() {
                         </div>
                       </div>
                       <Progress
-                        value={percentage || "unknown"}
+                        value={percentage}
                         className="h-2 bg-slate-700/50" />
 
                     </div>);
@@ -647,7 +647,7 @@ export default function CostAccounting() {
                 >
                   <option value="">请选择类型</option>
                   {Object.entries(costTypeConfig).map(([key, val]) =>
-                  <option key={key} value={key || "unknown"}>
+                  <option key={key} value={key}>
                       {val.label}
                   </option>
                   )}

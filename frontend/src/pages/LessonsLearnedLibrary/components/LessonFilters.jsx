@@ -37,7 +37,7 @@ export function LessonFilters({
                     >
                         <option value="">全部分类</option>
                         {(categories || []).map((cat) => (
-                            <option key={cat} value={cat || "unknown"}>
+                            <option key={cat} value={cat}>
                                 {cat}
                             </option>
                         ))}

@@ -214,7 +214,7 @@ export default function CostAnalysis() {
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-slate-400" />
                 <span className="text-slate-400">时间范围：</span>
-                <Select value={timeRange || "unknown"} onValueChange={setTimeRange}>
+                <Select value={timeRange} onValueChange={setTimeRange}>
                   <SelectTrigger className="w-32 bg-slate-900/50 border-slate-700">
                     <SelectValue />
                   </SelectTrigger>
@@ -312,7 +312,7 @@ export default function CostAnalysis() {
 
         {/* Analysis Tabs */}
         <Tabs
-          value={selectedTab || "unknown"}
+          value={selectedTab}
           onValueChange={setSelectedTab}
           className="space-y-6">
 

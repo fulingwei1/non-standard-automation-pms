@@ -179,42 +179,42 @@ export function TicketQueue({
             </div>
           </div>
           <div className="flex gap-2">
-            <Select value={statusFilter || "unknown"} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有状态</SelectItem>
                 {Object.entries(serviceStatusConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.icon} {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
 
-            <Select value={priorityFilter || "unknown"} onValueChange={setPriorityFilter}>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder="优先级" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有优先级</SelectItem>
                 {Object.entries(servicePriorityConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.icon} {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
 
-            <Select value={typeFilter || "unknown"} onValueChange={setTypeFilter}>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder="类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">所有类型</SelectItem>
                 {Object.entries(serviceTypeConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.icon} {config.label}
                 </SelectItem>
                 )}

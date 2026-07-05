@@ -272,7 +272,7 @@ export default function RiskManagement() {
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <select
-              value={statusFilter || "unknown"}
+              value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
@@ -284,7 +284,7 @@ export default function RiskManagement() {
               <option value="CLOSED">已关闭</option>
             </select>
             <select
-              value={levelFilter || "unknown"}
+              value={levelFilter}
               onChange={(e) => setLevelFilter(e.target.value)}
               className="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >

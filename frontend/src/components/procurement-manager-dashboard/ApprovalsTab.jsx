@@ -30,7 +30,7 @@ export default function ApprovalsTab({
             />
           </div>
           <select
-            value={filterStatus || "unknown"}
+            value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-4 py-2 rounded-lg bg-surface-100 border border-white/10 text-white text-sm"
           >

@@ -519,7 +519,7 @@ export default function ECNManagement({ embedded = false }) {
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700">
                     {Object.entries(priorityConfig).map(([key, config]) => (
-                      <SelectItem key={key} value={key || "unknown"} className="text-white">
+                      <SelectItem key={key} value={key} className="text-white">
                         {config.label}
                       </SelectItem>
                     ))}

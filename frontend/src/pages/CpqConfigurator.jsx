@@ -211,7 +211,7 @@ export default function CpqConfigurator() {
       case "select":
         return (
           <Select
-            value={fieldValue || "unknown"}
+            value={fieldValue}
             onValueChange={(value) => handleSelectionChange(key, value)}>
 
             <SelectTrigger>

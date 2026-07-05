@@ -350,7 +350,7 @@ export default function EngineerWorkstation() {
               <div className="flex items-center gap-3 flex-wrap">
                 {/* Project Filter */}
                 <select
-                  value={projectFilter || "unknown"}
+                  value={projectFilter}
                   onChange={(e) => setProjectFilter(e.target.value)}
                   className="h-9 px-3 rounded-lg bg-surface-2 border border-border text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
 
@@ -364,7 +364,7 @@ export default function EngineerWorkstation() {
 
                 {/* Status Filter */}
                 <select
-                  value={statusFilter || "unknown"}
+                  value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="h-9 px-3 rounded-lg bg-surface-2 border border-border text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
 

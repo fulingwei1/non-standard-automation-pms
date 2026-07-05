@@ -201,7 +201,7 @@ export default function RequirementFreezeManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(freezeTypeConfig).map(([key, label]) =>
-                  <SelectItem key={key} value={key || "unknown"}>
+                  <SelectItem key={key} value={key}>
                       {label}
                   </SelectItem>
                   )}

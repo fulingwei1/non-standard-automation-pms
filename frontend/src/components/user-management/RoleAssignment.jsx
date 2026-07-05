@@ -275,7 +275,7 @@ export function RoleAssignment({
   const renderDataScope = () =>
   <div className="space-y-3">
       <Label className="text-sm font-medium">数据权限范围</Label>
-      <Select value={dataScope || "unknown"} onValueChange={setDataScope}>
+      <Select value={dataScope} onValueChange={setDataScope}>
         <SelectTrigger>
           <SelectValue />
         </SelectTrigger>

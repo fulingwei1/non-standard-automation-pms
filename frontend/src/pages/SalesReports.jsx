@@ -333,7 +333,7 @@ export default function SalesReports() {
                           }
                         </div>
                       </div>
-                      <Progress value={achievementRate || "unknown"} className="h-2" />
+                      <Progress value={achievementRate} className="h-2" />
                     </div>);
 
                 })}

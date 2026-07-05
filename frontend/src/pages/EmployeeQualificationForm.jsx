@@ -395,7 +395,7 @@ export default function EmployeeQualificationForm() {
                   岗位类型 <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={positionType || "unknown"}
+                  value={positionType}
                   onValueChange={(value) => setValue("position_type", value)}>
 
                   <SelectTrigger id="position_type">

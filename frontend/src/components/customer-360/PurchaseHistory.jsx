@@ -189,27 +189,27 @@ export function PurchaseHistory({
                 className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500" />
 
             </div>
-            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-[160px] bg-slate-800 border-slate-700 text-white">
                 <SelectValue placeholder="合同状态" />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700">
                 <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(contractStatusConfigs).map(([status, config]) =>
-                <SelectItem key={status} value={status || "unknown"} className="text-white">
+                <SelectItem key={status} value={status} className="text-white">
                     {config.icon} {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterYear || "unknown"} onValueChange={setFilterYear}>
+            <Select value={filterYear} onValueChange={setFilterYear}>
               <SelectTrigger className="w-[140px] bg-slate-800 border-slate-700 text-white">
                 <SelectValue placeholder="年份" />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700">
                 <SelectItem value="all">全部年份</SelectItem>
                 {[...new Set((yearStats || []).map((s) => s.year))].sort((a, b) => b - a).map((year) =>
-                <SelectItem key={year} value={year || "unknown"} className="text-white">
+                <SelectItem key={year} value={year} className="text-white">
                     {year}年
                 </SelectItem>
                 )}

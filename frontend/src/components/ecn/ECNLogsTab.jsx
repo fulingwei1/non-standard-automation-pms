@@ -138,7 +138,7 @@ export const ECNLogsTab = ({
                 className="max-w-sm"
               />
             </div>
-            <Select value={filterType || "unknown"} onValueChange={onFilterChange}>
+            <Select value={filterType} onValueChange={onFilterChange}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="日志类型" />
               </SelectTrigger>

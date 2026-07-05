@@ -156,7 +156,7 @@ export default function DispatchManagement() {
       <Card>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Select value={filterWorkshop || "unknown"} onValueChange={setFilterWorkshop}>
+            <Select value={filterWorkshop} onValueChange={setFilterWorkshop}>
               <SelectTrigger>
                 <SelectValue placeholder="选择车间" />
               </SelectTrigger>
@@ -169,7 +169,7 @@ export default function DispatchManagement() {
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger>
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>

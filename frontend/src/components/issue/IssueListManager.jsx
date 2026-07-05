@@ -463,7 +463,7 @@ export const IssueListManager = ({
                 <SelectContent>
                   <SelectItem value="all">全部状态</SelectItem>
                   {Object.entries(issueStatusConfig).map(([key, config]) =>
-                  <SelectItem key={key} value={key || "unknown"}>{config.label}</SelectItem>
+                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -478,7 +478,7 @@ export const IssueListManager = ({
                 <SelectContent>
                   <SelectItem value="all">全部严重程度</SelectItem>
                   {Object.entries(issueSeverityConfig).map(([key, config]) =>
-                  <SelectItem key={key} value={key || "unknown"}>{config.label}</SelectItem>
+                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -493,13 +493,13 @@ export const IssueListManager = ({
                 <SelectContent>
                   <SelectItem value="all">全部分类</SelectItem>
                   {Object.entries(issueCategoryConfig).map(([key, config]) =>
-                  <SelectItem key={key} value={key || "unknown"}>{config.label}</SelectItem>
+                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
 
               <Select
-                value={sortBy || "unknown"}
+                value={sortBy}
                 onValueChange={onSortChange}>
 
                 <SelectTrigger className="w-40 bg-slate-800/60 border-slate-700 text-white">

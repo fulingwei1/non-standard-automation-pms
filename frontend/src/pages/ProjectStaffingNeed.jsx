@@ -347,7 +347,7 @@ export default function ProjectStaffingNeed() {
               />
             </div>
             <select
-              value={filterStatus || "unknown"}
+              value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               className="h-10 px-3 rounded-md border border-white/10 bg-white/5 text-sm"
             >

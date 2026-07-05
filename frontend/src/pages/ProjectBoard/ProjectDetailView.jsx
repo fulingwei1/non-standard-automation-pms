@@ -67,7 +67,7 @@ export default function ProjectDetailView({
       </Card>
 
       {/* 视图切换标签 */}
-      <Tabs value={detailViewMode || "unknown"} onValueChange={onDetailViewChange}>
+      <Tabs value={detailViewMode} onValueChange={onDetailViewChange}>
         <TabsList className="bg-surface-1 border border-white/10">
           <TabsTrigger value={VIEW_TYPES.PIPELINE} className="data-[state=active]:bg-blue-500">
             <Layers className="w-4 h-4 mr-2" />

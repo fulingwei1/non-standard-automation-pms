@@ -49,7 +49,7 @@ export default function PlanFilters({
             <SelectContent>
               <SelectItem value="all">全部类型</SelectItem>
               {Object.entries(typeConfigs).map(([key, config]) => (
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                   {config.label}
                 </SelectItem>
               ))}
@@ -94,7 +94,7 @@ export default function PlanFilters({
             <SelectContent>
               <SelectItem value="all">全部状态</SelectItem>
               {Object.entries(statusConfigs).map(([key, config]) => (
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                   {config.label}
                 </SelectItem>
               ))}

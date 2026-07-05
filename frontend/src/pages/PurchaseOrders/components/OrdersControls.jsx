@@ -50,7 +50,7 @@ export function OrdersControls({
                             <SelectContent className="bg-surface-2 border-border">
                                 <SelectItem value="all">全部状态</SelectItem>
                                 {Object.entries(ORDER_STATUS_CONFIGS).map(([key, config]) => (
-                                    <SelectItem key={key} value={key || "unknown"}>
+                                    <SelectItem key={key} value={key}>
                                         {config.label}
                                     </SelectItem>
                                 ))}

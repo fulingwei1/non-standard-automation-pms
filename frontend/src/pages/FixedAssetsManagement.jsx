@@ -266,7 +266,7 @@ export default function FixedAssetsManagement() {
                   className="flex-1" />
 
                 <select
-                  value={categoryFilter || "unknown"}
+                  value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
                   className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
 
@@ -275,7 +275,7 @@ export default function FixedAssetsManagement() {
                   <option value="办公设备">办公设备</option>
                 </select>
                 <select
-                  value={statusFilter || "unknown"}
+                  value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
 

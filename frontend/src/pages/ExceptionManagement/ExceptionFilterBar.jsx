@@ -44,7 +44,7 @@ export function ExceptionFilterBar({
 
           {/* Project filter */}
           <Select
-            value={filterProject || "unknown"}
+            value={filterProject}
             onValueChange={setFilterProject}
           >
             <SelectTrigger>
@@ -62,7 +62,7 @@ export function ExceptionFilterBar({
 
           {/* Type filter */}
           <Select
-            value={filterType || "unknown"}
+            value={filterType}
             onValueChange={setFilterType}
           >
             <SelectTrigger>
@@ -71,7 +71,7 @@ export function ExceptionFilterBar({
             <SelectContent>
               <SelectItem value="all">全部类型</SelectItem>
               {Object.entries(typeConfigs).map(([key, config]) => (
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                   {config.label}
                 </SelectItem>
               ))}
@@ -80,7 +80,7 @@ export function ExceptionFilterBar({
 
           {/* Severity filter */}
           <Select
-            value={filterSeverity || "unknown"}
+            value={filterSeverity}
             onValueChange={setFilterSeverity}
           >
             <SelectTrigger>
@@ -89,7 +89,7 @@ export function ExceptionFilterBar({
             <SelectContent>
               <SelectItem value="all">全部</SelectItem>
               {Object.entries(severityConfigs).map(([key, config]) => (
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                   {config.label}
                 </SelectItem>
               ))}
@@ -98,7 +98,7 @@ export function ExceptionFilterBar({
 
           {/* Status filter */}
           <Select
-            value={filterStatus || "unknown"}
+            value={filterStatus}
             onValueChange={setFilterStatus}
           >
             <SelectTrigger>
@@ -107,7 +107,7 @@ export function ExceptionFilterBar({
             <SelectContent>
               <SelectItem value="all">全部状态</SelectItem>
               {Object.entries(statusConfigs).map(([key, config]) => (
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                   {config.label}
                 </SelectItem>
               ))}

@@ -24,7 +24,7 @@ export function SearchFilter({ searchKeyword, setSearchKeyword, filterModule, se
               className="pl-10"
             />
           </div>
-          <Select value={filterModule || "unknown"} onValueChange={setFilterModule}>
+          <Select value={filterModule} onValueChange={setFilterModule}>
             <SelectTrigger className="w-full sm:w-[200px]">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="选择模块" />
@@ -32,7 +32,7 @@ export function SearchFilter({ searchKeyword, setSearchKeyword, filterModule, se
             <SelectContent>
               <SelectItem value="all">所有模块</SelectItem>
               {(modules || []).map((module) =>
-                <SelectItem key={module} value={module || "unknown"}>
+                <SelectItem key={module} value={module}>
                   {getModuleLabel(module)}
                 </SelectItem>
               )}

@@ -30,7 +30,7 @@ export default function EditRoleDialog({
                     <DialogTitle>编辑角色 - {form.role_name}</DialogTitle>
                 </DialogHeader>
                 <DialogBody className="flex-1 overflow-y-auto px-6">
-                    <Tabs value={activeTab || "unknown"} onValueChange={onTabChange} className="w-full h-full flex flex-col">
+                    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full h-full flex flex-col">
                         <TabsList className="grid w-full grid-cols-2 shrink-0">
                             <TabsTrigger value="basic">基本信息</TabsTrigger>
                             <TabsTrigger value="permissions">
@@ -86,7 +86,7 @@ export default function EditRoleDialog({
                                     </SelectTrigger>
                                     <SelectContent>
                                         {Object.entries(DATA_SCOPE_MAP).map(([key, config]) => (
-                                            <SelectItem key={key} value={key || "unknown"}>
+                                            <SelectItem key={key} value={key}>
                                                 {config.label}
                                             </SelectItem>
                                         ))}
@@ -116,7 +116,7 @@ export default function EditRoleDialog({
                                         />
                                     </div>
                                     <Select
-                                        value={permissionModuleFilter || "unknown"}
+                                        value={permissionModuleFilter}
                                         onValueChange={onPermissionModuleFilterChange}
                                     >
                                         <SelectTrigger className="w-40 bg-slate-800 border-slate-700">
@@ -125,7 +125,7 @@ export default function EditRoleDialog({
                                         <SelectContent>
                                             <SelectItem value="all">全部模块</SelectItem>
                                             {getAllModules().map(module => (
-                                                <SelectItem key={module} value={module || "unknown"}>
+                                                <SelectItem key={module} value={module}>
                                                     {module}
                                                 </SelectItem>
                                             ))}

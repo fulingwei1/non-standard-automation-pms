@@ -566,7 +566,7 @@ export default function RequirementSurvey({ embedded = false }) {
           {/* 筛选 */}
           <div className="flex items-center gap-3 flex-wrap">
             <select
-              value={selectedStatus || "unknown"}
+              value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
             >
@@ -577,7 +577,7 @@ export default function RequirementSurvey({ embedded = false }) {
               ))}
             </select>
             <select
-              value={selectedMethod || "unknown"}
+              value={selectedMethod}
               onChange={(e) => setSelectedMethod(e.target.value)}
               className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
             >

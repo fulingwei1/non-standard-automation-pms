@@ -59,7 +59,7 @@ export default function WorkOrderFilters({
             <SelectContent>
               <SelectItem value="all">全部状态</SelectItem>
               {Object.entries(statusConfigs).map(([key, config]) => (
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                   {config.label}
                 </SelectItem>
               ))}
@@ -72,7 +72,7 @@ export default function WorkOrderFilters({
             <SelectContent>
               <SelectItem value="all">全部优先级</SelectItem>
               {Object.entries(priorityConfigs).map(([key, config]) => (
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                   {config.label}
                 </SelectItem>
               ))}

@@ -205,7 +205,7 @@ export default function CreateOrderDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(priorityConfigs).map(([key, config]) => (
-                    <SelectItem key={key} value={key || "unknown"}>
+                    <SelectItem key={key} value={key}>
                       {config.label}
                     </SelectItem>
                   ))}

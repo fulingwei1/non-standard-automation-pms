@@ -189,7 +189,7 @@ export default function RdProjectDetail() {
       <StatCards statCards={statCards} />
 
       {/* Tabs */}
-      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab} className="mb-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
         <TabsList className="grid w-full grid-cols-6">
           {(tabs || []).map((tab) => (
             <TabsTrigger

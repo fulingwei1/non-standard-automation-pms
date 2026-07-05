@@ -38,7 +38,7 @@ export function DataImportPanel({
                     <div>
                         <Label>模板类型</Label>
                         <Select
-                            value={selectedTemplateType || "unknown"}
+                            value={selectedTemplateType}
                             onValueChange={setSelectedTemplateType}
                         >
                             <SelectTrigger>

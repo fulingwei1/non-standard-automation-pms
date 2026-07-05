@@ -19,7 +19,7 @@ const AlgorithmSelector = ({ value, onChange }) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <RadioGroup value={value || "unknown"} onValueChange={onChange}>
+        <RadioGroup value={value} onValueChange={onChange}>
           <div className="space-y-4">
             {Object.entries(FORECAST_ALGORITHMS).map(([key, config]) => (
               <div

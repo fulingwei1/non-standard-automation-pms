@@ -278,13 +278,13 @@ export default function ProjectSettlement() {
 
               </div>
               <select
-                value={selectedStatus || "unknown"}
+                value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
                 <option value="all">全部状态</option>
                 {Object.entries(statusConfig).map(([key, val]) =>
-                <option key={key} value={key || "unknown"}>
+                <option key={key} value={key}>
                     {val.label}
                 </option>
                 )}

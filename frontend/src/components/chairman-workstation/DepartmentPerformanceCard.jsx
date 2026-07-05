@@ -115,7 +115,7 @@ export const DepartmentPerformanceCard = ({ departmentPerformance }) => {
                   </div>
                   {achievement > 0 &&
                   <Progress
-                    value={achievement || "unknown"}
+                    value={achievement}
                     className="h-1.5 bg-slate-700/50" />
 
                   }

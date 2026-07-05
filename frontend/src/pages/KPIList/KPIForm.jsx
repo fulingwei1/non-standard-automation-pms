@@ -117,7 +117,7 @@ export default function KPIForm({ kpi, onSubmit, onCancel, loading }) {
               required
             >
               {Object.entries(BSC_DIMENSIONS).map(([key, config]) => (
-                <option key={key} value={key || "unknown"}>
+                <option key={key} value={key}>
                   {config.name}
                 </option>
               ))}
@@ -137,7 +137,7 @@ export default function KPIForm({ kpi, onSubmit, onCancel, loading }) {
               required
             >
               {Object.entries(COLLECTION_FREQUENCY).map(([key, config]) => (
-                <option key={key} value={key || "unknown"}>
+                <option key={key} value={key}>
                   {config.label}
                 </option>
               ))}

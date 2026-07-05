@@ -278,39 +278,39 @@ export function AlertTable({
                     <div>
                       <label className="text-sm font-medium">状态</label>
                       <select
-                      value={statusFilter || "unknown"}
+                      value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
                       className="w-full mt-1 text-sm border rounded p-1">
 
                         <option value="all">全部</option>
                         {Object.entries(ALERT_STATUS_STATS).map(([key, config]) =>
-                      <option key={key} value={key || "unknown"}>{config.label}</option>
+                      <option key={key} value={key}>{config.label}</option>
                       )}
                       </select>
                     </div>
                     <div>
                       <label className="text-sm font-medium">级别</label>
                       <select
-                      value={levelFilter || "unknown"}
+                      value={levelFilter}
                       onChange={(e) => setLevelFilter(e.target.value)}
                       className="w-full mt-1 text-sm border rounded p-1">
 
                         <option value="all">全部</option>
                         {Object.entries(ALERT_LEVEL_STATS).map(([key, config]) =>
-                      <option key={key} value={key || "unknown"}>{config.label}</option>
+                      <option key={key} value={key}>{config.label}</option>
                       )}
                       </select>
                     </div>
                     <div>
                       <label className="text-sm font-medium">类型</label>
                       <select
-                      value={typeFilter || "unknown"}
+                      value={typeFilter}
                       onChange={(e) => setTypeFilter(e.target.value)}
                       className="w-full mt-1 text-sm border rounded p-1">
 
                         <option value="all">全部</option>
                         {Object.entries(ALERT_TYPE_STATS).map(([key, config]) =>
-                      <option key={key} value={key || "unknown"}>{config.label}</option>
+                      <option key={key} value={key}>{config.label}</option>
                       )}
                       </select>
                     </div>

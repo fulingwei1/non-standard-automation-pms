@@ -58,7 +58,7 @@ export function AgingAnalysis({ agingData, formatCurrency }) {
                             {percentage.toFixed(1)}%
                           </span>
                         </div>
-                        <Progress value={percentage || "unknown"} className="h-2" />
+                        <Progress value={percentage} className="h-2" />
                       </div>
                     </div>
                   </CardContent>

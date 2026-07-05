@@ -62,7 +62,7 @@ export default function LeadFilters({
           </DropdownMenu>
           <div className="flex gap-2">
             <select
-              value={sortBy || "unknown"}
+              value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               className="px-3 py-1 border rounded text-sm bg-slate-900 text-slate-300"
             >

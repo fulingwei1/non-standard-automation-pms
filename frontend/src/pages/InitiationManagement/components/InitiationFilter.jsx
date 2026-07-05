@@ -16,7 +16,7 @@ export function InitiationFilter({ keyword, setKeyword, statusFilter, setStatusF
                         />
                     </div>
                     <select
-                        value={statusFilter || "unknown"}
+                        value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     >

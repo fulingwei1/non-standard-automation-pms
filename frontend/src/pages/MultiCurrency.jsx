@@ -149,11 +149,11 @@ function ConverterCard({ rates: _rates }) {
             <label className="text-xs text-slate-400 mb-1 block">从</label>
             <select
               className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300"
-              value={fromCurrency || "unknown"}
+              value={fromCurrency}
               onChange={(e) => setFromCurrency(e.target.value)}
             >
               {Object.keys(currencyNames).map((c) => (
-                <option key={c} value={c || "unknown"}>{currencyNames[c]} ({c})</option>
+                <option key={c} value={c}>{currencyNames[c]} ({c})</option>
               ))}
             </select>
           </div>
@@ -161,11 +161,11 @@ function ConverterCard({ rates: _rates }) {
             <label className="text-xs text-slate-400 mb-1 block">到</label>
             <select
               className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300"
-              value={toCurrency || "unknown"}
+              value={toCurrency}
               onChange={(e) => setToCurrency(e.target.value)}
             >
               {Object.keys(currencyNames).map((c) => (
-                <option key={c} value={c || "unknown"}>{currencyNames[c]} ({c})</option>
+                <option key={c} value={c}>{currencyNames[c]} ({c})</option>
               ))}
             </select>
           </div>

@@ -30,20 +30,20 @@ export function CustomerFilters({
                     icon={Search}
                 />
 
-                <Select value={filterIndustry || "unknown"} onValueChange={setFilterIndustry}>
+                <Select value={filterIndustry} onValueChange={setFilterIndustry}>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="筛选行业" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">所有行业</SelectItem>
                         {(industries || []).map((industry) => (
-                            <SelectItem key={industry} value={industry || "unknown"}>
+                            <SelectItem key={industry} value={industry}>
                                 {industry}
                             </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
-                <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
                     <SelectTrigger className="w-[150px]">
                         <SelectValue placeholder="筛选状态" />
                     </SelectTrigger>

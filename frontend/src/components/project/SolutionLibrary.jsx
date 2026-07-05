@@ -104,7 +104,7 @@ export default function SolutionLibrary({ projectId, onApplyTemplate }) {
 
           </div>
           <select
-            value={filterType || "unknown"}
+            value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
             className="h-9 px-3 rounded-lg border border-gray-300 text-sm">
 

@@ -309,7 +309,7 @@ const CustomerServiceDashboard = () => {
     render: (satisfaction) =>
     satisfaction ?
     <div>
-            <Rate disabled value={satisfaction || "unknown"} style={{ fontSize: 12 }} />
+            <Rate disabled value={satisfaction} style={{ fontSize: 12 }} />
             <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>
               {satisfaction}/5.0
             </div>

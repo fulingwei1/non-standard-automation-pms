@@ -61,7 +61,7 @@ export default function CreatePlanDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(typeConfigs).map(([key, config]) => (
-                      <SelectItem key={key} value={key || "unknown"}>
+                      <SelectItem key={key} value={key}>
                         {config.label}
                       </SelectItem>
                     ))}

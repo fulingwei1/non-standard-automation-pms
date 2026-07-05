@@ -31,20 +31,20 @@ export default function IssueTemplateFilters({
               className="pl-10 bg-surface-100 border-white/10 text-white"
             />
           </div>
-          <Select value={filterCategory || "unknown"} onValueChange={setFilterCategory}>
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
             <SelectTrigger className="bg-surface-100 border-white/10 text-white">
               <SelectValue placeholder="选择分类" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部分类</SelectItem>
               {Object.entries(categoryConfigs).map(([key, config]) => (
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                   {config.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Select value={filterActive || "unknown"} onValueChange={setFilterActive}>
+          <Select value={filterActive} onValueChange={setFilterActive}>
             <SelectTrigger className="bg-surface-100 border-white/10 text-white">
               <SelectValue placeholder="选择状态" />
             </SelectTrigger>

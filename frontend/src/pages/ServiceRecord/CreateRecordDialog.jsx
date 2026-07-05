@@ -43,7 +43,7 @@ export default function CreateRecordDialog({
               className="w-full mt-1 p-2 bg-slate-800 border border-slate-700 rounded text-white"
             >
               {Object.entries(SERVICE_TYPES).map(([key, type]) => (
-                <option key={key} value={key || "unknown"}>
+                <option key={key} value={key}>
                   {type.label}
                 </option>
               ))}

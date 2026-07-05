@@ -262,7 +262,7 @@ export default function OutsourcingOrderDetail() {
               </div>
               <Package className="w-8 h-8 text-blue-500" />
             </div>
-            <Progress value={deliveryRate || "unknown"} className="mt-2 h-2" />
+            <Progress value={deliveryRate} className="mt-2 h-2" />
             <div className="text-xs text-slate-500 mt-1">
               {deliveredQuantity} / {totalQuantity}
             </div>
@@ -279,7 +279,7 @@ export default function OutsourcingOrderDetail() {
               </div>
               <CheckCircle2 className="w-8 h-8 text-emerald-500" />
             </div>
-            <Progress value={passRate || "unknown"} className="mt-2 h-2" />
+            <Progress value={passRate} className="mt-2 h-2" />
             <div className="text-xs text-slate-500 mt-1">
               合格: {qualifiedQuantity} | 不合格: {rejectedQuantity}
             </div>

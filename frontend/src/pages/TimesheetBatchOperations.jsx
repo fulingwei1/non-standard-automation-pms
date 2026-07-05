@@ -292,7 +292,7 @@ export default function TimesheetBatchOperations() {
                 状态筛选
               </label>
               <select
-                value={filterStatus || "unknown"}
+                value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
                 className="w-full bg-slate-700 text-white px-3 py-2 rounded border border-slate-600">
 

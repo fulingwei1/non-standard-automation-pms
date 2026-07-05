@@ -29,7 +29,7 @@ export default function PeriodSelector({ selectedPeriod, setSelectedPeriod, date
               </Button>
             </div>
             <select
-              value={dateRange || "unknown"}
+              value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
               className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
               <option value="2024-07">2024年7月</option>

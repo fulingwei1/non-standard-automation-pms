@@ -323,7 +323,7 @@ export function TeamAssignment({
 
             </div>
 
-            <Select value={statusFilter || "unknown"} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -334,28 +334,28 @@ export function TeamAssignment({
               </SelectContent>
             </Select>
 
-            <Select value={skillFilter || "unknown"} onValueChange={setSkillFilter}>
+            <Select value={skillFilter} onValueChange={setSkillFilter}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">所有技能</SelectItem>
                 {(uniqueSkills || []).map((skill) =>
-              <SelectItem key={skill} value={skill || "unknown"}>
+              <SelectItem key={skill} value={skill}>
                     {skill}
               </SelectItem>
               )}
               </SelectContent>
             </Select>
 
-            <Select value={locationFilter || "unknown"} onValueChange={setLocationFilter}>
+            <Select value={locationFilter} onValueChange={setLocationFilter}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">所有地点</SelectItem>
                 {(uniqueLocations || []).map((location) =>
-              <SelectItem key={location} value={location || "unknown"}>
+              <SelectItem key={location} value={location}>
                     {location}
               </SelectItem>
               )}

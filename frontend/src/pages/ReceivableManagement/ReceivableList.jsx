@@ -126,7 +126,7 @@ export function ReceivableList({
                       {/* Progress row */}
                       <div className="mt-2">
                         <Progress
-                          value={paymentProgress || "unknown"}
+                          value={paymentProgress}
                           className="h-2"
                         />
                         <div className="flex items-center justify-between mt-1 text-xs text-slate-400">

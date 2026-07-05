@@ -459,13 +459,13 @@ export default function SchedulerMonitoringDashboard() {
 
                   </div>
                   <select
-                    value={filterCategory || "unknown"}
+                    value={filterCategory}
                     onChange={(e) => setFilterCategory(e.target.value)}
                     className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm">
 
                     <option value="all">所有类别</option>
                     {(categories || []).map((cat) =>
-                    <option key={cat} value={cat || "unknown"}>
+                    <option key={cat} value={cat}>
                         {cat}
                     </option>
                     )}

@@ -287,7 +287,7 @@ export default function Documents() {
                 </div>
                 <div className="w-full md:w-64">
                   <Select
-                    value={selectedProject || "unknown"}
+                    value={selectedProject}
                     onValueChange={setSelectedProject}>
 
                     <SelectTrigger className="bg-slate-800/50 border-slate-700">
@@ -419,7 +419,7 @@ export default function Documents() {
                   选择项目
                 </label>
                 <Select
-                  value={uploadProjectId || "unknown"}
+                  value={uploadProjectId}
                   onValueChange={setUploadProjectId}>
 
                   <SelectTrigger>

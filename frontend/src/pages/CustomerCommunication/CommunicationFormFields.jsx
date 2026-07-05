@@ -59,7 +59,7 @@ export default function CommunicationFormFields({ formData, setFormData, custome
           </SelectTrigger>
           <SelectContent className="bg-slate-800 border-slate-600">
             {Object.entries(COMMUNICATION_TYPE).map(([_key, value]) =>
-            <SelectItem key={value} value={value || "unknown"} className="text-white">
+            <SelectItem key={value} value={value} className="text-white">
                 {getCommunicationTypeIcon(value)} {COMMUNICATION_TYPE_LABELS[value]}
             </SelectItem>
             )}
@@ -80,7 +80,7 @@ export default function CommunicationFormFields({ formData, setFormData, custome
           </SelectTrigger>
           <SelectContent className="bg-slate-800 border-slate-600">
             {Object.entries(COMMUNICATION_TOPIC).map(([_key, value]) =>
-            <SelectItem key={value} value={value || "unknown"} className="text-white">
+            <SelectItem key={value} value={value} className="text-white">
                 {COMMUNICATION_TOPIC_LABELS[value]}
             </SelectItem>
             )}
@@ -101,7 +101,7 @@ export default function CommunicationFormFields({ formData, setFormData, custome
           </SelectTrigger>
           <SelectContent className="bg-slate-800 border-slate-600">
             {Object.entries(COMMUNICATION_PRIORITY).map(([_key, value]) =>
-            <SelectItem key={value} value={value || "unknown"} className="text-white">
+            <SelectItem key={value} value={value} className="text-white">
                 {COMMUNICATION_PRIORITY_LABELS[value]}
             </SelectItem>
             )}
@@ -197,7 +197,7 @@ export default function CommunicationFormFields({ formData, setFormData, custome
           <SelectContent className="bg-slate-800 border-slate-600">
             <SelectItem value="__none__" className="text-white">未评分</SelectItem>
             {Object.entries(CUSTOMER_SATISFACTION).map(([_key, value]) =>
-            <SelectItem key={value} value={value?.toString() || "unknown"} className="text-white">
+            <SelectItem key={value} value={value?.toString()} className="text-white">
                 {CUSTOMER_SATISFACTION_LABELS[value]}
             </SelectItem>
             )}

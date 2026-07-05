@@ -225,7 +225,7 @@ export function AlertList({
 
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="状态筛选" />
               </SelectTrigger>
@@ -238,7 +238,7 @@ export function AlertList({
               </SelectContent>
             </Select>
 
-            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+            <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="类型筛选" />
               </SelectTrigger>

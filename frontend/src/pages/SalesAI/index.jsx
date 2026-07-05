@@ -100,13 +100,13 @@ function ScriptRecommendation() {
   return (
     <div className="space-y-4">
       <div className="flex gap-4">
-        <Select value={scenario || "unknown"} onValueChange={setScenario}>
+        <Select value={scenario} onValueChange={setScenario}>
           <SelectTrigger className="w-[200px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {scenarios.map((s) => (
-              <SelectItem key={s} value={s || "unknown"}>
+              <SelectItem key={s} value={s}>
                 {s}
               </SelectItem>
             ))}
@@ -171,7 +171,7 @@ function ProposalGeneration() {
   return (
     <div className="space-y-4">
       <div className="flex gap-4">
-        <Select value={proposalType || "unknown"} onValueChange={setProposalType}>
+        <Select value={proposalType} onValueChange={setProposalType}>
           <SelectTrigger className="w-[200px]">
             <SelectValue />
           </SelectTrigger>

@@ -68,7 +68,7 @@ export default function LocationManagement() {
             <Input placeholder="搜索库位编码/名称..." value={keyword || "unknown"} onChange={(e) => setKeyword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && fetchData()} className="pl-9" />
           </div>
-          <Select value={whFilter || "unknown"} onValueChange={(v) => { setWhFilter(v); setPage(1); }}>
+          <Select value={whFilter} onValueChange={(v) => { setWhFilter(v); setPage(1); }}>
             <SelectTrigger className="w-40"><SelectValue placeholder="全部仓库" /></SelectTrigger>
             <SelectContent><SelectItem value="all">全部仓库</SelectItem>
               {(warehouses || []).map((w) => <SelectItem key={w.id} value={w.id.toString()}>{w.warehouse_name}</SelectItem>)}</SelectContent>

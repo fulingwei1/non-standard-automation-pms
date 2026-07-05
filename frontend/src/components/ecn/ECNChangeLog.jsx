@@ -128,20 +128,20 @@ export function ECNChangeLog({
 
               </div>
             </div>
-            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+            <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="日志类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">全部类型</SelectItem>
                 {Object.entries(logTypeConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.icon} {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterDateRange || "unknown"} onValueChange={setFilterDateRange}>
+            <Select value={filterDateRange} onValueChange={setFilterDateRange}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="时间范围" />
               </SelectTrigger>

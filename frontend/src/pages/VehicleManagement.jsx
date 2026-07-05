@@ -244,7 +244,7 @@ export default function VehicleManagement() {
                   className="flex-1" />
 
                 <select
-                  value={statusFilter || "unknown"}
+                  value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white">
 

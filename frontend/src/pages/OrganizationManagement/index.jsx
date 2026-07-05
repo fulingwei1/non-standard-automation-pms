@@ -280,7 +280,7 @@ export default function OrganizationManagement() {
                     onChange={(e) => setSearchKeyword(e.target.value)}
                     className="max-w-sm"
                   />
-                  <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+                  <Select value={filterType} onValueChange={setFilterType}>
                     <SelectTrigger className="w-[150px]">
                       <SelectValue placeholder="筛选类型" />
                     </SelectTrigger>

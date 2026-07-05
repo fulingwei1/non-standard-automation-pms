@@ -49,31 +49,31 @@ export default function AlertFilterBar({
             </div>
             <div className="flex gap-2 flex-wrap">
               <select
-                value={selectedLevel || "unknown"}
+                value={selectedLevel}
                 onChange={(e) => setSelectedLevel(e.target.value)}
                 className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
 
                 <option value="ALL">全部级别</option>
                 {Object.entries(ALERT_LEVELS).map(([key, config]) =>
-                <option key={key} value={key || "unknown"}>
+                <option key={key} value={key}>
                     {config.label}
                 </option>
                 )}
               </select>
               <select
-                value={selectedStatus || "unknown"}
+                value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
 
                 <option value="ALL">全部状态</option>
                 {Object.entries(ALERT_STATUS).map(([key, config]) =>
-                <option key={key} value={key || "unknown"}>
+                <option key={key} value={key}>
                     {config.label}
                 </option>
                 )}
               </select>
               <select
-                value={selectedProject || "unknown"}
+                value={selectedProject}
                 onChange={(e) => setSelectedProject(e.target.value)}
                 className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white">
 

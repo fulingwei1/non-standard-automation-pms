@@ -372,7 +372,7 @@ export default function ProductionLineManager({
             
             <div className="flex gap-2">
               <select
-                value={filterStatus || "unknown"}
+                value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm">
 
@@ -385,7 +385,7 @@ export default function ProductionLineManager({
               </select>
               
               <select
-                value={selectedShift || "unknown"}
+                value={selectedShift}
                 onChange={(e) => setSelectedShift(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm">
 

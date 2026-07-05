@@ -307,7 +307,7 @@ export default function SalesTeamPerformance({
             <h4 className="font-medium mb-3 text-slate-200">添加指标</h4>
             <div className="flex gap-2">
               <select
-                value={metricToAdd || "unknown"}
+                value={metricToAdd}
                 onChange={(e) => setMetricToAdd(e.target.value)}
                 className="flex-1 px-3 py-2 border border-slate-600 rounded-md bg-slate-700 text-slate-200">
 
@@ -419,7 +419,7 @@ export default function SalesTeamPerformance({
           </div>
 
           <select
-            value={selectedRegion || "unknown"}
+            value={selectedRegion}
             onChange={(e) => setSelectedRegion(e.target.value)}
             className="px-3 py-2 border border-slate-600 rounded-md text-sm bg-slate-700 text-slate-200">
 
@@ -432,7 +432,7 @@ export default function SalesTeamPerformance({
           </select>
 
           <select
-            value={sortBy || "unknown"}
+            value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="px-3 py-2 border border-slate-600 rounded-md text-sm bg-slate-700 text-slate-200">
 

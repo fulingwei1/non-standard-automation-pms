@@ -286,7 +286,7 @@ export default function ECNOverdueAlerts() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+              <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="筛选类型" />
                 </SelectTrigger>

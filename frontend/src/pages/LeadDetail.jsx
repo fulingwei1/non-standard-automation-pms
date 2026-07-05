@@ -426,7 +426,7 @@ export default function LeadDetail() {
                   <SelectContent>
                     {Object.entries(followUpTypeConfigs).map(
                       ([key, config]) =>
-                      <SelectItem key={key} value={key || "unknown"}>
+                      <SelectItem key={key} value={key}>
                           {config.label}
                       </SelectItem>
 

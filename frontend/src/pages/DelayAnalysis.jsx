@@ -147,7 +147,7 @@ export default function DelayAnalysis() {
         </CardContent>
       </Card>
 
-      <Tabs value={activeTab || "unknown"} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="root-cause">根因分析</TabsTrigger>
           <TabsTrigger value="impact">影响分析</TabsTrigger>

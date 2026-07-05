@@ -254,7 +254,7 @@ export function TeamPerformance({
               团队绩效详情
             </CardTitle>
             <div className="flex items-center gap-2">
-              <Select value={selectedPeriod || "unknown"} onValueChange={setSelectedPeriod}>
+              <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
                 <SelectTrigger className="w-[120px]">
                   <SelectValue />
                 </SelectTrigger>

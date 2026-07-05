@@ -15,7 +15,7 @@ export function LeaveFilters({ searchText, setSearchText, typeFilter, setTypeFil
                     />
 
                     <select
-                        value={typeFilter || "unknown"}
+                        value={typeFilter}
                         onChange={(e) => setTypeFilter(e.target.value)}
                         className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
                     >
@@ -24,7 +24,7 @@ export function LeaveFilters({ searchText, setSearchText, typeFilter, setTypeFil
                         ))}
                     </select>
                     <select
-                        value={statusFilter || "unknown"}
+                        value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white"
                     >

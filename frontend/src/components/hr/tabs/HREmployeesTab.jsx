@@ -79,7 +79,7 @@ export default function HREmployeesTab({
             />
           </div>
           <select
-            value={filterDepartment || "unknown"}
+            value={filterDepartment}
             onChange={(e) => setFilterDepartment(e.target.value)}
             className="px-4 py-2 rounded-lg bg-slate-800/40 border border-slate-700/50 text-white text-sm"
           >
@@ -91,7 +91,7 @@ export default function HREmployeesTab({
             ))}
           </select>
           <select
-            value={filterStatus || "unknown"}
+            value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-4 py-2 rounded-lg bg-slate-800/40 border border-slate-700/50 text-white text-sm"
           >

@@ -240,7 +240,7 @@ export default function MaterialDemandSummary() {
                 className="pl-10" />
 
             </div>
-            <Select value={filterProject || "unknown"} onValueChange={setFilterProject}>
+            <Select value={filterProject} onValueChange={setFilterProject}>
               <SelectTrigger>
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>

@@ -216,7 +216,7 @@ export const IssueStatsOverview = ({
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-slate-400" />
             <select
-              value={timeRange || "unknown"}
+              value={timeRange}
               onChange={(e) => onTimeRangeChange?.(e.target.value)}
               className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
 

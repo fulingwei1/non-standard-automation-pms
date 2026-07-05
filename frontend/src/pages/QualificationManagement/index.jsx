@@ -301,7 +301,7 @@ export default function QualificationManagement() {
         </CardHeader>
         <CardContent>
           <Tabs
-            value={activeTab || "unknown"}
+            value={activeTab}
             onValueChange={setActiveTab}
             className="w-full">
 

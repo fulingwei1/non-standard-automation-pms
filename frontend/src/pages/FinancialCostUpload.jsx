@@ -284,27 +284,27 @@ export default function FinancialCostUpload() {
 
               </div>
             </div>
-            <Select value={typeFilter || "unknown"} onValueChange={setTypeFilter}>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="成本类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
                 {(costTypes || []).map((type) =>
-                <SelectItem key={type} value={type || "unknown"}>
+                <SelectItem key={type} value={type}>
                     {costTypeLabels[type]}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={categoryFilter || "unknown"} onValueChange={setCategoryFilter}>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="成本分类" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部分类</SelectItem>
                 {(costCategories || []).map((cat) =>
-                <SelectItem key={cat} value={cat || "unknown"}>
+                <SelectItem key={cat} value={cat}>
                     {cat}
                 </SelectItem>
                 )}

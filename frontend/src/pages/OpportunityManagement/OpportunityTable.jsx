@@ -59,7 +59,7 @@ export default function OpportunityTable({
                         className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-white"
                       >
                         {Object.entries(stageConfig).map(([key, config]) => (
-                          <option key={key} value={key || "unknown"}>
+                          <option key={key} value={key}>
                             {config.label}
                           </option>
                         ))}

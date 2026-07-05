@@ -35,7 +35,7 @@ export function FilterCard({
           <div>
             <Label className="mb-2 block">选择项目</Label>
             <Select
-              value={selectedProject || "unknown"}
+              value={selectedProject}
               onValueChange={(v) => {
                 setSelectedProject(v);
                 setSelectedBom("");
@@ -56,7 +56,7 @@ export function FilterCard({
           <div>
             <Label className="mb-2 block">选择BOM</Label>
             <Select
-              value={selectedBom || "unknown"}
+              value={selectedBom}
               onValueChange={setSelectedBom}
               disabled={!selectedProject}
             >
@@ -74,7 +74,7 @@ export function FilterCard({
           </div>
           <div>
             <Label className="mb-2 block">筛选阶段</Label>
-            <Select value={filterStage || "unknown"} onValueChange={setFilterStage}>
+            <Select value={filterStage} onValueChange={setFilterStage}>
               <SelectTrigger>
                 <SelectValue placeholder="全部阶段" />
               </SelectTrigger>
@@ -91,7 +91,7 @@ export function FilterCard({
           <div>
             <Label className="mb-2 block">筛选类型</Label>
             <Select
-              value={filterBlocking || "unknown"}
+              value={filterBlocking}
               onValueChange={setFilterBlocking}
             >
               <SelectTrigger>

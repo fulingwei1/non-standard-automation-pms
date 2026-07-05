@@ -367,7 +367,7 @@ export default function FeasibilityAssessmentForm({
               <p className="text-xs text-slate-400">满分100</p>
             </div>
           </div>
-          <Progress value={overallScore || "unknown"} className="h-2" />
+          <Progress value={overallScore} className="h-2" />
           <div className="mt-3 flex items-center gap-2">
             <StatusIcon className={cn("w-4 h-4", feasibilityStatus.color)} />
             <span

@@ -95,7 +95,7 @@ export function CreateExceptionDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(typeConfigs).map(([key, config]) => (
-                      <SelectItem key={key} value={key || "unknown"}>
+                      <SelectItem key={key} value={key}>
                         {config.label}
                       </SelectItem>
                     ))}
@@ -121,7 +121,7 @@ export function CreateExceptionDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(severityConfigs).map(([key, config]) => (
-                      <SelectItem key={key} value={key || "unknown"}>
+                      <SelectItem key={key} value={key}>
                         {config.label}
                       </SelectItem>
                     ))}

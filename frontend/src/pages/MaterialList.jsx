@@ -214,7 +214,7 @@ export default function MaterialList() {
                   className="pl-10" />
 
               </div>
-              <Select value={filterCategory || "unknown"} onValueChange={setFilterCategory}>
+              <Select value={filterCategory} onValueChange={setFilterCategory}>
                 <SelectTrigger>
                   <SelectValue placeholder="选择分类" />
                 </SelectTrigger>
@@ -227,7 +227,7 @@ export default function MaterialList() {
                   )}
                 </SelectContent>
               </Select>
-              <Select value={filterSupplier || "unknown"} onValueChange={setFilterSupplier}>
+              <Select value={filterSupplier} onValueChange={setFilterSupplier}>
                 <SelectTrigger>
                   <SelectValue placeholder="选择供应商" />
                 </SelectTrigger>

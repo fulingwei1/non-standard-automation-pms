@@ -69,7 +69,7 @@ export default function FilterBar({
             </div>
 
             <Select
-              value={filterStatus || "unknown"}
+              value={filterStatus}
               onValueChange={onFilterStatusChange}
             >
               <SelectTrigger>
@@ -85,7 +85,7 @@ export default function FilterBar({
             </Select>
 
             <Select
-              value={filterType || "unknown"}
+              value={filterType}
               onValueChange={onFilterTypeChange}
             >
               <SelectTrigger>
@@ -101,7 +101,7 @@ export default function FilterBar({
             </Select>
 
             <Select
-              value={selectedProject || "unknown"}
+              value={selectedProject}
               onValueChange={onProjectChange}
             >
               <SelectTrigger>
