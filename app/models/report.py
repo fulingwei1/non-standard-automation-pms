@@ -91,6 +91,7 @@ class TimesheetReportTemplate(Base, TimestampMixin):
     【状态】未启用 - 工时报表模板"""
 
     __tablename__ = "report_template"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
 

@@ -46,6 +46,7 @@ class CostBreakdown(Base, TimestampMixin):
     """
 
     __tablename__ = "cost_breakdowns"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
 
@@ -116,6 +117,7 @@ class ProjectCostSummary(Base, TimestampMixin):
     """
 
     __tablename__ = "project_cost_summaries"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
 

@@ -69,6 +69,7 @@ class KnowledgeEntry(Base, TimestampMixin):
     """知识库条目表 — 所有沉淀知识的统一存储"""
 
     __tablename__ = "knowledge_entries"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     entry_code = Column(String(50), unique=True, nullable=False, comment="知识编号，如 KE-20260327-001")
@@ -170,6 +171,7 @@ class KnowledgeAlert(Base, TimestampMixin):
     """知识预警推送记录 — 新项目创建时自动推送的坑点/风险"""
 
     __tablename__ = "knowledge_alerts"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
 

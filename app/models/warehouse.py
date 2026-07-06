@@ -22,6 +22,7 @@ from .base import Base, TimestampMixin
 
 class Warehouse(Base, TimestampMixin):
     __tablename__ = "warehouses"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     id = Column(Integer, primary_key=True, autoincrement=True)
     warehouse_code = Column(String(50), unique=True, nullable=False, comment="仓库编码")
     warehouse_name = Column(String(200), nullable=False, comment="仓库名称")
@@ -37,6 +38,7 @@ class Warehouse(Base, TimestampMixin):
 
 class WarehouseLocation(Base, TimestampMixin):
     __tablename__ = "warehouse_locations"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     id = Column(Integer, primary_key=True, autoincrement=True)
     warehouse_id = Column(Integer, ForeignKey("warehouses.id"), nullable=False)
     location_code = Column(String(50), nullable=False, comment="库位编码")
@@ -57,6 +59,7 @@ class WarehouseLocation(Base, TimestampMixin):
 
 class InboundOrder(Base, TimestampMixin):
     __tablename__ = "inbound_orders"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     id = Column(Integer, primary_key=True, autoincrement=True)
     order_no = Column(String(50), unique=True, nullable=False, comment="入库单号")
     order_type = Column(String(50), default="PURCHASE", comment="入库类型")
@@ -76,6 +79,7 @@ class InboundOrder(Base, TimestampMixin):
 
 class InboundOrderItem(Base, TimestampMixin):
     __tablename__ = "inbound_order_items"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     id = Column(Integer, primary_key=True, autoincrement=True)
     order_id = Column(Integer, ForeignKey("inbound_orders.id"), nullable=False)
     material_code = Column(String(50), nullable=False, comment="物料编码")
@@ -91,6 +95,7 @@ class InboundOrderItem(Base, TimestampMixin):
 
 class OutboundOrder(Base, TimestampMixin):
     __tablename__ = "outbound_orders"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     id = Column(Integer, primary_key=True, autoincrement=True)
     order_no = Column(String(50), unique=True, nullable=False, comment="出库单号")
     order_type = Column(String(50), default="PRODUCTION", comment="出库类型")
@@ -111,6 +116,7 @@ class OutboundOrder(Base, TimestampMixin):
 
 class OutboundOrderItem(Base, TimestampMixin):
     __tablename__ = "outbound_order_items"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     id = Column(Integer, primary_key=True, autoincrement=True)
     order_id = Column(Integer, ForeignKey("outbound_orders.id"), nullable=False)
     material_code = Column(String(50), nullable=False, comment="物料编码")
@@ -126,6 +132,7 @@ class OutboundOrderItem(Base, TimestampMixin):
 
 class Inventory(Base, TimestampMixin):
     __tablename__ = "inventory"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     id = Column(Integer, primary_key=True, autoincrement=True)
     warehouse_id = Column(Integer, ForeignKey("warehouses.id"), nullable=False)
     location_id = Column(Integer, ForeignKey("warehouse_locations.id"), comment="库位ID")
@@ -146,6 +153,7 @@ class Inventory(Base, TimestampMixin):
 
 class StockCountOrder(Base, TimestampMixin):
     __tablename__ = "stock_count_orders"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     id = Column(Integer, primary_key=True, autoincrement=True)
     count_no = Column(String(50), unique=True, nullable=False, comment="盘点单号")
     warehouse_id = Column(Integer, ForeignKey("warehouses.id"), comment="仓库ID")
@@ -164,6 +172,7 @@ class StockCountOrder(Base, TimestampMixin):
 
 class StockCountItem(Base, TimestampMixin):
     __tablename__ = "stock_count_items"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     id = Column(Integer, primary_key=True, autoincrement=True)
     order_id = Column(Integer, ForeignKey("stock_count_orders.id"), nullable=False)
     material_code = Column(String(50), nullable=False, comment="物料编码")

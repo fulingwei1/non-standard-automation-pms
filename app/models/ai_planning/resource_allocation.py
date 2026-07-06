@@ -25,6 +25,7 @@ class AIResourceAllocation(Base, TimestampMixin):
     """AI资源分配建议表"""
 
     __tablename__ = "ai_resource_allocations"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     allocation_code = Column(String(50), unique=True, nullable=False, comment="分配编码")

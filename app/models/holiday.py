@@ -4,7 +4,7 @@
 用于存储法定节假日、调休日等，支持工时类型判断
 """
 
-from sqlalchemy import Boolean, Column, Date, Index, Integer, String, Text
+from sqlalchemy import ForeignKey, Boolean, Column, Date, Index, Integer, String, Text
 
 from .base import Base, TimestampMixin
 
@@ -20,6 +20,7 @@ class Holiday(Base, TimestampMixin):
     【状态】未启用 - 节假日管理"""
 
     __tablename__ = "holidays"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
 

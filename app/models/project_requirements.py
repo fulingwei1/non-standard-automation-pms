@@ -26,6 +26,7 @@ class ProjectRequirement(Base, TimestampMixin):
     """
 
     __tablename__ = "project_requirements"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     requirement_no = Column(String(50), unique=True, comment="需求编号")
@@ -88,6 +89,7 @@ class EngineerRecommendation(Base, TimestampMixin):
     """
 
     __tablename__ = "engineer_recommendations"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     recommendation_no = Column(String(50), unique=True, comment="推荐编号")

@@ -7,13 +7,14 @@
 app/services/presale/sales_coach.py 与 competitive_analyzer.py。
 """
 
-from sqlalchemy import Column, DateTime, Integer, String, Text, func
+from sqlalchemy import ForeignKey, Column, DateTime, Integer, String, Text, func
 
 from app.models.base import Base
 
 
 class Competitor(Base):
     __tablename__ = "competitors"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(200), nullable=False, comment="竞争对手名称")

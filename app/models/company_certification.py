@@ -1,7 +1,7 @@
 """
 公司资质证书模型
 """
-from sqlalchemy import Column, Integer, String, Text, Date, DateTime
+from sqlalchemy import ForeignKey, Column, Integer, String, Text, Date, DateTime
 from sqlalchemy.sql import func
 
 from app.models.base import Base
@@ -11,6 +11,7 @@ class CompanyCertification(Base):
     """公司资质证书"""
     
     __tablename__ = "company_certifications"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     
     id = Column(Integer, primary_key=True, index=True)
     

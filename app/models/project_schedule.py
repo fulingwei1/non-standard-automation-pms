@@ -25,6 +25,7 @@ class ProjectSchedulePlan(Base, TimestampMixin):
     """
 
     __tablename__ = "project_schedule_plans"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     plan_no = Column(String(50), unique=True, comment="计划编号")
@@ -88,6 +89,7 @@ class ScheduleTask(Base, TimestampMixin):
     """
 
     __tablename__ = "schedule_tasks"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
 

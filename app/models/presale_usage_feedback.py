@@ -13,7 +13,7 @@
 """
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Integer, String, Text
+from sqlalchemy import ForeignKey, Column, DateTime, Integer, String, Text
 
 from app.models.base import Base
 
@@ -22,6 +22,7 @@ class PresaleUsageFeedback(Base):
     """售前智能体使用反馈"""
 
     __tablename__ = "presale_usage_feedback"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     

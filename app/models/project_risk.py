@@ -50,6 +50,7 @@ class ProjectRisk(Base, TimestampMixin):
     """项目风险表"""
 
     __tablename__ = "project_risks"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
 

@@ -12,7 +12,7 @@
 """
 from datetime import datetime
 
-from sqlalchemy import JSON, Column, DateTime, Integer, String, Text
+from sqlalchemy import ForeignKey, JSON, Column, DateTime, Integer, String, Text
 
 from app.models.base import Base
 
@@ -21,6 +21,7 @@ class PresaleProposal(Base):
     """售前方案（一次智能体分析 = 一个 proposal，含多轮迭代）"""
 
     __tablename__ = "presale_proposals"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(200), nullable=False, comment="方案标题（取自需求）")
@@ -64,6 +65,7 @@ class PresaleProposalVersion(Base):
     """方案迭代版本（每一轮修改 = 一个 version）"""
 
     __tablename__ = "presale_proposal_versions"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     proposal_id = Column(Integer, nullable=False, comment="关联 presale_proposals.id")

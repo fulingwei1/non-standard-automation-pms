@@ -38,6 +38,7 @@ class Industry(Base, TimestampMixin):
     【状态】预留功能 - 行业分类管理"""
 
     __tablename__ = "industries"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     code = Column(String(50), unique=True, nullable=False, comment="行业编码")
@@ -76,6 +77,7 @@ class IndustryCategoryMapping(Base, TimestampMixin):
     【状态】预留功能 - 行业类别映射"""
 
     __tablename__ = "industry_category_mappings"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     industry_id = Column(Integer, ForeignKey("industries.id"), nullable=False, comment="行业ID")
@@ -107,6 +109,7 @@ class AdvantageProductCategory(Base, TimestampMixin):
     """
 
     __tablename__ = "advantage_product_categories"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     code = Column(String(50), unique=True, nullable=False, comment="类别编码")
@@ -140,6 +143,7 @@ class AdvantageProduct(Base, TimestampMixin):
     """
 
     __tablename__ = "advantage_products"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     product_code = Column(String(50), unique=True, nullable=False, comment="产品编码（如KC2701）")
@@ -217,6 +221,7 @@ class NewProductRequest(Base, TimestampMixin):
     【状态】预留功能 - 新产品请求"""
 
     __tablename__ = "new_product_requests"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     lead_id = Column(Integer, ForeignKey("leads.id"), nullable=False, comment="关联线索ID")

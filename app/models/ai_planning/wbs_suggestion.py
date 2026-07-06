@@ -24,6 +24,7 @@ class AIWbsSuggestion(Base, TimestampMixin):
     """AI WBS分解建议表"""
 
     __tablename__ = "ai_wbs_suggestions"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     suggestion_code = Column(String(50), unique=True, nullable=False, comment="建议编码")

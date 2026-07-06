@@ -11,7 +11,7 @@ fields_diff 记录字段级差异：[{field, old_value, new_value, reason}]
 """
 from datetime import datetime
 
-from sqlalchemy import JSON, Column, DateTime, Integer, String, Text
+from sqlalchemy import ForeignKey, JSON, Column, DateTime, Integer, String, Text
 
 from app.models.base import Base
 
@@ -20,6 +20,7 @@ class PresaleAgentRevision(Base):
     """售前智能体结果修订记录"""
 
     __tablename__ = "presale_agent_revisions"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     # 关联到本次智能体运行（presale_agent_metrics.id 或 ai_generation_jobs.id）

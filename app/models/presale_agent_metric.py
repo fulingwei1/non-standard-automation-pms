@@ -11,7 +11,7 @@
 后续可补：报价→实际成交偏差（需 join projects.actual_cost，等真实数据）、
         是否转化为签单（is_converted，需手动回填或外接 CRM）。
 """
-from sqlalchemy import JSON, Column, DateTime, Integer, Numeric, String, Text
+from sqlalchemy import ForeignKey, JSON, Column, DateTime, Integer, Numeric, String, Text
 
 from app.models.base import Base, TimestampMixin
 
@@ -20,6 +20,7 @@ class PresaleAgentMetric(Base, TimestampMixin):
     """售前智能体单次运行埋点"""
 
     __tablename__ = "presale_agent_metrics"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     job_id = Column(Integer, comment="关联 ai_generation_jobs.id")

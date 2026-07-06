@@ -27,6 +27,7 @@ class ProjectTeamPlan(Base, TimestampMixin):
     """
 
     __tablename__ = "project_team_plans"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     plan_no = Column(String(50), unique=True, comment="方案编号")
@@ -90,6 +91,7 @@ class ProjectTeamMember(Base, TimestampMixin):
     """
 
     __tablename__ = "project_team_members"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
 
@@ -141,6 +143,7 @@ class ProjectTeamApproval(Base, TimestampMixin):
     """
 
     __tablename__ = "project_team_approvals"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     approval_no = Column(String(50), unique=True, comment="审批编号")

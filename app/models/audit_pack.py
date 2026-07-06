@@ -7,7 +7,7 @@
 """
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Integer, String, Text
+from sqlalchemy import ForeignKey, Column, DateTime, Integer, String, Text
 
 from app.models.base import Base
 
@@ -16,6 +16,7 @@ class AuditPackRequest(Base):
     """验厂资料请求"""
 
     __tablename__ = "audit_pack_requests"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     # 请求信息

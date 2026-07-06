@@ -75,6 +75,7 @@ class TimesheetReminderConfig(Base, TimestampMixin):
     """工时提醒规则配置"""
 
     __tablename__ = "timesheet_reminder_config"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
 
@@ -128,6 +129,7 @@ class TimesheetReminderRecord(Base, TimestampMixin):
     """工时提醒记录"""
 
     __tablename__ = "timesheet_reminder_record"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
 
@@ -197,6 +199,7 @@ class TimesheetAnomalyRecord(Base, TimestampMixin):
     """异常工时检测记录"""
 
     __tablename__ = "timesheet_anomaly_record"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
 

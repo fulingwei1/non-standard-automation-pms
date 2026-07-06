@@ -26,6 +26,7 @@ class ProjectTemplateConfig(Base, TimestampMixin):
     """项目模板配置主表"""
 
     __tablename__ = "project_template_configs"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     config_code = Column(String(50), unique=True, nullable=False, comment="配置编码")
@@ -64,6 +65,7 @@ class StageConfig(Base, TimestampMixin):
     """阶段配置"""
 
     __tablename__ = "stage_configs"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     config_id = Column(
@@ -104,6 +106,7 @@ class NodeConfig(Base, TimestampMixin):
     """节点配置"""
 
     __tablename__ = "node_configs"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     stage_config_id = Column(

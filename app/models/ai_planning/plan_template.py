@@ -24,6 +24,7 @@ class AIProjectPlanTemplate(Base, TimestampMixin):
     """AI项目计划模板表"""
 
     __tablename__ = "ai_project_plan_templates"
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     template_code = Column(String(50), unique=True, nullable=False, comment="模板编码")
