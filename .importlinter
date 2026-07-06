@@ -1,0 +1,32 @@
+[importlinter]
+root_package = app
+include_external_packages = False
+
+; 合同1：models 层不得依赖 services/api 层。
+; 注：本版 grimp 只统计模块级 import；函数级懒加载（gate_checks 等历史债，
+; 见 MODULE_MAP §7）不在合同范围内，属许可的解环手段，迁移时仍应清零。
+[importlinter:contract:models-no-upward]
+name = models 不得 import services/api
+type = forbidden
+source_modules =
+    app.models
+forbidden_modules =
+    app.services
+    app.api
+
+; 合同2：services 层不得依赖 api 层。
+[importlinter:contract:services-no-api]
+name = services 不得 import api
+type = forbidden
+source_modules =
+    app.services
+forbidden_modules =
+    app.api
+
+; 合同3：业务模块彼此独立（modules/ 迁移的核心边界）。
+; 目前 modules/ 下只有 registry，模块迁入时把包名加进来。
+[importlinter:contract:modules-independence]
+name = 业务模块彼此独立
+type = independence
+modules =
+    app.modules.registry

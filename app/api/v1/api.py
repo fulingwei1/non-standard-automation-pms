@@ -1243,6 +1243,16 @@ def create_api_router() -> APIRouter:
         if STRICT_API_ROUTER:
             raise RuntimeError(f"关键模块加载失败[tenants]: {e}") from e
 
+    # ==================== 租户模块开通 ====================
+    try:
+        from app.api.v1.endpoints.tenant_modules import router as tenant_modules_router
+        api_router.include_router(tenant_modules_router, tags=["tenant-modules"])
+        print("✓ 租户模块开通模块加载成功")
+    except Exception as e:
+        print(f"✗ 租户模块开通模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[tenant-modules]: {e}") from e
+
     # ==================== 工时提醒 ====================
     try:
         from app.api.v1.endpoints.timesheet_reminders import router as timesheet_reminders_router

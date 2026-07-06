@@ -68,6 +68,8 @@ class Settings(BaseSettings):
     # extra_forbidden 校验拦下来（之前没声明这个字段，写进 .env.local 直接把
     # 整个后端启动搞挂了）。
     TENANT_ENFORCE_MODE: str = "log"
+    # 模块闸门模式：off=不拦截 / grandfather=缺行视为已开通(默认) / strict=缺行即拦截
+    MODULE_GATING_MODE: str = "grandfather"
 
     # API配置
     API_V1_PREFIX: str = "/api/v1"

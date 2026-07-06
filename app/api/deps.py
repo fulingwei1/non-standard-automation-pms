@@ -140,3 +140,26 @@ def require_super_admin(
 get_current_user = security.get_current_user
 get_current_active_user = security.get_current_active_user
 get_current_active_superuser = security.get_current_active_superuser
+
+
+def require_module(module_key: str):
+    """模块开通闸门依赖工厂。
+
+    用法：router = APIRouter(dependencies=[Depends(require_module("presale"))])
+    或单路由 Depends。未开通返回 403（错误码语义为"模块未开通"，前端据此
+    引导至开通页）。超管不受限；闸门模式见 settings.MODULE_GATING_MODE。
+    """
+
+    def _dep(current_user: User = Depends(security.get_current_active_user), db=Depends(get_db)) -> None:
+        if current_user.is_superuser:
+            return
+        from app.services.tenant_module_service import TenantModuleService
+
+        if not TenantModuleService(db).is_module_enabled(current_user.tenant_id, module_key):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"模块未开通: {module_key}",
+                headers={"X-Module-Required": module_key},
+            )
+
+    return _dep
