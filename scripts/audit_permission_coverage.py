@@ -15,6 +15,8 @@ API 权限覆盖审计脚本 (可重复运行)
     NONE        - 函数签名和函数体中未检测到任何认证/权限依赖
 """
 
+from __future__ import annotations
+
 import ast
 import json
 import os
@@ -27,6 +29,7 @@ from datetime import datetime
 PERM_PATTERNS = [
     "require_permission",
     "get_current_active_superuser",
+    "require_super_admin",
     "require_sales_create_permission",
     "require_sales_edit_permission",
     "require_sales_delete_permission",
@@ -56,9 +59,71 @@ KNOWN_PUBLIC = {
     ("GET", "/health"),
 }
 
+# Route factory helpers are not mounted endpoints themselves. The sync factory is mounted
+# through concrete routers and remains scanned through its generated module.
+EXCLUDED_ENDPOINT_FILE_SUFFIXES = (
+    "app/api/v1/endpoints/base_crud_router.py",
+    "app/api/v1/endpoints/material/tracking.py",
+    "app/api/v1/endpoints/material/project_fusion.py",
+)
+
+
+def is_excluded_endpoint_file(filepath: str) -> bool:
+    """判断文件是否是未挂载的路由生成 helper，而非真实 API 端点文件。"""
+    normalized = os.path.normpath(filepath).replace(os.sep, "/")
+    return any(normalized.endswith(suffix) for suffix in EXCLUDED_ENDPOINT_FILE_SUFFIXES)
+
+
+def detect_protection(text: str) -> tuple[bool, str, str | None, bool]:
+    """检测一段源码中的权限/认证保护。"""
+    has_perm = False
+    perm_type = "NONE"
+    perm_code = None
+    has_auth = False
+
+    for pat in PERM_PATTERNS:
+        if pat in text:
+            has_perm = True
+            perm_type = pat
+            m = re.search(rf"{pat}\([\"']([^\"']+)[\"']", text)
+            if m:
+                perm_code = m.group(1)
+            break
+
+    for pat in AUTH_PATTERNS:
+        if pat in text:
+            has_auth = True
+            break
+
+    return has_perm, perm_type, perm_code, has_auth
+
+
+def extract_router_dependency_text(source: str, tree: ast.AST) -> str:
+    """提取文件级 APIRouter(dependencies=[...]) 文本，供路由函数继承。"""
+    segments = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        is_api_router = (
+            (isinstance(func, ast.Name) and func.id == "APIRouter")
+            or (isinstance(func, ast.Attribute) and func.attr == "APIRouter")
+        )
+        if not is_api_router:
+            continue
+        for kw in node.keywords:
+            if kw.arg == "dependencies":
+                segment = ast.get_source_segment(source, kw.value)
+                if segment:
+                    segments.append(segment)
+    return "\n".join(segments)
+
 
 def extract_endpoints_from_file(filepath: str) -> list[dict]:
     """从单个 Python 文件中提取所有路由端点及其权限状态。"""
+    if is_excluded_endpoint_file(filepath):
+        return []
+
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             source = f.read()
@@ -71,6 +136,10 @@ def extract_endpoints_from_file(filepath: str) -> list[dict]:
 
     results = []
     lines = source.split("\n")
+    router_dependency_text = extract_router_dependency_text(source, tree)
+    router_has_perm, router_perm_type, router_perm_code, router_has_auth = detect_protection(
+        router_dependency_text
+    )
 
     for node in ast.walk(tree):
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -98,24 +167,13 @@ def extract_endpoints_from_file(filepath: str) -> list[dict]:
         end_line = min(end_line, len(lines))
         func_text = "\n".join(lines[start_line:end_line])
 
-        has_perm = False
-        perm_type = "NONE"
-        perm_code = None
-        has_auth = False
-
-        for pat in PERM_PATTERNS:
-            if pat in func_text:
-                has_perm = True
-                perm_type = pat
-                m = re.search(rf"{pat}\([\"']([^\"']+)[\"']", func_text)
-                if m:
-                    perm_code = m.group(1)
-                break
-
-        for pat in AUTH_PATTERNS:
-            if pat in func_text:
-                has_auth = True
-                break
+        has_perm, perm_type, perm_code, has_auth = detect_protection(func_text)
+        if not has_perm and router_has_perm:
+            has_perm = True
+            perm_type = router_perm_type
+            perm_code = router_perm_code
+        if not has_auth and router_has_auth:
+            has_auth = True
 
         if has_perm:
             protection = "PERMISSION"

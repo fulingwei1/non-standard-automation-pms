@@ -216,8 +216,20 @@ def main():
             logger.warning(f"  AI抽取异常，跳过: {e}")
             results.append({"file": fname, "method": method, "elements": None})
             continue
+        # 防御：AI 偶尔返回 list 而非 dict，跳过
+        if not isinstance(elements, dict):
+            logger.warning(f"  AI返回格式异常（{type(elements).__name__}），跳过")
+            results.append({"file": fname, "method": method, "elements": None})
+            # 仍记录进度（避免卡在同一份）
+            with args.progress.open("a", encoding="utf-8") as pf:
+                pf.write(pdf + "\n")
+            continue
         elements["_method"] = method
         elements["_text_len"] = len(text)
+        # 防御：把所有 None 值转成空串（AI 返回的 null 会变成 Python None）
+        for k, v in list(elements.items()):
+            if v is None:
+                elements[k] = ""
         results.append({"file": fname, "method": method, "elements": elements})
 
         # 打印抽取结果（全量模式只打 logger，不逐份 print）
@@ -237,7 +249,9 @@ def main():
             if elements.get("warranty"):
                 print(f"质保: {elements['warranty']}")
         else:
-            logger.info(f"  {method} | 供应商:{elements.get('supplier_name','')[:15]} | 物料{len(items)}项 | 总额{elements.get('total_amount','')}")
+            sup = elements.get('supplier_name') or ''
+            total_amt = elements.get('total_amount') or ''
+            logger.info(f"  {method} | 供应商:{sup[:15]} | 物料{len(items)}项 | 总额{total_amt}")
 
         # 写库（跳过缺单价的物料）
         if args.apply and conn and items:

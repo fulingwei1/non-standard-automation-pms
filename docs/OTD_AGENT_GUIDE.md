@@ -187,6 +187,51 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/otd/threshol
 - `app/utils/scheduled_tasks/__init__.py` — import + SCHEDULED_TASKS + TASK_GROUPS + __all__
 - `app/utils/scheduler_config/__init__.py` — 拼进 SCHEDULER_TASKS
 
+## 8.5 使用体验改进（UX）
+
+针对"用户实际操作"场景的体验优化：
+
+### scan profile 新增字段（快速决策 + 闭环处理）
+- **`top_cause`**：一句话主因摘要（不依赖 AI），即使 AI 不可用也能快速判断"最该先动手解决什么"。
+- **`alert_id` / `alert_no`**：扫描产预警后回填到 profile，用户可直接调 `PUT /alerts/{alert_id}/acknowledge` 处理，打通"扫描→处理"闭环。
+- **`suggestion_source`**：`none`/`rule`/`ai`。AI 失败时用规则兜底（不让用户看到空建议）。
+
+### 缓存（高频刷新不重算）
+- 毛利率 Dashboard：120s 缓存；OTD 7 指标：180s 缓存。命中时返回 `_from_cache: true`。
+
+### 趋势冷启动
+- 全局趋势返回 `needs_backfill` 标志 + `hint` 文案，引导调 `POST /pmo/margin-dashboard/backfill` 回填历史快照（解决新部署趋势图全空）。
+
+### scan 路径体验优化
+- **GET /otd/scan 默认 summary 模式**：响应体 ~3KB（之前 full 模式 75-150KB），只含 `project_id/code/name/stage/severity/top_cause/alert_id`，列表场景够用。设 `detail_level=full` 拿完整 risk_items。
+- **GET /otd/scan 带 120s 缓存**：只读模式（`create_alerts=false`）缓存，第二次调用快 8 倍（0.036s vs 0.299s）。`create_alerts=true` 不缓存（避免漏发预警）。
+- **GET /otd/scan 跳过 AI**：`create_alerts=false` 时不调 AI 归因（省几十秒），用规则兜底给 `suggestion`（`suggestion_source: rule`）。
+- **GET /otd/scan/{id}?include_ai=false**：单项目详情也支持跳过 AI，响应快。
+- **字段统一**：profile 里 `project_name`（不再是 `name`），与 metrics/dashboard 一致。
+
+### 指标下钻（B3）
+- `GET /otd/metrics` 每个指标新增 `top_offenders`：拖后腿的项目 Top 5（含 project_id/code/name + 该指标的具体值）。
+- 例：准时交付率 80% → `top_offenders` 显示逾期完成的项目（按延期天数降序）；毛利偏差 → margin_gap 最差的 5 个项目。
+- 设 `include_offenders=false` 可只看聚合数字（响应更小）。
+
+### 项目等级毛利率底线（联动手册 Sheet9 红线）
+- `Project.project_level`（S/A/B/C）决定目标毛利率：S=40% / A=35% / B=30% / C=25%（无等级=25%）。
+- `MarginAlertConfig.project_level` 可按等级配底线（首次访问 `GET /pmo/margin-dashboard/levels` 自动初始化手册红线值）。
+- 毛利率分析（`get_margin_analysis` / `batch_margin_analysis`）自动按项目等级取 target_margin，不用手动传。
+- `GET /pmo/margin-dashboard/levels` 查看各等级底线。
+
+### PM 月度自检（联动手册 Sheet8）
+- `GET /pmo/pm-monthly-check?pm_id=X` 一键生成 PM 月度自检表（实时聚合，不入库）：
+  - **在管项目利润健康度表**：合同额/当前毛利率/目标毛利率/健康度/风险点，critical 优先排序
+  - **8项关键动作自检**：4项系统自动判定（变更未登记/超预算/延期/复盘缺失）+ 4项靠PM自填（立项/评审参与/周更新/经验沉淀）
+  - 每项动作 `status`: `auto_passed`/`auto_failed`/`manual`
+
+### BOM 成本检查清单（联动手册 Sheet3）
+- `GET /projects/{project_id}/bom-cost-check` BOM 评审前的 12 项成本检查清单：
+  - **2项自动判定**：历史比价（同物料均价偏差>15%预警）+ 同类项目对比（BOM 总成本偏差>10%预警）
+  - **10项 PM 勾选**：标准件复用/过度选型/国产替代/数量准确/合并采购/供应商报价/呆料风险/线缆辅材/包装运输/调试耗材
+  - 每项 `status`: `auto_passed`/`auto_failed`/`manual`
+
 ## 9. 验收结果
 
 - ✅ 66 个 pytest 全绿（52 service + 14 API，含阈值配置化 + 7 指标口径 + 快照趋势测试）
