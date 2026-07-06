@@ -167,17 +167,6 @@ class TestMaterialServicesDeep:
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_material_transfer(self):
-        """测试物料转移"""
-        try:
-            from app.services.material_transfer_service import MaterialTransferService
-
-            mock_db = MagicMock()
-            service = MaterialTransferService(mock_db)
-
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestSalesServicesDeep:

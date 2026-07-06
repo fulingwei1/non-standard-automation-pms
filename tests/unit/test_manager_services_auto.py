@@ -47,18 +47,6 @@ class TestManagerPerformanceService:
             pytest.skip("Module not found")
 
 
-class TestMarginPermissionService:
-    """Tests for margin permission"""
-
-    def test_service_import(self):
-        """Test MarginPermissionService"""
-        try:
-            from app.services.margin_permission_service import MarginPermissionService
-            mock_db = MagicMock()
-            service = MarginPermissionService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestMeetingReportHelpers:
@@ -73,18 +61,6 @@ class TestMeetingReportHelpers:
             pytest.skip("Module not found")
 
 
-class TestMilestoneService:
-    """Tests for milestone"""
-
-    def test_service_import(self):
-        """Test MilestoneService"""
-        try:
-            from app.services.milestone_service import MilestoneService
-            mock_db = MagicMock()
-            service = MilestoneService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestNodeTaskService:

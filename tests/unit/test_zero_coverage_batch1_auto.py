@@ -112,18 +112,6 @@ class TestSalesCache:
             pytest.skip("Module not found")
 
 
-class TestChangeResponseSuggestionService:
-    """Tests for change response suggestion"""
-
-    def test_service_import(self):
-        """Test ChangeResponseSuggestionService"""
-        try:
-            from app.services.change_response_suggestion_service import ChangeResponseSuggestionService
-            mock_db = MagicMock()
-            service = ChangeResponseSuggestionService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestCollaborationService:

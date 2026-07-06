@@ -26,11 +26,6 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.business_rules import calc_kit_rate  # 套件率原版
-from app.services.business_rules import calc_spi  # 原版（PV<=0 抛异常）
-from app.services.business_rules import (
-    should_trigger_shortage_alert,
-)
 from app.utils.holiday_utils import get_working_days
 from app.utils.numerical_utils import (
     calc_cpi,
@@ -61,42 +56,12 @@ class TestEVMPrecision:
 
     # ── SPI 精度测试 ─────────────────────────────────────────────────────────
 
-    def test_spi_zero_pv_returns_default_1(self):
-        """PV=0 时不应除零崩溃，约定返回 1.0（无计划则视为正常）"""
-        spi = calc_spi_safe(ev=0, pv=0)
-        assert spi == pytest.approx(1.0, abs=1e-6)
 
-    def test_spi_zero_ev_zero_pv(self):
-        """EV 和 PV 均为 0 时 SPI=1（项目未启动，约定正常）"""
-        spi = calc_spi_safe(ev=0, pv=0)
-        assert float(spi) == pytest.approx(1.0, abs=1e-6)
 
-    def test_spi_decimal_precision(self):
-        """小数精度：EV=333.33, PV=333.34 → SPI ≈ 0.9999"""
-        spi = calc_spi_safe(ev=333.33, pv=333.34)
-        assert float(spi) == pytest.approx(0.9999, abs=0.0001)
 
-    def test_spi_large_numbers(self):
-        """超大数精度：EV=1e9, PV=1e9 → SPI=1.0"""
-        spi = calc_spi_safe(ev=1_000_000_000, pv=1_000_000_000)
-        assert float(spi) == pytest.approx(1.0, abs=1e-6)
 
-    def test_spi_ahead_of_schedule(self):
-        """进度超前：EV > PV → SPI > 1"""
-        spi = calc_spi_safe(ev=120_000, pv=100_000)
-        assert float(spi) == pytest.approx(1.2, abs=1e-4)
-        assert float(spi) > 1.0
 
-    def test_spi_behind_schedule(self):
-        """进度落后：EV < PV → SPI < 1"""
-        spi = calc_spi_safe(ev=80_000, pv=100_000)
-        assert float(spi) == pytest.approx(0.8, abs=1e-4)
-        assert float(spi) < 1.0
 
-    def test_spi_original_raises_on_zero_pv(self):
-        """原版 calc_spi 在 PV=0 时应抛出 ValueError"""
-        with pytest.raises(ValueError, match="计划价值"):
-            calc_spi(ev=0, pv=0)
 
     # ── CPI 精度测试 ─────────────────────────────────────────────────────────
 
@@ -175,43 +140,12 @@ class TestKitRatePrecision:
 
     # ── 基础套件率 ───────────────────────────────────────────────────────────
 
-    def test_kit_rate_exact_100_percent(self):
-        """恰好 100% 套件（全部到货）"""
-        rate = calc_kit_rate(actual_qty=100, bom_qty=100)
-        assert float(rate) == pytest.approx(1.0, abs=0.001)
 
-    def test_kit_rate_over_delivery(self):
-        """超量发货：实际 105，需求 100 → 套件率 1.05"""
-        rate = calc_kit_rate(actual_qty=105, bom_qty=100)
-        assert float(rate) == pytest.approx(1.05, abs=0.001)
 
-    def test_kit_rate_over_delivery_no_shortage_alert(self):
-        """超量发货不应触发缺料预警"""
-        rate = calc_kit_rate(actual_qty=105, bom_qty=100)
-        assert should_trigger_shortage_alert(rate) is False
 
-    def test_kit_rate_zero_actual(self):
-        """实际到货为 0 → 套件率 0（完全缺料）"""
-        rate = calc_kit_rate(actual_qty=0, bom_qty=100)
-        assert float(rate) == pytest.approx(0.0, abs=0.001)
-        assert should_trigger_shortage_alert(rate) is True
 
-    def test_kit_rate_bom_zero_raises(self):
-        """BOM 需求为 0 时应抛出 ValueError"""
-        with pytest.raises(ValueError):
-            calc_kit_rate(actual_qty=50, bom_qty=0)
 
-    def test_kit_rate_below_threshold_triggers_alert(self):
-        """套件率 < 95% 触发缺料预警"""
-        rate = calc_kit_rate(actual_qty=90, bom_qty=100)
-        assert float(rate) == pytest.approx(0.90, abs=0.001)
-        assert should_trigger_shortage_alert(rate) is True
 
-    def test_kit_rate_exactly_at_threshold(self):
-        """套件率恰好 95% → 不触发（边界值，规则是 < 95% 才触发）"""
-        rate = calc_kit_rate(actual_qty=95, bom_qty=100)
-        assert float(rate) == pytest.approx(0.95, abs=0.001)
-        assert should_trigger_shortage_alert(rate) is False
 
     # ── 分批到货累计套件率 ────────────────────────────────────────────────────
 

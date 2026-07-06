@@ -103,18 +103,6 @@ class TestProjectPerformanceService:
             pytest.skip("Module not found")
 
 
-class TestProjectRelationsService:
-    """Tests for project relations"""
-
-    def test_service_import(self):
-        """Test ProjectRelationsService"""
-        try:
-            from app.services.project_relations_service import ProjectRelationsService
-            mock_db = MagicMock()
-            service = ProjectRelationsService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestProjectTimelineService:
@@ -131,15 +119,3 @@ class TestProjectTimelineService:
             pytest.skip("Module not found")
 
 
-class TestQualityRiskManagementService:
-    """Tests for quality risk management"""
-
-    def test_service_import(self):
-        """Test QualityRiskManagementService"""
-        try:
-            from app.services.quality_risk_management.service import QualityRiskManagementService
-            mock_db = MagicMock()
-            service = QualityRiskManagementService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")

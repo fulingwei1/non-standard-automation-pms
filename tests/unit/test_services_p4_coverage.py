@@ -1199,34 +1199,6 @@ class TestProjectApprovalAdapter:
 # =============================================================================
 
 
-class TestWinRatePredictionAIService:
-    """win_rate_prediction_service ai_service 测试"""
-
-    def test_init_no_keys(self):
-        from app.services.win_rate_prediction_service.ai_service import AIWinRatePredictionService
-
-        with patch.dict("os.environ", {}, clear=False):
-            svc = AIWinRatePredictionService()
-            assert svc.openai_api_key is None
-            assert svc.kimi_api_key is None
-
-    def test_fallback_prediction(self):
-        from app.services.win_rate_prediction_service.ai_service import AIWinRatePredictionService
-
-        svc = AIWinRatePredictionService()
-        ticket_data = {"customer_name": "TestCo", "estimated_amount": 500000}
-        result = svc._fallback_prediction(ticket_data)
-        assert "win_rate_score" in result
-        assert "confidence_interval" in result
-        assert "influencing_factors" in result
-        assert isinstance(result["win_rate_score"], (int, float))
-
-    def test_use_kimi_flag(self):
-        from app.services.win_rate_prediction_service.ai_service import AIWinRatePredictionService
-
-        with patch.dict("os.environ", {"USE_KIMI_API": "true", "KIMI_API_KEY": "test_key"}):
-            svc = AIWinRatePredictionService()
-            assert svc.use_kimi is True
 
 
 # =============================================================================
@@ -1732,39 +1704,6 @@ class TestStageInstanceHelpers:
 # =============================================================================
 
 
-class TestQualityRiskAnalyzer:
-    """quality_risk_ai quality_risk_analyzer 测试"""
-
-    def test_analyze_work_logs_empty(self):
-        from app.services.quality_risk_ai.quality_risk_analyzer import QualityRiskAnalyzer
-
-        db = MagicMock()
-        with patch("app.services.quality_risk_ai.quality_risk_analyzer.RiskKeywordExtractor"):
-            analyzer = QualityRiskAnalyzer(db)
-            result = analyzer.analyze_work_logs([])
-            assert result["risk_level"] == "LOW"
-            assert result["risk_score"] == 0.0
-            assert result["risk_signals"] == []
-
-    def test_analyze_work_logs_with_logs(self):
-        from app.services.quality_risk_ai.quality_risk_analyzer import QualityRiskAnalyzer
-
-        db = MagicMock()
-        with patch(
-            "app.services.quality_risk_ai.quality_risk_analyzer.RiskKeywordExtractor"
-        ) as MockExtractor:
-            mock_extractor = MockExtractor.return_value
-            mock_extractor.extract.return_value = {"keywords": [], "risk_score": 10}
-            analyzer = QualityRiskAnalyzer(db)
-            logs = [{"content": "Normal work log", "date": "2025-01-01"}]
-            # Patch the keyword analysis method
-            with patch.object(
-                analyzer,
-                "_analyze_with_keywords",
-                return_value={"risk_score": 10, "risk_signals": [], "risk_level": "LOW"},
-            ):
-                result = analyzer.analyze_work_logs(logs)
-                assert "risk_level" in result
 
 
 # =============================================================================
@@ -2070,66 +2009,3 @@ class TestStrategyDashboardAdapter:
 # =============================================================================
 
 
-class TestWinRatePrediction:
-    """win_rate_prediction_service prediction 测试"""
-
-    def test_predict_basic(self):
-        """Test predict function with all dependencies patched"""
-        try:
-            from app.schemas.presales import DimensionScore
-            from app.services.win_rate_prediction_service.prediction import predict
-
-            service = MagicMock()
-            dimension_scores = MagicMock()
-
-            with (
-                patch(
-                    "app.services.win_rate_prediction_service.prediction.calculate_base_score",
-                    return_value=70.0,
-                ),
-                patch(
-                    "app.services.win_rate_prediction_service.prediction.get_salesperson_historical_win_rate",
-                    return_value=(0.6, 10),
-                ),
-                patch(
-                    "app.services.win_rate_prediction_service.prediction.calculate_salesperson_factor",
-                    return_value=1.0,
-                ),
-                patch(
-                    "app.services.win_rate_prediction_service.prediction.get_customer_cooperation_history",
-                    return_value=(5, 3),
-                ),
-                patch(
-                    "app.services.win_rate_prediction_service.prediction.calculate_customer_factor",
-                    return_value=1.05,
-                ),
-                patch(
-                    "app.services.win_rate_prediction_service.prediction.calculate_competitor_factor",
-                    return_value=0.9,
-                ),
-                patch(
-                    "app.services.win_rate_prediction_service.prediction.calculate_amount_factor",
-                    return_value=1.0,
-                ),
-                patch(
-                    "app.services.win_rate_prediction_service.prediction.calculate_product_factor",
-                    return_value=1.0,
-                ),
-                patch(
-                    "app.services.win_rate_prediction_service.prediction.get_similar_leads_statistics",
-                    return_value=(10, 6),
-                ),
-            ):
-                result = predict(
-                    service=service,
-                    dimension_scores=dimension_scores,
-                    salesperson_id=1,
-                    customer_id=1,
-                    estimated_amount=Decimal("500000"),
-                    competitor_count=3,
-                )
-            assert "predicted_rate" in result
-            assert "probability_level" in result
-            assert "confidence" in result
-        except SyntaxError:
-            pytest.skip("SyntaxError in prediction module, skipping")

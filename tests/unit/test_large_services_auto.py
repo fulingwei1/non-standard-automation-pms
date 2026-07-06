@@ -52,14 +52,6 @@ class TestLargeServicesBatch1:
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_resource_scheduling_ai_service(self):
-        try:
-            from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
-            mock_db = MagicMock()
-            service = ResourceSchedulingAIService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
     def test_schedule_prediction_service(self):
         try:

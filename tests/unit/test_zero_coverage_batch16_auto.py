@@ -44,18 +44,6 @@ class TestReportService:
             pytest.skip("Module not found")
 
 
-class TestRequirementExtractionService:
-    """Tests for requirement extraction"""
-
-    def test_service_import(self):
-        """Test RequirementExtractionService"""
-        try:
-            from app.services.requirement_extraction_service import RequirementExtractionService
-            mock_db = MagicMock()
-            service = RequirementExtractionService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestRevenueService:

@@ -37,10 +37,10 @@ class TestMetricCalculationService:
 # ===================== Services that take (db) =====================
 
 SERVICE_CLASSES_DB_ONLY = [
-    ("app.services.alert_subscription_service", "AlertSubscriptionService"),
-    ("app.services.cost_analysis_service", "CostAnalysisService"),
+    ("app.services.alert.alert_subscription_service", "AlertSubscriptionService"),
+    ("app.services.production.material_tracking.cost_analysis_service", "CostAnalysisService"),
     ("app.services.approval_workflow_service", "ApprovalWorkflowService"),
-    ("app.services.alert_escalation_service", "AlertEscalationService"),
+    ("app.services.alert.alert_escalation_service", "AlertEscalationService"),
     ("app.services.comparison_calculation_service", "ComparisonCalculationService"),
     ("app.services.customer_360_service", "Customer360Service"),
 ]
@@ -61,6 +61,8 @@ class TestDbOnlyServices:
 
 # ===================== Import-only tests (coverage through module loading) =====================
 
+
+
 IMPORT_MODULES = [
     "app.services.data_scope_service_enhanced",
     "app.services.loss_deep_analysis_service",
@@ -71,11 +73,9 @@ IMPORT_MODULES = [
     "app.services.cost_alert_service",
     "app.services.cost_allocation_service",
     "app.services.budget_execution_check_service",
-    "app.services.change_impact_analysis_service",
     "app.services.dashboard.dashboard_adapter",
     "app.services.culture_wall_service",
     "app.services.cost_match_suggestion_service",
-    "app.services.change_response_suggestion_service",
     "app.services.collaboration_rating.base",
     "app.services.collaboration_rating.ratings",
     "app.services.collaboration_rating.selector",
@@ -91,7 +91,6 @@ IMPORT_MODULES = [
     "app.services.acceptance.report_utils",
     "app.services.acceptance_report_service",
     "app.services.ai_assessment_service",
-    "app.services.ai_service",
     "app.services.assembly_attr_recommender",
     "app.services.assembly_kit_optimizer",
     "app.services.assembly_kit_service",
@@ -116,7 +115,6 @@ IMPORT_MODULES = [
     "app.services.presale_mobile_service",
     "app.services.technical_assessment_service",
 ]
-
 
 @pytest.mark.parametrize("module_path", IMPORT_MODULES)
 def test_module_importable(module_path):

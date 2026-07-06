@@ -5,53 +5,12 @@ from unittest.mock import MagicMock, patch
 import importlib
 
 
-class TestPPTGeneratorBaseBuilder:
-    """Tests for PPT base builder"""
-
-    def test_module_import(self):
-        """Test BaseSlideBuilder"""
-        try:
-            from app.services.ppt_generator.base_builder import BaseSlideBuilder
-            assert hasattr(BaseSlideBuilder, "add_title_slide")
-        except ImportError:
-            pytest.skip("Module not found")
 
 
-class TestPPTGeneratorConfig:
-    """Tests for PPT config"""
-
-    def test_module_import(self):
-        """Test PresentationConfig"""
-        try:
-            from app.services.ppt_generator.config import PresentationConfig
-            config = PresentationConfig()
-            assert config is not None
-        except ImportError:
-            pytest.skip("Module not found")
 
 
-class TestPPTGeneratorContentBuilder:
-    """Tests for PPT content builder"""
-
-    def test_module_import(self):
-        """Test ContentSlideBuilder"""
-        try:
-            from app.services.ppt_generator.content_builder import ContentSlideBuilder
-            assert ContentSlideBuilder is not None
-        except ImportError:
-            pytest.skip("Module not found")
 
 
-class TestPPTGeneratorTableBuilder:
-    """Tests for PPT table builder"""
-
-    def test_module_import(self):
-        """Test TableSlideBuilder"""
-        try:
-            from app.services.ppt_generator.table_builder import TableSlideBuilder
-            assert TableSlideBuilder is not None
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestPresaleAIService:

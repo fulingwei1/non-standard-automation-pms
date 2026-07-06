@@ -131,15 +131,3 @@ class TestProjectWorkspaceService:
             pytest.skip("Module not found")
 
 
-class TestPurchaseIntelligenceService:
-    """Tests for purchase intelligence"""
-
-    def test_service_import(self):
-        """Test PurchaseIntelligenceService"""
-        try:
-            from app.services.purchase_intelligence.service import PurchaseIntelligenceService
-            mock_db = MagicMock()
-            service = PurchaseIntelligenceService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")

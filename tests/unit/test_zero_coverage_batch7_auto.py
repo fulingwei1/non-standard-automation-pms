@@ -75,32 +75,8 @@ class TestBOMService:
             pytest.skip("Module not found")
 
 
-class TestChangeImpactAIService:
-    """Tests for change impact AI"""
-
-    def test_service_import(self):
-        """Test ChangeImpactAIService"""
-        try:
-            from app.services.change_impact_ai_service import ChangeImpactAIService
-            mock_db = MagicMock()
-            service = ChangeImpactAIService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
-class TestChangeImpactAnalysisService:
-    """Tests for change impact analysis"""
-
-    def test_service_import(self):
-        """Test ChangeImpactAnalysisService"""
-        try:
-            from app.services.change_impact_analysis_service import ChangeImpactAnalysisService
-            mock_db = MagicMock()
-            service = ChangeImpactAnalysisService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestConflictMediationService:

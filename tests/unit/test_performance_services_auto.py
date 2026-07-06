@@ -31,18 +31,6 @@ class TestPerformanceIntegrationService:
             pytest.skip("Module not found")
 
 
-class TestPerformanceStatsService:
-    """Tests for performance stats"""
-
-    def test_service_import(self):
-        """Test PerformanceStatsService"""
-        try:
-            from app.services.performance_stats_service import PerformanceStatsService
-            mock_db = MagicMock()
-            service = PerformanceStatsService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestPerformanceTrendService:

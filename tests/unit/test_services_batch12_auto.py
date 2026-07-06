@@ -91,12 +91,6 @@ class TestServicesBatch12B:
             assert s.db
         except: pytest.skip("skip")
 
-    def test_13(self):
-        try:
-            from app.services.inventory_analysis_service import InventoryAnalysisService
-            s = InventoryAnalysisService(MagicMock())
-            assert s.db
-        except: pytest.skip("skip")
 
     def test_14(self):
         try:

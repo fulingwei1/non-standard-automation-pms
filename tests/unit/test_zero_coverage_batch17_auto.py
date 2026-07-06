@@ -57,18 +57,6 @@ class TestScheduleGenerationService:
             pytest.skip("Module not found")
 
 
-class TestScheduleOptimizationService:
-    """Tests for schedule optimization"""
-
-    def test_service_import(self):
-        """Test ScheduleOptimizationService"""
-        try:
-            from app.services.schedule_optimization_service import ScheduleOptimizationService
-            mock_db = MagicMock()
-            service = ScheduleOptimizationService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestSchedulePredictionService:

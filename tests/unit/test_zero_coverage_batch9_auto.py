@@ -5,16 +5,6 @@ from unittest.mock import MagicMock, patch
 import importlib
 
 
-class TestMaterialTransferService:
-    """Tests for material transfer"""
-
-    def test_service_import(self):
-        """Test MaterialTransferService"""
-        try:
-            from app.services.material_transfer_service import MaterialTransferService
-            assert MaterialTransferService is not None
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestMeetingReportDocxService:
@@ -84,16 +74,6 @@ class TestPDFExportService:
             pytest.skip("Module not found")
 
 
-class TestPDFContentBuilders:
-    """Tests for PDF content builders"""
-
-    def test_module_import(self):
-        """Test PDFContentBuilders"""
-        try:
-            from app.services.pdf_content_builders import PDFContentBuilder
-            assert PDFContentBuilder is not None
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestPDFStyles:

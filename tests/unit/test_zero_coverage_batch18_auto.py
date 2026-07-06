@@ -73,31 +73,8 @@ class TestStageAdvanceService:
             pytest.skip("Module not found")
 
 
-class TestStageApprovalBridge:
-    """Tests for stage approval bridge"""
-
-    def test_module_import(self):
-        """Test StageApprovalBridge"""
-        try:
-            from app.services.stage_approval_bridge import StageApprovalBridge
-            bridge = StageApprovalBridge(MagicMock())
-            assert bridge is not None
-        except ImportError:
-            pytest.skip("Module not found")
 
 
-class TestShortageReportService:
-    """Tests for shortage report"""
-
-    def test_service_import(self):
-        """Test ShortageReportService"""
-        try:
-            from app.services.shortage_report_service import ShortageReportService
-            mock_db = MagicMock()
-            service = ShortageReportService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestSLAService:

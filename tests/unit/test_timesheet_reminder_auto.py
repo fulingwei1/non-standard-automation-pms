@@ -18,17 +18,6 @@ class TestTimesheetOvertimeCalculation:
             pytest.skip("Module not found")
 
 
-class TestTimesheetRecordsService:
-    """Tests for timesheet records"""
-
-    def test_service_import(self):
-        try:
-            from app.services.timesheet.records.service import TimesheetRecordsService
-            mock_db = MagicMock()
-            service = TimesheetRecordsService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestTimesheetAnomalyDetector:

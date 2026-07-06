@@ -61,11 +61,12 @@ def test_schema_importable(module_path):
 
 
 # Also import more service modules
+
+
 MORE_SERVICE_MODULES = [
     "app.services.production.material_tracking.material_tracking_service",
     "app.services.production.exception.exception_enhancement_service",
     "app.services.ai_emotion_service",
-    "app.services.purchase_intelligence.service",
     "app.services.sales_prediction_service",
     "app.services.report.report_service",
     "app.services.report_excel_service",
@@ -100,7 +101,6 @@ MORE_SERVICE_MODULES = [
     "app.services.dashboard_adapters.shortage",
     "app.services.dashboard_cache_service",
 ]
-
 
 @pytest.mark.parametrize("module_path", MORE_SERVICE_MODULES)
 def test_service_module_importable(module_path):

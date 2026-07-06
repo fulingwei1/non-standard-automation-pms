@@ -47,18 +47,6 @@ class TestInformationGapAnalysisService:
             pytest.skip("Module not found")
 
 
-class TestInventoryAnalysisService:
-    """Tests for inventory analysis"""
-
-    def test_service_import(self):
-        """Test InventoryAnalysisService"""
-        try:
-            from app.services.inventory_analysis_service import InventoryAnalysisService
-            mock_db = MagicMock()
-            service = InventoryAnalysisService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestIssueCostService:
@@ -75,18 +63,6 @@ class TestIssueCostService:
             pytest.skip("Module not found")
 
 
-class TestITRAnalyticsService:
-    """Tests for ITR analytics"""
-
-    def test_service_import(self):
-        """Test ITRAnalyticsService"""
-        try:
-            from app.services.itr_analytics_service import ITRAnalyticsService
-            mock_db = MagicMock()
-            service = ITRAnalyticsService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestITRService:
@@ -103,18 +79,6 @@ class TestITRService:
             pytest.skip("Module not found")
 
 
-class TestJobDutyTaskService:
-    """Tests for job duty task"""
-
-    def test_service_import(self):
-        """Test JobDutyTaskService"""
-        try:
-            from app.services.job_duty_task_service import JobDutyTaskService
-            mock_db = MagicMock()
-            service = JobDutyTaskService(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestKitRateStatisticsService:

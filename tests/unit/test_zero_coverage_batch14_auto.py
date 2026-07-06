@@ -33,18 +33,6 @@ class TestPurchaseRequestFromBomService:
             pytest.skip("Module not found")
 
 
-class TestPurchaseSuggestionEngine:
-    """Tests for purchase suggestion engine"""
-
-    def test_service_import(self):
-        """Test PurchaseSuggestionEngine"""
-        try:
-            from app.services.purchase_suggestion_engine import PurchaseSuggestionEngine
-            mock_db = MagicMock()
-            service = PurchaseSuggestionEngine(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
 
 class TestPurchaseWorkflowService:

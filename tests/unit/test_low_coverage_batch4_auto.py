@@ -17,14 +17,6 @@ class TestProjectServicesBatch4:
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_ppt_generator(self):
-        """测试PPT生成器"""
-        try:
-            from app.services.ppt_generator.generator import PPTGenerator
-            generator = PPTGenerator()
-            assert generator is not None
-        except ImportError:
-            pytest.skip("Module not found")
 
     def test_project_change_requests(self):
         """测试项目变更请求"""
@@ -85,15 +77,6 @@ class TestProjectServicesBatch4:
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_win_rate_analysis(self):
-        """测试胜率分析"""
-        try:
-            from app.services.win_rate_prediction_service.analysis import WinRateAnalysis
-            mock_db = MagicMock()
-            service = WinRateAnalysis(mock_db)
-            assert service.db == mock_db
-        except ImportError:
-            pytest.skip("Module not found")
 
     def test_ecn_template(self):
         """测试ECN模板"""

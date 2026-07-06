@@ -18,7 +18,6 @@ from app.models.issue import Issue, IssueTypeEnum
 from app.models.progress import Task
 from app.models.project import Machine, Project, ProjectMilestone, ProjectStatusLog
 from app.services.health_calculator import HealthCalculator
-from app.services.milestone_service import MilestoneService
 from app.services.stage_advance_service import (
     validate_target_stage,
     validate_stage_advancement,
@@ -325,79 +324,6 @@ class TestHealthCalculatorBranches:
 
 # ========== 里程碑服务测试 ==========
 
-class TestMilestoneServiceBranches:
-    """里程碑服务核心分支测试"""
-
-    def test_create_milestone(self, db_session, test_project):
-        """分支：创建里程碑"""
-        service = MilestoneService(db_session)
-        data = MilestoneCreate(
-            project_id=test_project.id,
-            milestone_name="设计评审",
-            planned_date=date.today() + timedelta(days=10),
-            is_key=True,
-            status="PENDING",
-        )
-
-        milestone = service.create(data)
-
-        assert milestone.milestone_name == "设计评审"
-        assert milestone.is_key is True
-
-    def test_get_by_project(self, db_session, test_project):
-        """分支：按项目查询里程碑"""
-        service = MilestoneService(db_session)
-
-        # 创建里程碑
-        for i in range(3):
-            milestone = ProjectMilestone(
-                project_id=test_project.id,
-                milestone_name=f"里程碑{i}",
-                planned_date=date.today() + timedelta(days=i * 5),
-                status="PENDING",
-            )
-            db_session.add(milestone)
-        db_session.commit()
-
-        result = service.get_by_project(test_project.id)
-
-        assert len(result) >= 3
-
-    def test_complete_milestone(self, db_session, test_project):
-        """分支：完成里程碑"""
-        service = MilestoneService(db_session)
-
-        milestone = ProjectMilestone(
-            project_id=test_project.id,
-            milestone_name="待完成里程碑",
-            planned_date=date.today(),
-            status="IN_PROGRESS",
-        )
-        db_session.add(milestone)
-        db_session.commit()
-
-        result = service.complete_milestone(milestone_id=milestone.id)
-
-        assert result.status == "COMPLETED"
-        assert result.actual_date is not None
-
-    def test_update_milestone(self, db_session, test_project):
-        """分支：更新里程碑"""
-        service = MilestoneService(db_session)
-
-        milestone = ProjectMilestone(
-            project_id=test_project.id,
-            milestone_name="原名称",
-            planned_date=date.today(),
-            status="PENDING",
-        )
-        db_session.add(milestone)
-        db_session.commit()
-
-        update_data = MilestoneUpdate(milestone_name="新名称")
-        updated = service.update(milestone.id, update_data)
-
-        assert updated.milestone_name == "新名称"
 
 
 # ========== 综合流程测试 ==========

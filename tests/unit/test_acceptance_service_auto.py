@@ -119,14 +119,6 @@ class TestAIEmotionService:
             assert result is not None
 
 
-class TestAIService:
-    """Tests for app.services.ai_service"""
-
-    def test_ai_service_init(self):
-        from app.services.ai_service import AIService
-
-        service = AIService()
-        assert service is not None
 
 
 class TestBackupService:
@@ -139,11 +131,4 @@ class TestBackupService:
         assert service is not None
 
 
-class TestBusinessRules:
-    """Tests for app.services.business_rules"""
 
-    def test_business_rules_module_exports(self):
-        from app.services import business_rules
-
-        assert hasattr(business_rules, "KPI_BENCHMARKS")
-        assert hasattr(business_rules, "calc_gross_margin")

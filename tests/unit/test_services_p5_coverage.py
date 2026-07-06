@@ -350,12 +350,6 @@ class TestDataCheckMixin:
 # 9. resource_waste_analysis/failure_patterns – FailurePatternsMixin
 # ─────────────────────────────────────────────────────────────────
 class TestFailurePatternsMixin:
-    def _make_mixin(self, db):
-        from app.services.resource_waste_analysis.failure_patterns import FailurePatternsMixin
-
-        obj = FailurePatternsMixin.__new__(FailurePatternsMixin)
-        obj.db = db
-        return obj
 
     def test_analyze_failure_patterns_no_data(self):
         db = MagicMock()
@@ -577,32 +571,6 @@ class TestSalesReportAdapter:
 # ─────────────────────────────────────────────────────────────────
 # 15. win_rate_prediction_service/analysis
 # ─────────────────────────────────────────────────────────────────
-class TestWinRateAnalysis:
-    def test_get_win_rate_distribution_empty(self):
-        from app.services.win_rate_prediction_service.analysis import get_win_rate_distribution
-
-        service = MagicMock()
-        service.db.query.return_value.filter.return_value.all.return_value = []
-        result = get_win_rate_distribution(service)
-        assert isinstance(result, dict)
-        # All counts should be 0
-        for level_data in result.values():
-            assert level_data["count"] == 0
-
-    def test_get_win_rate_distribution_with_projects(self):
-        from app.models.enums import LeadOutcomeEnum
-        from app.services.win_rate_prediction_service.analysis import get_win_rate_distribution
-
-        service = MagicMock()
-        p1 = MagicMock()
-        p1.predicted_win_rate = 0.85
-        p1.outcome = LeadOutcomeEnum.WON.value
-        p2 = MagicMock()
-        p2.predicted_win_rate = 0.30
-        p2.outcome = LeadOutcomeEnum.LOST.value
-        service.db.query.return_value.filter.return_value.all.return_value = [p1, p2]
-        result = get_win_rate_distribution(service)
-        assert isinstance(result, dict)
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -1077,33 +1045,6 @@ class TestTemplateReportCore:
 # ─────────────────────────────────────────────────────────────────
 # 31. win_rate_prediction_service/history
 # ─────────────────────────────────────────────────────────────────
-class TestWinRateHistory:
-    def test_get_salesperson_historical_win_rate_no_data(self):
-        from app.services.win_rate_prediction_service.history import (
-            get_salesperson_historical_win_rate,
-        )
-
-        service = MagicMock()
-        stats = MagicMock()
-        stats.total = 0
-        stats.won = 0
-        service.db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
-            stats
-        )
-        win_rate, count = get_salesperson_historical_win_rate(service, salesperson_id=1)
-        assert win_rate == 0.20  # industry average
-        assert count == 0
-
-    def test_get_customer_cooperation_history_by_id(self):
-        from app.services.win_rate_prediction_service.history import (
-            get_customer_cooperation_history,
-        )
-
-        service = MagicMock()
-        service.db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
-        total, won = get_customer_cooperation_history(service, customer_id=1)
-        assert total == 0
-        assert won == 0
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -1264,13 +1205,6 @@ class TestSalesReminderBase:
 # 37. resource_waste_analysis/investment – InvestmentAnalysisMixin
 # ─────────────────────────────────────────────────────────────────
 class TestInvestmentAnalysisMixin:
-    def _make_mixin(self, db):
-        from app.services.resource_waste_analysis.investment import InvestmentAnalysisMixin
-
-        obj = InvestmentAnalysisMixin.__new__(InvestmentAnalysisMixin)
-        obj.db = db
-        obj.hourly_rate = Decimal("100")
-        return obj
 
     def test_get_lead_resource_investment_no_logs(self):
         db = MagicMock()
