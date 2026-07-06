@@ -7,6 +7,7 @@
 - 收集 app/models 下所有 ORM 模型类名；
 - 在 app/（排除 models/tests/migrations）里查找构造调用 `ClassName(`、
   `bulk_insert`, 或 `INSERT INTO tablename`；
+- 将 scripts/import_*.py 与 scripts/enrich_*.py 视为生产主数据写入口径；
 - 无任何写入证据的模型 = 幽灵候选；仅当出现**基线之外的新幽灵**时失败。
 基线维护：python scripts/ci_guard_ghost_tables.py --update-baseline
 """
@@ -19,7 +20,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 MODELS_DIR = ROOT / "app" / "models"
 APP_DIR = ROOT / "app"
+SCRIPTS_DIR = ROOT / "scripts"
 BASELINE_FILE = ROOT / "scripts" / "ghost_tables_baseline.json"
+SCRIPT_WRITE_GLOBS = ("import_*.py", "enrich_*.py")
 
 
 def collect_models() -> dict:
@@ -48,12 +51,24 @@ def collect_models() -> dict:
     return models
 
 
-def collect_write_evidence() -> str:
-    chunks = []
+def _iter_write_evidence_paths():
     for path in APP_DIR.rglob("*.py"):
         rel = path.relative_to(ROOT).as_posix()
         if rel.startswith(("app/models/", "app/tests/")):
             continue
+        yield path
+
+    for pattern in SCRIPT_WRITE_GLOBS:
+        yield from SCRIPTS_DIR.glob(pattern)
+
+
+def collect_write_evidence() -> str:
+    chunks = []
+    seen = set()
+    for path in _iter_write_evidence_paths():
+        if path in seen:
+            continue
+        seen.add(path)
         try:
             chunks.append(path.read_text(encoding="utf-8"))
         except UnicodeDecodeError:
@@ -67,7 +82,7 @@ def find_ghosts() -> list:
     ghosts = []
     for cls, table in sorted(models.items()):
         has_ctor = re.search(rf"\b{re.escape(cls)}\s*\(", corpus)
-        has_sql = re.search(rf"INSERT INTO {re.escape(table)}\b", corpus, re.I)
+        has_sql = re.search(rf"INSERT(?:\s+OR\s+REPLACE)?\s+INTO {re.escape(table)}\b", corpus, re.I)
         if not has_ctor and not has_sql:
             ghosts.append(f"{cls}({table})")
     return ghosts
