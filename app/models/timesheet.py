@@ -4,7 +4,6 @@
 包含：工时记录、工时审批、工时汇总、加班申请
 """
 
-from datetime import datetime
 from enum import Enum
 
 from sqlalchemy import (
@@ -316,40 +315,24 @@ class OvertimeApplication(Base, TimestampMixin):
     )
 
 
-# ==================== 工时审批记录 ====================
+# ==================== 工时审批记录兼容壳 ====================
 
 
 class TimesheetApprovalLog(Base):
-    """工时审批记录
+    """退役后的工时审批记录兼容壳。
 
-    【状态】未启用 - 工时审批日志"""
+    工时审批明细统一写入 `approval_action_logs`，旧
+    `timesheet_approval_log` 表不再注册 SQLAlchemy 表。
+    """
 
-    __tablename__ = "timesheet_approval_log"
+    __abstract__ = True
 
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
-    # 关联
-    timesheet_id = Column(Integer, ForeignKey("timesheet.id"), comment="工时记录ID")
-    batch_id = Column(Integer, ForeignKey("timesheet_batch.id"), comment="工时批次ID")
-
-    # 审批人
-    approver_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="审批人ID")
-    approver_name = Column(String(50), comment="审批人")
-
-    # 审批动作
-    action = Column(String(20), nullable=False, comment="审批动作")
-    comment = Column(Text, comment="审批意见")
-
-    # 审批时间
-    approved_at = Column(DateTime, default=datetime.now, comment="审批时间")
-
-    __table_args__ = (
-        Index("idx_approval_timesheet", "timesheet_id"),
-        Index("idx_approval_batch", "batch_id"),
-        Index("idx_timesheet_approval_approver", "approver_id"),
-        {"comment": "工时审批记录表"},
-    )
+    def __repr__(self):
+        return f"<TimesheetApprovalLog {getattr(self, 'id', None)}>"
 
 
 # ==================== 工时填报规则 ====================

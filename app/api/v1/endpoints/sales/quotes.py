@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.models.sales import Customer, Opportunity, Quote, QuoteItem, QuoteTemplate, QuoteTemplateVersion, QuoteVersion
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 
@@ -33,6 +34,10 @@ from app.services.sales.presale_quote_context import (
     resolve_presale_solution_for_quote,
 )
 from app.services.sales.tax_basis import build_tax_breakdown
+from app.services.sales.quote_operation_audit import (
+    log_quote_operation,
+    quote_audit_value,
+)
 from app.api.v1.endpoints.sales.utils.quote_item_validation import (
     validate_quote_item_quantity_price,
 )
@@ -495,6 +500,14 @@ def create_quote(
         ).quantize(Decimal("0.01"))
 
     quote.current_version_id = version.id
+    log_quote_operation(
+        db,
+        quote,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=quote_audit_value(quote, current_version=version),
+        operation_desc="创建报价",
+    )
     db.commit()
     db.refresh(quote)
 

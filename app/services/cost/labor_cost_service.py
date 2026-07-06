@@ -706,14 +706,10 @@ class LaborCostExpenseService:
 
         total_cost = Decimal("0")
         for ts in timesheets:
-            user = self.db.query(User).filter(User.id == ts.user_id).first()
-            if user:
-                hourly_rate = self.hourly_rate_service.get_user_hourly_rate(
-                    self.db, user.id, ts.work_date
-                )
-                total_cost += Decimal(str(ts.hours or 0)) * hourly_rate
-            else:
-                total_cost += Decimal(str(ts.hours or 0)) * Decimal("300")
+            hourly_rate = self.hourly_rate_service.get_user_hourly_rate(
+                self.db, ts.user_id, ts.work_date
+            )
+            total_cost += Decimal(str(ts.hours or 0)) * hourly_rate
 
         return total_cost
 

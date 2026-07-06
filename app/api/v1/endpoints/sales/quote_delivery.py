@@ -12,9 +12,11 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.common.date_range import get_month_range_by_ym
 from app.core import security
+from app.models.sales.operation_log import SalesOperationType
 from app.models.sales import Quote
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.sales.quote_operation_audit import log_quote_operation, quote_audit_value
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -91,6 +93,7 @@ def update_quote_delivery(
         ResponseModel: 更新结果
     """
     quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+    old_quote = quote_audit_value(quote)
 
     delivery_date_str = delivery_data.get("delivery_date")
     if delivery_date_str:
@@ -98,6 +101,17 @@ def update_quote_delivery(
     else:
         quote.delivery_date = None
 
+    db.flush()
+    log_quote_operation(
+        db,
+        quote,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_quote,
+        new_value=quote_audit_value(quote),
+        operation_desc="更新报价交付日期",
+        remark=delivery_date_str,
+    )
     db.commit()
 
     return ResponseModel(

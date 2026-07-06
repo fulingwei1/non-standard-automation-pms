@@ -68,7 +68,7 @@ class Project(Base, TimestampMixin):
     )
     approval_record_id = Column(
         Integer,
-        ForeignKey("approval_records.id"),
+        ForeignKey("approval_instances.id"),
         comment="关联审批实例ID",
     )
 

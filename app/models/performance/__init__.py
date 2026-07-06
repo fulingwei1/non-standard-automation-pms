@@ -6,6 +6,7 @@
 """
 from .appeal_adjustment import PerformanceAdjustmentHistory, PerformanceAppeal
 from .contribution_ranking import PerformanceRankingSnapshot, ProjectContribution
+from .contract import PerformanceContract, PerformanceContractItem
 from .enums import (
     EvaluationStatusEnum,
     EvaluatorTypeEnum,
@@ -33,6 +34,8 @@ __all__ = [
     "EvaluatorTypeEnum",
     "EvaluationStatusEnum",
     # Period and Indicator
+    "PerformanceContract",
+    "PerformanceContractItem",
     "PerformancePeriod",
     "PerformanceIndicator",
     # Result and Evaluation

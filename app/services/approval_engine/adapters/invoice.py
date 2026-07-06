@@ -6,14 +6,12 @@
 """
 
 import logging
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance, ApprovalTask
-from app.models.sales.invoices import Invoice, InvoiceApproval
-from app.models.user import User
+from app.models.approval import ApprovalInstance
+from app.models.sales.invoices import Invoice
 
 from .base import ApprovalAdapter
 
@@ -204,7 +202,7 @@ class InvoiceApprovalAdapter(ApprovalAdapter):
         engine = ApprovalEngineService(self.db)
 
         instance = engine.submit(
-            template_code="SALES_INVOICE",
+            template_code="TPL_INVOICE",
             entity_type="INVOICE",
             entity_id=invoice.id,
             form_data=form_data,
@@ -224,94 +222,3 @@ class InvoiceApprovalAdapter(ApprovalAdapter):
         logger.info(f"发票 {invoice.invoice_code} 已提交审批，实例ID: {instance.id}")
 
         return instance
-
-    def create_invoice_approval(
-        self,
-        instance: ApprovalInstance,
-        task: ApprovalTask,
-    ) -> Optional[InvoiceApproval]:
-        """创建发票审批记录"""
-        from app.models.sales.invoices import InvoiceApproval
-
-        # 检查是否已存在
-        existing = (
-            self.db.query(InvoiceApproval)
-            .filter(
-                InvoiceApproval.invoice_id == instance.entity_id,
-                InvoiceApproval.approval_level == task.node_order,
-            )
-            .first()
-        )
-
-        if existing:
-            return existing
-
-        # 获取审批人
-        approver = (
-            self.db.query(User).filter(User.id == task.assignee_id).first()
-            if task.assignee_id
-            else None
-        )
-
-        # 计算到期时间
-        due_date = task.due_at or (datetime.now() + timedelta(hours=48))
-
-        # 创建新记录
-        approval = InvoiceApproval(
-            invoice_id=instance.entity_id,
-            approval_level=task.node_order,
-            approval_role=task.node_name or "",
-            approver_id=task.assignee_id,
-            approver_name=approver.real_name if approver else "",
-            approval_result=None,  # 待审批
-            status="PENDING",
-            due_date=due_date,
-            is_overdue=False,
-        )
-
-        self.db.add(approval)
-        return approval
-
-    def update_invoice_approval_from_action(
-        self,
-        task: ApprovalTask,
-        action: str,
-        comment: Optional[str] = None,
-    ) -> Optional[InvoiceApproval]:
-        """更新发票审批记录"""
-        approval_level = task.node_order
-        approval = (
-            self.db.query(InvoiceApproval)
-            .filter(
-                InvoiceApproval.invoice_id == task.instance.entity_id,
-                InvoiceApproval.approval_level == approval_level,
-            )
-            .first()
-        )
-
-        if not approval:
-            logger.warning(
-                f"未找到发票审批记录: entity_id={task.instance.entity_id}, level={approval_level}"
-            )
-            return None
-
-        # 更新审批结果
-        if action == "APPROVE":
-            approval.approval_result = "APPROVED"
-            approval.approval_opinion = comment
-            approval.status = "APPROVED"
-            approval.approved_at = datetime.now()
-        elif action == "REJECT":
-            approval.approval_result = "REJECTED"
-            approval.approval_opinion = comment
-            approval.status = "REJECTED"
-            approval.approved_at = datetime.now()
-
-        self.db.add(approval)
-        self.db.commit()
-
-        logger.info(
-            f"发票审批记录已更新: entity_id={approval.invoice_id}, level={approval_level}, action={action}"
-        )
-
-        return approval

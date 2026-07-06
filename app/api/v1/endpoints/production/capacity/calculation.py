@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.core import security
 from app.dependencies import get_db
 from app.models.production import (
     Equipment,
@@ -16,7 +17,8 @@ from app.models.production import (
     Worker,
     WorkerEfficiencyRecord,
 )
-from app.utils.db_helpers import save_obj
+from app.models.user import User
+from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -63,6 +65,7 @@ class WorkerEfficiencyCalculateRequest(BaseModel):
 async def calculate_oee(
     request: OEECalculateRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("production:manage")),
 ):
     """
     触发OEE计算
@@ -166,6 +169,7 @@ async def calculate_oee(
 async def calculate_worker_efficiency(
     request: WorkerEfficiencyCalculateRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("production:manage")),
 ):
     """
     计算工人效率

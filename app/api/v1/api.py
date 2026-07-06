@@ -285,6 +285,16 @@ def create_api_router() -> APIRouter:
         api_router.include_router(presale_agent_metrics_router)
         from app.api.v1.endpoints.presale_agent_revisions import router as presale_agent_revisions_router
         api_router.include_router(presale_agent_revisions_router)
+        from app.api.v1.endpoints.presale_proposals import router as presale_proposals_router
+        api_router.include_router(presale_proposals_router)
+        from app.api.v1.endpoints.audit_pack import router as audit_pack_router
+        api_router.include_router(audit_pack_router)
+        from app.api.v1.endpoints.presale_usage_feedback import router as presale_usage_feedback_router
+        api_router.include_router(presale_usage_feedback_router)
+        from app.api.v1.company_certifications import router as company_certifications_router
+        api_router.include_router(company_certifications_router)
+        from app.api.v1.endpoints.export_docs import router as export_docs_router
+        api_router.include_router(export_docs_router)
         from app.api.v1.endpoints.ai_feedback import router as ai_feedback_router
         api_router.include_router(ai_feedback_router)
         from app.api.v1.endpoints.sales.activity_minutes import router as sales_minutes_router
@@ -299,6 +309,10 @@ def create_api_router() -> APIRouter:
         api_router.include_router(otd_thresholds_router)
         from app.api.v1.endpoints.margin_dashboard import router as margin_dashboard_router
         api_router.include_router(margin_dashboard_router)
+        from app.api.v1.endpoints.pm_monthly_check import router as pm_monthly_check_router
+        api_router.include_router(pm_monthly_check_router)
+        from app.api.v1.endpoints.bom_cost_check import router as bom_cost_check_router
+        api_router.include_router(bom_cost_check_router)
         from app.api.v1.endpoints.ai_engineering import router as ai_engineering_router
         api_router.include_router(ai_engineering_router)
         from app.api.v1.endpoints.ai_more import router as ai_more_router

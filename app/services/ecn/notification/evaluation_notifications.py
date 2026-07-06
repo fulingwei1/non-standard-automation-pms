@@ -8,7 +8,8 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.ecn import Ecn, EcnApproval, EcnEvaluation
+from app.models.approval import ApprovalInstance, ApprovalTask
+from app.models.ecn import Ecn, EcnEvaluation
 from app.models.user import User
 from app.services.notification.channels.base import (
     NotificationPriority,
@@ -20,7 +21,6 @@ from .utils import (
     check_all_evaluations_completed,
     find_department_manager,
     find_users_by_department,
-    find_users_by_role,
 )
 
 
@@ -144,38 +144,38 @@ def notify_evaluation_completed(db: Session, ecn: Ecn, evaluation: EcnEvaluation
 
     # 通知审批人员（如果所有评估都完成，进入审批阶段）
     if check_all_evaluations_completed(db, ecn.id):
-        # 查找下一级审批人员
-        pending_approvals = (
-            db.query(EcnApproval)
-            .filter(EcnApproval.ecn_id == ecn.id, EcnApproval.approval_status == "PENDING")
-            .order_by(EcnApproval.approval_level)
+        pending_tasks = (
+            db.query(ApprovalTask)
+            .join(ApprovalInstance, ApprovalTask.instance_id == ApprovalInstance.id)
+            .filter(
+                ApprovalInstance.entity_type == "ECN",
+                ApprovalInstance.entity_id == ecn.id,
+                ApprovalTask.status == "PENDING",
+            )
+            .order_by(ApprovalTask.task_order)
             .all()
         )
 
-        for approval in pending_approvals:
-            # 根据角色查找审批人
-            role_users = find_users_by_role(db, approval.approval_role)
-            if role_users:
-                # 通知第一个符合条件的审批人
-                approver = role_users[0]
-                title = f"ECN审批任务分配：{ecn.ecn_no}"
-                content = f"所有评估已完成，您有一个新的ECN审批任务：\n\nECN编号：{ecn.ecn_no}\nECN标题：{ecn.ecn_title}\n审批层级：第{approval.approval_level}级\n\n请及时完成审批。"
+        for task in pending_tasks:
+            approval_level = task.node.node_order if task.node else task.task_order
+            title = f"ECN审批任务分配：{ecn.ecn_no}"
+            content = f"所有评估已完成，您有一个新的ECN审批任务：\n\nECN编号：{ecn.ecn_no}\nECN标题：{ecn.ecn_title}\n审批层级：第{approval_level}级\n\n请及时完成审批。"
 
-                request = NotificationRequest(
-                    recipient_id=approver.id,
-                    notification_type="ECN_APPROVAL_ASSIGNED",
-                    category="ecn",
-                    title=title,
-                    content=content,
-                    priority=NotificationPriority.HIGH,
-                    source_type="ecn",
-                    source_id=ecn.id,
-                    link_url=f"/ecns?ecnId={ecn.id}",
-                    extra_data={
-                        "ecn_no": ecn.ecn_no,
-                        "ecn_title": ecn.ecn_title,
-                        "approval_level": approval.approval_level,
-                        "approval_id": approval.id,
-                    },
-                )
-                dispatcher.send_notification_request(request)
+            request = NotificationRequest(
+                recipient_id=task.assignee_id,
+                notification_type="ECN_APPROVAL_ASSIGNED",
+                category="ecn",
+                title=title,
+                content=content,
+                priority=NotificationPriority.HIGH,
+                source_type="ecn",
+                source_id=ecn.id,
+                link_url=f"/ecns?ecnId={ecn.id}",
+                extra_data={
+                    "ecn_no": ecn.ecn_no,
+                    "ecn_title": ecn.ecn_title,
+                    "approval_level": approval_level,
+                    "approval_task_id": task.id,
+                },
+            )
+            dispatcher.send_notification_request(request)

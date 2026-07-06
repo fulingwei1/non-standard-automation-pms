@@ -231,6 +231,7 @@ class MarginTrendService:
             )
             current += timedelta(days=1)
 
+        total_snaps = sum(sum(d.values()) for d in health_map.values())
         return {
             "period": {
                 "start": start_date.isoformat(),
@@ -240,6 +241,13 @@ class MarginTrendService:
             "dates": dates,
             "avg_margin_rate": avg_series,
             "health_distribution": health_series,
-            "total_snapshots": sum(sum(d.values()) for d in health_map.values()),
+            "total_snapshots": total_snaps,
+            "needs_backfill": total_snaps < days,
+            "hint": (
+                "快照数据不足，趋势图可能有断点。"
+                "建议调 POST /pmo/margin-dashboard/backfill 回填历史快照。"
+                if total_snaps < days
+                else None
+            ),
             "generated_at": self._today.isoformat(),
         }

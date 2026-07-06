@@ -5,18 +5,19 @@
 """
 
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.core.auth import check_permission, get_current_active_user
+from app.core import security
 from app.models.user import User
 from app.schemas.project_risk import (
     ProjectRiskCreate,
     ProjectRiskUpdate,
     ProjectRiskResponse,
 )
-from app.schemas.auto_risk import AutoRiskScanRequest, AutoRiskScanResult
+from app.schemas.auto_risk import AutoRiskScanRequest
 from app.schemas.common import ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.services.project_risk import ProjectRiskService
@@ -38,34 +39,17 @@ def create_audit_log(
     pass
 
 
-def require_risk_permission(permission_code: str):
-    """Risk module permission dependency with real permission checking."""
-
-    def permission_dependency(
-        current_user: User = Depends(get_current_active_user),
-        db: Session = Depends(get_db),
-    ) -> User:
-        if check_permission(current_user, permission_code, db):
-            return current_user
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"权限不足: {permission_code}",
-        )
-
-    return permission_dependency
-
-
 @router.post("/{project_id}/risks", response_model=ResponseModel)
 def create_risk(
     project_id: int,
     risk_data: ProjectRiskCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_risk_permission("risk:create")),
+    current_user: User = Depends(security.require_permission("project:create")),
 ):
     """
     创建项目风险
-    
-    需要权限：risk:create
+
+    需要权限：project:create
     """
     service = ProjectRiskService(db)
     risk = service.create_risk(
@@ -114,12 +98,12 @@ def get_risks(
     is_occurred: Optional[bool] = Query(None, description="是否已发生"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_risk_permission("risk:read")),
+    current_user: User = Depends(security.require_permission("project:read")),
 ):
     """
     获取项目风险列表
-    
-    需要权限：risk:read
+
+    需要权限：project:read
     """
     service = ProjectRiskService(db)
     risks, total = service.get_risk_list(
@@ -153,12 +137,12 @@ def get_risk(
     project_id: int,
     risk_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_risk_permission("risk:read")),
+    current_user: User = Depends(security.require_permission("project:read")),
 ):
     """
     获取风险详情
-    
-    需要权限：risk:read
+
+    需要权限：project:read
     """
     service = ProjectRiskService(db)
     risk = service.get_risk_by_id(project_id, risk_id)
@@ -176,12 +160,12 @@ def update_risk(
     risk_id: int,
     risk_data: ProjectRiskUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_risk_permission("risk:update")),
+    current_user: User = Depends(security.require_permission("project:update")),
 ):
     """
     更新风险信息
-    
-    需要权限：risk:update
+
+    需要权限：project:update
     """
     service = ProjectRiskService(db)
     
@@ -233,12 +217,12 @@ def delete_risk(
     project_id: int,
     risk_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_risk_permission("risk:delete")),
+    current_user: User = Depends(security.require_permission("project:delete")),
 ):
     """
     删除风险
-    
-    需要权限：risk:delete
+
+    需要权限：project:delete
     """
     service = ProjectRiskService(db)
     risk_info = service.delete_risk(project_id, risk_id)
@@ -264,13 +248,13 @@ def delete_risk(
 def get_risk_matrix(
     project_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_risk_permission("risk:read")),
+    current_user: User = Depends(security.require_permission("project:read")),
 ):
     """
     获取风险矩阵（概率×影响）
-    
-    需要权限：risk:read
-    
+
+    需要权限：project:read
+
     返回5x5矩阵，每个单元格包含该概率和影响组合的风险数量和列表
     """
     service = ProjectRiskService(db)
@@ -287,13 +271,13 @@ def get_risk_matrix(
 def get_risk_summary(
     project_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_risk_permission("risk:read")),
+    current_user: User = Depends(security.require_permission("project:read")),
 ):
     """
     获取风险汇总统计
-    
-    需要权限：risk:read
-    
+
+    需要权限：project:read
+
     包含：总数、按类型统计、按等级统计、按状态统计等
     """
     service = ProjectRiskService(db)
@@ -311,7 +295,7 @@ def auto_scan_risks(
     project_id: int,
     scan_request: AutoRiskScanRequest = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_risk_permission("risk:create")),
+    current_user: User = Depends(security.require_permission("project:create")),
 ):
     """
     自动风险识别扫描
@@ -320,7 +304,7 @@ def auto_scan_risks(
     识别后自动创建风险记录（带"系统识别"标签和置信度），
     并通知项目负责人。
 
-    需要权限：risk:create
+    需要权限：project:create
     """
     if scan_request is None:
         scan_request = AutoRiskScanRequest()

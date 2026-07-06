@@ -4,6 +4,8 @@
 从 sales/quotes.py 拆分
 """
 
+from __future__ import annotations
+
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -14,8 +16,10 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import Quote, QuoteItem, QuoteVersion
+from app.models.sales.operation_log import SalesEntityType, SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.sales.operation_log_service import SalesOperationLogService
 from app.api.v1.endpoints.sales.utils.quote_item_validation import (
     validate_positive_quantity,
     validate_positive_unit_price,
@@ -82,6 +86,37 @@ def _to_decimal(value, *, default: Decimal = Decimal("0")) -> Decimal:
     if value is None:
         return default
     return Decimal(str(value))
+
+
+def _audit_scalar(value):
+    if isinstance(value, Decimal):
+        return str(value)
+    return value
+
+
+def _quote_item_audit_value(item: QuoteItem) -> dict:
+    return {
+        "item_id": item.id,
+        "quote_version_id": item.quote_version_id,
+        "item_type": item.item_type,
+        "item_name": item.item_name,
+        "qty": _audit_scalar(item.qty),
+        "unit_price": _audit_scalar(item.unit_price),
+        "cost": _audit_scalar(item.cost),
+        "lead_time_days": item.lead_time_days,
+        "remark": item.remark,
+        "cost_category": item.cost_category,
+        "cost_source": item.cost_source,
+        "specification": item.specification,
+        "unit": item.unit,
+    }
+
+
+def _quote_version_audit_code(version: QuoteVersion) -> str | None:
+    if getattr(version, "quote_code", None):
+        return version.quote_code
+    quote = getattr(version, "quote", None)
+    return getattr(quote, "quote_code", None) if quote else None
 
 
 def _recalculate_version_totals(db: Session, version: QuoteVersion) -> None:
@@ -213,6 +248,15 @@ def create_quote_item(
         )
         db.add(item)
         db.flush()
+        SalesOperationLogService.log_create(
+            db,
+            entity_type=SalesEntityType.QUOTE_VERSION,
+            entity_id=version.id,
+            operator=current_user,
+            entity_code=_quote_version_audit_code(version),
+            new_value=_quote_item_audit_value(item),
+            remark=f"quote_item_id={item.id}",
+        )
         _recalculate_version_totals(db, version)
         db.commit()
         db.refresh(item)
@@ -250,6 +294,7 @@ def update_quote_item(
             QuoteVersion.id == item.quote_version_id
         ).first()
         _ensure_version_editable(db, version)
+        old_value = _quote_item_audit_value(item)
 
         if "qty" in item_data:
             item_data["qty"] = validate_positive_quantity(item_data["qty"])
@@ -273,6 +318,16 @@ def update_quote_item(
                 setattr(item, field, item_data[field])
 
         db.flush()
+        SalesOperationLogService.log_update(
+            db,
+            entity_type=SalesEntityType.QUOTE_VERSION,
+            entity_id=version.id,
+            operator=current_user,
+            old_value=old_value,
+            new_value=_quote_item_audit_value(item),
+            entity_code=_quote_version_audit_code(version),
+            remark=f"quote_item_id={item.id}",
+        )
         _recalculate_version_totals(db, version)
         db.commit()
         return ResponseModel(code=200, message="报价明细更新成功")
@@ -306,9 +361,22 @@ def delete_quote_item(
             QuoteVersion.id == item.quote_version_id
         ).first()
         _ensure_version_editable(db, version)
+        old_value = _quote_item_audit_value(item)
 
         db.delete(item)
         db.flush()
+        SalesOperationLogService.log_operation(
+            db,
+            entity_type=SalesEntityType.QUOTE_VERSION,
+            entity_id=version.id,
+            operation_type=SalesOperationType.DELETE,
+            operator=current_user,
+            entity_code=_quote_version_audit_code(version),
+            operation_desc="删除报价明细",
+            old_value=old_value,
+            changed_fields=list(old_value.keys()),
+            remark=f"quote_item_id={item_id}",
+        )
         _recalculate_version_totals(db, version)
         db.commit()
         return ResponseModel(code=200, message="报价明细删除成功")

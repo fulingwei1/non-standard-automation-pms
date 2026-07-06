@@ -103,7 +103,6 @@ class Ecn(Base, TimestampMixin):
     machine = relationship("Machine")
     applicant = relationship("User", foreign_keys=[applicant_id])
     evaluations = relationship("EcnEvaluation", back_populates="ecn", lazy="dynamic")
-    approvals = relationship("EcnApproval", back_populates="ecn", lazy="dynamic")
     tasks = relationship("EcnTask", back_populates="ecn", lazy="dynamic")
     affected_materials = relationship("EcnAffectedMaterial", back_populates="ecn", lazy="dynamic")
     affected_orders = relationship("EcnAffectedOrder", back_populates="ecn", lazy="dynamic")

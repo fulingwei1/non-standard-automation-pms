@@ -25,9 +25,19 @@ export const roleWidgetConfig = {
     widgets: [
       { id: 'welcome-card', size: 'full' },
       { id: 'culture-wall', size: 'full' },
-      { id: 'stats-card', props: { type: 'admin', metrics: ['users', 'roles', 'logins', 'errors'] } },
+      // 原来"关键指标"（users/roles/logins/errors）和下面单独一张"用户
+      // 统计"卡片（user-stats widget，只在 ADMIN 角色出现过）各自读一份
+      // 数据、算法还不一样，导致用户数/角色数在两张卡片上数字对不上。
+      // 合并成一张卡片、6 个指标，只有 ADMIN 角色需要这么多管理类指标，
+      // 其他角色的 stats-card 不受影响。
+      {
+        id: 'stats-card',
+        props: {
+          type: 'admin',
+          metrics: ['users', 'roles', 'logins', 'errors', 'new_this_month', 'active_this_month'],
+        },
+      },
       { id: 'system-health' },
-      { id: 'user-stats' },
       { id: 'approval-pending' },
       { id: 'notification-panel' },
     ],

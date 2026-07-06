@@ -18,15 +18,24 @@ except ImportError:
                 from .admin.schedule_optimization import router
             except ImportError:
                 # Create a simple router as fallback
-                from fastapi import APIRouter
+                from fastapi import APIRouter, Depends
+
+                from app.core import security
+                from app.models.user import User
+
                 router = APIRouter()
 
                 @router.get('/')
-                def read_root():
+                def read_root(
+                    current_user: User = Depends(security.require_permission("project:read")),
+                ):
                     return {'message': 'schedule_optimization module placeholder'}
 
                 @router.get('/projects/{project_id}/optimization-analysis')
-                def get_optimization_analysis(project_id: int):
+                def get_optimization_analysis(
+                    project_id: int,
+                    current_user: User = Depends(security.require_permission("project:read")),
+                ):
                     return {
                         'project_id': project_id,
                         'overall_optimization_score': 0,
@@ -42,11 +51,17 @@ except ImportError:
                     }
 
                 @router.post('/projects/{project_id}/auto-generate-bom')
-                def auto_generate_bom(project_id: int):
+                def auto_generate_bom(
+                    project_id: int,
+                    current_user: User = Depends(security.require_permission("material:update")),
+                ):
                     return {'project_id': project_id, 'generated': False, 'items': []}
 
                 @router.post('/projects/{project_id}/auto-create-purchase')
-                def auto_create_purchase(project_id: int):
+                def auto_create_purchase(
+                    project_id: int,
+                    current_user: User = Depends(security.require_permission("purchase:create")),
+                ):
                     return {'project_id': project_id, 'created': False, 'items': []}
 
 __all__ = ['router']

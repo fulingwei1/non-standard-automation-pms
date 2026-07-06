@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """AI 后台任务端点：提交重的 AI 生成 + 轮询状态/结果。"""
-from typing import Any
+from __future__ import annotations
+
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -46,9 +48,9 @@ class PresaleAgentRequest(BaseModel):
     """售前智能体请求"""
 
     requirement_text: str = Field(..., min_length=2, description="客户原始需求")
-    customer_id: int | None = Field(None, description="关联客户ID（可选）")
-    industry_hint: str | None = Field(None, description="行业提示（可选）")
-    equipment_hint: str | None = Field(None, description="设备类型提示（可选）")
+    customer_id: Optional[int] = Field(None, description="关联客户ID（可选）")
+    industry_hint: Optional[str] = Field(None, description="行业提示（可选）")
+    equipment_hint: Optional[str] = Field(None, description="设备类型提示（可选）")
 
 
 @router.post("/presale-agent", summary="提交售前智能体分析(后台任务)")
@@ -87,6 +89,36 @@ def presale_clarify(
     from app.services.presale.requirement_clarifier import clarify_requirement
 
     result = clarify_requirement(request.requirement_text, request.history)
+    return result
+
+
+class SalesCoachRequest(BaseModel):
+    """销售教练请求"""
+
+    sales_input: str = Field(..., min_length=2, description="销售输入（客户线索/问题/会议记录）")
+    mode: str = Field("lead_analysis", description="模式：lead_analysis/meeting_prep/field_qa/review_coaching")
+    history: list = Field(default_factory=list, description="对话历史")
+
+
+@router.post("/sales-coach", summary="销售教练（AI 指导销售获取需求和成长）")
+def sales_coach(
+    request: SalesCoachRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """销售教练：像老法师一样指导新手销售。
+
+    四种模式：
+    - lead_analysis: 线索解读（刚接到客户，怎么开始）
+    - meeting_prep: 会前准备（去见客户前准备什么）
+    - field_qa: 现场答疑（客户问技术问题快速回答）
+    - review_coaching: 复盘辅导（沟通完总结提升）
+    """
+    from app.services.presale.sales_coach import coach_sales
+    from app.services.ai_client_service import AIClientService
+
+    ai = AIClientService()
+    result = coach_sales(db, ai, request.sales_input, request.mode, request.history)
     return result
 
 

@@ -24,7 +24,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, or_, text
 from sqlalchemy.orm import Query, Session
 
-from app.models.permission import DataScopeRule, RoleDataScope
+from app.models.permission import DataScopeRule
 from app.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -46,46 +46,12 @@ class CustomRuleService:
         Returns:
             DataScopeRule 或 None
         """
-        try:
-            from app.services.permission_management.permission_service import PermissionService
-
-            # 获取用户的有效角色
-            roles = PermissionService.get_user_effective_roles(db, user_id)
-            role_ids = [r.id for r in roles]
-
-            if not role_ids:
-                return None
-
-            # 查找资源级的数据权限配置
-            role_data_scope = (
-                db.query(RoleDataScope)
-                .filter(
-                    RoleDataScope.role_id.in_(role_ids),
-                    RoleDataScope.resource_type == resource_type,
-                    RoleDataScope.is_active,
-                )
-                .first()
-            )
-
-            if not role_data_scope:
-                return None
-
-            # 获取关联的规则
-            rule = (
-                db.query(DataScopeRule)
-                .filter(
-                    DataScopeRule.id == role_data_scope.scope_rule_id,
-                    DataScopeRule.scope_type == "CUSTOM",
-                    DataScopeRule.is_active,
-                )
-                .first()
-            )
-
-            return rule
-
-        except Exception as e:
-            logger.error(f"获取自定义规则失败: {e}")
-            return None
+        logger.debug(
+            "旧自定义数据范围规则表已退役，跳过 user_id=%s resource_type=%s",
+            user_id,
+            resource_type,
+        )
+        return None
 
     @staticmethod
     def apply_custom_filter(

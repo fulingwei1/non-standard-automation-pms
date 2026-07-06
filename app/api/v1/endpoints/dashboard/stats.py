@@ -31,8 +31,9 @@ from app.common.statistics import (
     format_percentage,
 )
 from app.core import security
+from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.ecn.core import Ecn
-from app.models.ecn.evaluation_approval import EcnApproval, EcnEvaluation
+from app.models.ecn.evaluation_approval import EcnEvaluation
 from app.models.production.work_order import WorkOrder
 from app.models.project import Project
 from app.models.purchase import PurchaseOrder, PurchaseRequest
@@ -190,8 +191,13 @@ def get_engineer_stats(db: Session, current_user: User) -> dict:
     )
 
     pending_approvals = (
-        db.query(func.count(EcnApproval.id))
-        .filter(EcnApproval.approver_id == user_id, EcnApproval.status == "PENDING")
+        db.query(func.count(ApprovalTask.id))
+        .join(ApprovalInstance, ApprovalTask.instance_id == ApprovalInstance.id)
+        .filter(
+            ApprovalInstance.entity_type == "ECN",
+            ApprovalTask.assignee_id == user_id,
+            ApprovalTask.status == "PENDING",
+        )
         .scalar()
         or 0
     )
@@ -388,7 +394,7 @@ def get_pmo_stats(db: Session, current_user: User) -> dict:
 
 def get_admin_stats(db: Session, current_user: User) -> dict:
     """获取管理员统计数据"""
-    from app.models.permission import PermissionAudit
+    from app.models.user import PermissionAudit
 
     today = date.today()
 
@@ -396,31 +402,22 @@ def get_admin_stats(db: Session, current_user: User) -> dict:
     db.query(func.count(User.id)).filter(User.is_active).scalar() or 0
     total_roles = db.query(func.count(Role.id)).scalar() or 0
 
-    # 今日审计操作次数（使用权限审计表统计今日活动）
     today_start = datetime.combine(today, datetime.min.time())
     today_end = datetime.combine(today, datetime.max.time())
 
+    # 今日活跃：原来查权限审计表里 action == "login" 的记录，但全仓从未有
+    # 任何地方真正写过这个 action（登录时只签发 token，不落审计记录），
+    # 这个口径永远是 0。直接用 users.last_login_at 判断更可靠——登录接口
+    # 那边补上了每次登录更新这个字段（之前也被注释掉过，同一次一起修的）。
     login_count_today = (
-        db.query(func.count(PermissionAudit.id))
+        db.query(func.count(User.id))
         .filter(
-            PermissionAudit.action == "login",
-            PermissionAudit.created_at >= today_start,
-            PermissionAudit.created_at <= today_end,
+            User.last_login_at >= today_start,
+            User.last_login_at <= today_end,
         )
         .scalar()
         or 0
     )
-
-    # 如果没有登录审计，使用今日总审计操作数作为活跃度指标
-    if login_count_today == 0:
-        login_count_today = (
-            db.query(func.count(PermissionAudit.id))
-            .filter(
-                PermissionAudit.created_at >= today_start, PermissionAudit.created_at <= today_end
-            )
-            .scalar()
-            or 0
-        )
 
     # TODO: 需要添加系统错误日志表来统计错误数
     # 当前从审计表中查询今日失败操作作为替代
@@ -436,12 +433,26 @@ def get_admin_stats(db: Session, current_user: User) -> dict:
     )
     error_count = error_query.scalar() or 0
 
+    # "用户统计"卡片（widgets/admin/UserStats.jsx）之前是完全写死的假数据
+    # （256/48/12/15，跟这里的真实用户数/角色数对不上），这两项一并算出来
+    # 让那张卡片改成读这里的真实数据，跟"关键指标"卡片保持同一个数据源、
+    # 不会再出现两张卡片各算一遍、数字却对不上的问题。
+    month_start = datetime(today.year, today.month, 1)
+    new_users_this_month = (
+        db.query(func.count(User.id)).filter(User.created_at >= month_start).scalar() or 0
+    )
+    active_users_this_month = (
+        db.query(func.count(User.id)).filter(User.last_login_at >= month_start).scalar() or 0
+    )
+
     return create_stats_response(
         [
             create_stat_card("users", "用户数", total_users),
             create_stat_card("roles", "角色数", total_roles),
             create_stat_card("logins", "今日活跃", login_count_today),
             create_stat_card("errors", "系统错误", error_count),
+            create_stat_card("new_this_month", "新增本月", new_users_this_month),
+            create_stat_card("active_this_month", "本月活跃", active_users_this_month),
         ]
     )
 

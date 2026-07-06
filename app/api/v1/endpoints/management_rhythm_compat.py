@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends
 
@@ -68,7 +68,7 @@ def _meetings() -> List[Dict[str, Any]]:
     ]
 
 
-def _filtered_meetings(rhythm_level: str | None = None, cycle_type: str | None = None) -> List[Dict[str, Any]]:
+def _filtered_meetings(rhythm_level: Optional[str] = None, cycle_type: Optional[str] = None) -> List[Dict[str, Any]]:
     items = _meetings()
     if rhythm_level:
         items = [item for item in items if item["rhythm_level"] == rhythm_level]
@@ -157,9 +157,9 @@ def _reports() -> List[Dict[str, Any]]:
 def list_meeting_reports(
     page: int = 1,
     page_size: int = 20,
-    report_type: str | None = None,
-    period_year: int | None = None,
-    rhythm_level: str | None = None,
+    report_type: Optional[str] = None,
+    period_year: Optional[int] = None,
+    rhythm_level: Optional[str] = None,
     _current_user: User = Depends(deps.get_current_active_user),
 ) -> Dict[str, Any]:
     items = _reports()

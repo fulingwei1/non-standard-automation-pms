@@ -145,6 +145,12 @@ class QuotationApprovalRequest(BaseModel):
         return v
 
 
+class QuotationPromotionRequest(BaseModel):
+    """AI报价草稿转正式销售报价请求"""
+
+    opportunity_id: Optional[int] = Field(None, description="指定商机ID；为空时从售前工单或客户最近商机推断")
+
+
 class QuotationEmailRequest(BaseModel):
     """发送报价单邮件请求"""
 
@@ -172,7 +178,6 @@ class QuotationItemResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
 
 class QuotationResponse(BaseModel):
     """报价单响应"""
@@ -300,23 +305,11 @@ class QuotationApprovalResponse(BaseModel):
         from_attributes = True
 
 
-# ============= 模板相关 =============
+class QuotationPromotionResponse(BaseModel):
+    """AI报价草稿转正式销售报价响应"""
 
-
-class QuotationTemplateResponse(BaseModel):
-    """报价单模板响应"""
-
-    id: int
-    name: str
-    template_type: str
-    template_content: Dict[str, Any]
-    pdf_template_path: Optional[str]
-    default_validity_days: int
-    default_tax_rate: Decimal
-    default_discount_rate: Decimal
-    is_active: bool
-    description: Optional[str]
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
+    quotation_id: int
+    quote_id: int
+    quote_code: str
+    quote_version_id: int
+    status: str

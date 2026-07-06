@@ -10,7 +10,6 @@ import logging
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter, apply_like_filter
@@ -30,6 +29,7 @@ from app.schemas.business_support import (
     InvoiceRequestResponse,
 )
 from app.services.notification.notification_dispatcher import NotificationDispatcher
+from app.utils.business_code_generator import generate_business_code
 
 logger = logging.getLogger(__name__)
 
@@ -179,152 +179,70 @@ class BusinessSupportUtilsService:
 
     def generate_order_no(self) -> str:
         """生成销售订单编号：SO250101-001"""
-        today = datetime.now()
-        month_str = today.strftime("%y%m%d")
-        prefix = f"SO{month_str}-"
-
-        max_order_query = self.db.query(SalesOrder)
-        max_order_query = apply_like_filter(
-            max_order_query,
+        return generate_business_code(
+            self.db,
             SalesOrder,
-            f"{prefix}%",
             "order_no",
-            use_ilike=False,
+            prefix="SO",
+            now=datetime.now(),
+            like_filter=apply_like_filter,
         )
-        max_order = max_order_query.order_by(desc(SalesOrder.order_no)).first()
-
-        if max_order:
-            try:
-                seq = int(max_order.order_no.split("-")[-1]) + 1
-            except (ValueError, TypeError, IndexError):
-                seq = 1
-        else:
-            seq = 1
-
-        return f"{prefix}{seq:03d}"
 
     def generate_delivery_no(self) -> str:
         """生成送货单号：DO250101-001"""
-        today = datetime.now()
-        month_str = today.strftime("%y%m%d")
-        prefix = f"DO{month_str}-"
-
-        max_delivery_query = self.db.query(DeliveryOrder)
-        max_delivery_query = apply_like_filter(
-            max_delivery_query,
+        return generate_business_code(
+            self.db,
             DeliveryOrder,
-            f"{prefix}%",
             "delivery_no",
-            use_ilike=False,
+            prefix="DO",
+            now=datetime.now(),
+            like_filter=apply_like_filter,
         )
-        max_delivery = max_delivery_query.order_by(desc(DeliveryOrder.delivery_no)).first()
-
-        if max_delivery:
-            try:
-                seq = int(max_delivery.delivery_no.split("-")[-1]) + 1
-            except (ValueError, TypeError, IndexError):
-                seq = 1
-        else:
-            seq = 1
-
-        return f"{prefix}{seq:03d}"
 
     def generate_invoice_request_no(self) -> str:
         """生成开票申请编号：IR250101-001"""
-        today = datetime.now()
-        prefix = f"IR{today.strftime('%y%m%d')}-"
-
-        latest_query = self.db.query(InvoiceRequest)
-        latest_query = apply_like_filter(
-            latest_query,
+        return generate_business_code(
+            self.db,
             InvoiceRequest,
-            f"{prefix}%",
             "request_no",
-            use_ilike=False,
+            prefix="IR",
+            now=datetime.now(),
+            like_filter=apply_like_filter,
         )
-        latest = latest_query.order_by(desc(InvoiceRequest.request_no)).first()
-        if latest:
-            try:
-                seq = int(latest.request_no.split("-")[-1]) + 1
-            except Exception:
-                seq = 1
-        else:
-            seq = 1
-        return f"{prefix}{seq:03d}"
 
     def generate_registration_no(self) -> str:
         """生成客户供应商入驻编号：CR250101-001"""
-        today = datetime.now()
-        prefix = f"CR{today.strftime('%y%m%d')}-"
-
-        latest_query = self.db.query(CustomerSupplierRegistration)
-        latest_query = apply_like_filter(
-            latest_query,
+        return generate_business_code(
+            self.db,
             CustomerSupplierRegistration,
-            f"{prefix}%",
             "registration_no",
-            use_ilike=False,
+            prefix="CR",
+            now=datetime.now(),
+            like_filter=apply_like_filter,
         )
-        latest = latest_query.order_by(desc(CustomerSupplierRegistration.registration_no)).first()
-        if latest:
-            try:
-                seq = int(latest.registration_no.split("-")[-1]) + 1
-            except Exception:
-                seq = 1
-        else:
-            seq = 1
-        return f"{prefix}{seq:03d}"
 
     def generate_invoice_code(self) -> str:
         """生成发票编码：INV-250101-001"""
-        today = datetime.now().strftime("%y%m%d")
-        prefix = f"INV-{today}-"
-
-        latest_query = self.db.query(Invoice)
-        latest_query = apply_like_filter(
-            latest_query,
+        return generate_business_code(
+            self.db,
             Invoice,
-            f"{prefix}%",
             "invoice_code",
-            use_ilike=False,
+            prefix="INV",
+            now=datetime.now(),
+            date_separator="-",
+            like_filter=apply_like_filter,
         )
-        latest = latest_query.order_by(desc(Invoice.invoice_code)).first()
-        if latest:
-            try:
-                seq = int(latest.invoice_code.split("-")[-1]) + 1
-            except Exception:
-                seq = 1
-        else:
-            seq = 1
-        return f"{prefix}{seq:03d}"
 
     def generate_reconciliation_no(self) -> str:
         """生成对账单号：RC250101-001"""
-        today = datetime.now()
-        month_str = today.strftime("%y%m%d")
-        prefix = f"RC{month_str}-"
-
-        max_reconciliation_query = self.db.query(Reconciliation)
-        max_reconciliation_query = apply_like_filter(
-            max_reconciliation_query,
+        return generate_business_code(
+            self.db,
             Reconciliation,
-            f"{prefix}%",
             "reconciliation_no",
-            use_ilike=False,
+            prefix="RC",
+            now=datetime.now(),
+            like_filter=apply_like_filter,
         )
-        max_reconciliation = max_reconciliation_query.order_by(
-            desc(Reconciliation.reconciliation_no)
-        ).first()
-
-        if max_reconciliation:
-            try:
-                seq = int(max_reconciliation.reconciliation_no.split("-")[-1]) + 1
-            except (ValueError, TypeError, IndexError):
-                seq = 1
-        else:
-            seq = 1
-
-        return f"{prefix}{seq:03d}"
 
     # ==================== 序列化辅助 ====================
 

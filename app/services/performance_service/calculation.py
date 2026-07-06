@@ -2,19 +2,24 @@
 """
 绩效管理服务 - 分数计算
 """
-from datetime import date
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any, Dict, Optional
 
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
 
+from app.common.date_range import get_month_range_by_ym
 from app.models.performance import (
     EvaluationStatusEnum,
     EvaluationWeightConfig,
     EvaluatorTypeEnum,
     MonthlyWorkSummary,
     PerformanceEvaluationRecord,
+    PerformancePeriod,
+    PerformanceResult,
 )
+from app.models.user import User
 
 
 def calculate_final_score(db: Session, summary_id: int, period: str) -> Optional[Dict[str, Any]]:
@@ -140,6 +145,86 @@ def calculate_final_score(db: Session, summary_id: int, period: str) -> Optional
         "project_weight": project_weight,
         "details": details,
     }
+
+
+def sync_monthly_summary_result(
+    db: Session, summary: MonthlyWorkSummary
+) -> Optional[PerformanceResult]:
+    """
+    将月度工作总结评价结果同步到正式 performance_result。
+
+    HR-14 的收敛点：月度绩效工作流仍保留原表单/评价任务，但最终结果必须进入
+    PerformanceResult，供个人绩效、排名、奖金等下游统一读取。
+    """
+    if not summary or summary.status != "COMPLETED":
+        return None
+    if not isinstance(summary.period, str) or len(summary.period.split("-")) != 2:
+        return None
+
+    score_result = calculate_final_score(db, summary.id, summary.period)
+    if not score_result:
+        return None
+
+    period = _get_or_create_monthly_period(db, summary.period)
+    user = db.query(User).filter(User.id == summary.employee_id).first()
+    if not user:
+        return None
+
+    result = (
+        db.query(PerformanceResult)
+        .filter(
+            PerformanceResult.period_id == period.id,
+            PerformanceResult.user_id == summary.employee_id,
+        )
+        .first()
+    )
+    if result is None:
+        result = PerformanceResult(period_id=period.id, user_id=summary.employee_id)
+        db.add(result)
+
+    final_score = Decimal(str(score_result["final_score"])).quantize(Decimal("0.01"))
+    result.user_name = user.display_name
+    result.department_id = user.department_id
+    result.department_name = user.department
+    result.total_score = final_score
+    result.original_total_score = final_score
+    result.level = get_score_level(float(final_score))
+    result.status = "CALCULATED"
+    result.calculated_at = datetime.now()
+    result.indicator_scores = {
+        "monthly_final_score": float(final_score),
+        "dept_score": score_result["dept_score"],
+        "project_score": score_result["project_score"],
+        "dept_weight": score_result["dept_weight"],
+        "project_weight": score_result["project_weight"],
+    }
+    return result
+
+
+def _get_or_create_monthly_period(db: Session, period: str) -> PerformancePeriod:
+    year, month = map(int, period.split("-"))
+    start_date, end_date = get_month_range_by_ym(year, month)
+    period_code = f"MONTHLY-{period}"
+
+    performance_period = (
+        db.query(PerformancePeriod).filter(PerformancePeriod.period_code == period_code).first()
+    )
+    if performance_period:
+        return performance_period
+
+    performance_period = PerformancePeriod(
+        period_code=period_code,
+        period_name=f"{period} 月度绩效",
+        period_type="MONTHLY",
+        start_date=start_date,
+        end_date=end_date,
+        status="FINALIZED",
+        is_active=False,
+        finalize_date=date.today(),
+    )
+    db.add(performance_period)
+    db.flush()
+    return performance_period
 
 
 def calculate_quarterly_score(db: Session, employee_id: int, end_period: str) -> Optional[float]:

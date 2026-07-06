@@ -51,9 +51,6 @@ class Invoice(Base, TimestampMixin):
 
     contract = relationship("Contract", back_populates="invoices")
     project = relationship("Project", foreign_keys=[project_id])
-    approvals = relationship(
-        "InvoiceApproval", back_populates="invoice", cascade="all, delete-orphan"
-    )
 
     def __repr__(self):
         return f"<Invoice {self.invoice_code}>"
@@ -114,34 +111,3 @@ class ReceivableDispute(Base, TimestampMixin):
 
     def __repr__(self):
         return f"<ReceivableDispute {self.id}>"
-
-
-class InvoiceApproval(Base, TimestampMixin):
-    """发票审批表"""
-
-    __tablename__ = "invoice_approvals"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=False, comment="发票ID")
-    approval_level = Column(Integer, nullable=False, comment="审批层级")
-    approval_role = Column(String(50), nullable=False, comment="审批角色")
-    approver_id = Column(Integer, ForeignKey("users.id"), comment="审批人ID")
-    approver_name = Column(String(50), comment="审批人姓名")
-    approval_result = Column(String(20), comment="审批结果")
-    approval_opinion = Column(Text, comment="审批意见")
-    status = Column(String(20), default="PENDING", comment="状态")
-    approved_at = Column(DateTime, comment="审批时间")
-    due_date = Column(DateTime, comment="审批期限")
-    is_overdue = Column(Boolean, default=False, comment="是否超期")
-
-    invoice = relationship("Invoice", back_populates="approvals")
-    approver = relationship("User", foreign_keys=[approver_id])
-
-    __table_args__ = (
-        Index("idx_invoice_approval_invoice", "invoice_id"),
-        Index("idx_invoice_approval_approver", "approver_id"),
-        Index("idx_invoice_approval_status", "status"),
-    )
-
-    def __repr__(self):
-        return f"<InvoiceApproval {self.invoice_id}-L{self.approval_level}>"

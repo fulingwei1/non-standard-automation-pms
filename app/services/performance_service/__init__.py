@@ -9,6 +9,7 @@ from .calculation import (
     calculate_final_score,
     calculate_quarterly_score,
     get_score_level,
+    sync_monthly_summary_result,
 )
 from .evaluation import create_evaluation_tasks
 from .history import get_historical_performance
@@ -26,6 +27,7 @@ def _patch_methods():
     PerformanceService.calculate_final_score = staticmethod(calculate_final_score)
     PerformanceService.calculate_quarterly_score = staticmethod(calculate_quarterly_score)
     PerformanceService.get_score_level = staticmethod(get_score_level)
+    PerformanceService.sync_monthly_summary_result = staticmethod(sync_monthly_summary_result)
     PerformanceService.get_historical_performance = staticmethod(get_historical_performance)
 
 

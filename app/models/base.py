@@ -422,6 +422,36 @@ def _ensure_sqlite_schema(engine):
         except Exception:
             logger.debug("ECN/模板配置历史表补丁跳过", exc_info=True)
 
+    # projects 表补 project_level 列（项目等级 S/A/B/C，毛利率管控用）
+    if "projects" in tables:
+        try:
+            proj_columns = {
+                col["name"] for col in inspector.get_columns("projects")
+            }
+            if "project_level" not in proj_columns:
+                with engine.begin() as conn:
+                    conn.execute(
+                        text("ALTER TABLE projects ADD COLUMN project_level VARCHAR(2)")
+                    )
+                logger.info("已补 projects.project_level 列")
+        except Exception:
+            logger.debug("projects.project_level 列补丁跳过", exc_info=True)
+
+    # margin_alert_configs 表补 project_level 列（按项目等级配毛利率底线）
+    if "margin_alert_configs" in tables:
+        try:
+            mac_columns = {
+                col["name"] for col in inspector.get_columns("margin_alert_configs")
+            }
+            if "project_level" not in mac_columns:
+                with engine.begin() as conn:
+                    conn.execute(
+                        text("ALTER TABLE margin_alert_configs ADD COLUMN project_level VARCHAR(2)")
+                    )
+                logger.info("已补 margin_alert_configs.project_level 列")
+        except Exception:
+            logger.debug("margin_alert_configs.project_level 列补丁跳过", exc_info=True)
+
     # OTD 智能体阈值配置表 + 风险快照表 + 毛利率快照表（新增表，对历史 DB 补建）
     otd_tables = [
         "otd_threshold_configs",
@@ -649,6 +679,17 @@ def _ensure_sqlite_schema(engine):
                     )
                 except Exception:
                     logger.debug("users.department_id 列补丁跳过", exc_info=True)
+
+    if "employees" in tables:
+        columns = {col["name"] for col in inspector.get_columns("employees")}
+        if "department_id" not in columns:
+            with engine.begin() as conn:
+                try:
+                    conn.execute(
+                        text("ALTER TABLE employees ADD COLUMN department_id INTEGER")
+                    )
+                except Exception:
+                    logger.debug("employees.department_id 列补丁跳过", exc_info=True)
 
     if "projects" in tables:
         columns = {col["name"] for col in inspector.get_columns("projects")}
@@ -1051,6 +1092,22 @@ def _ensure_sqlite_schema(engine):
         except Exception:
             logger.debug("presale_agent_revisions 建表补丁跳过", exc_info=True)
 
+    for tbl in ("presale_proposals", "presale_proposal_versions", "audit_pack_requests", "company_profile", "company_certifications", "presale_usage_feedback"):
+        if tbl not in tables:
+            try:
+                import importlib
+                importlib.import_module("app.models.presale_proposal")
+                metadata_tables = [
+                    Base.metadata.tables[name]
+                    for name in (tbl,)
+                    if name in Base.metadata.tables
+                ]
+                if metadata_tables:
+                    Base.metadata.create_all(bind=engine, tables=metadata_tables)
+                    tables = inspect(engine).get_table_names()
+            except Exception:
+                logger.debug(f"{tbl} 建表补丁跳过", exc_info=True)
+
     if "ecn" in tables:
         columns = {col["name"] for col in inspector.get_columns("ecn")}
         statements = []
@@ -1074,21 +1131,6 @@ def _ensure_sqlite_schema(engine):
                         conn.execute(text(ddl))
                     except Exception:
                         logger.debug("ecn 审批兼容列补丁跳过", exc_info=True)
-
-    if "ecn_approval_matrix" in tables:
-        columns = {col["name"] for col in inspector.get_columns("ecn_approval_matrix")}
-        if "condition_type" in columns:
-            with engine.begin() as conn:
-                try:
-                    conn.execute(
-                        text(
-                            "UPDATE ecn_approval_matrix "
-                            "SET condition_type = 'ALWAYS' "
-                            "WHERE condition_type IS NULL OR condition_type = ''"
-                        )
-                    )
-                except Exception:
-                    logger.debug("ecn_approval_matrix 条件类型回填跳过", exc_info=True)
 
     if "report_template" in tables:
         columns = {col["name"] for col in inspector.get_columns("report_template")}

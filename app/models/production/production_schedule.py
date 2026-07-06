@@ -98,13 +98,13 @@ class ProductionSchedule(Base, TimestampMixin):
 class ProductionResourceConflict(Base, TimestampMixin):
     """生产资源冲突记录表"""
 
-    __tablename__ = "resource_conflict"
+    __tablename__ = "production_resource_conflicts"
     __table_args__ = (
-        Index("idx_conflict_schedule", "schedule_id"),
-        Index("idx_conflict_type", "conflict_type"),
-        Index("idx_conflict_status", "status"),
-        Index("idx_conflict_resource", "resource_type", "resource_id"),
-        {"extend_existing": True, "comment": "资源冲突记录表"},
+        Index("idx_production_conflict_schedule", "schedule_id"),
+        Index("idx_production_conflict_type", "conflict_type"),
+        Index("idx_production_conflict_status", "status"),
+        Index("idx_production_conflict_resource", "resource_type", "resource_id"),
+        {"extend_existing": True, "comment": "生产排程资源冲突记录表"},
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")

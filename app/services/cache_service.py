@@ -36,6 +36,8 @@ logger = logging.getLogger(__name__)
 class CacheService:
     """项目数据缓存服务"""
 
+    _shared_memory_cache: Dict[str, tuple] = {}
+
     def __init__(self, redis_client: Optional[Any] = None):
         """
         初始化缓存服务
@@ -54,7 +56,7 @@ class CacheService:
                 redis_client = None
 
         self.redis_client = redis_client
-        self.memory_cache: Dict[str, tuple] = {}  # 内存缓存：{key: (value, expire_at)}
+        self.memory_cache = self._shared_memory_cache  # 进程级内存缓存：{key: (value, expire_at)}
         self.use_redis = REDIS_AVAILABLE and redis_client is not None
 
         # Sprint 5.3: 缓存统计

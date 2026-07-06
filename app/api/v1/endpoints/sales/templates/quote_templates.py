@@ -5,7 +5,9 @@
 包含报价模板的CRUD、版本管理和应用功能
 """
 
-from datetime import datetime, timezone
+from __future__ import annotations
+
+from datetime import date, datetime, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -17,6 +19,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.sales import QuoteTemplate, QuoteTemplateVersion
+from app.models.sales.operation_log import SalesEntityType, SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import (
@@ -29,8 +32,8 @@ from app.schemas.sales import (
     QuoteTemplateVersionCreate,
     QuoteTemplateVersionResponse,
 )
+from app.services.sales.operation_log_service import SalesOperationLogService
 from app.services.presale.cpq_pricing_service import CpqPricingService
-from app.utils.db_helpers import save_obj
 
 from .common import (
     _build_template_history,
@@ -41,6 +44,119 @@ from .common import (
 )
 
 router = APIRouter()
+
+
+def _audit_scalar(value: Any) -> Any:
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if hasattr(value, "value"):
+        return value.value
+    return value
+
+
+def _quote_template_version_audit_value(
+    version: QuoteTemplateVersion | None,
+) -> dict[str, Any] | None:
+    if not version:
+        return None
+    return {
+        "version_id": version.id,
+        "template_id": version.template_id,
+        "version_no": version.version_no,
+        "status": _audit_scalar(version.status),
+        "sections": version.sections,
+        "pricing_rules": version.pricing_rules,
+        "config_schema": version.config_schema,
+        "discount_rules": version.discount_rules,
+        "release_notes": version.release_notes,
+        "rule_set_id": version.rule_set_id,
+        "created_by": version.created_by,
+        "published_by": version.published_by,
+        "published_at": _audit_scalar(version.published_at),
+    }
+
+
+def _quote_template_audit_value(
+    template: QuoteTemplate,
+    *,
+    current_version: QuoteTemplateVersion | None = None,
+) -> dict[str, Any]:
+    version = current_version or template.current_version
+    return {
+        "template_id": template.id,
+        "template_code": template.template_code,
+        "template_name": template.template_name,
+        "category": template.category,
+        "description": template.description,
+        "status": _audit_scalar(template.status),
+        "visibility_scope": template.visibility_scope,
+        "is_default": template.is_default,
+        "current_version_id": template.current_version_id,
+        "owner_id": template.owner_id,
+        "current_version": _quote_template_version_audit_value(version),
+    }
+
+
+def _changed_fields(old_value: dict[str, Any], new_value: dict[str, Any]) -> list[str]:
+    return [
+        field
+        for field, value in new_value.items()
+        if field in old_value and old_value[field] != value
+    ]
+
+
+def _log_quote_template_operation(
+    db: Session,
+    template: QuoteTemplate,
+    operation_type: str,
+    operator: User,
+    *,
+    old_value: dict[str, Any] | None = None,
+    new_value: dict[str, Any] | None = None,
+    operation_desc: str,
+) -> None:
+    old_snapshot = old_value or {}
+    new_snapshot = new_value or {}
+    SalesOperationLogService.log_operation(
+        db,
+        entity_type=SalesEntityType.QUOTE_TEMPLATE,
+        entity_id=template.id,
+        entity_code=template.template_code,
+        operation_type=operation_type,
+        operator=operator,
+        operation_desc=operation_desc,
+        old_value=old_snapshot,
+        new_value=new_snapshot,
+        changed_fields=_changed_fields(old_snapshot, new_snapshot),
+        remark=template.template_name,
+    )
+
+
+def _log_quote_template_version_operation(
+    db: Session,
+    version: QuoteTemplateVersion,
+    operation_type: str,
+    operator: User,
+    *,
+    old_value: dict[str, Any] | None = None,
+    new_value: dict[str, Any] | None = None,
+    operation_desc: str,
+) -> None:
+    old_snapshot = old_value or {}
+    new_snapshot = new_value or {}
+    SalesOperationLogService.log_operation(
+        db,
+        entity_type=SalesEntityType.QUOTE_TEMPLATE_VERSION,
+        entity_id=version.id,
+        entity_code=f"{version.template_id}-{version.version_no}",
+        operation_type=operation_type,
+        operator=operator,
+        operation_desc=operation_desc,
+        old_value=old_snapshot,
+        new_value=new_snapshot,
+        changed_fields=_changed_fields(old_snapshot, new_snapshot),
+        remark=version.release_notes,
+    )
 
 
 @router.get("/quote-templates", response_model=PaginatedResponse[QuoteTemplateResponse])
@@ -100,12 +216,13 @@ def create_quote_template(
         description=template_in.description,
         visibility_scope=template_in.visibility_scope or "TEAM",
         is_default=template_in.is_default or False,
-        owner_id=template_in.owner_id or current_user.id,
+        owner_id=current_user.id,
         status="DRAFT",
     )
     db.add(template)
     db.flush()
 
+    version = None
     if template_in.initial_version:
         version_data = template_in.initial_version
         version = QuoteTemplateVersion(
@@ -123,6 +240,25 @@ def create_quote_template(
         db.add(version)
         db.flush()
         template.current_version_id = version.id
+        db.flush()
+
+    _log_quote_template_operation(
+        db,
+        template,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=_quote_template_audit_value(template, current_version=version),
+        operation_desc="创建结构化报价模板",
+    )
+    if version:
+        _log_quote_template_version_operation(
+            db,
+            version,
+            SalesOperationType.CREATE,
+            current_user,
+            new_value=_quote_template_version_audit_value(version),
+            operation_desc="创建结构化报价模板初始版本",
+        )
 
     db.commit()
     db.refresh(template)
@@ -156,9 +292,20 @@ def update_quote_template(
     if not template:
         raise HTTPException(status_code=404, detail="模板不存在或无权访问")
 
+    old_value = _quote_template_audit_value(template)
     update_data = template_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(template, field, value)
+    new_value = _quote_template_audit_value(template)
+    _log_quote_template_operation(
+        db,
+        template,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=new_value,
+        operation_desc="更新结构化报价模板",
+    )
     db.commit()
     db.refresh(template)
     template = (
@@ -203,7 +350,18 @@ def create_quote_template_version(
         status="DRAFT",
         created_by=current_user.id,
     )
-    save_obj(db, version)
+    db.add(version)
+    db.flush()
+    _log_quote_template_version_operation(
+        db,
+        version,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=_quote_template_version_audit_value(version),
+        operation_desc="创建结构化报价模板版本",
+    )
+    db.commit()
+    db.refresh(version)
     return QuoteTemplateVersionResponse(
         id=version.id,
         template_id=version.template_id,
@@ -248,6 +406,8 @@ def publish_quote_template_version(
     if not version:
         raise HTTPException(status_code=404, detail="模板版本不存在")
 
+    old_template_value = _quote_template_audit_value(template)
+    old_version_value = _quote_template_version_audit_value(version)
     version.status = "PUBLISHED"
     version.published_by = current_user.id
     version.published_at = datetime.now(timezone.utc)
@@ -258,6 +418,24 @@ def publish_quote_template_version(
         QuoteTemplateVersion.id != version_id,
         QuoteTemplateVersion.status == "PUBLISHED",
     ).update({"status": "ARCHIVED"}, synchronize_session=False)
+    _log_quote_template_operation(
+        db,
+        template,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_template_value,
+        new_value=_quote_template_audit_value(template, current_version=version),
+        operation_desc="发布结构化报价模板版本",
+    )
+    _log_quote_template_version_operation(
+        db,
+        version,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_version_value,
+        new_value=_quote_template_version_audit_value(version),
+        operation_desc="发布结构化报价模板版本",
+    )
 
     db.commit()
     template = (

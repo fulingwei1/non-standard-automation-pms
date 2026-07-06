@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core import security
+from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.user import User
 from app.schemas.sales.contract_enhanced import (
     ContractApprovalResponse,
@@ -143,7 +144,9 @@ def update_contract(
 ):
     """更新合同"""
     try:
-        contract = ContractEnhancedService.update_contract(db, contract_id, contract_data)
+        contract = ContractEnhancedService.update_contract(
+            db, contract_id, contract_data, operator_id=current_user.id
+        )
         if not contract:
             raise HTTPException(status_code=404, detail="合同不存在")
         return contract
@@ -159,7 +162,9 @@ def delete_contract(
 ):
     """删除合同"""
     try:
-        success = ContractEnhancedService.delete_contract(db, contract_id)
+        success = ContractEnhancedService.delete_contract(
+            db, contract_id, operator_id=current_user.id
+        )
         if not success:
             raise HTTPException(status_code=404, detail="合同不存在")
     except ValueError as e:
@@ -197,17 +202,42 @@ def submit_contract_for_approval(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/{contract_id}/approvals", response_model=List[ContractApprovalResponse])
+@router.get("/{contract_id}/approvals", response_model=List[dict])
 def get_contract_approvals(
     contract_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("contract:view")),
 ):
-    """审批记录"""
+    """审批记录（统一审批实例/任务）。"""
     contract = ContractEnhancedService.get_contract(db, contract_id)
     if not contract:
         raise HTTPException(status_code=404, detail="合同不存在")
-    return contract.approvals
+    tasks = (
+        db.query(ApprovalTask)
+        .join(ApprovalInstance, ApprovalTask.instance_id == ApprovalInstance.id)
+        .filter(
+            ApprovalInstance.entity_type == "CONTRACT",
+            ApprovalInstance.entity_id == contract_id,
+        )
+        .order_by(ApprovalTask.created_at)
+        .all()
+    )
+    return [
+        {
+            "id": task.id,
+            "task_id": task.id,
+            "instance_id": task.instance_id,
+            "contract_id": contract_id,
+            "approval_level": task.task_order or 1,
+            "approval_role": task.node.node_name if task.node else "统一审批",
+            "approver_id": task.assignee_id,
+            "approver_name": task.assignee_name,
+            "approval_status": task.status,
+            "approval_opinion": task.comment,
+            "approved_at": task.completed_at,
+        }
+        for task in tasks
+    ]
 
 
 @router.post("/{contract_id}/approve", response_model=ContractResponse)
@@ -240,7 +270,7 @@ def reject_contract(
     )
 
 
-@router.get("/approvals/pending", response_model=List[ContractApprovalResponse])
+@router.get("/approvals/pending", response_model=List[dict])
 def get_pending_approvals(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("contract:view")),
@@ -259,7 +289,9 @@ def add_contract_term(
     current_user: User = Depends(security.require_permission("contract:update")),
 ):
     """添加条款"""
-    term = ContractEnhancedService.add_term(db, contract_id, term_data)
+    term = ContractEnhancedService.add_term(
+        db, contract_id, term_data, operator_id=current_user.id
+    )
     return term
 
 
@@ -285,7 +317,9 @@ def update_contract_term(
     if not term_data.term_content:
         raise HTTPException(status_code=400, detail="条款内容不能为空")
     
-    term = ContractEnhancedService.update_term(db, term_id, term_data.term_content)
+    term = ContractEnhancedService.update_term(
+        db, term_id, term_data.term_content, operator_id=current_user.id
+    )
     if not term:
         raise HTTPException(status_code=404, detail="条款不存在")
     return term
@@ -298,7 +332,9 @@ def delete_contract_term(
     current_user: User = Depends(security.require_permission("contract:update")),
 ):
     """删除条款"""
-    success = ContractEnhancedService.delete_term(db, term_id)
+    success = ContractEnhancedService.delete_term(
+        db, term_id, operator_id=current_user.id
+    )
     if not success:
         raise HTTPException(status_code=404, detail="条款不存在")
 
@@ -334,7 +370,9 @@ def delete_attachment(
     current_user: User = Depends(security.require_permission("contract:update")),
 ):
     """删除附件"""
-    success = ContractEnhancedService.delete_attachment(db, attachment_id)
+    success = ContractEnhancedService.delete_attachment(
+        db, attachment_id, operator_id=current_user.id
+    )
     if not success:
         raise HTTPException(status_code=404, detail="附件不存在")
 

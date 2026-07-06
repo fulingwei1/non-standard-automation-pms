@@ -107,7 +107,7 @@ def list_lessons(
     lesson_type: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     impact_level: Optional[str] = Query(None),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ):
     query = _apply_lesson_filters(
         db.query(ProjectLesson),
@@ -137,7 +137,7 @@ def list_lessons(
 @router.get("/stats", response_model=ResponseModel)
 def lesson_stats(
     db: Session = Depends(get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ):
     total = db.query(ProjectLesson).count()
 
@@ -180,7 +180,7 @@ def search_lessons(
     category: Optional[str] = Query(None),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ):
     search_keyword = keyword or q
     query = _apply_lesson_filters(
@@ -205,7 +205,7 @@ def search_lessons(
 def lesson_detail(
     lesson_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:read")),
 ):
     lesson = get_or_404(db, ProjectLesson, lesson_id, detail="经验教训不存在")
     return ResponseModel(code=200, message="获取经验教训详情成功", data=_serialize_lesson(lesson))
@@ -215,7 +215,7 @@ def lesson_detail(
 def create_lesson(
     lesson_data: dict,
     db: Session = Depends(get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:create")),
 ):
     project_id = lesson_data.get("project_id")
     review_id = lesson_data.get("review_id")
@@ -262,7 +262,7 @@ def update_lesson(
     lesson_id: int,
     lesson_data: dict,
     db: Session = Depends(get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:update")),
 ):
     lesson = get_or_404(db, ProjectLesson, lesson_id, detail="经验教训不存在")
 
@@ -301,7 +301,7 @@ def update_lesson(
 def delete_lesson(
     lesson_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:update")),
 ):
     lesson = get_or_404(db, ProjectLesson, lesson_id, detail="经验教训不存在")
     db.delete(lesson)

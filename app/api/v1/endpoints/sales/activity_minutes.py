@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """销售活动：上传会议纪要 → AI 解读（后台任务）→ 确认后关联商机/项目并落库跟进记录。"""
+from __future__ import annotations
+
 from datetime import date, datetime
 from io import BytesIO
 from typing import Any, Optional
@@ -11,8 +13,15 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.sales import Opportunity
+from app.models.sales.operation_log import SalesEntityType, SalesOperationType
 from app.models.user import User
 from app.services import ai_job_service
+from app.services.sales.opportunity_operation_audit import (
+    log_opportunity_operation,
+    opportunity_audit_value,
+)
+from app.services.sales.operation_log_service import SalesOperationLogService
 
 router = APIRouter(prefix="/sales/activities", tags=["销售活动-会议纪要AI"])
 
@@ -196,6 +205,9 @@ def confirm_minutes(
     ) + 1
     comm_no = f"COMM-{today}-{seq:03d}"
 
+    topic = s.get("topic") or "销售会议"
+    subject = s.get("topic") or "销售会议纪要"
+
     db.execute(
         text(
             "INSERT INTO customer_communications "
@@ -215,8 +227,8 @@ def confirm_minutes(
             "pcode": project_code,
             "pname": project_name,
             "cdate": date.today().isoformat(),
-            "topic": s.get("topic") or "销售会议",
-            "subj": s.get("topic") or "销售会议纪要",
+            "topic": topic,
+            "subj": subject,
             "content": content,
             "fr": 1 if next_actions else 0,
             "ftask": next_actions,
@@ -231,6 +243,25 @@ def confirm_minutes(
     comm_id = db.execute(
         text("SELECT id FROM customer_communications WHERE communication_no=:n"), {"n": comm_no}
     ).scalar()
+    audit_request = QuickActivityRequest(
+        activity_type="MEETING",
+        content=content,
+        topic=topic,
+        customer_id=cust_id,
+        opportunity_id=request.opportunity_id,
+        project_id=request.project_id,
+        follow_up_task=next_actions or None,
+    )
+    _log_quick_activity_operations(
+        db,
+        request=audit_request,
+        operator=current_user,
+        activity_id=comm_id,
+        activity_no=comm_no,
+        topic=topic,
+        customer_id=cust_id,
+    )
+    db.commit()
 
     # ===== 自动派生 =====
     derived = {"backfilled_opportunity": False, "created_tasks": 0}
@@ -242,17 +273,32 @@ def confirm_minutes(
         maturity = "LOW" if gaps else "MEDIUM"
         demands = _join(s.get("key_demands"))
         budget = s.get("budget") or None
-        sets, binds = ["requirement_maturity=:rm", "updated_at=:now"], {
-            "rm": maturity, "now": now, "i": request.opportunity_id
-        }
-        if demands:
-            sets.append("acceptance_basis=:ab"); binds["ab"] = demands
-        if budget:
-            sets.append("budget_range=:br"); binds["br"] = str(budget)
         try:
-            db.execute(text(f"UPDATE opportunities SET {', '.join(sets)} WHERE id=:i"), binds)
-            db.commit()
-            derived["backfilled_opportunity"] = True
+            opportunity = (
+                db.query(Opportunity)
+                .filter(Opportunity.id == request.opportunity_id)
+                .first()
+            )
+            if opportunity:
+                old_opportunity_value = opportunity_audit_value(opportunity)
+                opportunity.requirement_maturity = maturity
+                if demands:
+                    opportunity.acceptance_basis = demands
+                if budget:
+                    opportunity.budget_range = str(budget)
+                db.flush()
+                log_opportunity_operation(
+                    db,
+                    opportunity,
+                    SalesOperationType.UPDATE,
+                    current_user,
+                    old_value=old_opportunity_value,
+                    new_value=opportunity_audit_value(opportunity),
+                    operation_desc="会议纪要回填商机需求",
+                    remark=topic,
+                )
+                db.commit()
+                derived["backfilled_opportunity"] = True
         except Exception:  # noqa: BLE001
             db.rollback()
 
@@ -338,6 +384,98 @@ class QuickActivityRequest(BaseModel):
     follow_up_task: Optional[str] = Field(None, description="跟进任务(可选)")
 
 
+def _quick_activity_audit_value(
+    *,
+    activity_id: int,
+    activity_no: str,
+    request: QuickActivityRequest,
+    topic: str,
+    customer_id: int | None,
+) -> dict[str, Any]:
+    return {
+        "activity_id": activity_id,
+        "activity_no": activity_no,
+        "activity_type": request.activity_type,
+        "topic": topic,
+        "content": request.content,
+        "customer_id": customer_id,
+        "opportunity_id": request.opportunity_id,
+        "lead_id": request.lead_id,
+        "project_id": request.project_id,
+        "follow_up_task": request.follow_up_task,
+    }
+
+
+def _log_quick_activity_operations(
+    db: Session,
+    *,
+    request: QuickActivityRequest,
+    operator: User,
+    activity_id: int,
+    activity_no: str,
+    topic: str,
+    customer_id: int | None,
+) -> None:
+    new_value = _quick_activity_audit_value(
+        activity_id=activity_id,
+        activity_no=activity_no,
+        request=request,
+        topic=topic,
+        customer_id=customer_id,
+    )
+    if customer_id:
+        customer_code = db.execute(
+            text("SELECT customer_code FROM customers WHERE id=:i"), {"i": customer_id}
+        ).scalar()
+        SalesOperationLogService.log_operation(
+            db,
+            entity_type=SalesEntityType.CUSTOMER,
+            entity_id=customer_id,
+            operation_type=SalesOperationType.COMMENT,
+            operator=operator,
+            entity_code=customer_code,
+            operation_desc="记录销售活动",
+            new_value=new_value,
+            changed_fields=list(new_value.keys()),
+            remark=topic,
+        )
+
+    if request.opportunity_id:
+        opp_code = db.execute(
+            text("SELECT opp_code FROM opportunities WHERE id=:i"),
+            {"i": request.opportunity_id},
+        ).scalar()
+        SalesOperationLogService.log_operation(
+            db,
+            entity_type=SalesEntityType.OPPORTUNITY,
+            entity_id=request.opportunity_id,
+            operation_type=SalesOperationType.COMMENT,
+            operator=operator,
+            entity_code=opp_code,
+            operation_desc="记录销售活动",
+            new_value=new_value,
+            changed_fields=list(new_value.keys()),
+            remark=topic,
+        )
+
+    if request.lead_id:
+        lead_code = db.execute(
+            text("SELECT lead_code FROM leads WHERE id=:i"), {"i": request.lead_id}
+        ).scalar()
+        SalesOperationLogService.log_operation(
+            db,
+            entity_type=SalesEntityType.LEAD,
+            entity_id=request.lead_id,
+            operation_type=SalesOperationType.COMMENT,
+            operator=operator,
+            entity_code=lead_code,
+            operation_desc="记录销售活动",
+            new_value=new_value,
+            changed_fields=list(new_value.keys()),
+            remark=topic,
+        )
+
+
 @router.post("/quick", summary="快速记录一条销售活动（自动挂客户/商机）")
 def quick_activity(
     request: QuickActivityRequest,
@@ -379,8 +517,17 @@ def quick_activity(
             "now": now,
         },
     )
-    db.commit()
     cid_new = db.execute(text("SELECT id FROM customer_communications WHERE communication_no=:n"), {"n": comm_no}).scalar()
+    _log_quick_activity_operations(
+        db,
+        request=request,
+        operator=current_user,
+        activity_id=cid_new,
+        activity_no=comm_no,
+        topic=topic,
+        customer_id=cust_id,
+    )
+    db.commit()
     return {"id": cid_new, "activity_no": comm_no, "message": "活动已记录"}
 
 

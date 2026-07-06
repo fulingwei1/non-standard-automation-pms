@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Progress compatibility routes used by older tracking pages."""
 
+from __future__ import annotations
+
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Optional
@@ -273,7 +275,7 @@ def list_project_tasks(
     stage: Optional[str] = Query(None),
     assignee_id: Optional[int] = Query(None),
     search: Optional[str] = Query(None),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     check_project_access_or_raise(db, current_user, project_id)
     query = db.query(Task).filter(Task.project_id == project_id)
@@ -314,7 +316,7 @@ def create_project_task(
     project_id: int,
     task_in: dict[str, Any] = Body(...),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:create")),
 ) -> Any:
     check_project_access_or_raise(db, current_user, project_id)
 
@@ -367,7 +369,7 @@ def create_project_task(
 def get_task(
     task_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
@@ -381,7 +383,7 @@ def get_task(
 def get_project_progress_forecast(
     project_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     check_project_access_or_raise(db, current_user, project_id)
     project = db.query(Project).filter(Project.id == project_id).first()
@@ -416,7 +418,7 @@ def get_project_progress_forecast(
 def check_project_dependencies(
     project_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     from app.models.progress import TaskDependency
 
@@ -469,7 +471,7 @@ def preview_auto_processing(
     auto_fix_missing: bool = Query(True),
     send_notifications: bool = Query(True),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     """Preview automated progress actions without changing project data."""
     forecast = get_project_progress_forecast(
@@ -539,7 +541,7 @@ def apply_forecast_auto_processing(
     auto_block: bool = Query(False),
     delay_threshold: int = Query(7, ge=1, le=60),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:update")),
 ) -> Any:
     _, tasks = _load_project_tasks_for_auto(db, current_user, project_id)
     stats = _apply_forecast_blocking(tasks, auto_block, delay_threshold)
@@ -553,7 +555,7 @@ def fix_dependencies_auto_processing(
     auto_fix_timing: bool = Query(False),
     auto_fix_missing: bool = Query(True),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:update")),
 ) -> Any:
     _, tasks = _load_project_tasks_for_auto(db, current_user, project_id)
     issues = _dependency_issues_for_tasks(db, tasks)
@@ -575,7 +577,7 @@ def run_complete_auto_processing(
     project_id: int,
     options: Optional[dict[str, Any]] = Body(None),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:update")),
 ) -> Any:
     options = options or {}
     _, tasks = _load_project_tasks_for_auto(db, current_user, project_id)
@@ -611,7 +613,7 @@ def run_complete_auto_processing(
 def batch_auto_process(
     payload: dict[str, Any] = Body(...),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:update")),
 ) -> Any:
     project_ids = payload.get("project_ids") or []
     options = payload.get("options") or {}
@@ -637,7 +639,7 @@ def list_wbs_templates(
     equipment_type: Optional[str] = Query(None),
     is_active: Optional[bool] = Query(None),
     keyword: Optional[str] = Query(None),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     query = db.query(WbsTemplate)
 
@@ -672,7 +674,7 @@ def list_wbs_templates(
 def create_wbs_template(
     data: dict = Body(...),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:create")),
 ) -> Any:
     template = WbsTemplate(
         template_code=data.get("template_code"),
@@ -695,7 +697,7 @@ def create_wbs_template(
 def get_wbs_template(
     template_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     template = db.query(WbsTemplate).filter(WbsTemplate.id == template_id).first()
     if not template:
@@ -708,7 +710,7 @@ def update_wbs_template(
     template_id: int,
     data: dict = Body(...),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:update")),
 ) -> Any:
     template = db.query(WbsTemplate).filter(WbsTemplate.id == template_id).first()
     if not template:
@@ -726,7 +728,7 @@ def update_wbs_template(
 def delete_wbs_template(
     template_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:delete")),
 ) -> Any:
     template = db.query(WbsTemplate).filter(WbsTemplate.id == template_id).first()
     if not template:
@@ -740,7 +742,7 @@ def delete_wbs_template(
 def list_wbs_template_tasks(
     template_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     template = db.query(WbsTemplate.id).filter(WbsTemplate.id == template_id).first()
     if not template:
@@ -764,7 +766,7 @@ def create_wbs_template_task(
     template_id: int,
     data: dict = Body(...),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:create")),
 ) -> Any:
     if not db.query(WbsTemplate.id).filter(WbsTemplate.id == template_id).first():
         raise HTTPException(status_code=404, detail="WBS模板不存在")
@@ -791,7 +793,7 @@ def update_wbs_template_task(
     task_id: int,
     data: dict = Body(...),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:update")),
 ) -> Any:
     task = db.query(WbsTemplateTask).filter(WbsTemplateTask.id == task_id).first()
     if not task:
@@ -815,7 +817,7 @@ def update_wbs_template_task(
 def get_milestone_rate_report(
     db: Session = Depends(deps.get_db),
     project_id: Optional[int] = Query(None),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     query = db.query(ProjectMilestone)
     if project_id:
@@ -849,7 +851,7 @@ def get_delay_reasons_report(
     db: Session = Depends(deps.get_db),
     project_id: Optional[int] = Query(None),
     top_n: int = Query(10, ge=1, le=50),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     query = db.query(Task).filter(Task.actual_end.isnot(None), Task.plan_end.isnot(None))
     query = query.filter(Task.actual_end > Task.plan_end)

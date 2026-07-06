@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Sparkles, Loader2, Send, RotateCcw, AlertCircle, Download, FileText,
   Lightbulb, Boxes, DollarSign, ShieldAlert, FileSearch,
-  CheckCircle2, Clock, Flag, Wrench, TrendingUp, Pencil, History, X, Save,
-  MessageSquare, Bot, User,
+  CheckCircle2, Clock, Flag, Wrench, TrendingUp, Pencil, History, X, Save, CheckCheck,
+  MessageSquare, Bot, User, Map, ExternalLink, GitBranch,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import {
@@ -17,6 +17,9 @@ import {
   submitPresaleAgent, pollPresaleAgentJob,
   submitRevision, listRevisions, revisionStats, clarifyRequirement,
 } from "../../services/api/presaleAgent";
+import {
+  createProposal, reviseProposal, submitProposal, listProposals,
+} from "../../services/api/presaleProposals";
 
 // 步骤定义（含中文说明 + 预计耗时秒）
 const STEPS = [
@@ -437,6 +440,60 @@ function AgentResult({ result, requirement, deep }) {
   const [showHistory, setShowHistory] = useState(false);
   const [revisedResult, setRevisedResult] = useState(null); // 修订后的结果（用于展示对比）
 
+  // ===== 方案协作状态 =====
+  const [proposalId, setProposalId] = useState(null); // 已保存为 proposal 的 id
+  const [proposalStatus, setProposalStatus] = useState(null); // draft/pending_review/approved/rejected
+  const [iterationMsgs, setIterationMsgs] = useState([]); // 迭代对话 [{role, content}]
+  const [iterInput, setIterInput] = useState("");
+  const [iterLoading, setIterLoading] = useState(false);
+  const [currentSolution, setCurrentSolution] = useState(result); // 当前方案（迭代后会更新）
+  const iterEndRef = useRef(null);
+
+  // 保存为方案（创建 proposal）
+  const handleSaveAsProposal = async () => {
+    try {
+      const r = await createProposal({
+        title: requirement.slice(0, 40),
+        requirement_text: requirement,
+        solution: currentSolution,
+      });
+      setProposalId(r.id);
+      setProposalStatus("draft");
+    } catch (e) {
+      setError(e?.response?.data?.detail || e.message || "保存失败");
+    }
+  };
+
+  // 迭代修改：提建议→agent改
+  const handleIterate = async () => {
+    const text = iterInput.trim();
+    if (!text || iterLoading || !proposalId) return;
+    setIterationMsgs((prev) => [...prev, { role: "user", content: text }]);
+    setIterInput("");
+    setIterLoading(true);
+    try {
+      const r = await reviseProposal(proposalId, text);
+      setIterationMsgs((prev) => [...prev, { role: "assistant", content: r.changes_summary || "已修改" }]);
+      if (r.solution) setCurrentSolution(r.solution); // 更新展示的方案
+      setProposalStatus("draft");
+    } catch (e) {
+      setIterationMsgs((prev) => [...prev, { role: "assistant", content: "⚠️ 修改失败：" + (e.message || "未知错误") }]);
+    } finally {
+      setIterLoading(false);
+      setTimeout(() => iterEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+    }
+  };
+
+  // 提交审核
+  const handleSubmitReview = async () => {
+    try {
+      const r = await submitProposal(proposalId);
+      setProposalStatus(r.status);
+    } catch (e) {
+      setError(e?.response?.data?.detail || e.message);
+    }
+  };
+
   const handleExportMarkdown = () => {
     const md = buildExportMarkdown(revisedResult || result, requirement);
     const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
@@ -470,9 +527,28 @@ function AgentResult({ result, requirement, deep }) {
         </Alert>
       )}
 
+      {/* ===== 方案协作面板（保存→迭代→提交→审核） ===== */}
+      <ProposalCollaborationPanel
+        proposalId={proposalId}
+        proposalStatus={proposalStatus}
+        iterationMsgs={iterationMsgs}
+        iterInput={iterInput}
+        setIterInput={setIterInput}
+        onIterate={handleIterate}
+        iterLoading={iterLoading}
+        onSave={handleSaveAsProposal}
+        onSubmit={handleSubmitReview}
+        iterEndRef={iterEndRef}
+      />
+
       <StepCard stepKey="quote_range" title="报价区间（基于历史数据）" timing={timings} steps={steps} icon={DollarSign}>
         <QuoteRangeView data={steps.quote_range} />
       </StepCard>
+
+      {/* 可视化方案包（整线项目，4 个 HTML） */}
+      {steps.layout_html?.ok && (
+        <VisualPackageCard layoutData={steps.layout_html} requirement={requirement} timing={timings?.layout_html} />
+      )}
 
       {/* ③ 风险（主结论） */}
       {steps.deep_risk_analysis?.ok ? (
@@ -1092,6 +1168,222 @@ function Field({ label, value, multiline }) {
 
 function Muted({ children }) {
   return <p className="text-sm text-slate-500">{children}</p>;
+}
+
+// ============= 方案协作面板（保存→迭代→提交→审核） =============
+
+const STATUS_CONFIG = {
+  draft: { label: "迭代中", color: "border-cyan-500/30 bg-cyan-500/10 text-cyan-300", icon: Pencil },
+  pending_review: { label: "待审核", color: "border-amber-500/30 bg-amber-500/10 text-amber-300", icon: Clock },
+  approved: { label: "已通过", color: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300", icon: CheckCircle2 },
+  rejected: { label: "已打回", color: "border-red-500/30 bg-red-500/10 text-red-300", icon: AlertCircle },
+};
+
+function ProposalCollaborationPanel({
+  proposalId, proposalStatus, iterationMsgs, iterInput, setIterInput,
+  onIterate, iterLoading, onSave, onSubmit, iterEndRef,
+}) {
+  // 还没保存为 proposal
+  if (!proposalId) {
+    return (
+      <Card className="border-violet-500/20 bg-slate-950/40">
+        <CardContent className="flex items-center justify-between pt-5">
+          <div className="flex items-center gap-2">
+            <GitBranch className="h-5 w-5 text-violet-400" />
+            <div>
+              <p className="text-sm font-medium text-slate-200">方案协作</p>
+              <p className="text-xs text-slate-500">保存方案后，可和 AI 多轮互动修改，再提交售前工程师审核</p>
+            </div>
+          </div>
+          <Button onClick={onSave} className="bg-violet-600 hover:bg-violet-500">
+            <Save className="mr-2 h-4 w-4" />
+            保存为方案
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const statusCfg = STATUS_CONFIG[proposalStatus] || STATUS_CONFIG.draft;
+  const StatusIcon = statusCfg.icon;
+  const canEdit = proposalStatus === "draft" || proposalStatus === "rejected";
+
+  return (
+    <Card className="border-violet-500/20 bg-slate-950/40">
+      <CardHeader className="flex-row items-center justify-between space-y-0">
+        <CardTitle className="flex items-center gap-2 text-base text-slate-100">
+          <GitBranch className="h-4 w-4 text-violet-400" />
+          方案协作
+          <span className={cn("ml-1 rounded-full border px-2 py-0.5 text-[10px]", statusCfg.color)}>
+            <StatusIcon className="mr-1 inline h-3 w-3" />
+            {statusCfg.label}
+          </span>
+          {proposalId && <span className="text-[10px] text-slate-500">方案 #{proposalId}</span>}
+        </CardTitle>
+        {canEdit && (
+          <Button onClick={onSubmit} size="sm" className="bg-amber-600 hover:bg-amber-500">
+            <CheckCheck className="mr-1.5 h-3.5 w-3.5" />
+            提交审核
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {/* 迭代对话区 */}
+        {canEdit && (
+          <>
+            <div className="max-h-[240px] min-h-[100px] space-y-2 overflow-y-auto rounded-lg border border-white/10 bg-slate-900/40 p-3">
+              {iterationMsgs.length === 0 ? (
+                <p className="py-4 text-center text-xs text-slate-500">
+                  提修改建议，AI 会自动改方案。例如："报价调低10%""加个老化工位""PLC换成西门子"
+                </p>
+              ) : (
+                iterationMsgs.map((m, i) => (
+                  <div key={i} className={cn("flex gap-2", m.role === "user" ? "justify-end" : "justify-start")}>
+                    {m.role === "assistant" && (
+                      <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-violet-500/20">
+                        <Bot className="h-3.5 w-3.5 text-violet-300" />
+                      </div>
+                    )}
+                    <div className={cn(
+                      "max-w-[80%] rounded-lg px-3 py-1.5 text-xs",
+                      m.role === "user" ? "bg-cyan-600/30 text-cyan-100" : "bg-white/5 text-slate-200"
+                    )}>
+                      {m.content}
+                    </div>
+                    {m.role === "user" && (
+                      <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-cyan-500/20">
+                        <User className="h-3.5 w-3.5 text-cyan-300" />
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+              {iterLoading && (
+                <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <Loader2 className="h-3 w-3 animate-spin" /> AI 正在修改方案...
+                </div>
+              )}
+              <div ref={iterEndRef} />
+            </div>
+            <div className="flex gap-2">
+              <input
+                value={iterInput}
+                onChange={(e) => setIterInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), onIterate())}
+                placeholder="提修改建议...（如：标准型报价调低到600万）"
+                disabled={iterLoading}
+                className="flex-1 rounded-md border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-violet-500/50 focus:outline-none disabled:opacity-50"
+              />
+              <Button onClick={onIterate} disabled={iterLoading || !iterInput.trim()} className="bg-violet-600 hover:bg-violet-500">
+                {iterLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* 状态提示 */}
+        {proposalStatus === "pending_review" && (
+          <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-100">
+            <Clock className="h-4 w-4" />
+            <AlertDescription>已提交审核，等待售前工程师确认。审核通过后方案定稿。</AlertDescription>
+          </Alert>
+        )}
+        {proposalStatus === "approved" && (
+          <Alert className="border-emerald-500/30 bg-emerald-500/10 text-emerald-100">
+            <CheckCircle2 className="h-4 w-4" />
+            <AlertDescription>✅ 方案已审核通过，定稿。</AlertDescription>
+          </Alert>
+        )}
+        {proposalStatus === "rejected" && (
+          <Alert className="border-red-500/30 bg-red-500/10 text-red-100">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>方案被打回，请根据意见继续修改后重新提交。</AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============= 可视化方案包卡片（4 个 HTML，Tab 切换） =============
+
+function VisualPackageCard({ layoutData, requirement, timing }) {
+  const [activeTab, setActiveTab] = useState("layout");
+
+  const tabs = [
+    { key: "layout_html", label: "产线布局图", icon: Map, short: "layout" },
+    { key: "spec_html", label: "技术规格书", icon: FileText, short: "spec" },
+    { key: "gantt_html", label: "进度甘特图", icon: Clock, short: "gantt" },
+    { key: "response_html", label: "技术响应表", icon: CheckCircle2, short: "response" },
+  ].filter((t) => layoutData[t.key]); // 只显示有内容的
+
+  if (tabs.length === 0) return null;
+  const activeHtml = layoutData[tabs.find((t) => t.short === activeTab)?.key] || "";
+
+  const handleDownload = () => {
+    const blob = new Blob([activeHtml], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const tabLabel = tabs.find((t) => t.short === activeTab)?.label || "可视化";
+    a.download = `${tabLabel}_${requirement.slice(0, 12)}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleOpenNew = () => {
+    const blob = new Blob([activeHtml], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  };
+
+  return (
+    <Card className="border-cyan-500/20 bg-slate-950/40">
+      <CardHeader className="flex-row items-center justify-between space-y-0">
+        <CardTitle className="flex items-center gap-2 text-base text-slate-100">
+          <Map className="h-4 w-4 text-cyan-400" />
+          可视化方案包
+          {timing != null && <span className="ml-1 text-xs font-normal text-slate-500">{timing}s</span>}
+          <Badge variant="info" className="ml-1">{tabs.length}个</Badge>
+        </CardTitle>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleOpenNew} className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10">
+            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />新窗口
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleDownload} className="border-white/20 text-slate-300">
+            <Download className="mr-1.5 h-3.5 w-3.5" />下载
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {/* Tab 切换 */}
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {tabs.map((t) => (
+            <button
+              key={t.short}
+              onClick={() => setActiveTab(t.short)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs transition",
+                activeTab === t.short
+                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
+                  : "bg-white/5 text-slate-400 border border-white/10 hover:text-slate-200"
+              )}
+            >
+              <t.icon className="h-3.5 w-3.5" />
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {/* HTML 预览（iframe） */}
+        <iframe
+          srcDoc={activeHtml}
+          className="h-[450px] w-full rounded border border-white/10 bg-white"
+          title={tabs.find((t) => t.short === activeTab)?.label}
+        />
+      </CardContent>
+    </Card>
+  );
 }
 
 // ============= 需求澄清对话面板 =============

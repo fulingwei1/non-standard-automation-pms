@@ -5,6 +5,8 @@
 包含待办事项的查询、创建、更新、关闭等端点
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any, Optional
 
@@ -18,12 +20,93 @@ from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.enums import AssessmentSourceTypeEnum, OpenItemStatusEnum
 from app.models.sales import Lead, OpenItem, Opportunity
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.sales import OpenItemCreate, OpenItemResponse
-from app.utils.db_helpers import get_or_404, save_obj
+from app.services.sales.lead_operation_audit import log_lead_operation
+from app.services.sales.opportunity_operation_audit import log_opportunity_operation
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+
+def _audit_scalar(value: Any) -> Any:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if hasattr(value, "value"):
+        return value.value
+    return value
+
+
+def _open_item_audit_value(open_item: OpenItem) -> dict[str, Any]:
+    fields = [
+        "id",
+        "source_type",
+        "source_id",
+        "item_code",
+        "item_type",
+        "description",
+        "responsible_party",
+        "responsible_person_id",
+        "due_date",
+        "status",
+        "close_evidence",
+        "blocks_quotation",
+        "closed_at",
+    ]
+    return {field: _audit_scalar(getattr(open_item, field, None)) for field in fields}
+
+
+def _generate_open_item_code(db: Session, source_type: str, source_id: int) -> str:
+    today = datetime.now().strftime("%y%m%d")
+    source_prefix = "L" if source_type == AssessmentSourceTypeEnum.LEAD.value else "O"
+    code_prefix = f"OI-{source_prefix}-{today}-{source_id:03d}"
+    sequence = (
+        db.query(OpenItem).filter(OpenItem.item_code.like(f"{code_prefix}-%")).count()
+    ) + 1
+    return f"{code_prefix}-{sequence:02d}"
+
+
+def _log_open_item_source_operation(
+    db: Session,
+    open_item: OpenItem,
+    operation_type: str,
+    current_user: User,
+    *,
+    old_open_item: dict[str, Any] | None,
+    new_open_item: dict[str, Any] | None,
+    operation_desc: str,
+    remark: str | None = None,
+) -> None:
+    old_value = {"open_item": old_open_item}
+    new_value = {"open_item": new_open_item}
+    if open_item.source_type == AssessmentSourceTypeEnum.LEAD.value:
+        lead = get_or_404(db, Lead, open_item.source_id, detail="线索不存在")
+        log_lead_operation(
+            db,
+            lead,
+            operation_type,
+            current_user,
+            old_value=old_value,
+            new_value=new_value,
+            operation_desc=operation_desc,
+            remark=remark,
+        )
+        return
+
+    if open_item.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value:
+        opportunity = get_or_404(db, Opportunity, open_item.source_id, detail="商机不存在")
+        log_opportunity_operation(
+            db,
+            opportunity,
+            operation_type,
+            current_user,
+            old_value=old_value,
+            new_value=new_value,
+            operation_desc=operation_desc,
+            remark=remark,
+        )
 
 
 @router.get("/open-items", response_model=PaginatedResponse[OpenItemResponse])
@@ -98,8 +181,7 @@ def create_open_item(
     """创建未决事项（线索）"""
     get_or_404(db, Lead, lead_id, detail="线索不存在")
 
-    # 生成编号
-    item_code = f"OI-{datetime.now().strftime('%y%m%d')}-{lead_id:03d}"
+    item_code = _generate_open_item_code(db, AssessmentSourceTypeEnum.LEAD.value, lead_id)
 
     open_item = OpenItem(
         source_type=AssessmentSourceTypeEnum.LEAD.value,
@@ -113,7 +195,20 @@ def create_open_item(
         blocks_quotation=request.blocks_quotation,
     )
 
-    save_obj(db, open_item)
+    db.add(open_item)
+    db.flush()
+    _log_open_item_source_operation(
+        db,
+        open_item,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_open_item=None,
+        new_open_item=_open_item_audit_value(open_item),
+        operation_desc="创建线索未决事项",
+        remark=request.description,
+    )
+    db.commit()
+    db.refresh(open_item)
 
     responsible_person_name = None
     if open_item.responsible_person_id:
@@ -151,8 +246,9 @@ def create_open_item_for_opportunity(
     """创建未决事项（商机）"""
     get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
-    # 生成编号
-    item_code = f"OI-{datetime.now().strftime('%y%m%d')}-{opp_id:03d}"
+    item_code = _generate_open_item_code(
+        db, AssessmentSourceTypeEnum.OPPORTUNITY.value, opp_id
+    )
 
     open_item = OpenItem(
         source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
@@ -166,7 +262,20 @@ def create_open_item_for_opportunity(
         blocks_quotation=request.blocks_quotation,
     )
 
-    save_obj(db, open_item)
+    db.add(open_item)
+    db.flush()
+    _log_open_item_source_operation(
+        db,
+        open_item,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_open_item=None,
+        new_open_item=_open_item_audit_value(open_item),
+        operation_desc="创建商机未决事项",
+        remark=request.description,
+    )
+    db.commit()
+    db.refresh(open_item)
 
     responsible_person_name = None
     if open_item.responsible_person_id:
@@ -203,6 +312,7 @@ def update_open_item(
 ) -> Any:
     """更新未决事项"""
     open_item = get_or_404(db, OpenItem, item_id, detail="未决事项不存在")
+    old_open_item = _open_item_audit_value(open_item)
 
     open_item.item_type = request.item_type
     open_item.description = request.description
@@ -211,6 +321,17 @@ def update_open_item(
     open_item.due_date = request.due_date
     open_item.blocks_quotation = request.blocks_quotation
 
+    db.flush()
+    _log_open_item_source_operation(
+        db,
+        open_item,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_open_item=old_open_item,
+        new_open_item=_open_item_audit_value(open_item),
+        operation_desc="更新未决事项",
+        remark=request.description,
+    )
     db.commit()
     db.refresh(open_item)
 
@@ -249,11 +370,23 @@ def close_open_item(
 ) -> Any:
     """关闭未决事项"""
     open_item = get_or_404(db, OpenItem, item_id, detail="未决事项不存在")
+    old_open_item = _open_item_audit_value(open_item)
 
     open_item.status = OpenItemStatusEnum.CLOSED.value
     open_item.close_evidence = close_evidence
     open_item.closed_at = datetime.now()
 
+    db.flush()
+    _log_open_item_source_operation(
+        db,
+        open_item,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_open_item=old_open_item,
+        new_open_item=_open_item_audit_value(open_item),
+        operation_desc="关闭未决事项",
+        remark=close_evidence,
+    )
     db.commit()
 
     return ResponseModel(message="未决事项已关闭")

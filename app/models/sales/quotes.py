@@ -3,8 +3,6 @@
 报价相关模型
 """
 
-from datetime import datetime
-
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -21,12 +19,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
-from app.models.enums import (
-    ApprovalStatusEnum,
-    QuoteStatusEnum,
-    TemplateStatusEnum,
-    TemplateVersionStatusEnum,
-)
+from app.models.enums import QuoteStatusEnum, TemplateStatusEnum, TemplateVersionStatusEnum
 
 
 class Quote(Base, TimestampMixin):
@@ -61,7 +54,6 @@ class Quote(Base, TimestampMixin):
     current_version = relationship(
         "QuoteVersion", foreign_keys=[current_version_id], post_update=True
     )
-    approvals = relationship("QuoteApproval", back_populates="quote", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Quote {self.quote_code}>"
@@ -125,16 +117,8 @@ class Quote(Base, TimestampMixin):
 class QuoteVersion(Base, TimestampMixin):
     """报价版本表
 
-    【重构】2026-03-12：
-    - 新增 solution_version_id，绑定方案版本
-    - 新增 cost_estimation_id，绑定成本估算
-    - 新增绑定验证字段
-    - cost_total 从绑定的成本估算同步
-
-    绑定规则：
-    - QuoteVersion 必须绑定 CostEstimation
-    - CostEstimation 必须绑定 SolutionVersion
-    - cost_total 必须等于 CostEstimation.total_cost
+    报价版本保留成本估算、售前方案等兼容字段；旧 SolutionVersion 三位一体绑定引擎
+    已退役，solution_version_id 仅作为历史兼容列保留。
     """
 
     __tablename__ = "quote_versions"
@@ -149,13 +133,7 @@ class QuoteVersion(Base, TimestampMixin):
     approval_instance_id = Column(Integer, comment="审批实例ID")
     approval_status = Column(String(30), default="DRAFT", comment="审批状态")
 
-    # === 【新增】三位一体绑定 ===
-    solution_version_id = Column(
-        Integer,
-        ForeignKey("solution_versions.id", ondelete="SET NULL"),
-        nullable=True,  # 迁移期间允许为空
-        comment="方案版本ID",
-    )
+    solution_version_id = Column(Integer, nullable=True, comment="旧方案版本ID（已退役）")
     cost_estimation_id = Column(
         Integer,
         ForeignKey("presale_ai_cost_estimation.id", ondelete="SET NULL"),
@@ -215,23 +193,7 @@ class QuoteVersion(Base, TimestampMixin):
     items = relationship("QuoteItem", back_populates="quote_version", cascade="all, delete-orphan")
     contracts = relationship("Contract", back_populates="quote_version")
     cost_template = relationship("QuoteCostTemplate", foreign_keys=[cost_template_id])
-    cost_approvals = relationship(
-        "QuoteCostApproval",
-        back_populates="quote_version",
-        foreign_keys="QuoteCostApproval.quote_version_id",
-    )
-    cost_histories = relationship(
-        "QuoteCostHistory",
-        back_populates="quote_version",
-        foreign_keys="QuoteCostHistory.quote_version_id",
-    )
 
-    # === 【新增】绑定关系 ===
-    solution_version = relationship(
-        "SolutionVersion",
-        backref="quote_versions",
-        foreign_keys=[solution_version_id],
-    )
     cost_estimation = relationship(
         "PresaleAICostEstimation",
         backref="quote_versions",
@@ -341,107 +303,6 @@ class QuoteCostTemplate(Base, TimestampMixin):
 
     def __repr__(self):
         return f"<QuoteCostTemplate {self.template_code}>"
-
-
-class QuoteCostApproval(Base, TimestampMixin):
-    """报价成本审批表
-
-    【状态】未启用 - 报价成本审批"""
-
-    __tablename__ = "quote_cost_approvals"
-
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")
-    quote_version_id = Column(
-        Integer, ForeignKey("quote_versions.id"), nullable=False, comment="报价版本ID"
-    )
-
-    # 审批信息
-    approval_status = Column(
-        String(20), default=ApprovalStatusEnum.PENDING.value, comment="审批状态：PENDING/APPROVED/REJECTED"
-    )
-    approval_level = Column(
-        Integer, default=1, comment="审批层级（1=销售经理，2=销售总监，3=财务）"
-    )
-    current_approver_id = Column(Integer, ForeignKey("users.id"), comment="当前审批人ID")
-
-    # 成本检查结果
-    total_price = Column(Numeric(12, 2), comment="总价")
-    total_cost = Column(Numeric(12, 2), comment="总成本")
-    gross_margin = Column(Numeric(5, 2), comment="毛利率")
-    margin_threshold = Column(Numeric(5, 2), default=20.00, comment="毛利率阈值")
-    margin_status = Column(String(20), comment="毛利率状态：PASS/WARNING/FAIL")
-
-    # 检查项
-    cost_complete = Column(Boolean, default=False, comment="成本拆解是否完整")
-    delivery_check = Column(Boolean, default=False, comment="交期校验是否通过")
-    risk_terms_check = Column(Boolean, default=False, comment="风险条款是否检查")
-
-    # 审批记录
-    approval_comment = Column(Text, comment="审批意见")
-    approved_by = Column(Integer, ForeignKey("users.id"), comment="审批人ID")
-    approved_at = Column(DateTime, comment="审批时间")
-    rejected_reason = Column(Text, comment="驳回原因")
-
-    # 关系
-    quote = relationship("Quote", foreign_keys=[quote_id])
-    quote_version = relationship("QuoteVersion", foreign_keys=[quote_version_id])
-    current_approver = relationship("User", foreign_keys=[current_approver_id])
-    approver = relationship("User", foreign_keys=[approved_by])
-
-    __table_args__ = (
-        Index("idx_cost_approval_quote_id", "quote_id"),
-        Index("idx_cost_approval_status", "approval_status"),
-        {"comment": "报价成本审批表"},
-    )
-
-    def __repr__(self):
-        return f"<QuoteCostApproval {self.quote_id}-{self.approval_level}>"
-
-
-class QuoteCostHistory(Base):
-    """报价成本历史记录表
-
-    【状态】未启用 - 报价成本历史"""
-
-    __tablename__ = "quote_cost_histories"
-
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")
-    quote_version_id = Column(
-        Integer, ForeignKey("quote_versions.id"), nullable=False, comment="报价版本ID"
-    )
-
-    # 成本快照
-    total_price = Column(Numeric(12, 2), comment="总价")
-    total_cost = Column(Numeric(12, 2), comment="总成本")
-    gross_margin = Column(Numeric(5, 2), comment="毛利率")
-
-    # 成本明细快照（JSON）
-    cost_breakdown = Column(JSON, comment="成本拆解明细")
-
-    # 变更信息
-    change_type = Column(String(50), comment="变更类型：CREATE/UPDATE/DELETE/APPROVE")
-    change_reason = Column(Text, comment="变更原因")
-    changed_by = Column(Integer, ForeignKey("users.id"), comment="变更人ID")
-
-    created_at = Column(DateTime, default=datetime.now, nullable=False, comment="创建时间")
-
-    # 关系
-    quote = relationship("Quote", foreign_keys=[quote_id])
-    quote_version = relationship("QuoteVersion", foreign_keys=[quote_version_id])
-    changer = relationship("User", foreign_keys=[changed_by])
-
-    __table_args__ = (
-        Index("idx_cost_history_quote_id", "quote_id"),
-        Index("idx_cost_history_created_at", "created_at"),
-        {"comment": "报价成本历史记录表"},
-    )
-
-    def __repr__(self):
-        return f"<QuoteCostHistory {self.quote_id}-{self.change_type}>"
 
 
 class PurchaseMaterialCost(Base, TimestampMixin):

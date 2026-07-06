@@ -17,19 +17,88 @@ from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
+from app.models.approval import ApprovalFlowDefinition, ApprovalNodeDefinition, ApprovalTemplate
 from app.models.project import Project, ProjectMember
 from app.models.task_center import (
-    TaskApprovalWorkflow,
     TaskCompletionProof,
     TaskUnified,
 )
 from app.models.user import User
 from app.schemas import engineer as schemas
+from app.services.approval_engine import ApprovalEngineService
 from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+TASK_APPROVAL_TEMPLATE_CODE = "TASK_APPROVAL"
+
+
+def _ensure_task_approval_template(db: Session, current_user_id: int) -> ApprovalTemplate:
+    """Ensure important engineer tasks use the unified approval engine."""
+    template = (
+        db.query(ApprovalTemplate)
+        .filter(ApprovalTemplate.template_code == TASK_APPROVAL_TEMPLATE_CODE)
+        .first()
+    )
+    if not template:
+        template = ApprovalTemplate(template_code=TASK_APPROVAL_TEMPLATE_CODE)
+        db.add(template)
+
+    template.template_name = "重要任务审批"
+    template.category = "ENGINEERING"
+    template.entity_type = "TASK"
+    template.description = "工程师重要任务由项目经理审批。"
+    template.is_active = True
+    template.is_published = True
+    template.created_by = template.created_by or current_user_id
+    template.updated_by = current_user_id
+    db.flush()
+
+    flow = (
+        db.query(ApprovalFlowDefinition)
+        .filter(
+            ApprovalFlowDefinition.template_id == template.id,
+            ApprovalFlowDefinition.flow_name == "默认重要任务审批",
+        )
+        .first()
+    )
+    if not flow:
+        flow = ApprovalFlowDefinition(
+            template_id=template.id,
+            flow_name="默认重要任务审批",
+        )
+        db.add(flow)
+
+    flow.is_default = True
+    flow.is_active = True
+    flow.created_by = flow.created_by or current_user_id
+    db.flush()
+
+    node = (
+        db.query(ApprovalNodeDefinition)
+        .filter(
+            ApprovalNodeDefinition.flow_id == flow.id,
+            ApprovalNodeDefinition.node_code == "TASK_PM_APPROVAL",
+        )
+        .first()
+    )
+    if not node:
+        node = ApprovalNodeDefinition(flow_id=flow.id, node_code="TASK_PM_APPROVAL")
+        db.add(node)
+
+    node.node_name = "项目经理审批"
+    node.node_order = 1
+    node.node_type = "APPROVAL"
+    node.approval_mode = "SINGLE"
+    node.is_active = True
+    node.approver_type = "FORM_FIELD"
+    node.approver_config = {"field_name": "approver_id"}
+    node.can_delegate = True
+    db.flush()
+
+    return template
 
 
 @router.post("/tasks", response_model=schemas.TaskResponse)
@@ -114,24 +183,30 @@ def create_task(
     db.add(new_task)
     db.flush()
 
-    # 如果是IMPORTANT任务，创建审批工作流
+    # 如果是IMPORTANT任务，发起统一审批实例
     if task_data.task_importance == "IMPORTANT":
-        approval_workflow = TaskApprovalWorkflow(
-            task_id=new_task.id,
-            submitted_by=current_user.id,
-            submitted_at=datetime.now(),
-            submit_note=task_data.justification,
-            approver_id=project.pm_id,  # 项目经理
-            approval_status="PENDING",
-            task_details={
+        if not project.pm_id:
+            raise HTTPException(status_code=400, detail="重要任务缺少项目经理，无法发起审批")
+
+        _ensure_task_approval_template(db, current_user.id)
+        ApprovalEngineService(db).submit(
+            template_code=TASK_APPROVAL_TEMPLATE_CODE,
+            entity_type="TASK",
+            entity_id=new_task.id,
+            form_data={
+                "task_id": new_task.id,
                 "title": task_data.title,
                 "description": task_data.description,
+                "justification": task_data.justification,
                 "estimated_hours": (
                     float(task_data.estimated_hours) if task_data.estimated_hours else None
                 ),
+                "approver_id": project.pm_id,
             },
+            initiator_id=current_user.id,
+            title=f"重要任务审批 - {task_data.title}",
+            summary=task_data.justification or task_data.description,
         )
-        db.add(approval_workflow)
 
         # 发送通知给PM
         from app.services.notification.channels.base import NotificationPriority, NotificationRequest

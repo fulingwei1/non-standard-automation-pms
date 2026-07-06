@@ -65,7 +65,6 @@ class Tenant(Base, TimestampMixin):
     # 权限相关关系（来自 permission.py 和 user.py）
     menu_permissions = relationship("MenuPermission", back_populates="tenant", lazy="dynamic")
     custom_permissions = relationship("ApiPermission", back_populates="tenant", lazy="dynamic")
-    data_scope_rules = relationship("DataScopeRule", back_populates="tenant", lazy="dynamic")
 
     def __repr__(self):
         return f"<Tenant {self.tenant_code}>"

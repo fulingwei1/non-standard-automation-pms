@@ -8,136 +8,87 @@
 - L3: 部门经理↔员工 — 个人绩效合约
 """
 
-import sqlite3
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.params import Param
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core.config import settings
+from app.models.performance.contract import PerformanceContract, PerformanceContractItem
 from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
-# 数据库路径
 DB_PATH = settings.SQLITE_DB_PATH
+VALID_CONTRACT_TYPES = {"L1", "L2", "L3"}
+VALID_CONTRACT_STATUSES = {
+    "draft",
+    "pending_review",
+    "pending_sign",
+    "active",
+    "completed",
+    "terminated",
+}
+VALID_ITEM_CATEGORIES = {"业绩指标", "管理指标", "能力指标", "态度指标"}
+VALID_SOURCE_TYPES = {"kpi", "work", "custom"}
 
 
-def get_db_connection():
-    """获取 SQLite 数据库连接"""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+def _now_string() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-def init_tables():
-    """Lazy init - 初始化数据表"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
+def _to_dict(obj: Any, *, include_items: bool = False) -> Dict[str, Any]:
+    data = {column.name: getattr(obj, column.name) for column in obj.__table__.columns}
+    if include_items:
+        data["items"] = [_to_dict(item) for item in obj.items]
+    return data
 
-    # 创建绩效合约表
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS performance_contracts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            contract_no TEXT UNIQUE NOT NULL,
-            contract_type TEXT NOT NULL CHECK(contract_type IN ('L1', 'L2', 'L3')),
-            year INTEGER NOT NULL,
-            quarter INTEGER,
-            signer_id INTEGER,
-            signer_name TEXT NOT NULL,
-            signer_title TEXT,
-            counterpart_id INTEGER,
-            counterpart_name TEXT NOT NULL,
-            counterpart_title TEXT,
-            department_id INTEGER,
-            department_name TEXT,
-            strategy_id INTEGER,
-            status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'pending_review', 'pending_sign', 'active', 'completed', 'terminated')),
-            total_weight REAL DEFAULT 0,
-            sign_date DATE,
-            effective_date DATE,
-            expiry_date DATE,
-            signer_signature DATETIME,
-            counterpart_signature DATETIME,
-            remarks TEXT,
-            created_by INTEGER,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+
+def _optional(value: Any) -> Any:
+    return None if isinstance(value, Param) else value
+
+
+def _get_contract_or_404(db: Session, contract_id: int) -> PerformanceContract:
+    contract = db.query(PerformanceContract).filter(PerformanceContract.id == contract_id).first()
+    if not contract:
+        raise HTTPException(status_code=404, detail="合约不存在")
+    return contract
+
+
+def _get_item_or_404(
+    db: Session, contract_id: int, item_id: int
+) -> PerformanceContractItem:
+    item = (
+        db.query(PerformanceContractItem)
+        .filter(
+            PerformanceContractItem.id == item_id,
+            PerformanceContractItem.contract_id == contract_id,
         )
-    """
+        .first()
     )
-
-    # 创建绩效合约指标条目表
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS performance_contract_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            contract_id INTEGER NOT NULL,
-            sort_order INTEGER DEFAULT 0,
-            category TEXT NOT NULL CHECK(category IN ('业绩指标', '管理指标', '能力指标', '态度指标')),
-            indicator_name TEXT NOT NULL,
-            indicator_description TEXT,
-            weight REAL NOT NULL,
-            unit TEXT,
-            target_value TEXT,
-            challenge_value TEXT,
-            baseline_value TEXT,
-            scoring_rule TEXT,
-            data_source TEXT,
-            evaluation_method TEXT,
-            actual_value TEXT,
-            score REAL,
-            evaluator_comment TEXT,
-            source_type TEXT CHECK(source_type IN ('kpi', 'work', 'custom')),
-            source_id INTEGER,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (contract_id) REFERENCES performance_contracts(id) ON DELETE CASCADE
-        )
-    """
-    )
-
-    # 创建索引
-    cursor.execute(
-        """
-        CREATE INDEX IF NOT EXISTS idx_contract_type ON performance_contracts(contract_type)
-    """
-    )
-    cursor.execute(
-        """
-        CREATE INDEX IF NOT EXISTS idx_contract_status ON performance_contracts(status)
-    """
-    )
-    cursor.execute(
-        """
-        CREATE INDEX IF NOT EXISTS idx_contract_year ON performance_contracts(year)
-    """
-    )
-    cursor.execute(
-        """
-        CREATE INDEX IF NOT EXISTS idx_contract_signer ON performance_contracts(signer_id)
-    """
-    )
-    cursor.execute(
-        """
-        CREATE INDEX IF NOT EXISTS idx_item_contract ON performance_contract_items(contract_id)
-    """
-    )
-    cursor.execute(
-        """
-        CREATE INDEX IF NOT EXISTS idx_item_source ON performance_contract_items(source_type, source_id)
-    """
-    )
-
-    conn.commit()
-    conn.close()
+    if not item:
+        raise HTTPException(status_code=404, detail="指标条目不存在或不属于该合约")
+    return item
 
 
-# 确保表存在
-init_tables()
+def _calculate_total_weight(db: Session, contract_id: int) -> float:
+    total = (
+        db.query(func.coalesce(func.sum(PerformanceContractItem.weight), 0))
+        .filter(PerformanceContractItem.contract_id == contract_id)
+        .scalar()
+    )
+    return float(total or 0)
+
+
+def _refresh_total_weight(db: Session, contract_id: int) -> float:
+    total_weight = _calculate_total_weight(db, contract_id)
+    contract = _get_contract_or_404(db, contract_id)
+    contract.total_weight = total_weight
+    return total_weight
 
 
 def generate_contract_no(contract_type: str, year: int) -> str:
@@ -146,17 +97,9 @@ def generate_contract_no(contract_type: str, year: int) -> str:
     return f"PC-{contract_type}-{year}-{timestamp}"
 
 
-def calculate_total_weight(contract_id: int) -> float:
+def calculate_total_weight(contract_id: int, db: Session = Depends(deps.get_db)) -> float:
     """计算合约总权重"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT COALESCE(SUM(weight), 0) as total FROM performance_contract_items WHERE contract_id = ?",
-        (contract_id,),
-    )
-    result = cursor.fetchone()
-    conn.close()
-    return float(result["total"]) if result else 0.0
+    return _calculate_total_weight(db, contract_id)
 
 
 # ============================================
@@ -188,78 +131,43 @@ def create_contract(
     current_user=Depends(deps.get_current_user),
 ):
     """创建绩效合约"""
-    if contract_type not in ["L1", "L2", "L3"]:
+    if contract_type not in VALID_CONTRACT_TYPES:
         raise HTTPException(status_code=400, detail="合约类型必须是 L1/L2/L3")
-
-    if status not in [
-        "draft",
-        "pending_review",
-        "pending_sign",
-        "active",
-        "completed",
-        "terminated",
-    ]:
+    if status not in VALID_CONTRACT_STATUSES:
         raise HTTPException(status_code=400, detail="状态无效")
+    if db.query(PerformanceContract.id).filter_by(contract_no=contract_no).first():
+        raise HTTPException(status_code=400, detail="合约编号已存在")
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
+    contract = PerformanceContract(
+        contract_no=contract_no,
+        contract_type=contract_type,
+        year=year,
+        quarter=quarter,
+        signer_id=signer_id,
+        signer_name=signer_name,
+        signer_title=signer_title,
+        counterpart_id=counterpart_id,
+        counterpart_name=counterpart_name,
+        counterpart_title=counterpart_title,
+        department_id=department_id,
+        department_name=department_name,
+        strategy_id=strategy_id,
+        status=status,
+        sign_date=sign_date,
+        effective_date=effective_date,
+        expiry_date=expiry_date,
+        remarks=remarks,
+        created_by=current_user.id,
+    )
+    db.add(contract)
     try:
-        # 检查合约编号是否已存在
-        cursor.execute("SELECT id FROM performance_contracts WHERE contract_no = ?", (contract_no,))
-        if cursor.fetchone():
-            raise HTTPException(status_code=400, detail="合约编号已存在")
-
-        cursor.execute(
-            """
-            INSERT INTO performance_contracts (
-                contract_no, contract_type, year, quarter,
-                signer_id, signer_name, signer_title,
-                counterpart_id, counterpart_name, counterpart_title,
-                department_id, department_name,
-                strategy_id, status,
-                sign_date, effective_date, expiry_date,
-                remarks, created_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-            (
-                contract_no,
-                contract_type,
-                year,
-                quarter,
-                signer_id,
-                signer_name,
-                signer_title,
-                counterpart_id,
-                counterpart_name,
-                counterpart_title,
-                department_id,
-                department_name,
-                strategy_id,
-                status,
-                sign_date,
-                effective_date,
-                expiry_date,
-                remarks,
-                current_user.id,
-            ),
-        )
-
-        contract_id = cursor.lastrowid
-        conn.commit()
-
-        # 获取创建的合约
-        cursor.execute("SELECT * FROM performance_contracts WHERE id = ?", (contract_id,))
-        contract = dict(cursor.fetchone())
-
-        return ResponseModel(code=200, message="创建成功", data=contract)
-    except HTTPException:
-        raise
+        db.commit()
+        db.refresh(contract)
     except Exception as e:
-        conn.rollback()
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"创建失败：{str(e)}")
-    finally:
-        conn.close()
+
+    return ResponseModel(code=200, message="创建成功", data=_to_dict(contract))
 
 
 @router.get("", response_model=ResponseModel)
@@ -275,64 +183,34 @@ def list_contracts(
     current_user=Depends(deps.get_current_user),
 ):
     """获取绩效合约列表"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # 构建查询条件
-    conditions = []
-    params = []
-
+    query = db.query(PerformanceContract)
     if contract_type:
-        conditions.append("contract_type = ?")
-        params.append(contract_type)
-
+        query = query.filter(PerformanceContract.contract_type == contract_type)
     if status:
-        conditions.append("status = ?")
-        params.append(status)
-
+        query = query.filter(PerformanceContract.status == status)
     if year:
-        conditions.append("year = ?")
-        params.append(year)
-
+        query = query.filter(PerformanceContract.year == year)
     if signer_id:
-        conditions.append("signer_id = ?")
-        params.append(signer_id)
-
+        query = query.filter(PerformanceContract.signer_id == signer_id)
     if department_id:
-        conditions.append("department_id = ?")
-        params.append(department_id)
+        query = query.filter(PerformanceContract.department_id == department_id)
 
-    where_clause = " AND ".join(conditions) if conditions else "1=1"
-
-    # 查询合约列表
-    cursor.execute(
-        f"""
-        SELECT * FROM performance_contracts
-        WHERE {where_clause}
-        ORDER BY created_at DESC
-        LIMIT ? OFFSET ?
-    """,
-        params + [limit, skip],
+    total = query.count()
+    contracts = (
+        query.order_by(PerformanceContract.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
     )
-
-    contracts = [dict(row) for row in cursor.fetchall()]
-
-    # 查询总数
-    cursor.execute(
-        f"""
-        SELECT COUNT(*) as count FROM performance_contracts
-        WHERE {where_clause}
-    """,
-        params,
-    )
-    total = cursor.fetchone()["count"]
-
-    conn.close()
-
     return ResponseModel(
         code=200,
         message="查询成功",
-        data={"items": contracts, "total": total, "skip": skip, "limit": limit},
+        data={
+            "items": [_to_dict(contract) for contract in contracts],
+            "total": total,
+            "skip": skip,
+            "limit": limit,
+        },
     )
 
 
@@ -343,84 +221,52 @@ def get_dashboard(
     current_user=Depends(deps.get_current_user),
 ):
     """获取绩效合约总览"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    base_query = db.query(PerformanceContract)
+    if year:
+        base_query = base_query.filter(PerformanceContract.year == year)
 
-    # 构建年度筛选条件
-    year_condition = "AND year = ?" if year else ""
-    year_params = [year] if year else []
-
-    # 各类型合约数量
-    cursor.execute(
-        f"""
-        SELECT contract_type, status, COUNT(*) as count
-        FROM performance_contracts
-        WHERE 1=1 {year_condition}
-        GROUP BY contract_type, status
-    """,
-        year_params,
-    )
-
-    type_status_counts = {}
-    for row in cursor.fetchall():
-        contract_type = row["contract_type"]
-        status = row["status"]
-        count = row["count"]
-
-        if contract_type not in type_status_counts:
-            type_status_counts[contract_type] = {}
-        type_status_counts[contract_type][status] = count
-
-    # 总计
-    cursor.execute(
-        f"""
-        SELECT
-            COUNT(*) as total,
-            SUM(CASE WHEN status = 'pending_sign' THEN 1 ELSE 0 END) as pending_sign,
-            SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,
-            SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
-            AVG(total_weight) as avg_weight
-        FROM performance_contracts
-        WHERE 1=1 {year_condition}
-    """,
-        year_params,
-    )
-
-    summary = dict(cursor.fetchone())
-
-    # 平均得分（仅计算已评分的条目）
-    cursor.execute(
-        f"""
-        SELECT AVG(score) as avg_score
-        FROM performance_contract_items
-        WHERE score IS NOT NULL
-        AND contract_id IN (
-            SELECT id FROM performance_contracts WHERE 1=1 {year_condition}
+    type_status_counts: Dict[str, Dict[str, int]] = {}
+    for contract_type, status, count in (
+        base_query.with_entities(
+            PerformanceContract.contract_type,
+            PerformanceContract.status,
+            func.count(PerformanceContract.id),
         )
-    """,
-        year_params,
+        .group_by(PerformanceContract.contract_type, PerformanceContract.status)
+        .all()
+    ):
+        type_status_counts.setdefault(contract_type, {})[status] = count
+
+    summary = {
+        "total": base_query.count(),
+        "pending_sign": base_query.filter(PerformanceContract.status == "pending_sign").count(),
+        "active": base_query.filter(PerformanceContract.status == "active").count(),
+        "completed": base_query.filter(PerformanceContract.status == "completed").count(),
+        "avg_weight": base_query.with_entities(func.avg(PerformanceContract.total_weight)).scalar()
+        or 0,
+    }
+
+    avg_score_query = db.query(func.avg(PerformanceContractItem.score)).join(
+        PerformanceContract,
+        PerformanceContract.id == PerformanceContractItem.contract_id,
     )
-
-    avg_score_result = cursor.fetchone()
-    avg_score = avg_score_result["avg_score"] if avg_score_result else 0
-
-    # 签署进度
-    cursor.execute(
-        f"""
-        SELECT
-            COUNT(*) as total,
-            SUM(CASE WHEN signer_signature IS NOT NULL THEN 1 ELSE 0 END) as signer_signed,
-            SUM(CASE WHEN counterpart_signature IS NOT NULL THEN 1 ELSE 0 END) as counterpart_signed,
-            SUM(CASE WHEN signer_signature IS NOT NULL AND counterpart_signature IS NOT NULL THEN 1 ELSE 0 END) as fully_signed
-        FROM performance_contracts
-        WHERE status IN ('pending_sign', 'active') {year_condition}
-    """,
-        year_params,
+    signing_query = db.query(PerformanceContract).filter(
+        PerformanceContract.status.in_(["pending_sign", "active"])
     )
+    if year:
+        avg_score_query = avg_score_query.filter(PerformanceContract.year == year)
+        signing_query = signing_query.filter(PerformanceContract.year == year)
 
-    signing_progress = dict(cursor.fetchone())
-
-    conn.close()
+    avg_score = avg_score_query.filter(PerformanceContractItem.score.isnot(None)).scalar() or 0
+    signing_contracts = signing_query.all()
+    signing_progress = {
+        "total": len(signing_contracts),
+        "signer_signed": sum(1 for c in signing_contracts if c.signer_signature),
+        "counterpart_signed": sum(1 for c in signing_contracts if c.counterpart_signature),
+        "fully_signed": sum(
+            1 for c in signing_contracts if c.signer_signature and c.counterpart_signature
+        ),
+    }
 
     return ResponseModel(
         code=200,
@@ -441,35 +287,8 @@ def get_contract(
     current_user=Depends(deps.get_current_user),
 ):
     """获取绩效合约详情（含指标条目）"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # 获取合约
-    cursor.execute("SELECT * FROM performance_contracts WHERE id = ?", (contract_id,))
-    contract = cursor.fetchone()
-
-    if not contract:
-        conn.close()
-        raise HTTPException(status_code=404, detail="合约不存在")
-
-    contract_data = dict(contract)
-
-    # 获取指标条目
-    cursor.execute(
-        """
-        SELECT * FROM performance_contract_items
-        WHERE contract_id = ?
-        ORDER BY sort_order, id
-    """,
-        (contract_id,),
-    )
-
-    items = [dict(row) for row in cursor.fetchall()]
-    contract_data["items"] = items
-
-    conn.close()
-
-    return ResponseModel(code=200, message="查询成功", data=contract_data)
+    contract = _get_contract_or_404(db, contract_id)
+    return ResponseModel(code=200, message="查询成功", data=_to_dict(contract, include_items=True))
 
 
 @router.put("/{contract_id}", response_model=ResponseModel)
@@ -497,18 +316,33 @@ def update_contract(
     current_user=Depends(deps.get_current_user),
 ):
     """更新绩效合约"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # 检查合约是否存在
-    cursor.execute("SELECT id FROM performance_contracts WHERE id = ?", (contract_id,))
-    if not cursor.fetchone():
-        conn.close()
-        raise HTTPException(status_code=404, detail="合约不存在")
-
-    # 构建更新字段
-    updates = []
-    params = []
+    contract_no = _optional(contract_no)
+    contract_type = _optional(contract_type)
+    year = _optional(year)
+    quarter = _optional(quarter)
+    signer_id = _optional(signer_id)
+    signer_name = _optional(signer_name)
+    signer_title = _optional(signer_title)
+    counterpart_id = _optional(counterpart_id)
+    counterpart_name = _optional(counterpart_name)
+    counterpart_title = _optional(counterpart_title)
+    department_id = _optional(department_id)
+    department_name = _optional(department_name)
+    strategy_id = _optional(strategy_id)
+    status = _optional(status)
+    sign_date = _optional(sign_date)
+    effective_date = _optional(effective_date)
+    expiry_date = _optional(expiry_date)
+    remarks = _optional(remarks)
+    contract = _get_contract_or_404(db, contract_id)
+    if contract_type is not None and contract_type not in VALID_CONTRACT_TYPES:
+        raise HTTPException(status_code=400, detail="合约类型必须是 L1/L2/L3")
+    if status is not None and status not in VALID_CONTRACT_STATUSES:
+        raise HTTPException(status_code=400, detail="状态无效")
+    if contract_no and contract_no != contract.contract_no:
+        existing = db.query(PerformanceContract.id).filter_by(contract_no=contract_no).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="合约编号已存在")
 
     field_mappings = {
         "contract_no": contract_no,
@@ -530,41 +364,19 @@ def update_contract(
         "expiry_date": expiry_date,
         "remarks": remarks,
     }
-
-    for field, value in field_mappings.items():
-        if value is not None:
-            updates.append(f"{field} = ?")
-            params.append(value)
-
+    updates = {field: value for field, value in field_mappings.items() if value is not None}
     if not updates:
-        conn.close()
         raise HTTPException(status_code=400, detail="没有要更新的字段")
 
-    updates.append("updated_at = CURRENT_TIMESTAMP")
-    params.append(contract_id)
-
+    for field, value in updates.items():
+        setattr(contract, field, value)
     try:
-        cursor.execute(
-            f"""
-            UPDATE performance_contracts
-            SET {', '.join(updates)}
-            WHERE id = ?
-        """,
-            params,
-        )
-
-        conn.commit()
-
-        # 返回更新后的合约
-        cursor.execute("SELECT * FROM performance_contracts WHERE id = ?", (contract_id,))
-        contract = dict(cursor.fetchone())
-
-        return ResponseModel(code=200, message="更新成功", data=contract)
+        db.commit()
+        db.refresh(contract)
     except Exception as e:
-        conn.rollback()
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"更新失败：{str(e)}")
-    finally:
-        conn.close()
+    return ResponseModel(code=200, message="更新成功", data=_to_dict(contract))
 
 
 # ============================================
@@ -593,72 +405,39 @@ def add_contract_item(
     current_user=Depends(deps.get_current_user),
 ):
     """添加合约指标条目"""
-    if category not in ["业绩指标", "管理指标", "能力指标", "态度指标"]:
+    if category not in VALID_ITEM_CATEGORIES:
         raise HTTPException(status_code=400, detail="指标类别无效")
-
-    if source_type and source_type not in ["kpi", "work", "custom"]:
+    if source_type and source_type not in VALID_SOURCE_TYPES:
         raise HTTPException(status_code=400, detail="来源类型无效")
+    _get_contract_or_404(db, contract_id)
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # 检查合约是否存在
-    cursor.execute("SELECT id FROM performance_contracts WHERE id = ?", (contract_id,))
-    if not cursor.fetchone():
-        conn.close()
-        raise HTTPException(status_code=404, detail="合约不存在")
-
+    item = PerformanceContractItem(
+        contract_id=contract_id,
+        sort_order=sort_order,
+        category=category,
+        indicator_name=indicator_name,
+        indicator_description=indicator_description,
+        weight=weight,
+        unit=unit,
+        target_value=target_value,
+        challenge_value=challenge_value,
+        baseline_value=baseline_value,
+        scoring_rule=scoring_rule,
+        data_source=data_source,
+        evaluation_method=evaluation_method,
+        source_type=source_type,
+        source_id=source_id,
+    )
+    db.add(item)
     try:
-        cursor.execute(
-            """
-            INSERT INTO performance_contract_items (
-                contract_id, sort_order, category, indicator_name,
-                indicator_description, weight, unit,
-                target_value, challenge_value, baseline_value,
-                scoring_rule, data_source, evaluation_method,
-                source_type, source_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-            (
-                contract_id,
-                sort_order,
-                category,
-                indicator_name,
-                indicator_description,
-                weight,
-                unit,
-                target_value,
-                challenge_value,
-                baseline_value,
-                scoring_rule,
-                data_source,
-                evaluation_method,
-                source_type,
-                source_id,
-            ),
-        )
-
-        item_id = cursor.lastrowid
-        conn.commit()
-
-        # 更新合约总权重
-        total_weight = calculate_total_weight(contract_id)
-        cursor.execute(
-            "UPDATE performance_contracts SET total_weight = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-            (total_weight, contract_id),
-        )
-        conn.commit()
-
-        # 返回创建的条目
-        cursor.execute("SELECT * FROM performance_contract_items WHERE id = ?", (item_id,))
-        item = dict(cursor.fetchone())
-
-        return ResponseModel(code=200, message="添加成功", data=item)
+        db.flush()
+        _refresh_total_weight(db, contract_id)
+        db.commit()
+        db.refresh(item)
     except Exception as e:
-        conn.rollback()
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"添加失败：{str(e)}")
-    finally:
-        conn.close()
+    return ResponseModel(code=200, message="添加成功", data=_to_dict(item))
 
 
 @router.put("/{contract_id}/items/{item_id}", response_model=ResponseModel)
@@ -684,21 +463,9 @@ def update_contract_item(
     current_user=Depends(deps.get_current_user),
 ):
     """更新合约指标条目"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # 检查条目是否存在且属于该合约
-    cursor.execute(
-        "SELECT * FROM performance_contract_items WHERE id = ? AND contract_id = ?",
-        (item_id, contract_id),
-    )
-    if not cursor.fetchone():
-        conn.close()
-        raise HTTPException(status_code=404, detail="指标条目不存在或不属于该合约")
-
-    # 构建更新字段
-    updates = []
-    params = []
+    item = _get_item_or_404(db, contract_id, item_id)
+    if category is not None and category not in VALID_ITEM_CATEGORIES:
+        raise HTTPException(status_code=400, detail="指标类别无效")
 
     field_mappings = {
         "sort_order": sort_order,
@@ -717,49 +484,22 @@ def update_contract_item(
         "score": score,
         "evaluator_comment": evaluator_comment,
     }
-
-    for field, value in field_mappings.items():
-        if value is not None:
-            updates.append(f"{field} = ?")
-            params.append(value)
-
+    updates = {field: value for field, value in field_mappings.items() if value is not None}
     if not updates:
-        conn.close()
         raise HTTPException(status_code=400, detail="没有要更新的字段")
 
-    updates.append("updated_at = CURRENT_TIMESTAMP")
-    params.append(item_id)
-
+    for field, value in updates.items():
+        setattr(item, field, value)
     try:
-        cursor.execute(
-            f"""
-            UPDATE performance_contract_items
-            SET {', '.join(updates)}
-            WHERE id = ?
-        """,
-            params,
-        )
-
-        # 如果更新了 weight，重新计算总权重
         if weight is not None:
-            total_weight = calculate_total_weight(contract_id)
-            cursor.execute(
-                "UPDATE performance_contracts SET total_weight = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-                (total_weight, contract_id),
-            )
-
-        conn.commit()
-
-        # 返回更新后的条目
-        cursor.execute("SELECT * FROM performance_contract_items WHERE id = ?", (item_id,))
-        item = dict(cursor.fetchone())
-
-        return ResponseModel(code=200, message="更新成功", data=item)
+            db.flush()
+            _refresh_total_weight(db, contract_id)
+        db.commit()
+        db.refresh(item)
     except Exception as e:
-        conn.rollback()
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"更新失败：{str(e)}")
-    finally:
-        conn.close()
+    return ResponseModel(code=200, message="更新成功", data=_to_dict(item))
 
 
 @router.delete("/{contract_id}/items/{item_id}", response_model=ResponseModel)
@@ -770,36 +510,16 @@ def delete_contract_item(
     current_user=Depends(deps.get_current_user),
 ):
     """删除合约指标条目"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # 检查条目是否存在且属于该合约
-    cursor.execute(
-        "SELECT id FROM performance_contract_items WHERE id = ? AND contract_id = ?",
-        (item_id, contract_id),
-    )
-    if not cursor.fetchone():
-        conn.close()
-        raise HTTPException(status_code=404, detail="指标条目不存在或不属于该合约")
-
+    item = _get_item_or_404(db, contract_id, item_id)
     try:
-        cursor.execute("DELETE FROM performance_contract_items WHERE id = ?", (item_id,))
-
-        # 重新计算总权重
-        total_weight = calculate_total_weight(contract_id)
-        cursor.execute(
-            "UPDATE performance_contracts SET total_weight = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-            (total_weight, contract_id),
-        )
-
-        conn.commit()
-
-        return ResponseModel(code=200, message="删除成功")
+        db.delete(item)
+        db.flush()
+        _refresh_total_weight(db, contract_id)
+        db.commit()
     except Exception as e:
-        conn.rollback()
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"删除失败：{str(e)}")
-    finally:
-        conn.close()
+    return ResponseModel(code=200, message="删除成功")
 
 
 # ============================================
@@ -814,44 +534,21 @@ def submit_contract(
     current_user=Depends(deps.get_current_user),
 ):
     """提交合约审批"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM performance_contracts WHERE id = ?", (contract_id,))
-    contract = cursor.fetchone()
-
-    if not contract:
-        conn.close()
-        raise HTTPException(status_code=404, detail="合约不存在")
-
-    if contract["status"] != "draft":
-        conn.close()
+    contract = _get_contract_or_404(db, contract_id)
+    if contract.status != "draft":
         raise HTTPException(status_code=400, detail="只有草稿状态的合约可以提交")
-
-    # 检查权重是否为 100
-    if abs(contract["total_weight"] - 100.0) > 0.01:
-        conn.close()
+    if abs((contract.total_weight or 0) - 100.0) > 0.01:
         raise HTTPException(
-            status_code=400, detail=f"权重总和必须为 100，当前为{contract['total_weight']}"
+            status_code=400, detail=f"权重总和必须为 100，当前为{contract.total_weight}"
         )
 
+    contract.status = "pending_review"
     try:
-        cursor.execute(
-            """
-            UPDATE performance_contracts
-            SET status = 'pending_review', updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        """,
-            (contract_id,),
-        )
-        conn.commit()
-
-        return ResponseModel(code=200, message="提交成功")
+        db.commit()
     except Exception as e:
-        conn.rollback()
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"提交失败：{str(e)}")
-    finally:
-        conn.close()
+    return ResponseModel(code=200, message="提交成功")
 
 
 @router.post("/{contract_id}/sign", response_model=ResponseModel)
@@ -862,71 +559,26 @@ def sign_contract(
     current_user=Depends(deps.get_current_user),
 ):
     """签署合约"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM performance_contracts WHERE id = ?", (contract_id,))
-    contract = cursor.fetchone()
-
-    if not contract:
-        conn.close()
-        raise HTTPException(status_code=404, detail="合约不存在")
-
-    if contract["status"] not in ["pending_sign", "active"]:
-        conn.close()
+    contract = _get_contract_or_404(db, contract_id)
+    if contract.status not in ["pending_sign", "active"]:
         raise HTTPException(status_code=400, detail="合约状态不允许签署")
+    if sign_as == "signer":
+        contract.signer_signature = _now_string()
+    elif sign_as == "counterpart":
+        contract.counterpart_signature = _now_string()
+    else:
+        raise HTTPException(status_code=400, detail="签署身份必须是 signer 或 counterpart")
+
+    if contract.signer_signature and contract.counterpart_signature:
+        contract.status = "active"
+        contract.sign_date = datetime.now().date().isoformat()
 
     try:
-        if sign_as == "signer":
-            cursor.execute(
-                """
-                UPDATE performance_contracts
-                SET signer_signature = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            """,
-                (contract_id,),
-            )
-        elif sign_as == "counterpart":
-            cursor.execute(
-                """
-                UPDATE performance_contracts
-                SET counterpart_signature = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            """,
-                (contract_id,),
-            )
-        else:
-            conn.close()
-            raise HTTPException(status_code=400, detail="签署身份必须是 signer 或 counterpart")
-
-        # 检查双方是否都已签署
-        cursor.execute(
-            "SELECT signer_signature, counterpart_signature FROM performance_contracts WHERE id = ?",
-            (contract_id,),
-        )
-        updated = cursor.fetchone()
-
-        if updated["signer_signature"] and updated["counterpart_signature"]:
-            # 双方都签署，状态改为 active
-            cursor.execute(
-                """
-                UPDATE performance_contracts
-                SET status = 'active', sign_date = DATE('now')
-                WHERE id = ?
-            """,
-                (contract_id,),
-            )
-
-        conn.commit()
-
-        return ResponseModel(code=200, message="签署成功")
-    except HTTPException:
-        raise
+        db.commit()
     except Exception as e:
-        conn.rollback()
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"签署失败：{str(e)}")
-    finally:
-        conn.close()
+    return ResponseModel(code=200, message="签署成功")
 
 
 @router.post("/{contract_id}/evaluate", response_model=ResponseModel)
@@ -937,62 +589,33 @@ def evaluate_contract(
     current_user=Depends(deps.get_current_user),
 ):
     """批量评分（更新指标条目的实际值和得分）"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM performance_contracts WHERE id = ?", (contract_id,))
-    contract = cursor.fetchone()
-
-    if not contract:
-        conn.close()
-        raise HTTPException(status_code=404, detail="合约不存在")
-
+    _get_contract_or_404(db, contract_id)
     try:
         for eval_item in evaluations:
             item_id = eval_item.get("item_id")
-            actual_value = eval_item.get("actual_value")
-            score = eval_item.get("score")
-            comment = eval_item.get("evaluator_comment")
-
             if not item_id:
                 continue
-
-            updates = []
-            params = []
-
-            if actual_value is not None:
-                updates.append("actual_value = ?")
-                params.append(str(actual_value))
-
-            if score is not None:
-                updates.append("score = ?")
-                params.append(score)
-
-            if comment is not None:
-                updates.append("evaluator_comment = ?")
-                params.append(comment)
-
-            if updates:
-                updates.append("updated_at = CURRENT_TIMESTAMP")
-                params.append(item_id)
-
-                cursor.execute(
-                    f"""
-                    UPDATE performance_contract_items
-                    SET {', '.join(updates)}
-                    WHERE id = ? AND contract_id = ?
-                """,
-                    params + [contract_id],
+            item = (
+                db.query(PerformanceContractItem)
+                .filter(
+                    PerformanceContractItem.id == item_id,
+                    PerformanceContractItem.contract_id == contract_id,
                 )
-
-        conn.commit()
-
-        return ResponseModel(code=200, message="评分成功")
+                .first()
+            )
+            if not item:
+                continue
+            if eval_item.get("actual_value") is not None:
+                item.actual_value = str(eval_item.get("actual_value"))
+            if eval_item.get("score") is not None:
+                item.score = eval_item.get("score")
+            if eval_item.get("evaluator_comment") is not None:
+                item.evaluator_comment = eval_item.get("evaluator_comment")
+        db.commit()
     except Exception as e:
-        conn.rollback()
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"评分失败：{str(e)}")
-    finally:
-        conn.close()
+    return ResponseModel(code=200, message="评分成功")
 
 
 # ============================================
@@ -1010,125 +633,85 @@ def generate_from_strategy(
     current_user=Depends(deps.get_current_user),
 ):
     """从战略分解自动生成合约条目"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # 检查合约是否存在
-    cursor.execute("SELECT * FROM performance_contracts WHERE id = ?", (contract_id,))
-    contract = cursor.fetchone()
-
-    if not contract:
-        conn.close()
-        raise HTTPException(status_code=404, detail="合约不存在")
-
+    _get_contract_or_404(db, contract_id)
     try:
         items_created = []
         sort_order = 0
 
-        # 获取战略关联的 KPI
         if include_kpis:
-            cursor.execute(
-                """
-                SELECT k.*, c.name as csf_name
-                FROM strategy_kpis k
-                LEFT JOIN strategy_csfs c ON k.csf_id = c.id
-                WHERE k.strategy_id = ? AND k.is_deleted = 0
-            """,
-                (strategy_id,),
-            )
-
-            for kpi in cursor.fetchall():
-                sort_order += 1
-                cursor.execute(
+            rows = db.execute(
+                text(
                     """
-                    INSERT INTO performance_contract_items (
-                        contract_id, sort_order, category, indicator_name,
-                        indicator_description, weight, unit,
-                        target_value, challenge_value, baseline_value,
-                        scoring_rule, data_source, evaluation_method,
-                        source_type, source_id
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                    (
-                        contract_id,
-                        sort_order,
-                        "业绩指标",
-                        kpi["name"],
-                        kpi.get("description"),
-                        0,
-                        kpi.get("unit"),
-                        str(kpi.get("target_value")),
-                        str(kpi.get("challenge_value")),
-                        str(kpi.get("baseline_value")),
-                        kpi.get("scoring_rule"),
-                        kpi.get("data_source"),
-                        "系统采集",
-                        "kpi",
-                        kpi["id"],
-                    ),
-                )
+                    SELECT k.*, c.name as csf_name
+                    FROM strategy_kpis k
+                    LEFT JOIN strategy_csfs c ON k.csf_id = c.id
+                    WHERE k.strategy_id = :strategy_id AND k.is_deleted = 0
+                    """
+                ),
+                {"strategy_id": strategy_id},
+            ).mappings()
 
+            for kpi in rows:
+                sort_order += 1
+                item = PerformanceContractItem(
+                    contract_id=contract_id,
+                    sort_order=sort_order,
+                    category="业绩指标",
+                    indicator_name=kpi["name"],
+                    indicator_description=kpi.get("description"),
+                    weight=0,
+                    unit=kpi.get("unit"),
+                    target_value=str(kpi.get("target_value")),
+                    challenge_value=str(kpi.get("challenge_value")),
+                    baseline_value=str(kpi.get("baseline_value")),
+                    scoring_rule=kpi.get("scoring_rule"),
+                    data_source=kpi.get("data_source"),
+                    evaluation_method="系统采集",
+                    source_type="kpi",
+                    source_id=kpi["id"],
+                )
+                db.add(item)
                 items_created.append({"type": "kpi", "id": kpi["id"], "name": kpi["name"]})
 
-        # 获取战略关联的年度重点工作
         if include_annual_works:
-            cursor.execute(
-                """
-                SELECT * FROM strategy_annual_works
-                WHERE strategy_id = ?
-            """,
-                (strategy_id,),
-            )
-
-            for work in cursor.fetchall():
-                sort_order += 1
-                cursor.execute(
+            rows = db.execute(
+                text(
                     """
-                    INSERT INTO performance_contract_items (
-                        contract_id, sort_order, category, indicator_name,
-                        indicator_description, weight, unit,
-                        target_value, challenge_value, baseline_value,
-                        scoring_rule, data_source, evaluation_method,
-                        source_type, source_id
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                    (
-                        contract_id,
-                        sort_order,
-                        "管理指标",
-                        work["name"],
-                        work.get("description"),
-                        0,
-                        "进度%",
-                        "100%",
-                        None,
-                        None,
-                        "按进度评分",
-                        "项目管理系统",
-                        "进度同步",
-                        "work",
-                        work["id"],
-                    ),
-                )
+                    SELECT *
+                    FROM strategy_annual_works
+                    WHERE strategy_id = :strategy_id
+                    """
+                ),
+                {"strategy_id": strategy_id},
+            ).mappings()
 
+            for work in rows:
+                sort_order += 1
+                item = PerformanceContractItem(
+                    contract_id=contract_id,
+                    sort_order=sort_order,
+                    category="管理指标",
+                    indicator_name=work["name"],
+                    indicator_description=work.get("description"),
+                    weight=0,
+                    unit="进度%",
+                    target_value="100%",
+                    scoring_rule="按进度评分",
+                    data_source="项目管理系统",
+                    evaluation_method="进度同步",
+                    source_type="work",
+                    source_id=work["id"],
+                )
+                db.add(item)
                 items_created.append(
                     {"type": "annual_work", "id": work["id"], "name": work["name"]}
                 )
 
-        # 更新合约的 strategy_id
-        cursor.execute(
-            "UPDATE performance_contracts SET strategy_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-            (strategy_id, contract_id),
-        )
-
-        # 重新计算总权重
-        total_weight = calculate_total_weight(contract_id)
-        cursor.execute(
-            "UPDATE performance_contracts SET total_weight = ? WHERE id = ?",
-            (total_weight, contract_id),
-        )
-
-        conn.commit()
+        contract = _get_contract_or_404(db, contract_id)
+        contract.strategy_id = strategy_id
+        db.flush()
+        total_weight = _refresh_total_weight(db, contract_id)
+        db.commit()
 
         return ResponseModel(
             code=200,
@@ -1140,7 +723,5 @@ def generate_from_strategy(
             },
         )
     except Exception as e:
-        conn.rollback()
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"生成失败：{str(e)}")
-    finally:
-        conn.close()

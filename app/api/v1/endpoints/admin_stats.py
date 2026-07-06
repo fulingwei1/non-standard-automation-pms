@@ -53,19 +53,25 @@ def _database_file_size() -> int:
 
 
 def _directory_size(path: Path) -> int:
-    if not path.exists():
+    try:
+        if not path.exists():
+            return 0
+        if path.is_file():
+            return path.stat().st_size
+    except OSError:
         return 0
-    if path.is_file():
-        return path.stat().st_size
 
     total = 0
-    for root, _, files in os.walk(path):
-        for filename in files:
-            file_path = Path(root) / filename
-            try:
-                total += file_path.stat().st_size
-            except OSError:
-                continue
+    try:
+        for root, _, files in os.walk(path):
+            for filename in files:
+                file_path = Path(root) / filename
+                try:
+                    total += file_path.stat().st_size
+                except OSError:
+                    continue
+    except OSError:
+        return total
     return total
 
 

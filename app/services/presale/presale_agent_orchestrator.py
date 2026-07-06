@@ -22,6 +22,7 @@
 端点：POST /ai-jobs/presale-agent
 """
 
+import json
 import logging
 import time
 from typing import Any, Dict, List, Optional
@@ -163,6 +164,72 @@ def run_presale_agent(
                 "tool_calls": len(step8.get("tool_calls", [])),
                 "subsystems": len(step8.get("subsystems", [])),
             })
+
+        # ============= Step 8.5: 竞争分析（深度方案时自动做） =============
+        if enable_deep_solution:
+            t0 = time.time()
+            from app.services.presale.competitive_analyzer import analyze_competition
+            step_comp = analyze_competition(
+                db, ai, requirement_text, parsed,
+                step8 if step8.get("ok") else {},
+                params.get("competitors_hint"),
+            )
+            result["steps"]["competitive_analysis"] = step_comp
+            result["timings"]["competitive_analysis"] = round(time.time() - t0, 2)
+            _log_step("8.5", "竞争分析", {
+                "ok": step_comp.get("ok"),
+                "selling_points": len(step_comp.get("our_selling_points", [])),
+            })
+
+        # ============= Step 9: 可视化方案包（整线项目，可选） =============
+        # 触发条件：深度方案开启 + 整线项目（project_type 或关键词判断）
+        _project_type = (parsed or {}).get("project_type", "")
+        is_line = _project_type == "整线" or any(
+            kw in requirement_text for kw in ["整线", "自动化线", "产线", "生产线", "DIP线", "SMT线", "工站"]
+        )
+        if enable_deep_solution and is_line:
+            stations_data = step8.get("line_stations", []) if step8.get("ok") else []
+            # 即使工位数据为空也尝试（模板会从 equipment/subsystems 兜底）
+            t0 = time.time()
+            try:
+                from app.services.presale.layout_html_generator import (
+                    render_layout_html, generate_layout_with_ai,
+                    render_spec_html, render_gantt_html, render_response_html_with_ai,
+                )
+                project_name = requirement_text[:20]
+                summary = requirement_text[:80]
+                ds_data = step8 if step8.get("ok") else {}
+
+                htmls = {}
+                # 布局图
+                layout = generate_layout_with_ai(ai, requirement_text, stations_data, project_name)
+                if not layout and stations_data:
+                    layout = render_layout_html(project_name, summary, stations_data, ds_data.get("customer_equipment_integration", []))
+                htmls["layout_html"] = layout or ""
+                # 规格书 + 甘特图（模板，快）
+                htmls["spec_html"] = render_spec_html(project_name, summary, ds_data, parsed)
+                htmls["gantt_html"] = render_gantt_html(project_name, summary, ds_data)
+                # 响应表（AI，耗时长，失败不影响）
+                try:
+                    htmls["response_html"] = render_response_html_with_ai(ai, project_name, requirement_text[:800], ds_data) or ""
+                except Exception:
+                    htmls["response_html"] = ""
+
+                result["steps"]["layout_html"] = {
+                    "ok": True,
+                    "html": htmls.get("layout_html", ""),  # 兼容前端
+                    **htmls,
+                    "method": "ai+template",
+                }
+                result["timings"]["layout_html"] = round(time.time() - t0, 2)
+                _log_step(9, "可视化方案包", {
+                    "layout": bool(htmls.get("layout_html")),
+                    "spec": bool(htmls.get("spec_html")),
+                    "gantt": bool(htmls.get("gantt_html")),
+                    "response": bool(htmls.get("response_html")),
+                })
+            except Exception as e:
+                logger.warning("Step9 可视化方案包失败: %s", e)
 
         result["total_time"] = round(time.time() - started, 2)
         result["summary"] = _build_overall_summary(result)
@@ -592,6 +659,108 @@ def _normalize_equipment(eq: Optional[str]) -> Optional[str]:
 
 def _log_step(step: int, name: str, brief: Any) -> None:
     logger.info("[售前智能体] Step%d %s 完成: %s", step, name, brief)
+
+
+def _revise_solution_with_ai(
+    ai: AIClientService,
+    current_solution: Dict[str, Any],
+    change_request: str,
+    requirement_text: str,
+) -> tuple:
+    """
+    销售提修改建议，agent 理解后修改方案的对应部分。
+
+    Args:
+        current_solution: 当前完整方案 JSON（含 steps）
+        change_request: 销售的修改建议（如"报价调低10%""加个老化工位""PLC换成西门子"）
+        requirement_text: 原始需求（给 AI 上下文）
+
+    Returns:
+        (revised_solution, changes_summary)
+        revised_solution: 修改后的完整方案 JSON
+        changes_summary: 本次改了什么的文字摘要
+    """
+    # 把方案浓缩成文本给 AI（完整 JSON 太长）
+    steps = current_solution.get("steps", {})
+    ds = steps.get("deep_solution", {})
+    solution_text = json.dumps(
+        {
+            "报价档位": ds.get("tiers", []),
+            "子系统": (ds.get("subsystems") or ds.get("line_stations", []))[:6],
+            "设备选型": (ds.get("equipment_selection") or [])[:6],
+            "成本分解": ds.get("cost_breakdown", []),
+            "风险": steps.get("risk_warnings", {}).get("risks", [])[:4],
+            "整线布局": ds.get("line_layout", ""),
+            "报价区间": steps.get("quote_range", {}).get("price", {}),
+        },
+        ensure_ascii=False,
+        indent=2,
+        default=str,
+    )
+
+    prompt = (
+        "你是售前方案修改助手。销售对当前方案提出了修改建议，请理解建议并修改方案的对应部分。\n\n"
+        f"## 原始客户需求\n{requirement_text[:200]}\n\n"
+        f"## 当前方案（浓缩）\n{solution_text}\n\n"
+        f"## 销售的修改建议\n{change_request}\n\n"
+        "## 要求\n"
+        "1. 理解建议意图（调价/加设备/换品牌/改工艺/改风险等）\n"
+        "2. 只改建议涉及的部分，其他保持不变\n"
+        "3. 修改要合理（如调低报价要相应调整成本分解；加设备要更新工位和成本）\n"
+        "4. 输出严格 JSON：\n"
+        "{\n"
+        '  "changes_summary": "用2-3句话说明本次改了什么（如：将标准型报价从665万调低10%至598万，相应调减电气系统成本）",\n'
+        '  "modified_parts": {\n'
+        '    "tiers": [修改后的三档报价],\n'
+        '    "subsystems": [修改后的子系统/工位],\n'
+        '    "equipment_selection": [修改后的设备选型],\n'
+        '    "cost_breakdown": [修改后的成本分解],\n'
+        '    "risks": [修改后的风险],\n'
+        '    "line_layout": "修改后的布局（如有改动）"\n'
+        "  }\n"
+        "}\n"
+        "只输出 JSON，modified_parts 里只放有改动的字段，没改的不要放。"
+    )
+    try:
+        resp = ai.generate_solution(prompt, model="qwen3-coder-plus", temperature=0.3, max_tokens=2000)
+        raw = resp.get("content") or ""
+        raw = raw.strip().strip("`")
+        if raw.startswith("json"):
+            raw = raw[4:].strip()
+        modification = json.loads(raw)
+        changes_summary = modification.get("changes_summary", "已根据建议修改")
+
+        # 把修改应用到完整方案
+        revised = _apply_modification(current_solution, modification.get("modified_parts", {}))
+        return revised, changes_summary
+    except Exception as e:
+        logger.warning("方案迭代修改失败: %s", e)
+        return current_solution, f"修改失败（{e}），方案未变"
+
+
+def _apply_modification(solution: Dict[str, Any], modified_parts: Dict[str, Any]) -> Dict[str, Any]:
+    """把 agent 的修改应用到完整方案 JSON（深拷贝，只覆盖有改动的字段）。"""
+    import copy
+    revised = copy.deepcopy(solution)
+    steps = revised.get("steps", {})
+    ds = steps.get("deep_solution", {})
+    if not ds.get("ok"):
+        # 单设备方案，用 generate_solution
+        ds = steps.get("generate_solution", {}).get("solution", {})
+        target_key = "generate_solution"
+    else:
+        target_key = "deep_solution"
+
+    for field, new_val in modified_parts.items():
+        if not new_val:
+            continue
+        if field in ("tiers", "subsystems", "equipment_selection", "cost_breakdown", "line_layout", "capacity_analysis"):
+            steps[target_key][field] = new_val
+        elif field == "risks":
+            steps["risk_warnings"]["risks"] = new_val
+
+    revised["steps"] = steps
+    return revised
 
 
 def _build_overall_summary(result: Dict[str, Any]) -> str:

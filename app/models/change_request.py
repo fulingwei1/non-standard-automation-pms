@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 项目变更管理模块 ORM 模型
-包含：变更请求、审批记录、通知记录
+包含：变更请求、通知记录等
 """
 
 from sqlalchemy import (
@@ -161,11 +161,6 @@ class ChangeRequest(Base, TimestampMixin):
     submitter = relationship('User', foreign_keys=[submitter_id])
     approver = relationship('User', foreign_keys=[approver_id])
     verified_by = relationship('User', foreign_keys=[verified_by_id])
-    approval_records = relationship(
-        'ChangeApprovalRecord',
-        back_populates='change_request',
-        cascade='all, delete-orphan'
-    )
     notifications = relationship(
         'ChangeNotification',
         back_populates='change_request',
@@ -195,51 +190,23 @@ class ChangeRequest(Base, TimestampMixin):
         return f"<ChangeRequest {self.change_code}>"
 
 
-# ==================== 变更审批记录表 ====================
+# ==================== 变更审批记录兼容壳 ====================
 
 class ChangeApprovalRecord(Base, TimestampMixin):
-    """变更审批记录表"""
-    __tablename__ = 'change_approval_records'
+    """退役后的变更审批记录兼容壳。
 
-    id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    change_request_id = Column(
-        Integer,
-        ForeignKey('change_requests.id'),
-        nullable=False,
-        comment='变更请求ID'
-    )
-    
-    # 审批人信息
-    approver_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='审批人ID')
-    approver_name = Column(String(50), comment='审批人姓名')
-    approver_role = Column(String(50), comment='审批人角色')
-    
-    # 审批信息
-    approval_date = Column(DateTime, default=datetime.utcnow, comment='审批日期')
-    decision = Column(
-        Enum(ApprovalDecisionEnum, values_callable=lambda enum_cls: [item.value for item in enum_cls]),
-        nullable=False,
-        comment='审批决策'
-    )
-    comments = Column(Text, comment='审批意见')
-    
-    # 审批附件
-    attachments = Column(JSON, comment='审批附件')
-    
-    # 关系
-    change_request = relationship('ChangeRequest', back_populates='approval_records')
-    approver = relationship('User')
+    审批明细统一写入 `approval_action_logs`，旧
+    `change_approval_records` 表不再注册 SQLAlchemy 表。
+    """
 
-    __table_args__ = (
-        Index('idx_approval_change', 'change_request_id'),
-        Index('idx_approval_approver', 'approver_id'),
-        Index('idx_approval_date', 'approval_date'),
-        {'comment': '变更审批记录表'}
-    )
+    __abstract__ = True
+
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def __repr__(self):
-        return f"<ChangeApprovalRecord {self.id}>"
+        return f"<ChangeApprovalRecord {getattr(self, 'id', None)}>"
 
 
 # ==================== 变更通知记录表 ====================

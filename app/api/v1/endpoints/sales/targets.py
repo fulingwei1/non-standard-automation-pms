@@ -3,6 +3,10 @@
 销售目标管理 API endpoints
 """
 
+from __future__ import annotations
+
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -15,10 +19,12 @@ from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.organization import Department
 from app.models.sales import SalesTarget
+from app.models.sales.operation_log import SalesEntityType, SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import SalesTargetCreate, SalesTargetResponse, SalesTargetUpdate
-from app.utils.db_helpers import get_or_404, save_obj
+from app.services.sales.operation_log_service import SalesOperationLogService
+from app.utils.db_helpers import get_or_404
 
 from .utils import get_user_role_code
 
@@ -26,6 +32,70 @@ router = APIRouter()
 
 
 # ==================== 销售目标管理 ====================
+
+
+def _audit_scalar(value: Any) -> Any:
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if hasattr(value, "value"):
+        return value.value
+    return value
+
+
+def _sales_target_audit_value(target: SalesTarget) -> dict[str, Any]:
+    fields = [
+        "id",
+        "tenant_id",
+        "target_scope",
+        "user_id",
+        "department_id",
+        "team_id",
+        "target_type",
+        "target_period",
+        "period_value",
+        "target_value",
+        "description",
+        "status",
+        "created_by",
+    ]
+    return {field: _audit_scalar(getattr(target, field, None)) for field in fields}
+
+
+def _changed_fields(old_value: dict[str, Any], new_value: dict[str, Any]) -> list[str]:
+    return [
+        field
+        for field, value in new_value.items()
+        if field in old_value and old_value[field] != value
+    ]
+
+
+def _log_sales_target_operation(
+    db: Session,
+    target: SalesTarget,
+    operation_type: str,
+    operator: User,
+    *,
+    old_value: dict[str, Any] | None = None,
+    new_value: dict[str, Any] | None = None,
+    operation_desc: str,
+) -> None:
+    old_snapshot = old_value or {}
+    new_snapshot = new_value or {}
+    SalesOperationLogService.log_operation(
+        db,
+        entity_type=SalesEntityType.TARGET,
+        entity_id=target.id,
+        operation_type=operation_type,
+        operator=operator,
+        entity_code=f"{target.target_type}-{target.period_value}",
+        operation_desc=operation_desc,
+        old_value=old_snapshot,
+        new_value=new_snapshot,
+        changed_fields=_changed_fields(old_snapshot, new_snapshot),
+        remark=target.description,
+    )
 
 
 @router.get("/targets", response_model=PaginatedResponse)
@@ -183,7 +253,18 @@ def create_sales_target(
         created_by=current_user.id,
     )
 
-    save_obj(db, target)
+    db.add(target)
+    db.flush()
+    _log_sales_target_operation(
+        db,
+        target,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=_sales_target_audit_value(target),
+        operation_desc="创建销售目标",
+    )
+    db.commit()
+    db.refresh(target)
 
     # 获取用户/部门名称
     user_name = None
@@ -244,6 +325,8 @@ def update_sales_target(
             else:
                 raise HTTPException(status_code=403, detail="无权修改此目标")
 
+    old_value = _sales_target_audit_value(target)
+
     # 更新字段
     if target_data.target_value is not None:
         target.target_value = target_data.target_value
@@ -252,6 +335,16 @@ def update_sales_target(
     if target_data.status is not None:
         target.status = target_data.status
 
+    db.flush()
+    _log_sales_target_operation(
+        db,
+        target,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=_sales_target_audit_value(target),
+        operation_desc="更新销售目标",
+    )
     db.commit()
     db.refresh(target)
 

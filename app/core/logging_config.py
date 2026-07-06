@@ -13,6 +13,8 @@
 import logging
 import os
 import sys
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 from .config import settings
@@ -31,6 +33,11 @@ LOG_LEVEL_MAP = {
     "ERROR": logging.ERROR,
     "CRITICAL": logging.CRITICAL,
 }
+
+DEFAULT_LOG_DIR = "logs"
+DEFAULT_LOG_FILE = "app.log"
+DEFAULT_LOG_MAX_BYTES = 10 * 1024 * 1024
+DEFAULT_LOG_BACKUP_COUNT = 7
 
 
 class SensitiveDataFilter(logging.Filter):
@@ -155,6 +162,12 @@ def setup_logging() -> None:
 
     root_logger.addHandler(console_handler)
 
+    # 文件处理器：保留最近若干份应用日志，便于故障后追溯。
+    file_handler = _build_rotating_file_handler(log_level, log_format)
+    file_handler.addFilter(sensitive_filter)
+    file_handler.addFilter(production_filter)
+    root_logger.addHandler(file_handler)
+
     # 第三方库日志级别控制（减少噪音）
     logging.getLogger("uvicorn").setLevel(logging.INFO if settings.DEBUG else logging.WARNING)
     logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
@@ -187,6 +200,42 @@ def get_logger(name: Optional[str] = None) -> logging.Logger:
     if name is None:
         name = "app"
     return logging.getLogger(name)
+
+
+def _get_positive_int_env(name: str, default: int) -> int:
+    """读取正整数环境变量，非法值回退到默认值。"""
+    raw_value = os.getenv(name)
+    if raw_value is None:
+        return default
+
+    try:
+        value = int(raw_value)
+    except ValueError:
+        return default
+
+    return value if value > 0 else default
+
+
+def _build_rotating_file_handler(log_level: int, log_format: str) -> RotatingFileHandler:
+    """构建应用日志文件 handler。"""
+    log_dir = Path(os.getenv("APP_LOG_DIR", DEFAULT_LOG_DIR)).expanduser()
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    log_file_name = os.getenv("APP_LOG_FILE", DEFAULT_LOG_FILE).strip() or DEFAULT_LOG_FILE
+    log_path = log_dir / Path(log_file_name).name
+
+    max_bytes = _get_positive_int_env("APP_LOG_MAX_BYTES", DEFAULT_LOG_MAX_BYTES)
+    backup_count = _get_positive_int_env("APP_LOG_BACKUP_COUNT", DEFAULT_LOG_BACKUP_COUNT)
+
+    file_handler = RotatingFileHandler(
+        log_path,
+        maxBytes=max_bytes,
+        backupCount=backup_count,
+        encoding="utf-8",
+    )
+    file_handler.setLevel(log_level)
+    file_handler.setFormatter(logging.Formatter(log_format))
+    return file_handler
 
 
 def _get_log_level() -> int:

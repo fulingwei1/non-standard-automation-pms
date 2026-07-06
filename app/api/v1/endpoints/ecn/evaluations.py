@@ -6,7 +6,7 @@ ECN评估管理 API endpoints
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, List
 
@@ -17,12 +17,11 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.ecn import Ecn, EcnApproval, EcnApprovalMatrix, EcnEvaluation, EcnType
+from app.models.ecn import Ecn, EcnEvaluation, EcnType
 from app.models.user import User
 from app.schemas.ecn import EcnEvaluationCreate, EcnEvaluationResponse
-from app.services.ecn.ecn_auto_assign_service import auto_assign_approval
+from app.services.ecn.approval import EcnApprovalService
 from app.services.ecn.notification import (
-    notify_approval_assigned,
     notify_evaluation_assigned,
     notify_evaluation_completed,
 )
@@ -31,6 +30,18 @@ from app.utils.db_helpers import get_or_404
 from .utils import get_user_display_name
 
 router = APIRouter()
+
+
+def _submit_ecn_to_unified_approval(db: Session, ecn: Ecn, current_user: User) -> None:
+    initiator_id = ecn.applicant_id or current_user.id
+    try:
+        EcnApprovalService(db)._submit_single_ecn(
+            ecn_id=ecn.id,
+            initiator_id=initiator_id,
+            urgency=ecn.urgency or "NORMAL",
+        )
+    except Exception:
+        logger.exception("ECN %s 评估完成后自动提交统一审批失败", ecn.id)
 
 
 @router.get(
@@ -214,86 +225,7 @@ def submit_ecn_evaluation(
             if all(dept in submitted_depts for dept in required_depts):
                 ecn.status = "EVALUATED"
                 ecn.current_step = "APPROVAL"
-
-                # 根据审批矩阵自动创建审批记录
-                approval_matrix = ecn_type_config.approval_matrix or {}
-                if approval_matrix:
-                    # 根据成本影响和工期影响确定审批层级
-                    cost_impact = float(ecn.cost_impact or 0)
-                    schedule_impact = ecn.schedule_impact_days or 0
-
-                    # 查找匹配的审批规则
-                    approval_rules = (
-                        db.query(EcnApprovalMatrix)
-                        .filter(
-                            EcnApprovalMatrix.ecn_type == ecn.ecn_type, EcnApprovalMatrix.is_active
-                        )
-                        .all()
-                    )
-
-                    for rule in approval_rules:
-                        if rule.condition_type == "COST":
-                            if rule.condition_min and rule.condition_max:
-                                if rule.condition_min <= cost_impact <= rule.condition_max:
-                                    # 创建审批记录
-                                    approval = EcnApproval(
-                                        ecn_id=ecn.id,
-                                        approval_level=rule.approval_level,
-                                        approval_role=rule.approval_role,
-                                        status="PENDING",
-                                        due_date=datetime.now() + timedelta(days=3),  # 默认3天期限
-                                    )
-                                    db.add(approval)
-
-                                    # 自动分配审批任务
-                                    try:
-                                        approver_id = auto_assign_approval(db, ecn, approval)
-                                        if approver_id:
-                                            approval.approver_id = approver_id
-                                            notify_approval_assigned(db, ecn, approval, approver_id)
-                                    except Exception as e:
-                                        logger.error(f"Failed to assign approval: {e}")
-                        elif rule.condition_type == "SCHEDULE":
-                            if rule.condition_min and rule.condition_max:
-                                if rule.condition_min <= schedule_impact <= rule.condition_max:
-                                    approval = EcnApproval(
-                                        ecn_id=ecn.id,
-                                        approval_level=rule.approval_level,
-                                        approval_role=rule.approval_role,
-                                        status="PENDING",
-                                        due_date=datetime.now() + timedelta(days=3),
-                                    )
-                                    db.add(approval)
-
-                                    # 自动分配审批任务
-                                    try:
-                                        approver_id = auto_assign_approval(db, ecn, approval)
-                                        if approver_id:
-                                            approval.approver_id = approver_id
-                                            notify_approval_assigned(db, ecn, approval, approver_id)
-                                    except Exception as e:
-                                        logger.error(f"Failed to auto assign approval: {e}")
-
-                    # 如果没有匹配的规则，使用默认审批流程
-                    if not approval_rules:
-                        # 默认一级审批
-                        approval = EcnApproval(
-                            ecn_id=ecn.id,
-                            approval_level=1,
-                            approval_role="项目经理",
-                            status="PENDING",
-                            due_date=datetime.now() + timedelta(days=3),
-                        )
-                        db.add(approval)
-
-                        # 自动分配审批任务
-                        try:
-                            approver_id = auto_assign_approval(db, ecn, approval)
-                            if approver_id:
-                                approval.approver_id = approver_id
-                                notify_approval_assigned(db, ecn, approval, approver_id)
-                        except Exception as e:
-                            logger.error(f"Failed to auto assign approval: {e}")
+                _submit_ecn_to_unified_approval(db, ecn, current_user)
 
     db.add(eval)
     db.add(ecn)

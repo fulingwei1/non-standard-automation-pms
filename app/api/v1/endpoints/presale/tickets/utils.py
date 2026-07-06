@@ -2,6 +2,8 @@
 """
 售前工单管理 - 工具函数
 """
+from __future__ import annotations
+
 from datetime import datetime
 
 from sqlalchemy import desc

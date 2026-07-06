@@ -38,6 +38,7 @@ data/*.db.new_*
 data/*.sql
 data/*.sqlite
 data/*.sqlite3
+data/scheduler_metrics.json
 
 # IDE
 .vscode/

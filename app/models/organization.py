@@ -75,6 +75,7 @@ class Employee(Base, TimestampMixin):
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     employee_code = Column(String(10), unique=True, nullable=False, comment="工号")
     name = Column(String(50), nullable=False, comment="姓名")
+    department_id = Column(Integer, ForeignKey("departments.id"), comment="部门ID")
     department = Column(String(50), comment="部门")  # Legacy string field
     role = Column(String(50), comment="角色")
     phone = Column(String(20), comment="电话")
@@ -92,8 +93,11 @@ class Employee(Base, TimestampMixin):
     pinyin_name = Column(String(100), comment="姓名拼音")
 
     # 关系
+    department_ref = relationship("Department", foreign_keys=[department_id])
     # user = relationship('User', back_populates='employee')
     hr_profile = relationship("EmployeeHrProfile", back_populates="employee", uselist=False)
+
+    __table_args__ = (Index("idx_employees_department_id", "department_id"),)
 
     def __repr__(self):
         return f"<Employee {self.name}>"

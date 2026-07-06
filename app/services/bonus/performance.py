@@ -44,7 +44,7 @@ class PerformanceBonusCalculator(BonusCalculatorBase):
 
         # 获取计算参数
         base_amount = bonus_rule.base_amount or Decimal("0")
-        coefficient = self.get_coefficient_by_level(performance_result.level)
+        coefficient = self.get_coefficient_by_level(performance_result.level, bonus_rule)
 
         # 计算奖金
         calculated_amount = base_amount * coefficient

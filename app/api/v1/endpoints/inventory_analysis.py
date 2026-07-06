@@ -6,6 +6,8 @@
 当前物料主数据返回稳定的分析 shape，避免占位路由导致页面 404。
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any, Dict, Iterable, List
 

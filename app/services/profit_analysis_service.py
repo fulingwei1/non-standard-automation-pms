@@ -10,7 +10,7 @@
 5. 低利润项目根因分析
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
@@ -37,17 +37,27 @@ class ProfitAnalysisService:
     # 1. 毛利率实时分析
     # ------------------------------------------------------------------
     def get_margin_analysis(
-        self, project_id: int, target_margin: float = DEFAULT_TARGET_MARGIN
+        self, project_id: int, target_margin: Optional[float] = None
     ) -> Dict[str, Any]:
         """
         实时计算项目毛利率：
         - 当前毛利 = 合同金额 - 已发生成本
         - 预计毛利 = 合同金额 - (已发生 + 预计剩余)
         - 毛利率 = 毛利 / 合同金额
+
+        target_margin 不传时，按项目的 project_level 取等级底线（联动手册红线）。
         """
         project = self.db.query(Project).filter(Project.id == project_id).first()
         if not project:
             return {"error": "项目不存在"}
+
+        # 未显式传 target_margin 时，按项目等级取底线
+        if target_margin is None:
+            from app.services.dashboard.margin_level_service import get_target_margin
+
+            target_margin = get_target_margin(
+                self.db, getattr(project, "project_level", None)
+            )
 
         contract_amount = float(project.contract_amount or 0)
         budget_amount = float(project.budget_amount or 0)
@@ -105,6 +115,97 @@ class ProfitAnalysisService:
             "forecast_gap": round(forecast_gap, 2),
             "health": health,
         }
+
+    def batch_margin_analysis(
+        self,
+        target_margin: float = DEFAULT_TARGET_MARGIN,
+        project_ids: Optional[List[int]] = None,
+    ) -> List[Dict[str, Any]]:
+        """批量计算多个项目的毛利率（解决 N+1：3 次 DB 查询替代 N×3）。
+
+        与 get_margin_analysis 口径完全一致（同公式）。
+        """
+        query = self.db.query(Project).filter(
+            Project.is_active.is_(True),
+            Project.contract_amount.isnot(None),
+            Project.contract_amount > 0,
+        )
+        if project_ids:
+            query = query.filter(Project.id.in_(project_ids))
+        projects = query.all()
+        if not projects:
+            return []
+
+        pid_set = {p.id for p in projects}
+
+        cost_rows = (
+            self.db.query(ProjectCost.project_id, func.sum(ProjectCost.amount))
+            .filter(ProjectCost.project_id.in_(pid_set), actual_project_cost_filter())
+            .group_by(ProjectCost.project_id)
+            .all()
+        )
+        cost_map = {pid: float(amt or 0) for pid, amt in cost_rows}
+
+        fin_rows = (
+            self.db.query(
+                FinancialProjectCost.project_id, func.sum(FinancialProjectCost.amount)
+            )
+            .filter(FinancialProjectCost.project_id.in_(pid_set))
+            .group_by(FinancialProjectCost.project_id)
+            .all()
+        )
+        fin_map = {pid: float(amt or 0) for pid, amt in fin_rows}
+
+        results: List[Dict[str, Any]] = []
+        # 按项目等级取目标毛利率（联动手册红线）
+        from app.services.dashboard.margin_level_service import get_target_margin
+
+        for project in projects:
+            contract_amount = float(project.contract_amount or 0)
+            budget_amount = float(project.budget_amount or 0)
+            actual_cost = cost_map.get(project.id, 0) + fin_map.get(project.id, 0)
+            remaining_cost = (
+                max(budget_amount - actual_cost, 0) if budget_amount > 0 else 0
+            )
+            forecast_total_cost = actual_cost + remaining_cost
+            current_margin = contract_amount - actual_cost
+            current_margin_rate = (
+                (current_margin / contract_amount * 100) if contract_amount > 0 else 0
+            )
+            forecast_margin = contract_amount - forecast_total_cost
+            forecast_margin_rate = (
+                (forecast_margin / contract_amount * 100) if contract_amount > 0 else 0
+            )
+            # 按项目等级取目标毛利率（S/A/B/C 对应不同底线）
+            proj_target = get_target_margin(self.db, getattr(project, "project_level", None))
+            margin_gap = current_margin_rate - proj_target
+            forecast_gap = forecast_margin_rate - proj_target
+            if current_margin_rate >= proj_target:
+                health = "healthy"
+            elif current_margin_rate >= proj_target * 0.7:
+                health = "warning"
+            else:
+                health = "critical"
+            results.append(
+                {
+                    "project_id": project.id,
+                    "project_code": project.project_code,
+                    "project_name": project.project_name,
+                    "project_type": project.project_type,
+                    "product_category": project.product_category,
+                    "industry": project.industry,
+                    "project_level": getattr(project, "project_level", None),
+                    "contract_amount": round(contract_amount, 2),
+                    "budget_amount": round(budget_amount, 2),
+                    "actual_cost": round(actual_cost, 2),
+                    "current_margin_rate": round(current_margin_rate, 2),
+                    "forecast_margin_rate": round(forecast_margin_rate, 2),
+                    "target_margin_rate": round(proj_target, 2),
+                    "margin_gap": round(margin_gap, 2),
+                    "health": health,
+                }
+            )
+        return results
 
     # ------------------------------------------------------------------
     # 2. 成本优化建议

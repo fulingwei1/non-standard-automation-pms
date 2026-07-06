@@ -4,7 +4,7 @@
 """
 
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, func, or_
@@ -15,6 +15,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.project.customer import Customer
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.models.sales import Contract, Opportunity, Quote
@@ -29,7 +30,11 @@ from app.schemas.sales.customers import (
     CustomerDetailResponse,
     CustomerInteractionItem,
 )
-from app.utils.db_helpers import delete_obj, get_or_404, save_obj
+from app.services.sales.customer_operation_audit import (
+    customer_audit_value,
+    log_customer_operation,
+)
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -340,7 +345,18 @@ def create_customer(
     # 自动更新客户等级
     customer.update_level()
 
-    save_obj(db, customer)
+    db.add(customer)
+    db.flush()
+    log_customer_operation(
+        db,
+        customer,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=customer_audit_value(customer),
+        operation_desc="创建客户",
+    )
+    db.commit()
+    db.refresh(customer)
 
     # 加载关联数据
     db.refresh(customer, attribute_names=["sales_owner", "tags", "contacts"])
@@ -372,6 +388,7 @@ def update_customer(
     if not security.check_sales_data_permission(customer, current_user, db, "sales_owner_id"):
         raise HTTPException(status_code=403, detail="无权修改该客户")
 
+    old_value = customer_audit_value(customer)
     # 更新字段
     update_data = customer_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -381,6 +398,15 @@ def update_customer(
     if "annual_revenue" in update_data or "cooperation_years" in update_data:
         customer.update_level()
 
+    log_customer_operation(
+        db,
+        customer,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=customer_audit_value(customer),
+        operation_desc="更新客户",
+    )
     db.commit()
     db.refresh(customer)
 
@@ -413,4 +439,15 @@ def delete_customer(
         if not security.is_admin(current_user):
             raise HTTPException(status_code=403, detail="无权删除该客户")
 
-    delete_obj(db, customer)
+    old_value = customer_audit_value(customer)
+    db.delete(customer)
+    log_customer_operation(
+        db,
+        customer,
+        SalesOperationType.DELETE,
+        current_user,
+        old_value=old_value,
+        new_value={},
+        operation_desc="删除客户",
+    )
+    db.commit()

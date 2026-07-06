@@ -7,16 +7,16 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import List
 
-from sqlalchemy import func
-
 from app.models.enums import LeadOutcomeEnum
 from app.models.project import Project
+from app.models.timesheet import Timesheet
 from app.schemas.dashboard import (
     DashboardStatCard,
     DashboardWidget,
     DetailedDashboardResponse,
 )
 from app.services.dashboard.dashboard_adapter import DashboardAdapter, register_dashboard
+from app.services.report_labor_cost import calculate_timesheet_labor_summary
 
 
 @register_dashboard
@@ -53,18 +53,18 @@ class PresalesDashboardAdapter(DashboardAdapter):
         )
 
         # 资源浪费统计
-        from app.models.timesheet import Timesheet
-
         total_hours = 0
         wasted_hours = 0
+        wasted_cost = Decimal("0")
 
         for project in ytd_projects:
-            hours = (
-                self.db.query(func.sum(Timesheet.hours))
-                .filter(Timesheet.project_id == project.id)
-                .scalar()
-                or 0
+            timesheets = (
+                self.db.query(Timesheet)
+                .filter(Timesheet.project_id == project.id, Timesheet.status == "APPROVED")
+                .all()
             )
+            labor_summary = calculate_timesheet_labor_summary(self.db, timesheets)
+            hours = float(labor_summary.total_hours)
             total_hours += hours
 
             if project.outcome in [
@@ -72,10 +72,10 @@ class PresalesDashboardAdapter(DashboardAdapter):
                 LeadOutcomeEnum.ABANDONED.value,
             ]:
                 wasted_hours += hours
+                wasted_cost += labor_summary.total_cost
 
         avg_investment = total_hours / total_leads_ytd if total_leads_ytd > 0 else 0
         waste_rate = wasted_hours / total_hours if total_hours > 0 else 0
-        wasted_cost = Decimal(str(wasted_hours)) * Decimal("300")
 
         return [
             DashboardStatCard(

@@ -3,6 +3,9 @@
 回款争议管理 API endpoints
 """
 
+from __future__ import annotations
+
+from datetime import date, datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -14,12 +17,69 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import ReceivableDispute
+from app.models.sales.operation_log import SalesEntityType, SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import ReceivableDisputeCreate, ReceivableDisputeResponse
-from app.utils.db_helpers import save_obj
+from app.services.sales.operation_log_service import SalesOperationLogService
 
 router = APIRouter()
+
+
+def _audit_value(value: Any) -> Any:
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if hasattr(value, "value"):
+        return value.value
+    return value
+
+
+def _dispute_audit_value(dispute: ReceivableDispute) -> dict[str, Any]:
+    return {
+        "dispute_id": dispute.id,
+        "payment_id": dispute.payment_id,
+        "reason_code": dispute.reason_code,
+        "description": dispute.description,
+        "status": _audit_value(dispute.status),
+        "responsible_dept": dispute.responsible_dept,
+        "responsible_id": dispute.responsible_id,
+        "expect_resolve_date": _audit_value(dispute.expect_resolve_date),
+    }
+
+
+def _changed_fields(old_value: dict[str, Any], new_value: dict[str, Any]) -> list[str]:
+    return [
+        field
+        for field, value in new_value.items()
+        if field in old_value and old_value[field] != value
+    ]
+
+
+def _log_dispute_operation(
+    db: Session,
+    dispute: ReceivableDispute,
+    operation_type: str,
+    operator: User,
+    *,
+    old_value: dict[str, Any] | None = None,
+    new_value: dict[str, Any] | None = None,
+    operation_desc: str,
+) -> None:
+    old_snapshot = old_value or {}
+    new_snapshot = new_value or {}
+    SalesOperationLogService.log_operation(
+        db,
+        entity_type=SalesEntityType.RECEIVABLE_DISPUTE,
+        entity_id=dispute.id,
+        entity_code=f"DISPUTE-{dispute.id}",
+        operation_type=operation_type,
+        operator=operator,
+        operation_desc=operation_desc,
+        old_value=old_snapshot,
+        new_value=new_snapshot,
+        changed_fields=_changed_fields(old_snapshot, new_snapshot),
+        remark=dispute.reason_code,
+    )
 
 
 @router.get("/disputes", response_model=PaginatedResponse[ReceivableDisputeResponse])
@@ -70,7 +130,18 @@ def create_dispute(
     创建回款争议
     """
     dispute = ReceivableDispute(**dispute_in.model_dump())
-    save_obj(db, dispute)
+    db.add(dispute)
+    db.flush()
+    _log_dispute_operation(
+        db,
+        dispute,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=_dispute_audit_value(dispute),
+        operation_desc="创建回款争议",
+    )
+    db.commit()
+    db.refresh(dispute)
 
     dispute_dict = {
         **{c.name: getattr(dispute, c.name) for c in dispute.__table__.columns},

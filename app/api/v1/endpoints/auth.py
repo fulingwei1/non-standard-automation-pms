@@ -5,7 +5,7 @@
 
 import logging
 import secrets
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
@@ -235,10 +235,17 @@ def login(
                 "message": "请提供双因素认证码"
             }
         
-        # 更新最后登录时间（临时禁用以绕过只读数据库问题）
-        # user.last_login_at = datetime.now()
-        # db.add(user)
-        # db.commit()
+        # 更新最后登录时间。之前这里被注释掉过（理由是"临时禁用以绕过只读
+        # 数据库问题"），但那个只读限制早就不存在了，一直没恢复导致
+        # last_login_at 永远是 NULL、管理员工作台"今日活跃"永远统计不到人。
+        # 这里跟上面查询用户一样用原始 SQL（避免加载/持有 ORM 实体，维持
+        # 这个函数原有的写法风格），不依赖上面并不存在于当前作用域的
+        # `user` 这个 ORM 对象。
+        db.execute(
+            text("UPDATE users SET last_login_at = :now WHERE id = :user_id"),
+            {"now": datetime.now(), "user_id": user_dict["id"]},
+        )
+        db.commit()
 
         # 创建Access Token和Refresh Token对
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)

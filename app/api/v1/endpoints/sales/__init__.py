@@ -33,7 +33,9 @@ from . import (
     invoices,
     leads,
     loss_analysis,
+    operation_logs,
     opportunities,
+    opportunity_batch,
     opportunity_health,
     payments,
     priority,
@@ -56,7 +58,6 @@ from . import (
     targets,
     team,
     templates,
-    workflows,
 )
 from .contracts import contracts as contracts_contracts
 
@@ -72,6 +73,7 @@ router.include_router(customer_tags.router, tags=["sales-customer-tags"])
 router.include_router(priority.router, tags=["sales-priority"])
 router.include_router(leads.router, tags=["sales-leads"])
 router.include_router(opportunity_health.router, tags=["sales-opportunity-health"])
+router.include_router(opportunity_batch.router, tags=["sales-opportunity-batch"])
 router.include_router(opportunities.router, tags=["sales-opportunities"])
 router.include_router(quotes.router, tags=["sales-quotes"])
 router.include_router(quote_approval.router, tags=["sales-quote-approval"])
@@ -90,17 +92,17 @@ router.include_router(disputes.router, tags=["sales-disputes"])
 router.include_router(targets.router, tags=["sales-targets"])
 router.include_router(team.router, tags=["sales-team"])
 router.include_router(templates.router, tags=["sales-templates"])
+router.include_router(operation_logs.router, tags=["sales-operation-logs"])
 
 # 以下模块暂时禁用（缺少 schema 定义）— 已全部启用
 # from . import cost_management
-# from . import receivables, workflows, requirements
+# from . import receivables, requirements
 # from . import accountability, health
 # from . import delay_analysis, cost_overrun, information_gap, cross_analysis
 
 # 已启用的模块（包含 schema 定义）
 router.include_router(cost_management.router, tags=["sales-cost-management"])
 router.include_router(receivables.router, tags=["sales-receivables"])
-router.include_router(workflows.router, tags=["sales-workflows"])
 router.include_router(requirements.router, tags=["sales-requirements"])
 router.include_router(sales_funnel.pipeline_router, tags=["sales-pipeline-analysis"])
 router.include_router(funnel.router, tags=["sales-funnel-state-machine"])

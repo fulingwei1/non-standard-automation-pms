@@ -7,7 +7,7 @@ ECN审批较为复杂，包含多部门评估（会签）环节
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
@@ -19,8 +19,7 @@ from app.models.approval import (
     ApprovalTask,
     ApprovalTemplate,
 )
-from app.models.ecn import Ecn, EcnApproval, EcnApprovalMatrix, EcnEvaluation
-from app.models.user import Role, User, UserRole
+from app.models.ecn import Ecn, EcnEvaluation
 from .base import ApprovalAdapter
 
 # 兼容测试 patch 点；真正使用时在 submit_for_approval 中懒加载，避免循环导入
@@ -431,195 +430,72 @@ class EcnApprovalAdapter(ApprovalAdapter):
         self,
         instance: ApprovalInstance,
         ecn,
-    ) -> List[EcnApproval]:
+    ) -> List[ApprovalTask]:
         """
-        根据审批实例创建ECN审批记录
+        返回统一审批任务，兼容旧集成接口。
 
-        将ApprovalEngine的任务转换为ECN的审批记录
+        旧版本会把 ApprovalTask 再同步成 `ecn_approvals` 行，造成同一审批
+        两套状态。表已退役后，这里只以统一审批任务为准。
         """
-        from app.models.ecn import EcnApproval
-
-        matrices = (
-            self.db.query(EcnApprovalMatrix)
-            .filter(EcnApprovalMatrix.ecn_type == ecn.ecn_type, EcnApprovalMatrix.is_active)
-            .order_by(EcnApprovalMatrix.approval_level)
-            .all()
-        )
-        unique_matrices = []
-        seen_levels = set()
-        for matrix in matrices:
-            if matrix.approval_level in seen_levels:
-                continue
-            seen_levels.add(matrix.approval_level)
-            unique_matrices.append(matrix)
-        matrices = unique_matrices
-        if matrices:
-            approval_records = []
-            for matrix in matrices:
-                existing_approval = (
-                    self.db.query(EcnApproval)
-                    .filter(
-                        EcnApproval.ecn_id == ecn.id,
-                        EcnApproval.approval_level == matrix.approval_level,
-                    )
-                    .first()
-                )
-                approver_ids = self.get_ecn_approvers(
-                    ecn, level=matrix.approval_level, matrix=[matrix]
-                )
-                approver_id = approver_ids[0] if approver_ids else None
-                approver = (
-                    self.db.query(User).filter(User.id == approver_id).first()
-                    if approver_id
-                    else None
-                )
-
-                if existing_approval:
-                    existing_approval.approval_role = matrix.approval_role or ""
-                    existing_approval.approver_id = approver_id
-                    existing_approval.approver_name = approver.real_name if approver else ""
-                    existing_approval.approval_result = None
-                    existing_approval.status = "PENDING"
-                    existing_approval.due_date = datetime.now() + timedelta(hours=48)
-                    existing_approval.is_overdue = False
-                    self.db.add(existing_approval)
-                    approval_records.append(existing_approval)
-                else:
-                    approval = EcnApproval(
-                        ecn_id=ecn.id,
-                        approval_level=matrix.approval_level,
-                        approval_role=matrix.approval_role or "",
-                        approver_id=approver_id,
-                        approver_name=approver.real_name if approver else "",
-                        approval_result=None,
-                        status="PENDING",
-                        due_date=datetime.now() + timedelta(hours=48),
-                        is_overdue=False,
-                    )
-                    self.db.add(approval)
-                    approval_records.append(approval)
-
-            self.db.commit()
-            logger.info(f"为ECN {ecn.ecn_no} 创建了 {len(approval_records)} 个审批记录")
-            return approval_records
-
-        # 获取当前节点对应的审批任务
         tasks = (
             self.db.query(ApprovalTask)
             .filter(
                 ApprovalTask.instance_id == instance.id,
+                ApprovalTask.task_type == "APPROVAL",
                 ApprovalTask.status == "PENDING",
             )
             .all()
         )
-
-        approval_records = []
-
-        for task in tasks:
-            # 确定审批层级
-            approval_level = self._determine_approval_level(task.node_id, ecn)
-
-            # 获取审批人
-            if task.assignee_id:
-                approver = self.db.query(User).filter(User.id == task.assignee_id).first()
-            else:
-                approver = None
-
-            # 创建或更新EcnApproval记录
-            existing_approval = (
-                self.db.query(EcnApproval)
-                .filter(
-                    EcnApproval.ecn_id == ecn.id,
-                    EcnApproval.approval_level == approval_level,
-                )
-                .first()
-            )
-
-            # 计算到期时间
-            due_date = task.due_at or (datetime.now() + timedelta(hours=48))
-
-            if existing_approval:
-                # 更新现有记录
-                existing_approval.approver_id = task.assignee_id
-                existing_approval.approver_name = approver.real_name if approver else ""
-                existing_approval.approval_result = None  # 待审批
-                existing_approval.status = "PENDING"
-                existing_approval.due_date = due_date
-                existing_approval.is_overdue = False
-
-                self.db.add(existing_approval)
-                approval_records.append(existing_approval)
-            else:
-                # 创建新记录
-                approval = EcnApproval(
-                    ecn_id=ecn.id,
-                    approval_level=approval_level,
-                    approval_role=task.node.node_name if task.node else "",
-                    approver_id=task.assignee_id,
-                    approver_name=approver.real_name if approver else "",
-                    approval_result=None,  # 待审批
-                    status="PENDING",
-                    due_date=due_date,
-                    is_overdue=False,
-                )
-
-                self.db.add(approval)
-                approval_records.append(approval)
-
-        self.db.commit()
-
-        logger.info(f"为ECN {ecn.ecn_no} 创建了 {len(approval_records)} 个审批记录")
-
-        return approval_records
+        logger.info("ECN %s 使用统一审批任务 %s 个", ecn.ecn_no, len(tasks))
+        return tasks
 
     def get_ecn_approvers(
         self,
         ecn,
         level: int,
-        matrix: Optional[EcnApprovalMatrix] = None,
+        matrix: Optional[Any] = None,
     ) -> List[int]:
         """
-        根据审批矩阵获取ECN审批人
+        从统一审批任务获取ECN审批人。
 
         Args:
             ecn: ECN实例
             level: 审批层级
-            matrix: 审批矩阵配置
+            matrix: 旧参数，仅保留兼容，不再查询旧矩阵表
 
         Returns:
             审批人ID列表
         """
-        if not matrix:
-            # 从数据库查询审批矩阵
-            matrix = (
-                self.db.query(EcnApprovalMatrix)
+        instance_id = getattr(ecn, "approval_instance_id", None)
+        if not instance_id:
+            instance = (
+                self.db.query(ApprovalInstance)
                 .filter(
-                    EcnApprovalMatrix.ecn_type == ecn.ecn_type,
-                    EcnApprovalMatrix.approval_level == level,
-                    EcnApprovalMatrix.is_active,
+                    ApprovalInstance.entity_type == "ECN",
+                    ApprovalInstance.entity_id == ecn.id,
                 )
-                .all()
+                .order_by(ApprovalInstance.id.desc())
+                .first()
             )
+            instance_id = instance.id if instance else None
+        if not instance_id:
+            return []
 
-        approvers = []
-
-        for matrix_item in matrix:
-            # 根据审批角色查找用户
-            if matrix_item.approval_role:
-                users = (
-                    self.db.query(User.id)
-                    .join(UserRole, User.id == UserRole.user_id)
-                    .join(Role, UserRole.role_id == Role.id)
-                    .filter(
-                        Role.role_code == matrix_item.approval_role,
-                        User.is_active,
-                    )
-                    .all()
-                )
-                approvers.extend([u.id for u in users])
-
-        # 去重
-        return list(set(approvers))
+        tasks = (
+            self.db.query(ApprovalTask)
+            .filter(
+                ApprovalTask.instance_id == instance_id,
+                ApprovalTask.task_type == "APPROVAL",
+                ApprovalTask.status == "PENDING",
+            )
+            .all()
+        )
+        approvers = [
+            task.assignee_id
+            for task in tasks
+            if task.assignee_id and self._determine_approval_level(task.node_id, ecn) == level
+        ]
+        return list(dict.fromkeys(approvers))
 
     def _determine_approval_level(
         self,
@@ -649,9 +525,9 @@ class EcnApprovalAdapter(ApprovalAdapter):
         task: ApprovalTask,
         action: str,
         comment: Optional[str] = None,
-    ) -> Optional[EcnApproval]:
+    ) -> Optional[ApprovalTask]:
         """
-        根据审批操作更新ECN审批记录
+        根据审批操作更新统一审批任务，兼容旧集成接口。
 
         Args:
             task: 审批任务
@@ -659,48 +535,31 @@ class EcnApprovalAdapter(ApprovalAdapter):
             comment: 审批意见
 
         Returns:
-            更新后的EcnApproval实例
+            更新后的 ApprovalTask 实例
         """
-        # 获取ECN审批记录
-        approval_level = self._determine_approval_level(task.node_id, task.instance.entity)
-        approval = (
-            self.db.query(EcnApproval)
-            .filter(
-                EcnApproval.ecn_id == task.instance.entity_id,
-                EcnApproval.approval_level == approval_level,
-            )
-            .first()
-        )
-
-        if not approval:
-            logger.warning(
-                f"未找到ECN审批记录: entity_id={task.instance.entity_id}, level={approval_level}"
-            )
-            return None
-
-        # 更新审批结果
+        task.action = action
+        task.comment = comment
         if action == "APPROVE":
-            approval.approval_result = "APPROVED"
-            approval.approval_opinion = comment
-            approval.status = "APPROVED"
-            approval.approved_at = datetime.now()
+            task.status = "COMPLETED"
+            task.completed_at = datetime.now()
         elif action == "REJECT":
-            approval.approval_result = "REJECTED"
-            approval.approval_opinion = comment
-            approval.status = "REJECTED"
-            approval.approved_at = datetime.now()
+            task.status = "COMPLETED"
+            task.completed_at = datetime.now()
         elif action == "WITHDRAW":
-            approval.approval_result = "WITHDRAWN"
-            approval.status = "CANCELLED"
+            task.status = "CANCELLED"
+            task.completed_at = datetime.now()
 
-        self.db.add(approval)
+        self.db.add(task)
         self.db.commit()
 
         logger.info(
-            f"ECN审批记录已更新: entity_id={approval.ecn_id}, level={approval.approval_level}, action={action}"
+            "ECN统一审批任务已更新: task_id=%s, entity_id=%s, action=%s",
+            task.id,
+            task.instance.entity_id if task.instance else None,
+            action,
         )
 
-        return approval
+        return task
 
     # ========== ECN特有方法 ========== #
 

@@ -15,6 +15,9 @@ const PresalesReviewCenter = lazyLoad(() => import("../../pages/PresalesReviewCe
 const SolutionDetail = lazyLoad(() => import("../../pages/SolutionDetail"));
 const KnowledgeBase = lazyLoad(() => import("../../pages/KnowledgeBase"));
 const PresaleAgent = lazyLoad(() => import("../../pages/PresaleAgent"));
+const PresaleProposalReview = lazyLoad(() => import("../../pages/PresaleProposalReview"));
+const AuditPack = lazyLoad(() => import("../../pages/AuditPack"));
+const PresaleUsageFeedback = lazyLoad(() => import("../../pages/PresaleUsageFeedback"));
 const AdvantageProducts = lazyLoad(() => import("../../components/sales/AdvantageProducts"));
 
 export function PresalesRoutes() {
@@ -22,6 +25,9 @@ export function PresalesRoutes() {
     <>
       <Route path="/presales/workbench" element={<PresalesWorkbench />} />
       <Route path="/presales/agent" element={<PresaleAgent />} />
+      <Route path="/presales/proposal-review" element={<PresaleProposalReview />} />
+      <Route path="/presales/audit-pack" element={<AuditPack />} />
+      <Route path="/presales/usage-feedback" element={<PresaleUsageFeedback />} />
       <Route path="/presales/ai-workbench" element={<PresaleAIWorkbench />} />
       <Route path="/presales/workbench/sales" element={<SalesPresaleWorkbench />} />
       <Route path="/presales/workbench/execution" element={<PresalesWorkstation />} />

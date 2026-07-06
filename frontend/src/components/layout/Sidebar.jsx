@@ -1,6 +1,12 @@
 import { useMemo, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { roleApi } from "../../services/api";
+// 直接从模块导入，不走 services/api.js 的 barrel：那边 `export * from
+// "./api/approvalCenter.js"` 和 `export { default as approvalApi } from
+// "./api/approval.js"` 撞名，JS 的具名导出会覆盖掉通配符导出，从 barrel
+// 拿到的 approvalApi 其实是 approval.js 的默认导出，没有 getCounts 方法
+// （实测复现：TypeError: approvalApi.getCounts is not a function）。
+import { approvalApi } from "../../services/api/approvalCenter";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -31,6 +37,37 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
   // State for dynamic menu from backend
   const [dynamicNavGroups, setDynamicNavGroups] = useState(null);
   const [_menuLoading, setMenuLoading] = useState(false);
+
+  // "审批中心"左侧菜单角标——原来是 sidebarConfig 里写死的固定值 "2"，不管
+  // 实际有没有待办都一直显示，处理完也不会消失。这里接上真实数据：待我
+  // 审批 + 未读抄送（跟审批中心页面自己统计的口径一致），全部处理完自动
+  // 变 0 隐藏。轮询兜底，避免用户在审批中心操作后角标不及时更新。
+  const [approvalBadgeCount, setApprovalBadgeCount] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+
+    const refreshApprovalBadge = () => {
+      approvalApi.getCounts()
+        .then((response) => {
+          if (!active) {return;}
+          const data = response.data?.data ?? response.data ?? {};
+          const count = (data.pending || 0) + (data.unread_cc || 0);
+          setApprovalBadgeCount(count);
+        })
+        .catch(() => {
+          if (active) {setApprovalBadgeCount(null);}
+        });
+    };
+
+    refreshApprovalBadge();
+    const interval = setInterval(refreshApprovalBadge, 30000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // Menu search state with debounce
   const [searchQuery, setSearchQuery] = useState("");
@@ -151,6 +188,19 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
     return filterNavItemsByRole(groups, role, isSuperuser);
   }, [role, isSuperuser, dynamicNavGroups, shouldUseBackendNav]);
 
+  // 用真实待办数覆盖"审批中心"菜单项配置里写死的角标
+  const navGroupsWithBadges = useMemo(() => {
+    if (approvalBadgeCount === null) {return navGroups;}
+    return navGroups.map((group) => ({
+      ...group,
+      items: (group.items || []).map((item) =>
+        item.path === "/approvals"
+          ? { ...item, badge: approvalBadgeCount > 0 ? String(approvalBadgeCount) : null }
+          : item
+      ),
+    }));
+  }, [navGroups, approvalBadgeCount]);
+
   // Toggle group collapse
   const toggleGroupCollapse = (groupLabel) => {
     setCollapsedGroups((prev) => {
@@ -184,11 +234,11 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
   // Filter menu items based on search query (using debounced value)
   const filteredNavGroups = useMemo(() => {
     if (!debouncedSearchQuery.trim()) {
-      return navGroups;
+      return navGroupsWithBadges;
     }
 
     const query = debouncedSearchQuery.toLowerCase();
-    return navGroups
+    return navGroupsWithBadges
       .map((group) => {
         const filteredItems = (group.items || []).filter(
           (item) =>
@@ -202,7 +252,7 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
         };
       })
       .filter((group) => group.items?.length > 0);
-  }, [navGroups, debouncedSearchQuery]);
+  }, [navGroupsWithBadges, debouncedSearchQuery]);
 
   // Get favorite items as a group
   const favoriteGroup = useMemo(() => {

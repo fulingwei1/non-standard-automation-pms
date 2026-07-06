@@ -2,8 +2,10 @@
 """
 服务工单管理 - 问题关联
 """
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -29,24 +31,24 @@ router = APIRouter()
 
 
 class TicketIssueEscalation(BaseModel):
-    title: str | None = Field(default=None, max_length=200)
-    description: str | None = None
+    title: Optional[str] = Field(default=None, max_length=200)
+    description: Optional[str] = None
     issue_type: str = "SERVICE_QUALITY"
     severity: str = "MAJOR"
-    priority: str | None = None
-    root_cause: str | None = None
-    assignee_id: int | None = None
+    priority: Optional[str] = None
+    root_cause: Optional[str] = None
+    assignee_id: Optional[int] = None
     is_blocking: bool = False
 
 
 class TicketEcnEscalation(BaseModel):
-    ecn_title: str | None = Field(default=None, max_length=200)
+    ecn_title: Optional[str] = Field(default=None, max_length=200)
     ecn_type: str = "QUALITY_ISSUE"
-    change_reason: str | None = None
-    change_description: str | None = None
+    change_reason: Optional[str] = None
+    change_description: Optional[str] = None
     change_scope: str = "PARTIAL"
-    priority: str | None = None
-    urgency: str | None = None
+    priority: Optional[str] = None
+    urgency: Optional[str] = None
 
 
 def _ticket_priority(ticket: ServiceTicket) -> str:

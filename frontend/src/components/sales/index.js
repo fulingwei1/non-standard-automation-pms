@@ -14,4 +14,3 @@ export { default as CustomerCard } from "./CustomerCard";
 export { default as OpportunityCard } from "./OpportunityCard";
 export { default as PaymentTimeline, PaymentStats } from "./PaymentTimeline";
 export { default as AdvantageProducts } from "./AdvantageProducts";
-export { SolutionVersionHistory } from "./SolutionVersionHistory";

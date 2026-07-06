@@ -56,6 +56,7 @@ class EmployeeCreate(BaseModel):
 
     employee_code: str = Field(max_length=10, description="工号")
     name: str = Field(max_length=50, description="姓名")
+    department_id: Optional[int] = None
     department: Optional[str] = None
     role: Optional[str] = None
     phone: Optional[str] = None
@@ -66,6 +67,7 @@ class EmployeeUpdate(BaseModel):
     """更新员工"""
 
     name: Optional[str] = None
+    department_id: Optional[int] = None
     department: Optional[str] = None
     role: Optional[str] = None
     phone: Optional[str] = None
@@ -79,6 +81,7 @@ class EmployeeResponse(TimestampSchema):
     id: int
     employee_code: str
     name: str
+    department_id: Optional[int] = None
     department: Optional[str] = None
     role: Optional[str] = None
     phone: Optional[str] = None

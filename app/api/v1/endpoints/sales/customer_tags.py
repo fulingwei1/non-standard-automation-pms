@@ -13,6 +13,7 @@ from app.api import deps
 from app.core import security
 from app.models.project.customer import Customer
 from app.models.sales.customer_tags import CustomerTag, PredefinedTags
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.sales import (
     CustomerTagBatchCreate,
@@ -20,9 +21,29 @@ from app.schemas.sales import (
     CustomerTagResponse,
     PredefinedTagsResponse,
 )
-from app.utils.db_helpers import delete_obj, get_or_404
+from app.services.sales.customer_operation_audit import (
+    customer_audit_value,
+    log_customer_operation,
+)
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+
+def _customer_tag_names(db: Session, customer_id: int) -> list[str]:
+    rows = (
+        db.query(CustomerTag.tag_name)
+        .filter(CustomerTag.customer_id == customer_id)
+        .order_by(CustomerTag.tag_name.asc())
+        .all()
+    )
+    return [row[0] for row in rows]
+
+
+def _customer_tag_audit_value(db: Session, customer: Customer) -> dict[str, Any]:
+    value = customer_audit_value(customer)
+    value["tags"] = _customer_tag_names(db, customer.id)
+    return value
 
 
 @router.get("/customer-tags/predefined", response_model=PredefinedTagsResponse)
@@ -96,10 +117,22 @@ def create_customer_tag(
         raise HTTPException(status_code=400, detail="该客户已有此标签")
 
     # 创建标签
+    old_value = _customer_tag_audit_value(db, customer)
     tag = CustomerTag(**tag_data)
     db.add(tag)
 
     try:
+        db.flush()
+        log_customer_operation(
+            db,
+            customer,
+            SalesOperationType.UPDATE,
+            current_user,
+            old_value=old_value,
+            new_value=_customer_tag_audit_value(db, customer),
+            operation_desc="添加客户标签",
+            remark=tag.tag_name,
+        )
         db.commit()
         db.refresh(tag)
     except IntegrityError:
@@ -141,12 +174,24 @@ def create_customer_tags_batch(
         raise HTTPException(status_code=400, detail="所有标签均已存在")
 
     # 批量创建标签
+    old_value = _customer_tag_audit_value(db, customer)
     new_tags = []
     for tag_name in new_tag_names:
         tag = CustomerTag(customer_id=customer_id, tag_name=tag_name)
         db.add(tag)
         new_tags.append(tag)
 
+    db.flush()
+    log_customer_operation(
+        db,
+        customer,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=_customer_tag_audit_value(db, customer),
+        operation_desc="批量添加客户标签",
+        remark=",".join(new_tag_names),
+    )
     db.commit()
 
     # 刷新所有标签
@@ -186,7 +231,21 @@ def delete_customer_tag(
     if not tag:
         raise HTTPException(status_code=404, detail="标签不存在")
 
-    delete_obj(db, tag)
+    old_value = _customer_tag_audit_value(db, customer)
+    tag_name = tag.tag_name
+    db.delete(tag)
+    db.flush()
+    log_customer_operation(
+        db,
+        customer,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=_customer_tag_audit_value(db, customer),
+        operation_desc="删除客户标签",
+        remark=tag_name,
+    )
+    db.commit()
 
 
 @router.delete("/customers/{customer_id}/tags", status_code=204)
@@ -216,4 +275,17 @@ def delete_customer_tags_by_name(
     if not tag:
         raise HTTPException(status_code=404, detail="标签不存在")
 
-    delete_obj(db, tag)
+    old_value = _customer_tag_audit_value(db, customer)
+    db.delete(tag)
+    db.flush()
+    log_customer_operation(
+        db,
+        customer,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=_customer_tag_audit_value(db, customer),
+        operation_desc="删除客户标签",
+        remark=tag_name,
+    )
+    db.commit()

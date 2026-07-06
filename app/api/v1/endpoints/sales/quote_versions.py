@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.api.deps import get_db
 from app.core import security
 from app.models.sales import Quote, QuoteItem, QuoteVersion
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.api.v1.endpoints.sales.utils.quote_item_validation import (
@@ -25,6 +26,12 @@ from app.services.sales.presale_quote_context import (
     resolve_presale_ticket_id_for_quote,
     resolve_presale_solution_for_quote,
     to_decimal,
+)
+from app.services.sales.quote_operation_audit import (
+    log_quote_operation,
+    log_quote_version_operation,
+    quote_audit_value,
+    quote_version_audit_value,
 )
 from app.services.sales.tax_basis import build_tax_breakdown
 from app.utils.db_helpers import get_or_404
@@ -190,6 +197,7 @@ def create_quote_version(
         ResponseModel: 创建结果
     """
     quote = _check_quote_scope(db, quote_id, current_user)
+    old_quote_value = quote_audit_value(quote)
 
     # 生成版本号
     existing_count = db.query(QuoteVersion).filter(QuoteVersion.quote_id == quote_id).count()
@@ -288,9 +296,27 @@ def create_quote_version(
             * Decimal("100")
         ).quantize(Decimal("0.01"))
 
+    log_quote_version_operation(
+        db,
+        version,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=quote_version_audit_value(version),
+        operation_desc="创建报价版本",
+    )
+
     # 设置为当前版本
     if version_data.get("set_as_current", True):
         quote.current_version_id = version.id
+        log_quote_operation(
+            db,
+            quote,
+            SalesOperationType.UPDATE,
+            current_user,
+            old_value=old_quote_value,
+            new_value=quote_audit_value(quote, current_version=version),
+            operation_desc="更新报价当前版本",
+        )
 
     db.commit()
     db.refresh(version)

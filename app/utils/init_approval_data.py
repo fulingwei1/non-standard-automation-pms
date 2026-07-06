@@ -94,7 +94,7 @@ APPROVAL_WORKFLOW_SEEDS: list[dict[str, Any]] = [
         ],
     },
     {
-        "template_code": "SALES_INVOICE",
+        "template_code": "TPL_INVOICE",
         "template_name": "销售发票审批",
         "category": "FINANCE",
         "entity_type": "INVOICE",

@@ -5,6 +5,7 @@
 
 from fastapi import APIRouter
 
+from .appeals import router as appeals_router
 from .employee_api import router as employee_api_router
 from .evaluation_tasks import router as evaluation_tasks_router
 from .hr_api import router as hr_api_router
@@ -20,6 +21,7 @@ router.include_router(evaluation_tasks_router)
 router.include_router(individual_router)
 router.include_router(team_router)
 router.include_router(project_router)
+router.include_router(appeals_router)
 router.include_router(employee_api_router)
 router.include_router(manager_api_router)
 router.include_router(hr_api_router)

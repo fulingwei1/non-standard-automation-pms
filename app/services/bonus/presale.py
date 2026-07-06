@@ -22,6 +22,49 @@ class PresaleBonusCalculator(BonusCalculatorBase):
     def __init__(self, db: Session):
         super().__init__(db)
 
+    def _get_urgency_coefficient(self, bonus_rule: BonusRule, urgency: str) -> Decimal:
+        coefficients = {}
+        trigger_condition = getattr(bonus_rule, "trigger_condition", None)
+        if isinstance(trigger_condition, dict):
+            coefficients = trigger_condition.get("urgency_coefficients") or {}
+        if urgency in coefficients:
+            return Decimal(str(coefficients[urgency]))
+        if "default" in coefficients:
+            return Decimal(str(coefficients["default"]))
+        if urgency == "VERY_URGENT":
+            return Decimal("1.3")
+        if urgency == "URGENT":
+            return Decimal("1.1")
+        return Decimal("1.0")
+
+    def _get_satisfaction_coefficient(
+        self, bonus_rule: BonusRule, satisfaction_score: Optional[int]
+    ) -> Decimal:
+        coefficients = {}
+        trigger_condition = getattr(bonus_rule, "trigger_condition", None)
+        if isinstance(trigger_condition, dict):
+            coefficients = trigger_condition.get("satisfaction_coefficients") or {}
+        if satisfaction_score is not None:
+            thresholds = []
+            for key, value in coefficients.items():
+                if key.startswith("score_gte_"):
+                    try:
+                        thresholds.append((int(key.removeprefix("score_gte_")), value))
+                    except ValueError:
+                        continue
+            for threshold, value in sorted(thresholds, reverse=True):
+                if satisfaction_score >= threshold:
+                    return Decimal(str(value))
+            if "default" in coefficients:
+                return Decimal(str(coefficients["default"]))
+
+            if satisfaction_score >= 5:
+                return Decimal("1.2")
+            if satisfaction_score >= 4:
+                return Decimal("1.0")
+            return Decimal("0.8")
+        return Decimal(str(coefficients.get("no_score", "1.0")))
+
     def calculate(
         self,
         ticket: PresaleSupportTicket,
@@ -56,21 +99,12 @@ class PresaleBonusCalculator(BonusCalculatorBase):
             base_amount = bonus_rule.base_amount or Decimal("0")
 
             # 根据工单类型和紧急程度调整系数
-            urgency_coef = Decimal("1.0")
-            if ticket.urgency == "VERY_URGENT":
-                urgency_coef = Decimal("1.3")
-            elif ticket.urgency == "URGENT":
-                urgency_coef = Decimal("1.1")
+            urgency_coef = self._get_urgency_coefficient(bonus_rule, ticket.urgency)
 
             # 根据满意度调整系数
-            satisfaction_coef = Decimal("1.0")
-            if ticket.satisfaction_score:
-                if ticket.satisfaction_score >= 5:
-                    satisfaction_coef = Decimal("1.2")
-                elif ticket.satisfaction_score >= 4:
-                    satisfaction_coef = Decimal("1.0")
-                else:
-                    satisfaction_coef = Decimal("0.8")
+            satisfaction_coef = self._get_satisfaction_coefficient(
+                bonus_rule, ticket.satisfaction_score
+            )
 
             calculated_amount = base_amount * urgency_coef * satisfaction_coef
 

@@ -11,6 +11,7 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.core import security
 from app.models.user import User
 
 router = APIRouter()
@@ -275,7 +276,7 @@ def _has_path(adjacency: Dict[int, Set[int]], start: int, target: int) -> bool:
 def get_gantt_data(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:read")),
     project_id: int,
 ) -> Any:
     _ensure_table(db)
@@ -339,7 +340,7 @@ def get_gantt_data(
 def add_dependency(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:update")),
     project_id: int,
     payload: DependencyCreate,
 ) -> Any:
@@ -464,7 +465,7 @@ def add_dependency(
 def delete_dependency(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:update")),
     id: int,
 ) -> Any:
     _ensure_table(db)
@@ -490,7 +491,7 @@ def delete_dependency(
 def get_critical_path(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:read")),
     project_id: int,
 ) -> Any:
     _ensure_table(db)

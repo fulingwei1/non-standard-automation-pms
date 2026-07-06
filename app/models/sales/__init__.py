@@ -11,7 +11,6 @@ from .contacts import Contact
 from .contracts import (
     Contract,
     ContractAmendment,
-    ContractApproval,
     ContractAttachment,
     ContractDeliverable,
     ContractTemplate,
@@ -23,7 +22,6 @@ from .customer_tags import CustomerTag, PredefinedTags
 # 发票相关
 from .invoices import (
     Invoice,
-    InvoiceApproval,
     ReceivableDispute,
 )
 
@@ -42,9 +40,6 @@ from .presale_ai_cost import (
     PresaleCostOptimizationRecord,
 )
 
-# 方案版本
-from .solution_version import SolutionVersion
-
 # AI赢率预测
 from .presale_ai_win_rate import (
     PresaleAIWinRate,
@@ -58,8 +53,6 @@ from .quotes import (
     MaterialCostUpdateReminder,
     PurchaseMaterialCost,
     Quote,
-    QuoteCostApproval,
-    QuoteCostHistory,
     QuoteCostTemplate,
     QuoteItem,
     QuoteTemplate,
@@ -84,14 +77,6 @@ from .data_audit import (
 # 客户关系成熟度评分
 from .relationship_scores import CustomerRelationshipScore
 
-# 销售目标 V2
-from .target_v2 import (
-    SalesTargetV2,
-    TargetBreakdownLog,
-    TargetPeriodEnumV2,
-    TargetTypeEnumV2,
-)
-
 # 团队管理
 from .team import (
     SalesTeam,
@@ -106,7 +91,6 @@ from .technical_assessment import (
     FailureCase,
     LeadRequirementDetail,
     OpenItem,
-    QuoteApproval,
     RequirementFreeze,
     ScoringRule,
     TechnicalAssessment,
@@ -140,13 +124,6 @@ from .sales_funnel import (
     StageGateResult,
 )
 
-# 线索需求详情 V2（拆分后的子表）
-from .lead_requirement_v2 import (
-    LeadRequirementBasicV2,
-    LeadRequirementFacilityV2,
-    LeadRequirementTechnicalV2,
-)
-
 # 毛利率预警
 from .margin_alert import (
     MarginAlertConfig,
@@ -157,10 +134,6 @@ from .margin_alert import (
 
 # 审批工作流和目标
 from .workflow import (
-    ApprovalHistory,
-    ApprovalRecord,
-    ApprovalWorkflow,
-    ApprovalWorkflowStep,
     SalesRankingConfig,
     SalesTarget,
 )
@@ -181,8 +154,6 @@ __all__ = [
     "QuoteVersion",
     "QuoteItem",
     "QuoteCostTemplate",
-    "QuoteCostApproval",
-    "QuoteCostHistory",
     "PurchaseMaterialCost",
     "MaterialCostUpdateReminder",
     "CpqRuleSet",
@@ -194,13 +165,11 @@ __all__ = [
     "Contract",
     "ContractDeliverable",
     "ContractAmendment",
-    "ContractApproval",
     "ContractTerm",
     "ContractAttachment",
     # 发票相关
     "Invoice",
     "ReceivableDispute",
-    "InvoiceApproval",
     # 技术评估和需求
     "TechnicalAssessment",
     "ScoringRule",
@@ -209,12 +178,7 @@ __all__ = [
     "RequirementFreeze",
     "OpenItem",
     "AIClarification",
-    "QuoteApproval",
-    # 审批工作流和目标
-    "ApprovalWorkflow",
-    "ApprovalWorkflowStep",
-    "ApprovalRecord",
-    "ApprovalHistory",
+    # 销售目标
     "SalesTarget",
     "SalesRankingConfig",
     # 团队管理
@@ -222,11 +186,6 @@ __all__ = [
     "SalesTeamMember",
     "TeamPerformanceSnapshot",
     "TeamPKRecord",
-    # 销售目标 V2
-    "SalesTargetV2",
-    "TargetBreakdownLog",
-    "TargetPeriodEnumV2",
-    "TargetTypeEnumV2",
     # 销售区域
     "SalesRegion",
     # AI赢率预测
@@ -237,8 +196,6 @@ __all__ = [
     "PresaleAICostEstimation",
     "PresaleCostHistory",
     "PresaleCostOptimizationRecord",
-    # 方案版本
-    "SolutionVersion",
     # 客户关系成熟度评分
     "CustomerRelationshipScore",
     # 业务操作日志
@@ -250,10 +207,6 @@ __all__ = [
     "DataAuditStatusEnum",
     "DataAuditPriorityEnum",
     "DataChangeType",
-    # 线索需求详情 V2
-    "LeadRequirementBasicV2",
-    "LeadRequirementTechnicalV2",
-    "LeadRequirementFacilityV2",
     # 毛利率预警
     "MarginAlertConfig",
     "MarginAlertRecord",

@@ -70,6 +70,7 @@ class OTDScanService:
         project_ids: Optional[List[int]] = None,
         create_alerts: bool = True,
         create_snapshot: bool = False,
+        detail_level: str = "full",
     ) -> Dict[str, Any]:
         """
         批量扫描所有执行中项目的 OTD 风险。
@@ -78,8 +79,9 @@ class OTDScanService:
             active_only: 仅扫描活跃项目（is_active=True）
             project_ids: 指定项目 ID 列表（优先于 active_only）
             create_alerts: 是否对 HIGH/CRITICAL 产出 AlertRecord 并推送
-            create_snapshot: 是否落风险快照（用于趋势分析）。
-                定时任务和手动 /scan/run 默认 True；只读 GET /scan 默认 False。
+            create_snapshot: 是否落风险快照
+            detail_level: "full"（默认，含完整 risk_items）或 "summary"（精简，
+                只含 severity + top_cause，响应体小 10 倍，适合列表场景）
 
         Returns:
             {
@@ -111,7 +113,10 @@ class OTDScanService:
 
         for project in projects:
             try:
-                profile = self.scan_project(project.id)
+                # create_alerts=False（GET 只读）时跳过 AI 归因，省几十秒
+                profile = self.scan_project(
+                    project.id, include_ai=create_alerts
+                )
                 results.append(profile)
                 if profile["risk_items"]:
                     with_risk += 1
@@ -129,7 +134,7 @@ class OTDScanService:
                     {
                         "project_id": project.id,
                         "project_code": project.project_code,
-                        "name": project.project_name,
+                        "project_name": project.project_name,
                         "error": str(e),
                         "severity": "LOW",
                         "risk_items": [],
@@ -141,13 +146,31 @@ class OTDScanService:
             key=lambda x: SEVERITY_ORDER.get(x.get("severity", "LOW"), 0), reverse=True
         )
 
+        # 精简模式：只保留列表场景需要的字段（响应体小 ~10 倍）
+        if detail_level == "summary":
+            returned = [
+                {
+                    "project_id": p.get("project_id"),
+                    "project_code": p.get("project_code"),
+                    "project_name": p.get("project_name"),
+                    "stage": p.get("stage"),
+                    "severity": p.get("severity"),
+                    "top_cause": p.get("top_cause"),
+                    "alert_id": p.get("alert_id"),
+                }
+                for p in results[:50]
+            ]
+        else:
+            returned = results[:50]
+
         return {
             "scanned": len(projects),
             "with_risk": with_risk,
             "high_or_critical": high_or_critical,
             "alerts_created": alerts_created,
             "snapshots_created": snapshots_created,
-            "projects": results[:50],  # 返回前 50 条，避免响应过大
+            "returned": len(returned),  # 实际返回条数（避免前端误用 scanned 当列表长度）
+            "projects": returned,
             "timestamp": datetime.now().isoformat(),
         }
 
@@ -155,9 +178,15 @@ class OTDScanService:
     # 单项目扫描入口
     # ================================================================
 
-    def scan_project(self, project_id: int) -> Dict[str, Any]:
+    def scan_project(
+        self, project_id: int, include_ai: bool = True
+    ) -> Dict[str, Any]:
         """
-        对单个项目执行 10 维 OTD 风险检测。
+        对单个项目执行 11 维 OTD 风险检测。
+
+        Args:
+            include_ai: 是否调 AI 归因。GET 只读查看场景传 False 跳过（省几秒），
+                        create_alerts=True 时应传 True（预警内容含 AI 建议）。
 
         Returns:
             {
@@ -172,7 +201,7 @@ class OTDScanService:
             return {
                 "project_id": project_id,
                 "project_code": None,
-                "name": None,
+                "project_name": None,
                 "severity": "LOW",
                 "risk_items": [{"dim": "meta", "severity": "LOW",
                                 "msg": "项目不存在"}],
@@ -215,10 +244,20 @@ class OTDScanService:
             ):
                 severity = item["severity"]
 
+        # 一句话主因摘要（不依赖 AI，取命中最重的维度）
+        top_cause = ""
+        if risk_items:
+            top_item = sorted(
+                risk_items,
+                key=lambda x: SEVERITY_ORDER.get(x.get("severity", "LOW"), 0),
+                reverse=True,
+            )[0]
+            top_cause = f"{top_item['label']}（{top_item['severity']}）：{top_item['msg']}"
+
         profile = {
             "project_id": project.id,
             "project_code": project.project_code,
-            "name": project.project_name,
+            "project_name": project.project_name,
             "stage": project.stage,
             "progress": float(project.progress_pct or 0),
             "planned_end": (
@@ -227,12 +266,29 @@ class OTDScanService:
                 else None
             ),
             "severity": severity,
+            "top_cause": top_cause,
             "risk_items": risk_items,
             "suggestion": "",
+            "suggestion_source": "none",
+            "alert_id": None,
+            "alert_no": None,
         }
 
         # 可选 AI 归因（轻量，照抄 ai_delivery.py:60-64）
-        profile["suggestion"] = self._ai_attribution(project, profile)
+        # include_ai=False 时跳过（GET 只读查看场景，省几秒 AI 调用）
+        if include_ai:
+            ai_suggestion = self._ai_attribution(project, profile)
+            if ai_suggestion:
+                profile["suggestion"] = ai_suggestion
+                profile["suggestion_source"] = "ai"
+            elif top_cause:
+                profile["suggestion"] = f"建议优先处理：{top_cause}"
+                profile["suggestion_source"] = "rule"
+        else:
+            # 不调 AI 时，用规则兜底（不让用户看到空建议而困惑）
+            if top_cause:
+                profile["suggestion"] = f"建议优先处理：{top_cause}"
+                profile["suggestion_source"] = "rule"
 
         return profile
 

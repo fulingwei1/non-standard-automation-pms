@@ -270,6 +270,79 @@ def _build_prometheus_metrics() -> str:
             f"pms_scheduler_jobs {int(scheduler.get('job_count') or 0)}",
         ]
     )
+
+    try:
+        from app.utils.scheduler_metrics import get_metrics_snapshot, get_metrics_statistics
+
+        snapshot = get_metrics_snapshot()
+        statistics = get_metrics_statistics()
+        job_snapshot = snapshot.get("jobs", {})
+        notification_snapshot = snapshot.get("notifications", {})
+
+        lines.extend(
+            [
+                "# HELP pms_scheduler_job_success_total Total successful scheduler job runs.",
+                "# TYPE pms_scheduler_job_success_total counter",
+                "# HELP pms_scheduler_job_failure_total Total failed scheduler job runs.",
+                "# TYPE pms_scheduler_job_failure_total counter",
+                "# HELP pms_scheduler_job_last_duration_ms Last scheduler job duration in milliseconds.",
+                "# TYPE pms_scheduler_job_last_duration_ms gauge",
+            ]
+        )
+        for job_id, stats in job_snapshot.items():
+            label = f'job_id="{_metric_label(str(job_id))}"'
+            lines.append(
+                f"pms_scheduler_job_success_total{{{label}}} {int(stats.get('success_count', 0))}"
+            )
+            lines.append(
+                f"pms_scheduler_job_failure_total{{{label}}} {int(stats.get('failure_count', 0))}"
+            )
+            lines.append(
+                f"pms_scheduler_job_last_duration_ms{{{label}}} {stats.get('last_duration_ms', 0)}"
+            )
+
+        lines.extend(
+            [
+                "# HELP pms_scheduler_job_duration_avg_ms Average scheduler job duration in milliseconds.",
+                "# TYPE pms_scheduler_job_duration_avg_ms gauge",
+                "# HELP pms_scheduler_job_duration_p95_ms P95 scheduler job duration in milliseconds.",
+                "# TYPE pms_scheduler_job_duration_p95_ms gauge",
+            ]
+        )
+        for job_id, stats in statistics.items():
+            if stats.get("sample_count", 0) == 0:
+                continue
+            label = f'job_id="{_metric_label(str(job_id))}"'
+            if stats.get("avg_duration_ms") is not None:
+                lines.append(
+                    f"pms_scheduler_job_duration_avg_ms{{{label}}} {stats['avg_duration_ms']:.2f}"
+                )
+            if stats.get("p95_duration_ms") is not None:
+                lines.append(
+                    f"pms_scheduler_job_duration_p95_ms{{{label}}} {stats['p95_duration_ms']:.2f}"
+                )
+
+        lines.extend(
+            [
+                "# HELP pms_scheduler_notification_success_total Successful scheduler notifications by channel.",
+                "# TYPE pms_scheduler_notification_success_total counter",
+                "# HELP pms_scheduler_notification_failure_total Failed scheduler notifications by channel.",
+                "# TYPE pms_scheduler_notification_failure_total counter",
+            ]
+        )
+        for channel, stats in notification_snapshot.items():
+            label = f'channel="{_metric_label(str(channel))}"'
+            lines.append(
+                f"pms_scheduler_notification_success_total{{{label}}} {int(stats.get('success_count', 0))}"
+            )
+            lines.append(
+                f"pms_scheduler_notification_failure_total{{{label}}} {int(stats.get('failure_count', 0))}"
+            )
+    except Exception:  # noqa: BLE001
+        import logging
+
+        logging.getLogger(__name__).debug("调度器 Prometheus 指标生成失败，已跳过", exc_info=True)
+
     return "\n".join(lines) + "\n"
 
 

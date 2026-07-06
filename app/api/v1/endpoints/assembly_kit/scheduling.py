@@ -56,6 +56,7 @@ async def generate_scheduling_suggestions(
     db: Session = Depends(deps.get_db),
     scope: str = Query("WEEKLY", description="排产范围：WEEKLY/MONTHLY"),
     project_ids: Optional[str] = Query(None, description="项目ID列表，逗号分隔"),
+    current_user: User = Depends(security.require_permission("assembly_kit:create")),
 ):
     """生成智能排产建议"""
     from app.services.scheduling_suggestion_service import SchedulingSuggestionService
@@ -81,6 +82,7 @@ async def get_scheduling_suggestions(
     suggestion_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     project_id: Optional[int] = Query(None),
     pagination: PaginationParams = Depends(get_pagination_query),
+    current_user: User = Depends(security.require_permission("assembly_kit:read")),
 ):
     """获取排产建议列表"""
     query = db.query(SchedulingSuggestion)
@@ -129,7 +131,7 @@ async def accept_suggestion(
     suggestion_id: int,
     accept_data: SchedulingSuggestionAccept,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("assembly_kit:read")),
+    current_user: User = Depends(security.require_permission("assembly_kit:update")),
 ):
     """接受排产建议"""
     suggestion = get_or_404(db, SchedulingSuggestion, suggestion_id, "排产建议不存在")
@@ -157,7 +159,7 @@ async def reject_suggestion(
     suggestion_id: int,
     reject_data: SchedulingSuggestionReject,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("assembly_kit:read")),
+    current_user: User = Depends(security.require_permission("assembly_kit:update")),
 ):
     """拒绝排产建议"""
     suggestion = get_or_404(db, SchedulingSuggestion, suggestion_id, "排产建议不存在")

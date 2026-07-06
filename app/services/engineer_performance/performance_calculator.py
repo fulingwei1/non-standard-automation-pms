@@ -5,7 +5,7 @@
 """
 
 from decimal import Decimal
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
@@ -22,6 +22,7 @@ from app.models.engineer_performance import (
 )
 from app.models.performance import PerformancePeriod
 from app.schemas.engineer_performance import EngineerDimensionScore
+from app.services.performance_collector.aggregator import PerformanceDataAggregator
 
 
 class PerformanceCalculator:
@@ -73,54 +74,69 @@ class PerformanceCalculator:
         self, engineer_id: int, period: PerformancePeriod
     ) -> EngineerDimensionScore:
         """计算机械工程师五维得分"""
-        # 技术能力：设计一次通过率、ECN责任率、调试问题密度
-        design_reviews = (
-            self.db.query(DesignReview)
-            .filter(
-                DesignReview.designer_id == engineer_id,
-                DesignReview.review_date.between(period.start_date, period.end_date),
-            )
-            .all()
-        )
+        collected_data = self._collect_performance_data(engineer_id, period)
 
-        if design_reviews:
-            first_pass_count = sum(1 for r in design_reviews if r.is_first_pass)
-            first_pass_rate = first_pass_count / len(design_reviews) * 100
+        # 技术能力：设计一次通过率、ECN责任率、调试问题密度
+        design_data = collected_data.get("design_review", {})
+        if self._has_collected_value(design_data, "total_reviews"):
+            first_pass_rate = float(design_data.get("first_pass_rate") or 0)
         else:
-            first_pass_rate = 85  # 默认值
+            design_reviews = (
+                self.db.query(DesignReview)
+                .filter(
+                    DesignReview.designer_id == engineer_id,
+                    DesignReview.review_date.between(period.start_date, period.end_date),
+                )
+                .all()
+            )
+
+            if design_reviews:
+                first_pass_count = sum(1 for r in design_reviews if r.is_first_pass)
+                first_pass_rate = first_pass_count / len(design_reviews) * 100
+            else:
+                first_pass_rate = 85  # 默认值
 
         # 调试问题数量
-        debug_issues = (
-            self.db.query(MechanicalDebugIssue)
-            .filter(
-                MechanicalDebugIssue.responsible_id == engineer_id,
-                MechanicalDebugIssue.found_date.between(period.start_date, period.end_date),
+        debug_data = collected_data.get("debug_issue", {})
+        if self._has_collected_value(debug_data, "mechanical_issues"):
+            debug_issues = int(debug_data.get("mechanical_issues") or 0)
+        else:
+            debug_issues = (
+                self.db.query(MechanicalDebugIssue)
+                .filter(
+                    MechanicalDebugIssue.responsible_id == engineer_id,
+                    MechanicalDebugIssue.found_date.between(period.start_date, period.end_date),
+                )
+                .count()
             )
-            .count()
-        )
 
         # 技术得分计算
         technical_score = min(first_pass_rate / 85 * 100, 120)
         if debug_issues > 0:
             technical_score = max(technical_score - debug_issues * 5, 0)
 
-        # 项目执行：简化计算
-        execution_score = Decimal("80")
-
-        # 成本/质量：简化计算
-        cost_quality_score = Decimal("75")
+        execution_score = self._execution_score_from_collected_data(
+            collected_data, default=Decimal("80")
+        )
+        cost_quality_score = self._cost_quality_score_from_collected_data(
+            collected_data, default=Decimal("75")
+        )
 
         # 知识沉淀
-        contributions = (
-            self.db.query(KnowledgeContribution)
-            .filter(
-                KnowledgeContribution.contributor_id == engineer_id,
-                KnowledgeContribution.job_type == "mechanical",
-                KnowledgeContribution.status == "approved",
-                KnowledgeContribution.created_at.between(period.start_date, period.end_date),
+        knowledge_data = collected_data.get("knowledge_contribution", {})
+        if self._has_collected_value(knowledge_data, "total_contributions"):
+            contributions = int(knowledge_data.get("total_contributions") or 0)
+        else:
+            contributions = (
+                self.db.query(KnowledgeContribution)
+                .filter(
+                    KnowledgeContribution.contributor_id == engineer_id,
+                    KnowledgeContribution.job_type == "mechanical",
+                    KnowledgeContribution.status == "approved",
+                    KnowledgeContribution.created_at.between(period.start_date, period.end_date),
+                )
+                .count()
             )
-            .count()
-        )
 
         knowledge_score = min(50 + contributions * 10, 100)
 
@@ -139,6 +155,8 @@ class PerformanceCalculator:
         self, engineer_id: int, period: PerformancePeriod
     ) -> EngineerDimensionScore:
         """计算测试工程师五维得分"""
+        collected_data = self._collect_performance_data(engineer_id, period)
+
         # Bug修复统计
         bugs = (
             self.db.query(TestBugRecord)
@@ -184,8 +202,12 @@ class PerformanceCalculator:
 
         return EngineerDimensionScore(
             technical_score=Decimal(str(round(technical_score, 2))),
-            execution_score=Decimal("80"),
-            cost_quality_score=Decimal("75"),
+            execution_score=self._execution_score_from_collected_data(
+                collected_data, default=Decimal("80")
+            ),
+            cost_quality_score=self._cost_quality_score_from_collected_data(
+                collected_data, default=Decimal("75")
+            ),
             knowledge_score=Decimal(str(knowledge_score)),
             collaboration_score=collaboration_avg,
         )
@@ -194,6 +216,8 @@ class PerformanceCalculator:
         self, engineer_id: int, period: PerformancePeriod
     ) -> EngineerDimensionScore:
         """计算电气工程师五维得分"""
+        collected_data = self._collect_performance_data(engineer_id, period)
+
         # PLC程序调试统计
         plc_programs = (
             self.db.query(PlcProgramVersion)
@@ -229,8 +253,12 @@ class PerformanceCalculator:
 
         return EngineerDimensionScore(
             technical_score=Decimal(str(round(technical_score, 2))),
-            execution_score=Decimal("80"),
-            cost_quality_score=Decimal("75"),
+            execution_score=self._execution_score_from_collected_data(
+                collected_data, default=Decimal("80")
+            ),
+            cost_quality_score=self._cost_quality_score_from_collected_data(
+                collected_data, default=Decimal("75")
+            ),
             knowledge_score=Decimal(str(knowledge_score)),
             collaboration_score=collaboration_avg,
         )
@@ -239,6 +267,8 @@ class PerformanceCalculator:
         self, engineer_id: int, period: PerformancePeriod
     ) -> EngineerDimensionScore:
         """计算方案工程师得分（六维：技术能力+方案成功率+项目执行+成本/质量+知识沉淀+团队协作）"""
+        collected_data = self._collect_performance_data(engineer_id, period)
+
         from app.models.presale import (
             PresaleSolution,
             PresaleSolutionTemplate,
@@ -373,8 +403,10 @@ class PerformanceCalculator:
         delivery_rate = on_time_solutions / len(solutions) * 100 if solutions else 90
         execution_score = Decimal(str(min(delivery_rate / 90 * 100, 120)))  # 目标90%
 
-        # 4. 成本/质量维度（使用cost_quality_score，但方案工程师权重较低）
-        cost_quality_score = Decimal("75.0")  # 简化计算
+        # 4. 成本/质量维度（有采集数据时使用真实质量/返工信号，否则保留旧兜底）
+        cost_quality_score = self._cost_quality_score_from_collected_data(
+            collected_data, default=Decimal("75.0")
+        )
 
         # 5. 知识沉淀维度（15%权重）
         # 方案模板贡献
@@ -424,6 +456,71 @@ class PerformanceCalculator:
         )
         avg = total / (len(ratings) * 4) * 20  # 转换为百分制
         return Decimal(str(round(avg, 2)))
+
+    def _collect_performance_data(
+        self, engineer_id: int, period: PerformancePeriod
+    ) -> Dict[str, Dict[str, Any]]:
+        """读取绩效采集器结果；失败时静默回落旧算分链路。"""
+        try:
+            result = PerformanceDataAggregator(self.db).collect_all_data(
+                engineer_id, period.start_date, period.end_date
+            )
+        except Exception:
+            return {}
+
+        if not isinstance(result, dict):
+            return {}
+        data = result.get("data")
+        return data if isinstance(data, dict) else {}
+
+    def _has_collected_value(self, source: Any, *keys: str) -> bool:
+        if not isinstance(source, dict) or source.get("error"):
+            return False
+        return any(self._decimal_from_value(source.get(key)) > 0 for key in keys)
+
+    def _decimal_from_value(self, value: Any, default: Decimal = Decimal("0")) -> Decimal:
+        if value is None:
+            return default
+        try:
+            return Decimal(str(value))
+        except Exception:
+            return default
+
+    def _round_score(self, value: Decimal) -> Decimal:
+        return Decimal(str(round(value, 2)))
+
+    def _execution_score_from_collected_data(
+        self, collected_data: Dict[str, Dict[str, Any]], default: Decimal
+    ) -> Decimal:
+        task_data = collected_data.get("task_completion", {})
+        if not self._has_collected_value(task_data, "total_tasks"):
+            return default
+
+        completion_rate = self._decimal_from_value(task_data.get("completion_rate"))
+        on_time_rate = self._decimal_from_value(task_data.get("on_time_rate"))
+        score = completion_rate * Decimal("0.6") + on_time_rate * Decimal("0.4")
+        return self._round_score(min(max(score, Decimal("0")), Decimal("120")))
+
+    def _cost_quality_score_from_collected_data(
+        self, collected_data: Dict[str, Dict[str, Any]], default: Decimal
+    ) -> Decimal:
+        scores = []
+
+        bom_data = collected_data.get("bom_data", {})
+        if self._has_collected_value(bom_data, "total_bom"):
+            scores.append(self._decimal_from_value(bom_data.get("bom_timeliness_rate")))
+            scores.append(self._decimal_from_value(bom_data.get("standard_part_rate")))
+            if self._has_collected_value(bom_data, "reuse_rate"):
+                scores.append(self._decimal_from_value(bom_data.get("reuse_rate")))
+
+        ecn_data = collected_data.get("ecn_responsibility", {})
+        if self._has_collected_value(ecn_data, "total_ecn", "responsible_ecn"):
+            ecn_rate = self._decimal_from_value(ecn_data.get("ecn_responsibility_rate"))
+            scores.append(max(Decimal("100") - ecn_rate, Decimal("0")))
+
+        if not scores:
+            return default
+        return self._round_score(sum(scores) / Decimal(str(len(scores))))
 
     def calculate_total_score(
         self,

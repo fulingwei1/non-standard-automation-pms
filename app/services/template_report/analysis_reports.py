@@ -14,6 +14,7 @@ from app.models.project import Project
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.services.project_status_normalization import is_project_open_expr
+from app.services.report_labor_cost import calculate_timesheet_labor_cost
 
 
 class AnalysisReportMixin:
@@ -148,12 +149,12 @@ class AnalysisReportMixin:
                 .filter(
                     Timesheet.project_id == project.id,
                     Timesheet.work_date.between(start_date, end_date),
+                    Timesheet.status == "APPROVED",
                 )
                 .all()
             )
 
-            labor_hours = sum(float(t.hours or 0) for t in timesheets)
-            estimated_labor_cost = labor_hours * 100  # 假设时薪100元
+            estimated_labor_cost = float(calculate_timesheet_labor_cost(db, timesheets))
 
             total_actual += estimated_labor_cost
 

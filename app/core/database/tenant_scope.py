@@ -55,7 +55,7 @@ TEN-02: 框架级租户查询过滤（SQLAlchemy 2.0 正确实现）
   log（灰度默认）下不过滤但记告警。
 
 **tenant_id 可空模型里的"NULL=共享"陷阱**（已用真实回归测试复现）：
-`Role`/`ApiPermission`/`DataScopeRule`/`MenuPermission` 这几张表的
+`Role`/`ApiPermission`/`MenuPermission` 这几张表的
 `tenant_id` 允许为 NULL，但 NULL 在这里的业务含义是"系统级/全租户共享的
 默认配置"（例如系统内置角色、内置权限目录），不是"不属于任何租户"。
 `User.tenant_id IS NULL` 则是完全不同的语义——超级管理员账号，不应被当作
@@ -98,9 +98,8 @@ logger = logging.getLogger(__name__)
 _tenant_scoped_classes_cache = None
 
 # 这几张表的 tenant_id=NULL 表示"系统级/全租户共享"，不是"不属于任何租户"
-# （Role/ApiPermission/DataScopeRule 的模型 docstring 明确写了这个约定，
-# ApiPermission/DataScopeRule/MenuPermission 三者原文一致："NULL=系统级
-# XX，所有租户共享"；Role 本身虽未在 docstring 写明，但
+# （ApiPermission/MenuPermission 的模型 docstring 明确写了这个约定：
+# "NULL=系统级 XX，所有租户共享"；Role 本身虽未在 docstring 写明，但
 # test_role_tenant_isolation_contracts.py 的既有回归用例证实了同样约定）。
 # 未在此列表的可空 tenant_id 模型（如 User：NULL=超级管理员账号）维持严格
 # 相等过滤，不把 NULL 行当共享数据放行。
@@ -115,7 +114,7 @@ _tenant_scoped_classes_cache = None
 # 与共享默认数据共存不冲突。RoleApiPermission/RoleMenu 是 Role 的关联表，
 # Role 本身已是 NULL=共享语义，这两张关联表跟随同样的约定。
 _SHARED_WHEN_NULL_MODEL_NAMES = frozenset({
-    "Role", "ApiPermission", "DataScopeRule", "MenuPermission",
+    "Role", "ApiPermission", "MenuPermission",
     "AcceptanceTemplate", "AlertRule", "AlertRuleTemplate", "ApprovalRoutingRule",
     "ApprovalTemplate", "ApprovalTemplateVersion", "AssemblyTemplate", "AssessmentTemplate",
     "BenchmarkConfiguration", "BonusRule", "CategoryStageMapping", "ContractTemplate",
@@ -124,10 +123,10 @@ _SHARED_WHEN_NULL_MODEL_NAMES = frozenset({
     "EvaluationWeightConfig", "HourlyRateConfig", "HrTagDict", "ImportTemplate",
     "IssueTemplate", "JobDutyTemplate", "JobLevel", "ManagementRhythmConfig",
     "MarginAlertConfig", "MaterialAlertRule", "MaterialCategory", "MeetingReportConfig",
-    "OtdThresholdConfig", "PermissionGroup", "PresaleAIConfig", "PresaleAISolutionTemplate",
-    "PresaleSolutionTemplate", "ProcessDict", "ProjectCostAllocationRule", "ProjectRoleConfig",
+    "OtdThresholdConfig", "PermissionGroup", "PresaleAIConfig", "PresaleSolutionTemplate",
+    "ProcessDict", "ProjectCostAllocationRule", "ProjectRoleConfig",
     "ProjectRoleType", "ProjectTemplate", "ProjectTemplateVersion", "QualityAlertRule",
-    "QuotationTemplate", "QuoteCostTemplate", "QuoteTemplate", "QuoteTemplateVersion",
+    "QuoteCostTemplate", "QuoteTemplate", "QuoteTemplateVersion",
     "RdCostAllocationRule", "RdCostType", "RdProjectCategory", "ReportTemplate",
     "RoleApiPermission", "RoleMenu", "SalesRankingConfig", "SatisfactionSurveyTemplate",
     "SchedulerTaskConfig", "ScoringRule", "ShortageAlertRule", "SolutionCreditConfig",

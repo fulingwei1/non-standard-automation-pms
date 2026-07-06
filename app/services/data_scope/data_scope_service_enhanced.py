@@ -255,7 +255,7 @@ class DataScopeServiceEnhanced:
 
         try:
             scopes = PermissionService.get_user_data_scopes(db, user.id)
-            scope_type = scopes.get(resource_type, ScopeType.OWN.value)
+            scope_type = scopes.get(resource_type) or scopes.get("*", ScopeType.OWN.value)
             normalized_scope = DataScopeServiceEnhanced.normalize_scope_type(scope_type)
 
             logger.debug(
@@ -350,7 +350,7 @@ class DataScopeServiceEnhanced:
 
         try:
             scopes = PermissionService.get_user_data_scopes(db, user.id)
-            scope_type = scopes.get(resource_type, ScopeType.OWN.value)
+            scope_type = scopes.get(resource_type) or scopes.get("*", ScopeType.OWN.value)
             normalized_scope = DataScopeServiceEnhanced.normalize_scope_type(scope_type)
 
             if normalized_scope == DataScopeEnum.ALL.value:

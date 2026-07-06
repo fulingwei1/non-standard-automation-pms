@@ -8,6 +8,8 @@
 - 成本计算（自动计算总价/毛利/毛利率、模拟计算、价格建议、批量更新）
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
@@ -22,8 +24,11 @@ from app.api.deps import get_db
 from app.core import security
 from app.core.sales_permissions import check_sales_data_permission, filter_sales_data_by_scope
 from app.models.sales import PurchaseMaterialCost, Quote, QuoteItem, QuoteVersion
+from app.models.sales.operation_log import SalesEntityType
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.sales.quote_operation_audit import quote_version_audit_value
+from app.services.sales.operation_log_service import SalesOperationLogService
 from app.utils.db_helpers import get_or_404
 from app.utils.json_helpers import safe_json_loads
 
@@ -77,6 +82,39 @@ def _to_decimal(value) -> Decimal:
     except (InvalidOperation, ValueError, TypeError) as e:
         logger.warning(f"成本字段转换失败: value={value!r}, error={e}")
         return Decimal("0")
+
+
+def _audit_scalar(value):
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if hasattr(value, "value"):
+        return value.value
+    return value
+
+
+def _quote_cost_item_audit_value(item: QuoteItem) -> dict:
+    return {
+        "item_id": item.id,
+        "quote_version_id": item.quote_version_id,
+        "item_type": item.item_type,
+        "item_name": item.item_name,
+        "qty": _audit_scalar(item.qty),
+        "unit_price": _audit_scalar(item.unit_price),
+        "cost": _audit_scalar(item.cost),
+        "cost_category": item.cost_category,
+        "cost_source": item.cost_source,
+        "specification": item.specification,
+        "unit": item.unit,
+        "lead_time_days": item.lead_time_days,
+        "remark": item.remark,
+    }
+
+
+def _quote_version_audit_code(version: QuoteVersion) -> str | None:
+    quote = getattr(version, "quote", None)
+    return getattr(quote, "quote_code", None) if quote else None
 
 
 def _split_remark_meta(remark: Optional[str]) -> tuple[str, dict]:
@@ -515,12 +553,25 @@ def update_cost_item(
         if quote:
             _check_quote_scope(quote, current_user, db)
 
+    old_value = _quote_cost_item_audit_value(item)
     # 可更新字段
     updatable = ["cost", "cost_category", "cost_source", "unit_price", "qty", "remark"]
     for field in updatable:
         if field in item_data:
             setattr(item, field, item_data[field])
 
+    db.flush()
+    if version:
+        SalesOperationLogService.log_update(
+            db,
+            entity_type=SalesEntityType.QUOTE_VERSION,
+            entity_id=version.id,
+            operator=current_user,
+            old_value=old_value,
+            new_value=_quote_cost_item_audit_value(item),
+            entity_code=_quote_version_audit_code(version),
+            remark=f"quote_cost_item_id={item.id}",
+        )
     db.commit()
 
     return ResponseModel(code=200, message="成本明细更新成功", data={"id": item.id})
@@ -551,6 +602,7 @@ def recalculate_cost(
     vid = version_id or quote.current_version_id
     version = get_or_404(db, QuoteVersion, vid, detail="版本不存在")
 
+    old_version_value = quote_version_audit_value(version)
     items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == vid).all()
 
     total_cost = Decimal('0')
@@ -566,8 +618,8 @@ def recalculate_cost(
             total_price += item.qty * item.unit_price
 
     # 更新版本汇总
-    version.cost_total = total_cost
-    version.total_price = total_price
+    version.cost_total = total_cost.quantize(Decimal("0.01"))
+    version.total_price = total_price.quantize(Decimal("0.01"))
     if total_price > 0:
         version.gross_margin = ((total_price - total_cost) / total_price * 100).quantize(Decimal('0.01'))
         version.margin_warning = version.gross_margin < 15
@@ -575,6 +627,17 @@ def recalculate_cost(
         version.gross_margin = Decimal('0')
 
     version.cost_breakdown_complete = True
+    db.flush()
+    SalesOperationLogService.log_update(
+        db,
+        entity_type=SalesEntityType.QUOTE_VERSION,
+        entity_id=version.id,
+        operator=current_user,
+        old_value=old_version_value or {},
+        new_value=quote_version_audit_value(version) or {},
+        entity_code=_quote_version_audit_code(version),
+        remark="quote_cost_recalculate",
+    )
     db.commit()
 
     return ResponseModel(
@@ -714,15 +777,20 @@ def apply_quote_cost_match_suggestions(
 
     vid = version_id or apply_data.version_id or quote.current_version_id
     version = get_or_404(db, QuoteVersion, vid, detail="版本不存在")
+    old_version_value = quote_version_audit_value(version) or {}
     items = (
         db.query(QuoteItem)
         .filter(QuoteItem.quote_version_id == vid)
         .order_by(QuoteItem.id)
         .all()
     )
+    old_version_value["items"] = [
+        _quote_cost_item_audit_value(item) for item in items
+    ]
     items_by_id = {item.id: item for item in items}
 
     updated_count = 0
+    updated_items = []
     for suggestion in apply_data.suggestions:
         item = items_by_id.get(suggestion.get("item_id"))
         if not item:
@@ -737,6 +805,7 @@ def apply_quote_cost_match_suggestions(
             item.lead_time_days = int(suggestion["lead_time_days"])
         item.cost_source = "HISTORY"
         updated_count += 1
+        updated_items.append(item)
 
     total_cost = Decimal("0")
     total_price = Decimal("0")
@@ -745,8 +814,8 @@ def apply_quote_cost_match_suggestions(
         total_cost += _to_decimal(item.cost) * qty
         total_price += _to_decimal(item.unit_price) * qty
 
-    version.cost_total = total_cost
-    version.total_price = total_price
+    version.cost_total = total_cost.quantize(Decimal("0.01"))
+    version.total_price = total_price.quantize(Decimal("0.01"))
     version.gross_margin = (
         ((total_price - total_cost) / total_price * 100).quantize(Decimal("0.01"))
         if total_price > 0
@@ -754,6 +823,22 @@ def apply_quote_cost_match_suggestions(
     )
     version.margin_warning = version.gross_margin < 15 if total_price > 0 else False
     version.cost_breakdown_complete = True
+    db.flush()
+    new_version_value = quote_version_audit_value(version) or {}
+    new_version_value["updated_count"] = updated_count
+    new_version_value["items"] = [
+        _quote_cost_item_audit_value(item) for item in updated_items
+    ]
+    SalesOperationLogService.log_update(
+        db,
+        entity_type=SalesEntityType.QUOTE_VERSION,
+        entity_id=version.id,
+        operator=current_user,
+        old_value=old_version_value,
+        new_value=new_version_value,
+        entity_code=_quote_version_audit_code(version),
+        remark="quote_cost_match_apply",
+    )
     db.commit()
 
     return ResponseModel(
@@ -1009,6 +1094,12 @@ def batch_update_prices(
     rate = Decimal(str(update_data.rate))
 
     items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version_id).all()
+    version = get_or_404(db, QuoteVersion, version_id, detail="版本不存在")
+    old_value = {
+        "version_id": version.id,
+        "quote_id": version.quote_id,
+        "items": [_quote_cost_item_audit_value(item) for item in items],
+    }
 
     updated_count = 0
     for item in items:
@@ -1029,6 +1120,25 @@ def batch_update_prices(
             item.unit_price = new_price
             updated_count += 1
 
+    db.flush()
+    new_value = {
+        "version_id": version.id,
+        "quote_id": version.quote_id,
+        "items": [_quote_cost_item_audit_value(item) for item in items],
+        "updated_count": updated_count,
+        "mode": mode,
+        "rate": str(rate),
+    }
+    SalesOperationLogService.log_update(
+        db,
+        entity_type=SalesEntityType.QUOTE_VERSION,
+        entity_id=version.id,
+        operator=current_user,
+        old_value=old_value,
+        new_value=new_value,
+        entity_code=_quote_version_audit_code(version),
+        remark="quote_cost_batch_price_update",
+    )
     db.commit()
 
     return ResponseModel(

@@ -7,7 +7,7 @@ import hashlib
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from app.core.config import settings
 
@@ -69,6 +69,7 @@ class FileUploadService:
         allowed_extensions: Optional[set] = None,
         max_file_size: Optional[int] = None,
         user_quota: Optional[int] = None,
+        db: Optional[Any] = None,
     ):
         """
         初始化文件上传服务
@@ -79,7 +80,12 @@ class FileUploadService:
             max_file_size: 最大文件大小（字节）
             user_quota: 用户上传配额（字节）
         """
-        self.upload_dir = upload_dir or Path(settings.UPLOAD_DIR)
+        if upload_dir is not None and not isinstance(upload_dir, (str, Path)):
+            db = upload_dir
+            upload_dir = None
+
+        self.db = db
+        self.upload_dir = Path(upload_dir) if upload_dir is not None else Path(settings.UPLOAD_DIR)
         self.allowed_extensions = allowed_extensions or self.DEFAULT_ALLOWED_EXTENSIONS
         self.max_file_size = max_file_size or self.DEFAULT_MAX_FILE_SIZE
         self.user_quota = user_quota or self.DEFAULT_USER_QUOTA
@@ -133,8 +139,77 @@ class FileUploadService:
 
         return True, None
 
+    def validate_file_content(
+        self,
+        file_content: bytes,
+        filename: str,
+    ) -> Tuple[bool, Optional[str]]:
+        """
+        验证文件内容与扩展名是否匹配，防止可执行文件或脚本伪装成允许类型。
+
+        Args:
+            file_content: 文件内容
+            filename: 原始文件名
+
+        Returns:
+            (是否有效, 错误消息)
+        """
+        if isinstance(file_content, str):
+            file_content = file_content.encode("utf-8")
+
+        if not file_content:
+            return False, "文件内容不能为空"
+
+        file_ext = Path(filename).suffix.lower()
+        header = file_content[:16]
+        lower_sample = file_content[:1024].lower().lstrip()
+
+        blocked_signatures = (
+            (b"MZ", "Windows 可执行文件"),
+            (b"\x7fELF", "Linux 可执行文件"),
+            (b"#!", "脚本文件"),
+        )
+        for signature, label in blocked_signatures:
+            if header.startswith(signature):
+                return False, f"文件内容与扩展名不匹配：禁止上传{label}"
+
+        expected_signatures = {
+            ".pdf": (b"%PDF-",),
+            ".png": (b"\x89PNG\r\n\x1a\n",),
+            ".jpg": (b"\xff\xd8\xff",),
+            ".jpeg": (b"\xff\xd8\xff",),
+            ".gif": (b"GIF87a", b"GIF89a"),
+            ".bmp": (b"BM",),
+            ".zip": (b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08"),
+            ".docx": (b"PK\x03\x04",),
+            ".xlsx": (b"PK\x03\x04",),
+            ".pptx": (b"PK\x03\x04",),
+            ".doc": (b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1",),
+            ".xls": (b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1",),
+            ".ppt": (b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1",),
+            ".rar": (b"Rar!\x1a\x07\x00", b"Rar!\x1a\x07\x01\x00"),
+            ".7z": (b"7z\xbc\xaf\x27\x1c",),
+            ".gz": (b"\x1f\x8b",),
+        }
+
+        signatures = expected_signatures.get(file_ext)
+        if signatures and not any(header.startswith(signature) for signature in signatures):
+            return False, "文件内容与扩展名不匹配"
+
+        text_like_extensions = {".txt", ".md", ".csv", ".rtf", ".svg"}
+        if file_ext in text_like_extensions:
+            if lower_sample.startswith((b"<!doctype html", b"<html")) or b"<script" in lower_sample:
+                return False, "文本文件内容包含 HTML/脚本，已拒绝上传"
+
+        if file_ext == ".webp" and not (
+            header.startswith(b"RIFF") and file_content[8:12] == b"WEBP"
+        ):
+            return False, "文件内容与扩展名不匹配"
+
+        return True, None
+
     def check_user_quota(
-        self, user_id: int, file_size: int, db, model_class=None
+        self, user_id: int, file_size: int = 0, db=None, model_class=None
     ) -> Tuple[bool, Optional[str]]:
         """
         检查用户上传配额
@@ -148,6 +223,7 @@ class FileUploadService:
         Returns:
             (是否通过, 错误消息)
         """
+        db = db if db is not None else self.db
         current_used = self.get_user_total_upload_size(user_id, db, model_class)
 
         if current_used + file_size > self.user_quota:

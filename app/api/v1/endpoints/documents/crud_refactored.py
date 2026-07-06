@@ -183,6 +183,10 @@ async def upload_document_file(
     if not is_valid_size:
         raise HTTPException(status_code=400, detail=size_error)
 
+    is_valid_content, content_error = upload_service.validate_file_content(content, filename)
+    if not is_valid_content:
+        raise HTTPException(status_code=400, detail=content_error)
+
     _, relative_path = upload_service.save_file(
         content,
         filename,

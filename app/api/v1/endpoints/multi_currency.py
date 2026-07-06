@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """Multi-currency compatibility endpoints for the finance UI."""
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -98,7 +100,7 @@ def convert_currency(
 
 @router.get("/history")
 def get_history(
-    currency: str | None = Query(None),
+    currency: Optional[str] = Query(None),
     limit: int = Query(20, ge=1, le=100),
     current_user=Depends(deps.get_current_user),
 ):

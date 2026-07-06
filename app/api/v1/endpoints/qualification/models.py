@@ -3,6 +3,8 @@
 岗位能力模型管理端点
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any, Optional
 

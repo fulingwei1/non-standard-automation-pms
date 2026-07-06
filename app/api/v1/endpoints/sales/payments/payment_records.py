@@ -2,6 +2,8 @@
 """
 回款记录管理 endpoints
 """
+from __future__ import annotations
+
 from datetime import date
 from decimal import Decimal
 from typing import Any, Optional
@@ -16,8 +18,15 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import Contract, Invoice
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.services.sales.invoice_operation_audit import (
+    invoice_audit_value as _invoice_audit_value,
+    invoice_paid as _invoice_paid,
+    invoice_total as _invoice_total,
+    log_invoice_operation,
+)
 
 
 class PaymentRecordCreate(BaseModel):
@@ -55,14 +64,6 @@ def _apply_invoice_scope(query, current_user: User, db: Session):
     )
 
 
-def _invoice_total(invoice: Invoice) -> Decimal:
-    return invoice.total_amount or invoice.amount or Decimal("0")
-
-
-def _invoice_paid(invoice: Invoice) -> Decimal:
-    return invoice.paid_amount or Decimal("0")
-
-
 def _invoice_unpaid(invoice: Invoice) -> Decimal:
     return _invoice_total(invoice) - _invoice_paid(invoice)
 
@@ -88,6 +89,28 @@ def _get_scoped_invoice(db: Session, invoice_id: int, current_user: User) -> Inv
     if not invoice:
         raise HTTPException(status_code=404, detail="发票不存在或无权访问")
     return invoice
+
+
+def _log_invoice_payment_operation(
+    db: Session,
+    invoice: Invoice,
+    operation_type: str,
+    operator: User,
+    old_value: dict[str, Any],
+    new_value: dict[str, Any],
+    operation_desc: str,
+    remark: str | None = None,
+) -> None:
+    log_invoice_operation(
+        db,
+        invoice,
+        operation_type=operation_type,
+        operator=operator,
+        old_value=old_value,
+        new_value=new_value,
+        operation_desc=operation_desc,
+        remark=remark,
+    )
 
 
 @router.get("/payments/overdue", response_model=PaginatedResponse)
@@ -354,6 +377,7 @@ def create_payment_record(
     if record_data.amount > unpaid:
         raise HTTPException(status_code=400, detail=f"回款金额不能超过未收金额 {unpaid}")
 
+    old_value = _invoice_audit_value(invoice)
     current_paid = _invoice_paid(invoice)
     new_paid = current_paid + record_data.amount
     invoice.paid_amount = new_paid
@@ -374,6 +398,16 @@ def create_payment_record(
 
     invoice.remark = (invoice.remark or "") + f"\n{payment_note}"
 
+    _log_invoice_payment_operation(
+        db,
+        invoice,
+        SalesOperationType.CREATE,
+        current_user,
+        old_value,
+        _invoice_audit_value(invoice),
+        "登记回款",
+        remark=payment_note,
+    )
     db.commit()
 
     return ResponseModel(
@@ -461,6 +495,7 @@ def update_payment_record(
 ) -> Any:
     """更新回款记录（当前以发票收款字段承载）。"""
     invoice = _get_scoped_invoice(db, payment_id, current_user)
+    old_value = _invoice_audit_value(invoice)
 
     update_data = record_data.model_dump(exclude_unset=True)
     if "amount" in update_data and update_data["amount"] is not None:
@@ -486,6 +521,16 @@ def update_payment_record(
     if note_parts:
         invoice.remark = (invoice.remark or "") + "\n回款记录更新：" + "，".join(note_parts)
 
+    _log_invoice_payment_operation(
+        db,
+        invoice,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value,
+        _invoice_audit_value(invoice),
+        "更新回款记录",
+        remark="；".join(note_parts) if note_parts else None,
+    )
     db.commit()
     db.refresh(invoice)
 
@@ -514,11 +559,22 @@ def delete_payment_record(
 ) -> Any:
     """删除回款记录（清空发票上的收款信息，不删除发票）。"""
     invoice = _get_scoped_invoice(db, payment_id, current_user)
+    old_value = _invoice_audit_value(invoice)
 
     invoice.paid_amount = Decimal("0")
     invoice.paid_date = None
     invoice.payment_status = "PENDING"
     invoice.remark = (invoice.remark or "") + "\n回款记录已删除"
+    _log_invoice_payment_operation(
+        db,
+        invoice,
+        SalesOperationType.DELETE,
+        current_user,
+        old_value,
+        _invoice_audit_value(invoice),
+        "删除回款记录",
+        remark=f"payment_id={payment_id}",
+    )
     db.commit()
 
     return ResponseModel(
@@ -549,6 +605,7 @@ def match_payment_to_invoice(
     if invoice.status != "ISSUED":
         raise HTTPException(status_code=400, detail="只有已开票的发票才能核销")
 
+    old_value = _invoice_audit_value(invoice)
     total = _invoice_total(invoice)
     current_paid = _invoice_paid(invoice)
     unpaid = total - current_paid
@@ -569,6 +626,16 @@ def match_payment_to_invoice(
     # 更新收款状态
     _sync_invoice_payment_status(invoice)
 
+    _log_invoice_payment_operation(
+        db,
+        invoice,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value,
+        _invoice_audit_value(invoice),
+        f"发票核销：{old_value.get('payment_status')} → {invoice.payment_status}",
+        remark=f"matched_amount={match_amount or unpaid}",
+    )
     db.commit()
 
     return ResponseModel(

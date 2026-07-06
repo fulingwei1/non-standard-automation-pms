@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Financial report endpoints used by the financial reports page."""
 
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import date, datetime
 from decimal import Decimal

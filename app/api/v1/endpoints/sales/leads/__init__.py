@@ -5,7 +5,7 @@
 
 from fastapi import APIRouter
 
-from . import actions, crud, follow_ups
+from . import actions, batch, crud, follow_ups
 
 # 创建主路由
 router = APIRouter()
@@ -14,4 +14,5 @@ router = APIRouter()
 # 静态入口（例如 /leads/export）必须先于 /leads/{lead_id} 注册。
 router.include_router(actions.router)
 router.include_router(follow_ups.router)
+router.include_router(batch.router)
 router.include_router(crud.router)

@@ -7,7 +7,6 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Dict
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.common.dashboard.base import BaseDashboardEndpoint
@@ -16,6 +15,7 @@ from app.models.project import Project
 from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.presales import PresalesDashboardData
+from app.services.report_labor_cost import calculate_timesheet_labor_summary
 
 
 class PresaleAnalyticsDashboardEndpoint(BaseDashboardEndpoint):
@@ -44,25 +44,27 @@ class PresaleAnalyticsDashboardEndpoint(BaseDashboardEndpoint):
         # 资源浪费统计：工时实际落在 Timesheet，WorkLog 只保留日报文本。
         total_hours = 0.0
         wasted_hours = 0.0
+        wasted_cost = Decimal("0")
         loss_reasons = {}
 
         for project in ytd_projects:
-            hours = float(
-                db.query(func.sum(Timesheet.hours))
-                .filter(Timesheet.project_id == project.id)
-                .scalar()
-                or 0
+            timesheets = (
+                db.query(Timesheet)
+                .filter(Timesheet.project_id == project.id, Timesheet.status == "APPROVED")
+                .all()
             )
+            labor_summary = calculate_timesheet_labor_summary(db, timesheets)
+            hours = float(labor_summary.total_hours)
             total_hours += hours
 
             if project.outcome in [LeadOutcomeEnum.LOST.value, LeadOutcomeEnum.ABANDONED.value]:
                 wasted_hours += hours
+                wasted_cost += labor_summary.total_cost
                 reason = project.loss_reason or "OTHER"
                 loss_reasons[reason] = loss_reasons.get(reason, 0) + 1
 
         avg_investment = total_hours / total_leads_ytd if total_leads_ytd > 0 else 0
         waste_rate = wasted_hours / total_hours if total_hours > 0 else 0
-        wasted_cost = Decimal(str(wasted_hours)) * Decimal("300")
 
         # 月度统计（近6个月）
         monthly_stats = []

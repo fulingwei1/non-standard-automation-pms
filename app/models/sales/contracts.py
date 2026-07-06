@@ -166,9 +166,6 @@ class Contract(Base, TimestampMixin):
     amendments = relationship(
         "ContractAmendment", back_populates="contract", cascade="all, delete-orphan"
     )
-    approvals = relationship(
-        "ContractApproval", back_populates="contract", cascade="all, delete-orphan"
-    )
     terms = relationship("ContractTerm", back_populates="contract", cascade="all, delete-orphan")
     attachments = relationship(
         "ContractAttachment", back_populates="contract", cascade="all, delete-orphan"
@@ -290,36 +287,6 @@ class ContractAmendment(Base, TimestampMixin):
 
     def __repr__(self):
         return f"<ContractAmendment {self.amendment_no}>"
-
-
-class ContractApproval(Base, TimestampMixin):
-    """合同审批表"""
-
-    __tablename__ = "contract_approvals"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    contract_id = Column(Integer, ForeignKey("contracts.id"), nullable=False, comment="合同ID")
-    approval_level = Column(Integer, nullable=False, comment="审批层级")
-    approval_role = Column(String(50), nullable=False, comment="审批角色")
-    approver_id = Column(Integer, ForeignKey("users.id"), comment="审批人ID")
-    approver_name = Column(String(50), comment="审批人姓名")
-    approval_status = Column(
-        String(20), default="pending", comment="审批状态: pending/approved/rejected"
-    )
-    approval_opinion = Column(Text, comment="审批意见")
-    approved_at = Column(DateTime, comment="审批时间")
-
-    contract = relationship("Contract", back_populates="approvals")
-    approver = relationship("User", foreign_keys=[approver_id])
-
-    __table_args__ = (
-        Index("idx_contract_approval_contract", "contract_id"),
-        Index("idx_contract_approval_approver", "approver_id"),
-        Index("idx_contract_approval_status", "approval_status"),
-    )
-
-    def __repr__(self):
-        return f"<ContractApproval {self.contract_id}-L{self.approval_level}>"
 
 
 class ContractTerm(Base, TimestampMixin):

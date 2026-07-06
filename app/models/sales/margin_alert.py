@@ -65,6 +65,8 @@ class MarginAlertConfig(Base, TimestampMixin):
     customer_level = Column(String(50), comment="客户等级（A/B/C/D）")
     project_type = Column(String(50), comment="项目类型")
     industry = Column(String(50), comment="适用行业")
+    # 项目等级（S/A/B/C，对应手册毛利率分级底线）
+    project_level = Column(String(2), comment="项目等级 S/A/B/C")
 
     # 毛利率阈值（百分比）
     standard_margin = Column(Numeric(5, 2), default=25, comment="标准毛利率阈值(%)")

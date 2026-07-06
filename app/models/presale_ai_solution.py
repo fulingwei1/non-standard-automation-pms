@@ -9,6 +9,7 @@ from sqlalchemy import DECIMAL, JSON, Column, DateTime, ForeignKey, Index, Integ
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base
+from app.models.presale import PresaleSolutionTemplate as PresaleAISolutionTemplate
 
 
 class PresaleAISolution(Base):
@@ -23,12 +24,8 @@ class PresaleAISolution(Base):
         Integer, ForeignKey("presale_ai_requirement_analysis.id"), comment="需求分析ID"
     )
 
-    # === 【新增】版本管理 ===
-    current_version_id = Column(
-        Integer,
-        ForeignKey("solution_versions.id", use_alter=True, name="fk_solution_current_version"),
-        comment="当前生效版本ID",
-    )
+    # 旧方案版本引擎已退役；保留空兼容列，避免历史库 schema 反复迁移。
+    current_version_id = Column(Integer, comment="旧方案版本ID（已退役）")
 
     # 模板匹配结果
     matched_template_ids = Column(JSON, comment="匹配的模板ID列表 (TOP 3)")
@@ -82,91 +79,11 @@ class PresaleAISolution(Base):
     creator = relationship("User", foreign_keys=[created_by])
     reviewer = relationship("User", foreign_keys=[reviewed_by])
 
-    # === 【新增】版本关系 ===
-    # 当前生效版本
-    current_version = relationship(
-        "SolutionVersion",
-        foreign_keys=[current_version_id],
-        post_update=True,
-        uselist=False,
-    )
-    # 所有版本列表
-    versions = relationship(
-        "SolutionVersion",
-        back_populates="solution",
-        cascade="all, delete-orphan",
-        foreign_keys="SolutionVersion.solution_id",
-        order_by="SolutionVersion.created_at.desc()",
-    )
-
     # 索引
     __table_args__ = (
         Index("idx_presale_ticket", "presale_ticket_id"),
         Index("idx_ai_solution_status", "status"),
         Index("idx_ai_solution_created_at", "created_at"),
-    )
-
-
-class PresaleAISolutionTemplate(Base):
-    """方案模板库 (用于相似度匹配)"""
-
-    __tablename__ = "presale_solution_templates"
-
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    name = Column(String(200), nullable=False, comment="模板名称")
-    code = Column(String(100), unique=True, comment="模板编码")
-
-    # 分类信息
-    industry = Column(String(100), comment="行业分类: 汽车/电子/医疗/食品等")
-    equipment_type = Column(String(100), comment="设备类型: 装配/焊接/检测/包装等")
-    complexity_level = Column(String(50), comment="复杂度: simple/medium/complex")
-
-    # 模板内容
-    solution_content = Column(JSON, comment="方案内容模板")
-    architecture_diagram = Column(Text, comment="架构图模板 (Mermaid)")
-    bom_template = Column(JSON, comment="BOM模板")
-
-    # 技术参数
-    technical_specs = Column(JSON, comment="技术规格参数")
-    equipment_list = Column(JSON, comment="设备清单")
-
-    # 向量嵌入 (用于语义搜索)
-    embedding = Column(Text, comment="文本嵌入向量 (JSON字符串)")
-    embedding_model = Column(String(100), comment="嵌入模型名称")
-
-    # 使用统计
-    usage_count = Column(Integer, default=0, comment="使用次数")
-    success_rate = Column(DECIMAL(3, 2), comment="成功率")
-    avg_quality_score = Column(DECIMAL(3, 2), comment="平均质量评分")
-
-    # 成本信息
-    typical_cost_range_min = Column(DECIMAL(12, 2), comment="典型成本范围-最小值")
-    typical_cost_range_max = Column(DECIMAL(12, 2), comment="典型成本范围-最大值")
-
-    # 标签和关键词
-    tags = Column(JSON, comment="标签列表")
-    keywords = Column(Text, comment="关键词 (用于全文搜索)")
-
-    # 状态
-    is_active = Column(Integer, default=1, comment="是否启用: 1启用/0禁用")
-
-    # 创建信息
-    created_by = Column(Integer, ForeignKey("users.id"), comment="创建人ID")
-    created_at = Column(DateTime, default=datetime.utcnow, comment="创建时间")
-    updated_at = Column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, comment="更新时间"
-    )
-
-    # 关联关系
-    creator = relationship("User", foreign_keys=[created_by])
-
-    # 索引
-    __table_args__ = (
-        Index("idx_industry_equipment", "industry", "equipment_type"),
-        Index("idx_sol_tmpl_complexity", "complexity_level"),
-        Index("idx_sol_tmpl_active", "is_active"),
-        Index("idx_usage", "usage_count"),
     )
 
 

@@ -13,6 +13,11 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.sales.contracts import Contract
+from app.models.sales.operation_log import SalesOperationType
+from app.services.sales.contract_operation_audit import (
+    contract_audit_value,
+    log_contract_operation,
+)
 from app.services.sales.contract.status_service import normalize_contract_status
 from app.services.sales.payment_plan_service import PaymentPlanService
 from app.services.status_transition_service import StatusTransitionService
@@ -74,6 +79,7 @@ def create_project_from_contract(
         )
 
     try:
+        old_value = contract_audit_value(contract)
         transition_service = StatusTransitionService(db)
         project = transition_service.handle_contract_signed(
             contract_id, auto_create_project=True
@@ -83,6 +89,16 @@ def create_project_from_contract(
 
         db.refresh(contract)
         payment_plans = PaymentPlanService(db).generate_payment_plans_from_contract(contract)
+        log_contract_operation(
+            db,
+            contract,
+            SalesOperationType.UPDATE,
+            current_user,
+            old_value=old_value,
+            new_value=contract_audit_value(contract),
+            operation_desc="合同生成项目",
+            remark=f"project_code={project.project_code}; payment_plans={len(payment_plans)}",
+        )
         db.commit()
 
         logger.info(

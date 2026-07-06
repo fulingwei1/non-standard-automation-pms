@@ -9,18 +9,17 @@ from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.enums import ApprovalRecordStatusEnum, GateStatusEnum, LeadStatusEnum, QuoteStatusEnum
+from app.models.approval import ApprovalInstance, ApprovalTask
+from app.models.enums import GateStatusEnum, LeadStatusEnum, QuoteStatusEnum
 from app.models.notification import Notification
 from app.models.sales import (
-    ApprovalRecord,
-    ApprovalWorkflowStep,
     Lead,
     LeadFollowUp,
     Opportunity,
     Quote,
     QuoteVersion,
 )
-from app.services.sales_reminder.base import create_notification, find_users_by_role
+from app.services.sales_reminder.base import create_notification
 
 
 def notify_gate_timeout(db: Session, timeout_days: int = 3) -> int:
@@ -429,85 +428,66 @@ def notify_approval_pending(db: Session, timeout_hours: int = 24) -> int:
 
     count = 0
 
-    # 查询所有待审批的记录
-    records = (
-        db.query(ApprovalRecord)
+    # 查询统一审批引擎里的超时待办任务
+    tasks = (
+        db.query(ApprovalTask)
+        .join(ApprovalInstance, ApprovalTask.instance_id == ApprovalInstance.id)
         .filter(
-            ApprovalRecord.status == ApprovalRecordStatusEnum.PENDING,
-            ApprovalRecord.created_at <= threshold_time,
+            ApprovalTask.status == "PENDING",
+            ApprovalTask.created_at <= threshold_time,
+            ApprovalInstance.status == "PENDING",
         )
         .all()
     )
 
-    for record in records:
-        # 获取当前审批步骤
-        step = (
-            db.query(ApprovalWorkflowStep)
+    for task in tasks:
+        instance = task.instance
+        if not instance or not task.assignee_id:
+            continue
+
+        hours_pending = (now - task.created_at).total_seconds() / 3600
+        entity_type = instance.entity_type or "APPROVAL"
+        entity_id = instance.entity_id or instance.id
+        entity_name = {"QUOTE": "报价", "CONTRACT": "合同", "INVOICE": "发票"}.get(
+            entity_type, "事项"
+        )
+        source_type = entity_type.lower()
+
+        # 检查今天是否已发送过提醒
+        existing = (
+            db.query(Notification)
             .filter(
                 and_(
-                    ApprovalWorkflowStep.workflow_id == record.workflow_id,
-                    ApprovalWorkflowStep.step_order == record.current_step,
+                    Notification.user_id == task.assignee_id,
+                    Notification.source_type == source_type,
+                    Notification.source_id == entity_id,
+                    Notification.notification_type == "APPROVAL_PENDING",
+                    Notification.created_at >= datetime.combine(now.date(), datetime.min.time()),
                 )
             )
             .first()
         )
 
-        if not step:
-            continue
-
-        # 获取审批人（优先使用指定审批人，否则根据角色查找）
-        approver_ids = []
-        if step.approver_id:
-            approver_ids = [step.approver_id]
-        elif step.approver_role:
-            # 根据角色查找审批人
-            role_users = find_users_by_role(db, step.approver_role)
-            approver_ids = [u.id for u in role_users]
-
-        if not approver_ids:
-            continue
-
-        hours_pending = (now - record.created_at).total_seconds() / 3600
-        entity_name = {"QUOTE": "报价", "CONTRACT": "合同", "INVOICE": "发票"}.get(
-            record.entity_type, "事项"
-        )
-
-        for approver_id in approver_ids:
-            # 检查今天是否已发送过提醒
-            existing = (
-                db.query(Notification)
-                .filter(
-                    and_(
-                        Notification.user_id == approver_id,
-                        Notification.source_type == record.entity_type.lower(),
-                        Notification.source_id == record.entity_id,
-                        Notification.notification_type == "APPROVAL_PENDING",
-                        Notification.created_at
-                        >= datetime.combine(now.date(), datetime.min.time()),
-                    )
-                )
-                .first()
+        if not existing:
+            create_notification(
+                db=db,
+                user_id=task.assignee_id,
+                notification_type="APPROVAL_PENDING",
+                title=f"审批待处理：{entity_name}审批",
+                content=f"{entity_name}审批已待处理 {int(hours_pending)} 小时，请及时处理。",
+                source_type=source_type,
+                source_id=entity_id,
+                link_url=f"/approvals/tasks/{task.id}",
+                priority="HIGH" if hours_pending >= 48 else "NORMAL",
+                extra_data={
+                    "entity_type": entity_type,
+                    "entity_id": entity_id,
+                    "approval_instance_id": instance.id,
+                    "approval_task_id": task.id,
+                    "hours_pending": int(hours_pending),
+                    "node_name": task.node.node_name if task.node else None,
+                },
             )
-
-            if not existing:
-                create_notification(
-                    db=db,
-                    user_id=approver_id,
-                    notification_type="APPROVAL_PENDING",
-                    title=f"审批待处理：{entity_name}审批",
-                    content=f"{entity_name}审批已待处理 {int(hours_pending)} 小时，请及时处理。",
-                    source_type=record.entity_type.lower(),
-                    source_id=record.entity_id,
-                    link_url=f"/sales/{record.entity_type.lower()}s/{record.entity_id}/approval-status",
-                    priority="HIGH" if hours_pending >= 48 else "NORMAL",
-                    extra_data={
-                        "entity_type": record.entity_type,
-                        "entity_id": record.entity_id,
-                        "approval_record_id": record.id,
-                        "hours_pending": int(hours_pending),
-                        "step_name": step.step_name,
-                    },
-                )
-                count += 1
+            count += 1
 
     return count

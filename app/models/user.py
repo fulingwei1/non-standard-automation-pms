@@ -181,8 +181,6 @@ class Role(Base, TimestampMixin):
     parent = relationship("Role", remote_side=[id], back_populates="children")
     children = relationship("Role", back_populates="parent", remote_side=[parent_id])
 
-    # 来自 permission.py 的反向关系
-    data_scopes = relationship("RoleDataScope", back_populates="role")
     menu_assignments = relationship("RoleMenu", back_populates="role")
 
     def __repr__(self):

@@ -13,10 +13,10 @@ from decimal import Decimal
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from app.models.presale import PresaleSolutionTemplate
 from app.models.presale_ai_solution import (
     PresaleAIGenerationLog,
     PresaleAISolution,
-    PresaleSolutionTemplate,
 )
 from app.schemas.presale_ai_solution import (
     SolutionGenerationRequest,
@@ -35,6 +35,46 @@ except ImportError:
     SEMANTIC_SEARCH_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+
+
+def _template_equipment_type(template: PresaleSolutionTemplate) -> Optional[str]:
+    for attr in ("test_type", "equipment_type"):
+        value = getattr(template, attr, None)
+        if isinstance(value, str) and value:
+            return value
+    return None
+
+
+def _template_usage_count(template: PresaleSolutionTemplate) -> int:
+    for attr in ("use_count", "usage_count"):
+        value = getattr(template, attr, None)
+        if isinstance(value, int):
+            return value
+    return 0
+
+
+def _template_keywords(template: PresaleSolutionTemplate) -> str:
+    parts = [
+        getattr(template, "name", None),
+        getattr(template, "industry", None),
+        _template_equipment_type(template),
+        getattr(template, "description", None),
+        getattr(template, "content_template", None),
+    ]
+    return " ".join(part for part in parts if isinstance(part, str) and part)
+
+
+def _template_solution_content(template: PresaleSolutionTemplate) -> Dict[str, Any]:
+    raw_content = getattr(template, "content_template", None)
+    if isinstance(raw_content, dict):
+        return raw_content
+    if isinstance(raw_content, str) and raw_content:
+        try:
+            parsed = json.loads(raw_content)
+            return parsed if isinstance(parsed, dict) else {"content": parsed}
+        except (TypeError, json.JSONDecodeError):
+            return {"description": str(raw_content)}
+    return {"description": getattr(template, "description", "") or ""}
 
 
 class PresaleAIService:
@@ -77,7 +117,7 @@ class PresaleAIService:
 
         # 构建查询
         query = self.db.query(PresaleSolutionTemplate).filter(
-            PresaleSolutionTemplate.is_active == 1
+            PresaleSolutionTemplate.is_active.is_(True)
         )
 
         # 过滤条件
@@ -85,7 +125,7 @@ class PresaleAIService:
             query = query.filter(PresaleSolutionTemplate.industry == request.industry)
 
         if request.equipment_type:
-            query = query.filter(PresaleSolutionTemplate.equipment_type == request.equipment_type)
+            query = query.filter(PresaleSolutionTemplate.test_type == request.equipment_type)
 
         # 获取候选模板
         templates = query.all()
@@ -94,7 +134,7 @@ class PresaleAIService:
         if request.keywords:
             scored_templates = []
             for template in templates:
-                score = self._calculate_similarity(request.keywords, template.keywords or "")
+                score = self._calculate_similarity(request.keywords, _template_keywords(template))
                 scored_templates.append((template, score))
 
             # 按相似度排序
@@ -102,7 +142,7 @@ class PresaleAIService:
             top_templates = scored_templates[: request.top_k]
         else:
             # 按使用次数排序
-            templates = sorted(templates, key=lambda x: x.usage_count or 0, reverse=True)
+            templates = sorted(templates, key=_template_usage_count, reverse=True)
             top_templates = [(t, 0.0) for t in templates[: request.top_k]]
 
         # 构建响应
@@ -114,11 +154,9 @@ class PresaleAIService:
                     template_name=template.name,
                     similarity_score=score if score > 0 else 0.5,  # 默认0.5
                     industry=template.industry,
-                    equipment_type=template.equipment_type,
-                    usage_count=template.usage_count or 0,
-                    avg_quality_score=(
-                        float(template.avg_quality_score) if template.avg_quality_score else None
-                    ),
+                    equipment_type=_template_equipment_type(template),
+                    usage_count=_template_usage_count(template),
+                    avg_quality_score=None,
                 )
             )
 
@@ -299,9 +337,9 @@ class PresaleAIService:
 参考模板：
 模板名称：{template.name}
 行业：{template.industry}
-设备类型：{template.equipment_type}
+设备类型：{_template_equipment_type(template)}
 模板内容：
-{json.dumps(template.solution_content, ensure_ascii=False, indent=2)}
+{json.dumps(_template_solution_content(template), ensure_ascii=False, indent=2)}
 """
 
         prompt += """
@@ -637,12 +675,12 @@ class PresaleAIService:
         query = self.db.query(PresaleSolutionTemplate)
 
         if is_active:
-            query = query.filter(PresaleSolutionTemplate.is_active == 1)
+            query = query.filter(PresaleSolutionTemplate.is_active.is_(True))
 
         if industry:
             query = query.filter(PresaleSolutionTemplate.industry == industry)
 
         if equipment_type:
-            query = query.filter(PresaleSolutionTemplate.equipment_type == equipment_type)
+            query = query.filter(PresaleSolutionTemplate.test_type == equipment_type)
 
-        return query.order_by(desc(PresaleSolutionTemplate.usage_count)).all()
+        return query.order_by(desc(PresaleSolutionTemplate.use_count)).all()

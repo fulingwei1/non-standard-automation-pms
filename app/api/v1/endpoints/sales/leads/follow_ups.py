@@ -13,11 +13,16 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.sales import Lead, LeadFollowUp
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.sales import (
     LeadFollowUpCreate,
     LeadFollowUpQuickCreate,
     LeadFollowUpResponse,
+)
+from app.services.sales.lead_operation_audit import (
+    lead_audit_value,
+    log_lead_operation,
 )
 from app.utils.db_helpers import get_or_404
 
@@ -83,6 +88,7 @@ def _create_follow_up_record(
     next_action_at: datetime = None,
     attachments: str = None,
 ) -> LeadFollowUp:
+    old_lead_value = lead_audit_value(lead)
     follow_up = LeadFollowUp(
         lead_id=lead.id,
         follow_up_type=follow_up_type,
@@ -99,6 +105,16 @@ def _create_follow_up_record(
     if next_action_at:
         lead.next_action_at = next_action_at
 
+    log_lead_operation(
+        db,
+        lead,
+        SalesOperationType.COMMENT,
+        current_user,
+        old_value=old_lead_value,
+        new_value=lead_audit_value(lead),
+        operation_desc="添加线索跟进",
+        remark=content,
+    )
     db.commit()
     db.refresh(follow_up)
     return follow_up

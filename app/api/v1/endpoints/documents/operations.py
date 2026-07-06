@@ -3,7 +3,7 @@
 文档操作API（更新、下载、版本、删除）
 """
 from pathlib import Path
-from typing import Any, List
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
@@ -28,6 +28,28 @@ router = APIRouter()
 # 文档上传目录
 DOCUMENT_UPLOAD_DIR = Path(settings.UPLOAD_DIR) / "documents"
 DOCUMENT_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _resolve_document_file_path(file_path: str) -> Optional[Path]:
+    path = Path(file_path)
+    if not path.is_absolute():
+        path = DOCUMENT_UPLOAD_DIR / path
+
+    resolved_path = path.resolve()
+    try:
+        resolved_path.relative_to(DOCUMENT_UPLOAD_DIR.resolve())
+    except ValueError:
+        return None
+    return resolved_path
+
+
+def _delete_document_file(file_path: str) -> bool:
+    resolved_path = _resolve_document_file_path(file_path)
+    if not resolved_path or not resolved_path.is_file():
+        return False
+
+    resolved_path.unlink()
+    return True
 
 
 def _build_document_response(document: ProjectDocument) -> ProjectDocumentResponse:
@@ -145,7 +167,7 @@ def delete_document(
 ) -> Any:
     """
     删除文档记录
-    注意：这里只删除数据库记录，不删除实际文件。如需删除文件，需要额外处理。
+    同步清理上传目录内的实际文件；路径越界或文件不存在时仅删除数据库记录。
     """
     document = get_or_404(db, ProjectDocument, doc_id, "文档记录不存在")
 
@@ -153,7 +175,9 @@ def delete_document(
     if document.project_id:
         check_project_access_or_raise(db, current_user, document.project_id)
 
+    file_path = document.file_path
     db.delete(document)
     db.commit()
+    _delete_document_file(file_path)
 
     return ResponseModel(code=200, message="文档记录已删除")

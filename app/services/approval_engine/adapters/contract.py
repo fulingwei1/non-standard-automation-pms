@@ -5,19 +5,14 @@
 将合同模块接入统一审批系统
 """
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
-
-if TYPE_CHECKING:
-    from app.models.sales.contracts import ContractApproval
+from typing import Any, Dict, List, Optional
 
 import logging
-from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance, ApprovalTask
+from app.models.approval import ApprovalInstance
 from app.models.sales.contracts import Contract
-from app.models.user import User
 from app.services.sales.contract.status_service import apply_contract_status, normalize_contract_status
 
 from .base import ApprovalAdapter
@@ -239,94 +234,3 @@ class ContractApprovalAdapter(ApprovalAdapter):
         logger.info(f"合同 {contract.contract_code} 已提交审批，实例ID: {instance.id}")
 
         return instance
-
-    def create_contract_approval(
-        self,
-        instance: ApprovalInstance,
-        task: ApprovalTask,
-    ) -> Optional["ContractApproval"]:
-        """创建合同审批记录"""
-        from app.models.sales.contracts import ContractApproval
-
-        # 检查是否已存在
-        existing = (
-            self.db.query(ContractApproval)
-            .filter(
-                ContractApproval.contract_id == instance.entity_id,
-                ContractApproval.approval_level == task.node_order,
-            )
-            .first()
-        )
-
-        if existing:
-            return existing
-
-        # 获取审批人
-        approver = (
-            self.db.query(User).filter(User.id == task.assignee_id).first()
-            if task.assignee_id
-            else None
-        )
-
-        # 计算到期时间
-        due_date = task.due_at or (datetime.now() + timedelta(hours=48))
-
-        # 创建新记录
-        approval = ContractApproval(
-            contract_id=instance.entity_id,
-            approval_level=task.node_order,
-            approval_role=task.node_name or "",
-            approver_id=task.assignee_id,
-            approver_name=approver.real_name if approver else "",
-            approval_result=None,  # 待审批
-            status="PENDING",
-            due_date=due_date,
-            is_overdue=False,
-        )
-
-        self.db.add(approval)
-        return approval
-
-    def update_contract_approval_from_action(
-        self,
-        task: ApprovalTask,
-        action: str,
-        comment: Optional[str] = None,
-    ) -> Optional["ContractApproval"]:
-        """更新合同审批记录"""
-        approval_level = task.node_order
-        approval = (
-            self.db.query(ContractApproval)
-            .filter(
-                ContractApproval.contract_id == task.instance.entity_id,
-                ContractApproval.approval_level == approval_level,
-            )
-            .first()
-        )
-
-        if not approval:
-            logger.warning(
-                f"未找到合同审批记录: entity_id={task.instance.entity_id}, level={approval_level}"
-            )
-            return None
-
-        # 更新审批结果
-        if action == "APPROVE":
-            approval.approval_result = "APPROVED"
-            approval.approval_opinion = comment
-            approval.status = "APPROVED"
-            approval.approved_at = datetime.now()
-        elif action == "REJECT":
-            approval.approval_result = "REJECTED"
-            approval.approval_opinion = comment
-            approval.status = "REJECTED"
-            approval.approved_at = datetime.now()
-
-        self.db.add(approval)
-        self.db.commit()
-
-        logger.info(
-            f"合同审批记录已更新: entity_id={approval.contract_id}, level={approval_level}, action={action}"
-        )
-
-        return approval

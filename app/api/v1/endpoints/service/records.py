@@ -3,6 +3,8 @@
 现场服务记录管理 API endpoints
 """
 
+from __future__ import annotations
+
 import uuid
 from datetime import date, datetime
 from pathlib import Path

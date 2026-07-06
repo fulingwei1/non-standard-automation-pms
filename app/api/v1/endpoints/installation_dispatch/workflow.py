@@ -5,6 +5,8 @@
 所有状态转换均通过 InstallationDispatchStateMachine 执行，确保状态规则统一
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal

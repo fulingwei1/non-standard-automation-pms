@@ -8,7 +8,7 @@
 
 import logging
 from dataclasses import dataclass, field
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Union
 
 from sqlalchemy.orm import Query, Session
 
@@ -47,7 +47,7 @@ class EngPerfScopeContext:
         return self.scope_type == ScopeType.OWN.value
 
 
-def _get_dept_ids_for_users(db: Session, user_ids: Set[int] | List[int]) -> List[int]:
+def _get_dept_ids_for_users(db: Session, user_ids: Union[Set[int], List[int]]) -> List[int]:
     """根据用户集合读取部门 ID 列表。"""
     ids = list(user_ids or [])
     if not ids:
@@ -65,8 +65,8 @@ def resolve_engperf_scope(db: Session, user: User) -> EngPerfScopeContext:
     """
     解析当前用户的工程师绩效数据范围。
 
-    优先从 RoleDataScope 读取 resource_type="engineer_performance"，
-    未配置则降级读取 Role.data_scope 字段。
+    从 Role.data_scope 读取全局数据范围，并兼容旧的
+    resource_type="engineer_performance" 调用口径。
     """
     try:
         if user.is_superuser:
@@ -76,7 +76,7 @@ def resolve_engperf_scope(db: Session, user: User) -> EngPerfScopeContext:
                 accessible_dept_ids=None,
             )
 
-        # 1. 从 RoleDataScope 读取
+        # 1. 从角色全局数据范围读取
         scopes = PermissionService.get_user_data_scopes(db, user.id)
         scope_type = scopes.get(RESOURCE_TYPE)
 
@@ -206,8 +206,6 @@ def apply_user_id_scope(
 
     # DEPARTMENT / BUSINESS_UNIT → 需要 JOIN User 获取 department
     if scope.accessible_dept_ids:
-        from sqlalchemy import and_
-
         return query.join(
             User, user_id_column == User.id
         ).filter(User.department_id.in_(scope.accessible_dept_ids))

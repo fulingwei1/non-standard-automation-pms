@@ -17,6 +17,8 @@ from app.schemas.presale_ai_quotation import (
     QuotationEmailRequest,
     QuotationGenerateRequest,
     QuotationHistoryResponse,
+    QuotationPromotionRequest,
+    QuotationPromotionResponse,
     QuotationResponse,
     QuotationUpdateRequest,
     ThreeTierQuotationRequest,
@@ -165,6 +167,41 @@ async def update_quotation(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"更新报价单失败: {str(e)}"
         )
+
+
+@router.post(
+    "/quotation/{quotation_id}/promote-to-sales-quote",
+    response_model=QuotationPromotionResponse,
+    summary="采纳AI报价草稿为正式销售报价",
+)
+async def promote_quotation_to_sales_quote(
+    quotation_id: int,
+    request: QuotationPromotionRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    将售前AI报价草稿复制到正式销售报价链路。
+    """
+    try:
+        service = AIQuotationGeneratorService(db)
+        quote = service.promote_to_sales_quote(
+            quotation_id=quotation_id,
+            user_id=current_user.id,
+            opportunity_id=request.opportunity_id,
+        )
+        return {
+            "quotation_id": quotation_id,
+            "quote_id": quote.id,
+            "quote_code": quote.quote_code,
+            "quote_version_id": quote.current_version_id,
+            "status": quote.status,
+        }
+    except ValueError as e:
+        detail = str(e)
+        if "not found" in detail:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
 
 
 @router.post("/export-quotation-pdf/{quotation_id}", summary="导出报价单PDF")

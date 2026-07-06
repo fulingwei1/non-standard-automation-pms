@@ -7,7 +7,7 @@
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -28,12 +28,26 @@ from .utils import build_department_tree
 router = APIRouter()
 
 
+def _employee_department_condition(department: Department):
+    return or_(
+        Employee.department_id == department.id,
+        and_(Employee.department_id.is_(None), Employee.department == department.dept_name),
+    )
+
+
+def _user_department_condition(department: Department):
+    return or_(
+        User.department_id == department.id,
+        and_(User.department_id.is_(None), User.department == department.dept_name),
+    )
+
+
 @router.get("/departments")
 def read_departments(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
     is_active: Optional[bool] = Query(None, description="是否启用"),
-    current_user: User = Depends(security.get_current_active_user),
+    _current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """获取部门列表"""
     query = db.query(Department)
@@ -56,7 +70,7 @@ def read_departments(
 def get_department_tree(
     db: Session = Depends(deps.get_db),
     is_active: Optional[bool] = Query(None, description="是否只显示启用的部门"),
-    current_user: User = Depends(security.get_current_active_user),
+    _current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """获取部门树结构"""
     query = db.query(Department)
@@ -72,7 +86,7 @@ def get_department_tree(
 @router.get("/departments/statistics")
 def get_department_statistics(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    _current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """获取部门统计数据（用于总经理仪表板）"""
     departments = db.query(Department).filter(Department.is_active).all()
@@ -81,7 +95,7 @@ def get_department_statistics(
     for dept in departments:
         employee_count = (
             db.query(func.count(Employee.id))
-            .filter(Employee.department == dept.dept_name, Employee.is_active)
+            .filter(_employee_department_condition(dept), Employee.is_active)
             .scalar()
             or 0
         )
@@ -113,7 +127,7 @@ def create_department(
     *,
     db: Session = Depends(deps.get_db),
     dept_in: DepartmentCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    _current_user: User = Depends(security.require_permission("hr:create")),
 ) -> Any:
     """创建新部门"""
     department = db.query(Department).filter(Department.dept_code == dept_in.dept_code).first()
@@ -164,6 +178,7 @@ def read_department(
     *,
     db: Session = Depends(deps.get_db),
     dept_id: int,
+    _current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """Get department by ID."""
     department = db.query(Department).filter(Department.id == dept_id).first()
@@ -183,7 +198,7 @@ def update_department(
     db: Session = Depends(deps.get_db),
     dept_id: int,
     dept_in: DepartmentUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    _current_user: User = Depends(security.require_permission("hr:update")),
 ) -> Any:
     """更新部门信息"""
     department = db.query(Department).filter(Department.id == dept_id).first()
@@ -267,7 +282,7 @@ def delete_department(
 
     active_employees = (
         db.query(func.count(Employee.id))
-        .filter(Employee.department == department.dept_name, Employee.is_active)
+        .filter(_employee_department_condition(department), Employee.is_active)
         .scalar()
         or 0
     )
@@ -292,7 +307,7 @@ def get_department_users(
     pagination: PaginationParams = Depends(get_pagination_query),
     keyword: Optional[str] = Query(None, description="关键词搜索（用户名/姓名/工号）"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
-    current_user: User = Depends(security.get_current_active_user),
+    _current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Any:
     """获取部门人员列表"""
 
@@ -300,7 +315,7 @@ def get_department_users(
     if not department:
         raise HTTPException(status_code=404, detail="部门不存在")
 
-    query = db.query(User).filter(User.department == department.dept_name)
+    query = db.query(User).filter(_user_department_condition(department))
 
     query = apply_keyword_filter(query, User, keyword, ["username", "real_name", "employee_no"])
 

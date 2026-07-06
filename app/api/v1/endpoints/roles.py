@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """角色管理 API。"""
 
+from __future__ import annotations
+
 from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
@@ -601,7 +603,7 @@ def get_role_nav_groups(
 @router.put("/{role_id}/nav-groups", status_code=status.HTTP_200_OK)
 def update_role_nav_groups(
     role_id: int,
-    nav_groups: list[dict[str, Any]] | None = Body(default=None),
+    nav_groups: Optional[list[dict[str, Any]]] = Body(default=None),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("role:update")),
 ) -> Any:

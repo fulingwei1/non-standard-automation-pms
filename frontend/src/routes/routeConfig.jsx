@@ -12,7 +12,8 @@ import {
   SystemRoutes,
   StrategyRoutes,
   WarehouseRoutes,
-  QualityRoutes
+  QualityRoutes,
+  OTDRoutes
 } from "./modules";
 import AfterSalesCenter from '../pages/AfterSales/AfterSalesCenter';
 import ProjectOverviewDashboard from '../pages/ProjectOverviewDashboard';
@@ -43,6 +44,7 @@ export function AppRoutes() {
       {StrategyRoutes()}
       {WarehouseRoutes()}
       {QualityRoutes()}
+      {OTDRoutes()}
       {/* 项目总览 */}
       <Route path="/projects/:projectId/overview-dashboard" element={<ProjectOverviewDashboard />} />
       {/* 售后服务 */}

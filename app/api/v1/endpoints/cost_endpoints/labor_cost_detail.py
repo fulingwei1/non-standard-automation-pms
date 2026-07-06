@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """人工成本明细分析 API"""
 
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
 from typing import Any
 
 from fastapi import APIRouter, Depends
@@ -8,11 +12,12 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.models.production.worker import Worker
+from app.models.production.work_order import WorkOrder
 from app.models.user import User
+from app.services.hourly_rate_service import HourlyRateService
 
 router = APIRouter()
-
-DEFAULT_HOURLY_RATE = 200
 
 
 @router.get("/summary", summary="按项目汇总人工成本")
@@ -85,71 +90,131 @@ def labor_cost_by_engineer(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
 ) -> Any:
-    sql = text(
-        """
-        SELECT
-            u.id AS engineer_id,
-            COALESCE(u.real_name, u.username) AS engineer_name,
-            COUNT(wo.id) AS work_order_count,
-            COUNT(DISTINCT wo.project_id) AS project_count,
-            SUM(COALESCE(wo.actual_hours, wo.standard_hours, 0)) AS total_hours,
-            SUM(COALESCE(wo.actual_hours, wo.standard_hours, 0) * :hourly_rate) AS estimated_labor_cost,
-            SUM(CASE WHEN wo.status = 'COMPLETED' THEN 1 ELSE 0 END) AS completed_orders,
-            SUM(CASE WHEN wo.status = 'IN_PROGRESS' THEN 1 ELSE 0 END) AS in_progress_orders
-        FROM work_order wo
-        JOIN users u ON wo.assigned_to = u.id
-        WHERE wo.project_id IS NOT NULL
-        GROUP BY u.id, u.real_name, u.username
-        ORDER BY estimated_labor_cost DESC, total_hours DESC
-        """
+    rows = (
+        db.query(WorkOrder, Worker, User)
+        .join(Worker, WorkOrder.assigned_to == Worker.id)
+        .outerjoin(User, Worker.user_id == User.id)
+        .filter(WorkOrder.project_id.isnot(None))
+        .all()
     )
-    rows = db.execute(sql, {"hourly_rate": DEFAULT_HOURLY_RATE}).fetchall()
+
+    grouped: dict[int, dict[str, Any]] = {}
+    total_work_orders = 0
+    total_hours = Decimal("0")
+    total_cost = Decimal("0")
+
+    for work_order, worker, linked_user in rows:
+        engineer_id = linked_user.id if linked_user else worker.id
+        engineer_name = (
+            linked_user.display_name
+            if linked_user
+            else worker.worker_name or f"工程师#{worker.id}"
+        )
+        stats = grouped.setdefault(
+            engineer_id,
+            {
+                "engineer_id": engineer_id,
+                "engineer_name": engineer_name,
+                "work_order_count": 0,
+                "project_ids": set(),
+                "total_hours": Decimal("0"),
+                "estimated_labor_cost": Decimal("0"),
+                "completed_orders": 0,
+                "in_progress_orders": 0,
+            },
+        )
+
+        hours = _work_order_hours(work_order)
+        hourly_rate = _resolve_work_order_hourly_rate(db, work_order, worker)
+        cost = hours * hourly_rate
+
+        stats["work_order_count"] += 1
+        stats["project_ids"].add(work_order.project_id)
+        stats["total_hours"] += hours
+        stats["estimated_labor_cost"] += cost
+        if work_order.status == "COMPLETED":
+            stats["completed_orders"] += 1
+        if work_order.status == "IN_PROGRESS":
+            stats["in_progress_orders"] += 1
+
+        total_work_orders += 1
+        total_hours += hours
+        total_cost += cost
 
     engineers = []
-    total_work_orders = 0
-    total_hours = 0.0
-    total_cost = 0.0
-
-    for row in rows:
-        work_order_count = int(row.work_order_count or 0)
-        completed_orders = int(row.completed_orders or 0)
-        in_progress_orders = int(row.in_progress_orders or 0)
-        engineer_hours = float(row.total_hours or 0)
-        engineer_cost = float(row.estimated_labor_cost or 0)
-
-        total_work_orders += work_order_count
-        total_hours += engineer_hours
-        total_cost += engineer_cost
-
+    for stats in grouped.values():
+        work_order_count = stats["work_order_count"]
         engineers.append(
             {
-                "engineer_id": row.engineer_id,
-                "engineer_name": row.engineer_name or f"工程师#{row.engineer_id}",
+                "engineer_id": stats["engineer_id"],
+                "engineer_name": stats["engineer_name"],
                 "work_order_count": work_order_count,
-                "project_count": int(row.project_count or 0),
-                "total_hours": round(engineer_hours, 2),
-                "estimated_labor_cost": round(engineer_cost, 2),
-                "completed_orders": completed_orders,
-                "in_progress_orders": in_progress_orders,
+                "project_count": len(stats["project_ids"]),
+                "total_hours": round(float(stats["total_hours"]), 2),
+                "estimated_labor_cost": round(float(stats["estimated_labor_cost"]), 2),
+                "completed_orders": stats["completed_orders"],
+                "in_progress_orders": stats["in_progress_orders"],
                 "completion_rate": (
-                    round(completed_orders / work_order_count * 100, 2)
+                    round(stats["completed_orders"] / work_order_count * 100, 2)
                     if work_order_count > 0
                     else 0
                 ),
             }
         )
+    engineers.sort(
+        key=lambda item: (item["estimated_labor_cost"], item["total_hours"]), reverse=True
+    )
 
     return {
         "summary": {
             "total_engineers": len(engineers),
             "total_work_orders": total_work_orders,
-            "total_hours": round(total_hours, 2),
-            "total_estimated_labor_cost": round(total_cost, 2),
-            "hourly_rate_used": DEFAULT_HOURLY_RATE,
-            "avg_cost_per_hour": round(total_cost / total_hours, 2) if total_hours > 0 else 0,
+            "total_hours": round(float(total_hours), 2),
+            "total_estimated_labor_cost": round(float(total_cost), 2),
+            "hourly_rate_used": (
+                round(float(total_cost / total_hours), 2) if total_hours > 0 else 0
+            ),
+            "rate_source": "hourly_rate_service",
+            "avg_cost_per_hour": (
+                round(float(total_cost / total_hours), 2) if total_hours > 0 else 0
+            ),
         },
         "engineers": engineers,
     }
+
+
+def _work_order_hours(work_order: WorkOrder) -> Decimal:
+    hours = work_order.actual_hours
+    if hours is None:
+        hours = work_order.standard_hours
+    return Decimal(str(hours or 0))
+
+
+def _work_order_rate_date(work_order: WorkOrder) -> date | None:
+    for value in (
+        work_order.actual_end_time,
+        work_order.actual_start_time,
+        work_order.plan_end_date,
+        work_order.plan_start_date,
+    ):
+        if value is None:
+            continue
+        if hasattr(value, "date"):
+            return value.date()
+        if isinstance(value, date):
+            return value
+    return None
+
+
+def _resolve_work_order_hourly_rate(
+    db: Session, work_order: WorkOrder, worker: Worker
+) -> Decimal:
+    rate_date = _work_order_rate_date(work_order)
+    if worker.user_id:
+        return HourlyRateService.get_user_hourly_rate(db, worker.user_id, rate_date)
+    if worker.hourly_rate is not None:
+        return Decimal(str(worker.hourly_rate))
+    return HourlyRateService.DEFAULT_HOURLY_RATE
 
 
 @router.get("/{project_id}", summary="单项目人工成本明细")

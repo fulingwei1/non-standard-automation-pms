@@ -4,7 +4,7 @@
 把多源数据整合成一个"弹药库"，供售前智能体和销售查询复用：
   - case_lib    历史案例（presale_knowledge_case，含技术亮点/教训/标签）
   - quote_ammo  历史报价明细（quote_versions + quote_items，给报价区间）
-  - solution_tpl 方案模板（presale_solution_templates）
+  - solution_tpl 方案模板（presale_solution_template）
   - module_lib  标准模块库（ai_standard_modules，给 BOM 模板）
 
 核心对外能力：
@@ -139,7 +139,8 @@ class AmmoLibraryService:
             SELECT id, case_name, source_project_id, industry, equipment_type,
                    customer_name, project_amount, project_summary,
                    technical_highlights, success_factors, lessons_learned,
-                   tags, quality_score, embedding
+                   tags, quality_score, embedding,
+                   workpiece_type, process_flow, cycle_time, automation_level
             FROM presale_knowledge_case
             WHERE is_public = 1
               AND case_name NOT LIKE 'presale_knowledge_case_%'
@@ -165,10 +166,8 @@ class AmmoLibraryService:
         # 尝试 embedding 语义检索
         scored = self._semantic_score(query, rows)
         if scored is None:
-            # embedding 不可用 → 关键词打分 + 同义词扩展（弥补语义鸿沟）
-            expanded = _expand_synonyms(query)
-            query_terms = [t for t in expanded.replace("/", " ").split() if len(t) >= 2]
-            scored = [(r, self._keyword_score(expanded, query_terms, r)) for r in rows]
+            # embedding 不可用 → 结构化权重打分（对齐金凯博相似度规则）+ 语义兜底
+            scored = [(r, self._weighted_score(query, equipment_type, industry, r)) for r in rows]
 
         scored.sort(key=lambda x: x[1], reverse=True)
         return [
@@ -241,6 +240,78 @@ class AmmoLibraryService:
         return score
 
     # ============= 报价区间聚合 =============
+
+    def _weighted_score(
+        self, query: str, query_equipment: Optional[str],
+        query_industry: Optional[str], case: Dict,
+    ) -> float:
+        """
+        结构化权重打分（对齐金凯博相似度规则）。
+        7 维度加权：设备类型25% + 工艺20% + 工件15% + 节拍15% + 自动化10% + 行业10% + 语义5%。
+
+        从 query 文本里推断查询的结构化特征，和案例的结构化字段比对。
+        每个维度满分按权重给，部分匹配给部分分。
+        """
+        from app.services.presale.risk_taxonomy import SIMILARITY_WEIGHTS
+
+        # 从 query 推断查询特征
+        q_features = _infer_query_features(query, query_equipment, query_industry)
+
+        total = 0.0
+        # 设备类型（25分）：精确匹配满分，包含关系给半分
+        if q_features["equipment_type"] and case.get("equipment_type"):
+            if q_features["equipment_type"] == case["equipment_type"]:
+                total += SIMILARITY_WEIGHTS["equipment_type"]
+            elif q_features["equipment_type"] in case["equipment_type"] or case["equipment_type"] in q_features["equipment_type"]:
+                total += SIMILARITY_WEIGHTS["equipment_type"] * 0.6
+
+        # 工艺流程（20分）：关键词重叠
+        if q_features["process_keywords"] and case.get("process_flow"):
+            case_process = str(case["process_flow"]).lower()
+            overlap = sum(1 for kw in q_features["process_keywords"] if kw.lower() in case_process)
+            if overlap > 0:
+                total += SIMILARITY_WEIGHTS["process_flow"] * min(overlap / max(len(q_features["process_keywords"]), 1), 1.0)
+
+        # 工件类型（15分）
+        if q_features["workpiece_type"] and case.get("workpiece_type"):
+            if q_features["workpiece_type"] == case["workpiece_type"]:
+                total += SIMILARITY_WEIGHTS["workpiece_type"]
+            elif q_features["workpiece_type"] in str(case["workpiece_type"]):
+                total += SIMILARITY_WEIGHTS["workpiece_type"] * 0.6
+
+        # 节拍/产能（15分）：数字接近度
+        if q_features["uph"] and case.get("cycle_time"):
+            case_ct = str(case["cycle_time"])
+            # 从案例 cycle_time 抽数字
+            case_uph = _extract_uph(case_ct)
+            if case_uph and q_features["uph"]:
+                ratio = min(q_features["uph"], case_uph) / max(q_features["uph"], case_uph)
+                if ratio > 0.8:  # 20% 内差异给满分
+                    total += SIMILARITY_WEIGHTS["cycle_time"]
+                elif ratio > 0.5:
+                    total += SIMILARITY_WEIGHTS["cycle_time"] * 0.6
+
+        # 自动化程度（10分）
+        if q_features["automation_level"] and case.get("automation_level"):
+            if q_features["automation_level"] == case["automation_level"]:
+                total += SIMILARITY_WEIGHTS["automation_level"]
+
+        # 行业（10分）
+        if q_features["industry"] and case.get("industry"):
+            if q_features["industry"] == case["industry"]:
+                total += SIMILARITY_WEIGHTS["industry"]
+            elif q_features["industry"] in str(case["industry"]):
+                total += SIMILARITY_WEIGHTS["industry"] * 0.5
+
+        # 语义（5分）：关键词命中（同义词扩展后的）
+        expanded = _expand_synonyms(query)
+        query_terms = [t for t in expanded.replace("/", " ").split() if len(t) >= 2]
+        if query_terms:
+            blob = " ".join(str(case.get(k) or "") for k in ("case_name", "equipment_type", "technical_highlights", "project_summary", "tags")).lower()
+            hits = sum(1 for t in query_terms if t.lower() in blob)
+            total += SIMILARITY_WEIGHTS["semantic"] * min(hits / max(len(query_terms), 1), 1.0)
+
+        return round(total, 2)
 
     def quote_range(
         self,
@@ -440,11 +511,27 @@ class AmmoLibraryService:
         top_k: int = 3,
     ) -> List[Dict[str, Any]]:
         sql = """
-            SELECT id, name, code, industry, equipment_type, complexity_level,
-                   typical_cost_range_min, typical_cost_range_max,
-                   success_rate, usage_count, is_active
-            FROM presale_solution_templates
-            WHERE is_active = 1
+            SELECT id,
+                   name,
+                   template_no AS code,
+                   industry,
+                   test_type AS equipment_type,
+                   NULL AS complexity_level,
+                   CASE
+                       WHEN json_valid(cost_template)
+                       THEN json_extract(cost_template, '$.typical_cost_range_min')
+                       ELSE NULL
+                   END AS typical_cost_range_min,
+                   CASE
+                       WHEN json_valid(cost_template)
+                       THEN json_extract(cost_template, '$.typical_cost_range_max')
+                       ELSE NULL
+                   END AS typical_cost_range_max,
+                   NULL AS success_rate,
+                   COALESCE(use_count, 0) AS usage_count,
+                   COALESCE(is_active, 1) AS is_active
+            FROM presale_solution_template
+            WHERE COALESCE(is_active, 1) = 1
         """
         params: Dict[str, Any] = {}
         conditions = []
@@ -452,11 +539,11 @@ class AmmoLibraryService:
             conditions.append("industry = :industry")
             params["industry"] = industry
         if equipment_type:
-            conditions.append("equipment_type = :equipment_type")
+            conditions.append("test_type = :equipment_type")
             params["equipment_type"] = equipment_type
         if conditions:
             sql += " AND " + " AND ".join(conditions)
-        sql += " LIMIT :top_k"
+        sql += " ORDER BY COALESCE(use_count, 0) DESC, id LIMIT :top_k"
         params["top_k"] = top_k
 
         rows = self.db.execute(text(sql), params).mappings().all()
@@ -536,6 +623,63 @@ class AmmoLibraryService:
 
 
 # ============= 工具函数 =============
+
+def _infer_query_features(query: str, equipment_hint: str = None, industry_hint: str = None) -> Dict[str, Any]:
+    """从查询文本推断结构化特征（设备/工艺/工件/节拍/自动化/行业）。"""
+    ql = query.lower()
+
+    equipment = equipment_hint
+    if not equipment:
+        for eq in ["ict", "fct", "eol", "bms", "aoi", "老化", "烧录", "涂覆", "点胶", "分板", "电驱", "视觉"]:
+            if eq in ql:
+                equipment = {"ict": "ICT测试", "fct": "FCT测试", "eol": "EOL测试",
+                             "bms": "BMS测试", "aoi": "视觉检测", "老化": "老化设备",
+                             "烧录": "烧录设备", "涂覆": "涂覆机", "点胶": "点胶机",
+                             "分板": "分板机", "电驱": "电驱测试", "视觉": "视觉检测"}.get(eq)
+                break
+
+    process_keywords = [kw for kw in ["波峰焊", "插件", "涂覆", "点胶", "固化", "分板", "测试", "检测", "老化", "烧录"] if kw in query]
+
+    workpiece = None
+    for wp in ["pcba", "pcb", "控制板", "驱动板", "整机", "bms", "电驱", "电池"]:
+        if wp in ql:
+            workpiece = {"pcba": "PCBA", "pcb": "PCB", "控制板": "控制板", "驱动板": "驱动板",
+                         "整机": "整机", "bms": "BMS", "电驱": "电驱", "电池": "电池包"}.get(wp)
+            break
+
+    uph = _extract_uph(query)
+
+    automation = None
+    if "整线" in query or "自动化线" in query or "产线" in query:
+        automation = "全自动"
+    elif "半自动" in query:
+        automation = "半自动"
+    elif "手动" in query or "人工" in query:
+        automation = "人工"
+
+    industry = industry_hint
+    if not industry:
+        for ind in ["新能源汽车", "动力电池", "消费电子", "白色家电", "家电", "汽车", "医疗", "通信"]:
+            if ind in query:
+                industry = ind
+                break
+
+    return {
+        "equipment_type": equipment, "process_keywords": process_keywords,
+        "workpiece_type": workpiece, "uph": uph,
+        "automation_level": automation, "industry": industry,
+    }
+
+
+def _extract_uph(text: str) -> Optional[int]:
+    """从文本提取 UPH 数值（如 'UPH800' 'UPH≥800' '800PCS'）。"""
+    import re
+    for pattern in [r"uph\s*[≥>=]*\s*(\d+)", r"(\d+)\s*pcs", r"(\d+)\s*板/小时"]:
+        m = re.search(pattern, text.lower())
+        if m:
+            return int(m.group(1))
+    return None
+
 
 def _percentile(sorted_list: List[float], pct: float) -> Optional[float]:
     """计算分位数（输入需已排序）。"""

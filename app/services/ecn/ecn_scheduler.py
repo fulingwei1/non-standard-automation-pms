@@ -6,14 +6,23 @@ ECN定时任务服务
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db_session
-from app.models.ecn import Ecn, EcnApproval, EcnEvaluation, EcnTask
+from app.models.approval import ApprovalInstance, ApprovalTask
+from app.models.ecn import Ecn, EcnEvaluation, EcnTask
+
+
+def _approval_task_level(task: ApprovalTask) -> Optional[int]:
+    return task.node.node_order if task.node else task.task_order
+
+
+def _approval_task_role(task: ApprovalTask) -> str:
+    return task.node.node_name if task.node else task.task_type or "ECN审批"
 
 
 def check_evaluation_overdue(db: Session) -> List[Dict[str, Any]]:
@@ -61,32 +70,39 @@ def check_approval_overdue(db: Session) -> List[Dict[str, Any]]:
     now = datetime.now()
 
     overdue_approvals = (
-        db.query(EcnApproval)
-        .filter(and_(EcnApproval.status == "PENDING", EcnApproval.due_date < now))
+        db.query(ApprovalTask)
+        .join(ApprovalInstance, ApprovalTask.instance_id == ApprovalInstance.id)
+        .filter(
+            and_(
+                ApprovalInstance.entity_type == "ECN",
+                ApprovalTask.status == "PENDING",
+                ApprovalTask.due_at.isnot(None),
+                ApprovalTask.due_at < now,
+            )
+        )
         .all()
     )
 
     alerts = []
-    for approval in overdue_approvals:
-        ecn = db.query(Ecn).filter(Ecn.id == approval.ecn_id).first()
+    for approval_task in overdue_approvals:
+        ecn = db.query(Ecn).filter(Ecn.id == approval_task.instance.entity_id).first()
         if ecn:
-            overdue_days = (now - approval.due_date).days if approval.due_date else 0
+            approval_level = _approval_task_level(approval_task)
+            approval_role = _approval_task_role(approval_task)
+            overdue_days = (now - approval_task.due_at).days if approval_task.due_at else 0
             alerts.append(
                 {
                     "type": "APPROVAL_OVERDUE",
                     "ecn_id": ecn.id,
                     "ecn_no": ecn.ecn_no,
                     "ecn_title": ecn.ecn_title,
-                    "approval_id": approval.id,
-                    "approval_level": approval.approval_level,
-                    "approval_role": approval.approval_role,
+                    "approval_task_id": approval_task.id,
+                    "approval_level": approval_level,
+                    "approval_role": approval_role,
                     "overdue_days": overdue_days,
-                    "message": f"ECN {ecn.ecn_no} 的第{approval.approval_level}级审批（{approval.approval_role}）已超时{overdue_days}天",
+                    "message": f"ECN {ecn.ecn_no} 的第{approval_level}级审批（{approval_role}）已超时{overdue_days}天",
                 }
             )
-            # 更新超时标识
-            approval.is_overdue = True
-            db.add(approval)
 
     db.commit()
     return alerts
@@ -146,7 +162,7 @@ def send_overdue_notifications(alerts: List[Dict[str, Any]]) -> None:
     发送超时提醒通知
     """
     from app.dependencies import get_db_session
-    from app.models.ecn import Ecn, EcnApproval, EcnEvaluation, EcnTask
+    from app.models.ecn import Ecn, EcnEvaluation, EcnTask
     from app.services.ecn.notification import notify_overdue_alert
 
     if not alerts:
@@ -173,13 +189,20 @@ def send_overdue_notifications(alerts: List[Dict[str, Any]]) -> None:
 
                 elif alert["type"] == "APPROVAL_OVERDUE":
                     # 审批超时：通知审批人
-                    approval_id = alert.get("approval_id")
-                    if approval_id:
-                        approval = (
-                            db.query(EcnApproval).filter(EcnApproval.id == approval_id).first()
+                    task_id = alert.get("approval_task_id") or alert.get("task_id")
+                    if task_id:
+                        task = (
+                            db.query(ApprovalTask)
+                            .join(ApprovalInstance, ApprovalTask.instance_id == ApprovalInstance.id)
+                            .filter(
+                                ApprovalTask.id == task_id,
+                                ApprovalTask.status == "PENDING",
+                                ApprovalInstance.entity_type == "ECN",
+                            )
+                            .first()
                         )
-                        if approval and approval.approver_id:
-                            user_ids.append(approval.approver_id)
+                        if task and task.assignee_id:
+                            user_ids.append(task.assignee_id)
 
                 elif alert["type"] == "TASK_OVERDUE":
                     # 任务超时：通知任务负责人

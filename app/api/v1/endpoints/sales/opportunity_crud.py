@@ -14,6 +14,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.project import Customer
 from app.models.sales import Opportunity, OpportunityRequirement
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.sales import (
@@ -22,7 +23,11 @@ from app.schemas.sales import (
     OpportunityResponse,
     OpportunityUpdate,
 )
-from app.utils.db_helpers import delete_obj, get_or_404
+from app.services.sales.opportunity_operation_audit import (
+    log_opportunity_operation,
+    opportunity_audit_value,
+)
+from app.utils.db_helpers import get_or_404
 
 from .utils import (
     generate_opportunity_code,
@@ -164,6 +169,14 @@ def create_opportunity(
         requirement = OpportunityRequirement(**req_data)
         db.add(requirement)
 
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=opportunity_audit_value(opportunity),
+        operation_desc="创建商机",
+    )
     db.commit()
     db.refresh(opportunity)
 
@@ -255,6 +268,7 @@ def update_opportunity(
     ):
         raise HTTPException(status_code=403, detail="您没有权限编辑此商机")
 
+    old_value = opportunity_audit_value(opportunity)
     update_data = opp_in.model_dump(exclude_unset=True, exclude={"requirement"})
     if "stage" in update_data:
         update_data["stage"] = validate_opportunity_stage_transition(
@@ -283,6 +297,15 @@ def update_opportunity(
                 requirement = OpportunityRequirement(**req_data)
                 db.add(requirement)
 
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=opportunity_audit_value(opportunity),
+        operation_desc="更新商机",
+    )
     db.commit()
     db.refresh(opportunity)
 
@@ -323,5 +346,16 @@ def delete_opportunity(
     ):
         raise HTTPException(status_code=403, detail="您没有权限删除此商机")
 
-    delete_obj(db, opportunity)
+    old_value = opportunity_audit_value(opportunity)
+    db.delete(opportunity)
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.DELETE,
+        current_user,
+        old_value=old_value,
+        new_value={},
+        operation_desc="删除商机",
+    )
+    db.commit()
     return ResponseModel(code=200, message="商机删除成功", data={"id": opp_id})

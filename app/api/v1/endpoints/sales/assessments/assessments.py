@@ -5,6 +5,8 @@
 包含技术评估的申请、执行、查询等核心端点
 """
 
+from __future__ import annotations
+
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -16,12 +18,18 @@ from app.core import security
 from app.models.enums import AssessmentSourceTypeEnum, AssessmentStatusEnum
 from app.models.presale import PresaleSupportTicket
 from app.models.sales import AssessmentTemplate, Lead, Opportunity, TechnicalAssessment
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import (
     TechnicalAssessmentApplyRequest,
     TechnicalAssessmentEvaluateRequest,
     TechnicalAssessmentResponse,
+)
+from app.services.sales.lead_operation_audit import lead_audit_value, log_lead_operation
+from app.services.sales.opportunity_operation_audit import (
+    log_opportunity_operation,
+    opportunity_audit_value,
 )
 from app.services.ai_assessment_service import AIAssessmentService
 from app.services.technical_assessment_service import TechnicalAssessmentService
@@ -165,6 +173,57 @@ def _assessment_response(
     )
 
 
+def _source_audit_value(
+    db: Session,
+    assessment: TechnicalAssessment,
+) -> dict[str, Any]:
+    if assessment.source_type == AssessmentSourceTypeEnum.LEAD.value:
+        lead = get_or_404(db, Lead, assessment.source_id, detail="线索不存在")
+        return lead_audit_value(lead)
+    if assessment.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value:
+        opportunity = get_or_404(db, Opportunity, assessment.source_id, detail="商机不存在")
+        return opportunity_audit_value(opportunity)
+    return {}
+
+
+def _log_assessment_source_operation(
+    db: Session,
+    assessment: TechnicalAssessment,
+    operation_type: str,
+    current_user: User,
+    *,
+    old_value: dict[str, Any],
+    operation_desc: str,
+    remark: str | None = None,
+) -> None:
+    if assessment.source_type == AssessmentSourceTypeEnum.LEAD.value:
+        lead = get_or_404(db, Lead, assessment.source_id, detail="线索不存在")
+        log_lead_operation(
+            db,
+            lead,
+            operation_type,
+            current_user,
+            old_value=old_value,
+            new_value=lead_audit_value(lead),
+            operation_desc=operation_desc,
+            remark=remark,
+        )
+        return
+
+    if assessment.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value:
+        opportunity = get_or_404(db, Opportunity, assessment.source_id, detail="商机不存在")
+        log_opportunity_operation(
+            db,
+            opportunity,
+            operation_type,
+            current_user,
+            old_value=old_value,
+            new_value=opportunity_audit_value(opportunity),
+            operation_desc=operation_desc,
+            remark=remark,
+        )
+
+
 def _get_or_create_open_assessment(
     db: Session,
     *,
@@ -213,6 +272,7 @@ def apply_lead_assessment(
 ) -> Any:
     """申请技术评估（线索）"""
     lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
+    old_value = lead_audit_value(lead)
     ticket = _get_presale_ticket_for_source(
         db,
         source_type=AssessmentSourceTypeEnum.LEAD.value,
@@ -236,6 +296,17 @@ def apply_lead_assessment(
     lead.assessment_id = assessment.id
     lead.assessment_status = assessment.status
 
+    db.flush()
+    log_lead_operation(
+        db,
+        lead,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=lead_audit_value(lead),
+        operation_desc="申请线索技术评估",
+        remark=str(assessment.id),
+    )
     db.commit()
 
     return ResponseModel(
@@ -260,6 +331,7 @@ def apply_opportunity_assessment(
 ) -> Any:
     """申请技术评估（商机）"""
     opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+    old_value = opportunity_audit_value(opportunity)
     ticket = _get_presale_ticket_for_source(
         db,
         source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
@@ -283,6 +355,17 @@ def apply_opportunity_assessment(
     opportunity.assessment_id = assessment.id
     opportunity.assessment_status = assessment.status
 
+    db.flush()
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=opportunity_audit_value(opportunity),
+        operation_desc="申请商机技术评估",
+        remark=str(assessment.id),
+    )
     db.commit()
 
     return ResponseModel(
@@ -309,6 +392,7 @@ async def evaluate_assessment(
 ) -> Any:
     """执行技术评估"""
     assessment = get_or_404(db, TechnicalAssessment, assessment_id, detail="技术评估不存在")
+    old_source_value = _source_audit_value(db, assessment)
 
     if assessment.status != AssessmentStatusEnum.PENDING.value:
         raise HTTPException(status_code=400, detail="评估状态不正确")
@@ -335,6 +419,21 @@ async def evaluate_assessment(
         assessment_id=assessment.id,
     )
 
+    db.flush()
+    operation_desc = (
+        "执行线索技术评估"
+        if assessment.source_type == AssessmentSourceTypeEnum.LEAD.value
+        else "执行商机技术评估"
+    )
+    _log_assessment_source_operation(
+        db,
+        assessment,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_source_value,
+        operation_desc=operation_desc,
+        remark=assessment.decision,
+    )
     db.commit()
 
     db.refresh(assessment)

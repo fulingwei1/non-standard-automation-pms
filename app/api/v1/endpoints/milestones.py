@@ -55,7 +55,7 @@ def list_milestones(
     project_id: Optional[int] = Query(None, description="项目ID"),
     status_filter: Optional[str] = Query(None, alias="status", description="状态"),
     milestone_type: Optional[str] = Query(None, description="里程碑类型"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     query = db.query(ProjectMilestone)
 
@@ -87,7 +87,7 @@ def list_project_milestones_compat(
     project_id: int,
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     return list_milestones(
         db=db,
@@ -103,7 +103,7 @@ def list_project_milestones_compat(
 def get_milestone(
     milestone_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("milestone:read")),
 ) -> Any:
     milestone = db.query(ProjectMilestone).filter(ProjectMilestone.id == milestone_id).first()
     if not milestone:
@@ -125,7 +125,7 @@ def _parse_date(value: Any) -> Optional[date]:
 def create_milestone(
     data: dict = Body(...),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("milestone:create")),
 ) -> Any:
     project_id = data.get("project_id")
     if not project_id:
@@ -159,7 +159,7 @@ def update_milestone(
     milestone_id: int,
     data: dict = Body(...),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("milestone:update")),
 ) -> Any:
     milestone = db.query(ProjectMilestone).filter(ProjectMilestone.id == milestone_id).first()
     if not milestone:
@@ -191,7 +191,7 @@ def complete_milestone(
     milestone_id: int,
     data: dict = Body(default={}),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("milestone:update")),
 ) -> Any:
     milestone = db.query(ProjectMilestone).filter(ProjectMilestone.id == milestone_id).first()
     if not milestone:
@@ -236,7 +236,7 @@ def complete_milestone(
 def delete_milestone(
     milestone_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("milestone:delete")),
 ) -> Any:
     milestone = db.query(ProjectMilestone).filter(ProjectMilestone.id == milestone_id).first()
     if not milestone:

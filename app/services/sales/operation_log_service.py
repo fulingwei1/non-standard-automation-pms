@@ -5,6 +5,8 @@
 提供统一的操作日志记录和查询功能。
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -24,6 +26,9 @@ logger = logging.getLogger(__name__)
 
 class SalesOperationLogService:
     """销售操作日志服务类"""
+
+    def __init__(self, db: Session | None = None):
+        self.db = db
 
     @staticmethod
     def log_operation(
@@ -76,7 +81,7 @@ class SalesOperationLogService:
             changed_fields=changed_fields,
             operator_id=operator.id,
             operator_name=operator.real_name or operator.username,
-            operator_dept=operator.department.name if operator.department else None,
+            operator_dept=_get_operator_department(operator),
             operation_time=datetime.now(),
             ip_address=ip_address,
             user_agent=user_agent,
@@ -298,6 +303,35 @@ def _get_entity_name(entity_type: str) -> str:
         SalesEntityType.QUOTE_VERSION: "报价版本",
         SalesEntityType.CONTRACT: "合同",
         SalesEntityType.INVOICE: "发票",
+        SalesEntityType.RECEIVABLE_DISPUTE: "回款争议",
         SalesEntityType.CUSTOMER: "客户",
+        SalesEntityType.TEAM_PK: "销售团队PK",
+        SalesEntityType.APPROVAL_WORKFLOW: "审批流程配置",
+        SalesEntityType.QUOTE_TEMPLATE: "报价模板",
+        SalesEntityType.QUOTE_TEMPLATE_VERSION: "报价模板版本",
+        SalesEntityType.QUOTE_COST_TEMPLATE: "报价成本模板",
+        SalesEntityType.PURCHASE_MATERIAL_COST: "采购物料成本",
+        SalesEntityType.MATERIAL_COST_REMINDER: "物料成本更新提醒",
+        SalesEntityType.CONTRACT_TEMPLATE: "合同模板",
+        SalesEntityType.CONTRACT_TEMPLATE_VERSION: "合同模板版本",
+        SalesEntityType.CPQ_RULE_SET: "CPQ规则集",
+        SalesEntityType.PRESALE_EXPENSE: "售前费用",
+        SalesEntityType.MARGIN_ALERT_CONFIG: "毛利率预警配置",
+        SalesEntityType.SCORING_RULE: "评分规则",
+        SalesEntityType.FAILURE_CASE: "失败案例",
+        SalesEntityType.ASSESSMENT_TEMPLATE: "技术评估模板",
+        SalesEntityType.ASSESSMENT_ITEM: "技术评估项",
+        SalesEntityType.ASSESSMENT_RISK: "技术评估风险",
+        SalesEntityType.ASSESSMENT_VERSION: "技术评估版本",
     }
     return names.get(entity_type, entity_type)
+
+
+def _get_operator_department(operator: User) -> str | None:
+    """兼容 User.department 字符串与旧代码里可能传入的 Department-like 对象。"""
+    department = getattr(operator, "department", None)
+    if not department:
+        return None
+    if isinstance(department, str):
+        return department
+    return getattr(department, "name", None) or getattr(department, "dept_name", None)

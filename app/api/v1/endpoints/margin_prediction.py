@@ -364,6 +364,15 @@ def get_margin_variance(
     }
 
 
+def get_cost_variance(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+    limit: int = 50,
+) -> Dict[str, Any]:
+    """Backward-compatible alias for older tests/integrations."""
+    return get_margin_variance(db=db, current_user=current_user, limit=limit)
+
+
 @router.get("/project/{project_id}/bom-costs")
 def get_project_bom_costs(
     project_id: int,
@@ -399,5 +408,6 @@ __all__ = [
     "get_historical_margins",
     "predict_margin",
     "get_margin_variance",
+    "get_cost_variance",
     "get_project_bom_costs",
 ]

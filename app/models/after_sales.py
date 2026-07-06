@@ -88,43 +88,6 @@ class AfterSalesMaintenance(Base, TimestampMixin):
     )
 
 
-class AfterSalesSupportTicket(Base, TimestampMixin):
-    """技术支持工单表"""
-    
-    __tablename__ = "after_sales_support_tickets"
-    
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键 ID")
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    project_id = Column(Integer, ForeignKey("projects.id"), comment="关联项目 ID")
-    customer_id = Column(Integer, ForeignKey("customers.id"), comment="客户 ID")
-    
-    # 工单信息
-    ticket_no = Column(String(50), unique=True, comment="工单编号")
-    subject = Column(String(200), comment="主题")
-    description = Column(Text, comment="问题描述")
-    
-    # 分类
-    category = Column(String(30), comment="分类：TECHNICAL/TRAINING/DOCUMENTATION/OTHER")
-    priority = Column(String(20), default="MEDIUM", comment="优先级：LOW/MEDIUM/HIGH/URGENT")
-    
-    # 处理状态
-    status = Column(String(20), default="OPEN", comment="状态：OPEN/IN_PROGRESS/WAITING_CUSTOMER/RESOLVED/CLOSED")
-    assigned_to = Column(Integer, ForeignKey("users.id"), comment="处理人 ID")
-    resolved_at = Column(DateTime, comment="解决时间")
-    resolution = Column(Text, comment="解决方案")
-    
-    # 关系
-    project = relationship("Project", foreign_keys=[project_id])
-    customer = relationship("Customer", foreign_keys=[customer_id])
-    assignee = relationship("User", foreign_keys=[assigned_to])
-    
-    __table_args__ = (
-        Index("idx_asst_project", "project_id"),
-        Index("idx_asst_ticket_no", "ticket_no"),
-        Index("idx_asst_status", "status"),
-    )
-
-
 class AfterSalesWarranty(Base, TimestampMixin):
     """质保管理表"""
     
@@ -202,7 +165,7 @@ class AfterSalesFieldService(Base, TimestampMixin):
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目 ID")
     customer_id = Column(Integer, ForeignKey("customers.id"), comment="客户 ID")
-    ticket_id = Column(Integer, ForeignKey("after_sales_support_tickets.id"), comment="关联工单 ID")
+    ticket_id = Column(Integer, ForeignKey("service_tickets.id"), comment="关联中心工单 ID")
     dispatch_order_id = Column(Integer, ForeignKey("installation_dispatch_orders.id"), comment="关联派工单 ID")
     
     # 服务信息
@@ -260,7 +223,7 @@ class AfterSalesSLA(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目 ID")
-    ticket_id = Column(Integer, ForeignKey("after_sales_support_tickets.id"), comment="工单 ID")
+    ticket_id = Column(Integer, ForeignKey("service_tickets.id"), comment="中心工单 ID")
     
     # SLA 指标
     response_target_hours = Column(Integer, default=4, comment="响应目标(小时)")
@@ -286,7 +249,7 @@ class AfterSalesSatisfaction(Base, TimestampMixin):
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     project_id = Column(Integer, ForeignKey("projects.id"), comment="项目 ID")
     customer_id = Column(Integer, ForeignKey("customers.id"), comment="客户 ID")
-    ticket_id = Column(Integer, ForeignKey("after_sales_support_tickets.id"), nullable=True, comment="工单 ID")
+    ticket_id = Column(Integer, ForeignKey("service_tickets.id"), nullable=True, comment="中心工单 ID")
     field_service_id = Column(Integer, ForeignKey("after_sales_field_services.id"), nullable=True, comment="现场服务 ID")
     
     # 满意度评分

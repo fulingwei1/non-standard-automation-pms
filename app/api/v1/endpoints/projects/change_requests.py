@@ -37,6 +37,18 @@ from app.services.project_change_requests import ProjectChangeRequestsService
 router = APIRouter()
 
 
+def generate_change_code(db: Session, project_id: int) -> str:
+    """兼容旧单测入口：实际逻辑在服务层。"""
+    return ProjectChangeRequestsService(db).generate_change_code(project_id)
+
+
+def validate_status_transition(
+    current_status: ChangeStatusEnum, new_status: ChangeStatusEnum
+) -> bool:
+    """兼容旧单测入口：实际逻辑在服务层。"""
+    return ProjectChangeRequestsService(None).validate_status_transition(current_status, new_status)
+
+
 @router.post("/")
 def create_change_request(
     *,

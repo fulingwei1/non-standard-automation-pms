@@ -18,7 +18,12 @@ from app.core.sales_permissions import can_manage_sales_opportunity
 from app.api.v1.endpoints.sales.utils import validate_opportunity_stage_transition
 from app.models.enums import OpportunityStageEnum
 from app.models.sales import Opportunity
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
+from app.services.sales.opportunity_operation_audit import (
+    log_opportunity_operation,
+    opportunity_audit_value,
+)
 
 router = APIRouter()
 
@@ -133,9 +138,20 @@ def batch_update_stage(
             continue
 
         try:
+            old_value = opportunity_audit_value(opp)
             opp.stage = validate_opportunity_stage_transition(opp.stage, target_stage)
             opp.updated_by = current_user.id
             opp.updated_at = datetime.utcnow()
+            log_opportunity_operation(
+                db,
+                opp,
+                SalesOperationType.STATUS_CHANGE,
+                current_user,
+                old_value=old_value,
+                new_value=opportunity_audit_value(opp),
+                operation_desc="批量更新商机阶段",
+                remark=request.reason,
+            )
             results.append(BatchResultItem(id=opp_id, success=True))
             success_count += 1
         except Exception as e:
@@ -193,9 +209,20 @@ def batch_update_owner(
             continue
 
         try:
+            old_value = opportunity_audit_value(opp)
             opp.owner_id = request.owner_id
             opp.updated_by = current_user.id
             opp.updated_at = datetime.utcnow()
+            log_opportunity_operation(
+                db,
+                opp,
+                SalesOperationType.ASSIGN,
+                current_user,
+                old_value=old_value,
+                new_value=opportunity_audit_value(opp),
+                operation_desc="批量更新商机负责人",
+                remark=new_owner.real_name or new_owner.username,
+            )
             results.append(BatchResultItem(id=opp_id, success=True))
             success_count += 1
         except Exception as e:
@@ -258,6 +285,7 @@ def batch_close_opportunities(
             continue
 
         try:
+            old_value = opportunity_audit_value(opp)
             opp.stage = validate_opportunity_stage_transition(
                 opp.stage,
                 target_stage,
@@ -268,6 +296,16 @@ def batch_close_opportunities(
                 opp.close_reason = request.reason
             opp.updated_by = current_user.id
             opp.updated_at = datetime.utcnow()
+            log_opportunity_operation(
+                db,
+                opp,
+                SalesOperationType.STATUS_CHANGE,
+                current_user,
+                old_value=old_value,
+                new_value=opportunity_audit_value(opp),
+                operation_desc="批量关闭商机",
+                remark=request.reason,
+            )
             results.append(BatchResultItem(id=opp_id, success=True))
             success_count += 1
         except Exception as e:

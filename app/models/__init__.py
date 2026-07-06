@@ -59,7 +59,6 @@ from .after_sales import (  # noqa: F401
     AfterSalesSLA,
     AfterSalesSatisfaction,
     AfterSalesSparePart,
-    AfterSalesSupportTicket,
     AfterSalesWarranty,
 )
 
@@ -85,6 +84,7 @@ from .kitting_optimization import ExpediteRecord, MaterialAlternative  # noqa: F
 # Material Shortage (from material.py)
 from .material import MaterialShortage  # noqa: F401
 from .material_progress_subscription import MaterialProgressSubscription  # noqa: F401
+from .performance import PerformanceContract, PerformanceContractItem  # noqa: F401
 from .presale_ai import (  # noqa: F401
     PresaleAIAuditLog,
     PresaleAIConfig,
@@ -96,8 +96,6 @@ from .presale_ai_emotion_analysis import PresaleAIEmotionAnalysis  # noqa: F401
 from .presale_ai_qa import PresaleAIQA  # noqa: F401
 from .presale_ai_quotation import (  # noqa: F401
     PresaleAIQuotation,
-    QuotationApproval,
-    QuotationTemplate,
     QuotationVersion,
 )
 from .presale_ai_requirement_analysis import PresaleAIRequirementAnalysis  # noqa: F401
@@ -173,7 +171,7 @@ from .sales.presale_ai_win_rate import (  # noqa: F401
 from .shortage.smart_alert import (
     MaterialDemandForecast,
 )
-from .shortage.smart_alert import (  # noqa: F401; Alias for consistency
+from .shortage.smart_alert import (  # noqa: F401  # Alias for consistency
     ShortageAlert as ShortageAlertEnhanced,
 )
 from .shortage.smart_alert import (
@@ -354,6 +352,8 @@ __all__ = [
     "ProjectContribution",
     "PerformanceRankingSnapshot",
     "PerformanceAdjustmentHistory",
+    "PerformanceContract",
+    "PerformanceContractItem",
     # Engineer Performance
     "EngineerProfile",
     "EngineerDimensionConfig",
@@ -421,8 +421,6 @@ __all__ = [
     "QuoteVersion",
     "QuoteItem",
     "QuoteCostTemplate",
-    "QuoteCostApproval",
-    "QuoteCostHistory",
     "PurchaseMaterialCost",
     "MaterialCostUpdateReminder",
     "CpqRuleSet",
@@ -436,9 +434,6 @@ __all__ = [
     "Invoice",
     "ReceivableDispute",
     "SalesTarget",
-    "QuoteApproval",
-    "ContractApproval",
-    "InvoiceApproval",
     # Technical Assessment
     "TechnicalAssessment",
     "ScoringRule",
@@ -447,11 +442,6 @@ __all__ = [
     "RequirementFreeze",
     "OpenItem",
     "AIClarification",
-    # Approval Workflow
-    "ApprovalWorkflow",
-    "ApprovalWorkflowStep",
-    "ApprovalRecord",
-    "ApprovalHistory",
     "ApprovalRecordStatusEnum",
     # Business Support
     "BiddingProject",
@@ -471,7 +461,6 @@ __all__ = [
     # Service
     "AfterSalesFeedback",
     "AfterSalesMaintenance",
-    "AfterSalesSupportTicket",
     "AfterSalesWarranty",
     "AfterSalesSparePart",
     "AfterSalesFieldService",

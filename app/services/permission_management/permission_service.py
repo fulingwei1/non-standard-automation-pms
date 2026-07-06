@@ -21,13 +21,10 @@ from app.models.organization import (
     PositionRole,
 )
 from app.models.permission import (
-    DataScopeRule,
     MenuPermission,
-    RoleDataScope,
     RoleMenu,
 )
 from app.models.user import Role, User, UserRole
-from app.services.permission_management.permission_cache_service import get_permission_cache_service
 
 logger = logging.getLogger(__name__)
 
@@ -314,6 +311,10 @@ class PermissionService:
         """
         获取用户的数据权限范围映射
 
+        自定义资源级数据范围表已退役，当前唯一生效来源是角色
+        `roles.data_scope`。为兼容仍按资源名读取的调用方，这里把
+        最大角色范围投射到常用资源键，并提供 "*" 兜底。
+
         Args:
             db: 数据库会话
             user_id: 用户ID
@@ -324,21 +325,11 @@ class PermissionService:
         scopes: Dict[str, str] = {}
 
         try:
-            # 获取用户的所有角色
             roles = PermissionService.get_user_effective_roles(db, user_id)
-            role_ids = [r.id for r in roles]
-
-            if not role_ids:
+            active_roles = [role for role in roles if getattr(role, "is_active", True)]
+            if not active_roles:
                 return scopes
 
-            # 获取每个角色的数据权限
-            role_data_scopes = (
-                db.query(RoleDataScope)
-                .filter(RoleDataScope.role_id.in_(role_ids), RoleDataScope.is_active)
-                .all()
-            )
-
-            # 合并数据权限（取最大范围）
             scope_priority = {
                 "ALL": 6,
                 "BUSINESS_UNIT": 5,
@@ -352,19 +343,37 @@ class PermissionService:
                 "CUSTOM": 0,
             }
 
-            for rds in role_data_scopes:
-                rule = db.query(DataScopeRule).filter(DataScopeRule.id == rds.scope_rule_id).first()
+            best_scope = "OWN"
+            best_priority = scope_priority[best_scope]
+            for role in active_roles:
+                candidate = getattr(role, "data_scope", None) or "OWN"
+                candidate_priority = scope_priority.get(str(candidate), 0)
+                if candidate_priority > best_priority:
+                    best_scope = str(candidate)
+                    best_priority = candidate_priority
 
-                if rule:
-                    resource = rds.resource_type
-                    current_scope = scopes.get(resource)
-                    new_scope = rule.scope_type
-
-                    # 取更大的权限范围
-                    if not current_scope or scope_priority.get(new_scope, 0) > scope_priority.get(
-                        current_scope, 0
-                    ):
-                        scopes[resource] = new_scope
+            for resource_type in (
+                "*",
+                "sales",
+                "customer",
+                "opportunity",
+                "quote",
+                "contract",
+                "project",
+                "timesheet",
+                "engineer_performance",
+                "production",
+                "purchase",
+                "outsourcing",
+                "bom",
+                "ecn",
+                "inventory",
+                "warehouse",
+                "budget",
+                "cost",
+                "finance_reports",
+            ):
+                scopes[resource_type] = best_scope
 
         except Exception as e:
             logger.error(f"获取用户数据权限失败: {e}")

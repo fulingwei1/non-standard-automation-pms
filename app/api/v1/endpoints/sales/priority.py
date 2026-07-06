@@ -3,6 +3,8 @@
 销售线索优先级管理 API endpoints
 """
 
+from __future__ import annotations
+
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -11,11 +13,49 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.sales import Lead, Opportunity
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.lead_priority_scoring import LeadPriorityScoringService
+from app.services.sales.lead_operation_audit import lead_audit_value, log_lead_operation
+from app.services.sales.opportunity_operation_audit import (
+    log_opportunity_operation,
+    opportunity_audit_value,
+)
 
 router = APIRouter()
+
+
+def _with_lead_priority_result(
+    audit_value: dict[str, Any],
+    result: dict[str, Any] | None,
+) -> dict[str, Any]:
+    audit_value = dict(audit_value)
+    audit_value.update(
+        {
+            "is_key_lead": result.get("is_key_lead") if result else None,
+            "priority_level": result.get("priority_level") if result else None,
+            "importance_level": result.get("importance_level") if result else None,
+            "urgency_level": result.get("urgency_level") if result else None,
+        }
+    )
+    return audit_value
+
+
+def _with_opportunity_priority_result(
+    audit_value: dict[str, Any],
+    result: dict[str, Any] | None,
+) -> dict[str, Any]:
+    audit_value = dict(audit_value)
+    audit_value.update(
+        {
+            "is_key_opportunity": result.get("is_key_opportunity") if result else None,
+            "priority_level": result.get("priority_level") if result else None,
+            "importance_level": result.get("importance_level") if result else None,
+            "urgency_level": result.get("urgency_level") if result else None,
+        }
+    )
+    return audit_value
 
 
 @router.post("/leads/{lead_id}/calculate-priority", response_model=ResponseModel)
@@ -35,11 +75,23 @@ def calculate_lead_priority(
         # 更新线索的优先级字段
         lead = db.query(Lead).filter(Lead.id == lead_id).first()
         if lead:
+            old_value = _with_lead_priority_result(lead_audit_value(lead), None)
             lead.priority_score = result["total_score"]
             lead.is_key_lead = result["is_key_lead"]
             lead.priority_level = result["priority_level"]
             lead.importance_level = result["importance_level"]
             lead.urgency_level = result["urgency_level"]
+            db.flush()
+            log_lead_operation(
+                db,
+                lead,
+                SalesOperationType.UPDATE,
+                current_user,
+                old_value=old_value,
+                new_value=_with_lead_priority_result(lead_audit_value(lead), result),
+                operation_desc="计算线索优先级",
+                remark=result["priority_level"],
+            )
             db.commit()
 
         return ResponseModel(code=200, message="计算成功", data=result)
@@ -97,9 +149,25 @@ def calculate_opportunity_priority(
         # 更新商机的优先级字段
         opportunity = db.query(Opportunity).filter(Opportunity.id == opp_id).first()
         if opportunity:
+            old_value = _with_opportunity_priority_result(
+                opportunity_audit_value(opportunity), None
+            )
             opportunity.priority_score = result["total_score"]
             opportunity.is_key_opportunity = result["is_key_opportunity"]
             opportunity.priority_level = result["priority_level"]
+            db.flush()
+            log_opportunity_operation(
+                db,
+                opportunity,
+                SalesOperationType.UPDATE,
+                current_user,
+                old_value=old_value,
+                new_value=_with_opportunity_priority_result(
+                    opportunity_audit_value(opportunity), result
+                ),
+                operation_desc="计算商机优先级",
+                remark=result["priority_level"],
+            )
             db.commit()
 
         return ResponseModel(code=200, message="计算成功", data=result)

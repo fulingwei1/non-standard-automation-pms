@@ -17,6 +17,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.advantage_product import AdvantageProduct
 from app.models.sales import Lead, LeadFollowUp, Opportunity
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.sales import (
@@ -24,7 +25,11 @@ from app.schemas.sales import (
     LeadResponse,
     LeadUpdate,
 )
-from app.utils.db_helpers import delete_obj, get_or_404, save_obj
+from app.services.sales.lead_operation_audit import (
+    lead_audit_value,
+    log_lead_operation,
+)
+from app.utils.db_helpers import get_or_404
 from app.utils.json_helpers import safe_json_loads
 
 from ..utils import (
@@ -229,7 +234,18 @@ def create_lead(
         lead_data["product_match_type"] = "UNKNOWN"
 
     lead = Lead(**lead_data)
-    save_obj(db, lead)
+    db.add(lead)
+    db.flush()
+    log_lead_operation(
+        db,
+        lead,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=lead_audit_value(lead),
+        operation_desc="创建线索",
+    )
+    db.commit()
+    db.refresh(lead)
 
     # 构造响应，包含优势产品详情
     lead_dict = {
@@ -297,6 +313,7 @@ def update_lead(
     ):
         raise HTTPException(status_code=403, detail="您没有权限编辑此线索")
 
+    old_value = lead_audit_value(lead)
     update_data = lead_in.model_dump(exclude_unset=True)
     if "selected_advantage_products" in update_data:
         selected_products = update_data["selected_advantage_products"]
@@ -306,6 +323,15 @@ def update_lead(
     for field, value in update_data.items():
         setattr(lead, field, value)
 
+    log_lead_operation(
+        db,
+        lead,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=lead_audit_value(lead),
+        operation_desc="更新线索",
+    )
     db.commit()
     db.refresh(lead)
 
@@ -341,6 +367,17 @@ def delete_lead(
     ):
         raise HTTPException(status_code=403, detail="您没有权限删除此线索")
 
-    delete_obj(db, lead)
+    old_value = lead_audit_value(lead)
+    db.delete(lead)
+    log_lead_operation(
+        db,
+        lead,
+        SalesOperationType.DELETE,
+        current_user,
+        old_value=old_value,
+        new_value={},
+        operation_desc="删除线索",
+    )
+    db.commit()
 
     return ResponseModel(code=200, message="线索已删除")

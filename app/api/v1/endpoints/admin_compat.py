@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.api.v1.endpoints.admin_stats import collect_admin_stats
+from app.core import security
 from app.models.admin_office import (
     AdminAsset,
     AdminExpense,
@@ -113,7 +114,7 @@ def _parse_date(value) -> Optional[date]:
 @router.get("/stats")
 def get_admin_stats(
     db: Session = Depends(deps.get_db),
-    _current_user: User = Depends(deps.get_current_active_user),
+    _current_user: User = Depends(security.require_permission("user:read")),
 ) -> Dict[str, Any]:
     return {"code": 200, "message": "success", "data": collect_admin_stats(db)}
 
@@ -124,7 +125,7 @@ def get_admin_stats(
 @router.get("/supplies")
 def list_supplies(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:read")),
 ) -> Dict[str, Any]:
     supplies = db.query(AdminSupply).order_by(AdminSupply.id.asc()).all()
     items = [_supply_view(s) for s in supplies]
@@ -134,7 +135,7 @@ def list_supplies(
 @router.get("/supplies/inventory")
 def get_supplies_inventory(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:read")),
 ) -> Dict[str, Any]:
     supplies = db.query(AdminSupply).order_by(AdminSupply.id.asc()).all()
     items = [_supply_view(s) for s in supplies]
@@ -150,7 +151,7 @@ def get_supplies_inventory(
 def create_supply_request(
     payload: dict = Body(...),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:create")),
 ) -> Dict[str, Any]:
     """创建用品申领单（PENDING，审批通过才扣库存）。"""
     supply = get_or_404(db, AdminSupply, payload.get("supply_id"), "用品不存在")
@@ -175,7 +176,7 @@ def approve_supply_request(
     request_id: int,
     payload: dict = Body(default={}),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:update")),
 ) -> Dict[str, Any]:
     """审批用品申领：通过即扣减库存（库存不足拒绝）。"""
     request = get_or_404(db, AdminSupplyRequest, request_id, "申领单不存在")
@@ -202,7 +203,7 @@ def reject_supply_request(
     request_id: int,
     payload: dict = Body(default={}),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:update")),
 ) -> Dict[str, Any]:
     request = get_or_404(db, AdminSupplyRequest, request_id, "申领单不存在")
     if request.status != "PENDING":
@@ -220,7 +221,7 @@ def reject_supply_request(
 def get_supply(
     supply_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:read")),
 ) -> Dict[str, Any]:
     return _supply_view(get_or_404(db, AdminSupply, supply_id, "用品不存在"))
 
@@ -231,7 +232,7 @@ def get_supply(
 @router.get("/vehicles")
 def list_vehicles(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:read")),
 ) -> Dict[str, Any]:
     vehicles = db.query(AdminVehicle).order_by(AdminVehicle.id.asc()).all()
     items = [_vehicle_view(v) for v in vehicles]
@@ -242,7 +243,7 @@ def list_vehicles(
 def list_available_vehicles(
     date: Optional[str] = Query(None, description="用车日期（预留）"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:read")),
 ) -> Dict[str, Any]:
     vehicles = (
         db.query(AdminVehicle)
@@ -258,7 +259,7 @@ def list_available_vehicles(
 def create_vehicle_request(
     payload: dict = Body(...),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:create")),
 ) -> Dict[str, Any]:
     use_date = _parse_date(payload.get("use_date")) or date.today()
     vehicle_id = payload.get("vehicle_id")
@@ -285,7 +286,7 @@ def approve_vehicle_request(
     request_id: int,
     payload: dict = Body(default={}),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:update")),
 ) -> Dict[str, Any]:
     """审批用车：通过后车辆置 IN_USE。"""
     request = get_or_404(db, AdminVehicleRequest, request_id, "用车申请不存在")
@@ -310,7 +311,7 @@ def reject_vehicle_request(
     request_id: int,
     payload: dict = Body(default={}),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:update")),
 ) -> Dict[str, Any]:
     request = get_or_404(db, AdminVehicleRequest, request_id, "用车申请不存在")
     if request.status != "PENDING":
@@ -328,7 +329,7 @@ def reject_vehicle_request(
 def get_vehicle(
     vehicle_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:read")),
 ) -> Dict[str, Any]:
     return _vehicle_view(get_or_404(db, AdminVehicle, vehicle_id, "车辆不存在"))
 
@@ -339,7 +340,7 @@ def get_vehicle(
 @router.get("/assets")
 def list_assets(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:read")),
 ) -> Dict[str, Any]:
     assets = db.query(AdminAsset).order_by(AdminAsset.id.asc()).all()
     items = [_asset_view(a) for a in assets]
@@ -349,7 +350,7 @@ def list_assets(
 @router.get("/assets/statistics")
 def get_asset_statistics(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:read")),
 ) -> Dict[str, Any]:
     total_count = db.query(func.count(AdminAsset.id)).scalar() or 0
     total_value = float(db.query(func.sum(AdminAsset.value)).scalar() or 0)
@@ -382,7 +383,7 @@ def get_asset_statistics(
 def create_asset(
     payload: dict = Body(...),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:create")),
 ) -> Dict[str, Any]:
     name = (payload.get("name") or "").strip()
     if not name:
@@ -412,7 +413,7 @@ def update_asset(
     asset_id: int,
     payload: dict = Body(...),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:update")),
 ) -> Dict[str, Any]:
     asset = get_or_404(db, AdminAsset, asset_id, "资产不存在")
     for field in ("name", "category", "specification", "custodian", "location", "status", "remark"):
@@ -431,7 +432,7 @@ def update_asset(
 def delete_asset(
     asset_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:delete")),
 ) -> Dict[str, Any]:
     asset = get_or_404(db, AdminAsset, asset_id, "资产不存在")
     db.delete(asset)
@@ -443,7 +444,7 @@ def delete_asset(
 def get_asset(
     asset_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:read")),
 ) -> Dict[str, Any]:
     return _asset_view(get_or_404(db, AdminAsset, asset_id, "资产不存在"))
 
@@ -454,7 +455,7 @@ def get_asset(
 @router.get("/expenses")
 def list_expenses(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:read")),
 ) -> Dict[str, Any]:
     expenses = db.query(AdminExpense).order_by(AdminExpense.expense_date.desc()).limit(200).all()
     items = [
@@ -476,7 +477,7 @@ def list_expenses(
 def get_expense_statistics(
     period: str = Query("month", description="统计周期: month/quarter/year"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("user:read")),
 ) -> Dict[str, Any]:
     """行政费用统计：按真实费用记录聚合（不再返回写死数字）。"""
     today = date.today()

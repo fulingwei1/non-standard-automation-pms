@@ -177,6 +177,41 @@ class ToolRegistry:
             handler=lambda keyword=None: _tool_standard_costs(ammo, keyword),
         )
 
+        # 6. 查金凯博优势产品库（KC2700 FCT 全系列等，核心卖点数据）
+        self.register(
+            name="advantage_products",
+            description=(
+                "查询金凯博优势产品库（自有产品系列，含型号/规格/产能/价格/核心技术）。"
+                "用于方案选型时引用我方真实产品型号和参数。"
+                "如查FCT产品传keyword='FCT'，查ICT传'ICT'。"
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "keyword": {"type": "string", "description": "产品关键词，如'FCT''ICT''BMS''老化'"},
+                },
+            },
+            handler=lambda keyword=None: _tool_advantage_products(keyword),
+        )
+
+        # 7. 查金凯博公司知识库（销售问"我们做过什么/客户/技术实力"时用）
+        self.register(
+            name="company_brief",
+            description=(
+                "查询金凯博公司知识库：公司简介/业务领域/典型客户/技术实力/产品体系/发展历程。"
+                "销售问'我们做过什么''有哪些客户''技术强在哪''有没有类似案例'时用这个工具。"
+                "category可选：overview(概览)/business(业务领域)/customers(客户)/tech(技术)/products(产品)"
+            ),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "category": {"type": "string", "description": "分类（可选）：overview/business/customers/tech/products。不传则全部返回"},
+                    "keyword": {"type": "string", "description": "关键词搜索（可选），如'汽车电子''BMS''客户'"},
+                },
+            },
+            handler=lambda category=None, keyword=None: _tool_company_brief(category, keyword),
+        )
+
 
 # ============= 工具实现（包装 AmmoLibraryService，返回模型友好的字符串） =============
 
@@ -248,8 +283,73 @@ def _tool_standard_modules(ammo: AmmoLibraryService, keyword: Optional[str]) -> 
     return "\n".join(lines)
 
 
+def _tool_company_brief(category: Optional[str] = None, keyword: Optional[str] = None) -> str:
+    """查金凯博公司知识库。"""
+    from sqlalchemy import text
+    from app.models.base import SessionLocal
+    db = SessionLocal()
+    try:
+        sql = "SELECT category, key, content FROM company_profile WHERE is_active=1"
+        params = {}
+        conditions = []
+        if category:
+            conditions.append("category = :cat")
+            params["cat"] = category
+        if keyword:
+            conditions.append("(key LIKE :kw OR content LIKE :kw)")
+            params["kw"] = f"%{keyword}%"
+        if conditions:
+            sql += " AND " + " AND ".join(conditions)
+        sql += " ORDER BY sort_order LIMIT 10"
+        rows = db.execute(text(sql), params).all()
+        if not rows:
+            return "无匹配的公司信息。"
+        lines = [f"找到 {len(rows)} 条公司信息："]
+        for r in rows:
+            lines.append(f"\n【{r[1]}】")
+            lines.append(r[2])
+        return "\n".join(lines)
+    finally:
+        db.close()
+
+
+def _tool_advantage_products(keyword: Optional[str]) -> str:
+    """查金凯博优势产品库（KC2700 FCT 全系列等，核心卖点）。"""
+    from sqlalchemy import text
+    from app.models.base import SessionLocal
+    db = SessionLocal()
+    try:
+        kw = f"%{keyword}%" if keyword else "%FCT%"
+        rows = db.execute(text(
+            "SELECT product_code, product_name, automation_level, workstation_count, "
+            "max_throughput_uph, typical_ct_seconds, rail_type, test_types, "
+            "substr(description,1,120) FROM advantage_products "
+            "WHERE is_active=1 AND (product_name LIKE :kw OR test_types LIKE :kw OR description LIKE :kw) "
+            "ORDER BY product_code LIMIT 10"
+        ), {"kw": kw}).all()
+        if not rows:
+            rows = db.execute(text(
+                "SELECT product_code, product_name, automation_level, workstation_count, "
+                "max_throughput_uph, typical_ct_seconds, rail_type, test_types, "
+                "substr(description,1,120) FROM advantage_products "
+                "WHERE is_active=1 ORDER BY product_code LIMIT 8"
+            )).all()
+        if not rows:
+            return "无匹配的优势产品。"
+        lines = [f"找到 {len(rows)} 个金凯博优势产品（我方真实产品线）："]
+        for r in rows:
+            lines.append(
+                f"- {r[1]}（{r[0]}）：{r[2] or ''} {r[3] or 0}工位 {r[6] or ''} "
+                f"UPH{r[4] or '?'} CT{r[5] or '?'}s | {r[7] or ''} | {r[8] or ''}"
+            )
+        return "\n".join(lines)
+    finally:
+        db.close()
+
+
 def _tool_standard_costs(ammo: AmmoLibraryService, keyword: Optional[str]) -> str:
     """查标准件价格库（部件级历史成本）。"""
+
     std_costs = ammo.get_standard_costs(keyword=keyword)
     if not std_costs:
         return "无匹配的标准件价格数据。"

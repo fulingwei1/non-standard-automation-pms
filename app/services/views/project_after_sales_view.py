@@ -2,7 +2,7 @@
 """项目售后关联视图 - 完整版"""
 
 from datetime import date
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from sqlalchemy import inspect
 from sqlalchemy.exc import OperationalError
@@ -39,25 +39,25 @@ def get_project_after_sales_overview(db: Session, project_id: int) -> Dict[str, 
     from app.models.after_sales import (
         AfterSalesFeedback,
         AfterSalesMaintenance,
-        AfterSalesSupportTicket,
         AfterSalesWarranty,
         AfterSalesSparePart,
         AfterSalesFieldService,
         AfterSalesSLA,
         AfterSalesSatisfaction,
     )
+    from app.models.service import ServiceTicket
 
     required_tables = [
         model.__tablename__
         for model in (
             AfterSalesFeedback,
             AfterSalesMaintenance,
-            AfterSalesSupportTicket,
             AfterSalesWarranty,
             AfterSalesSparePart,
             AfterSalesFieldService,
             AfterSalesSLA,
             AfterSalesSatisfaction,
+            ServiceTicket,
         )
     ]
     inspector = inspect(db.get_bind())
@@ -71,8 +71,8 @@ def get_project_after_sales_overview(db: Session, project_id: int) -> Dict[str, 
         # 维修保养
         maintenance = db.query(AfterSalesMaintenance).filter(AfterSalesMaintenance.project_id == project_id).all()
         
-        # 支持工单
-        tickets = db.query(AfterSalesSupportTicket).filter(AfterSalesSupportTicket.project_id == project_id).all()
+        # 支持工单：统一走中心 service_tickets
+        tickets = db.query(ServiceTicket).filter(ServiceTicket.project_id == project_id).all()
         
         # 质保
         warranties = db.query(AfterSalesWarranty).filter(AfterSalesWarranty.project_id == project_id).all()
@@ -127,10 +127,10 @@ def get_project_after_sales_overview(db: Session, project_id: int) -> Dict[str, 
         # 支持工单
         "support_tickets": {
             "total": len(tickets),
-            "open": sum(1 for t in tickets if t.status == "OPEN"),
+            "open": sum(1 for t in tickets if t.status in {"OPEN", "PENDING"}),
             "in_progress": sum(1 for t in tickets if t.status == "IN_PROGRESS"),
             "resolved": sum(1 for t in tickets if t.status == "RESOLVED"),
-            "urgent": sum(1 for t in tickets if t.priority == "URGENT"),
+            "urgent": sum(1 for t in tickets if getattr(t, "urgency", None) == "URGENT"),
         },
         
         # 备件

@@ -3,6 +3,8 @@
 售前费用管理 API endpoints
 """
 
+from __future__ import annotations
+
 from datetime import date
 from decimal import Decimal
 from typing import Any, List, Optional
@@ -15,9 +17,11 @@ from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.presale_expense import PresaleExpense
+from app.models.sales.operation_log import SalesEntityType, SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.cost.labor_cost_service import LaborCostExpenseService
+from app.services.sales.operation_log_service import SalesOperationLogService
 
 router = APIRouter()
 
@@ -28,6 +32,39 @@ class ExpenseLostProjectsRequest(BaseModel):
     project_ids: Optional[List[int]] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+
+
+def _expense_decimal_value(value: Any) -> str | None:
+    if value is None:
+        return None
+    return str(Decimal(str(value)).quantize(Decimal("0.01")))
+
+
+def _presale_expense_audit_value(expense: PresaleExpense) -> dict[str, Any]:
+    return {
+        "id": expense.id,
+        "project_id": expense.project_id,
+        "project_code": expense.project_code,
+        "project_name": expense.project_name,
+        "lead_id": expense.lead_id,
+        "opportunity_id": expense.opportunity_id,
+        "expense_type": expense.expense_type,
+        "expense_category": expense.expense_category,
+        "amount": _expense_decimal_value(expense.amount),
+        "labor_hours": _expense_decimal_value(expense.labor_hours),
+        "hourly_rate": _expense_decimal_value(expense.hourly_rate),
+        "user_id": expense.user_id,
+        "user_name": expense.user_name,
+        "department_id": expense.department_id,
+        "department_name": expense.department_name,
+        "salesperson_id": expense.salesperson_id,
+        "salesperson_name": expense.salesperson_name,
+        "expense_date": expense.expense_date.isoformat() if expense.expense_date else None,
+        "description": expense.description,
+        "loss_reason": expense.loss_reason,
+        "approval_status": expense.approval_status,
+        "created_by": expense.created_by,
+    }
 
 
 @router.post("/expenses/expense-lost-projects", response_model=ResponseModel)
@@ -80,6 +117,18 @@ def expense_lost_projects(
             created_by=expense_data.get("created_by") or current_user.id,
         )
         db.add(expense)
+        db.flush()
+        SalesOperationLogService.log_operation(
+            db,
+            entity_type=SalesEntityType.PRESALE_EXPENSE,
+            entity_id=expense.id,
+            entity_code=expense.project_code,
+            operation_type=SalesOperationType.CREATE,
+            operator=current_user,
+            new_value=_presale_expense_audit_value(expense),
+            changed_fields=["presale_expense"],
+            remark="expense_lost_project",
+        )
         expenses_created.append(expense)
 
     db.commit()

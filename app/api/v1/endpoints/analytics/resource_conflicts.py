@@ -6,6 +6,7 @@
 """
 
 from datetime import date
+from decimal import Decimal
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -93,45 +94,9 @@ def check_project_conflicts(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    检查当前分配是否有冲突（重新计算）
+    检查当前分配是否有冲突（重新计算并落库）
     """
-    # 获取项目所有已分配的计划
-    plans = (
-        db.query(ProjectStageResourcePlan)
-        .filter(
-            ProjectStageResourcePlan.project_id == project_id,
-            ProjectStageResourcePlan.assigned_employee_id.isnot(None),
-            ProjectStageResourcePlan.planned_start.isnot(None),
-            ProjectStageResourcePlan.planned_end.isnot(None),
-        )
-        .all()
-    )
-
-    # 按员工分组
-    employee_plans = {}
-    for plan in plans:
-        if plan.assigned_employee_id not in employee_plans:
-            employee_plans[plan.assigned_employee_id] = []
-        employee_plans[plan.assigned_employee_id].append(plan)
-
-    # 检测冲突
-    new_conflicts = []
-    for employee_id, emp_plans in employee_plans.items():
-        for i, plan_a in enumerate(emp_plans):
-            for plan_b in emp_plans[i + 1 :]:
-                conflict = _check_time_overlap(plan_a, plan_b)
-                if conflict:
-                    new_conflicts.append(
-                        {
-                            "employee_id": employee_id,
-                            "employee_name": (
-                                plan_a.assigned_employee.username
-                                if plan_a.assigned_employee
-                                else None
-                            ),
-                            **conflict,
-                        }
-                    )
+    new_conflicts = _detect_and_persist_project_conflicts(db, project_id)
 
     return ResponseModel(
         data={
@@ -333,6 +298,104 @@ def resolve_conflict(
 
 
 # ==================== Helper Functions ====================
+
+
+def _detect_and_persist_project_conflicts(db: Session, project_id: int) -> list[dict]:
+    """检测项目相关的跨项目/项目内人员分配冲突，并持久化到 resource_conflicts。"""
+    plans = (
+        db.query(ProjectStageResourcePlan)
+        .filter(
+            ProjectStageResourcePlan.project_id == project_id,
+            ProjectStageResourcePlan.assigned_employee_id.isnot(None),
+            ProjectStageResourcePlan.assignment_status == "ASSIGNED",
+            ProjectStageResourcePlan.planned_start.isnot(None),
+            ProjectStageResourcePlan.planned_end.isnot(None),
+        )
+        .all()
+    )
+
+    conflicts: list[dict] = []
+    seen_pairs: set[tuple[int, int]] = set()
+
+    for plan in plans:
+        peer_plans = (
+            db.query(ProjectStageResourcePlan)
+            .filter(
+                ProjectStageResourcePlan.id != plan.id,
+                ProjectStageResourcePlan.assigned_employee_id == plan.assigned_employee_id,
+                ProjectStageResourcePlan.assignment_status == "ASSIGNED",
+                ProjectStageResourcePlan.planned_start.isnot(None),
+                ProjectStageResourcePlan.planned_end.isnot(None),
+                ProjectStageResourcePlan.planned_end >= plan.planned_start,
+                ProjectStageResourcePlan.planned_start <= plan.planned_end,
+            )
+            .all()
+        )
+
+        for peer in peer_plans:
+            plan_a, plan_b = _canonical_plan_pair(plan, peer)
+            pair_key = (plan_a.id, plan_b.id)
+            if pair_key in seen_pairs:
+                continue
+            seen_pairs.add(pair_key)
+
+            conflict = _check_time_overlap(plan_a, plan_b)
+            if not conflict:
+                continue
+
+            _upsert_resource_conflict(db, plan_a, plan_b, conflict)
+            conflicts.append(
+                {
+                    "employee_id": plan.assigned_employee_id,
+                    "employee_name": (
+                        plan.assigned_employee.username if plan.assigned_employee else None
+                    ),
+                    **conflict,
+                }
+            )
+
+    if conflicts:
+        db.commit()
+    return conflicts
+
+
+def _canonical_plan_pair(
+    plan_a: ProjectStageResourcePlan, plan_b: ProjectStageResourcePlan
+) -> tuple[ProjectStageResourcePlan, ProjectStageResourcePlan]:
+    return (plan_a, plan_b) if plan_a.id < plan_b.id else (plan_b, plan_a)
+
+
+def _upsert_resource_conflict(
+    db: Session,
+    plan_a: ProjectStageResourcePlan,
+    plan_b: ProjectStageResourcePlan,
+    conflict: dict,
+) -> ResourceConflict:
+    existing = (
+        db.query(ResourceConflict)
+        .filter(
+            ResourceConflict.employee_id == plan_a.assigned_employee_id,
+            ResourceConflict.plan_a_id == plan_a.id,
+            ResourceConflict.plan_b_id == plan_b.id,
+            ResourceConflict.is_resolved == 0,
+        )
+        .first()
+    )
+    if existing is None:
+        existing = ResourceConflict(
+            employee_id=plan_a.assigned_employee_id,
+            plan_a_id=plan_a.id,
+            plan_b_id=plan_b.id,
+            is_resolved=0,
+        )
+        db.add(existing)
+
+    existing.overlap_start = conflict["overlap_start"]
+    existing.overlap_end = conflict["overlap_end"]
+    existing.total_allocation = Decimal(str(conflict["total_allocation"]))
+    existing.over_allocation = Decimal(str(conflict["over_allocation"]))
+    existing.severity = conflict["severity"]
+    return existing
 
 
 def _format_conflict(

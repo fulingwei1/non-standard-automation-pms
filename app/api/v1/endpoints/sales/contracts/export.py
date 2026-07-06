@@ -5,6 +5,7 @@
 """
 
 import logging
+import io
 from datetime import datetime, timedelta
 from typing import Any, Optional
 
@@ -33,6 +34,7 @@ def _build_contract_pdf_response(
     current_user: User,
 ) -> Any:
     from app.services.pdf_export_service import PDFExportService, create_pdf_response
+    from app.services.export.watermark_service import add_watermark_to_pdf
 
     contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
@@ -67,7 +69,15 @@ def _build_contract_pdf_response(
     pdf_data = pdf_service.export_contract_to_pdf(contract_data, deliverable_list)
 
     filename = f"合同_{contract.contract_code}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    return create_pdf_response(pdf_data, filename)
+    operator_name = getattr(current_user, "real_name", None) or getattr(
+        current_user, "username", None
+    )
+    watermarked_pdf = add_watermark_to_pdf(
+        pdf_data.getvalue(),
+        operator_name=operator_name,
+        custom_text="内部资料",
+    )
+    return create_pdf_response(io.BytesIO(watermarked_pdf), filename)
 
 
 @router.get("/contracts/expiring")

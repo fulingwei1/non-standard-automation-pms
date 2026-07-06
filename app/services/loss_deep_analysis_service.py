@@ -9,6 +9,7 @@ import logging
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
+from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import func
@@ -83,6 +84,7 @@ class LossDeepAnalysisService:
 
         return {
             "total_lost_projects": len(lost_projects),
+            "summary": {"total_projects": len(lost_projects)},
             "analysis_period": {
                 "start_date": start_date.isoformat() if start_date else None,
                 "end_date": end_date.isoformat() if end_date else None,
@@ -143,11 +145,12 @@ class LossDeepAnalysisService:
     def _determine_investment_stage(self, project: Project) -> str:
         """判断项目投入到了哪个阶段"""
         # 检查项目阶段
-        if project.stage:
+        project_stage = getattr(project, "stage", None)
+        if project_stage:
             # 如果项目阶段在S4（加工制造）或之后，说明已完成详细设计
             stage_order = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9"]
             try:
-                current_index = stage_order.index(project.stage)
+                current_index = stage_order.index(project_stage)
                 if current_index >= 3:  # S4及以后
                     return "detailed_design"
                 elif current_index >= 1:  # S2-S3
@@ -158,7 +161,11 @@ class LossDeepAnalysisService:
                 pass
 
         # 通过工时记录判断（如果有详细设计相关的工时）
-        hours = self._get_project_hours(project.id)
+        project_id = getattr(project, "id", None)
+        if project_id is None:
+            return "unknown"
+
+        hours = self._get_project_hours(project_id)
         if hours > 80:  # 如果工时超过80小时，通常已进入详细设计
             return "detailed_design"
         elif hours > 40:  # 如果工时超过40小时，通常已进入方案设计
@@ -325,6 +332,7 @@ class LossDeepAnalysisService:
 
     def _identify_patterns(self, projects: List[Project]) -> Dict[str, Any]:
         """识别未中标模式"""
+        projects = [self._coerce_project_like(project) for project in projects]
         patterns = {
             "high_investment_low_win_rate": [],  # 高投入低中标率
             "detailed_design_loss_patterns": [],  # 详细设计后未中标模式
@@ -390,6 +398,17 @@ class LossDeepAnalysisService:
 
         return patterns
 
+    @staticmethod
+    def _coerce_project_like(project):
+        if not isinstance(project, dict):
+            return project
+        return SimpleNamespace(
+            id=project.get("id"),
+            stage=project.get("stage"),
+            loss_reason=project.get("loss_reason"),
+            salesperson_id=project.get("salesperson_id"),
+        )
+
     def _get_project_hours(self, project_id: int) -> float:
         """获取项目总工时"""
         # 从Timesheet表获取
@@ -413,15 +432,10 @@ class LossDeepAnalysisService:
         total_cost = Decimal("0")
         for ts in timesheets:
             # 获取用户角色和工时单价
-            user = self.db.query(User).filter(User.id == ts.user_id).first()
-            if user:
-                hourly_rate = self.hourly_rate_service.get_user_hourly_rate(
-                    self.db, user.id, ts.work_date
-                )
-                total_cost += Decimal(str(ts.hours or 0)) * hourly_rate
-            else:
-                # 默认工时单价
-                total_cost += Decimal(str(ts.hours or 0)) * Decimal("300")
+            hourly_rate = self.hourly_rate_service.get_user_hourly_rate(
+                self.db, ts.user_id, ts.work_date
+            )
+            total_cost += Decimal(str(ts.hours or 0)) * hourly_rate
 
         return total_cost
 

@@ -20,9 +20,16 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.sales import Quote
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.quote_approval import QuoteApprovalService
+from app.services.sales.quote_operation_audit import (
+    log_quote_operation,
+    log_quote_version_operation,
+    quote_audit_value,
+    quote_version_audit_value,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +158,7 @@ def approve_quote(
         return _approve_quote_directly(
             db=db,
             quote=quote,
-            approver_id=current_user.id,
+            approver=current_user,
             comment=request.comment or request.remark,
         )
 
@@ -236,17 +243,42 @@ def _approve_quote_directly(
     *,
     db: Session,
     quote: Quote,
-    approver_id: int,
+    approver: User,
     comment: Optional[str] = None,
 ) -> ResponseModel:
     """无待办任务时的单据级便捷审批兜底。"""
+    old_quote_value = quote_audit_value(quote)
+    version = quote.current_version
+    old_version_value = quote_version_audit_value(version) if version else None
+
     quote.status = "APPROVED"
-    if quote.current_version:
-        quote.current_version.approved_by = approver_id
-        quote.current_version.approved_at = datetime.now()
+    if version:
+        version.approved_by = approver.id
+        version.approved_at = datetime.now()
+    log_quote_operation(
+        db,
+        quote,
+        SalesOperationType.APPROVE,
+        approver,
+        old_value=old_quote_value,
+        new_value=quote_audit_value(quote),
+        operation_desc="报价审批通过",
+        remark=comment,
+    )
+    if version and old_version_value:
+        log_quote_version_operation(
+            db,
+            version,
+            SalesOperationType.APPROVE,
+            approver,
+            old_value=old_version_value,
+            new_value=quote_version_audit_value(version),
+            operation_desc="报价版本审批通过",
+            remark=comment,
+        )
     db.commit()
 
-    logger.info("报价 %s 已直接审批通过, 操作人: %s", quote.id, approver_id)
+    logger.info("报价 %s 已直接审批通过, 操作人: %s", quote.id, approver.id)
 
     return ResponseModel(
         code=200,

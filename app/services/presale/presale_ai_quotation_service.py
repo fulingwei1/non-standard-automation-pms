@@ -4,8 +4,9 @@ Team 5: AI Quotation Generator Service
 """
 
 import json
+import re
 import time
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -14,11 +15,13 @@ from sqlalchemy.orm import Session
 
 from app.models.presale_ai_quotation import (
     PresaleAIQuotation,
-    QuotationApproval,
     QuotationStatus,
     QuotationType,
     QuotationVersion,
 )
+from app.models.sales.leads import Opportunity
+from app.models.sales.quotes import Quote, QuoteItem, QuoteVersion as SalesQuoteVersion
+from app.models.presale import PresaleSupportTicket
 from app.schemas.presale_ai_quotation import (
     QuotationGenerateRequest,
     QuotationItem,
@@ -432,7 +435,7 @@ class AIQuotationGeneratorService:
 
     def approve_quotation(
         self, quotation_id: int, approver_id: int, status: str, comments: Optional[str] = None
-    ) -> QuotationApproval:
+    ) -> dict:
         """
         审批报价单
         Args:
@@ -441,22 +444,11 @@ class AIQuotationGeneratorService:
             status: 审批状态 (approved/rejected)
             comments: 审批意见
         Returns:
-            审批记录
+            审批结果
         """
         quotation = self.get_quotation(quotation_id)
         if not quotation:
             raise ValueError(f"Quotation {quotation_id} not found")
-
-        # 创建审批记录
-        approval = QuotationApproval(
-            quotation_id=quotation_id,
-            approver_id=approver_id,
-            status=status,
-            comments=comments,
-            approved_at=datetime.now(),
-        )
-
-        self.db.add(approval)
 
         # 更新报价单状态
         if status == "approved":
@@ -464,12 +456,211 @@ class AIQuotationGeneratorService:
         elif status == "rejected":
             quotation.status = QuotationStatus.REJECTED
 
+        approved_at = datetime.now()
         self.db.commit()
-        self.db.refresh(approval)
+        return {
+            "id": quotation_id,
+            "quotation_id": quotation_id,
+            "approver_id": approver_id,
+            "status": status,
+            "comments": comments,
+            "created_at": approved_at,
+            "approved_at": approved_at,
+        }
 
-        return approval
+    def promote_to_sales_quote(
+        self,
+        quotation_id: int,
+        user_id: int,
+        opportunity_id: Optional[int] = None,
+    ) -> Quote:
+        """Promote an AI quotation draft into the formal sales quote chain."""
+        quotation = self.get_quotation(quotation_id)
+        if not quotation:
+            raise ValueError(f"Quotation {quotation_id} not found")
+
+        existing_quote_id = self._promoted_quote_id_from_notes(quotation.notes)
+        if existing_quote_id:
+            existing_quote = self.db.query(Quote).filter(Quote.id == existing_quote_id).first()
+            if existing_quote:
+                return existing_quote
+
+        ticket = (
+            self.db.query(PresaleSupportTicket)
+            .filter(PresaleSupportTicket.id == quotation.presale_ticket_id)
+            .first()
+        )
+        resolved_opportunity = self._resolve_sales_opportunity(
+            quotation,
+            ticket,
+            opportunity_id=opportunity_id,
+        )
+        if not resolved_opportunity:
+            raise ValueError("AI报价转正式报价需要关联商机")
+
+        customer_id = quotation.customer_id or resolved_opportunity.customer_id
+        if not customer_id:
+            raise ValueError("AI报价转正式报价需要关联客户")
+
+        quote = Quote(
+            quote_code=self._generate_sales_quote_code(quotation),
+            opportunity_id=resolved_opportunity.id,
+            customer_id=customer_id,
+            status="DRAFT",
+            valid_until=date.today() + timedelta(days=quotation.validity_days or 30),
+            owner_id=user_id,
+            tenant_id=quotation.tenant_id,
+        )
+        self.db.add(quote)
+        self.db.flush()
+
+        amount_without_tax = self._round_money(
+            self._to_decimal(quotation.subtotal) - self._to_decimal(quotation.discount)
+        )
+        tax_amount = self._round_money(self._to_decimal(quotation.tax))
+        total_price = self._round_money(self._to_decimal(quotation.total))
+        tax_rate = Decimal("0")
+        if self._to_decimal(quotation.subtotal):
+            tax_rate = self._round_money(
+                tax_amount / self._to_decimal(quotation.subtotal) * Decimal("100")
+            )
+
+        version = SalesQuoteVersion(
+            quote_id=quote.id,
+            version_no=f"AI-{quotation.version or 1}",
+            quote_code=quotation.quotation_number,
+            status="DRAFT",
+            total_price=total_price,
+            amount_without_tax=amount_without_tax,
+            tax_rate=tax_rate,
+            tax_amount=tax_amount,
+            amount_with_tax=total_price,
+            cost_total=Decimal("0"),
+            gross_margin=Decimal("100.00") if total_price > 0 else Decimal("0"),
+            risk_terms=self._build_sales_quote_risk_terms(quotation),
+            presale_ticket_id=quotation.presale_ticket_id,
+            created_by=user_id,
+            tenant_id=quotation.tenant_id,
+        )
+        self.db.add(version)
+        self.db.flush()
+
+        for item in self._normalised_sales_quote_items(quotation.items):
+            self.db.add(
+                QuoteItem(
+                    quote_version_id=version.id,
+                    item_type="AI_QUOTATION",
+                    item_name=item["name"],
+                    qty=item["quantity"],
+                    unit=item["unit"],
+                    unit_price=item["unit_price"],
+                    cost=Decimal("0"),
+                    cost_category=item["category"],
+                    specification=item["description"],
+                    remark=f"来源AI报价: {quotation.quotation_number}",
+                    tenant_id=quotation.tenant_id,
+                )
+            )
+
+        quote.current_version_id = version.id
+        quotation.status = QuotationStatus.ACCEPTED
+        quotation.notes = self._append_promotion_note(
+            quotation.notes,
+            quote_id=quote.id,
+            version_id=version.id,
+        )
+        self.db.commit()
+        self.db.refresh(quote)
+        return quote
 
     # ========== 私有方法 ==========
+
+    def _resolve_sales_opportunity(
+        self,
+        quotation: PresaleAIQuotation,
+        ticket: Optional[PresaleSupportTicket],
+        *,
+        opportunity_id: Optional[int] = None,
+    ) -> Optional[Opportunity]:
+        if opportunity_id:
+            return self.db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
+        if ticket and ticket.opportunity_id:
+            return (
+                self.db.query(Opportunity)
+                .filter(Opportunity.id == ticket.opportunity_id)
+                .first()
+            )
+        if quotation.customer_id:
+            return (
+                self.db.query(Opportunity)
+                .filter(Opportunity.customer_id == quotation.customer_id)
+                .order_by(Opportunity.created_at.desc(), Opportunity.id.desc())
+                .first()
+            )
+        return None
+
+    def _generate_sales_quote_code(self, quotation: PresaleAIQuotation) -> str:
+        base = f"AIQ-{quotation.id}-{datetime.now().strftime('%m%d')}"[:20]
+        candidate = base
+        counter = 1
+        while self.db.query(Quote).filter(Quote.quote_code == candidate).first():
+            suffix = f"-{counter}"
+            candidate = f"{base[: 20 - len(suffix)]}{suffix}"
+            counter += 1
+        return candidate
+
+    def _normalised_sales_quote_items(self, raw_items: Any) -> List[Dict[str, Any]]:
+        items = self._json_or_default(raw_items, [])
+        if not isinstance(items, list):
+            return []
+        normalised: List[Dict[str, Any]] = []
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            name = item.get("name") or item.get("item_name") or item.get("product_name")
+            if not name:
+                continue
+            quantity = self._to_decimal(item.get("quantity") or item.get("qty") or 1)
+            unit_price = self._to_decimal(item.get("unit_price"))
+            total_price = self._to_decimal(item.get("total_price"))
+            if not unit_price and quantity:
+                unit_price = total_price / quantity
+            normalised.append(
+                {
+                    "name": str(name),
+                    "description": item.get("description") or item.get("specification"),
+                    "quantity": quantity,
+                    "unit": item.get("unit") or "项",
+                    "unit_price": unit_price,
+                    "category": item.get("category") or item.get("cost_category"),
+                }
+            )
+        return normalised
+
+    def _build_sales_quote_risk_terms(self, quotation: PresaleAIQuotation) -> str:
+        parts = [
+            f"来源AI报价: {quotation.quotation_number}",
+            f"报价档位: {self._normalize_quotation_type(quotation.quotation_type)}",
+        ]
+        if quotation.payment_terms:
+            parts.append(f"付款条款: {quotation.payment_terms}")
+        return "\n".join(parts)
+
+    @staticmethod
+    def _promoted_quote_id_from_notes(notes: Optional[str]) -> Optional[int]:
+        if not notes:
+            return None
+        match = re.search(r"promoted_quote_id=(\d+)", notes)
+        return int(match.group(1)) if match else None
+
+    @staticmethod
+    def _append_promotion_note(notes: Optional[str], *, quote_id: int, version_id: int) -> str:
+        promotion_note = f"promoted_quote_id={quote_id}; promoted_quote_version_id={version_id}"
+        if not notes:
+            return promotion_note
+        if "promoted_quote_id=" in notes:
+            return notes
+        return f"{notes}\n{promotion_note}"
 
     def _generate_payment_terms(self, total: Decimal, quotation_type: QuotationType) -> str:
         """

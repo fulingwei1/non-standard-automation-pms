@@ -15,8 +15,17 @@ from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.enums import LeadStatusEnum
 from app.models.sales import Lead, LeadFollowUp
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.sales.lead_operation_audit import (
+    lead_audit_value,
+    log_lead_operation,
+)
+from app.services.sales.opportunity_operation_audit import (
+    log_opportunity_operation,
+    opportunity_audit_value,
+)
 from app.utils.db_helpers import get_or_404
 
 from ..utils import (
@@ -111,6 +120,7 @@ def convert_lead_to_opportunity(
     lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
+    old_lead_value = lead_audit_value(lead)
 
     # G1验证
     requirement = None
@@ -163,6 +173,25 @@ def convert_lead_to_opportunity(
 
     # 更新线索状态
     lead.status = LeadStatusEnum.CONVERTED
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=opportunity_audit_value(opportunity),
+        operation_desc="线索转商机创建商机",
+        remark=f"来源线索：{lead.lead_code}",
+    )
+    log_lead_operation(
+        db,
+        lead,
+        SalesOperationType.CONVERT,
+        current_user,
+        old_value=old_lead_value,
+        new_value=lead_audit_value(lead),
+        operation_desc="线索转商机",
+        remark=f"生成商机：{opportunity.opp_code}",
+    )
 
     db.commit()
     db.refresh(opportunity)
@@ -202,8 +231,18 @@ def mark_lead_invalid(
     if lead.status == LeadStatusEnum.CONVERTED:
         raise HTTPException(status_code=400, detail="已转商机的线索不能标记为无效")
 
+    old_lead_value = lead_audit_value(lead)
     lead.status = LeadStatusEnum.INVALID
-    db.commit()
+    log_lead_operation(
+        db,
+        lead,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_lead_value,
+        new_value=lead_audit_value(lead),
+        operation_desc="标记线索无效",
+        remark=reason,
+    )
 
     # 可选：记录一条跟进记录说明无效原因
     if reason:
@@ -214,7 +253,8 @@ def mark_lead_invalid(
             created_by=current_user.id,
         )
         db.add(follow_up)
-        db.commit()
+
+    db.commit()
 
     return ResponseModel(code=200, message="线索已标记为无效")
 

@@ -20,7 +20,7 @@ router = APIRouter()
 async def import_employees_from_excel(
     file: UploadFile = File(..., description="Excel文件（支持企业微信导出格式）"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("hr:create")),
 ) -> Dict[str, Any]:
     """
     从Excel文件批量导入员工数据
@@ -67,7 +67,7 @@ async def import_employees_from_excel(
 
 @router.get("/employees/import/template")
 async def download_import_template(
-    current_user: User = Depends(security.get_current_active_user),
+    _current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """
     获取员工导入模板说明

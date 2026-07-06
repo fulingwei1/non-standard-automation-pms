@@ -38,7 +38,7 @@ SHORTAGE_TASKS = [
         "description": "每天 7:30 检查紧急级别的缺料预警，自动创建采购申请。",
         "enabled": True,  # APPR-04 回填：申请以 SUBMITTED 进审批池，人审仍是闸门
         "dependencies_tables": [
-            "mat_shortage_alert",
+            "alert_records",
             "materials",
             "material_suppliers",
             "purchase_requests",

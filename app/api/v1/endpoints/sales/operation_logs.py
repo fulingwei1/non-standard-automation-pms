@@ -61,7 +61,7 @@ def get_entity_operation_logs(
     """
     获取指定实体的操作日志
 
-    - entity_type: LEAD/OPPORTUNITY/QUOTE/CONTRACT/INVOICE/CUSTOMER
+    - entity_type: LEAD/OPPORTUNITY/QUOTE/CONTRACT/INVOICE/CUSTOMER/CONTACT
     - entity_id: 实体ID
     """
     logs, total = SalesOperationLogService.get_entity_logs(

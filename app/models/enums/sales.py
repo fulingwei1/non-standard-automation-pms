@@ -11,6 +11,7 @@ class LeadStatusEnum(str, Enum):
     CONTACTED = "CONTACTED"
     QUALIFIED = "QUALIFIED"
     CONVERTED = "CONVERTED"
+    INVALID = "INVALID"
     LOST = "LOST"
 
 

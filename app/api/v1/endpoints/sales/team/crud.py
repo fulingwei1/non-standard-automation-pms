@@ -3,6 +3,10 @@
 销售团队CRUD API endpoints
 """
 
+from __future__ import annotations
+
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -13,14 +17,78 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.sales import SalesTeam, SalesTeamMember
+from app.models.sales.operation_log import SalesEntityType, SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import SalesTeamCreate, SalesTeamUpdate
-from app.utils.db_helpers import save_obj
+from app.services.sales.operation_log_service import SalesOperationLogService
 
 from .utils import build_team_response
 
 router = APIRouter()
+
+
+def _audit_scalar(value: Any) -> Any:
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if hasattr(value, "value"):
+        return value.value
+    return value
+
+
+def _sales_team_audit_value(team: SalesTeam) -> dict[str, Any]:
+    fields = [
+        "id",
+        "tenant_id",
+        "team_code",
+        "team_name",
+        "description",
+        "team_type",
+        "department_id",
+        "leader_id",
+        "parent_team_id",
+        "is_active",
+        "sort_order",
+        "created_by",
+    ]
+    return {field: _audit_scalar(getattr(team, field, None)) for field in fields}
+
+
+def _changed_fields(old_value: dict[str, Any], new_value: dict[str, Any]) -> list[str]:
+    return [
+        field
+        for field, value in new_value.items()
+        if field in old_value and old_value[field] != value
+    ]
+
+
+def _log_sales_team_operation(
+    db: Session,
+    team: SalesTeam,
+    operation_type: str,
+    operator: User,
+    *,
+    old_value: dict[str, Any] | None = None,
+    new_value: dict[str, Any] | None = None,
+    operation_desc: str,
+) -> None:
+    old_snapshot = old_value or {}
+    new_snapshot = new_value or {}
+    SalesOperationLogService.log_operation(
+        db,
+        entity_type=SalesEntityType.TEAM,
+        entity_id=team.id,
+        operation_type=operation_type,
+        operator=operator,
+        entity_code=team.team_code,
+        operation_desc=operation_desc,
+        old_value=old_snapshot,
+        new_value=new_snapshot,
+        changed_fields=_changed_fields(old_snapshot, new_snapshot),
+        remark=team.team_name,
+    )
 
 
 @router.get("/sales-teams", response_model=ResponseModel)
@@ -124,7 +192,8 @@ def create_sales_team(
         sort_order=request.sort_order,
         created_by=current_user.id,
     )
-    save_obj(db, team)
+    db.add(team)
+    db.flush()
 
     # 如果指定了负责人，自动添加为团队成员
     if request.leader_id:
@@ -135,7 +204,16 @@ def create_sales_team(
             is_primary=True,
         )
         db.add(member)
-        db.commit()
+    _log_sales_team_operation(
+        db,
+        team,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=_sales_team_audit_value(team),
+        operation_desc="创建销售团队",
+    )
+    db.commit()
+    db.refresh(team)
 
     return ResponseModel(
         code=201,
@@ -182,10 +260,21 @@ def update_sales_team(
             detail="团队不存在",
         )
 
+    old_value = _sales_team_audit_value(team)
     update_data = request.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(team, field, value)
 
+    db.flush()
+    _log_sales_team_operation(
+        db,
+        team,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=_sales_team_audit_value(team),
+        operation_desc="更新销售团队",
+    )
     db.commit()
     db.refresh(team)
 
@@ -226,7 +315,18 @@ def delete_sales_team(
             detail="该团队下有子团队，无法删除",
         )
 
+    old_value = _sales_team_audit_value(team)
     team.is_active = False
+    db.flush()
+    _log_sales_team_operation(
+        db,
+        team,
+        SalesOperationType.DELETE,
+        current_user,
+        old_value=old_value,
+        new_value=_sales_team_audit_value(team),
+        operation_desc="删除销售团队",
+    )
     db.commit()
 
     return ResponseModel(

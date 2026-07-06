@@ -2,7 +2,7 @@
 """
 ECN模型 - 配置类
 """
-from sqlalchemy import Boolean, Column, ForeignKey, Index, Integer, JSON, Numeric, String, Text
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, JSON, String, Text
 
 from ..base import Base, TimestampMixin
 
@@ -26,19 +26,15 @@ class EcnType(Base, TimestampMixin):
         return f"<EcnType {self.type_code}>"
 
 
-class EcnApprovalMatrix(Base, TimestampMixin):
-    """ECN审批矩阵配置表"""
+class EcnApprovalMatrix(Base):
+    """Retired ECN approval matrix compatibility shell.
 
-    __tablename__ = "ecn_approval_matrix"
+    ECN routing is configured through the unified approval template/flow tables.
+    The old `ecn_approval_matrix` table is archived and not mapped anymore.
+    """
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    ecn_type = Column(String(20), comment="ECN类型")
-    condition_type = Column(String(20), default="ALWAYS", comment="条件类型")
-    condition_min = Column(Numeric(14, 2), comment="条件下限")
-    condition_max = Column(Numeric(14, 2), comment="条件上限")
-    approval_level = Column(Integer, nullable=False, comment="审批层级")
-    approval_role = Column(String(50), nullable=False, comment="审批角色")
-    is_active = Column(Boolean, default=True, comment="是否启用")
+    __abstract__ = True
 
-    __table_args__ = (Index("idx_matrix_type", "ecn_type"),)
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)

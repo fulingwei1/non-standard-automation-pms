@@ -6,7 +6,6 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from sqlalchemy import (
     JSON,
@@ -335,61 +334,6 @@ class TaskReminder(Base, TimestampMixin):
         Index("idx_reminder_time", "remind_at"),
         {"comment": "任务提醒表"},
     )
-
-
-# ==================== 任务审批工作流 ====================
-
-
-class TaskApprovalWorkflow(Base, TimestampMixin):
-    """任务审批工作流"""
-
-    __tablename__ = "task_approval_workflows"
-
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    task_id = Column(Integer, ForeignKey("task_unified.id"), nullable=False, comment="任务ID")
-    submitted_by = Column(Integer, ForeignKey("users.id"), nullable=False, comment="提交人ID")
-    submitted_at = Column(DateTime, nullable=False, default=datetime.now, comment="提交时间")
-    submit_note = Column(Text, comment="提交说明（任务必要性）")
-
-    approver_id = Column(Integer, ForeignKey("users.id"), comment="审批人ID")
-    approval_status = Column(
-        String(20), default="PENDING", comment="审批状态：PENDING/APPROVED/REJECTED"
-    )
-    approved_at = Column(DateTime, comment="审批时间")
-    approval_note = Column(Text, comment="审批意见")
-    rejection_reason = Column(Text, comment="拒绝原因")
-
-    task_details = Column(JSON, comment="任务详情快照")
-
-    # 关系
-    task = relationship("TaskUnified", backref="approval_workflows")
-
-    __table_args__ = (
-        Index("idx_taw_task_id", "task_id"),
-        Index("idx_taw_approver_id", "approver_id"),
-        Index("idx_taw_status", "approval_status"),
-        Index("idx_taw_submitted_by", "submitted_by"),
-        {"comment": "任务审批工作流表"},
-    )
-
-    @property
-    def decision(self) -> Optional[str]:
-        """向后兼容字段命名：decision -> approval_status"""
-        return self.approval_status
-
-    @decision.setter
-    def decision(self, value: str) -> None:
-        self.approval_status = value
-
-    @property
-    def comment(self) -> Optional[str]:
-        """兼容 comment 字段"""
-        return self.approval_note or self.rejection_reason
-
-    @comment.setter
-    def comment(self, value: Optional[str]) -> None:
-        self.approval_note = value
 
 
 # ==================== 任务完成证明 ====================

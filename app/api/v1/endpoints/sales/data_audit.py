@@ -10,6 +10,8 @@
 - 查询审核历史
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -24,10 +26,13 @@ from app.core import security
 from app.models.sales.data_audit import (
     DataAuditPriorityEnum,
     DataChangeType,
+    SalesDataAuditRequest,
 )
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.services.sales.data_audit_service import SalesDataAuditService
+from app.services.sales.operation_log_service import SalesOperationLogService
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +104,68 @@ class AuditRequestResponse(BaseModel):
         from_attributes = True
 
 
+def _audit_request_operation_value(audit_request: SalesDataAuditRequest) -> dict[str, Any]:
+    return {
+        "audit_request_id": audit_request.id,
+        "audit_status": audit_request.status,
+        "entity_type": audit_request.entity_type,
+        "entity_id": audit_request.entity_id,
+        "entity_code": audit_request.entity_code,
+        "change_type": audit_request.change_type,
+        "change_reason": audit_request.change_reason,
+        "priority": audit_request.priority,
+        "changed_fields": audit_request.changed_fields or [],
+        "requested_change": audit_request.new_value,
+        "original_value": audit_request.old_value,
+        "requester_id": audit_request.requester_id,
+        "reviewer_id": audit_request.reviewer_id,
+        "review_comment": audit_request.review_comment,
+        "applied_at": audit_request.applied_at.isoformat() if audit_request.applied_at else None,
+    }
+
+
+def _log_data_audit_operation(
+    db: Session,
+    audit_request: SalesDataAuditRequest,
+    operation_type: str,
+    operator: User,
+    *,
+    old_status: str | None = None,
+    operation_desc: str,
+    remark: str | None = None,
+) -> None:
+    new_value = _audit_request_operation_value(audit_request)
+    old_value = (
+        {
+            **new_value,
+            "audit_status": old_status,
+            "reviewer_id": None,
+            "review_comment": None,
+            "applied_at": None,
+        }
+        if old_status
+        else {}
+    )
+    changed_fields = (
+        ["audit_status"]
+        if old_status and old_status != audit_request.status
+        else audit_request.changed_fields or []
+    )
+    SalesOperationLogService.log_operation(
+        db,
+        entity_type=audit_request.entity_type,
+        entity_id=audit_request.entity_id,
+        operation_type=operation_type,
+        operator=operator,
+        entity_code=audit_request.entity_code,
+        operation_desc=operation_desc,
+        old_value=old_value,
+        new_value=new_value,
+        changed_fields=changed_fields,
+        remark=remark or audit_request.change_reason,
+    )
+
+
 # ==================== API 端点 ====================
 
 
@@ -128,6 +195,14 @@ def submit_audit_request(
             change_type=request.change_type,
             change_reason=request.change_reason,
             priority=request.priority,
+        )
+        _log_data_audit_operation(
+            db,
+            audit_request,
+            SalesOperationType.SUBMIT,
+            current_user,
+            operation_desc="提交销售数据审核",
+            remark=request.change_reason,
         )
 
         db.commit()
@@ -216,6 +291,7 @@ def review_audit_request(
     service = SalesDataAuditService(db)
 
     try:
+        old_status = service.get_request_detail(request_id).status
         if request.action == "approve":
             audit_request = service.approve_request(
                 request_id=request_id,
@@ -224,6 +300,8 @@ def review_audit_request(
                 apply_immediately=request.apply_immediately,
             )
             message = "审核通过"
+            operation_type = SalesOperationType.APPROVE
+            operation_desc = "通过销售数据审核"
         elif request.action == "reject":
             if not request.comment:
                 raise HTTPException(status_code=400, detail="驳回时必须填写原因")
@@ -233,9 +311,20 @@ def review_audit_request(
                 comment=request.comment,
             )
             message = "审核驳回"
+            operation_type = SalesOperationType.REJECT
+            operation_desc = "驳回销售数据审核"
         else:
             raise HTTPException(status_code=400, detail=f"不支持的操作: {request.action}")
 
+        _log_data_audit_operation(
+            db,
+            audit_request,
+            operation_type,
+            current_user,
+            old_status=old_status,
+            operation_desc=operation_desc,
+            remark=request.comment,
+        )
         db.commit()
 
         return ResponseModel(
@@ -268,10 +357,20 @@ def cancel_audit_request(
     service = SalesDataAuditService(db)
 
     try:
+        old_status = service.get_request_detail(request_id).status
         audit_request = service.cancel_request(
             request_id=request_id,
             user=current_user,
             reason=request.reason,
+        )
+        _log_data_audit_operation(
+            db,
+            audit_request,
+            SalesOperationType.STATUS_CHANGE,
+            current_user,
+            old_status=old_status,
+            operation_desc="撤销销售数据审核",
+            remark=request.reason,
         )
 
         db.commit()

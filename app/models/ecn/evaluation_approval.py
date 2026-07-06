@@ -4,7 +4,6 @@ ECN模型 - 评估和审批
 """
 from sqlalchemy import (
     JSON,
-    Boolean,
     Column,
     DateTime,
     ForeignKey,
@@ -64,39 +63,17 @@ class EcnEvaluation(Base, TimestampMixin):
     )
 
 
-class EcnApproval(Base, TimestampMixin):
-    """ECN审批表"""
+class EcnApproval(Base):
+    """Retired ECN approval row compatibility shell.
 
-    __tablename__ = "ecn_approvals"
+    Runtime ECN approvals now live in the unified approval engine
+    (`approval_instances` / `approval_tasks` / `approval_action_logs`).
+    This shell keeps old helper signatures importable without registering the
+    retired `ecn_approvals` table in SQLAlchemy metadata.
+    """
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    ecn_id = Column(Integer, ForeignKey("ecn.id"), nullable=False, comment="ECN ID")
-    approval_level = Column(Integer, nullable=False, comment="审批层级")
-    approval_role = Column(String(50), nullable=False, comment="审批角色")
+    __abstract__ = True
 
-    # 审批人
-    approver_id = Column(Integer, ForeignKey("users.id"), comment="审批人ID")
-    approver_name = Column(String(50), comment="审批人姓名")
-
-    # 审批结果
-    approval_result = Column(String(20), comment="审批结果")
-    approval_opinion = Column(Text, comment="审批意见")
-
-    # 状态
-    status = Column(String(20), default="PENDING", comment="状态")
-    approved_at = Column(DateTime, comment="审批时间")
-
-    # 超时
-    due_date = Column(DateTime, comment="审批期限")
-    is_overdue = Column(Boolean, default=False, comment="是否超期")
-
-    # 关系
-    ecn = relationship("Ecn", back_populates="approvals")
-    approver = relationship("User")
-
-    __table_args__ = (
-        Index("idx_approval_ecn", "ecn_id"),
-        Index("idx_ecn_approval_approver", "approver_id"),
-        Index("idx_approval_status", "status"),
-    )
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)

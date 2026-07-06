@@ -9,9 +9,12 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core import security
-from app.models.sales import Quote, QuoteApproval
+from app.models.approval import ApprovalActionLog, ApprovalInstance
+from app.models.sales import Quote
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.sales.quote_operation_audit import log_quote_operation, quote_audit_value
 from app.services.status_update_service import StatusUpdateService
 from app.utils.db_helpers import get_or_404
 
@@ -137,6 +140,7 @@ def change_quote_status(
         ResponseModel: 变更结果
     """
     quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+    old_value = quote_audit_value(quote)
 
     new_status = status_data.get("new_status")
     if not new_status:
@@ -161,6 +165,16 @@ def change_quote_status(
             detail=f"不能从 {old_name} 转换为 {new_name}",
         )
 
+    log_quote_operation(
+        db,
+        quote,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_value,
+        new_value=quote_audit_value(quote),
+        operation_desc=f"报价状态变更：{result.old_status} → {result.new_status}",
+        remark=status_data.get("reason"),
+    )
     db.commit()
 
     old_name = QUOTE_STATUSES.get(result.old_status, {}).get("name", result.old_status)
@@ -195,11 +209,14 @@ def get_status_history(
     """
     quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
-    # 从审批记录获取状态变更
-    approvals = (
-        db.query(QuoteApproval)
-        .filter(QuoteApproval.quote_id == quote_id)
-        .order_by(QuoteApproval.created_at)
+    approval_logs = (
+        db.query(ApprovalActionLog)
+        .join(ApprovalInstance, ApprovalActionLog.instance_id == ApprovalInstance.id)
+        .filter(
+            ApprovalInstance.entity_type == "QUOTE",
+            ApprovalInstance.entity_id == quote_id,
+        )
+        .order_by(ApprovalActionLog.action_at)
         .all()
     )
 
@@ -217,28 +234,28 @@ def get_status_history(
         }
     )
 
-    # 从审批记录推断状态变更
-    for a in approvals:
-        if a.status == "APPROVED":
+    # 从统一审批动作日志推断状态变更
+    for log in approval_logs:
+        if log.action == "APPROVE":
             history.append(
                 {
                     "status": "APPROVED",
                     "status_name": "已批准",
                     "action": "审批通过",
-                    "operator": a.approver_name,
-                    "timestamp": a.approved_at.isoformat() if a.approved_at else None,
-                    "remark": a.approval_opinion,
+                    "operator": log.operator_name,
+                    "timestamp": log.action_at.isoformat() if log.action_at else None,
+                    "remark": log.comment,
                 }
             )
-        elif a.status == "REJECTED":
+        elif log.action == "REJECT":
             history.append(
                 {
                     "status": "REJECTED",
                     "status_name": "已拒绝",
                     "action": "审批拒绝",
-                    "operator": a.approver_name,
-                    "timestamp": a.approved_at.isoformat() if a.approved_at else None,
-                    "remark": a.approval_opinion,
+                    "operator": log.operator_name,
+                    "timestamp": log.action_at.isoformat() if log.action_at else None,
+                    "remark": log.comment,
                 }
             )
 

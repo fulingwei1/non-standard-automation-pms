@@ -3,8 +3,11 @@
 团队PK管理 API endpoints
 """
 
+from __future__ import annotations
+
 import json
 from datetime import datetime
+from decimal import Decimal
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -15,10 +18,11 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import Contract, Invoice, Lead, SalesTeam, SalesTeamMember, TeamPKRecord
+from app.models.sales.operation_log import SalesEntityType, SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import TeamPKCreateRequest, TeamPKUpdateRequest
-from app.utils.db_helpers import save_obj
+from app.services.sales.operation_log_service import SalesOperationLogService
 
 router = APIRouter()
 
@@ -60,6 +64,68 @@ def _safe_parse_json(raw_value: Optional[Any]) -> Optional[Any]:
         return json.loads(str(raw_value))
     except (json.JSONDecodeError, TypeError, ValueError):
         return None
+
+
+def _audit_value(value: Any) -> Any:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return str(value)
+    if hasattr(value, "value"):
+        return value.value
+    return value
+
+
+def _team_pk_audit_value(pk: TeamPKRecord) -> dict[str, Any]:
+    return {
+        "team_pk_id": pk.id,
+        "pk_name": pk.pk_name,
+        "pk_type": pk.pk_type,
+        "team_ids": _safe_parse_id_list(pk.team_ids),
+        "start_date": _audit_value(pk.start_date),
+        "end_date": _audit_value(pk.end_date),
+        "target_value": _audit_value(pk.target_value),
+        "status": pk.status,
+        "winner_team_id": pk.winner_team_id,
+        "result_summary": _safe_parse_json(pk.result_summary),
+        "reward_description": pk.reward_description,
+        "created_by": pk.created_by,
+    }
+
+
+def _changed_fields(old_value: dict[str, Any], new_value: dict[str, Any]) -> list[str]:
+    return [
+        field
+        for field, value in new_value.items()
+        if field in old_value and old_value[field] != value
+    ]
+
+
+def _log_team_pk_operation(
+    db: Session,
+    pk: TeamPKRecord,
+    operation_type: str,
+    operator: User,
+    *,
+    old_value: dict[str, Any] | None = None,
+    new_value: dict[str, Any] | None = None,
+    operation_desc: str,
+) -> None:
+    old_snapshot = old_value or {}
+    new_snapshot = new_value or {}
+    SalesOperationLogService.log_operation(
+        db,
+        entity_type=SalesEntityType.TEAM_PK,
+        entity_id=pk.id,
+        entity_code=f"TEAM-PK-{pk.id}",
+        operation_type=operation_type,
+        operator=operator,
+        operation_desc=operation_desc,
+        old_value=old_snapshot,
+        new_value=new_snapshot,
+        changed_fields=_changed_fields(old_snapshot, new_snapshot),
+        remark="team_pk",
+    )
 
 
 @router.get("/team-pk", response_model=ResponseModel)
@@ -146,7 +212,18 @@ def create_team_pk(
         status="PENDING" if request.start_date > datetime.now() else "ONGOING",
         created_by=current_user.id,
     )
-    save_obj(db, pk)
+    db.add(pk)
+    db.flush()
+    _log_team_pk_operation(
+        db,
+        pk,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=_team_pk_audit_value(pk),
+        operation_desc="创建团队PK",
+    )
+    db.commit()
+    db.refresh(pk)
 
     return ResponseModel(
         code=201,
@@ -283,12 +360,23 @@ def update_team_pk(
             detail="PK记录不存在",
         )
 
+    old_value = _team_pk_audit_value(pk)
     update_data = request.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         if field == "result_summary" and value:
             value = json.dumps(value) if isinstance(value, dict) else value
         setattr(pk, field, value)
 
+    db.flush()
+    _log_team_pk_operation(
+        db,
+        pk,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=_team_pk_audit_value(pk),
+        operation_desc="更新团队PK",
+    )
     db.commit()
     db.refresh(pk)
 
@@ -386,9 +474,20 @@ def complete_team_pk(
     results.sort(key=lambda x: x["value"], reverse=True)
     winner = results[0] if results else None
 
+    old_value = _team_pk_audit_value(pk)
     pk.status = "COMPLETED"
     pk.winner_team_id = winner["team_id"] if winner else None
     pk.result_summary = json.dumps(results)
+    db.flush()
+    _log_team_pk_operation(
+        db,
+        pk,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_value,
+        new_value=_team_pk_audit_value(pk),
+        operation_desc="完成团队PK",
+    )
     db.commit()
 
     return ResponseModel(

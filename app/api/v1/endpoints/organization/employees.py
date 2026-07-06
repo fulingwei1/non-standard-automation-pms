@@ -14,7 +14,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
 from app.core.schemas import list_response, success_response
-from app.models.organization import Employee
+from app.models.organization import Department, Employee
 from app.models.user import User
 from app.schemas.organization import (
     EmployeeCreate,
@@ -23,6 +23,20 @@ from app.schemas.organization import (
 )
 
 router = APIRouter(dependencies=[Depends(security.require_permission("hr:read"))])
+
+
+def _normalize_employee_department_payload(db: Session, data: dict) -> dict:
+    department_id = data.get("department_id")
+    if department_id is None:
+        return data
+
+    department = db.query(Department).filter(Department.id == department_id).first()
+    if not department:
+        raise HTTPException(status_code=404, detail="部门不存在")
+
+    normalized = dict(data)
+    normalized["department"] = department.dept_name
+    return normalized
 
 
 @router.get("/employees")
@@ -54,7 +68,8 @@ def create_employee(
             status_code=400,
             detail="Employee with this code already exists.",
         )
-    employee = Employee(**emp_in.model_dump())
+    employee_data = _normalize_employee_department_payload(db, emp_in.model_dump())
+    employee = Employee(**employee_data)
     db.add(employee)
     db.commit()
     db.refresh(employee)
@@ -97,7 +112,7 @@ def update_employee(
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
 
-    update_data = emp_in.model_dump(exclude_unset=True)
+    update_data = _normalize_employee_department_payload(db, emp_in.model_dump(exclude_unset=True))
     for field, value in update_data.items():
         setattr(employee, field, value)
 

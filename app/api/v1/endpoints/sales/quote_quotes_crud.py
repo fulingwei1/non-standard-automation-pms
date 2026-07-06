@@ -11,9 +11,11 @@ from sqlalchemy.orm import Session, joinedload
 from app.api.deps import get_db
 from app.core import security
 from app.models.sales import Quote, QuoteVersion
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.utils.db_helpers import delete_obj, get_or_404
+from app.services.sales.quote_operation_audit import log_quote_operation, quote_audit_value
+from app.utils.db_helpers import get_or_404
 from app.utils.json_helpers import safe_json_loads
 
 router = APIRouter()
@@ -203,6 +205,8 @@ def update_quote(
     if not security.check_sales_data_permission(quote, current_user, db, "owner_id"):
         raise HTTPException(status_code=403, detail="无权修改该报价")
 
+    old_quote_value = quote_audit_value(quote)
+
     # 可更新字段
     updatable_fields = ["valid_until", "owner_id"]
     for field in updatable_fields:
@@ -213,6 +217,15 @@ def update_quote(
                 value = date.fromisoformat(value)
             setattr(quote, field, value)
 
+    log_quote_operation(
+        db,
+        quote,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_quote_value,
+        new_value=quote_audit_value(quote),
+        operation_desc="更新报价",
+    )
     db.commit()
     return ResponseModel(code=200, message="报价更新成功", data={"id": quote.id})
 
@@ -246,7 +259,18 @@ def delete_quote(
     if quote.status in NON_DELETABLE_QUOTE_STATUSES:
         raise HTTPException(status_code=400, detail="审批中、已审批或已成交的报价不能删除")
 
-    # 硬删除（级联删除版本和明细）
-    delete_obj(db, quote)
+    old_quote_value = quote_audit_value(quote)
+    log_quote_operation(
+        db,
+        quote,
+        SalesOperationType.DELETE,
+        current_user,
+        old_value=old_quote_value,
+        new_value={},
+        operation_desc="删除报价",
+    )
 
+    # 硬删除（级联删除版本和明细）
+    db.delete(quote)
+    db.commit()
     return ResponseModel(code=200, message="报价删除成功")

@@ -4,22 +4,32 @@ In-memory scheduler metrics collector.
 Supports historical duration tracking for percentile calculations.
 """
 
+from __future__ import annotations
+
 import threading
+import json
+import logging
+import os
 from collections import defaultdict, deque
 from copy import deepcopy
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class SchedulerMetrics:
-    def __init__(self, max_history_size: int = 1000):
+    def __init__(self, max_history_size: int = 1000, persistence_path: Optional[str | Path] = None):
         """
         Initialize metrics collector.
 
         Args:
             max_history_size: Maximum number of duration samples to keep per job
+            persistence_path: Optional JSON file used to persist metrics across restarts
         """
         self._lock = threading.Lock()
         self._max_history_size = max_history_size
+        self._persistence_path = Path(persistence_path) if persistence_path else None
         # Main metrics data
         self._data: Dict[str, Dict[str, Any]] = defaultdict(
             lambda: {
@@ -39,6 +49,7 @@ class SchedulerMetrics:
         self._notification_stats: Dict[str, Dict[str, int]] = defaultdict(
             lambda: {"success_count": 0, "failure_count": 0}
         )
+        self._load_from_disk()
 
     def record_success(self, job_id: str, duration_ms: float, timestamp: str) -> None:
         with self._lock:
@@ -50,6 +61,7 @@ class SchedulerMetrics:
             entry["last_timestamp"] = timestamp
             # Add to history
             self._duration_history[job_id].append(duration_ms)
+            self._persist_locked()
 
     def record_failure(self, job_id: str, duration_ms: float, timestamp: str) -> None:
         with self._lock:
@@ -61,12 +73,14 @@ class SchedulerMetrics:
             entry["last_timestamp"] = timestamp
             # Add to history (failures also have duration)
             self._duration_history[job_id].append(duration_ms)
+            self._persist_locked()
 
     def reset(self) -> None:
         with self._lock:
             self._data.clear()
             self._duration_history.clear()
             self._notification_stats.clear()
+            self._persist_locked()
 
     def record_notification(self, channel: str, success: bool) -> None:
         with self._lock:
@@ -75,6 +89,48 @@ class SchedulerMetrics:
                 entry["success_count"] += 1
             else:
                 entry["failure_count"] += 1
+            self._persist_locked()
+
+    def _load_from_disk(self) -> None:
+        if not self._persistence_path or not self._persistence_path.exists():
+            return
+
+        try:
+            payload = json.loads(self._persistence_path.read_text(encoding="utf-8"))
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Scheduler metrics persistence load failed: %s", exc)
+            return
+
+        for job_id, stats in payload.get("jobs", {}).items():
+            self._data[job_id].update(stats)
+
+        for job_id, history in payload.get("duration_history", {}).items():
+            self._duration_history[job_id].extend(history[-self._max_history_size:])
+
+        for channel, stats in payload.get("notifications", {}).items():
+            self._notification_stats[channel].update(stats)
+
+    def _persist_locked(self) -> None:
+        if not self._persistence_path:
+            return
+
+        payload = {
+            "jobs": {job_id: dict(stats) for job_id, stats in self._data.items()},
+            "duration_history": {
+                job_id: list(history) for job_id, history in self._duration_history.items()
+            },
+            "notifications": {
+                channel: dict(stats) for channel, stats in self._notification_stats.items()
+            },
+        }
+
+        try:
+            self._persistence_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp_path = self._persistence_path.with_suffix(f"{self._persistence_path.suffix}.tmp")
+            tmp_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+            tmp_path.replace(self._persistence_path)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Scheduler metrics persistence write failed: %s", exc)
 
     def snapshot(self) -> Dict[str, Dict[str, Any]]:
         """Get a snapshot of current metrics."""
@@ -148,7 +204,9 @@ class SchedulerMetrics:
         }
 
 
-METRICS = SchedulerMetrics()
+METRICS = SchedulerMetrics(
+    persistence_path=os.getenv("SCHEDULER_METRICS_PATH", "data/scheduler_metrics.json")
+)
 
 
 def record_job_success(job_id: str, duration_ms: float, timestamp: str) -> None:

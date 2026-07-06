@@ -83,8 +83,10 @@ const defaultStats = {
   admin: [
     { key: 'users', label: '用户数', value: 0, trend: 0 },
     { key: 'roles', label: '角色数', value: 0, trend: 0 },
-    { key: 'logins', label: '今日登录', value: 0, trend: 0 },
+    { key: 'logins', label: '今日活跃', value: 0, trend: 0 },
     { key: 'errors', label: '系统错误', value: 0, trend: 0 },
+    { key: 'new_this_month', label: '新增本月', value: 0, trend: 0 },
+    { key: 'active_this_month', label: '本月活跃', value: 0, trend: 0 },
   ],
 };
 
@@ -153,8 +155,13 @@ export default function StatsCard({ type = 'sales', metrics, data }) {
         // 否则尝试从 API 获取
         try {
           const response = await api.get(`/dashboard/stats/${type}`);
-          if (response.data?.stats) {
-            setStats(response.data.stats);
+          // 接口统一包了一层 {success, code, message, data}，真实的 stats
+          // 在 response.data.data.stats，不是 response.data.stats——之前只
+          // 拆了一层，条件恒为假，实际请求成功了也会被当成失败，直接掉进
+          // 下面的默认数据分支，界面上永远显示写死的 0。
+          const stats = response.data?.data?.stats ?? response.data?.stats;
+          if (stats) {
+            setStats(stats);
             return;
           }
         } catch {

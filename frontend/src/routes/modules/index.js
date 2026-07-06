@@ -11,3 +11,4 @@ export { SystemRoutes } from "./systemRoutes";
 export { StrategyRoutes } from "./strategyRoutes";
 export { WarehouseRoutes } from "./warehouseRoutes";
 export { QualityRoutes } from "./qualityRoutes";
+export { OTDRoutes } from "./otdRoutes";

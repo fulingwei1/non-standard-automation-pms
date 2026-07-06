@@ -3,18 +3,26 @@
 项目变更请求服务层
 """
 
+from __future__ import annotations
+
 import logging
+import json
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Dict, List, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import desc, func, text
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_pagination
+from app.models.approval import (
+    ApprovalActionLog,
+    ApprovalFlowDefinition,
+    ApprovalInstance,
+    ApprovalTemplate,
+)
 from app.models.change_request import (
-    ChangeApprovalRecord,
     ChangeRequest,
 )
 from app.models.enums import (
@@ -45,6 +53,23 @@ from app.utils.db_helpers import get_or_404, save_obj
 
 logger = logging.getLogger(__name__)
 
+PROJECT_CHANGE_APPROVAL_ENTITY_TYPE = "PROJECT_CHANGE_REQUEST"
+PROJECT_CHANGE_APPROVAL_TEMPLATE_CODES = (
+    "TPL_PROJECT_CHANGE",
+    "PROJECT_CHANGE_REQUEST",
+    "TPL_PROJECT",
+)
+PROJECT_CHANGE_APPROVAL_ACTION_BY_DECISION = {
+    ApprovalDecisionEnum.APPROVED: "APPROVE",
+    ApprovalDecisionEnum.REJECTED: "REJECT",
+    ApprovalDecisionEnum.RETURNED: "RETURN",
+}
+PROJECT_CHANGE_DECISION_BY_ACTION = {
+    "APPROVE": ApprovalDecisionEnum.APPROVED.value,
+    "REJECT": ApprovalDecisionEnum.REJECTED.value,
+    "RETURN": ApprovalDecisionEnum.RETURNED.value,
+}
+
 
 class ProjectChangeRequestsService:
     """项目变更请求服务"""
@@ -54,6 +79,173 @@ class ProjectChangeRequestsService:
 
     def _has_real_session(self) -> bool:
         return type(self.db).__module__.startswith("sqlalchemy.orm")
+
+    def _approval_operator_name(self, user: User) -> str:
+        return user.real_name or user.username
+
+    def _project_change_instance_no(self, change_request_id: int) -> str:
+        stamp = datetime.utcnow().strftime("%y%m%d%H%M%S%f")
+        return f"PCR{change_request_id}-{stamp}"[:50]
+
+    def _find_project_change_template(self) -> tuple[ApprovalTemplate, ApprovalFlowDefinition] | None:
+        templates = (
+            self.db.query(ApprovalTemplate)
+            .filter(
+                ApprovalTemplate.template_code.in_(PROJECT_CHANGE_APPROVAL_TEMPLATE_CODES),
+                ApprovalTemplate.is_active,
+            )
+            .all()
+        )
+        template_by_code = {template.template_code: template for template in templates}
+        template = next(
+            (
+                template_by_code[code]
+                for code in PROJECT_CHANGE_APPROVAL_TEMPLATE_CODES
+                if code in template_by_code
+            ),
+            None,
+        )
+        if template is None:
+            return None
+
+        flow = (
+            self.db.query(ApprovalFlowDefinition)
+            .filter(
+                ApprovalFlowDefinition.template_id == template.id,
+                ApprovalFlowDefinition.is_active,
+            )
+            .order_by(ApprovalFlowDefinition.is_default.desc(), ApprovalFlowDefinition.id)
+            .first()
+        )
+        if flow is None:
+            return None
+        return template, flow
+
+    def _get_or_create_project_change_approval_instance(
+        self,
+        change_request: ChangeRequest,
+        current_user: User,
+    ) -> ApprovalInstance | None:
+        if not self._has_real_session():
+            instance = ApprovalInstance(
+                instance_no=f"MOCK-{PROJECT_CHANGE_APPROVAL_ENTITY_TYPE}-{change_request.id}",
+                template_id=0,
+                flow_id=0,
+                entity_type=PROJECT_CHANGE_APPROVAL_ENTITY_TYPE,
+                entity_id=change_request.id,
+                initiator_id=change_request.submitter_id or current_user.id,
+                initiator_name=change_request.submitter_name or self._approval_operator_name(current_user),
+                form_data={"change_request_id": change_request.id},
+                status="PENDING",
+                title=f"项目变更 {change_request.change_code} 审批",
+                summary=change_request.title,
+                submitted_at=change_request.submit_date or datetime.utcnow(),
+            )
+            instance.id = change_request.id
+            return instance
+
+        existing = (
+            self.db.query(ApprovalInstance)
+            .filter(
+                ApprovalInstance.entity_type == PROJECT_CHANGE_APPROVAL_ENTITY_TYPE,
+                ApprovalInstance.entity_id == change_request.id,
+            )
+            .order_by(ApprovalInstance.id.desc())
+            .first()
+        )
+        if existing:
+            return existing
+
+        template_flow = self._find_project_change_template()
+        if template_flow is None:
+            logger.warning("项目变更审批模板/流程不存在，无法写入统一审批日志")
+            return None
+
+        template, flow = template_flow
+        instance = ApprovalInstance(
+            tenant_id=change_request.tenant_id,
+            instance_no=self._project_change_instance_no(change_request.id),
+            template_id=template.id,
+            flow_id=flow.id,
+            entity_type=PROJECT_CHANGE_APPROVAL_ENTITY_TYPE,
+            entity_id=change_request.id,
+            initiator_id=change_request.submitter_id or current_user.id,
+            initiator_name=change_request.submitter_name or self._approval_operator_name(current_user),
+            form_data={
+                "source": "project_change_requests",
+                "change_request_id": change_request.id,
+                "change_code": change_request.change_code,
+                "project_id": change_request.project_id,
+            },
+            status="PENDING",
+            title=f"项目变更 {change_request.change_code} 审批",
+            summary=change_request.title,
+            submitted_at=change_request.submit_date or datetime.utcnow(),
+        )
+        self.db.add(instance)
+        self.db.flush()
+        return instance
+
+    def _record_project_change_approval_log(
+        self,
+        *,
+        change_request: ChangeRequest,
+        approval_in: ChangeApprovalRequest,
+        current_user: User,
+        before_status: str,
+    ) -> None:
+        from app.services.approval_engine.engine import ApprovalEngineService
+
+        instance = self._get_or_create_project_change_approval_instance(change_request, current_user)
+        if instance is None:
+            return
+
+        action = PROJECT_CHANGE_APPROVAL_ACTION_BY_DECISION[approval_in.decision]
+        action_at = change_request.approval_date or datetime.utcnow()
+        if approval_in.decision == ApprovalDecisionEnum.APPROVED:
+            instance.status = "APPROVED"
+            instance.completed_at = action_at
+            instance.final_approver_id = current_user.id
+            instance.final_comment = approval_in.comments
+        elif approval_in.decision == ApprovalDecisionEnum.REJECTED:
+            instance.status = "REJECTED"
+            instance.completed_at = action_at
+            instance.final_approver_id = current_user.id
+            instance.final_comment = approval_in.comments
+        else:
+            instance.status = "PENDING"
+            instance.final_comment = approval_in.comments
+
+        ApprovalEngineService(self.db).record_action_log(
+            tenant_id=change_request.tenant_id,
+            instance_id=instance.id,
+            operator_id=current_user.id,
+            operator_name=self._approval_operator_name(current_user),
+            action=action,
+            action_detail={
+                "source": "project_change_requests.approve_change_request",
+                "change_request_id": change_request.id,
+                "change_code": change_request.change_code,
+                "decision": approval_in.decision.value,
+                "approver_role": "PM",
+            },
+            comment=approval_in.comments,
+            attachments=approval_in.attachments,
+            before_status=before_status,
+            after_status=change_request.status.value,
+            action_at=action_at,
+        )
+
+    def _json_dict(self, value) -> dict:
+        if isinstance(value, dict):
+            return value
+        if isinstance(value, str) and value.strip():
+            try:
+                parsed = json.loads(value)
+                return parsed if isinstance(parsed, dict) else {}
+            except (TypeError, ValueError):
+                return {}
+        return {}
 
     def _send_change_notification(
         self,
@@ -246,6 +438,9 @@ class ProjectChangeRequestsService:
         change_request: ChangeRequest,
         current_user: User,
     ) -> None:
+        if not self._has_real_session():
+            return
+
         impact_details = self._impact_details(change_request)
         baseline_application = impact_details.get("baseline_application")
         if isinstance(baseline_application, dict) and baseline_application.get("applied"):
@@ -447,6 +642,8 @@ class ProjectChangeRequestsService:
         if change_request.status != ChangeStatusEnum.PENDING_APPROVAL:
             raise HTTPException(status_code=400, detail="只有待审批状态的变更请求才能审批")
 
+        before_status = change_request.status.value
+
         # 更新审批信息
         change_request.approver_id = current_user.id
         change_request.approver_name = current_user.real_name or current_user.username
@@ -463,19 +660,14 @@ class ProjectChangeRequestsService:
         elif approval_in.decision == ApprovalDecisionEnum.RETURNED:
             change_request.status = ChangeStatusEnum.ASSESSING
 
-        # 创建审批记录
-        approval_record = ChangeApprovalRecord(
-            change_request_id=change_request.id,
-            approver_id=current_user.id,
-            approver_name=current_user.real_name or current_user.username,
-            approver_role="PM",  # 可以从用户角色获取
-            decision=approval_in.decision,
-            comments=approval_in.comments,
-            attachments=approval_in.attachments,
+        self._record_project_change_approval_log(
+            change_request=change_request,
+            approval_in=approval_in,
+            current_user=current_user,
+            before_status=before_status,
         )
 
         self.db.add(change_request)
-        self.db.add(approval_record)
         self.db.commit()
         self.db.refresh(change_request)
 
@@ -500,29 +692,38 @@ class ProjectChangeRequestsService:
         """获取审批记录"""
         get_or_404(self.db, ChangeRequest, change_id, detail="变更请求不存在")
 
-        rows = self.db.execute(
-            text(
-                """
-                SELECT
-                    id,
-                    change_request_id,
-                    approver_id,
-                    approver_name,
-                    approver_role,
-                    approval_date,
-                    decision,
-                    comments,
-                    attachments,
-                    created_at
-                FROM change_approval_records
-                WHERE change_request_id = :change_id
-                ORDER BY approval_date DESC
-                """
-            ),
-            {"change_id": change_id},
-        ).mappings()
+        rows = (
+            self.db.query(ApprovalActionLog, ApprovalInstance.entity_id)
+            .join(ApprovalInstance, ApprovalActionLog.instance_id == ApprovalInstance.id)
+            .filter(
+                ApprovalInstance.entity_type == PROJECT_CHANGE_APPROVAL_ENTITY_TYPE,
+                ApprovalInstance.entity_id == change_id,
+                ApprovalActionLog.action.in_(PROJECT_CHANGE_DECISION_BY_ACTION),
+            )
+            .order_by(ApprovalActionLog.action_at.desc(), ApprovalActionLog.id.desc())
+            .all()
+        )
 
-        return [dict(row) for row in rows]
+        records = []
+        for log, entity_id in rows:
+            detail = self._json_dict(log.action_detail)
+            decision = detail.get("decision") or PROJECT_CHANGE_DECISION_BY_ACTION.get(log.action)
+            records.append(
+                {
+                    "id": log.id,
+                    "change_request_id": entity_id,
+                    "approver_id": log.operator_id,
+                    "approver_name": log.operator_name,
+                    "approver_role": detail.get("approver_role") or detail.get("role"),
+                    "approval_date": log.action_at,
+                    "decision": decision,
+                    "comments": log.comment,
+                    "attachments": log.attachments,
+                    "created_at": log.created_at,
+                }
+            )
+
+        return records
 
     def update_change_status(
         self,

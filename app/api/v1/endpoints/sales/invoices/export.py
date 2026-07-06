@@ -4,6 +4,7 @@
 """
 
 import logging
+import io
 from datetime import datetime
 from typing import Any, Optional
 
@@ -173,6 +174,7 @@ def export_invoice_pdf(
     Issue 4.5: 导出发票 PDF
     """
     from app.services.pdf_export_service import PDFExportService, create_pdf_response
+    from app.services.export.watermark_service import add_watermark_to_pdf
 
     invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 
@@ -202,4 +204,12 @@ def export_invoice_pdf(
     pdf_data = pdf_service.export_invoice_to_pdf(invoice_data)
 
     filename = f"发票_{invoice.invoice_code}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    return create_pdf_response(pdf_data, filename)
+    operator_name = getattr(current_user, "real_name", None) or getattr(
+        current_user, "username", None
+    )
+    watermarked_pdf = add_watermark_to_pdf(
+        pdf_data.getvalue(),
+        operator_name=operator_name,
+        custom_text="内部资料",
+    )
+    return create_pdf_response(io.BytesIO(watermarked_pdf), filename)

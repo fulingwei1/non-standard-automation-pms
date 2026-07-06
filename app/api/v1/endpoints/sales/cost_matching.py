@@ -15,14 +15,18 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.common.query_filters import apply_keyword_filter
 from app.core import security
+from app.api.v1.endpoints.sales.purchase_material_costs import (
+    _log_material_cost_operation,
+    _material_cost_audit_value,
+)
 from app.models.sales import PurchaseMaterialCost
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.sales import (
     MaterialCostMatchRequest,
     MaterialCostMatchResponse,
     PurchaseMaterialCostResponse,
 )
-from app.utils.db_helpers import save_obj
 
 router = APIRouter()
 
@@ -110,9 +114,22 @@ def match_material_cost(
 
     # 如果匹配成功，更新使用次数
     if matched_cost:
+        old_value = _material_cost_audit_value(matched_cost)
         matched_cost.usage_count = (matched_cost.usage_count or 0) + 1
         matched_cost.last_used_at = datetime.now()
-        save_obj(db, matched_cost)
+        db.add(matched_cost)
+        db.flush()
+        _log_material_cost_operation(
+            db,
+            matched_cost,
+            SalesOperationType.UPDATE,
+            current_user,
+            old_value=old_value,
+            new_value=_material_cost_audit_value(matched_cost),
+            operation_desc="物料成本匹配命中",
+            remark="material_cost_match",
+        )
+        db.commit()
 
     # 构建响应
     matched_cost_dict = None

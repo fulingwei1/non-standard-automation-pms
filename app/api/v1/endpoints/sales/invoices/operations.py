@@ -3,6 +3,8 @@
 发票操作 API endpoints
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import date, timedelta
 from decimal import Decimal, ROUND_HALF_UP
@@ -16,9 +18,14 @@ from app.core import security
 from app.models.approval import ApprovalInstance
 from app.models.enums import InvoiceStatusEnum, WorkflowTypeEnum
 from app.models.sales import Invoice
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import InvoiceIssueRequest
+from app.services.sales.invoice_operation_audit import (
+    invoice_audit_value,
+    log_invoice_operation,
+)
 from app.utils.number_generator import generate_sequential_no
 
 logger = logging.getLogger(__name__)
@@ -136,6 +143,7 @@ def issue_invoice(
     """
     invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
     _require_invoice_ready_to_issue(db, invoice)
+    old_value = invoice_audit_value(invoice)
 
     invoice.issue_date = issue_request.issue_date
     invoice.status = InvoiceStatusEnum.ISSUED.value
@@ -145,6 +153,16 @@ def issue_invoice(
     if not invoice.due_date and invoice.issue_date:
         invoice.due_date = invoice.issue_date + timedelta(days=30)
 
+    log_invoice_operation(
+        db,
+        invoice,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_value,
+        new_value=invoice_audit_value(invoice),
+        operation_desc="开具发票",
+        remark=f"issue_date={invoice.issue_date.isoformat() if invoice.issue_date else ''}",
+    )
     db.commit()
 
     # 发送发票开具通知
@@ -206,7 +224,12 @@ def receive_payment(
     )
 
 
-def _void_invoice_logic(db: Session, invoice_id: int, reason: Optional[str]) -> ResponseModel:
+def _void_invoice_logic(
+    db: Session,
+    invoice_id: int,
+    reason: Optional[str],
+    current_user: User,
+) -> ResponseModel:
     invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
 
     # 只有已开票或已审批的发票才能作废
@@ -216,9 +239,19 @@ def _void_invoice_logic(db: Session, invoice_id: int, reason: Optional[str]) -> 
     ]:
         raise HTTPException(status_code=400, detail="只有已开票或已审批的发票才能作废")
 
+    old_value = invoice_audit_value(invoice)
     red_invoice = None
     if invoice.status == InvoiceStatusEnum.ISSUED.value:
         red_invoice = _create_red_credit_invoice(db, invoice, reason)
+        log_invoice_operation(
+            db,
+            red_invoice,
+            SalesOperationType.CREATE,
+            current_user,
+            new_value=invoice_audit_value(red_invoice),
+            operation_desc="生成红冲发票",
+            remark=f"original_invoice_id={invoice.id}; reason={reason or ''}",
+        )
 
     invoice.status = InvoiceStatusEnum.CANCELLED.value
     if reason:
@@ -226,6 +259,16 @@ def _void_invoice_logic(db: Session, invoice_id: int, reason: Optional[str]) -> 
     if red_invoice:
         _append_remark(invoice, f"红冲发票: {red_invoice.invoice_code}")
 
+    log_invoice_operation(
+        db,
+        invoice,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_value,
+        new_value=invoice_audit_value(invoice),
+        operation_desc="作废发票",
+        remark=reason,
+    )
     db.commit()
 
     if red_invoice:
@@ -253,7 +296,7 @@ def void_invoice(
     """
     作废发票
     """
-    return _void_invoice_logic(db, invoice_id, reason)
+    return _void_invoice_logic(db, invoice_id, reason, current_user)
 
 
 @router.post("/invoices/{invoice_id}/cancel", response_model=ResponseModel, include_in_schema=False)
@@ -261,10 +304,10 @@ def cancel_invoice_legacy(
     *,
     db: Session = Depends(deps.get_db),
     invoice_id: int,
-    cancel_request: dict[str, Any] | None = Body(default=None),
+    cancel_request: Optional[dict[str, Any]] = Body(default=None),
     current_user: User = Depends(security.require_permission("finance:update")),
 ) -> Any:
     """旧版发票作废入口，兼容 POST /invoices/{id}/cancel。"""
     payload = cancel_request or {}
     reason = payload.get("reason") or payload.get("cancel_reason")
-    return _void_invoice_logic(db, invoice_id, reason)
+    return _void_invoice_logic(db, invoice_id, reason, current_user)

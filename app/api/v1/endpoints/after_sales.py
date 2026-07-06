@@ -5,6 +5,8 @@
 提供客户反馈、维修保养、技术支持工单的管理功能
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import date, datetime
 from decimal import Decimal
@@ -26,7 +28,6 @@ from app.models.after_sales import (
     AfterSalesSLA,
     AfterSalesSatisfaction,
     AfterSalesSparePart,
-    AfterSalesSupportTicket,
     AfterSalesWarranty,
 )
 from app.models.project import Project, ProjectWarranty
@@ -47,7 +48,6 @@ logger = logging.getLogger(__name__)
 AFTER_SALES_TABLE_MODELS = (
     AfterSalesFeedback,
     AfterSalesMaintenance,
-    AfterSalesSupportTicket,
     AfterSalesWarranty,
     AfterSalesSparePart,
     AfterSalesFieldService,
@@ -322,21 +322,6 @@ def _sync_spare_part_inventory(db: Session, part: AfterSalesSparePart) -> Invent
     inventory.last_inbound_date = datetime.now() if quantity > 0 else inventory.last_inbound_date
     db.add(inventory)
     return inventory
-
-
-def _format_legacy_support_ticket(ticket: AfterSalesSupportTicket) -> dict:
-    return {
-        "id": ticket.id,
-        "ticket_no": ticket.ticket_no,
-        "subject": ticket.subject,
-        "description": ticket.description,
-        "category": ticket.category,
-        "priority": ticket.priority,
-        "status": ticket.status,
-        "created_at": ticket.created_at,
-        "assignee_name": ticket.assignee.username if ticket.assignee else None,
-        "source": "legacy_after_sales_support_ticket",
-    }
 
 
 def _format_service_ticket(ticket: ServiceTicket) -> dict:
@@ -665,17 +650,8 @@ def get_project_support_tickets(
         .order_by(ServiceTicket.created_at.desc())
         .all()
     )
-    legacy_tickets = (
-        db.query(AfterSalesSupportTicket)
-        .filter(AfterSalesSupportTicket.project_id == project_id)
-        .order_by(AfterSalesSupportTicket.created_at.desc())
-        .all()
-    )
-    
-    return [
-        *[_format_service_ticket(ticket) for ticket in service_tickets],
-        *[_format_legacy_support_ticket(ticket) for ticket in legacy_tickets],
-    ]
+
+    return [_format_service_ticket(ticket) for ticket in service_tickets]
 
 
 @router.post("/projects/{project_id}/support-tickets", status_code=status.HTTP_201_CREATED)
@@ -1283,39 +1259,27 @@ def create_knowledge(title: str = Query(...), category: str = Query("FAQ"), cont
 def escalate_ticket(project_id: int, ticket_id: int, reason: str = Query(...), db: Session = Depends(deps.get_db), current_user: User = Depends(security.get_current_active_user)):
     """工单升级"""
     _ensure_after_sales_tables(db)
-    ticket = db.query(AfterSalesSupportTicket).filter(AfterSalesSupportTicket.id == ticket_id).first()
-    service_ticket = None
-    if not ticket:
-        service_ticket = (
-            db.query(ServiceTicket)
-            .filter(ServiceTicket.id == ticket_id, ServiceTicket.project_id == project_id)
-            .first()
-        )
-    if not ticket and not service_ticket:
+    service_ticket = (
+        db.query(ServiceTicket)
+        .filter(ServiceTicket.id == ticket_id, ServiceTicket.project_id == project_id)
+        .first()
+    )
+    if not service_ticket:
         raise HTTPException(status_code=404, detail="工单不存在")
     # 升级优先级
     priority_order = ["LOW", "MEDIUM", "HIGH", "URGENT"]
-    current_priority = ticket.priority if ticket else service_ticket.urgency
+    current_priority = service_ticket.urgency
     current_idx = priority_order.index(current_priority) if current_priority in priority_order else 0
     new_priority = current_priority
     if current_idx < len(priority_order) - 1:
         new_priority = priority_order[current_idx + 1]
-    if ticket:
-        ticket.priority = new_priority
-        ticket.status = "IN_PROGRESS"
-        ticket_no = ticket.ticket_no
-        source_id = ticket.id
-    else:
-        service_ticket.urgency = new_priority
-        if service_ticket.status == "PENDING":
-            service_ticket.status = "IN_PROGRESS"
-        ticket_no = service_ticket.ticket_no
-        source_id = service_ticket.id
+    service_ticket.urgency = new_priority
+    if service_ticket.status == "PENDING":
+        service_ticket.status = "IN_PROGRESS"
+    ticket_no = service_ticket.ticket_no
+    source_id = service_ticket.id
     db.commit()
-    if ticket:
-        db.refresh(ticket)
-    else:
-        db.refresh(service_ticket)
+    db.refresh(service_ticket)
     _send_after_sales_notification(
         db,
         project_id=project_id,

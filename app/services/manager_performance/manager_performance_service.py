@@ -451,6 +451,8 @@ class ManagerPerformanceService:
 
         if all([e.status == "COMPLETED" for e in all_evals]):
             summary.status = "COMPLETED"
+            self.db.flush()
+            PerformanceService.sync_monthly_summary_result(self.db, summary)
 
         self.db.commit()
         self.db.refresh(evaluation)

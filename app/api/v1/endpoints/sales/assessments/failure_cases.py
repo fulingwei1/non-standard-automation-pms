@@ -5,6 +5,9 @@
 包含失败案例的查询、创建、相似案例查找等端点
 """
 
+from __future__ import annotations
+
+import json
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -16,12 +19,21 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import FailureCase
+from app.models.sales.operation_log import SalesEntityType, SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import FailureCaseCreate, FailureCaseResponse, FailureCaseUpdate
-from app.utils.db_helpers import save_obj
+from app.services.sales.operation_log_service import SalesOperationLogService
 
 router = APIRouter()
+
+_JSON_AUDIT_FIELDS = {
+    "product_types",
+    "processes",
+    "failure_tags",
+    "early_warning_signals",
+    "keywords",
+}
 
 
 def _build_failure_case_response(db: Session, case: FailureCase) -> FailureCaseResponse:
@@ -33,6 +45,82 @@ def _build_failure_case_response(db: Session, case: FailureCase) -> FailureCaseR
     return FailureCaseResponse(
         **{c.name: getattr(case, c.name) for c in case.__table__.columns},
         creator_name=creator_name,
+    )
+
+
+def _failure_case_json_value(value: str | None) -> Any:
+    if value is None:
+        return None
+    try:
+        return json.loads(value)
+    except json.JSONDecodeError:
+        return value
+
+
+def _failure_case_audit_value(case: FailureCase) -> dict[str, Any]:
+    fields = [
+        "id",
+        "case_code",
+        "project_name",
+        "industry",
+        "product_types",
+        "processes",
+        "takt_time_s",
+        "annual_volume",
+        "budget_status",
+        "customer_project_status",
+        "spec_status",
+        "price_sensitivity",
+        "delivery_months",
+        "failure_tags",
+        "core_failure_reason",
+        "early_warning_signals",
+        "final_result",
+        "lesson_learned",
+        "keywords",
+        "created_by",
+    ]
+    audit_value = {}
+    for field in fields:
+        value = getattr(case, field, None)
+        if field in _JSON_AUDIT_FIELDS:
+            value = _failure_case_json_value(value)
+        audit_value[field] = value
+    return audit_value
+
+
+def _changed_fields(old_value: dict[str, Any], new_value: dict[str, Any]) -> list[str]:
+    return [
+        field
+        for field, value in new_value.items()
+        if old_value.get(field) != value
+    ]
+
+
+def _log_failure_case_operation(
+    db: Session,
+    case: FailureCase,
+    operation_type: str,
+    current_user: User,
+    *,
+    old_value: dict[str, Any] | None,
+    new_value: dict[str, Any] | None,
+    changed_fields: list[str] | None,
+    operation_desc: str,
+    remark: str | None = None,
+) -> None:
+    SalesOperationLogService.log_operation(
+        db,
+        entity_type=SalesEntityType.FAILURE_CASE,
+        entity_id=case.id,
+        entity_code=case.case_code,
+        operation_type=operation_type,
+        operator=current_user,
+        operation_desc=operation_desc,
+        old_value=old_value,
+        new_value=new_value,
+        changed_fields=changed_fields,
+        remark=remark,
     )
 
 
@@ -125,7 +213,21 @@ def create_failure_case(
         created_by=current_user.id,
     )
 
-    save_obj(db, case)
+    db.add(case)
+    db.flush()
+    _log_failure_case_operation(
+        db,
+        case,
+        SalesOperationType.CREATE,
+        current_user,
+        old_value={},
+        new_value=_failure_case_audit_value(case),
+        changed_fields=[],
+        operation_desc="创建失败案例",
+        remark=case.core_failure_reason,
+    )
+    db.commit()
+    db.refresh(case)
 
     return _build_failure_case_response(db, case)
 
@@ -158,9 +260,24 @@ def update_failure_case(
     if not case:
         raise HTTPException(status_code=404, detail="失败案例不存在")
 
+    old_value = _failure_case_audit_value(case)
     update_data = request.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(case, field, value)
 
-    save_obj(db, case)
+    db.flush()
+    new_value = _failure_case_audit_value(case)
+    _log_failure_case_operation(
+        db,
+        case,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=new_value,
+        changed_fields=_changed_fields(old_value, new_value),
+        operation_desc="更新失败案例",
+        remark=case.core_failure_reason,
+    )
+    db.commit()
+    db.refresh(case)
     return _build_failure_case_response(db, case)

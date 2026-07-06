@@ -4,12 +4,14 @@ ECN自动分配服务
 功能：根据部门、角色自动分配评估、审批、执行任务
 """
 
+from types import SimpleNamespace
 from typing import List, Optional
 
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
-from app.models.ecn import Ecn, EcnApproval, EcnEvaluation, EcnTask
+from app.models.approval import ApprovalInstance, ApprovalTask
+from app.models.ecn import Ecn, EcnEvaluation, EcnTask
 from app.models.user import Role, User, UserRole
 
 
@@ -102,12 +104,12 @@ def auto_assign_evaluation(db: Session, ecn: Ecn, evaluation: EcnEvaluation) -> 
     return None
 
 
-def auto_assign_approval(db: Session, ecn: Ecn, approval: EcnApproval) -> Optional[int]:
+def auto_assign_approval(db: Session, ecn: Ecn, approval: object) -> Optional[int]:
     """
     自动分配审批任务
     优先分配给项目相关的角色负责人，如果没有负责人，分配给角色经理
     """
-    role_name = approval.approval_role
+    role_name = getattr(approval, "approval_role", None)
     if not role_name:
         return None
 
@@ -277,23 +279,26 @@ def auto_assign_pending_approvals(db: Session, ecn_id: int) -> int:
         return 0
 
     pending_approvals = (
-        db.query(EcnApproval)
+        db.query(ApprovalTask)
+        .join(ApprovalInstance, ApprovalTask.instance_id == ApprovalInstance.id)
         .filter(
             and_(
-                EcnApproval.ecn_id == ecn_id,
-                EcnApproval.status == "PENDING",
-                EcnApproval.approver_id.is_(None),
+                ApprovalInstance.entity_type == "ECN",
+                ApprovalInstance.entity_id == ecn_id,
+                ApprovalTask.status == "PENDING",
+                ApprovalTask.assignee_id.is_(None),
             )
         )
         .all()
     )
 
     assigned_count = 0
-    for approval in pending_approvals:
+    for task in pending_approvals:
+        approval = SimpleNamespace(approval_role=task.node.node_name if task.node else None)
         approver_id = auto_assign_approval(db, ecn, approval)
         if approver_id:
-            approval.approver_id = approver_id
-            db.add(approval)
+            task.assignee_id = approver_id
+            db.add(task)
             assigned_count += 1
 
     if assigned_count > 0:

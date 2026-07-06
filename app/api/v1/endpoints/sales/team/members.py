@@ -3,6 +3,10 @@
 团队成员管理 API endpoints
 """
 
+from __future__ import annotations
+
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -11,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.sales import SalesTeam, SalesTeamMember
+from app.models.sales.operation_log import SalesEntityType, SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import (
@@ -18,9 +23,104 @@ from app.schemas.sales import (
     TeamMemberBatchAddRequest,
     TeamMemberUpdateRequest,
 )
-from app.utils.db_helpers import save_obj
+from app.services.sales.operation_log_service import SalesOperationLogService
 
 router = APIRouter()
+
+
+def _audit_scalar(value: Any) -> Any:
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if hasattr(value, "value"):
+        return value.value
+    return value
+
+
+def _team_member_audit_value(member: SalesTeamMember) -> dict[str, Any]:
+    fields = [
+        "id",
+        "tenant_id",
+        "team_id",
+        "user_id",
+        "role",
+        "joined_at",
+        "is_primary",
+        "is_active",
+        "remark",
+    ]
+    return {field: _audit_scalar(getattr(member, field, None)) for field in fields}
+
+
+def _team_members_audit_values(db: Session, team_id: int) -> list[dict[str, Any]]:
+    members = (
+        db.query(SalesTeamMember)
+        .filter(SalesTeamMember.team_id == team_id)
+        .order_by(SalesTeamMember.id)
+        .all()
+    )
+    return [_team_member_audit_value(member) for member in members]
+
+
+def _changed_fields(old_value: dict[str, Any], new_value: dict[str, Any]) -> list[str]:
+    return [
+        field
+        for field, value in new_value.items()
+        if field in old_value and old_value[field] != value
+    ]
+
+
+def _log_team_member_operation(
+    db: Session,
+    team: SalesTeam,
+    operator: User,
+    *,
+    old_member: dict[str, Any] | None,
+    new_member: dict[str, Any] | None,
+    operation_desc: str,
+) -> None:
+    old_value = {"team_member": old_member}
+    new_value = {"team_member": new_member}
+    SalesOperationLogService.log_operation(
+        db,
+        entity_type=SalesEntityType.TEAM,
+        entity_id=team.id,
+        entity_code=team.team_code,
+        operation_type=SalesOperationType.UPDATE,
+        operator=operator,
+        operation_desc=operation_desc,
+        old_value=old_value,
+        new_value=new_value,
+        changed_fields=_changed_fields(old_value, new_value),
+        remark=team.team_name,
+    )
+
+
+def _log_team_members_operation(
+    db: Session,
+    team: SalesTeam,
+    operator: User,
+    *,
+    old_members: list[dict[str, Any]],
+    new_members: list[dict[str, Any]],
+    operation_desc: str,
+) -> None:
+    old_value = {"team_members": old_members}
+    new_value = {"team_members": new_members}
+    SalesOperationLogService.log_operation(
+        db,
+        entity_type=SalesEntityType.TEAM,
+        entity_id=team.id,
+        entity_code=team.team_code,
+        operation_type=SalesOperationType.UPDATE,
+        operator=operator,
+        operation_desc=operation_desc,
+        old_value=old_value,
+        new_value=new_value,
+        changed_fields=_changed_fields(old_value, new_value),
+        remark=team.team_name,
+    )
 
 
 @router.get("/sales-teams/{team_id}/members", response_model=ResponseModel)
@@ -116,15 +216,16 @@ def add_team_member(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="该用户已是团队成员",
             )
+        old_member = _team_member_audit_value(existing)
         # 重新激活
         existing.is_active = True
         existing.role = request.role
         existing.is_primary = request.is_primary
         existing.remark = request.remark
-        db.commit()
-        db.refresh(existing)
+        db.flush()
         member = existing
     else:
+        old_member = None
         member = SalesTeamMember(
             team_id=team_id,
             user_id=request.user_id,
@@ -132,7 +233,8 @@ def add_team_member(
             is_primary=request.is_primary,
             remark=request.remark,
         )
-        save_obj(db, member)
+        db.add(member)
+        db.flush()
 
     # 如果设为主团队，清除其他团队的主团队标记
     if request.is_primary:
@@ -140,7 +242,18 @@ def add_team_member(
             SalesTeamMember.user_id == request.user_id,
             SalesTeamMember.id != member.id,
         ).update({"is_primary": False})
-        db.commit()
+        db.flush()
+
+    _log_team_member_operation(
+        db,
+        team,
+        current_user,
+        old_member=old_member,
+        new_member=_team_member_audit_value(member),
+        operation_desc="更新销售团队成员",
+    )
+    db.commit()
+    db.refresh(member)
 
     return ResponseModel(
         code=201,
@@ -178,6 +291,7 @@ def batch_add_team_members(
 
     added = []
     skipped = []
+    old_members = _team_members_audit_values(db, team_id)
     for user_id in request.user_ids:
         existing = (
             db.query(SalesTeamMember)
@@ -200,6 +314,16 @@ def batch_add_team_members(
         db.add(member)
         added.append(user_id)
 
+    db.flush()
+    if added:
+        _log_team_members_operation(
+            db,
+            team,
+            current_user,
+            old_members=old_members,
+            new_members=_team_members_audit_values(db, team_id),
+            operation_desc="批量更新销售团队成员",
+        )
     db.commit()
 
     return ResponseModel(
@@ -237,6 +361,7 @@ def update_team_member(
         )
 
     update_data = request.model_dump(exclude_unset=True)
+    old_member = _team_member_audit_value(member)
     for field, value in update_data.items():
         setattr(member, field, value)
 
@@ -247,6 +372,15 @@ def update_team_member(
             SalesTeamMember.id != member.id,
         ).update({"is_primary": False})
 
+    db.flush()
+    _log_team_member_operation(
+        db,
+        member.team,
+        current_user,
+        old_member=old_member,
+        new_member=_team_member_audit_value(member),
+        operation_desc="更新销售团队成员",
+    )
     db.commit()
     db.refresh(member)
 
@@ -286,7 +420,17 @@ def remove_team_member(
             detail="成员不存在",
         )
 
+    old_member = _team_member_audit_value(member)
     member.is_active = False
+    db.flush()
+    _log_team_member_operation(
+        db,
+        member.team,
+        current_user,
+        old_member=old_member,
+        new_member=_team_member_audit_value(member),
+        operation_desc="移除销售团队成员",
+    )
     db.commit()
 
     return ResponseModel(

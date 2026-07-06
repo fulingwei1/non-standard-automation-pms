@@ -4,9 +4,12 @@
 包含：模板CRUD、版本管理、从模板创建报价
 """
 
+from __future__ import annotations
+
 import json
-from datetime import datetime
-from typing import Optional
+from datetime import date, datetime
+from decimal import Decimal
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, or_
@@ -17,9 +20,11 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import QuoteTemplate, QuoteTemplateVersion
+from app.models.sales.operation_log import SalesEntityType, SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.utils.db_helpers import delete_obj, get_or_404, save_obj
+from app.services.sales.operation_log_service import SalesOperationLogService
+from app.utils.db_helpers import delete_obj, get_or_404
 
 router = APIRouter()
 
@@ -36,6 +41,121 @@ def _json_value(value, default):
         except ValueError:
             return value
     return value
+
+
+def _audit_scalar(value: Any) -> Any:
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if hasattr(value, "value"):
+        return value.value
+    return value
+
+
+def _template_version_audit_value(
+    version: QuoteTemplateVersion | None,
+) -> dict[str, Any] | None:
+    if not version:
+        return None
+    return {
+        "version_id": version.id,
+        "template_id": version.template_id,
+        "version_no": version.version_no,
+        "status": _audit_scalar(version.status),
+        "sections": version.sections,
+        "pricing_rules": version.pricing_rules,
+        "config_schema": version.config_schema,
+        "discount_rules": version.discount_rules,
+        "release_notes": version.release_notes,
+        "rule_set_id": version.rule_set_id,
+        "created_by": version.created_by,
+        "published_by": version.published_by,
+        "published_at": _audit_scalar(version.published_at),
+    }
+
+
+def _template_audit_value(
+    template: QuoteTemplate,
+    *,
+    current_version: QuoteTemplateVersion | None = None,
+) -> dict[str, Any]:
+    version = current_version or template.current_version
+    return {
+        "template_id": template.id,
+        "template_code": template.template_code,
+        "template_name": template.template_name,
+        "category": template.category,
+        "description": template.description,
+        "status": _audit_scalar(template.status),
+        "visibility_scope": template.visibility_scope,
+        "is_default": template.is_default,
+        "current_version_id": template.current_version_id,
+        "owner_id": template.owner_id,
+        "current_version": _template_version_audit_value(version),
+    }
+
+
+def _changed_fields(old_value: dict[str, Any], new_value: dict[str, Any]) -> list[str]:
+    return [
+        field
+        for field, value in new_value.items()
+        if field in old_value and old_value[field] != value
+    ]
+
+
+def _log_template_operation(
+    db: Session,
+    template: QuoteTemplate,
+    operation_type: str,
+    operator: User,
+    *,
+    old_value: dict[str, Any] | None = None,
+    new_value: dict[str, Any] | None = None,
+    operation_desc: str,
+) -> None:
+    old_snapshot = old_value or {}
+    new_snapshot = new_value or {}
+    SalesOperationLogService.log_operation(
+        db,
+        entity_type=SalesEntityType.QUOTE_TEMPLATE,
+        entity_id=template.id,
+        entity_code=template.template_code,
+        operation_type=operation_type,
+        operator=operator,
+        operation_desc=operation_desc,
+        old_value=old_snapshot,
+        new_value=new_snapshot,
+        changed_fields=_changed_fields(old_snapshot, new_snapshot),
+        remark=template.template_name,
+    )
+
+
+def _log_template_version_operation(
+    db: Session,
+    version: QuoteTemplateVersion,
+    operation_type: str,
+    operator: User,
+    *,
+    old_value: dict[str, Any] | None = None,
+    new_value: dict[str, Any] | None = None,
+    operation_desc: str,
+) -> None:
+    old_snapshot = old_value or {}
+    new_snapshot = new_value or {}
+    SalesOperationLogService.log_operation(
+        db,
+        entity_type=SalesEntityType.QUOTE_TEMPLATE_VERSION,
+        entity_id=version.id,
+        entity_code=f"{version.template_id}-{version.version_no}",
+        operation_type=operation_type,
+        operator=operator,
+        operation_desc=operation_desc,
+        old_value=old_snapshot,
+        new_value=new_snapshot,
+        changed_fields=_changed_fields(old_snapshot, new_snapshot),
+        remark=version.release_notes,
+    )
 
 
 def _next_version_no(db: Session, template_id: int) -> str:
@@ -262,6 +382,23 @@ def create_quote_template(
     db.flush()
 
     template.current_version_id = version.id
+    db.flush()
+    _log_template_operation(
+        db,
+        template,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=_template_audit_value(template, current_version=version),
+        operation_desc="创建报价模板",
+    )
+    _log_template_version_operation(
+        db,
+        version,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=_template_version_audit_value(version),
+        operation_desc="创建报价模板初始版本",
+    )
     db.commit()
 
     return ResponseModel(
@@ -293,6 +430,7 @@ def update_quote_template(
     if not _can_manage_template(template, current_user):
         raise HTTPException(status_code=403, detail="无权限修改此模板")
 
+    old_value = _template_audit_value(template)
     updatable = [
         "template_name",
         "category",
@@ -305,6 +443,16 @@ def update_quote_template(
         if field in template_data:
             setattr(template, field, template_data[field])
 
+    new_value = _template_audit_value(template)
+    _log_template_operation(
+        db,
+        template,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=new_value,
+        operation_desc="更新报价模板",
+    )
     db.commit()
 
     return ResponseModel(code=200, message="模板更新成功", data={"id": template.id})
@@ -335,6 +483,16 @@ def delete_quote_template(
     if template.status == "PUBLISHED":
         raise HTTPException(status_code=400, detail="已发布的模板不能删除")
 
+    old_value = _template_audit_value(template)
+    _log_template_operation(
+        db,
+        template,
+        SalesOperationType.DELETE,
+        current_user,
+        old_value=old_value,
+        new_value={},
+        operation_desc="删除报价模板",
+    )
     delete_obj(db, template)
 
     return ResponseModel(code=200, message="模板删除成功", data={"id": template_id})
@@ -380,7 +538,18 @@ def create_template_version(
         rule_set_id=version_data.get("rule_set_id"),
         created_by=current_user.id,
     )
-    save_obj(db, version)
+    db.add(version)
+    db.flush()
+    _log_template_version_operation(
+        db,
+        version,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=_template_version_audit_value(version),
+        operation_desc="创建报价模板版本",
+    )
+    db.commit()
+    db.refresh(version)
 
     return ResponseModel(
         code=200, message="版本创建成功", data={"id": version.id, "version_no": new_version_no}
@@ -412,18 +581,40 @@ def publish_template(
     if not template.current_version_id:
         raise HTTPException(status_code=400, detail="模板没有版本，无法发布")
 
+    old_template_value = _template_audit_value(template)
     # 更新当前版本状态
     version = (
         db.query(QuoteTemplateVersion)
         .filter(QuoteTemplateVersion.id == template.current_version_id)
         .first()
     )
+    old_version_value = _template_version_audit_value(version)
     if version:
         version.status = "PUBLISHED"
         version.published_at = datetime.now()
         version.published_by = current_user.id
 
     template.status = "PUBLISHED"
+    new_template_value = _template_audit_value(template, current_version=version)
+    _log_template_operation(
+        db,
+        template,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_template_value,
+        new_value=new_template_value,
+        operation_desc="发布报价模板",
+    )
+    if version:
+        _log_template_version_operation(
+            db,
+            version,
+            SalesOperationType.STATUS_CHANGE,
+            current_user,
+            old_value=old_version_value,
+            new_value=_template_version_audit_value(version),
+            operation_desc="发布报价模板版本",
+        )
     db.commit()
 
     return ResponseModel(code=200, message="模板发布成功", data={"id": template.id})

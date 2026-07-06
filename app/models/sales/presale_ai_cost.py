@@ -1,11 +1,7 @@
 """
 售前AI成本估算模型
 
-【重构】2026-03-12：
-- 新增 solution_version_id，绑定方案版本
-- 新增 version_no，支持同一方案版本多次估算
-- 新增审批流程字段
-- 新增绑定状态字段
+旧 SolutionVersion 三位一体绑定引擎已退役；保留 solution_version_id 空兼容列。
 """
 
 from datetime import datetime
@@ -21,7 +17,6 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -31,10 +26,7 @@ from app.models.base import Base
 class PresaleAICostEstimation(Base):
     """AI成本估算记录表
 
-    核心绑定规则：
-    - 每个成本估算必须绑定一个方案版本（solution_version_id）
-    - 同一方案版本可以有多个成本估算版本（version_no）
-    - 只有 approved 状态的成本估算可以被报价引用
+    成本估算记录；solution_version_id 为历史兼容列，不再绑定独立方案版本表。
     """
 
     __tablename__ = "presale_ai_cost_estimation"
@@ -44,15 +36,9 @@ class PresaleAICostEstimation(Base):
     presale_ticket_id = Column(Integer, nullable=False, index=True, comment="售前工单ID")
 
     # === 【保留】原字段，用于向后兼容 ===
-    solution_id = Column(Integer, nullable=True, comment="解决方案ID（废弃，使用 solution_version_id）")
+    solution_id = Column(Integer, nullable=True, comment="解决方案ID")
 
-    # === 【新增】方案版本绑定 ===
-    solution_version_id = Column(
-        Integer,
-        ForeignKey("solution_versions.id", ondelete="SET NULL"),
-        nullable=True,  # 迁移期间允许为空，后续改为 nullable=False
-        comment="方案版本ID（绑定到具体版本）",
-    )
+    solution_version_id = Column(Integer, nullable=True, comment="旧方案版本ID（已退役）")
     version_no = Column(String(20), default="V1", comment="成本估算版本号")
 
     # 成本分解
@@ -92,12 +78,6 @@ class PresaleAICostEstimation(Base):
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
-    # === 关系 ===
-    solution_version = relationship(
-        "SolutionVersion",
-        backref="cost_estimations",
-        foreign_keys=[solution_version_id],
-    )
     approver = relationship("User", foreign_keys=[approved_by])
 
     # 索引
@@ -106,10 +86,6 @@ class PresaleAICostEstimation(Base):
         Index("idx_cost_est_created_at", "created_at"),
         Index("idx_ce_solution_version", "solution_version_id"),
         Index("idx_ce_status", "status"),
-        UniqueConstraint(
-            "solution_version_id", "version_no",
-            name="uq_cost_estimation_version",
-        ),
     )
 
 

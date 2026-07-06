@@ -1,5 +1,6 @@
 import { Route, Navigate } from "react-router-dom";
 import { lazyLoad } from "../lazyLoad";
+import { ModuleProtectedRoute } from "../../lib/permission";
 
 const NotificationCenter = lazyLoad(() => import("../../pages/NotificationCenter"));
 const StageTemplateManagement = lazyLoad(() => import("../../pages/StageTemplateManagement"));
@@ -88,6 +89,21 @@ const TemplateConfigEditor = lazyLoad(() => import("../../pages/TemplateConfigEd
 const TemplateCenter = lazyLoad(() => import("../../pages/TemplateCenter"));
 const AccountPermissionCenter = lazyLoad(() => import("../../pages/AccountPermissionCenter"));
 const OrganizationCenter = lazyLoad(() => import("../../pages/OrganizationCenter"));
+
+const ACCOUNT_PERMISSION_PERMISSIONS = ["USER_VIEW", "ROLE_VIEW"];
+const ORG_CENTER_PERMISSIONS = ["system:org:manage", "system:position:manage"];
+
+const protect = (element, permission, moduleName) => (
+  <ModuleProtectedRoute permission={permission} moduleName={moduleName}>
+    {element}
+  </ModuleProtectedRoute>
+);
+
+const protectAny = (element, permissions, moduleName) => (
+  <ModuleProtectedRoute permissions={permissions} moduleName={moduleName}>
+    {element}
+  </ModuleProtectedRoute>
+);
 
 export function SystemRoutes() {
   return (
@@ -211,46 +227,71 @@ export function SystemRoutes() {
       <Route path="/settings" element={<Settings />} />
 
       {/* System Management */}
-      <Route path="/system/template-center" element={<TemplateCenter />} />
-      <Route path="/system/account-permission-center" element={<AccountPermissionCenter />} />
-      <Route path="/system/organization-center" element={<OrganizationCenter />} />
-      <Route path="/stage-templates" element={<StageTemplateManagement />} />
-      <Route path="/stage-templates/:templateId/edit" element={<StageTemplateEditor />} />
-      <Route path="/report-generation" element={<ReportGeneration />} />
-      <Route path="/report-templates" element={<ReportTemplates />} />
-      <Route path="/report-archives" element={<ReportArchives />} />
-      <Route path="/template-configs" element={<TemplateConfigList />} />
-      <Route path="/template-configs/new" element={<TemplateConfigEditor />} />
+      <Route
+        path="/system/template-center"
+        element={protect(<TemplateCenter />, "system:template:manage", "模板中心")}
+      />
+      <Route
+        path="/system/account-permission-center"
+        element={protectAny(
+          <AccountPermissionCenter />,
+          ACCOUNT_PERMISSION_PERMISSIONS,
+          "账号权限中心",
+        )}
+      />
+      <Route
+        path="/system/organization-center"
+        element={protectAny(<OrganizationCenter />, ORG_CENTER_PERMISSIONS, "组织架构中心")}
+      />
+      <Route path="/stage-templates" element={protect(<StageTemplateManagement />, "system:template:manage", "阶段模板")} />
+      <Route
+        path="/stage-templates/:templateId/edit"
+        element={protect(<StageTemplateEditor />, "system:template:manage", "阶段模板")}
+      />
+      <Route path="/report-generation" element={protect(<ReportGeneration />, "system:template:manage", "报表生成")} />
+      <Route path="/report-templates" element={protect(<ReportTemplates />, "system:template:manage", "报表模板")} />
+      <Route path="/report-archives" element={protect(<ReportArchives />, "system:template:manage", "报表归档")} />
+      <Route path="/template-configs" element={protect(<TemplateConfigList />, "system:template:manage", "模板配置")} />
+      <Route path="/template-configs/new" element={protect(<TemplateConfigEditor />, "system:template:manage", "模板配置")} />
       <Route
         path="/template-configs/edit/:id"
-        element={<TemplateConfigEditor />}
+        element={protect(<TemplateConfigEditor />, "system:template:manage", "模板配置")}
       />
-      <Route path="/user-management" element={<UserManagement />} />
-      <Route path="/role-management" element={<RoleManagement />} />
-      <Route path="/permission-management" element={<PermissionManagement />} />
+      <Route path="/user-management" element={protect(<UserManagement />, "USER_VIEW", "用户管理")} />
+      <Route path="/role-management" element={protect(<RoleManagement />, "ROLE_VIEW", "角色管理")} />
+      <Route path="/permission-management" element={protectAny(<PermissionManagement />, ACCOUNT_PERMISSION_PERMISSIONS, "权限管理")} />
       <Route
         path="/scheduler-monitoring"
-        element={<SchedulerMonitoringDashboard />}
+        element={protect(<SchedulerMonitoringDashboard />, "system:scheduler:read", "定时任务")}
       />
-      <Route path="/scheduler-config" element={<SchedulerConfigManagement />} />
-      <Route path="/audit-logs" element={<AuditLogs />} />
-      <Route path="/data-import-export" element={<DataImportExport />} />
-      <Route path="/hourly-rates" element={<HourlyRateManagement />} />
-      <Route path="/hr-management" element={<HRManagement />} />
+      <Route path="/scheduler-config" element={protect(<SchedulerConfigManagement />, "system:scheduler:read", "定时任务配置")} />
+      <Route path="/audit-logs" element={protect(<AuditLogs />, "AUDIT_VIEW", "审计日志")} />
+      <Route path="/data-import-export" element={protect(<DataImportExport />, "system:data:manage", "数据导入导出")} />
+      <Route path="/hourly-rates" element={protect(<HourlyRateManagement />, "hr:update", "工时费率")} />
+      <Route path="/hr-management" element={protect(<HRManagement />, "hr:read", "人事管理")} />
       <Route path="/presales-integration" element={<PresalesIntegration />} />
-      <Route path="/projects/:id/roles" element={<ProjectRoles />} />
+      <Route path="/projects/:id/roles" element={protect(<ProjectRoles />, "project_role:read", "项目角色")} />
 
       {/* Master Data Management */}
-      <Route path="/customer-management" element={<CustomerManagement />} />
+      <Route path="/customer-management" element={protect(<CustomerManagement />, "customer:read", "客户主数据")} />
       <Route path="/customers/:id/360" element={<Customer360 />} />
       <Route path="/sales/customers/:id/360" element={<Customer360 />} />
       <Route
         path="/supplier-management-data"
-        element={<SupplierManagementData />}
+        element={protect(<SupplierManagementData />, "supplier:read", "供应商主数据")}
       />
-      <Route path="/department-management" element={<DepartmentManagement />} />
-      <Route path="/organization-management" element={<OrganizationManagement />} />
-      <Route path="/position-management" element={<PositionManagement />} />
+      <Route
+        path="/department-management"
+        element={protectAny(<DepartmentManagement />, ORG_CENTER_PERMISSIONS, "部门管理")}
+      />
+      <Route
+        path="/organization-management"
+        element={protectAny(<OrganizationManagement />, ORG_CENTER_PERMISSIONS, "组织管理")}
+      />
+      <Route
+        path="/position-management"
+        element={protectAny(<PositionManagement />, ORG_CENTER_PERMISSIONS, "岗位管理")}
+      />
 
       {/* Mobile Pages */}
       <Route path="/mobile/tasks" element={<MobileWorkerTaskList />} />
@@ -282,7 +323,10 @@ export function SystemRoutes() {
       />
 
       {/* Debug Routes */}
-      <Route path="/debug/permissions" element={<PermissionDebug />} />
+      <Route
+        path="/debug/permissions"
+        element={protectAny(<PermissionDebug />, ACCOUNT_PERMISSION_PERMISSIONS, "权限调试")}
+      />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

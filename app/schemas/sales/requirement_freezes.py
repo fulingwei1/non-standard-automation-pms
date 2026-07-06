@@ -14,10 +14,10 @@ class RequirementFreezeBase(BaseModel):
 
     source_type: str = Field(..., description="来源类型：LEAD/OPPORTUNITY")
     source_id: int = Field(..., description="来源ID")
-    freeze_version: str = Field(..., description="冻结版本号")
-    frozen_content: Optional[str] = Field(None, description="冻结内容(JSON)")
-    frozen_by: Optional[int] = Field(None, description="冻结人ID")
-    freeze_reason: Optional[str] = Field(None, description="冻结原因")
+    freeze_type: str = Field(..., description="冻结点类型")
+    version_number: str = Field(..., description="冻结版本号")
+    requires_ecr: bool = Field(True, description="冻结后变更是否必须走ECR/ECN")
+    description: Optional[str] = Field(None, description="冻结说明")
 
 
 class RequirementFreezeCreate(RequirementFreezeBase):
@@ -29,14 +29,17 @@ class RequirementFreezeCreate(RequirementFreezeBase):
 class RequirementFreezeUpdate(BaseModel):
     """更新需求冻结"""
 
-    freeze_reason: Optional[str] = None
+    description: Optional[str] = None
 
 
 class RequirementFreezeResponse(RequirementFreezeBase):
     """需求冻结响应"""
 
     id: int
-    frozen_at: Optional[datetime] = None
+    freeze_time: Optional[datetime] = None
+    frozen_by: Optional[int] = None
+    frozen_by_name: Optional[str] = None
     created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}

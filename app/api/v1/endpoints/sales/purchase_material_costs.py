@@ -5,6 +5,10 @@
 包含采购物料成本的CRUD操作
 """
 
+from __future__ import annotations
+
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -16,6 +20,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.sales import PurchaseMaterialCost
+from app.models.sales.operation_log import SalesEntityType, SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.sales import (
@@ -23,9 +28,92 @@ from app.schemas.sales import (
     PurchaseMaterialCostResponse,
     PurchaseMaterialCostUpdate,
 )
-from app.utils.db_helpers import delete_obj, get_or_404, save_obj
+from app.services.sales.operation_log_service import SalesOperationLogService
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+
+def _audit_value(value: Any) -> Any:
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if hasattr(value, "value"):
+        return value.value
+    return value
+
+
+def _material_cost_audit_value(cost: PurchaseMaterialCost) -> dict[str, Any]:
+    return {
+        "cost_id": cost.id,
+        "material_code": cost.material_code,
+        "material_name": cost.material_name,
+        "specification": cost.specification,
+        "brand": cost.brand,
+        "unit": cost.unit,
+        "material_type": cost.material_type,
+        "is_standard_part": cost.is_standard_part,
+        "unit_cost": _audit_value(cost.unit_cost),
+        "currency": cost.currency,
+        "supplier_id": cost.supplier_id,
+        "supplier_name": cost.supplier_name,
+        "purchase_date": _audit_value(cost.purchase_date),
+        "purchase_order_no": cost.purchase_order_no,
+        "purchase_quantity": _audit_value(cost.purchase_quantity),
+        "lead_time_days": cost.lead_time_days,
+        "is_active": cost.is_active,
+        "match_priority": cost.match_priority,
+        "match_keywords": cost.match_keywords,
+        "usage_count": cost.usage_count,
+        "last_used_at": _audit_value(cost.last_used_at),
+        "remark": cost.remark,
+        "submitted_by": cost.submitted_by,
+    }
+
+
+def _changed_fields(old_value: dict[str, Any], new_value: dict[str, Any]) -> list[str]:
+    return [
+        field
+        for field, value in new_value.items()
+        if field in old_value and old_value[field] != value
+    ]
+
+
+def _log_material_cost_operation(
+    db: Session,
+    cost: PurchaseMaterialCost,
+    operation_type: str,
+    operator: User,
+    *,
+    old_value: dict[str, Any] | None = None,
+    new_value: dict[str, Any] | None = None,
+    operation_desc: str,
+    remark: str | None = None,
+) -> None:
+    old_snapshot = old_value or {}
+    new_snapshot = new_value or {}
+    SalesOperationLogService.log_operation(
+        db,
+        entity_type=SalesEntityType.PURCHASE_MATERIAL_COST,
+        entity_id=cost.id,
+        entity_code=cost.material_code,
+        operation_type=operation_type,
+        operator=operator,
+        operation_desc=operation_desc,
+        old_value=old_snapshot,
+        new_value=new_snapshot,
+        changed_fields=_changed_fields(old_snapshot, new_snapshot),
+        remark=remark or cost.material_name,
+    )
+
+
+def _build_material_cost_response(cost: PurchaseMaterialCost) -> PurchaseMaterialCostResponse:
+    cost_dict = {
+        **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
+        "submitter_name": cost.submitter.real_name if cost.submitter else None,
+    }
+    return PurchaseMaterialCostResponse(**cost_dict)
 
 
 @router.get(
@@ -65,13 +153,7 @@ def get_purchase_material_costs(
         pagination.limit,
     ).all()
 
-    items = []
-    for cost in costs:
-        cost_dict = {
-            **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
-            "submitter_name": cost.submitter.real_name if cost.submitter else None,
-        }
-        items.append(PurchaseMaterialCostResponse(**cost_dict))
+    items = [_build_material_cost_response(cost) for cost in costs]
 
     return PaginatedResponse(
         items=items,
@@ -94,11 +176,7 @@ def get_purchase_material_cost(
     """
     cost = get_or_404(db, PurchaseMaterialCost, cost_id, detail="采购物料成本不存在")
 
-    cost_dict = {
-        **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
-        "submitter_name": cost.submitter.real_name if cost.submitter else None,
-    }
-    return PurchaseMaterialCostResponse(**cost_dict)
+    return _build_material_cost_response(cost)
 
 
 @router.post(
@@ -114,13 +192,20 @@ def create_purchase_material_cost(
     创建采购物料成本（采购部提交）
     """
     cost = PurchaseMaterialCost(**cost_in.model_dump(), submitted_by=current_user.id)
-    save_obj(db, cost)
+    db.add(cost)
+    db.flush()
+    _log_material_cost_operation(
+        db,
+        cost,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=_material_cost_audit_value(cost),
+        operation_desc="创建采购物料成本",
+    )
+    db.commit()
+    db.refresh(cost)
 
-    cost_dict = {
-        **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
-        "submitter_name": cost.submitter.real_name if cost.submitter else None,
-    }
-    return PurchaseMaterialCostResponse(**cost_dict)
+    return _build_material_cost_response(cost)
 
 
 @router.put("/purchase-material-costs/{cost_id}", response_model=PurchaseMaterialCostResponse)
@@ -137,17 +222,24 @@ def update_purchase_material_cost(
     cost = get_or_404(db, PurchaseMaterialCost, cost_id, detail="采购物料成本不存在")
 
     update_data = cost_in.model_dump(exclude_unset=True)
+    old_value = _material_cost_audit_value(cost)
     for field, value in update_data.items():
         if hasattr(cost, field):
             setattr(cost, field, value)
 
-    save_obj(db, cost)
+    _log_material_cost_operation(
+        db,
+        cost,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=_material_cost_audit_value(cost),
+        operation_desc="更新采购物料成本",
+    )
+    db.commit()
+    db.refresh(cost)
 
-    cost_dict = {
-        **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
-        "submitter_name": cost.submitter.real_name if cost.submitter else None,
-    }
-    return PurchaseMaterialCostResponse(**cost_dict)
+    return _build_material_cost_response(cost)
 
 
 @router.delete("/purchase-material-costs/{cost_id}", status_code=200)
@@ -162,6 +254,17 @@ def delete_purchase_material_cost(
     """
     cost = get_or_404(db, PurchaseMaterialCost, cost_id, detail="采购物料成本不存在")
 
-    delete_obj(db, cost)
+    old_value = _material_cost_audit_value(cost)
+    db.delete(cost)
+    _log_material_cost_operation(
+        db,
+        cost,
+        SalesOperationType.DELETE,
+        current_user,
+        old_value=old_value,
+        new_value={},
+        operation_desc="删除采购物料成本",
+    )
+    db.commit()
 
     return ResponseModel(code=200, message="删除成功")

@@ -9,7 +9,6 @@ from datetime import datetime
 from enum import Enum
 
 from sqlalchemy import (
-    JSON,
     Boolean,
     Column,
     DateTime,
@@ -55,38 +54,18 @@ class PermissionType(str, Enum):
 
 
 class DataScopeRule(Base, TimestampMixin):
-    """数据权限规则表
+    """退役后的数据范围规则兼容壳。
 
-    多租户支持：
-    - tenant_id = NULL: 系统级规则，所有租户共享
-    - tenant_id = N: 租户自定义规则
+    真实数据范围以 `roles.data_scope` 为准；旧 `data_scope_rules`
+    表已经退役，不再注册 SQLAlchemy 表。保留这个轻量对象只为兼容
+    仍复用 `get_scope_config_dict()` 的过滤工具和旧测试。
     """
 
-    __tablename__ = "data_scope_rules"
+    __abstract__ = True
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    # 多租户支持
-    tenant_id = Column(
-        Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID（NULL=系统级规则）"
-    )
-    rule_code = Column(String(50), nullable=False, comment="规则编码")
-    rule_name = Column(String(100), nullable=False, comment="规则名称")
-    scope_type = Column(String(20), nullable=False, comment="范围类型")
-    scope_config = Column(JSON, comment="范围配置")
-    description = Column(Text, comment="描述")
-    is_active = Column(Boolean, default=True, comment="是否启用")
-    is_system = Column(Boolean, default=False, comment="是否系统预置")
-
-    # 关系
-    tenant = relationship("Tenant", back_populates="data_scope_rules")
-    role_data_scopes = relationship("RoleDataScope", back_populates="scope_rule")
-
-    __table_args__ = (
-        Index("idx_dsr_scope_type", "scope_type"),
-        Index("idx_dsr_active", "is_active"),
-        Index("idx_dsr_tenant", "tenant_id"),
-        UniqueConstraint("tenant_id", "rule_code", name="uk_tenant_rule_code"),
-    )
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def get_scope_config_dict(self) -> dict:
         """返回标准化后的 scope_config 字典。"""
@@ -105,24 +84,13 @@ class DataScopeRule(Base, TimestampMixin):
 
 
 class RoleDataScope(Base):
-    """角色数据权限关联表"""
+    """退役后的角色数据权限关联兼容壳。"""
 
-    __tablename__ = "role_data_scopes"
+    __abstract__ = True
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    role_id = Column(Integer, ForeignKey("roles.id", ondelete="CASCADE"), nullable=False)
-    resource_type = Column(String(50), nullable=False)
-    scope_rule_id = Column(
-        Integer, ForeignKey("data_scope_rules.id", ondelete="RESTRICT"), nullable=False
-    )
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.now)
-
-    role = relationship("Role", back_populates="data_scopes")
-    scope_rule = relationship("DataScopeRule", back_populates="role_data_scopes")
-
-    __table_args__ = (UniqueConstraint("role_id", "resource_type", name="uk_role_resource"),)
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 class PermissionGroup(Base, TimestampMixin):

@@ -10,6 +10,8 @@
 - 应用已审核的变更
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
@@ -117,7 +119,7 @@ class SalesDataAuditService:
             status=DataAuditStatusEnum.PENDING.value,
             priority=priority,
             requester_id=requester.id,
-            requester_dept=requester.department.name if requester.department else None,
+            requester_dept=_get_user_department(requester),
             requested_at=datetime.now(),
         )
 
@@ -423,3 +425,12 @@ def _get_entity_name(entity_type: str) -> str:
         SalesEntityType.CUSTOMER: "客户",
     }
     return names.get(entity_type, entity_type)
+
+
+def _get_user_department(user: User) -> str | None:
+    department = getattr(user, "department", None)
+    if not department:
+        return None
+    if isinstance(department, str):
+        return department
+    return getattr(department, "name", None) or getattr(department, "dept_name", None)

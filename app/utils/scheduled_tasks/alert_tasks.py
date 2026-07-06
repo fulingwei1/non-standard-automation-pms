@@ -3,6 +3,8 @@
 定时任务 - 预警与通知相关任务
 包含：预警升级、消息推送、通知重试、响应指标计算
 """
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 

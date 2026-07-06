@@ -12,14 +12,21 @@
 - 审批历史查询
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
 from app.models.approval import ApprovalInstance, ApprovalTask
+from app.models.sales.operation_log import SalesOperationType
 from app.models.sales.contracts import Contract
-from app.services.approval_engine import ApprovalEngineService
+from app.models.user import User
+from app.services.sales.contract_operation_audit import (
+    contract_audit_value,
+    log_contract_operation,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +40,45 @@ class ContractApprovalService:
     """合同审批服务"""
 
     def __init__(self, db: Session):
+        from app.services.approval_engine import ApprovalEngineService
+
         self.db = db
         self.engine = ApprovalEngineService(db)
+
+    def _get_operator(self, user_id: int) -> User | None:
+        operator = self.db.get(User, user_id)
+        return operator if isinstance(operator, User) else None
+
+    def _get_contract_for_task(self, task_id: int) -> Contract | None:
+        task = self.db.query(ApprovalTask).filter(ApprovalTask.id == task_id).first()
+        instance = task.instance if task else None
+        if not instance or instance.entity_type != "CONTRACT":
+            return None
+        return self.db.query(Contract).filter(Contract.id == instance.entity_id).first()
+
+    def _log_contract_approval_operation(
+        self,
+        contract: Contract | None,
+        operation_type: str,
+        operator_id: int,
+        *,
+        old_value: dict[str, Any] | None = None,
+        operation_desc: str,
+        remark: str | None = None,
+    ) -> None:
+        operator = self._get_operator(operator_id)
+        if not contract or not operator:
+            return
+        log_contract_operation(
+            self.db,
+            contract,
+            operation_type,
+            operator,
+            old_value=old_value,
+            new_value=contract_audit_value(contract),
+            operation_desc=operation_desc,
+            remark=remark,
+        )
 
     def submit_contracts_for_approval(
         self,
@@ -80,6 +124,9 @@ class ContractApprovalService:
                 continue
 
             try:
+                operator = self._get_operator(initiator_id)
+                old_value = contract_audit_value(contract) if operator else None
+
                 # 构建表单数据
                 form_data = self._build_contract_form_data(contract)
 
@@ -90,6 +137,15 @@ class ContractApprovalService:
                     form_data=form_data,
                     initiator_id=initiator_id,
                     urgency=urgency,
+                )
+
+                self._log_contract_approval_operation(
+                    contract,
+                    SalesOperationType.SUBMIT,
+                    initiator_id,
+                    old_value=old_value,
+                    operation_desc="提交合同审批",
+                    remark=comment,
                 )
 
                 results.append(
@@ -221,11 +277,22 @@ class ContractApprovalService:
         Returns:
             审批结果
         """
-        return self.engine.approve(
+        contract = self._get_contract_for_task(task_id)
+        old_value = contract_audit_value(contract) if contract else None
+        result = self.engine.approve(
             task_id=task_id,
             approver_id=approver_id,
             comment=comment,
         )
+        self._log_contract_approval_operation(
+            contract,
+            SalesOperationType.APPROVE,
+            approver_id,
+            old_value=old_value,
+            operation_desc="合同审批通过",
+            remark=comment,
+        )
+        return result
 
     def reject_task(
         self,
@@ -244,11 +311,22 @@ class ContractApprovalService:
         Returns:
             审批结果
         """
-        return self.engine.reject(
+        contract = self._get_contract_for_task(task_id)
+        old_value = contract_audit_value(contract) if contract else None
+        result = self.engine.reject(
             task_id=task_id,
             approver_id=approver_id,
             comment=comment,
         )
+        self._log_contract_approval_operation(
+            contract,
+            SalesOperationType.REJECT,
+            approver_id,
+            old_value=old_value,
+            operation_desc="合同审批驳回",
+            remark=comment,
+        )
+        return result
 
     def batch_approve_or_reject(
         self,
@@ -275,13 +353,13 @@ class ContractApprovalService:
         for task_id in task_ids:
             try:
                 if action == "approve":
-                    self.engine.approve(
+                    self.approve_task(
                         task_id=task_id,
                         approver_id=approver_id,
                         comment=comment,
                     )
                 elif action == "reject":
-                    self.engine.reject(
+                    self.reject_task(
                         task_id=task_id,
                         approver_id=approver_id,
                         comment=comment,
@@ -396,7 +474,18 @@ class ContractApprovalService:
         if instance.initiator_id != user_id:
             raise ValueError("只能撤回自己提交的审批")
 
+        operator = self._get_operator(user_id)
+        old_value = contract_audit_value(contract) if operator else None
+
         self.engine.withdraw(instance_id=instance.id, initiator_id=user_id, comment=reason)
+        self._log_contract_approval_operation(
+            contract,
+            SalesOperationType.STATUS_CHANGE,
+            user_id,
+            old_value=old_value,
+            operation_desc="撤回合同审批",
+            remark=reason,
+        )
 
         return {
             "contract_id": contract_id,

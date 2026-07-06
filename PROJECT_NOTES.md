@@ -1,5 +1,708 @@
 # PROJECT_NOTES
 
+## 2026-07-05 继续：审批动作日志与业务状态历史边界收口
+
+- 用户选择第 4 条后，收口“审批动作历史只进 `approval_action_logs`；业务状态历史进 `state_transition_logs` 或领域日志”的工程边界。
+- TDD：在 `tests/unit/test_approval_engine_consolidation_guard.py` 新增架构守护，先红灯抓到 `app/services/project_change_requests/service.py` 在审批引擎外直接构造 `ApprovalActionLog`；同时禁止把 `STATUS_CHANGE/STATE_CHANGE/UPDATE_STATUS/TRANSITION` 这类业务状态动作写成审批动作。
+- 代码面：`ApprovalEngineCore` 新增公共 `record_action_log()`，支持 `tenant_id`、指定 `action_at`、附件、详情、审批前后状态；项目变更服务改为调用 `ApprovalEngineService.record_action_log()`，不再直接插 `approval_action_logs`。
+- 验证：审批整合守护、审批核心日志测试、项目变更统一日志测试合计 14 条通过；`rg "ApprovalActionLog\\(" app` 复核运行代码里只有审批引擎内部构造日志，模型定义除外。
+
+## 2026-07-05 继续：PERM-11 进度兼容/行政兼容权限收口
+
+- 用户继续后，沿 PERM-11 Top risk 继续处理业务 AUTH_ONLY 删除点；`progress_compat.py::delete_wbs_template` 背后是 20 个旧进度兼容端点整簇只校验登录态，`admin_compat.py::delete_asset` 背后是 21 个行政管理兼容端点整簇只校验登录态。
+- TDD：在 `tests/test_api_permission_scan.py` 新增进度兼容权限守护与行政兼容权限守护，均先红灯确认当前为 AUTH_ONLY，再补权限转绿；另补 `test_directory_size_treats_permission_denied_as_zero`，复现 `/admin/stats` 扫到不可读目录时 500。
+- 代码面：`progress_compat.py` 任务/WBS/报表读取挂 `task:read`，任务/WBS 创建挂 `task:create`，自动处理/依赖修复/WBS 更新挂 `task:update`，WBS 模板删除挂 `task:delete`。`admin_compat.py` 行政后台读取挂 `user:read`，申领/用车申请/资产创建挂 `user:create`，审批/驳回/资产更新挂 `user:update`，资产删除挂 `user:delete`；不新增权限码。`admin_stats._directory_size()` 对不可读目录/文件返回 0，避免 `/var/backups/pms` 权限拒绝打崩 `/admin/stats`；同轮补 `contract_approval/service.py` 的 `from __future__ import annotations`，恢复 Python 3.9 下 `app.main` 严格路由加载。
+- 验证：进度兼容/行政兼容权限守护及相关 API/路由回归合并跑 32 条中 25 passed/7 skipped（既有 skip）；`python scripts/audit_permission_coverage.py --json-only` 后 PERM 指标为 3022 端点、PERMISSION=1175（38.9%）、AUTH_ONLY=1771、NONE=76；`python scripts/ci_guard_permission_coverage.py` 通过；相关文件 `ruff check`、`py_compile`、`git diff --check` 通过；`from app.main import app` 成功，路由加载失败 0 项，最终路由数 2993，进度/行政目标路由均已挂载。
+- 边界：`service/surveys.py::submit_customer_satisfaction` 仍是最高 NONE，但属于外部客户提交；`auth.logout/change_password` 仍是本人操作；下一批 Top risk 已转向 `report.py`、`culture_wall_config.py`、`bom/bom_items.py` 和销售删除类 AUTH_ONLY。
+
+## 2026-07-05 继续：PERM-11 工程师排产路由权限收口
+
+- 用户继续后，沿 PERM-11 Top risk 继续处理第一个语义明确的业务 AUTH_ONLY 删除点；发现 `engineer_scheduling.py` 不是单点问题，而是 15 个工程师排产/负载/能力/预警端点整簇只校验登录态。
+- TDD：在 `tests/test_api_permission_scan.py` 新增工程师排产权限守护，先红灯确认 `POST /assignments` 等端点仍为 AUTH_ONLY，再补权限转绿。
+- 代码面：排产读侧看板、可用性、能力模型、负载分析、冲突检测、排产报告、AI/核心能力评估统一挂 `task:read`；创建分配挂 `task:create`；更新分配、生成预警、能力/AI/核心能力重算挂 `task:update`；取消分配挂 `task:delete`。本轮采用种子角色里稳定存在的 `task:*`，不新增权限码。
+- 验证：工程师排产权限守护 1 passed；`tests/unit/test_engineer_scheduling_as17.py` 2 passed；`python scripts/audit_permission_coverage.py --json-only` 后 PERM 指标为 3022 端点、PERMISSION=1134（37.5%）、AUTH_ONLY=1812、NONE=76；`python scripts/ci_guard_permission_coverage.py` 通过；相关文件 `ruff check`、`py_compile`、`git diff --check` 通过；`from app.main import app` 成功，路由加载失败 0 项，最终路由数 2993，工程师排产目标路由均已挂载。
+- 边界：`service/surveys.py::submit_customer_satisfaction` 仍是最高 NONE，但属于外部客户提交；`auth.logout/change_password` 仍是本人操作；下一批可继续收剩余业务删除类 AUTH_ONLY。
+
+## 2026-07-05 继续：PERM-11 里程碑/经验教训兼容路由权限收口
+
+- 用户继续后，沿 PERM-11 Top risk 继续分流；本轮没有改外部客户满意度提交、本人 logout/password 等语义敏感入口，转而收口已在线且权限语义明确的全局里程碑与经验教训兼容路由。
+- TDD：在 `tests/test_api_permission_scan.py` 新增里程碑权限守护与经验教训兼容路由权限守护，先红灯确认这两组端点仍是 AUTH_ONLY，再补权限转绿。
+- 代码面：`milestones.py` 列表/项目列表/详情挂 `milestone:read`，创建挂 `milestone:create`，更新/完成挂 `milestone:update`，删除挂 `milestone:delete`；`lessons_learned.py` 列表/统计/搜索/详情挂 `project_evaluation:read`，创建挂 `project_evaluation:create`，更新/删除挂 `project_evaluation:update`。
+- 验证：里程碑与经验教训权限守护 2 passed；`tests/api/test_batch8_route_contracts.py::test_lessons_compat_routes_return_empty_list_and_stats` 通过；里程碑 API 回归 10 条中 3 passed/7 skipped（既有 skip）；`python scripts/audit_permission_coverage.py --json-only` 后 PERM 指标为 3022 端点、PERMISSION=1119（37.0%）、AUTH_ONLY=1827、NONE=76；`python scripts/ci_guard_permission_coverage.py` 通过；相关文件 `ruff check`、`py_compile`、`git diff --check` 通过；`from app.main import app` 成功，路由加载失败 0 项，最终路由数 2993，里程碑/经验教训目标路由均已挂载。
+- 边界：当前 Top risk 仍是 `service/surveys.py::submit_customer_satisfaction` 外部提交、`auth.logout/change_password` 本人会话/密码操作，以及若干剩余 AUTH_ONLY 删除类端点，后续需要按业务语义逐个收口。
+
+## 2026-07-05 继续：PERM-11 严格路由审计分流与甘特依赖权限收口
+
+- 用户继续后，沿 PERM-11 Top risk 继续分流；先确认 `base_crud_router.py` 是未挂载的异步 CRUD route factory，当前主应用实际使用的是 `base_crud_router_sync.py` 生成的 customers/suppliers/materials 路由；`material/tracking.py` 与 `material/project_fusion.py` 也未挂当前严格主路由，不能按在线裸端点处理。
+- TDD：在 `tests/test_api_permission_scan.py` 新增两条审计口径守护，先红灯确认上述未挂载 helper/lazy 文件会被错误扫入；再在 `scripts/audit_permission_coverage.py` 加窄范围排除清单，只排这些未挂严格主路由的文件。
+- 同轮处理真实在线的 `app/api/v1/endpoints/gantt_dependency.py`：前端 `ganttDependencyApi` 调用 `/gantt/{projectId}`、新增依赖、删除依赖、关键路径接口；新增/删除会改 `task_dependencies` 和级联排期，不能只要求登录。读接口改 `project:read`，新增/删除依赖改 `project:update`。
+- 验证：审计分流守护 2 passed；甘特权限守护 1 passed；`tests/unit/test_gantt_dependency_proj09.py` 3 passed；`python scripts/audit_permission_coverage.py --json-only` 后 PERM 指标为 3022 端点、PERMISSION=1105（36.6%）、AUTH_ONLY=1841、NONE=76；`python scripts/ci_guard_permission_coverage.py` 通过；相关文件 `ruff check`、`py_compile`、`git diff --check` 通过；`from app.main import app` 成功，路由加载失败 0 项，最终路由数 2993，甘特目标路由均已挂载。
+- 边界：`service/surveys.py::submit_customer_satisfaction` 仍为 Top risk，但语义是外部客户提交，不能粗暴加员工权限；`auth.logout/change_password` 是本人会话/密码操作，也不应改成管理权限。
+
+## 2026-07-05 维护：未启用报价成本历史表退役
+
+- 清理目标：处理台账里剩余待确认的 `quote_cost_histories`。该表模型注释已标“未启用 - 报价成本历史”，运行代码没有真实读写；当前报价成本修改、重算、匹配建议、批量调价的审计已统一写入 `sales_operation_logs`。
+- 执行结果：
+  - 真实库 `data/app.db` 删除后业务表数为 553。
+  - `quote_cost_histories` 3 行已归档到 `data/retired_unused_tables_archive_20260705_162243.db`。
+  - 删除前整库备份：`data/app.before_unused_tables_drop_20260705_162243.db`。
+  - 3 行旧数据的 `total_price/total_cost/gross_margin/cost_breakdown/change_type/change_reason/changed_by` 均为空，判定为生成残留。
+- 代码面：
+  - 删除未启用 `QuoteCostHistory` ORM 和 `QuoteVersion.cost_histories` 关系，避免 `create_all` 复活旧表。
+  - `app.models.sales`、`app.models`、`app.models.exports.complete` 不再导出 `QuoteCostHistory`。
+  - `scripts/retire_unused_tables_20260705.py` 与 `migrations/20260705_z_drop_unused_residual_tables_sqlite.sql` 纳入 `quote_cost_histories` 防回潮删除；`scripts/ghost_tables_baseline.json` 移除旧 ghost 项。
+- 验证：新增守护测试先红后绿；真实库复核 `quote_cost_histories` 不存在，归档库保留 3 行；ORM metadata 和所有 FK 均不再引用该表；`PRAGMA foreign_key_check` 未新增问题。
+
+## 2026-07-05 继续：PERM-11 产能计算/组织部门/员工导入权限与审计口径收口
+
+- 用户继续后，沿 PERM-11 剩余高风险裸端点推进；优先处理已挂主路由且会写业务数据的 `production/capacity/calculation.py`、组织部门主 CRUD 的 `departments_refactored.py`、以及批量新增/更新员工档案的 `employee_import.py`。`service/surveys.py::submit_customer_satisfaction` 虽在 Top risk 中，但源码语义是外部客户满意度提交，本轮不粗暴改成员工登录；后续应按一次性/签名 survey token 设计。
+- TDD：在 `tests/test_api_permission_scan.py` 新增产能计算权限守护、APIRouter router-level 权限识别守护、组织部门权限守护、员工导入权限守护，均先红灯确认当前 `production:manage` 缺失、router 级 `hr:read` 未被审计脚本识别、组织部门端点仍是 AUTH_ONLY/NONE、员工导入端点仍只有登录态。
+- 代码面：`calculate_oee`、`calculate_worker_efficiency` 统一挂 `production:manage`，并补回文件实际使用但缺失的 `get_or_404` import；`scripts/audit_permission_coverage.py` 现在识别 `APIRouter(dependencies=[Depends(require_permission(...))])` 并让函数级权限覆盖 router 级权限；`departments_refactored.py` 部门列表/树/统计/详情/人员列表挂 `hr:read`，创建挂 `hr:create`，更新/删除挂 `hr:update`；`employee_import.py` 批量导入挂 `hr:create`，导入模板说明挂 `hr:read`。
+- 验证：新增权限守护 4 passed；组织部门/员工导入相关 API 回归 9 passed；`python scripts/audit_permission_coverage.py --json-only` 后 PERM 指标为 3033 端点、PERMISSION=1101（36.3%）、AUTH_ONLY=1845、NONE=87；`python scripts/ci_guard_permission_coverage.py` 通过；相关文件 `ruff check`、`py_compile`、`git diff --check` 通过；`from app.main import app` 成功，路由加载失败 0 项，最终路由数 2993，组织部门与员工导入目标路由均已挂载。
+
+## 2026-07-05 继续：PERM-11 项目风险/排程优化/齐套排产权限收口
+
+- 用户继续后，沿 PERM-11 裸端点继续收口；`app/api/v1/endpoints/projects/risks.py` 8 个风险 CRUD/矩阵/汇总/自动扫描端点使用自定义 `require_risk_permission("risk:*")`，审计脚本无法识别且 `risk:*` 不在当前权限种子主链，扫描结果表现为 NONE。
+- 同轮继续处理 `app/api/v1/endpoints/schedule_optimization.py` fallback 路由：虽然是占位兼容文件，但已挂到主 API，前端 `scheduleOptimizationApi` 会调用分析/自动生成 BOM/自动创建采购三个接口，不能裸露。
+- 同轮继续处理 `app/api/v1/endpoints/assembly_kit/scheduling.py`：生成排产建议是裸 POST，建议列表是裸 GET，接受/拒绝建议虽然有依赖但只挂 `assembly_kit:read`，实际会修改建议状态。
+- TDD：在 `tests/test_api_permission_scan.py` 新增项目风险、排程优化 fallback、齐套排产建议三条权限守护，先红灯确认 `POST /{project_id}/risks`、`/schedule-optimization/projects/{project_id}/auto-*`、`/assembly-kit/scheduling/suggestions/generate` 等端点被扫描为 NONE/弱权限；再改代码转绿。
+- 代码面：删除风险模块自定义权限依赖，统一复用已初始化的项目权限码：创建/自动扫描用 `project:create`，列表/详情/矩阵/汇总用 `project:read`，更新用 `project:update`，删除用 `project:delete`；同步清理无用 import。
+- 排程优化 fallback：根/分析接口挂 `project:read`，自动生成 BOM 挂 `material:update`，自动创建采购挂 `purchase:create`；保持原空态返回结构，避免影响前端兼容。
+- 齐套排产建议：生成建议挂 `assembly_kit:create`，建议列表挂 `assembly_kit:read`，接受/拒绝建议改挂 `assembly_kit:update`。
+- 验证：项目风险/排程优化/齐套排产权限守护 3 passed；`tests/api/test_project_risks.py` 17 passed；`tests/unit/test_scheduling_suggestion_service.py` 15 passed；`python scripts/audit_permission_coverage.py --json-only` 后 PERM 指标为 3033 端点、PERMISSION=1087（35.8%）、AUTH_ONLY=1853、NONE=93；`python scripts/ci_guard_permission_coverage.py` 通过；相关文件 `ruff check`、`py_compile`、`git diff --check` 通过；`from app.main import app` 成功，路由加载失败 0 项，最终路由数 2993，排程优化与齐套排产目标路由均已挂载。
+
+## 2026-07-05 维护：生产资源冲突表改名隔离
+
+- 清理目标：收口 `resource_conflicts` / `resource_conflict` 这组业务域撞名。两表不是同一业务，不能合并：`resource_conflicts` 是项目阶段资源计划冲突，`resource_conflict` 是生产排程资源冲突。
+- 执行结果：
+  - 正式保留项目资源冲突主表 `resource_conflicts`。
+  - 生产排程冲突表从 `resource_conflict` 改名为 `production_resource_conflicts`，保留原 3 行数据。
+  - 真实库业务表数仍为 554；这是 rename，不是 drop。
+  - 改名前整库备份：`data/app.before_production_resource_conflict_rename_20260705_140025.db`。
+- 代码面：
+  - `ProductionResourceConflict.__tablename__` 改为 `production_resource_conflicts`，索引名同步改为 `idx_production_conflict_*`。
+  - 新增迁移 `migrations/20260705_z_rename_production_resource_conflict_sqlite.sql`，老库升级时把旧表改为清晰表名。
+  - 守护测试把 `resource_conflict` 纳入退役表名集合，并要求 `production_resource_conflicts` 注册在 ORM metadata。
+- 验证：红测先失败于 `resource_conflict` 仍在 `Base.metadata.tables`；改名后转绿。真实库复核：`resource_conflict` 不存在，`production_resource_conflicts=3`、`resource_conflicts=3`。迁移前后 `PRAGMA foreign_key_check` 输出一致，未新增 FK 脏数据。
+
+## 2026-07-05 继续：PERM-11 售前 AI 知识库/情绪接口权限收口
+
+- 用户继续后，沿 PERM-11 裸端点收口继续推进；最新 `PERMISSION_COVERAGE_AUDIT.json` 显示售前 AI 知识库与情绪分析两个已挂主路由簇仍为 NONE，且包含案例读写、问答反馈、情绪分析、跟进提醒生成/忽略等真实业务动作。
+- TDD：在 `tests/test_api_permission_scan.py` 新增两条守护，先红灯确认 `app/api/v1/presale_ai_knowledge.py` 与 `app/api/presale_ai_emotion.py` 所有端点均被扫描为 NONE。
+- 代码面：知识库读/搜索/问答/标签接口挂 `knowledge:read`，案例提取/新增/更新/问答反馈挂 `knowledge:write`；情绪分析/流失预测/跟进建议/提醒/趋势/批量分析统一先挂 `presale:manage`。同步校正 `tests/api/test_presales_contract_api.py` 的旧路由契约：`/presale/ai/generate-solution` 现在是 PRE-10 异步 job 桥接入口，应保留，旧 `solution/{id}/template*` 方案栈才是下线对象。
+- 验证：新增权限守护 2 passed；`python scripts/audit_permission_coverage.py --json-only` 后 PERM 指标为 3033 端点、NONE=107、PERMISSION=1073（35.4%）；`python scripts/ci_guard_permission_coverage.py` 通过；`tests/test_ai_emotion_api.py` 4 passed；售前 AI 路由契约与 PRE-10 生成方案挂载契约 2 passed；相关文件 `ruff check`、`py_compile` 通过；`from app.main import app` 成功，路由加载失败 0 项，最终路由数 2993。
+
+## 2026-07-05 维护：售前 AI 报价草稿并入正式报价链路
+
+- 清理目标：收口 `quotes/quote_versions/quote_items` 与 `presale_ai_quotation/quotation_versions` 的报价双轨，避免同一报价金额在销售正式链和售前 AI 链各自成为事实源。
+- 业务口径：正式报价唯一事实源为 `quotes`、`quote_versions`、`quote_items`；合同、审批、销售报表继续只认正式报价链。`presale_ai_quotation` 保留为 AI 草稿/三档比选工作台，`quotation_versions` 保留为 AI 草稿版本快照。
+- 代码面：
+  - `AIQuotationGeneratorService.promote_to_sales_quote()` 新增 AI 草稿采纳能力：解析售前工单/客户商机，复制报价头、版本、明细到正式报价链，设置 `Quote.current_version_id`，并把 AI 草稿标记为 `ACCEPTED`，备注写入 `promoted_quote_id`。
+  - 新增 `/presale/ai/quotation/{quotation_id}/promote-to-sales-quote`，作为后续前端“采纳该档报价”的唯一入口；缺商机/客户时拒绝，避免生成孤儿正式报价。
+  - `approve_quotation()` 保持不写旧 `quotation_approvals`，符合统一审批引擎收口方向。
+- 验证：新增守护测试先红后绿；`python -m pytest tests/unit/test_presale_ai_quotation_to_sales_quote.py -q` 通过（3 passed）。真实库当前仍为 554 张业务表；`quotes=275`、`quote_versions=275`、`quote_items=697`、`presale_ai_quotation=9`、`quotation_versions=9`。
+- 边界：本轮未删除 `presale_ai_quotation` / `quotation_versions`，也未自动把真实库 AI 草稿转正式报价；真实转化需要业务先选择采纳哪一档。
+
+## 2026-07-05 继续：CI 质量门禁恢复绿灯
+
+- 用户继续后，优先处理当前红色 CI 门禁：`ci_guard_permission_coverage` 因 NONE 端点 148、权限覆盖率 34.0% 低于基线失败；`ci_guard_ghost_tables` 因 `CompanyProfile(company_profile)`、`Competitor(competitors)` 被误报为新增幽灵表失败；`ci_guard_ai_mock` 原本通过。
+- TDD：补 `tests/test_api_permission_scan.py`，覆盖 `deps.require_super_admin` 应计入 PERMISSION、备份接口必须有超管级保护、公司资质证书接口必须有权限保护；新增 `tests/unit/test_ci_guard_ghost_tables.py`，确认主数据导入脚本可作为 `company_profile` / `competitors` 写入证据。
+- 代码面：`scripts/audit_permission_coverage.py` 将 `require_super_admin` 纳入权限模式；`app/api/v1/endpoints/backup.py` 所有备份/恢复/清理/统计接口加 `deps.require_super_admin`；`app/api/v1/company_certifications.py` 所有资质证书接口加 `security.require_permission("presale:manage")`；`scripts/ci_guard_ghost_tables.py` 将 `scripts/import_*.py`、`scripts/enrich_*.py` 纳入生产主数据写入证据，并识别 `INSERT OR REPLACE INTO`。
+- 验证：`python scripts/ci_guard_permission_coverage.py` 通过（3032 端点，NONE=125，权限覆盖率 34.8%，基线 NONE<=143/覆盖率>=34.4）；`python scripts/ci_guard_ghost_tables.py` 通过（当前 94，基线 98，仅提示可收紧已消除项）；`python scripts/ci_guard_ai_mock.py` 通过。
+- 额外验收：目标权限红测 3 passed；幽灵表守护 2 passed；`ruff check`、`py_compile`、`git diff --check` 针对本轮文件通过；`from app.main import app` 成功，路由加载失败 0 项，最终应用路由数 2992。
+
+## 2026-07-05 继续：PERM-22 旧系统直链权限补漏
+
+- 用户继续后，沿 `SYSTEM_IMPROVEMENT_PLAN` 的 `PERM-22` 前端路由/菜单权限守卫继续补漏：此前新中心页已有 `ModuleProtectedRoute` 守卫，但旧系统直链 `/debug/permissions`、`/customer-management`、`/supplier-management-data`、`/projects/:id/roles` 仍可绕过权限直接进入页面。
+- TDD：扩展 `frontend/src/routes/modules/__tests__/permissionProtectedRoutes.test.jsx`，先证明无权限用户能看到“权限调试页面”；再补候选菜单库 `allMenuGroups` 的权限字段守护，红灯落在 `/user-management` 缺 `permission` 元数据。
+- 代码面：`systemRoutes.jsx` 对旧直链补页面级守卫：权限调试复用账号权限中心 `USER_VIEW/ROLE_VIEW`，客户/供应商主数据分别用 `customer:read`、`supplier:read`，项目角色页面用后端同口径 `project_role:read`；`allMenuItems.js` 给系统/主数据候选菜单补 `permission/permissionAny/permissionLabel`。
+- 验证：`npm --prefix frontend test -- --run src/routes/modules/__tests__/permissionProtectedRoutes.test.jsx --silent` 通过（6 passed）；`npm exec eslint -- src/routes/modules/systemRoutes.jsx src/lib/allMenuItems.js src/routes/modules/__tests__/permissionProtectedRoutes.test.jsx`（cwd=`frontend`）通过；`npm --prefix frontend run build` 通过（仅保留既有动态/静态重复导入与大 chunk warning）。
+
+## 2026-07-05 继续：Python 3.9 销售路由 import 兼容
+
+- 用户要求继续下一个高价值任务后，优先处理上一批暴露出的全局验收 blocker：默认 `python` 实际是 3.9.6，销售聚合路由 import 会在 `X | None` 注解求值处崩溃，导致无法做真实 router 级验收。
+- TDD：新增 `tests/unit/test_sales_router_import_contract.py`，要求 `from app.api.v1.endpoints.sales import router` 成功，并确认 `/contracts/{contract_id}/amendments` 仍在销售路由中；红测先失败于 `app/models/service/enums.py:152` 的 `str | None`，继续暴露 `operation_log_service.py`、通知 webhook、scheduler metrics 和发票 legacy endpoint 参数注解的同类 Python 3.9 兼容问题。
+- 代码面：将 `validate_service_ticket_transition()` 返回注解改回 `Optional[str]`；为仍使用 PEP604 注解的 app 文件补 `from __future__ import annotations`，避免普通 import 时运行期求值；FastAPI/Pydantic 会解析 endpoint 参数和模型字段，不能仅靠 future，因此将发票 workflow/legacy `Body` 参数、角色导航参数、审批 legacy payload、AI job 请求、公司认证字段、多币种/排产 query、管理节奏 query、服务工单 escalation 模型等改为 `Optional[...]`；Webhook `_webhook_url()` 和工程师绩效 scope union 也改回 Python 3.9 可求值写法。
+- 验证：`python -m pytest -q tests/unit/test_sales_router_import_contract.py` 通过；直接执行 `python - <<'PY' ... from app.api.v1.endpoints.sales import router ...` 返回 `True` 和 409 条路由，确认合同变更路径可见；继续执行 `python - <<'PY' import app.main; print(len(app.main.app.routes)) PY` 成功，API 路由加载失败汇总 0 项，最终应用路由数 2992。
+
+## 2026-07-05 继续：第三批只读历史表外部归档删除
+
+- 用户继续要求清理没有用的表后，进一步处理 app 运行代码零引用的只读历史表：`legacy_approval_archives`、`tasks_deprecated`、`task_id_map`。这些表已完成主链切换，留在主库只会干扰表口径；历史数据转入外部归档库和整库备份。
+- TDD：先给 `tests/unit/test_unused_table_retirement.py` 补红测 `test_retire_unused_tables_archives_history_only_tables`，要求脚本归档并删除三张只读历史表；旧清单未覆盖，红测失败。
+- 代码面：将 `legacy_approval_archives`、`tasks_deprecated`、`task_id_map` 加入 `scripts/retire_unused_tables_20260705.py` 的退役表清单；同步更新 `migrations/20260705_z_drop_unused_residual_tables_sqlite.sql` 防回潮。
+- 真实库执行：
+  - dry-run：`.venv/bin/python scripts/retire_unused_tables_20260705.py data/app.db --archive-path /tmp/retired_unused_tables_history_dry_run_20260705.db`，命中 `legacy_approval_archives=125`、`tasks_deprecated=131`、`task_id_map=131`。
+  - 正式执行：`.venv/bin/python scripts/retire_unused_tables_20260705.py data/app.db --drop-tables`。
+  - 删除前整库备份：`data/app.before_unused_tables_drop_20260705_120303.db`；外部归档库：`data/retired_unused_tables_archive_20260705_120303.db`。
+  - 已删除表：`legacy_approval_archives`、`tasks_deprecated`、`task_id_map`；真实库业务表数从 570 降到 567。
+- 验证：
+  - 真实库中三张目标表查询为空，归档库 manifest/表行数分别为 125、131、131。
+  - 删除前备份与删除后库的 `PRAGMA foreign_key_check` 输出完全一致；本轮未新增 FK 脏数据。
+  - 删除后后端代码零引用表为 0；剩余 12 张无模型表均有 app 运行代码直接读写，不能继续按“无模型/无引用”粗删。
+
+## 2026-07-05 继续：第二批旧 RBAC 残留表删除
+
+- 用户要求继续清理表格后，重新扫描删表后的真实库：572 张业务表，17 张无 SQLAlchemy 模型表；真正低风险的新候选只剩旧 RBAC 残留 `role_exclusions`、`user_role_assignments`，以及只依赖后者的视图 `v_user_active_roles`。
+- 业务判断：当前权限主链仍是 `user_roles`、`role_api_permissions`、`permission_audits`，大量运行代码直接使用 `UserRole(user_roles)`；本轮不动主链。`role_exclusions` / `user_role_assignments` 无 app/frontend 运行引用，仅旧脚本和旧视图痕迹。
+- TDD：先给 `tests/unit/test_unused_table_retirement.py` 补红测 `test_retire_unused_tables_drops_dependent_views_before_tables`，要求归档 `v_user_active_roles` 定义并先删视图再删表；旧脚本无 `dropped_views` 报告，红测失败。
+- 代码面：扩展 `scripts/retire_unused_tables_20260705.py`，新增 `RETIRABLE_VIEWS=("v_user_active_roles",)`、视图 manifest 归档、先 drop view 后 drop table；将 `role_exclusions`、`user_role_assignments` 加入退役表清单；同步更新 `migrations/20260705_z_drop_unused_residual_tables_sqlite.sql`。
+- 真实库执行：
+  - dry-run：`.venv/bin/python scripts/retire_unused_tables_20260705.py data/app.db --archive-path /tmp/retired_unused_tables_rbac_dry_run_20260705.db`，命中 `role_exclusions=6`、`user_role_assignments=6`、`v_user_active_roles`。
+  - 正式执行：`.venv/bin/python scripts/retire_unused_tables_20260705.py data/app.db --drop-tables`。
+  - 删除前整库备份：`data/app.before_unused_tables_drop_20260705_114553.db`；外部归档库：`data/retired_unused_tables_archive_20260705_114553.db`。
+  - 已删除表：`role_exclusions`、`user_role_assignments`；已删除视图：`v_user_active_roles`；真实库业务表数从 572 降到 570。
+- 验证：
+  - 真实库中 `role_exclusions`、`user_role_assignments`、`v_user_active_roles` 查询为空。
+  - 归档库 manifest 确认两张表各 6 行，并保存 `v_user_active_roles` 的 source SQL。
+  - 删除前备份与删除后库的 `PRAGMA foreign_key_check` 输出完全一致；本轮未新增 FK 脏数据。
+  - 删除后无模型表 15 张；剩余多为仍被运行代码直接读写的裸 SQL 表或只读历史表，不适合继续按“无模型”粗暴删除。
+
+## 2026-07-05 继续：第一批未用/生成残留表删除
+
+- 用户确认“好”后，按“备份 -> 外部归档 -> drop -> 验证”执行第一批低风险表清理；目标是真正删掉无用表，不再只停在台账。
+- 真实库：`/Users/flw/non-standard-automation-pm/data/app.db`；删除前整库备份：`data/app.before_unused_tables_drop_20260705_113611.db`；外部归档库：`data/retired_unused_tables_archive_20260705_113611.db`。
+- 新增归档/删表脚本：`scripts/retire_unused_tables_20260705.py`，默认只归档，只有显式 `--drop-tables` 才删表；新增防回潮迁移：`migrations/20260705_z_drop_unused_residual_tables_sqlite.sql`。
+- 已删除 18 张表：`lead_requirement_facility_v2`、`lead_requirement_technical_v2`、`lead_requirement_basic_v2`、`funding_records`、`equity_structures`、`funding_usages`、`funding_rounds`、`investors`、`department_default_roles`、`department_role_admins`、`role_template_permissions`、`role_audits`、`currency_rates`、`currency_history`、`ecn_records`、`shortage_alerts`、`mat_shortage_alert`、`quotation_templates`。
+- 代码收口：
+  - 删除空的 `LeadRequirement*V2` 模型文件和销售模型导出，保留当前主链 `lead_requirement_details`。
+  - 删除未启用的 `QuotationTemplate` ORM/Schema/tenant-scope 配置，保留正式报价模板 `quote_templates`。
+  - `app/utils/scheduler_config/shortage.py` 将紧急缺料采购任务依赖从旧 `mat_shortage_alert` 改为真实使用的 `alert_records`。
+  - `scripts/ghost_tables_baseline.json` 移除已删除模型对应 ghost 项。
+- 验证：
+  - TDD 红测先失败于缺少归档脚本和退役模型仍注册；改动后 `.venv/bin/python -m pytest tests/unit/test_unused_table_retirement.py -q` 通过。
+  - dry-run：`.venv/bin/python scripts/retire_unused_tables_20260705.py data/app.db --archive-path /tmp/retired_unused_tables_dry_run_20260705.db` 通过，18 张候选表均可归档，无保留表外键阻断。
+  - 正式执行：`.venv/bin/python scripts/retire_unused_tables_20260705.py data/app.db --drop-tables` 成功，归档行数和预期一致。
+  - 删除后真实库目标表查询为空，业务表数从 590 降至 572；`retired_unused_tables_archive_20260705_113611.db` 的 manifest 保留每张表 row_count。
+  - 删除前备份与删除后库的 `PRAGMA foreign_key_check` 输出完全一致；现存 FK 脏数据是本轮前已有的 `work_order -> worker`、`stock_count_detail -> stock_count_task`、`permission_audits -> users`、`presale_expenses -> projects`，本轮未新增。
+  - `.venv/bin/python -m pytest tests/unit/test_unused_table_retirement.py tests/unit/test_shortage_alert_task_backfill.py -q` 通过（11 passed）。
+  - `git diff --check`、`.venv/bin/ruff check ...`、`.venv/bin/python -m py_compile ...` 针对本轮文件通过。
+  - 精确扫描 `app/` 内退役表的 `__tablename__` 与 `FROM/JOIN/INSERT/UPDATE/DELETE` 运行时 SQL，无命中；`Base.metadata.tables` 中退役模型表为空。
+- 边界：`scripts/ci_guard_ghost_tables.py` 当前仍失败于工作区已有的 `CompanyProfile(company_profile)`、`Competitor(competitors)` 新 ghost 模型，和本轮删除表无关；本轮未处理该未落地主链。
+
+## 2026-07-05 继续：流程引擎/审批引擎首批整合
+
+- 用户要求“整合一下”后，先做小范围可验证收口：把流程相关对象分成审批引擎、业务状态机、领域 workflow 门面、状态变更 hook、deprecated 旧审批 workflow。
+- 新增台账：`docs/database/process-engine-survival-ledger-20260705.md`，列出 `approval_*` 主表、`state_transition_logs`、销售漏斗日志、售前 AI workflow 日志、ECN/工时/变更请求领域审批表的保留/待合并/只读历史建议。
+- 运行代码整合：
+  - 发票审批模板编码统一到真实库主线 `TPL_INVOICE`，改动 `app/services/approval_workflow_service.py`、`app/services/approval_engine/adapters/invoice.py`、`app/utils/init_approval_data.py`。
+  - `app/api/v1/endpoints/sales/invoices/__init__.py` 移除全局 `approvals_router` 二次挂载；通用审批只走 `/approvals`，发票域保留自己的新版 `workflow_router`。
+  - `tests/audit_p0/test_p0_02_approval_template_no_seed.py` 的发票期望种子同步为 `TPL_INVOICE`。
+- 守护测试：
+  - `tests/unit/test_approval_engine_consolidation_guard.py` 新增三条：发票路由不得再挂全局 approvals、发票运行/种子代码不得再用 `SALES_INVOICE`、app 运行代码不得 import deprecated `approval_engine.workflow_engine`。
+  - 红测先失败于发票路由双挂和 `SALES_INVOICE` 旧编码；改动后守护转绿。
+- 测试夹具：
+  - `tests/conftest.py` 不再强制 import 已删除的 `TaskApprovalWorkflow`；该旧任务审批模型缺失时按 `None` 兼容，`mock_important_task` 不再硬写废弃 `task_approval_workflows`。
+- 边界：
+  - `app/services/approval_engine/workflow_engine.py` 仍保留为 deprecated 测试兼容层，运行主线不引用；删除前需要迁掉大量旧测试。
+  - `ecn_approvals` / `ecn_approval_matrix` 仍被 ECN 服务、通知、看板消费，不能直接删；应作为下一批“领域审批表迁入统一审批引擎”的专题。
+
+## 2026-07-05 继续：真实库旧审批表删除与统一引擎收口
+
+- 用户确认“删除了”后，已对真实库 `/Users/flw/non-standard-automation-pm/data/app.db` 执行旧审批表归档删除；删除前备份：`data/app.before_approval_legacy_drop_20260705_105449.db`。
+- 归档结果：`legacy_approval_archives` 125 行；旧表已删除 11 张：`approval_history`、`approval_records`、`approval_workflow_steps`、`approval_workflows`、`contract_approvals`、`invoice_approvals`、`quotation_approvals`、`quote_approvals`、`quote_cost_approvals`、`role_assignment_approvals`、`task_approval_workflows`。
+- 修复真实库 `projects.approval_record_id` 的残留外键：已从旧 `approval_records.id` 改为统一 `approval_instances.id`；重建前备份：`data/app.before_projects_fk_rebuild_20260705_110742.db`；`projects` 行数重建前后均为 105，`approval_record_id` 非空 0。
+- 代码收口：删除旧销售/任务/报价/合同/发票/售前报价专用审批 ORM 表模型和旧 `sales/legacy_approval.py` 兼容残留；任务重要审批、合同审批兼容门面、合同增强服务、报价状态历史、售前 AI 报价审批路径均不再写旧专用审批表。
+- 新增最终清理迁移：`migrations/20260705_999_drop_retired_approval_tables_sqlite.sql`，防止旧迁移/兼容路径后续把废弃审批表留在库里。
+- 新增守护：`tests/unit/test_approval_engine_consolidation_guard.py` 现在校验旧审批表不再注册进 `Base.metadata.tables`。
+- 验证：
+  - 真实库旧审批表查询为空；统一审批核心表计数：`legacy_approval_archives=125`、`approval_templates=10`、`approval_instances=9`、`approval_tasks=19`、`approval_action_logs=36`。
+  - ORM metadata：11 张旧审批表为空，`legacy_approval_*` metadata 也为空。
+  - `projects` 外键清单确认 `approval_record_id -> approval_instances.id`。
+  - `.venv/bin/python -m py_compile ...` 通过。
+  - `.venv/bin/python -m pytest tests/unit/test_approval_engine_consolidation_guard.py -q` 通过（5 passed）。
+  - `.venv/bin/python -m pytest tests/unit/test_approval_workflow_service.py -q` 通过（11 passed）。
+  - `.venv/bin/python -m pytest tests/unit/test_approval_adapter_quote.py tests/unit/test_quote_adapter.py tests/unit/test_approval_adapter_invoice.py tests/unit/test_approval_adapter_invoice_batch19.py -q` 通过；旧 `quote_approvals`/`invoice_approvals` 专用同步用例按废弃路径跳过。
+- 边界：`PRAGMA foreign_key_check` 仍报告既有非审批历史坏账：`work_order -> worker`、`stock_count_detail -> stock_count_task`、`permission_audits -> users`、`presale_expenses -> projects`；本轮未处理这些非审批数据完整性问题。
+
+## 2026-07-05 复核：数据库表存废台账第一版
+
+- 只读检查对象：`/Users/flw/non-standard-automation-pm/data/app.db` 当前 600 张业务表；69 张空表，243 张非空 1-3 行小表，其中 232 张刚好 3 行，未发现字段结构完全一致的复制表。
+- 产出：`docs/database/table-survival-ledger-20260705.md`。
+- 结论：当前主要不是“复制表”，而是同业务多套事实源/新旧双轨/生成残留并存。第一批已列任务表、销售目标、正式报价 vs 售前 AI 报价、售前方案模板、资源冲突、缺料预警、线索需求 V1/V2、审批表、权限数据范围残留、融资/币种 demo 残留的存废建议。
+- 边界：本轮未做任何删表、迁移或数据修改；台账里的“废弃候选/合并”必须另起迁移任务，先备份、做引用扫描、外键/视图/触发器扫描和回归。
+
+## 2026-07-05 继续：审批双轨收口到统一审批引擎
+
+- 修复目标：统一审批引擎，包括销售域；同一业务多套审批表、新旧双轨和原型残留不能继续补逻辑。
+- 主事实源：保留 `approval_templates`、`approval_instances`、`approval_tasks`、`approval_action_logs`；旧审批表进入只读历史/归档删除路线。
+- 代码变更：
+  - `app/api/v1/endpoints/sales/__init__.py` 移除旧销售审批配置路由 `/sales/approval-workflows`，并删除旧原型路由文件 `app/api/v1/endpoints/sales/workflows.py`；审批办理继续走统一 `/approvals`。
+  - `app/services/approval_engine/adapters/quote.py`、`invoice.py`、`contract.py` 删除旧专用审批表回写方法，不再同步 `quote_approvals`、`invoice_approvals`、`contract_approvals`。
+  - `app/services/approval_workflow_service.py` 保留旧调用方法名，但内部改为统一审批门面：`start_approval()` 走 `ApprovalEngineService.submit()`，审批/驳回/撤回查 `approval_instances/approval_tasks`，不再读写旧 `approval_records`。
+  - `app/services/sales_reminder/sales_flow_reminders.py` 的审批超时提醒改查统一 `approval_tasks`，不再读旧 `approval_workflow_steps`。
+  - 新增 `scripts/consolidate_legacy_approval_tables.py`，把 11 张旧审批表归档进 `legacy_approval_archives`，默认只归档，只有显式 `--drop-legacy-tables` 才删源表。
+  - 新增 `tests/unit/test_approval_engine_consolidation_guard.py`，防止旧销售工作流路由和旧适配器回写方法回潮。
+  - `tests/unit/test_approval_workflow_service.py` 对齐兼容门面新的统一审批实现，不再 patch 旧审批表枚举/模型。
+  - `tests/unit/test_sales_operation_audit_perm07.py` 删除旧 `/sales/approval-workflows` 配置路由审计用例；该路由已下线，不再作为 PERM-07 应保留能力。
+  - `app/api/v1/endpoints/sales/quote_costs.py` 顺手修复 PERM-07 匹配建议应用入口漏初始化 `updated_items` 的真实 bug。
+- 临时库演练：复制 `data/app.db` 到临时目录后执行 `consolidate_legacy_approval_tables(conn, drop_legacy_tables=True)`，结果 `archived_rows=125`，归档表行数 125，删除旧表：`approval_history`、`approval_records`、`approval_workflow_steps`、`approval_workflows`、`contract_approvals`、`invoice_approvals`、`quotation_approvals`、`quote_approvals`、`quote_cost_approvals`、`role_assignment_approvals`、`task_approval_workflows`；临时库剩余旧审批表 0。
+- 验证：
+  - `.venv/bin/python -m pytest tests/unit/test_approval_engine_consolidation_guard.py -q` 通过（3 个用例）。
+  - `.venv/bin/python -m pytest tests/unit/test_approval_adapter_quote.py tests/unit/test_quote_adapter.py tests/unit/test_approval_adapter_invoice.py tests/unit/test_approval_adapter_invoice_batch19.py -q` 通过；旧专用审批表同步测试已按废弃路径跳过。
+  - `.venv/bin/python -m pytest tests/unit/test_sales_operation_audit_perm07.py -q` 通过。
+  - 旧 service/提醒邻域回归 `.venv/bin/python -m pytest tests/unit/test_approval_workflow_service.py tests/unit/test_approval_workflow_service_coverage.py app/tests/services/approval_workflow/test_approval_workflow_service.py tests/unit/test_batch_services_1.py::test_approval_workflow_start_approval_basic tests/unit/test_batch_services_1.py::test_approval_workflow_select_workflow_by_routing tests/unit/test_batch_services_1.py::test_approval_workflow_approve_step tests/unit/test_batch_services_1.py::test_approval_workflow_reject_step tests/unit/test_batch_services_1.py::test_approval_workflow_withdraw_approval tests/unit/test_sales_flow_reminders.py tests/unit/test_services_p3_coverage.py::TestSalesFlowReminders -q` 通过（3 skipped 为既有复杂 DB 查询跳过）。
+  - 组合回归 `.venv/bin/python -m pytest tests/unit/test_approval_engine_consolidation_guard.py tests/unit/test_approval_adapter_quote.py tests/unit/test_quote_adapter.py tests/unit/test_approval_adapter_invoice.py tests/unit/test_approval_adapter_invoice_batch19.py tests/unit/test_sales_operation_audit_perm07.py tests/unit/test_approval_workflow_service.py tests/unit/test_approval_workflow_service_coverage.py app/tests/services/approval_workflow/test_approval_workflow_service.py tests/unit/test_batch_services_1.py::test_approval_workflow_start_approval_basic tests/unit/test_batch_services_1.py::test_approval_workflow_select_workflow_by_routing tests/unit/test_batch_services_1.py::test_approval_workflow_approve_step tests/unit/test_batch_services_1.py::test_approval_workflow_reject_step tests/unit/test_batch_services_1.py::test_approval_workflow_withdraw_approval tests/unit/test_sales_flow_reminders.py tests/unit/test_services_p3_coverage.py::TestSalesFlowReminders -q` 通过；跳过项为旧专用审批表同步测试与既有复杂 DB 查询跳过。
+  - `.venv/bin/ruff check ...` 和 `.venv/bin/python -m py_compile ...` 针对本轮代码/测试文件通过。
+- 边界：真实 `data/app.db` 未执行归档/删表；执行真实库清理前必须先备份并显式确认。
+
+## 2026-07-05 复核：已修待验/基本完成项归一关闭
+
+- 复核范围：`ADMIN-07`、`ADMIN-17`、`ADMIN-19`、`TEN-03`、`TEN-06`。
+- 验证：
+  - `.venv/bin/python -m pytest -q tests/unit/test_admin_office_real.py tests/unit/test_file_upload_service.py tests/unit/test_documents_upload_content_validation_admin17.py tests/unit/test_document_delete_file_lifecycle_admin19.py tests/unit/test_project_document_orphan_cleanup_admin19.py tests/unit/test_tenant_fail_closed.py tests/unit/test_ten03_core_tables_tenant_scope.py tests/unit/test_tenant_query_scope_ten02.py tests/unit/test_ten03_batch5_tenant_scope.py` 通过（94 个用例）。
+  - `import app.main` 路由清单确认 `/api/v1/admin/*`、`/api/v1/documents/*`、`/api/v1/tenants/*` 已注册，路由加载失败汇总 0 项。
+  - `.venv/bin/python -m ruff check ...` 与 `.venv/bin/python -m py_compile ...` 针对相关实现/测试文件通过。
+- 台账：`docs/root-docs-archive/20260704/FUNCTIONAL_AUDIT_TRACKER.md` 已将上述 5 项统一改为 `已验证`。
+- 边界：`ADMIN-19` 的真实 orphan 文件清理仍未执行 `--delete`，只是功能闭环和 dry-run 扫描能力已验证；清理真实上传目录需要单独确认。
+
+## 2026-07-05 继续：提升方案 P2 小项——PERM-07 业务操作审计日志首批/二批/三批/四批/五批/六批/七批/八批/九批/十批/十一批/十二批/十三批/十四批/十五批/十六批/十七批/十八批/十九批/二十批/二十一批/二十二批/二十三批/二十四批/二十五批/二十六批/二十七批/二十八批/二十九批/三十批/三十一批/三十二批/三十三批/三十四批/三十五批/三十六批/三十七批/三十八批/三十九批/四十批/四十一批/四十二批/四十三批/四十四批/四十五批/四十六批/四十七批/四十八批/四十九批/五十批/五十一批/五十二批/五十三批/五十四批/五十五批/五十六批/五十七批/五十八批/五十九批/六十批/六十一批/六十二批/六十三批/六十四批/六十五批/六十六批/六十七批/六十八批/六十九批/七十批/七十一批/七十二批/七十三批/七十四批/七十五批/七十六批/七十七批/七十八批接线
+
+- 修复项：`PERM-07` 销售业务审计切口：权限/角色/用户已有 `permission_audits`，销售业务侧虽已有 `SalesOperationLog` 模型/服务/查询端点文件，但销售聚合路由未挂 `operation_logs`，报价明细 create/update/delete 写操作也完全不落 `sales_operation_logs`；回款登记/更新/删除/核销、发票创建/更新/删除/开票/作废、合同基础创建/更新/删除、合同从报价生成/签署/归档、合同收款计划创建、客户创建/更新/删除、客户标签新增/批量新增/删除、销售活动 quick 记录/AI 纪要确认/纪要回填商机、客户联系人 CRUD/设主联系人/主联系人自动降级、商机创建/更新/删除、商机阶段/赢单/输单、商机 POST 高频/兼容工作流、商机评分/阶段门、线索创建/更新/删除、线索需求详情创建/更新、线索/商机需求冻结、线索/商机未决事项创建/更新/关闭、线索/商机 AI 澄清创建/答复更新、线索转商机、线索跟进、线索标无效、线索批量状态更新、线索批量转商机、线索批量分配负责人、商机批量操作路由注册、商机批量阶段更新、商机批量负责人更新、商机批量关闭、销售目标创建/更新、销售团队创建/更新/删除、销售团队成员新增/更新/移除/批量新增、销售审批流程配置创建/更新、报价模板创建/更新/删除/版本创建/发布、销售数据审核提交/驳回/撤销、报价交付日期更新、报价主表创建、报价更新/删除、报价版本创建、报价通用状态变更、报价直接审批、报价正式审批提交/通过/驳回/批量通过/批量驳回/撤回也只改业务表，不留业务操作日志。
+- TDD：
+  - 红测 1：`SalesOperationLogService.log_operation()` 应兼容当前 `User.department` 字符串字段；旧代码按 `operator.department.name` 读取会 AttributeError。
+  - 红测 2：销售聚合路由应包含 `/operation-logs/{entity_type}/{entity_id}` 与 `/operation-logs/` 查询入口；旧 `sales/__init__.py` 未 include。
+  - 红测 3：报价明细新增/更新/删除应在同一事务内写 3 条 `QUOTE_VERSION` 操作日志；旧写入口只改业务表和重算报价版本金额，日志为空。
+  - 红测 4：回款登记/更新/删除应按同一发票写 `INVOICE` 操作日志，分别为 `CREATE/UPDATE/DELETE`，并保留 paid_amount/payment_status 前后值。
+  - 红测 5：发票核销应写 `STATUS_CHANGE` 操作日志，记录 `PENDING → PAID` 及核销后的已收款金额。
+  - 红测 6：发票创建/更新/删除应按同一发票写 `INVOICE` 操作日志，保留金额、购买方、草稿删除前状态。
+  - 红测 7：发票审批后开票、作废应写 `STATUS_CHANGE` 操作日志；已开票作废生成的红冲发票也应有 `CREATE` 日志。
+  - 红测 8：合同创建/更新/删除应按同一合同写 `CONTRACT` 操作日志，保留合同名称、金额、付款条款和草稿删除前状态。
+  - 红测 9：从报价创建合同应写 `CONTRACT` 的 `CREATE` 操作日志，保留报价版本、金额和付款条款。
+  - 红测 10：合同签署、归档应写 `CONTRACT` 的 `STATUS_CHANGE` 操作日志，记录 `APPROVED → SIGNED → COMPLETED` 和签署日期。
+  - 红测 11：客户创建/更新/删除应按同一客户写 `CUSTOMER` 操作日志，保留客户名称、状态、付款条件、年成交额和删除前状态。
+  - 红测 12：商机创建/更新/删除应按同一商机写 `OPPORTUNITY` 操作日志，保留商机名称、阶段、概率、预算范围和删除前阶段。
+  - 红测 13：商机阶段更新、赢单、输单应按对应商机写 `OPPORTUNITY` 的 `STATUS_CHANGE` 操作日志，记录阶段前后值。
+  - 红测 14：商机 POST `advance/win/lose/loss` 高频/兼容入口应按对应商机写 `OPPORTUNITY` 的 `STATUS_CHANGE` 操作日志，记录阶段前后值和输单原因。
+  - 红测 15：商机评分应写 `OPPORTUNITY` 的 `UPDATE` 操作日志；阶段门提交应写 `OPPORTUNITY` 的 `STATUS_CHANGE` 操作日志，保留评分/风险等级和 gate_status 前后值。
+  - 红测 16：线索创建/更新/删除应按同一线索写 `LEAD` 操作日志，保留客户名称、状态、电话、需求摘要和删除前状态。
+  - 红测 17：报价主表创建应按同一报价写 `QUOTE` 的 `CREATE` 操作日志，保留报价编号、客户/商机 ID、状态和当前版本金额快照；旧 `create_quote()` 只建报价和版本，日志为空。
+  - 红测 18：线索转商机应写线索 `LEAD/CONVERT` 日志和新商机 `OPPORTUNITY/CREATE` 日志，保留线索 `NEW → CONVERTED` 和新商机 lead/customer/stage 快照；旧入口只建商机和改线索状态，日志为空。
+  - 红测 19：报价版本创建应写新版本 `QUOTE_VERSION/CREATE` 日志；若设为当前版本，还应写报价主表 `QUOTE/UPDATE` 日志，保留 `current_version_id` 前后值。
+  - 红测 20：报价通用状态变更应写 `QUOTE/STATUS_CHANGE` 日志，保留 `DRAFT → PENDING_APPROVAL` 和变更原因；旧入口只调用 `StatusUpdateService` 改状态。
+  - 红测 21：报价直接审批通过应写报价 `QUOTE/APPROVE` 与当前版本 `QUOTE_VERSION/APPROVE` 日志，保留报价状态和版本审批人/审批时间前后值。
+  - 红测 22：线索跟进应写 `LEAD/COMMENT` 操作日志，保留 `next_action_at` 前后值和跟进内容；旧入口只新增 follow-up 记录，不留线索操作日志。
+  - 红测 23：报价正式提交审批服务链应写 `QUOTE/SUBMIT` 操作日志，保留 `DRAFT → PENDING_APPROVAL` 与当前版本 ID；旧 `QuoteApprovalService.submit_quotes_for_approval()` 只调用审批引擎，不留报价操作日志。
+  - 红测 24：报价正式审批通过应写 `QUOTE/APPROVE` 操作日志，保留 `PENDING_APPROVAL → APPROVED` 和审批意见。
+  - 红测 25：报价正式审批驳回应写 `QUOTE/REJECT` 操作日志，保留 `PENDING_APPROVAL → REJECTED` 和驳回意见。
+  - 红测 26：报价基础信息更新应写 `QUOTE/UPDATE` 操作日志，保留 `valid_until` 前后值；旧 `quote_quotes_crud.update_quote()` 只更新报价主表。
+  - 红测 27：草稿报价删除应写 `QUOTE/DELETE` 操作日志，保留删除前报价编号、状态和当前版本 ID；旧 `quote_quotes_crud.delete_quote()` 直接 `delete_obj()` 提交，日志为空。
+  - 红测 28：报价正式审批批量通过应逐条写 `QUOTE/APPROVE` 操作日志，保留每张报价 `PENDING_APPROVAL → APPROVED` 和批量审批意见。
+  - 红测 29：报价正式审批批量驳回应逐条写 `QUOTE/REJECT` 操作日志，保留每张报价 `PENDING_APPROVAL → REJECTED` 和批量驳回意见。
+  - 红测 30：报价正式审批撤回应写 `QUOTE/STATUS_CHANGE` 操作日志，保留 `PENDING_APPROVAL → DRAFT` 和撤回原因；旧 `withdraw_approval()` 只调用审批引擎，不留销售业务日志。
+  - 红测 31：线索批量状态更新入口应注册到销售线索路由聚合；旧 `leads/__init__.py` 未 include `batch.router`，`/leads/batch/status` 不在活动路由中。
+  - 红测 32：线索标无效应写 `LEAD/STATUS_CHANGE` 操作日志，保留 `NEW → INVALID` 和无效原因；旧入口因 `LeadStatusEnum.INVALID` 缺失直接 AttributeError，且不留日志。
+  - 红测 33：线索批量状态更新应为每条成功线索写 `LEAD/STATUS_CHANGE` 操作日志，保留 `NEW → INVALID` 和批量原因；旧入口只改状态和 follow-up，日志为空。
+  - 红测 34：线索批量转商机应为每条成功线索写 `LEAD/CONVERT`，并为每个新商机写 `OPPORTUNITY/CREATE`；旧入口只建商机和改线索状态，日志为空。
+  - 红测 35：线索批量分配负责人应为每条成功线索写 `LEAD/ASSIGN`，保留 `owner_id` 前后值；旧入口只改负责人和 follow-up，日志为空。
+  - 红测 36：商机批量操作路由应注册 `/opportunities/batch/stage|owner|close`；旧 `sales/__init__.py` 未 include `opportunity_batch.router`。
+  - 红测 37：商机批量阶段更新应为每条成功商机写 `OPPORTUNITY/STATUS_CHANGE`，保留 `DISCOVERY → QUALIFICATION` 和批量原因；旧入口只改阶段/updated_by/updated_at，日志为空。
+  - 红测 38：商机批量负责人更新应为每条成功商机写 `OPPORTUNITY/ASSIGN`，保留 `owner_id` 前后值；旧入口只改负责人/updated_by/updated_at，日志为空。
+  - 红测 39：商机批量关闭应为每条成功商机写 `OPPORTUNITY/STATUS_CHANGE`，保留 `NEGOTIATION → WON` 和关闭原因；旧入口只改终态/closed_at/close_reason，日志为空。
+  - 红测 40：客户联系人创建/更新/删除应按同一联系人写 `CONTACT` 操作日志，保留客户 ID、姓名、职位、手机、主联系人标记等快照；旧入口只改 `contacts` 表，日志为空。
+  - 红测 41：设置主要联系人应写 `CONTACT/STATUS_CHANGE` 操作日志，保留 `is_primary: False → True`；旧入口只改布尔值，日志为空。
+  - 红测 42：设置主要联系人时，原主要联系人被自动降级也应写 `CONTACT/STATUS_CHANGE` 操作日志；旧入口只记录新主联系人，旧主联系人静默变更。
+  - 红测 43：创建新主要联系人时，原主要联系人被自动降级也应写 `CONTACT/STATUS_CHANGE` 操作日志；旧入口使用批量 update，旧主联系人无留痕。
+  - 红测 44：更新联系人为主要联系人时，原主要联系人被自动降级也应写 `CONTACT/STATUS_CHANGE` 操作日志；旧入口使用批量 update，旧主联系人无留痕。
+  - 补测 45：客户标签单个新增应写 `CUSTOMER/UPDATE` 操作日志，保留 `tags: [] → ["重点客户"]`；当前 worktree 已有接线，作为客户标签切口基线回归。
+  - 红测 46：客户标签批量新增应写 `CUSTOMER/UPDATE` 操作日志，保留既有标签到新增多标签后的快照；旧入口只批量插入 `customer_tags`，日志为空。
+  - 红测 47：按 `tag_id` 删除客户标签应写 `CUSTOMER/UPDATE` 操作日志，保留删除前后 tags 快照；旧入口走 `delete_obj()` 提前提交，日志为空。
+  - 红测 48：按 `tag_name` 删除客户标签应写 `CUSTOMER/UPDATE` 操作日志，保留删除前后 tags 快照；旧入口走 `delete_obj()` 提前提交，日志为空。
+  - 红测 49：销售快速活动同时关联客户和商机时，应分别写 `CUSTOMER/COMMENT` 与 `OPPORTUNITY/COMMENT` 操作日志，保留活动 ID、活动编号、类型、主题和跟进任务；旧入口只插入 `customer_communications`，日志为空。
+  - 补测 50：销售快速活动只关联线索时，应写 `LEAD/COMMENT` 操作日志，保留活动 ID、类型和跟进任务；该分支复用同一 quick activity 审计 helper。
+  - 红测 51：AI 会议纪要确认落库并关联客户/商机时，应分别写 `CUSTOMER/COMMENT` 与 `OPPORTUNITY/COMMENT` 操作日志，保留 communication_id/communication_no、会议主题和后续任务；回填商机需求成熟度/验收依据/预算时，还应写 `OPPORTUNITY/UPDATE` 并保留 requirement_maturity、acceptance_basis、budget_range 前后值；旧入口只插入 `customer_communications` 并 raw SQL 回填商机，日志为空。
+  - 红测 52：线索需求详情创建/更新应写 `LEAD/UPDATE` 操作日志，保留 `requirement_detail` 前后快照；旧入口只 `save_obj()` 保存详情，不留业务操作日志，且节拍秒数快照未统一成两位字符串。
+  - 红测 53：线索/商机需求冻结应写 `LEAD/STATUS_CHANGE` 与 `OPPORTUNITY/STATUS_CHANGE`，保留 `requirement_detail` 冻结前后值和 `requirement_freeze` 快照；旧 schema 仍要求 `freeze_version` 而真实前端/模型使用 `version_number`，且创建冻结不写销售操作日志。
+  - 红测 54：线索/商机未决事项创建、商机未决事项更新和关闭应写 `LEAD/UPDATE`、`OPPORTUNITY/UPDATE` 与 `OPPORTUNITY/STATUS_CHANGE`，保留 `open_item` 前后快照；旧入口还会因线索/商机同日同 ID 生成相同 `item_code` 而唯一键冲突。
+  - 红测 55：线索/商机 AI 澄清创建和答案更新应写来源实体 `UPDATE` 操作日志，保留 `ai_clarification` 问题/答案快照；旧入口创建请求 schema 没有 `answers` 字段却直接读取，修复后又失败于日志不存在。
+  - 红测 56：报价交付日期更新应写 `QUOTE/UPDATE` 操作日志，保留 `delivery_date` 前后值；旧 `quote_delivery.py` 只更新字段并提交，不留销售操作日志。
+  - 红测 57：合同收款计划创建应写 `CONTRACT/UPDATE` 操作日志，保留 `payment_plans` 从空到分期计划的前后快照；旧入口只创建 `ProjectPaymentPlan` 并提交。
+  - 红测 58：销售目标创建/更新应写 `TARGET/CREATE` 与 `TARGET/UPDATE` 操作日志，保留 target_scope、target_type、period_value、target_value、status 等快照；旧入口只 `save_obj/db.commit`，日志为空。
+  - 红测 59：销售团队创建/更新/软删除应写 `TEAM/CREATE`、`TEAM/UPDATE`、`TEAM/DELETE` 操作日志，保留 team_code、team_name、team_type、sort_order、is_active 等前后快照；旧入口只 `save_obj/db.commit`，日志为空。
+  - 红测 60：销售团队成员新增、更新、移除应写同一团队 `TEAM/UPDATE` 操作日志，保留 `team_member` 前后快照；旧入口只改 `sales_team_members` 并提交，日志为空。
+  - 红测 61：销售团队成员批量新增应写同一团队 `TEAM/UPDATE` 汇总日志，保留批量前后的 `team_members` 列表；旧入口只批量插入成员并提交，日志为空。
+  - 红测 62：销售审批流程配置创建和更新应写 `APPROVAL_WORKFLOW/CREATE` 与 `APPROVAL_WORKFLOW/UPDATE` 操作日志，保留 workflow 基础字段和审批步骤前后快照；旧 `sales/workflows.py` 只改配置表，不留业务操作日志。
+  - 红测 63：报价模板创建/更新/删除、模板版本创建和模板发布应写 `QUOTE_TEMPLATE` 与 `QUOTE_TEMPLATE_VERSION` 操作日志，保留模板基础字段、当前版本、版本结构和定价规则快照；旧 `sales/quote_templates.py` 只改模板/版本表，不留销售业务操作日志。
+  - 红测 64：销售数据审核提交、驳回、撤销应按来源业务实体写 `SUBMIT/REJECT/STATUS_CHANGE` 操作日志，保留审核请求、原值、新值、变更字段和审核意见；旧 `sales/data_audit.py` 只写 `sales_data_audit_requests`，且 `SalesDataAuditService` 仍把字符串 `User.department` 当对象读取 `.name`。
+  - 红测 65：合同模板创建/更新、版本创建和版本发布应写 `CONTRACT_TEMPLATE` 与 `CONTRACT_TEMPLATE_VERSION` 操作日志，保留模板基础字段、当前版本、合同条款结构、条款库、附件、审批流和发布人快照；旧 `contract_templates.py` 还会在创建时读取不存在的 `template_in.owner_id` 并 AttributeError。
+  - 红测 66：CPQ 规则集创建/更新应写 `CPQ_RULE_SET/CREATE` 与 `CPQ_RULE_SET/UPDATE` 操作日志，保留规则编码、基准价、配置项、价格矩阵、审批阈值、可见范围和负责角色前后快照；旧 `cpq_rules.py` 还会在创建时读取不存在的 `rule_set_in.status` 并 AttributeError。
+  - 红测 67：新版结构化报价模板创建/更新、版本创建和版本发布应写 `QUOTE_TEMPLATE` 与 `QUOTE_TEMPLATE_VERSION` 操作日志，保留模板编码、当前版本、结构、定价规则、配置 schema、折扣规则和发布人快照；旧 `sales/templates/quote_templates.py` 还会在创建时读取不存在的 `template_in.owner_id` 并 AttributeError。
+  - 红测 68：报价成本模板创建、更新、删除应写 `QUOTE_COST_TEMPLATE/CREATE/UPDATE/DELETE` 操作日志，保留模板编码、模板类型、成本结构、总成本、启用状态等快照；旧 `sales/cost_templates.py` 只改 `quote_cost_templates`，日志为空。
+  - 红测 69：采购物料成本创建、更新、删除应写 `PURCHASE_MATERIAL_COST/CREATE/UPDATE/DELETE` 操作日志，保留物料编码、物料名称、单价、供应商、采购日期、匹配优先级等快照；旧 `sales/purchase_material_costs.py` 只改 `purchase_material_costs`，日志为空。
+  - 红测 70：报价成本明细更新入口应写 `QUOTE_VERSION/UPDATE` 操作日志，保留明细项成本、成本分类、成本来源、数量、单价、备注前后快照；旧 `sales/quote_costs.py` 直接改 `QuoteItem` 并提交，日志为空。
+  - 红测 71：报价成本重算入口应写 `QUOTE_VERSION/UPDATE` 操作日志，保留 `cost_total/total_price/gross_margin` 前后快照；旧 `sales/quote_costs.py` 重算版本汇总后直接提交，日志为空，且金额乘法中间值可能以 4 位小数进入审计快照。
+  - 红测 72：报价成本匹配建议应用入口应写 `QUOTE_VERSION/UPDATE` 操作日志，保留版本汇总和被批量更新的明细项快照；旧 `sales/quote_costs.py` 批量更新明细、重算版本后直接提交，日志为空，且汇总金额可能以 4 位小数进入审计快照。
+  - 红测 73：报价成本批量调价入口应写 `QUOTE_VERSION/UPDATE` 操作日志，保留批量更新前后明细项列表、mode/rate/updated_count；旧 `sales/quote_costs.py` 批量更新 `QuoteItem.unit_price` 后直接提交，日志为空。
+  - 红测 74：物料成本更新提醒配置更新和确认处理应写 `MATERIAL_COST_REMINDER/UPDATE` 与 `MATERIAL_COST_REMINDER/STATUS_CHANGE` 操作日志，保留提醒间隔、下次提醒日、通知对象、提醒次数等快照；旧 `sales/cost_reminder.py` 只保存提醒配置/确认状态，日志为空。
+  - 红测 75：物料成本匹配命中后会更新采购物料成本 `usage_count/last_used_at`，应写 `PURCHASE_MATERIAL_COST/UPDATE` 操作日志；旧 `sales/cost_matching.py` 走 `save_obj()` 静默提交，日志为空。
+  - 红测 76：团队 PK 创建、更新、完成应写 `TEAM_PK/CREATE/UPDATE/STATUS_CHANGE` 操作日志，保留参赛团队、目标值、奖励说明、获胜团队和结果汇总快照；旧 `sales/team/pk.py` 只保存 PK 记录，日志为空。
+  - 红测 77：回款争议创建应写 `RECEIVABLE_DISPUTE/CREATE` 操作日志，保留关联回款计划、争议金额、原因、状态和期望解决日快照；旧 `sales/disputes.py` 只创建争议记录，日志为空。
+  - 红测 78：售前费用化未中标项目批量创建 `PresaleExpense` 时应写 `PRESALE_EXPENSE/CREATE` 操作日志，保留项目、线索/商机、费用类型、金额、工时和创建人快照；旧 `sales/expenses.py` 只批量写费用记录并提交，日志为空。
+  - 红测 79：毛利率预警配置更新和软删除应写 `MARGIN_ALERT_CONFIG/UPDATE/DELETE` 操作日志，保留阈值、启用状态和变更字段；旧 `sales/margin_alerts.py` 只改配置并提交，日志为空。
+  - 红测 80：评分规则创建和激活应写 `SCORING_RULE/CREATE` 与 `SCORING_RULE/STATUS_CHANGE` 操作日志，保留版本、规则 JSON、启用状态和描述；旧 `sales/assessments/scoring_rules.py` 只改评分规则表，日志为空。
+  - 红测 81：激活新评分规则时，旧激活规则被自动停用也应写 `SCORING_RULE/STATUS_CHANGE` 操作日志；旧入口只批量取消其他规则启用状态，不留停用审计。
+  - 红测 82：失败案例创建和更新应写 `FAILURE_CASE/CREATE` 与 `FAILURE_CASE/UPDATE` 操作日志，保留案例编号、项目、行业、失败标签、预警信号和复盘结论；旧 `sales/assessments/failure_cases.py` 只 `save_obj()` 静默提交。
+  - 红测 83：线索/商机优先级计算后应分别写 `LEAD/UPDATE` 与 `OPPORTUNITY/UPDATE` 操作日志，保留 `priority_score` 和评分结果等级；旧 `sales/priority.py` 只改优先级字段并提交，日志为空。
+  - 红测 84：线索/商机申请技术评估后应分别写来源实体 `UPDATE` 操作日志，保留 `assessment_id` 与 `assessment_status=PENDING`；旧 `sales/assessments/assessments.py` 只更新来源对象并提交，日志为空。
+  - 红测 85：执行技术评估完成后应分别写来源实体 `UPDATE` 操作日志，保留 `assessment_status=PENDING -> COMPLETED`；旧 `evaluate_assessment` 只调用评估服务完成状态同步并提交，缺第二条完成日志。
+  - 红测 86：合同变更记录创建应写 `CONTRACT/UPDATE` 操作日志，保留 `contract_amendments` 从空到新增变更的前后快照；旧 `sales/contracts/deliverables.py` 使用与当前 schema 不一致的字段并直接 `save_obj()`，既会读取不存在的 title，也不留业务操作日志。
+  - 红测 87：技术评估模板创建应写 `ASSESSMENT_TEMPLATE/CREATE` 操作日志，保留模板编码、名称、分类、权重和阈值快照；旧 `sales/assessment_templates.py` 只写模板表，日志为空。
+  - 红测 88：技术评估模板更新应写 `ASSESSMENT_TEMPLATE/UPDATE` 操作日志，保留名称、阈值等前后值；旧入口只更新模板表，日志为空。
+  - 红测 89：技术评估模板设为默认应写 `ASSESSMENT_TEMPLATE/STATUS_CHANGE` 操作日志，保留 `is_default` 前后值；旧入口只改默认标记，日志为空。
+  - 红测 90：技术评估项单个新增应写 `ASSESSMENT_ITEM/CREATE` 操作日志，保留模板、编码、维度、权重和评分标准快照；旧入口只写评估项表，日志为空。
+  - 红测 91：技术评估项批量新增也应逐项写 `ASSESSMENT_ITEM/CREATE` 操作日志；旧批量入口只批量插入，日志为空。
+  - 红测 92：技术评估风险创建和状态更新应写 `ASSESSMENT_RISK/CREATE` 与 `ASSESSMENT_RISK/STATUS_CHANGE` 操作日志，保留风险标题、等级、状态、解决说明等快照；旧入口只改风险表，日志为空。
+  - 红测 93：技术评估版本快照创建应写 `ASSESSMENT_VERSION/CREATE` 操作日志，保留评估 ID、版本号、说明、总分和决策快照；旧入口只创建版本记录，日志为空。
+  - 红测 94：AI 方案评审结果持久化应写商机 `OPPORTUNITY/UPDATE` 操作日志，保留 `solution_review.high_risk/resolved/reviews` 快照；旧 `sales/utils/solution_review.py` 只写 `opportunity_requirements.extra_json` 并提交，日志为空。
+  - 红测 95：AI 方案评审人工处置应写商机 `OPPORTUNITY/STATUS_CHANGE` 操作日志，保留 `solution_review.resolved/resolution` 前后快照；旧入口只写 extra_json 和 AI feedback，销售业务日志为空。
+  - 红测 96：发票审批 start 应写 `INVOICE/SUBMIT` 操作日志，保留 `DRAFT -> PENDING_APPROVAL` 与审批实例 ID；旧 `sales/invoices/workflow.py` 只调用统一审批引擎，不留发票业务日志。
+  - 红测 97：发票审批通过动作应写 `INVOICE/APPROVE` 操作日志，保留 `PENDING_APPROVAL -> APPROVED` 和审批意见；旧 workflow action 只改审批/发票状态，不留销售操作日志。
+  - 红测 98：发票审批驳回动作应写 `INVOICE/REJECT` 操作日志，保留 `PENDING_APPROVAL -> REJECTED` 和驳回意见；旧 workflow action 同样日志为空。
+- 代码面：
+  - `SalesOperationLogService` 增加轻量实例化兼容和部门字段解析，兼容字符串部门与旧 Department-like 对象。
+  - `/sales/operation-logs` 查询路由接入销售聚合路由。
+  - `quote_items.py` 在 create/update/delete 三个写入口写 `SalesOperationLog`，old/new value 使用可 JSON 序列化快照，记录 item_id、报价版本、数量、单价、成本等关键字段。
+  - 新增 `invoice_operation_audit.py` 统一发票审计快照/变更字段逻辑，金额、日期、枚举都转成 JSON 安全值。
+  - `payment_records.py` 在回款登记、回款更新、回款删除、发票核销四个入口写 `SalesOperationLog`，实体统一为 `INVOICE`，与实际承载表一致；日志与业务字段修改同一事务提交。
+  - `sales/invoices/basic.py` 在发票创建、更新、删除入口写 `INVOICE` 操作日志；删除入口改为同一事务内 `db.delete + log + commit`，不再走会提前 commit 的 `delete_obj()`。
+  - `sales/invoices/operations.py` 在开票写 `APPROVED → ISSUED` 状态日志；作废写原票 `ISSUED/APPROVED → CANCELLED` 状态日志；已开票作废生成的 `RED_CREDIT` 负票同步写创建日志。
+  - `sales/invoices/workflow.py` 在发票审批 start/通过/驳回/委托/撤回动作写 `INVOICE` 操作日志，审批引擎继续负责统一审批状态，销售业务日志记录发票 old/new 快照和审批意见。
+  - 新增 `contract_operation_audit.py` 统一合同审计快照/变更字段逻辑。
+  - `sales/contracts/basic.py` 在合同基础创建、更新、删除入口写 `CONTRACT` 操作日志；删除入口同一事务内 `db.delete + log + commit`。
+  - `sales/contracts/basic.py` 在从报价创建合同入口写 `CONTRACT` 创建日志，在归档入口写 `STATUS_CHANGE` 日志。
+  - `sales/contracts/sign_project.py` 在合同签署入口写 `STATUS_CHANGE` 日志，日志与签署日期、状态更新同一事务提交。
+  - `sales/payments/payment_plans.py` 在合同收款计划创建入口写 `CONTRACT/UPDATE`，把付款计划列表纳入合同审计快照。
+  - 新增 `customer_operation_audit.py` 统一客户审计快照/变更字段逻辑。
+  - `sales/customers.py` 在客户创建、更新、删除入口写 `CUSTOMER` 操作日志；创建/删除入口不再走会提前提交的 `save_obj/delete_obj`，改为业务变更和日志同一事务提交。
+  - `sales/customer_tags.py` 将客户标签变更纳入客户画像审计快照，单个新增、批量新增、按 ID 删除、按名称删除均写 `CUSTOMER/UPDATE`，记录 `tags` 前后值和标签名 remark；删除入口不再走会提前提交的 `delete_obj()`。
+  - `sales/activity_minutes.py` 的 `quick_activity()` 和 `confirm_minutes()` 在活动/纪要确认落库后写销售操作日志：按关联对象分别记录 `CUSTOMER/COMMENT`、`OPPORTUNITY/COMMENT`、`LEAD/COMMENT`，快照包含活动 ID、活动编号、类型、主题、内容和跟进任务；`confirm_minutes()` 回填商机需求/预算/成熟度时改用 ORM 快照并写 `OPPORTUNITY/UPDATE`；`quick-ai` 复用 `quick_activity()`，同步获得留痕。
+  - 新增 `contact_operation_audit.py` 统一联系人审计快照/变更字段逻辑，`SalesEntityType` 增加 `CONTACT`。
+  - `sales/contacts.py` 在联系人创建、更新、删除入口写 `CONTACT` 操作日志，设置主联系人入口写 `CONTACT/STATUS_CHANGE`；创建新主联系人、更新为主联系人、显式设置主联系人时，原主联系人自动降级也逐条写 `CONTACT/STATUS_CHANGE`；创建/删除入口不再走会提前提交的 `save_obj/delete_obj`，改为业务变更和日志同一事务提交。
+  - 新增 `opportunity_operation_audit.py` 统一商机审计快照/变更字段逻辑。
+  - `sales/opportunity_crud.py` 在商机创建、更新、删除入口写 `OPPORTUNITY` 操作日志；删除入口不再走会提前提交的 `delete_obj()`，改为业务变更和日志同一事务提交。
+  - `sales/opportunity_workflow.py` 在 PUT 阶段更新、赢单、输单入口写 `OPPORTUNITY` 的 `STATUS_CHANGE` 操作日志，与阶段字段变更同一事务提交。
+  - `sales/opportunity_workflow.py` 在 POST `advance`、POST `win`、POST 兼容 `lose`、POST 新 `loss` 入口写 `OPPORTUNITY` 的 `STATUS_CHANGE` 操作日志；输单原因写入 `remark`。
+  - `sales/opportunity_workflow.py` 在商机评分入口写 `UPDATE` 日志，在阶段门提交入口写 `STATUS_CHANGE` 日志。
+  - `sales/__init__.py` 注册 `opportunity_batch.router`，并保持在动态 `opportunities.router` 之前，避免静态批量路径被动态详情路由吞掉。
+  - `sales/opportunity_batch.py` 在批量阶段更新入口写 `OPPORTUNITY/STATUS_CHANGE` 操作日志，保留阶段变更快照和批量原因。
+  - `sales/opportunity_batch.py` 在批量负责人更新入口写 `OPPORTUNITY/ASSIGN` 操作日志，在批量关闭入口写 `OPPORTUNITY/STATUS_CHANGE` 操作日志，保留负责人/终态变更快照和原因。
+  - `opportunity_operation_audit.py` 的商机审计快照补入 `close_reason` 与 `closed_at`，让批量关闭日志不只在 remark 里留原因，也在 old/new 快照和 changed_fields 中可追溯。
+  - 新增 `lead_operation_audit.py` 统一线索审计快照/变更字段逻辑。
+  - `sales/leads/crud.py` 在线索创建、更新、删除入口写 `LEAD` 操作日志；创建/删除入口不再走会提前提交的 `save_obj/delete_obj`，改为业务变更和日志同一事务提交。
+  - `sales/requirement_details.py` 在线索需求详情创建/更新入口写 `LEAD/UPDATE` 操作日志，快照包含需求对象、场景、成熟度、SOW/接口/图纸、节拍、验收依据、冻结状态等字段，并将浮点节拍统一为两位字符串。
+  - `sales/requirement_freezes.py` 在线索需求冻结入口写 `LEAD/STATUS_CHANGE`，在商机需求冻结入口写 `OPPORTUNITY/STATUS_CHANGE`，冻结记录和业务日志同一事务提交，快照包含冻结点、版本号、ECR 要求和说明。
+  - `schemas/sales/requirement_freezes.py` 对齐真实模型和前端字段：使用 `freeze_type/version_number/requires_ecr/description/freeze_time`，不再暴露旧的 `freeze_version/freeze_reason`。
+  - `sales/assessments/open_items.py` 为未决事项编号加入来源类型和序号，避免线索/商机同 ID 撞码；创建/更新/关闭未决事项时按来源写 `LEAD/UPDATE`、`OPPORTUNITY/UPDATE` 或 `OPPORTUNITY/STATUS_CHANGE`，快照保留阻塞报价、责任方、关闭证据等字段。
+  - `sales/ai_clarifications.py` 创建 AI 澄清时兼容无 `answers` 的真实 schema，请求落库后按来源写 `LEAD/UPDATE` 或 `OPPORTUNITY/UPDATE`；更新答案时保留回答前后快照。
+  - `sales/quote_delivery.py` 复用报价审计 helper，在交付日期更新入口写 `QUOTE/UPDATE`，日志与交付日期变更同一事务提交。
+  - `SalesEntityType` 增加 `TARGET`；`sales/targets.py` 在销售目标创建/更新入口写 `TARGET/CREATE` 与 `TARGET/UPDATE`，金额、日期和枚举字段统一转 JSON 安全值。
+  - `SalesEntityType` 增加 `TEAM`；`sales/team/crud.py` 在销售团队创建、更新、软删除入口写 `TEAM/CREATE`、`TEAM/UPDATE`、`TEAM/DELETE`，创建入口不再走会提前提交的 `save_obj()`。
+  - `sales/team/members.py` 在团队成员新增、重新激活、更新、移除入口写 `TEAM/UPDATE`，快照保留成员角色、主团队标记、启用状态和备注；批量新增写一条团队成员列表前后快照汇总日志。
+  - `SalesEntityType` 增加 `APPROVAL_WORKFLOW`；`sales/workflows.py` 在销售审批流程配置创建/更新入口写 `APPROVAL_WORKFLOW/CREATE`、`APPROVAL_WORKFLOW/UPDATE`，快照包含流程类型、名称、启用状态、路由规则和审批步骤。
+  - `SalesEntityType` 增加 `QUOTE_TEMPLATE` 与 `QUOTE_TEMPLATE_VERSION`；`sales/quote_templates.py` 在报价模板创建、更新、删除、版本创建、发布入口写模板/版本操作日志，快照包含模板基础字段、当前版本、模板结构、定价规则和发布状态。
+  - `sales/data_audit.py` 在销售数据审核提交、通过/驳回、撤销入口按来源实体写 `SUBMIT/APPROVE/REJECT/STATUS_CHANGE` 操作日志；`SalesDataAuditService` 的申请人部门读取对齐当前 `User.department` 字符串/对象双形态。
+  - `SalesEntityType` 增加 `CONTRACT_TEMPLATE` 与 `CONTRACT_TEMPLATE_VERSION`；`sales/templates/contract_templates.py` 在合同模板创建、更新、版本创建、版本发布入口写模板/版本操作日志，并修复创建请求读取不存在 `owner_id` 的 AttributeError。
+  - `SalesEntityType` 增加 `CPQ_RULE_SET`；`sales/templates/cpq_rules.py` 在 CPQ 规则集创建、更新入口写规则集操作日志，并修复创建请求读取不存在 `status` 的 AttributeError。
+  - `sales/templates/quote_templates.py` 在新版结构化报价模板创建、更新、版本创建、版本发布入口写 `QUOTE_TEMPLATE` 与 `QUOTE_TEMPLATE_VERSION` 操作日志，并修复创建请求读取不存在 `owner_id` 的 AttributeError。
+  - `SalesEntityType` 增加 `QUOTE_COST_TEMPLATE`；`sales/cost_templates.py` 在报价成本模板创建、更新、删除入口写成本模板操作日志，删除入口不再走会提前提交的 `delete_obj()`。
+  - `SalesEntityType` 增加 `PURCHASE_MATERIAL_COST`；`sales/purchase_material_costs.py` 在采购物料成本创建、更新、删除入口写采购物料成本操作日志，创建/删除入口不再走会提前提交的 `save_obj/delete_obj()`。
+  - `sales/quote_costs.py` 在报价成本明细更新入口写 `QUOTE_VERSION/UPDATE` 操作日志，快照保留成本项字段前后值，日志与明细更新同一事务提交。
+  - `sales/quote_costs.py` 在报价成本重算入口写 `QUOTE_VERSION/UPDATE` 操作日志，版本汇总金额持久化前统一量化到 2 位，避免审计快照出现乘法中间精度。
+  - `sales/quote_costs.py` 在报价成本匹配建议应用入口写 `QUOTE_VERSION/UPDATE` 操作日志，old/new 快照包含版本汇总和明细列表，版本汇总金额同样量化到 2 位。
+  - `sales/quote_costs.py` 在报价成本批量调价入口写 `QUOTE_VERSION/UPDATE` 操作日志，old/new 快照包含明细列表和本次调价参数。
+  - `SalesEntityType` 增加 `MATERIAL_COST_REMINDER`；`sales/cost_reminder.py` 在物料成本提醒配置更新和确认入口写提醒实体操作日志。
+  - `sales/cost_matching.py` 在采购物料成本匹配命中并更新使用次数时写 `PURCHASE_MATERIAL_COST/UPDATE` 操作日志，保留 `usage_count/last_used_at` 前后快照。
+  - `SalesEntityType` 增加 `TEAM_PK`；`sales/team/pk.py` 在团队 PK 创建、更新、完成入口写 PK 操作日志，结果汇总按 JSON 快照入账。
+  - `SalesEntityType` 增加 `RECEIVABLE_DISPUTE`；`sales/disputes.py` 在回款争议创建入口写争议操作日志，争议记录和日志同一事务提交。
+  - `SalesEntityType` 增加 `PRESALE_EXPENSE`；`sales/expenses.py` 在未中标项目费用化创建售前费用记录时写费用操作日志，费用记录和日志同一事务提交。
+  - `SalesEntityType` 增加 `MARGIN_ALERT_CONFIG`；`sales/margin_alerts.py` 在毛利率预警配置更新和软删除入口写配置操作日志，配置变更和日志同一事务提交。
+  - `SalesEntityType` 增加 `SCORING_RULE`；`sales/assessments/scoring_rules.py` 在评分规则创建、激活和旧激活规则自动停用入口写评分规则操作日志，`rules_json` 解析后入账，业务变更和日志同一事务提交。
+  - `SalesEntityType` 增加 `FAILURE_CASE`；`sales/assessments/failure_cases.py` 在失败案例创建/更新入口写失败案例操作日志，JSON 字符串字段解析成数组入账，业务变更和日志同一事务提交。
+  - `sales/priority.py` 在线索/商机优先级计算入口写来源实体 `UPDATE` 操作日志，快照包含持久化的 `priority_score` 和本次评分返回的 key/priority/importance/urgency 等级。
+  - `sales/assessments/assessments.py` 在线索/商机技术评估申请与执行完成入口写来源实体 `UPDATE` 操作日志，覆盖 `assessment_id` 与 `assessment_status` 从空到 PENDING、从 PENDING 到 COMPLETED 的关键闭环。
+  - `sales/contracts/deliverables.py` 兼容当前 `ContractAmendmentCreate` 字段，在合同变更创建入口写 `CONTRACT/UPDATE` 操作日志，审计快照包含 `contract_amendments` 列表和新增变更的原因、内容、金额、申请日期、状态。
+  - `sales/assessment_templates.py` 在技术评估模板创建/更新/设默认、评估项单个/批量新增、评估风险创建/状态更新、评估版本快照创建入口写对应 `ASSESSMENT_*` 操作日志。
+  - `sales/utils/solution_review.py` 与真实商机端点接入 AI 方案评审审计：评审落库写 `OPPORTUNITY/UPDATE`，人工处置写 `OPPORTUNITY/STATUS_CHANGE`，旧调用不传 `current_user` 仍兼容。
+  - `tests/factories.py` 将旧 `ApprovalWorkflow/ApprovalWorkflowStep` 工厂改为兼容模型存在时才定义；不假造已移除旧模型，只防止全局 conftest 在旧销售审批工作流模型缺失时导入断裂。
+  - `sales/leads/actions.py` 在线索转商机入口写 `LEAD` 的 `CONVERT` 日志，并为新建商机同步写 `OPPORTUNITY` 的 `CREATE` 日志，两条日志与商机创建、线索状态变更同一事务提交。
+  - `sales/leads/follow_ups.py` 在线索跟进入口写 `LEAD/COMMENT` 操作日志，记录下次行动时间前后值和跟进内容。
+  - `sales/leads/actions.py` 在线索标无效入口写 `LEAD/STATUS_CHANGE` 操作日志；`LeadStatusEnum` 补入服务层已消费的 `INVALID` 状态。
+  - `sales/leads/batch.py` 批量状态更新入口为每条成功线索写 `LEAD/STATUS_CHANGE` 操作日志；批量转商机入口写 `LEAD/CONVERT` 与新商机 `OPPORTUNITY/CREATE`；批量分配负责人入口写 `LEAD/ASSIGN`，均与业务变更同一事务提交；`sales/leads/__init__.py` 将批量路由纳入聚合并保持静态路由先于动态详情路由。
+  - 新增 `quote_operation_audit.py` 统一报价主表审计快照/变更字段逻辑，当前版本金额、税额、毛利等金额字段转为 JSON 安全字符串。
+  - `sales/quotes.py` 在报价创建入口写 `QUOTE` 创建日志，日志与报价、当前版本创建同一事务提交。
+  - `quote_operation_audit.py` 暴露 `quote_version_audit_value()` 与 `log_quote_version_operation()`，统一报价版本审计快照和日志写入。
+  - `sales/quote_versions.py` 在报价版本创建入口写 `QUOTE_VERSION/CREATE`；设为当前版本时同步写 `QUOTE/UPDATE`，与版本创建同一事务提交。
+  - `sales/quote_status.py` 在通用状态变更入口写 `QUOTE/STATUS_CHANGE`，记录状态前后值和原因。
+  - `sales/quote_per_id_approval.py` 在漏斗报价无待办任务的直接审批兜底入口写 `QUOTE/APPROVE` 与 `QUOTE_VERSION/APPROVE`，记录状态、审批人和审批时间。
+  - `quote_approval_service.py` 在正式提交/通过/驳回/撤回审批服务链写 `QUOTE/SUBMIT`、`QUOTE/APPROVE`、`QUOTE/REJECT`、`QUOTE/STATUS_CHANGE` 操作日志；批量通过/驳回复用单条审批动作，逐张报价写入操作日志，记录提交/审批/撤回原因、状态变化和当前版本快照。
+  - `quote_quotes_crud.py` 在报价基础信息更新和草稿删除入口写 `QUOTE/UPDATE` 与 `QUOTE/DELETE` 操作日志；删除入口不再走会提前提交的 `delete_obj()`，改为日志与删除同一事务提交。
+- 验证：报价撤回红测 `test_quote_withdraw_approval_writes_quote_status_change_log` 先失败于 `sqlalchemy.exc.NoResultFound`；线索标无效红测先失败于 `LeadStatusEnum.INVALID` 缺失；线索批量状态红测先失败于日志为空；线索批量转商机红测先失败于 `len(lead_logs) == 0`；线索批量分配负责人红测先失败于 `len(logs) == 0`；商机批量路由红测先失败于 `/opportunities/batch/stage` 不在活动路由中；商机批量阶段/负责人/关闭日志接线后转绿；关闭快照加严红测先失败于 `KeyError: 'close_reason'`，补入审计快照字段后转绿；客户联系人 CRUD 红测先失败于日志为空，设主联系人目标日志红测先失败于 `NoResultFound`，设置/创建/更新为主联系人时原主联系人自动降级红测先失败于只记录新联系人，补入逐条降级审计后转绿；客户标签批量新增/按 ID 删除/按名称删除红测均先失败于 `sqlalchemy.exc.NoResultFound`，补入同事务标签审计后转绿；销售快速活动客户+商机红测先失败于 `len(logs) == 0`，补入 quick activity 审计后转绿；AI 会议纪要确认 COMMENT 红测先失败于 `len(logs) == 0`，补入 confirm minutes 审计后转绿；会议纪要回填商机 UPDATE 红测先失败于 `sqlalchemy.exc.NoResultFound`，补入 `OPPORTUNITY/UPDATE` 后转绿；线索需求详情审计回归曾失败于 `45.0 != "45.00"`，当前快照格式化后单测转绿；需求冻结红测先失败于 `freeze_version` schema 缺失，schema 对齐后再失败于 `sqlalchemy.exc.NoResultFound`，接入冻结审计后转绿；未决事项红测先失败于 `open_items.item_code` 唯一键冲突，编号修复后再失败于 `sqlalchemy.exc.NoResultFound`，接入 open item 审计后转绿；AI 澄清红测先失败于 `AIClarificationCreate` 缺少 `answers` 属性，创建兼容后再失败于 `sqlalchemy.exc.NoResultFound`，接入来源实体审计后转绿；报价交付日期红测先失败于 `sqlalchemy.exc.NoResultFound`，接入报价审计后转绿；销售目标红测先失败于 `logs == []`，接入 `TARGET` 审计后转绿；销售团队 CRUD 红测先失败于 `logs == []`，接入 `TEAM` 审计后转绿；销售团队成员新增/更新/移除红测先失败于 `logs == []`，批量新增红测先失败于 `logs == []`，接入成员审计后转绿；销售审批流程配置创建/更新红测先失败于 `logs == []`，接入 `APPROVAL_WORKFLOW` 审计后转绿；报价模板生命周期红测先失败于 `sqlalchemy.exc.NoResultFound`（模板/版本日志为空），接入 `QUOTE_TEMPLATE` 与 `QUOTE_TEMPLATE_VERSION` 审计后转绿；销售数据审核红测先失败于 `AttributeError: 'str' object has no attribute 'name'`，修正部门兼容后再失败于 `logs == []`，接入审核动作审计后转绿；合同模板生命周期红测先失败于 `AttributeError: 'ContractTemplateCreate' object has no attribute 'owner_id'`，修复 owner 归属后接入 `CONTRACT_TEMPLATE` 与 `CONTRACT_TEMPLATE_VERSION` 审计并转绿；CPQ 规则集红测先失败于 `AttributeError: 'CpqRuleSetCreate' object has no attribute 'status'`，修复默认状态后接入 `CPQ_RULE_SET` 审计并转绿；结构化报价模板生命周期红测先失败于 `AttributeError: 'QuoteTemplateCreate' object has no attribute 'owner_id'`，修复 owner 归属后接入 `QUOTE_TEMPLATE` 与 `QUOTE_TEMPLATE_VERSION` 审计并转绿；报价成本模板 CRUD 红测先失败于 `logs == []`，接入 `QUOTE_COST_TEMPLATE` 审计并转绿；采购物料成本 CRUD 红测先失败于 `logs == []`，接入 `PURCHASE_MATERIAL_COST` 审计并转绿；报价成本明细更新红测先失败于 `sqlalchemy.exc.NoResultFound`，接入 `QUOTE_VERSION` 审计并转绿；报价成本重算红测先失败于 `sqlalchemy.exc.NoResultFound`，接入 `QUOTE_VERSION` 审计后又暴露 `cost_total` 快照 4 位小数，量化汇总金额后转绿；报价成本匹配建议应用红测先失败于 `sqlalchemy.exc.NoResultFound`，接入 `QUOTE_VERSION` 审计后同样暴露汇总金额 4 位小数和 items 未进 changed_fields，补齐 old items 快照并量化金额后转绿；报价成本批量调价红测先失败于 `sqlalchemy.exc.NoResultFound`，接入 `QUOTE_VERSION` 审计后转绿；物料成本提醒配置/确认红测覆盖旧入口日志为空风险，接入 `MATERIAL_COST_REMINDER` 审计后转绿；物料成本匹配命中红测覆盖旧入口静默更新使用次数风险，接入 `PURCHASE_MATERIAL_COST` 审计后转绿；团队 PK 红测先失败于 `logs == []`，接入 `TEAM_PK` 审计后转绿；回款争议红测先失败于 `sqlalchemy.exc.NoResultFound`，接入 `RECEIVABLE_DISPUTE` 审计后转绿；售前费用化红测先失败于 `sqlalchemy.exc.NoResultFound`，接入 `PRESALE_EXPENSE` 审计后转绿；毛利率预警配置红测先失败于 `logs == []`，接入 `MARGIN_ALERT_CONFIG` 审计后转绿；评分规则创建/激活红测先失败于 `logs == []`，接入 `SCORING_RULE` 审计后转绿；旧激活评分规则停用红测先失败于 `len(logs) == 1`，补入旧规则停用日志后转绿；失败案例创建/更新红测先失败于 `logs == []`，接入 `FAILURE_CASE` 审计后转绿；线索/商机优先级计算红测先失败于 `NoResultFound`，接入来源实体 `UPDATE` 审计后转绿；技术评估申请红测先失败于 `NoResultFound`，接入来源实体申请日志后转绿；技术评估执行红测先失败于 `len(lead_logs) == 1`，接入来源实体完成日志后转绿；合同变更红测先失败于 `ContractAmendmentCreate.title` 缺失，兼容当前 schema 后接入 `CONTRACT/UPDATE` 审计并转绿。
+  - 发票审批 workflow 红测先失败于 `sqlalchemy.exc.NoResultFound`（start/approve/reject 日志为空），接入 workflow 审计后 3 条转绿。
+  - `tests/unit/test_sales_operation_audit_perm07.py` exit 0（98 passed）。
+  - 补充：后续 pytest collect 曾失败于 `tests.factories` 强制导入已移除的旧 `ApprovalWorkflow/ApprovalWorkflowStep`；将旧工作流 factory 改为可选后，`tests/unit/test_sales_operation_audit_perm07.py` 恢复并继续扩展至 98 passed，团队 PK/操作日志相邻回归恢复 24 passed。
+  - 销售团队相邻回归 `tests/unit/test_sales_team_deep.py tests/unit/test_sales_target_actuals.py tests/unit/test_sales_operation_audit_perm07.py::test_sales_team_crud_writes_team_operation_logs tests/unit/test_sales_operation_audit_perm07.py::test_sales_team_member_changes_write_team_operation_logs tests/unit/test_sales_operation_audit_perm07.py::test_sales_team_member_batch_add_writes_team_operation_log` exit 0（8 passed）；需求冻结/详情聚焦回归 2 passed；销售活动聚焦回归 4 passed；客户标签聚焦回归 4 passed；联系人聚焦回归 5 passed。
+  - 销售审批流程邻域回归 `tests/integration/test_workflow_integration.py::TestApprovalWorkflowIntegration tests/unit/services/sales/test_operation_log_service.py tests/unit/test_operation_log_service_coverage.py tests/unit/test_sales_operation_audit_perm07.py::test_sales_approval_workflow_create_update_writes_operation_logs` exit 0（24 passed）。
+  - 报价模板邻域回归 `tests/api/test_batch14_route_contracts.py::test_legacy_sales_quote_templates_route_uses_current_template_model tests/api/test_sales_quotes_api.py::TestSalesQuotesAPI::test_create_quote_from_template_static_route tests/unit/services/sales/test_operation_log_service.py tests/unit/test_operation_log_service_coverage.py` exit 0（21 passed）。
+  - 销售数据审核邻域回归 `tests/unit/services/sales/test_data_audit_service.py tests/unit/test_data_audit_service_coverage.py` exit 0（22 passed）。
+  - 最终组合回归 `.venv/bin/pytest tests/unit/test_sales_operation_audit_perm07.py tests/unit/services/sales/test_data_audit_service.py tests/unit/test_data_audit_service_coverage.py tests/unit/test_quote_approval_service.py tests/unit/test_quote_approval_service_coverage.py tests/unit/services/sales/test_operation_log_service.py tests/unit/test_operation_log_service_coverage.py tests/unit/test_contract_status_update_guard_peer01_02.py tests/unit/test_contract_project_delivery_date_appr14.py tests/api/test_batch14_route_contracts.py::test_legacy_sales_quote_templates_route_uses_current_template_model tests/api/test_sales_quotes_api.py::TestSalesQuotesAPI::test_create_quote_from_template_static_route tests/api/test_sales.py::TestLeadManagement tests/api/test_sales_customers_api.py tests/api/test_sales_opportunities_api.py tests/api/test_sales_opportunity_unit.py tests/api/test_sales.py::TestOpportunityManagement::test_update_opportunity_rejects_lost_to_won_transition tests/api/test_sales.py::TestOpportunityManagement::test_stage_endpoint_rejects_lost_to_won_transition tests/api/test_sales.py::TestOpportunityManagement::test_legacy_win_endpoint_rejects_lost_opportunity tests/api/test_sales.py::TestQuoteManagement::test_create_quote_success tests/api/test_sales.py::TestQuoteManagement::test_create_quote_version tests/api/test_sales.py::TestQuoteManagement::test_approve_quote tests/api/test_sales_quotes_api.py::TestSalesQuotesAPI::test_create_quote -q -rs` exit 0（7 skipped，跳过项均为既有未实现客户联系人/客户项目/商机 API 分支）。
+  - 本轮补充：`pytest -q tests/unit/test_sales_operation_audit_perm07.py::test_invoice_approval_start_writes_invoice_submit_log tests/unit/test_sales_operation_audit_perm07.py::test_invoice_approval_action_writes_invoice_approve_log tests/unit/test_sales_operation_audit_perm07.py::test_invoice_approval_action_writes_invoice_reject_log` 通过；`ruff check app/api/v1/endpoints/sales/invoices/workflow.py tests/unit/test_sales_operation_audit_perm07.py` 通过。尝试跑 `tests/api/test_invoice_approval_workflow_contracts.py` 时卡在测试环境 `starlette.TestClient`/`httpx` 签名不兼容（`Client.__init__() got an unexpected keyword argument 'app'`），未进入业务断言。
+  - `ruff check`、`.venv/bin/python -m py_compile` 通过。
+- 备注：本轮曾试跑更宽的 `tests/integration/test_workflow_integration.py`，其中两个既有销售 pipeline 用例失败于 `contracts.contract_name` NOT NULL，和销售审批流审计接线无关；有效邻域已改为 `TestApprovalWorkflowIntegration` 子集。
+- 补充校验：`git diff --check` 通过。
+- 边界：本轮已覆盖报价明细、报价主表创建、报价基础信息更新、报价草稿删除、报价版本创建、报价交付日期更新、报价通用状态变更、报价直接审批兜底、报价正式审批提交/通过/驳回/批量通过/批量驳回/撤回、报价模板创建/更新/删除/版本创建/发布、结构化报价模板创建/更新/版本创建/版本发布、报价成本模板创建/更新/删除、采购物料成本创建/更新/删除、物料成本提醒配置/确认、物料成本匹配命中 usage 更新、报价成本明细更新、报价成本重算、报价成本匹配建议应用、报价成本批量调价、合同模板创建/更新/版本创建/版本发布、CPQ 规则集创建/更新、销售数据审核提交/通过/驳回/撤销、回款/核销、回款争议创建、售前费用化未中标项目、毛利率预警配置更新/软删除、发票 CRUD/开票/作废/审批 start/通过/驳回/委托/撤回 workflow、合同基础 CRUD、合同从报价生成/签署/归档、合同收款计划创建、客户 CRUD、客户标签新增/批量新增/删除、销售活动 quick 记录/AI 纪要确认/纪要回填商机、客户联系人 CRUD/设主联系人/主联系人自动降级、商机 CRUD、商机 PUT 阶段/赢单/输单、商机 POST 高频/兼容工作流、商机评分/阶段门、AI 方案评审落库/人工处置、商机批量路由注册、商机批量阶段/负责人/关闭、销售目标创建/更新、销售团队创建/更新/删除、销售团队成员新增/更新/移除/批量新增、团队 PK 创建/更新/完成、销售审批流程配置创建/更新、线索 CRUD、线索需求详情创建/更新、线索/商机需求冻结、线索/商机未决事项创建/更新/关闭、线索/商机 AI 澄清创建/答复更新、线索转商机、线索跟进、线索标无效、线索批量状态更新、线索批量转商机、线索批量分配负责人、评分规则创建/激活/旧激活规则停用、失败案例创建/更新、线索/商机优先级计算、线索/商机技术评估申请与执行、技术评估模板/评估项/风险/版本管理、合同变更记录创建七十八批高价值写入口；PERM-07 仍可继续扫更多销售写入口，因此台账保持 `修复中`，不标完成。
+
+## 2026-07-05 继续：提升方案 P2 小项——ADMIN-17 文件上传内容校验
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 运维治理里的 `ADMIN-17`：统一文件上传服务存在，但主要只校验扩展名/大小；项目文档上传入口读取文件后直接保存，`.pdf` 可被 EXE/HTML 等内容伪装。
+- TDD：
+  - 红测 1：`FileUploadService.validate_file_content(b"%PDF-...", "quote.pdf")` 应通过；旧服务没有该方法。
+  - 红测 2：`b"MZ..." + "quote.pdf"` 应被拒绝，并提示文件内容与扩展名不匹配；旧服务没有内容校验。
+  - 红测 3：`.txt` 上传 HTML/script 内容应被拒绝。
+  - 红测 4：`documents/crud_refactored.upload_document_file()` 对伪装 PDF 应在 `save_file()` 前抛 400；旧入口会继续保存。
+- 代码面：
+  - `FileUploadService.validate_file_content()` 增加内容签名校验：PDF、PNG/JPEG/GIF/BMP/WebP、ZIP/Office、legacy Office、RAR/7z/GZ 等常见格式按魔数匹配。
+  - 全局拦截 Windows/Linux 可执行头、shebang 脚本；文本类扩展拒绝 HTML/script 内容。
+  - 项目文档上传入口在扩展名和大小校验后、保存前调用内容校验。
+  - 兼容旧调用 `FileUploadService(db)`：若第一个参数不是路径则视为 DB，并保留 `self.db`；`check_user_quota()` 可使用实例 DB，修复旧浅覆盖测试里的历史调用方式。
+- 验证：`tests/unit/test_file_upload_service.py tests/unit/test_documents_upload_content_validation_admin17.py app/tests/services/file_upload/test_file_upload_service.py tests/unit/test_file_upload_deep.py tests/unit/test_file_upload_service_coverage.py tests/unit/test_zero_coverage_batch10_auto.py::TestFileUploadService` 95 passed；`ruff check`、`.venv/bin/python -m py_compile` 通过。
+- 边界：本轮完成内容签名校验和项目文档上传入口接线；真正 AV/杀毒扫描需要外部扫描引擎或队列隔离，后续可在 `FileUploadService` 保存前/后扩展。
+
+## 2026-07-05 继续：提升方案 P1 小项——ADMIN-16 导出水印接线
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 运维治理里的 `ADMIN-16`：`app/services/export/watermark_service.py` 存在但全仓导出链路零调用；同时原 PDF 水印固定用 Helvetica，中文水印容易渲染成黑方块。
+- TDD：
+  - 红测 1：合同 PDF 导出 `_build_contract_pdf_response()` 应把生成的 PDF bytes 交给 `add_watermark_to_pdf()`，并带上当前用户姓名；旧代码直接 `create_pdf_response(raw_pdf)`。
+  - 红测 2：发票 PDF 导出 `export_invoice_pdf()` 同样应调用水印服务；旧代码未调用。
+  - 红测 3：中文水印文本应选择 `STSong-Light` CID 字体，英文保留 `Helvetica`；旧 `WatermarkService` 没有字体选择入口。
+  - 红测 4：项目依赖实际安装的是 `PyPDF2`，旧水印服务只 import `pypdf`，导致 `PYPDF_AVAILABLE=False`、真实水印合并不可用。
+- 代码面：
+  - `sales/contracts/export.py` 与 `sales/invoices/export.py` 在 PDF 生成后调用 `add_watermark_to_pdf(..., operator_name=当前用户姓名, custom_text="内部资料")`，再返回 watermarked `BytesIO`。
+  - `watermark_service.py` 增加 `get_pdf_font_name()`：非 ASCII 文本注册并使用 `STSong-Light`，避免中文水印黑方块；英文仍用 Helvetica。
+  - PDF 合并依赖 now 优先 `pypdf`，没有则 fallback 到项目已有 `PyPDF2==3.0.1`。
+- 验证：`tests/unit/test_sales_pdf_watermark_admin16.py tests/unit/test_watermark_service_coverage.py tests/unit/test_sales_scope_expansion.py` 27 passed；`ruff check`、`.venv/bin/python -m py_compile`、`git diff --check` 通过；真实小 PDF 冒烟验证 `raw_len=1408/out_len=5704/changed=True/font=STSong-Light`。
+- 边界：本轮先接销售合同/发票 PDF 两条真实导出链路；其它报表/Excel 导出仍可后续复用同一水印服务继续接线。
+
+## 2026-07-05 继续：提升方案 P2 小项——ADMIN-19 文档附件生命周期
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 运维治理里的 `ADMIN-19`：`DELETE /documents/{doc_id}` 只删除 `project_documents` 记录，不删除实际上传文件，历史 `uploads/documents` 下形成大量孤儿附件。
+- TDD：
+  - 红测 1：临时上传目录内有 `projects/quote.pdf`，`ProjectDocument.file_path="projects/quote.pdf"`；旧 `delete_document()` 返回 200 但文件仍存在。
+  - 红测 2：扫描上传目录时，DB 已引用 `project-a/kept.pdf`、目录里另有 `project-a/orphan.pdf`；旧代码没有扫描服务，测试 import 失败。
+  - 红测 3：`delete=True` 清理时只删除未引用文件，保留 DB 已引用文件。
+- 代码面：
+  - `documents/operations.py` 删除文档记录后调用安全文件删除：相对路径按 `DOCUMENT_UPLOAD_DIR` 解析，只允许删除上传目录内文件，越界/不存在不阻断 DB 删除。
+  - 新增 `app/services/document_file_lifecycle.py`，提供 `scan_project_document_orphans(db, upload_dir, delete=False)`，默认 dry-run，返回 scanned/referenced/orphan/deleted 计数和路径列表。
+  - 新增 `scripts/scan_project_document_orphans.py`，可用 `.venv/bin/python scripts/scan_project_document_orphans.py --upload-dir uploads/documents` dry-run；传 `--delete` 才真实删除。
+- 验证：两组红测均红后绿；`tests/unit/test_document_delete_file_lifecycle_admin19.py tests/unit/test_project_document_orphan_cleanup_admin19.py tests/unit/test_documents_upload_misc06.py tests/unit/test_document_management_deep.py` 6 passed / 4 skipped（旧 deep 测试模块缺失原样 skip）；`ruff check`、`.venv/bin/python -m py_compile`、`git diff --check` 通过；脚本临时空目录 dry-run 通过。
+- 真实 dry-run：`.venv/bin/python scripts/scan_project_document_orphans.py --upload-dir uploads/documents` 返回 `scanned_count=341`、`referenced_count=0`、`orphan_count=341`、`deleted_count=0`。本轮未执行真实 `--delete`，因为会删除本地文件，需要单独确认。
+
+## 2026-07-05 继续：提升方案 P2 小项——PERM-04 账号锁定死代码清理
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 权限治理里的 `PERM-04`：`app/core/account_lockout.py` 是内存版账号锁定实现，全仓生产代码零调用；真实登录入口早已使用 `app.services.account_lockout_service.AccountLockoutService`，保留 core 版会让后续维护误以为存在第二套有效锁定链路。
+- TDD：
+  - 红测：新增 `tests/unit/test_account_lockout_entrypoint_perm04.py`，要求 `app/core/account_lockout.py` 不存在，且 `auth.py` 只导入 Service 版锁定入口；旧代码因 core 文件存在失败。
+  - 绿测：删除 core 内存版实现后，契约测试通过，并确认登录入口仍导入 `app.services.account_lockout_service`。
+- 代码面：
+  - 删除 `app/core/account_lockout.py`。
+  - 删除两份只覆盖死代码的旧测试：`tests/unit/core/test_account_lockout.py`、`tests/unit/test_core_account_lockout.py`。
+  - 从 `tests/unit/test_auth_branches.py` 移除 core 内存版账号锁定分支测试，保留 JWT 与认证中间件分支测试。
+- 验证：`tests/unit/test_account_lockout_entrypoint_perm04.py` 红后绿；`tests/services/test_account_lockout_service.py tests/unit/test_account_lockout_service_coverage.py tests/unit/test_account_lockout_entrypoint_perm04.py` 15 passed；`tests/unit/test_auth_branches.py` 29 passed；源码扫描无生产代码引用 `app.core.account_lockout`。
+- 边界：`tests/integration/test_auth_lockout_integration.py` 当前因 Starlette `TestClient` 传 `app=` 给本机 httpx 后报 `Client.__init__() got an unexpected keyword argument 'app'`，未能用于本轮验收；这是测试依赖兼容问题，不是 PERM-04 改动路径。
+
+## 2026-07-05 继续：提升方案 P2 小项——ADMIN-22 编码规则统一生成器
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 运维治理里的 `ADMIN-22`：业务支持订单、送货、开票申请、客户入驻、发票、对账编号各自手写“查最大号+1”，同一数据库快照下并发调用会返回重复编号。
+- TDD：
+  - 红测：固定日期、数据库查询无最新记录时，6 个并发调用 `generate_order_no()`；旧代码全部返回 `SO250115-001`，撞号。
+  - 绿测：now 同场景返回 `SO250115-001` 到 `SO250115-006`，且保持既有首号、递增、无效格式兜底、`INV-250520-001` 格式等用例不变。
+- 代码面：
+  - 新增 `app/utils/business_code_generator.py`：统一生成 `SO250101-001`、`INV-250101-001` 等日期前缀编号。
+  - 生成器在当前应用进程内按 `模型/字段/日期前缀` 加锁，并记录已预约的最大序号；并发请求即使看到同一 DB 最大号，也会拿到不同的下一个序号。
+  - `BusinessSupportUtilsService` 的 6 个编码方法全部改为调用 `generate_business_code()`，不再各自复制查询和解析逻辑。
+- 验证：`test_generate_order_no_reserves_unique_numbers_for_same_snapshot` 红后绿；`tests/unit/test_business_support_utils_service.py` 34 passed；`tests/unit/test_api_p6_coverage.py::TestBSOUtils` 10 passed；`ruff check`、`py_compile` 通过。
+- 边界：本轮解决单应用进程内并发撞号；多 worker/多实例部署如果要做到全局强一致，后续应补 DB 序列表或唯一键冲突重试。
+
+## 2026-07-05 继续：提升方案 P2 小项——ADMIN-10 调度器指标持久化与 /metrics 暴露
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 运维治理里的 `ADMIN-10`：调度器指标虽然有内存采集和鉴权后的 `/scheduler/metrics/prometheus`，但重启即清零，且根 `/metrics` 没输出 job 运行结果，Prometheus 默认抓不到任务成功/失败/耗时。
+- TDD：
+  - 红测 1：`SchedulerMetrics(persistence_path=...)` 记录成功、失败和通知后，新建另一个 `SchedulerMetrics` 应能从同一 JSON 文件恢复；旧代码不支持 `persistence_path` 参数。
+  - 红测 2：先 `record_job_success("admin10_job", 42.0, ...)`，再抓根 `/metrics`，应包含 `pms_scheduler_job_success_total` 和 last duration；旧输出只有应用健康、依赖和 scheduler running/job_count。
+- 代码面：
+  - `app/utils/scheduler_metrics.py` 支持可选 `persistence_path`，记录成功/失败/通知和 reset 时原子写 JSON；初始化时可重载 job 计数、通知计数和 duration history。
+  - 全局 `METRICS` 默认持久化到 `data/scheduler_metrics.json`，可通过 `SCHEDULER_METRICS_PATH` 覆盖；运行态文件已加入 `.gitignore`。
+  - `app/main.py` 的根 `/metrics` 追加 `pms_scheduler_job_success_total/failure_total/last_duration_ms/duration_avg_ms/duration_p95_ms` 和 `pms_scheduler_notification_*` 指标，沿用 `/metrics` 白名单让 Prometheus 可直接抓。
+- 验证：两个红测均先失败后变绿；相邻回归 `tests/unit/test_scheduler_metrics_utils.py tests/unit/test_prometheus_metrics_admin08.py` 共 18 passed；`ruff check`、`py_compile` 通过。
+- 边界：当前持久化是本机 JSON 文件，解决单实例重启清零；多实例聚合、Prometheus 长期时序和告警规则仍由 Prometheus/Grafana 侧负责。
+
+## 2026-07-05 继续：提升方案 P2 小项——ADMIN-11 项目缓存内存降级可命中
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 运维治理里的 `ADMIN-11`：项目列表端点每次请求都会新建 `CacheService()`；旧 `CacheService.memory_cache` 是实例字段，Redis 不可用时 A 请求写入、B 请求读取必 miss，所谓内存缓存实际零命中。
+- TDD：
+  - 红测：在 `REDIS_AVAILABLE=False` 下，实例 A `set_project_list()` 后，实例 B 用相同 page/page_size/is_active 调 `get_project_list()`；旧代码返回 `None`。
+  - 绿测：now 实例 B 能读到实例 A 写入的项目列表缓存，且 reader 统计 `hits == 1`。
+- 代码面：
+  - `app/services/cache_service.py` 把内存降级缓存从每实例 `self.memory_cache = {}` 改为进程级 `_shared_memory_cache`。
+  - 每个 `CacheService` 仍保留自己的 `stats`，避免不同调用方的命中/失败统计互相污染。
+  - `clear()`、`delete_pattern()`、项目缓存失效方法继续作用于同一共享内存缓存，因此 ADMIN-12 已修的项目缓存清理端点也能清掉内存降级缓存。
+- 验证：`test_memory_project_list_cache_survives_new_service_instance` 红后绿；缓存服务和项目缓存清理相邻回归 `tests/unit/test_cache_service.py tests/unit/test_projects_cache_admin12.py` 共 36 passed / 1 skipped（Redis 服务测试原样 skip）；`ruff check`、`py_compile` 通过。
+- 边界：这是单进程内存降级缓存修复；多 worker/多机器一致性仍依赖 Redis，不把内存缓存冒充分布式缓存。
+
+## 2026-07-05 继续：提升方案 P2 小项——ADMIN-20 日志文件输出与轮转
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 运维治理里的 `ADMIN-20`：应用日志只有 stdout，`logs/` 为空；服务重启或容器外采集缺失时，故障后几乎没有本机取证材料。
+- TDD：
+  - 红测：设置临时 `APP_LOG_DIR`、`APP_LOG_FILE`、`APP_LOG_MAX_BYTES`、`APP_LOG_BACKUP_COUNT` 后调用 `setup_logging()`，旧代码 root logger 没有 `RotatingFileHandler`，日志文件不存在。
+  - 绿测：now root logger 同时有 stdout 和 `RotatingFileHandler`，写入 warning 后 `app.log` 存在且包含日志内容，轮转大小与保留份数按环境变量生效。
+- 代码面：
+  - `app/core/logging_config.py` 新增默认日志目录 `logs/`、默认文件 `app.log`、默认 10MB 轮转、默认保留 7 份。
+  - 文件 handler 复用现有格式、日志级别、`SensitiveDataFilter` 与 `ProductionSensitiveFilter`，避免文件日志绕过脱敏/生产过滤。
+  - 支持 `APP_LOG_DIR`、`APP_LOG_FILE`、`APP_LOG_MAX_BYTES`、`APP_LOG_BACKUP_COUNT` 四个环境变量覆盖。
+- 验证：`tests/unit/test_logging_file_rotation_admin20.py` 红后绿 1 passed；稳定相邻日志配置回归 `tests/unit/test_logging_file_rotation_admin20.py app/tests/services/core/test_logging_config.py` 共 14 passed；`ruff check`、`py_compile` 通过；`setup_logging()+get_logger()` 导入写日志验证通过。
+- 边界：`tests/unit/test_logger.py` 和 `tests/unit/test_core_modules_deep_auto.py` 文件级回归仍有既有失败（前者测试缩进导致 `NameError`，后者 CRUD 构造签名旧假设），本轮未顺手改无关旧测试。
+
+## 2026-07-05 继续：提升方案 P2 小项——PERM-22 前端路由权限守卫
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 里的 `PERM-22`：system/hr/finance 多个前端页面只有菜单层权限，直接输入路由可绕过前端守卫进入页面；401/mock 回落会进一步掩盖越权体验。
+- TDD：
+  - 红测 1：无 `system:template:manage` 时访问 `/system/template-center`，旧代码直接渲染模板中心，期望显示路由无权限。
+  - 红测 2：无绩效权限时访问 `/hr/performance-center`，旧代码直接渲染绩效中心，期望显示路由无权限。
+  - 红测 3：无 `cost:accounting:read` 时访问 `/finance/cost-center`，旧代码直接渲染成本中心，期望显示路由无权限。
+- 代码面：
+  - `systemRoutes.jsx`、`hrRoutes.jsx`、`financeRoutes.jsx` 接入 `ModuleProtectedRoute`，把管理类页面和既有菜单权限口径对齐。
+  - 支持任一权限即可进入的组合路由，例如账号权限中心 `USER_VIEW/ROLE_VIEW`、组织中心 `system:org:manage/system:position:manage`、绩效中心 `performance:manage/evaluation:config:manage`。
+  - 保留个人自助页 `/personal/monthly-summary`、`/personal/my-performance`、`/personal/my-bonus` 不挂 HR 管理权限，避免员工自查被误拦。
+- 验证：`permissionProtectedRoutes.test.jsx` 红后绿 4 passed；前端权限/布局相邻回归 93 passed；4 个变更文件 ESLint 通过；`npm run build` 通过（仅既有 Vite 分包/大 chunk 提醒、Node `module.register()` 弃用提醒）。
+- 边界：本轮是前端直链守卫补齐，不替代后端 `require_permission`；按钮级零散操作仍需随 PERM-11/页面专项继续收口。
+
+## 2026-07-04 继续：提升方案 P2 小项——HR-05 员工部门主链路 ID 化
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 数据治理里的 `HR-05`：`Employee` 只有 `department` 字符串，组织部门端点按部门名统计/拦截/查用户；组织变更后 ID 正确但旧字符串滞后时，会漏拦部门删除、部门用户列表漏人。
+- TDD：
+  - 红测 1：员工 `department_id=新部门ID`、`department=旧部门名` 且在职时，删除新部门旧代码返回 200 停用，期望 400 拦截“存在在职员工”。
+  - 红测 2：用户 `department_id=新部门ID`、`department=旧部门名` 时，`GET /org/departments/{id}/users` 旧代码返回空，期望按 ID 查到该用户。
+- 代码面：
+  - `Employee` 增加 `department_id` 外键、索引和 `department_ref` 关系；`EmployeeCreate/Update/Response` 增加 `department_id`。
+  - 员工创建/更新传入 `department_id` 时校验部门存在，并同步旧 `department` 字符串为当前 `dept_name`，减少新增脏数据。
+  - 部门统计、部门删除保护、部门用户列表统一为：优先 `department_id == dept.id`；旧字符串仅在 `department_id IS NULL` 时按 `department == dept_name` 回退。
+  - 新增 SQLite 迁移 `migrations/20260704_employee_department_id_sqlite.sql`，精确部门名匹配时回填 `employees.department_id`；启动补丁也会为旧 SQLite 补列。
+- 验证：`tests/api/test_org_department_id_hr05.py` 红后绿 2 passed；组织相邻回归 24 passed（2 个既有 skip）；`ruff check`、`py_compile`、`git diff --check` 通过。
+- 边界：本轮完成 Employee/User 与组织部门端点的主链路 ID 化；复杂同义词、重复部门名、历史 `Employee.department` 全量人工清洗不在这个小步内自动猜测处理。
+
+## 2026-07-04 继续：提升方案 P1 小项——HR-03 部门数据权限按 ID 随组织变动
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P1 里的 `HR-03`：通用数据权限 DEPT 分支用 `user.department` 部门名字符串反查部门 ID；用户调岗后如果旧字符串没同步，仍会按旧部门过滤，导致看不到新部门数据或继续看到旧部门数据。
+- TDD：
+  - 红测：当前用户 `department_id=20` 但 `department="旧部门"`，旧部门名反查到部门 ID 99；`dept_field="department_id"` 时旧代码生成 `users.department_id = 99`。
+  - 绿测：同场景 now 生成 `users.department_id = 20`，且不会再查询旧部门名。
+- 代码面：
+  - `GenericFilterService` 新增部门 ID 解析：优先读取 `user.department_id/dept_id/owner_dept_id`，仅在没有 ID 时回退 `Department.dept_name == user.department`。
+  - 直接部门字段为 `department_id/dept_id/*_department_id/*_dept_id` 时按 ID 过滤；旧字符串部门字段则可按 ID 反查当前部门名后兼容过滤。
+  - 通过项目间接做 DEPT 过滤时也改为用解析后的部门 ID 查 `Project.dept_id`，避免项目域继续被旧部门名带偏。
+- 验证：`test_dept_scope_prefers_department_id_over_legacy_name` 红后绿；数据权限核心回归 30 passed；PERM-17 工时/预算财务/采购/BOM/ECN/仓储库存相关回归 31 passed；`ruff check`、`py_compile`、`git diff --check` 通过。
+- 边界：本轮只修通用过滤行为和保留旧字段回退；存量 `Employee.department` 等历史字符串字段清洗仍归 HR-05/组织数据治理后续处理。
+
+## 2026-07-04 继续：提升方案 P2 小项——HR-23 资源冲突检测落库
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 多轨收敛里的 `HR-23`：`resource_conflicts` 真表和冲突调解算法存在，但项目级 `/resource-conflicts/check` 只在同一项目内部临时返回冲突，跨项目同人超额分配不会被发现，也不会落库，调解建议长期架在空表上。
+- TDD：
+  - 红测：同一员工在项目 A 70%、项目 B 60%，日期 2026-07-10~2026-07-20 重叠；调用项目 A 的冲突检查，旧代码返回 `has_conflicts=false` 且 `ResourceConflict` 空表。
+- 代码面：
+  - `analytics/resource_conflicts.py` 的项目检查 now 扫描目标项目资源计划与全局同员工已分配计划的重叠，计算总分配、超额分配和严重度，并幂等 upsert `resource_conflicts`。
+  - 重复调用不会重复插入同一组未解决冲突；已有冲突会更新重叠期/分配比例/严重度。
+  - `ConflictMediationService` 补齐 `identify_conflicts/resolve_conflict/escalate_conflict/get_conflict_history` 服务层直调入口；推荐生成增加防御，半成品冲突数据不会拖垮整个建议响应。
+- 验证：`tests/unit/test_resource_conflict_persistence_hr23.py` 1 passed；冲突调解/资源冲突/路由契约回归 54 passed；`ruff check`、`py_compile`、`git diff --check` 通过。
+- 边界：本轮先打通“检测 -> 落库 -> 调解可读”的主链路；更复杂的多冲突合并、自动派单和 AS-24/MISC-02 双轨收敛后续可继续做。
+
+## 2026-07-04 继续：提升方案 P2 小项——HR-14 月度绩效结果并入正式 PerformanceResult
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 多轨收敛里的 `HR-14`：员工/经理月度绩效体系使用 `MonthlyWorkSummary` + `PerformanceEvaluationRecord` 临时算分，工程师/个人绩效/奖金链路读取 `PerformanceResult`，三套绩效结果互相割裂，谁是正式绩效说不清。
+- TDD：
+  - 红测：部门经理评分 90、项目经理评分 80，权重 60/40；项目经理提交最后一条评价后，旧代码只把 `MonthlyWorkSummary` 置 `COMPLETED`，不会创建 `MONTHLY-2026-07` 周期，也不会写 `PerformanceResult`。
+- 代码面：
+  - 新增 `PerformanceService.sync_monthly_summary_result(db, summary)`：月度总结完成后，根据 `calculate_final_score()` 的结果创建/复用 `PerformancePeriod(period_code="MONTHLY-YYYY-MM")`，并 upsert `PerformanceResult`。
+  - `ManagerPerformanceService.submit_evaluation()` 在所有评价完成时先 `flush()` 当前评价，再同步正式结果，解决 `SessionLocal(autoflush=False)` 下计算看不到本次评价的问题。
+  - 正式结果写入员工姓名、部门、总分、等级和 `indicator_scores`（monthly_final_score / dept_score / project_score / 权重），供个人绩效、排名、奖金等下游统一读取。
+- 验证：`tests/unit/test_performance_unification_hr14.py` 1 passed；相邻回归 `test_manager_performance_service.py`、`test_employee_performance_service.py`、`test_performance_service.py` 与 API 路由契约合计 134 passed；`ruff check`、`py_compile`、`git diff --check` 通过。
+- 边界：本轮先合上“结果表割裂”这个最大断点；服务层重复代码的深度合并不在本小步内继续扩大战线。
+
+## 2026-07-04 继续：提升方案 P1/P2 小项——HR-11/12 绩效采集器接入算分器
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 多轨收敛里的 `HR-11/12`：工程师五维绩效存在采集器 `PerformanceDataAggregator`，但主算分器没有消费它，导致技术/执行/质量/知识多处靠默认或硬编码，特别是执行分 80、成本质量分 75 对多岗位恒定。
+- TDD：
+  - 红测：用假的采集器返回机械岗低设计一次通过率、2 个调试问题、任务完成率 40%、准时率 50%、BOM 及时率 50%、标准件率 60%、ECN 责任率 20%、知识贡献 2 条；旧代码仍算出默认技术分 100/执行 80/质量 75/知识 50，测试失败。
+- 代码面：
+  - `PerformanceCalculator` now 调 `PerformanceDataAggregator.collect_all_data()`；失败或无数据时保留旧兜底，避免空数据把历史结果打穿。
+  - 机械岗技术分 now 优先用采集器的 `design_review.first_pass_rate` 与 `debug_issue.mechanical_issues`，知识分优先用 `knowledge_contribution.total_contributions`。
+  - 执行分 now 优先按 `task_completion` 计算：`completion_rate*0.6 + on_time_rate*0.4`；机械/测试/电气共用。
+  - 成本质量分 now 优先按 `bom_data` 与 `ecn_responsibility` 计算：BOM 及时率、标准件率、复用率（有值才用）和 `100-ECN责任率` 的平均；机械/测试/电气/方案共用。
+- 验证：`tests/unit/test_performance_collector_integration_hr11_12.py` 1 passed；相邻绩效计算/HR-10 回归 35 passed；采集器回归 21 passed；`ruff check`、`py_compile`、`git diff --check` 通过；旧的直接硬编码返回 80/75 扫描无命中。
+- 边界：本轮接通正式算分器与现有采集器，并保留无数据兜底；HR-14 的“三套绩效服务合一”仍是后续结构收敛项。
+
+## 2026-07-04 继续：提升方案 P2 小项——HR-13 绩效申诉闭环
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 多轨收敛里的 `HR-13`：`PerformanceAppeal` 模型已存在，但绩效申诉没有 API 写入口、没有查询入口，也无法把申诉处理结果写回 `performance_result` 与调整历史。
+- TDD：
+  - 红测 1：提交本人绩效申诉应落 `performance_appeal`，状态为 `PENDING`，并把对应绩效结果标记为 `APPEALING`；旧代码模块不存在。
+  - 红测 2：申诉列表普通员工只能看到自己的申诉，管理员可按绩效结果过滤查看。
+  - 红测 3：处理申诉为 `ACCEPTED` 时，应更新处理人/处理时间/调整后分数与等级，并写入 `PerformanceAdjustmentHistory`。
+  - 红测 4：`performance` 聚合路由必须注册 `/performance/appeals` 与 `/performance/appeals/{appeal_id}/handle`。
+- 代码面：
+  - 新增 `app/api/v1/endpoints/performance/appeals.py`：提交、列表、处理三类端点；本人可提交自己的结果申诉，管理员/HR 类角色可处理。
+  - 接受申诉时同步更新 `PerformanceResult.total_score/adjusted_total_score/level/is_adjusted/status`，并写调整历史；拒绝/关闭也会回写结果状态。
+  - `app/api/v1/endpoints/performance/__init__.py` 注册申诉路由，纳入现有绩效 API 聚合。
+- 验证：`tests/unit/test_performance_appeals_hr13.py` 4 passed；相邻回归 `test_engineer_performance_result_persistence_hr10.py`、`test_manager_evaluation_service.py` 合计 20 passed；API 路由契约 36 passed；`ruff check`、`py_compile`、`git diff --check` 通过。
+- 边界：本轮先把申诉写入/处理/调整历史闭环做实；若后续要接统一审批引擎，可在当前处理端点前增加审批任务流转，不再需要重建申诉数据模型。
+
+## 2026-07-04 继续：提升方案 P2 小项——HR-20 时薪旁路清理
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 多轨收敛里的 `HR-20`：统一时薪配置服务已存在，但旧模板成本分析、售前资源浪费/投入看板、人工成本 by-engineer、未中标投入分析等入口仍按固定 100/200/300 估算人工成本，且部分入口把未审批工时也计入成本。
+- TDD：
+  - 红测 1：旧 `template_report` 成本分析对 2h×150 + 3h×80 + 10h SUBMITTED 算成 1500，期望只算已审批配置费率 540。
+  - 红测 2：`ResourceWasteAnalysisService.calculate_waste_by_period()` 把未审批工时计入 19h，期望仅已审批 9h、浪费 5h、浪费成本 540。
+  - 红测 3：`labor_cost_by_engineer()` 仍按 200 元/小时，期望通过 WorkOrder→Worker→User 走配置费率 175。
+  - 红测 4/5：`LossDeepAnalysisService` 与 `LaborCostExpenseService` 缺失用户时仍按 300 兜底，期望统一走 `HourlyRateService` 的可追踪兜底 100。
+- 代码面：
+  - `report_labor_cost.py` 增加 `TimesheetLaborCostSummary`，统一按 `Timesheet.user_id + work_date` 读取 `HourlyRateService`，并提供加权平均时薪。
+  - 旧 `template_report` 成本分析、售前资源投入/浪费 API、售前 dashboard adapter、resource_waste_analysis 服务均改为只读 `APPROVED` 工时并按配置费率逐条计算。
+  - `labor_cost_detail.by-engineer` 从 raw SQL 固定 200 改为 WorkOrder→Worker→User 聚合；有绑定用户走 `HourlyRateService`，无绑定用户才使用 worker 自身显式费率或统一兜底。
+  - resource_waste_analysis 默认不再持有 300 元/小时；显式传 `hourly_rate` 仍作为兼容覆盖，默认路径走统一配置。
+  - `loss_deep_analysis_service` 与 `LaborCostExpenseService` 缺失用户分支不再硬编码 300，改由 `HourlyRateService` 返回来源可追踪的兜底。
+- 验证：`tests/unit/test_hourly_rate_consumers_hr20.py` 5 passed；相邻回归（RPT-03、resource_waste、dashboard、loss_deep、labor_cost）91 passed / 2 skipped；`ruff check`、`py_compile`、`git diff --check` 通过；源码扫描未再发现 HR-20 相关的固定时薪 200/300 旁路。
+
+## 2026-07-04 继续：提升方案 P2 小项——HR-19 奖金系数规则化
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P2 多轨收敛里的 `HR-19`：绩效等级系数、售前紧急/满意度系数原先写死在代码里，调整系数必须改代码。
+- TDD：
+  - 红测 1：`test_performance_bonus_uses_rule_level_coefficients`，规则 JSON 配 `performance_coefficients: {"A": "2.5"}` 时，旧代码仍按 A=1.2 计算 1200。
+  - 红测 2：`test_presale_completion_bonus_uses_rule_coefficients`，规则 JSON 配 `VERY_URGENT=2.0`、满意度 5 分=1.5 时，旧代码仍按 1.3*1.2 计算 156。
+- 代码面：
+  - `BonusCalculatorBase.get_coefficient_by_level(level, bonus_rule)` 支持从 `BonusRule.trigger_condition.performance_coefficients` 读取绩效等级系数；未配置时保留旧默认。
+  - `PresaleBonusCalculator` 支持从 `trigger_condition.urgency_coefficients` / `satisfaction_coefficients` 读取售前系数；未配置时保留旧默认。
+  - 角色系数原已支持 `trigger_condition.role_coefficients`，本轮补齐绩效等级和售前系数两块。
+- 验证：`tests/unit/test_bonus_rule_coefficients_hr19.py` 2 passed；相邻回归 `tests/unit/test_performance_bonus_chain_hr16.py`、`tests/unit/test_presale_bonus.py`、`tests/unit/test_bonus_presale.py` 合计 21 passed；`ruff check` 与 `py_compile` 通过。
+
+## 2026-07-04 继续：提升方案 P1 小项——HR-15 绩效合同裸 sqlite3 改 ORM
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P1 数据治理里的 `HR-15`：`app/api/v1/endpoints/performance/contract.py` 原先 import 期执行 `init_tables()`，并通过裸 `sqlite3.connect(DB_PATH)` 直连业务库；在测试 `:memory:` 下会创建/查询不同连接，实际 CRUD 可 500。
+- TDD：
+  - 红测 1：`test_performance_contract_module_does_not_open_sqlite_on_import`，旧代码 import 模块即调用 `sqlite3.connect` 建表。
+  - 红测 2：`test_create_contract_uses_injected_session`，旧代码忽略注入 `db_session`，新建合约因 `performance_contracts` 不在同一内存库而 500。
+  - 回归覆盖：`test_contract_items_submit_and_sign_use_injected_session` 覆盖条目权重、提交、签署主流程。
+- 代码面：
+  - 新增 `app/models/performance/contract.py`：`PerformanceContract` / `PerformanceContractItem` ORM 模型，并注册到 `app.models.performance` / `app.models`。
+  - 重写 `performance/contract.py` 为 SQLAlchemy Session 实现，去掉裸 `sqlite3`、`get_db_connection`、`init_tables`；所有 CRUD/条目/提交/签署/评分都走注入的 `db`。
+- 验证：`tests/unit/test_performance_contract_import.py` 4 passed；生产文件 `rg "sqlite3|sqlite3\\.connect|get_db_connection|init_tables"` 无命中；`ruff check`、`py_compile` 通过。
+
+## 2026-07-04 继续：提升方案 P1 小项——SALES-06 预测目标接 sales_targets 真数据
+
+- 修复项：`SYSTEM_IMPROVEMENT_PLAN` P1 数据治理里的 `SALES-06 残项`：`SalesForecastService._get_sales_target` 原先写死年度目标 2 亿，导致销售预测目标不随目标管理页配置变化。
+- TDD：
+  - 红测 1：`test_sales_target_uses_company_yearly_target_from_sales_targets`，真实 `sales_targets` 年度公司合同额目标为 12,345,678.90 时，旧代码仍返回 200,000,000。
+  - 红测 2：`test_sales_target_sums_quarterly_scope_targets_when_company_target_missing`，无公司级目标时，个人/团队同季度有效合同额目标应汇总；旧代码返回默认季度拆分 55,000,000。
+- 代码面：`sales_forecast_service.py` 先查 ACTIVE 的 COMPANY/CONTRACT_AMOUNT 周期目标；没有公司级目标时汇总同周期 ACTIVE 的非公司合同额目标；仍无配置才保留原默认值作为兜底。
+- 验证：`tests/unit/test_sales_forecast_service.py` 3 passed；相关回归 `tests/unit/test_sales_forecast_wiring.py`、`tests/unit/test_sales_forecast_deep.py`、`tests/unit/test_sales_target_actuals.py`、`tests/services/test_sales_team_aggregation_contracts.py` 合计 11 passed；`ruff check` 与 `py_compile` 通过。
+- 备注：`tests/audit_p0/test_p0_15_forecast_hardcoded.py` 在 API fixture 启动/退出阶段仍会 timeout；服务级与目标聚合口径已验证，本项未改 API 路由。
+
 ## 2026-07-04 继续：TEN-06 修复（租户 fail-closed 地基）——多租户已拍板启动
 
 - **业务决策**：多租户确定要做，租户管理入口放超级管理员设置（TEN-01 管理 API 已由并行会话补好）。台账最短路径：TEN-06（本条）→ TEN-02 查询层（等 models/base.py 释放）→ TEN-03 按域加列（先 Project 域）。
@@ -4270,7 +4973,7 @@
   - `.venv/bin/python -m ruff check app/api/v1/endpoints/organization/employees.py app/api/v1/endpoints/organization/departments_refactored.py tests/api/test_org_delete_hr04.py` 通过。
   - `.venv/bin/python -m py_compile app/api/v1/endpoints/organization/employees.py app/api/v1/endpoints/organization/departments_refactored.py tests/api/test_org_delete_hr04.py` 通过。
   - `import app.main` 路由清单确认 `DELETE /api/v1/org/employees/{emp_id}` 与 `DELETE /api/v1/org/departments/{dept_id}` 已注册。
-- 边界：本轮不做 HR-03/HR-05 的部门 ID 化和数据清洗；部门仍按旧 `Employee.department` 字符串判断是否有在职员工。
+- 边界：HR-03/HR-05 已在后续小步完成部门 ID 优先主链路；更复杂的部门同义词和历史字符串清洗仍留给数据治理专项。
 - 台账：`FUNCTIONAL_AUDIT_TRACKER.md` 中 `HR-04` 已改为 `已验证`。
 
 ## 2026-07-04 维护：根目录清理与报告归档
@@ -4299,3 +5002,211 @@
   - `docs/api/` 的 API summary 文档虽然日期较老且多处写有 `2025-01-XX`，但需要和真实路由对账后再处理。
   - `docs/design/`、`docs/deployment/`、`docs/security/` 中仍可能作为规范、运行手册或安全要求使用的文档，先保留。
   - `docs/root-docs-archive/20260704/` 是本轮根目录清理新收纳的验收/审计材料，不重复归档。
+
+## 2026-07-05 维护：毛利率分析能力提升方案复验收尾
+
+- 修复目标：按 `docs/毛利率分析能力提升方案.md` 的验收标准补齐毛利率专项测试与覆盖率，消除旧测试和当前 ORM 实现之间的不一致。
+- 代码面：
+  - `app/api/v1/endpoints/margin_prediction.py` 增加 `get_cost_variance()` 兼容别名，实际复用 `get_margin_variance()`。
+  - `app/services/margin_permission_service.py` 增加可选 `db` 初始化，兼容既有测试和实例化使用。
+- 测试面：
+  - `tests/test_margin_prediction_api.py` 从旧 `db.execute()` mock 口径改为当前 ORM 查询口径，并补 BOM 成本汇总测试。
+  - `tests/unit/test_profit_analysis_service_coverage.py` 补 `calculate_project_profit`、`calculate_gross_margin`、`allocate_costs` 分支测试。
+- 验证：
+  - `.venv/bin/python -m pytest -q tests/test_margin_prediction_api.py tests/unit/test_margin_permission_service_coverage.py` 通过（10 个用例）。
+  - `.venv/bin/python -m pytest -q tests/unit/test_profit_analysis_service_coverage.py` 通过（8 个用例）。
+  - 毛利率专项覆盖率命令通过（120 passed）；`profit_analysis_service.py` 覆盖率 94%，`margin_prediction.py` 覆盖率 92%，均超过方案要求。
+  - `.venv/bin/python -m ruff check app/api/v1/endpoints/margin_prediction.py app/services/margin_permission_service.py tests/test_margin_prediction_api.py tests/unit/test_profit_analysis_service_coverage.py tests/unit/test_margin_permission_service_coverage.py` 通过。
+  - `.venv/bin/python -m py_compile app/api/v1/endpoints/margin_prediction.py app/services/margin_permission_service.py tests/test_margin_prediction_api.py tests/unit/test_profit_analysis_service_coverage.py tests/unit/test_margin_permission_service_coverage.py` 通过。
+
+## 2026-07-05 维护：销售目标 V2 合并退役
+
+- 清理目标：收口 `sales_targets` 与 `sales_targets_v2` / `target_breakdown_logs` 的销售目标双轨，保留 `/sales/targets` 现有正式主链。
+- 执行结果：
+  - 真实库 `data/app.db` 删除后业务表数为 565。
+  - `sales_targets_v2` 28 行和 `target_breakdown_logs` 20 行已归档到 `data/retired_unused_tables_archive_20260705_121036.db`。
+  - 删除前整库备份：`data/app.before_unused_tables_drop_20260705_121036.db`。
+  - 14 行有效 V2 目标拆成正式 `sales_targets` 的 56 行，指标映射为 `sales_target -> CONTRACT_AMOUNT`、`payment_target -> COLLECTION_AMOUNT`、`lead_target -> LEAD_COUNT`、`opportunity_target -> OPPORTUNITY_COUNT`。
+  - 14 行明显生成脏数据（`target_year=4/7/10/13/16/19/22/25` 等）只归档，不写入正式目标表。
+  - V2 的 `new_customer_target`、`deal_target` 暂无正式目标枚举承接，只保存在归档原始行中，未强行污染正式目标看板。
+- 代码面：
+  - `scripts/retire_unused_tables_20260705.py` 增加销售目标 V2 合并逻辑、合并 manifest、并把 `sales_targets_v2` / `target_breakdown_logs` 纳入退役表集合。
+  - `migrations/20260705_z_drop_unused_residual_tables_sqlite.sql` 增加两张 V2 表的防回潮 drop。
+  - `app/models/sales/__init__.py` 停止注册 `SalesTargetV2` / `TargetBreakdownLog`，避免主模型元数据重新带回 V2 表。
+  - `tests/unit/test_unused_table_retirement.py` 增加“先合并再退役”守护测试，并断言 V2 表不再进入主模型元数据。
+- 验证：
+  - `.venv/bin/python -m pytest tests/unit/test_unused_table_retirement.py tests/unit/test_shortage_alert_task_backfill.py -q` 通过（14 passed）。
+  - `.venv/bin/ruff check scripts/retire_unused_tables_20260705.py tests/unit/test_unused_table_retirement.py app/models/sales/__init__.py` 通过。
+  - `.venv/bin/python -m py_compile scripts/retire_unused_tables_20260705.py tests/unit/test_unused_table_retirement.py` 通过。
+  - `sqlite3 data/app.db` 复核 `sales_targets_v2` / `target_breakdown_logs` 已不存在，`sales_targets` 现有 85 行。
+- 边界：`app/services/sales_target_service.py`、`app/api/v1/endpoints/sales/targets_standalone.py`、`app/schemas/sales_target.py` 仍是未挂载的 V2 代码残留；主模型和主路由已断开。后续如继续深清理，可删除这些未挂载文件及其专用测试。
+
+## 2026-07-05 维护：旧权限表合并退役
+
+- 清理目标：收口旧 `permissions` / `role_permissions` 与新 `api_permissions` / `role_api_permissions` 双轨，保留当前统一权限引擎主链。
+- 执行结果：
+  - 真实库 `data/app.db` 删除后业务表数为 563。
+  - 旧 `permissions` 323 行、旧 `role_permissions` 6 行已归档到 `data/retired_unused_tables_archive_20260705_121755.db`。
+  - 删除前整库备份：`data/app.before_unused_tables_drop_20260705_121755.db`。
+  - 旧角色权限 6 条全部迁到 `role_api_permissions`。
+  - 其中 4 个权限码复用既有 `api_permissions`，2 个已绑定但缺失的新权限码补入 `api_permissions`：`advantage_products:product:manage`、`advantage_products:product:read`。
+  - 旧 `permissions` 中 317 个未被角色绑定的权限定义只归档，不写入新权限中心，避免旧种子污染权限管理页。
+  - `permission_cache_revisions` 已 bump `system` 与 `tenant:1` 两个 scope。
+- 代码面：
+  - `scripts/retire_unused_tables_20260705.py` 增加旧权限合并逻辑和 `legacy_permission_merge_manifest`，并把 `role_permissions` / `permissions` 纳入退役表集合。
+  - `migrations/20260705_z_drop_unused_residual_tables_sqlite.sql` 增加两张旧权限表的防回潮 drop。
+  - `tests/unit/test_unused_table_retirement.py` 增加“只迁已绑定旧权限”的守护测试，防止把未绑定旧权限种子整包复活。
+- 验证：
+  - `.venv/bin/python -m pytest tests/unit/test_unused_table_retirement.py tests/unit/test_shortage_alert_task_backfill.py tests/unit/test_permission_engine.py tests/unit/test_permission_cache_perm13.py -q` 通过（29 passed）。
+  - `.venv/bin/ruff check scripts/retire_unused_tables_20260705.py tests/unit/test_unused_table_retirement.py app/models/sales/__init__.py` 通过。
+  - `.venv/bin/python -m py_compile scripts/retire_unused_tables_20260705.py tests/unit/test_unused_table_retirement.py` 通过。
+  - `import app.main` 通过，路由加载失败 0；`Base.metadata.tables` 中 `permissions` / `role_permissions` 均不存在。
+  - `sqlite3 data/app.db` 复核旧权限两表已不存在，`api_permissions=364`、`role_api_permissions=1056`。
+- 边界：部分历史脚本/迁移仍含旧 `permissions` / `role_permissions` 字样，用于旧库诊断或历史迁移；运行主链和真实库已不再依赖旧表。后续如做脚本卫生，可把旧导出/诊断脚本改查新权限链或移入 archive。
+
+## 2026-07-05 维护：售前方案模板复数表合并退役
+
+- 清理目标：收口 `presale_solution_template` 与旧 AI 模板表 `presale_solution_templates` 双轨，保留正式售前方案模板表作为唯一事实源。
+- 执行结果：
+  - 真实库 `data/app.db` 删除后业务表数为 562。
+  - 旧 `presale_solution_templates` 3 行已归档到 `data/retired_unused_tables_archive_20260705_122850.db`。
+  - 删除前整库备份：`data/app.before_unused_tables_drop_20260705_122850.db`。
+  - 旧表 3 行按 `code` 对齐正式表 `template_no`，均命中既有正式模板编号，记录为 `updated_existing=3`，没有新增重复模板。
+  - 旧表 3 行本身是占位 seed，没有额外有效方案内容；正式表仍保留原有 3 条模板记录。
+- 代码面：
+  - `app/services/presale/presale_ai_service.py` 改读正式 `PresaleSolutionTemplate`，兼容映射 `test_type -> equipment_type`、`use_count -> usage_count`、`content_template -> solution_content`。
+  - `app/services/presale/ammo_library_service.py` 原生 SQL 改查 `presale_solution_template`，弹药库方案推荐不再依赖旧复数表。
+  - `app/models/presale_ai_solution.py` 中 `PresaleAISolutionTemplate` 改为正式模板模型兼容别名，避免 SQLAlchemy metadata 重建 `presale_solution_templates`。
+  - `scripts/retire_unused_tables_20260705.py` 增加旧 AI 模板合并逻辑和 `presale_solution_template_merge_manifest`，并把旧复数表纳入退役集合。
+  - `migrations/20260705_z_drop_unused_residual_tables_sqlite.sql` 增加旧复数表防回潮 drop；`scripts/ghost_tables_baseline.json` 移除旧模型基线项。
+- 验证：
+  - `.venv/bin/python -m pytest tests/unit/test_unused_table_retirement.py tests/unit/test_presale_ai_service.py tests/unit/test_presale_ai_mock_guard.py -q` 通过（45 passed）。
+  - `.venv/bin/ruff check app/services/presale/presale_ai_service.py app/services/presale/ammo_library_service.py app/models/presale_ai_solution.py app/core/database/tenant_scope.py scripts/retire_unused_tables_20260705.py tests/unit/test_presale_ai_service.py tests/unit/test_unused_table_retirement.py` 通过。
+  - `Base.metadata.tables` 中 `presale_solution_templates=False`、`presale_solution_template=True`。
+  - `sqlite3 data/app.db` 复核 `presale_solution_templates` 已不存在，`presale_solution_template` 仍有 3 行。
+  - `PRAGMA foreign_key_check` 未新增问题；仍只有既有 `work_order -> worker`、`stock_count_detail -> stock_count_task`、`permission_audits -> users`、`presale_expenses -> projects`。
+- 边界：历史迁移文件仍含 `presale_solution_templates` 的创建/回滚定义，属于旧版本迁移记录；运行主链、模型 metadata 和真实库已不再依赖旧表。
+
+## 2026-07-05 维护：空 solution_versions 表和绑定验证原型链退役
+
+- 清理目标：收口空 `solution_versions` 表及其配套的绑定校验原型链，避免售前方案、报价版本、成本估算继续指向一张没有数据、没有正式 API 主入口的旧表。
+- 执行结果：
+  - 真实库 `data/app.db` 删除后业务表数为 561。
+  - `solution_versions` 0 行已归档到 `data/retired_unused_tables_archive_20260705_123626.db`。
+  - 删除前整库备份：`data/app.before_unused_tables_drop_20260705_123626.db`。
+  - `presale_ai_solution.current_version_id`、`quote_versions.solution_version_id`、`presale_ai_cost_estimation.solution_version_id` 当前均无非空数据，本轮拆除 FK/关系，仅保留可空兼容列。
+- 代码面：
+  - 删除 `SolutionVersion` 模型、Schema 和销售模型导出，`Base.metadata.tables` 不再注册 `solution_versions`。
+  - 删除未挂载的绑定校验服务、对应单测、前端 `solutionVersionService`、绑定校验卡片/弹窗和销售版本历史组件。
+  - `scripts/retire_unused_tables_20260705.py` 与 `migrations/20260705_z_drop_unused_residual_tables_sqlite.sql` 增加 `solution_versions` 防回潮删除。
+  - `scripts/ghost_tables_baseline.json` 移除 `SolutionVersion(solution_versions)` 基线项。
+- 验证：
+  - `.venv/bin/python -m pytest tests/unit/test_unused_table_retirement.py tests/unit/test_presale_ai_service.py tests/unit/test_presale_ai_mock_guard.py -q` 通过（46 passed）。
+  - `.venv/bin/ruff check app/models/presale_ai_solution.py app/models/sales/quotes.py app/models/sales/presale_ai_cost.py app/models/sales/__init__.py scripts/retire_unused_tables_20260705.py tests/unit/test_unused_table_retirement.py` 通过。
+  - `.venv/bin/python -m py_compile app/models/presale_ai_solution.py app/models/sales/quotes.py app/models/sales/presale_ai_cost.py app/models/sales/__init__.py scripts/retire_unused_tables_20260705.py tests/unit/test_unused_table_retirement.py` 通过。
+  - `import app.main` 通过，路由加载失败 0；`Base.metadata.tables` 中 `solution_versions=False`，且无模型 FK 指向 `solution_versions`。
+  - `npm --prefix frontend run build` 通过；只有既有 Node/Vite 警告和 chunk size 警告。
+  - `sqlite3 data/app.db` 复核 `solution_versions` 已不存在；归档库 manifest 记录 `solution_versions row_count=0`。
+  - `PRAGMA foreign_key_check` 未新增问题；仍只有既有 `work_order -> worker`、`stock_count_detail -> stock_count_task`、`permission_audits -> users`、`presale_expenses -> projects`。
+
+## 2026-07-05 维护：空数据范围规则表退役
+
+- 清理目标：收口空 `role_data_scopes` / `data_scope_rules`。这套资源级自定义数据范围表在 PERM-16 已确认“死在实践中”，真实运行口径是 `roles.data_scope`。
+- 执行结果：
+  - 真实库 `data/app.db` 删除后业务表数为 559。
+  - `role_data_scopes` 0 行、`data_scope_rules` 0 行已归档到 `data/retired_unused_tables_archive_20260705_124356.db`。
+  - 删除前整库备份：`data/app.before_unused_tables_drop_20260705_124356.db`。
+- 代码面：
+  - `DataScopeRule` / `RoleDataScope` 改为非 ORM 兼容壳，不再注册 SQLAlchemy 表；`Role.data_scopes`、`Tenant.data_scope_rules` 关系已移除。
+  - `PermissionService.get_user_data_scopes()` 改为从有效角色 `data_scope` 取最大范围，并给销售、报价、工时、工程绩效等常用 resource key 保留兼容映射。
+  - `DataScopeServiceEnhanced` 增加 `*` 兜底；`CustomRuleService.get_custom_rule()` 不再查询旧表。
+  - 租户共享白名单 `_SHARED_WHEN_NULL_MODEL_NAMES` 移除 `DataScopeRule`，不再把退役表当共享配置模型处理。
+  - `scripts/retire_unused_tables_20260705.py`、`migrations/20260705_z_drop_unused_residual_tables_sqlite.sql` 和 `scripts/ghost_tables_baseline.json` 已同步。
+- 验证：
+  - 新增守护测试先红后绿：ORM metadata 不再包含两张表；退役脚本能归档并按依赖顺序删除空表。
+  - `.venv/bin/python -m pytest tests/unit/test_unused_table_retirement.py::test_retired_models_are_not_registered_in_sqlalchemy_metadata tests/unit/test_unused_table_retirement.py::test_retire_unused_tables_archives_empty_data_scope_tables_before_drop -q` 通过。
+  - `.venv/bin/python -m pytest tests/unit/test_g3_permission_service.py::TestGetUserDataScopes tests/unit/test_permission_service_branches.py::TestPermissionServiceBranches::test_get_user_data_scopes_all tests/unit/test_permission_service_branches.py::TestPermissionServiceBranches::test_get_user_data_scopes_priority tests/unit/test_engperf_data_scope.py::TestDataScopeMerge::test_multiple_roles_take_highest_scope tests/unit/test_permission_and_data_scope_normalization.py::test_data_scope_rule_get_scope_config_dict_parses_json_string tests/unit/test_permission_service_practical.py::TestPermissionService::test_get_user_permissions_basic -q` 通过。
+  - `import app.models` 元数据复核：`data_scope_rules=False`、`role_data_scopes=False`，且无 FK 指向这两张表。
+  - `sqlite3 data/app.db` 复核两张表已不存在；归档库 manifest 记录两张表均为 0 行。
+  - `PRAGMA foreign_key_check` 未新增问题；仍只有既有 `work_order -> worker`、`stock_count_detail -> stock_count_task`、`permission_audits -> users`、`presale_expenses -> projects`。
+
+## 2026-07-05 维护：售后旧工单影子表并入中心服务工单
+
+- 清理目标：收口旧 `after_sales_support_tickets` 与中心 `service_tickets` 的售后工单双轨。AS-07 已经把售后中心创建/列表改到中心服务工单，本轮删除空影子表并处理依附外键。
+- 执行结果：
+  - 真实库 `data/app.db` 删除后业务表数为 558，空表数为 61。
+  - `after_sales_support_tickets` 0 行已归档到 `data/retired_unused_tables_archive_20260705_125345.db`。
+  - 删除前整库备份：`data/app.before_unused_tables_drop_20260705_125345.db`。
+  - 保留 `after_sales_field_services`、`after_sales_sla`、`after_sales_satisfaction`；脚本重建这 3 张空依附表，把 `ticket_id` 外键从旧影子表改指向 `service_tickets`。
+- 代码面：
+  - 删除 `AfterSalesSupportTicket` ORM 和模型导出，`Base.metadata.tables` 不再注册 `after_sales_support_tickets`。
+  - `AfterSalesFieldService.ticket_id`、`AfterSalesSLA.ticket_id`、`AfterSalesSatisfaction.ticket_id` 改为 FK 到 `service_tickets.id`。
+  - `after_sales.py` 去掉 legacy 工单查询/格式化；工单列表、创建、升级统一使用 `ServiceTicket`。
+  - `project_after_sales_view.py` 售后总览改从 `ServiceTicket` 汇总支持工单。
+  - `scripts/retire_unused_tables_20260705.py` 增加针对空售后依附表的安全重建逻辑，避免删除旧表后留下无效 FK。
+- 验证：
+  - 新增守护测试先红后绿：ORM metadata 不含旧表；退役脚本能归档旧表、重建依附表并把外键改到 `service_tickets`。
+  - 真实库复核：`after_sales_support_tickets` 已不存在；3 张依附表仍存在；三者 `ticket_id` 均指向 `service_tickets.id`。
+  - `PRAGMA foreign_key_check` 未新增问题；仍只有既有 `work_order -> worker`、`stock_count_detail -> stock_count_task`、`permission_audits -> users`、`presale_expenses -> projects`。
+- 边界：本轮不是删除售后模块；质保、备件、现场服务、SLA、满意度、知识库等售后表继续保留。
+
+## 2026-07-05 维护：项目变更旧审批明细并入统一审批日志
+
+- 清理目标：收口 `change_approval_records` 与统一审批动作日志的双轨。项目变更主事实继续保留在 `change_requests`，审批动作历史统一写 `approval_action_logs`。
+- 执行结果：
+  - 真实库 `data/app.db` 删除后业务表数为 557，空表数为 61。
+  - `change_approval_records` 3 行已归档到 `data/retired_unused_tables_archive_20260705_130451.db`。
+  - 删除前整库备份：`data/app.before_unused_tables_drop_20260705_130451.db`。
+  - 迁移新增 `approval_instances=3`、`approval_action_logs=3`；旧表 3 条 `decision` 均为脏值 `ch230356`，按 `change_requests.status` 推断 2 条 `APPROVE`，1 条保留为 `COMMENT`，原值写入 `action_detail`。
+- 代码面：
+  - `ChangeApprovalRecord` 改为非 ORM 兼容壳，不再注册 `change_approval_records`。
+  - `ProjectChangeRequestsService.approve_change_request()` 不再写旧表，改写统一 `ApprovalActionLog`。
+  - `ProjectChangeRequestsService.get_approval_records()` 改从 `approval_instances` / `approval_action_logs` 回放旧接口字段。
+  - `scripts/retire_unused_tables_20260705.py` 增加旧项目变更审批明细迁移逻辑，并把旧表纳入退役集合。
+  - `tests/api/test_path_param_route_contracts.py` 的旧表插入用例改为统一审批日志，避免测试回潮。
+- 验证：
+  - 新增守护测试先红后绿：服务层不再 add `ChangeApprovalRecord`，退役脚本会先迁移再删除旧表。
+  - `.venv/bin/python -m pytest tests/unit/test_unused_table_retirement.py tests/unit/test_project_change_requests_service.py -q` 通过（57 passed）。
+  - 真实库复核：`change_approval_records` 已不存在；`PROJECT_CHANGE_REQUEST` 统一实例 3 条、动作日志 3 条。
+  - `PRAGMA foreign_key_check` 未新增问题；仍只有既有 `work_order -> worker`、`stock_count_detail -> stock_count_task`、`permission_audits -> users`、`presale_expenses -> projects`。
+
+## 2026-07-05 维护：工时旧审批日志退役
+
+- 清理目标：收口 `timesheet_approval_log` 与统一审批动作日志的双轨。工时审批接口已经使用 `ApprovalEngineService`，审批历史统一读 `approval_action_logs`。
+- 执行结果：
+  - 真实库 `data/app.db` 删除后业务表数为 556，空表数为 61。
+  - `timesheet_approval_log` 20 行已归档到 `data/retired_unused_tables_archive_20260705_132031.db`。
+  - 删除前整库备份：`data/app.before_unused_tables_drop_20260705_132031.db`。
+  - 20 行旧日志均无 `timesheet_id` / `batch_id`，且 `action` 全是 `timesheet_appr230118` 脏值；判定为孤儿生成残留，只归档、不伪造统一审批实例。
+- 代码面：
+  - `TimesheetApprovalLog` 改为非 ORM 兼容壳，不再注册 `timesheet_approval_log`。
+  - `scripts/retire_unused_tables_20260705.py` 增加有锚点旧工时日志迁入 `approval_instances` / `approval_action_logs` 的逻辑；无锚点行跳过但保留外部归档。
+  - 工时集成测试改为写入/查询 `ApprovalInstance` + `ApprovalActionLog`，不再手工造旧表日志。
+  - `migrations/20260705_z_drop_unused_residual_tables_sqlite.sql` 增加旧表 DROP 防回潮；`scripts/ghost_tables_baseline.json` 移除 `TimesheetApprovalLog(timesheet_approval_log)`。
+- 验证：
+  - 新增守护测试先红后绿：有 `timesheet_id` 的旧日志会迁入统一审批日志，无实体锚点旧日志只归档跳过。
+  - `pytest tests/unit/test_unused_table_retirement.py -q` 通过（12 passed）。
+  - `pytest tests/integration/test_timesheet_flow_integration.py -q` 通过（8 passed）。
+  - 真实库复核：`timesheet_approval_log` 已不存在；`approval_instances` / `approval_action_logs` 的 `TIMESHEET` 计数仍为 0，未被孤儿脏数据污染。
+  - `PRAGMA foreign_key_check` 未新增问题；仍只有既有 `work_order -> worker`、`stock_count_detail -> stock_count_task`、`permission_audits -> users`、`presale_expenses -> projects`。
+
+## 2026-07-05 维护：ECN旧审批表并入统一审批任务
+
+- 清理目标：收口 `ecn_approvals` / `ecn_approval_matrix` 与统一审批引擎的双轨。ECN 审批主链保留 `approval_instances` / `approval_tasks` / `approval_action_logs`。
+- 执行结果：
+  - 真实库 `data/app.db` 删除后业务表数为 554。
+  - `ecn_approvals` 3 行、`ecn_approval_matrix` 3 行已归档到 `data/retired_unused_tables_archive_20260705_133524.db`。
+  - 删除前整库备份：`data/app.before_unused_tables_drop_20260705_133524.db`。
+  - 3 条旧 `ecn_approvals` 都缺少有效审批人/审批结果，判定为生成残留；只归档不伪造统一审批日志。真实库 ECN 统一审批保持 `approval_instances=1`、`approval_action_logs=7`。
+- 代码面：
+  - `EcnApproval` / `EcnApprovalMatrix` 改为非 ORM 兼容壳，不再注册 `ecn_approvals` / `ecn_approval_matrix`。
+  - ECN 评估完成后改调用 `EcnApprovalService` 提交统一审批；旧审批矩阵创建记录逻辑移除。
+  - ECN 超时提醒、定时任务、物料干系人、评估通知、工程看板统计均改读统一审批任务。
+  - `EcnApprovalAdapter.create_ecn_approval_records()` 兼容旧方法名，但只返回统一 `ApprovalTask`，不再同步旧表。
+  - `scripts/retire_unused_tables_20260705.py` 增加 ECN 旧审批迁移/归档逻辑；`migrations/20260705_z_drop_unused_residual_tables_sqlite.sql` 增加旧表 DROP；`scripts/ghost_tables_baseline.json` 移除旧矩阵 ghost。
+- 验证：
+  - 新增守护测试先红后绿：旧 ECN 审批行有有效锚点时会迁入统一审批实例/日志；无效行只归档跳过。
+  - `python -m pytest tests/unit/test_unused_table_retirement.py tests/unit/test_ecn_scheduler_service.py -q` 通过（29 passed）。
+  - `python -m ruff check ...` 和 `python -m py_compile ...` 通过。
+  - `from app.main import app` 路由加载通过，路由失败汇总 0 项。
+  - 真实库复核：`ecn_approvals` / `ecn_approval_matrix` 已不存在；归档库两表各 3 行，manifest 完整；`PRAGMA foreign_key_check` 未新增问题，仍只有既有孤儿外键项。

@@ -10,7 +10,6 @@ from sqlalchemy import (
     DECIMAL,
     JSON,
     TIMESTAMP,
-    Boolean,
     Column,
     Enum,
     ForeignKey,
@@ -40,14 +39,6 @@ class QuotationStatus(str, enum.Enum):
     SENT = "sent"
     ACCEPTED = "accepted"
     REJECTED = "rejected"
-
-
-class TemplateType(str, enum.Enum):
-    """模板类型枚举"""
-
-    BASIC = "basic"
-    STANDARD = "standard"
-    PREMIUM = "premium"
 
 
 class PresaleAIQuotation(Base):
@@ -97,76 +88,6 @@ class PresaleAIQuotation(Base):
 
     def __repr__(self):
         return f"<PresaleAIQuotation(id={self.id}, number={self.quotation_number}, type={self.quotation_type}, status={self.status})>"
-
-
-class QuotationTemplate(Base):
-    """报价单模板库
-
-    【状态】未启用 - 报价模板"""
-
-    __tablename__ = "quotation_templates"
-
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    name = Column(String(100), nullable=False, comment="模板名称")
-    template_type = Column(Enum(TemplateType), nullable=False, comment="模板类型")
-
-    # 模板内容 - JSON格式存储
-    template_content = Column(JSON, nullable=False, comment="模板内容")
-
-    # PDF模板路径
-    pdf_template_path = Column(String(255), nullable=True, comment="PDF模板路径")
-
-    # 模板配置
-    default_validity_days = Column(Integer, nullable=False, default=30, comment="默认有效期")
-    default_tax_rate = Column(DECIMAL(5, 4), nullable=False, default=0.13, comment="默认税率")
-    default_discount_rate = Column(DECIMAL(5, 4), nullable=False, default=0, comment="默认折扣率")
-
-    # 状态
-    is_active = Column(Boolean, nullable=False, default=True, comment="是否启用")
-
-    # 创建信息
-    created_at = Column(TIMESTAMP, nullable=False, default=datetime.now, comment="创建时间")
-    updated_at = Column(TIMESTAMP, nullable=True, onupdate=datetime.now, comment="更新时间")
-    created_by = Column(Integer, nullable=True, comment="创建人ID")
-
-    # 描述
-    description = Column(Text, nullable=True, comment="模板描述")
-
-    def __repr__(self):
-        return f"<QuotationTemplate(id={self.id}, name={self.name}, type={self.template_type})>"
-
-
-class QuotationApproval(Base):
-    """报价单审批记录"""
-
-    __tablename__ = "quotation_approvals"
-
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    quotation_id = Column(
-        Integer, ForeignKey("presale_ai_quotation.id"), nullable=False, comment="报价单ID"
-    )
-    approver_id = Column(Integer, nullable=False, comment="审批人ID")
-
-    # 审批结果
-    status = Column(
-        Enum("pending", "approved", "rejected", name="approval_status"),
-        nullable=False,
-        default="pending",
-        comment="审批状态",
-    )
-    comments = Column(Text, nullable=True, comment="审批意见")
-
-    # 时间
-    created_at = Column(TIMESTAMP, nullable=False, default=datetime.now, comment="创建时间")
-    approved_at = Column(TIMESTAMP, nullable=True, comment="审批时间")
-
-    # 关联
-    quotation = relationship("PresaleAIQuotation", backref="approvals")
-
-    def __repr__(self):
-        return f"<QuotationApproval(id={self.id}, quotation_id={self.quotation_id}, status={self.status})>"
 
 
 class QuotationVersion(Base):

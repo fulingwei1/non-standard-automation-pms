@@ -358,6 +358,7 @@ class ApprovalEngineCore:
         instance_id: int,
         operator_id: int,
         action: str,
+        tenant_id: Optional[int] = None,
         task_id: Optional[int] = None,
         node_id: Optional[int] = None,
         operator_name: Optional[str] = None,
@@ -366,9 +367,11 @@ class ApprovalEngineCore:
         action_detail: Optional[Dict] = None,
         before_status: Optional[str] = None,
         after_status: Optional[str] = None,
+        action_at: Optional[datetime] = None,
     ):
         """记录操作日志"""
         log = ApprovalActionLog(
+            tenant_id=tenant_id,
             instance_id=instance_id,
             task_id=task_id,
             node_id=node_id,
@@ -380,6 +383,41 @@ class ApprovalEngineCore:
             attachments=attachments,
             before_status=before_status,
             after_status=after_status,
-            action_at=datetime.now(),
+            action_at=action_at or datetime.now(),
         )
         self.db.add(log)
+        return log
+
+    def record_action_log(
+        self,
+        *,
+        instance_id: int,
+        operator_id: int,
+        action: str,
+        tenant_id: Optional[int] = None,
+        task_id: Optional[int] = None,
+        node_id: Optional[int] = None,
+        operator_name: Optional[str] = None,
+        comment: Optional[str] = None,
+        attachments: Optional[List[Dict]] = None,
+        action_detail: Optional[Dict] = None,
+        before_status: Optional[str] = None,
+        after_status: Optional[str] = None,
+        action_at: Optional[datetime] = None,
+    ) -> ApprovalActionLog:
+        """Public write boundary for approval action history."""
+        return self._log_action(
+            tenant_id=tenant_id,
+            instance_id=instance_id,
+            task_id=task_id,
+            node_id=node_id,
+            operator_id=operator_id,
+            operator_name=operator_name,
+            action=action,
+            action_detail=action_detail,
+            comment=comment,
+            attachments=attachments,
+            before_status=before_status,
+            after_status=after_status,
+            action_at=action_at,
+        )

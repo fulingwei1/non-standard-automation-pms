@@ -5,6 +5,9 @@
 包含AI澄清的CRUD操作
 """
 
+from __future__ import annotations
+
+from datetime import datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -17,6 +20,7 @@ from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.enums import AssessmentSourceTypeEnum
 from app.models.sales import AIClarification, Lead, Opportunity
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import (
@@ -24,9 +28,73 @@ from app.schemas.sales import (
     AIClarificationResponse,
     AIClarificationUpdate,
 )
-from app.utils.db_helpers import get_or_404, save_obj
+from app.services.sales.lead_operation_audit import log_lead_operation
+from app.services.sales.opportunity_operation_audit import log_opportunity_operation
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+
+def _audit_scalar(value: Any) -> Any:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if hasattr(value, "value"):
+        return value.value
+    return value
+
+
+def _ai_clarification_audit_value(clarification: AIClarification) -> dict[str, Any]:
+    fields = [
+        "id",
+        "source_type",
+        "source_id",
+        "round",
+        "questions",
+        "answers",
+        "created_at",
+        "updated_at",
+    ]
+    return {field: _audit_scalar(getattr(clarification, field, None)) for field in fields}
+
+
+def _log_ai_clarification_source_operation(
+    db: Session,
+    clarification: AIClarification,
+    current_user: User,
+    *,
+    old_clarification: dict[str, Any] | None,
+    new_clarification: dict[str, Any] | None,
+    operation_desc: str,
+    remark: str | None = None,
+) -> None:
+    old_value = {"ai_clarification": old_clarification}
+    new_value = {"ai_clarification": new_clarification}
+    if clarification.source_type == AssessmentSourceTypeEnum.LEAD.value:
+        lead = get_or_404(db, Lead, clarification.source_id, detail="线索不存在")
+        log_lead_operation(
+            db,
+            lead,
+            SalesOperationType.UPDATE,
+            current_user,
+            old_value=old_value,
+            new_value=new_value,
+            operation_desc=operation_desc,
+            remark=remark,
+        )
+        return
+
+    if clarification.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value:
+        opportunity = get_or_404(db, Opportunity, clarification.source_id, detail="商机不存在")
+        log_opportunity_operation(
+            db,
+            opportunity,
+            SalesOperationType.UPDATE,
+            current_user,
+            old_value=old_value,
+            new_value=new_value,
+            operation_desc=operation_desc,
+            remark=remark,
+        )
 
 
 @router.get("/ai-clarifications", response_model=PaginatedResponse[AIClarificationResponse])
@@ -116,10 +184,22 @@ def create_ai_clarification_for_lead(
         source_id=lead_id,
         round=max_round + 1,
         questions=clarification_in.questions,
-        answers=clarification_in.answers,
+        answers=getattr(clarification_in, "answers", None),
     )
 
-    save_obj(db, clarification)
+    db.add(clarification)
+    db.flush()
+    _log_ai_clarification_source_operation(
+        db,
+        clarification,
+        current_user,
+        old_clarification=None,
+        new_clarification=_ai_clarification_audit_value(clarification),
+        operation_desc="创建线索AI澄清",
+        remark=clarification_in.questions,
+    )
+    db.commit()
+    db.refresh(clarification)
 
     return AIClarificationResponse(
         id=clarification.id,
@@ -168,10 +248,22 @@ def create_ai_clarification_for_opportunity(
         source_id=opp_id,
         round=max_round + 1,
         questions=clarification_in.questions,
-        answers=clarification_in.answers,
+        answers=getattr(clarification_in, "answers", None),
     )
 
-    save_obj(db, clarification)
+    db.add(clarification)
+    db.flush()
+    _log_ai_clarification_source_operation(
+        db,
+        clarification,
+        current_user,
+        old_clarification=None,
+        new_clarification=_ai_clarification_audit_value(clarification),
+        operation_desc="创建商机AI澄清",
+        remark=clarification_in.questions,
+    )
+    db.commit()
+    db.refresh(clarification)
 
     return AIClarificationResponse(
         id=clarification.id,
@@ -201,8 +293,19 @@ def update_ai_clarification(
     if not clarification:
         raise HTTPException(status_code=404, detail="AI澄清记录不存在")
 
+    old_clarification = _ai_clarification_audit_value(clarification)
     clarification.answers = clarification_in.answers
 
+    db.flush()
+    _log_ai_clarification_source_operation(
+        db,
+        clarification,
+        current_user,
+        old_clarification=old_clarification,
+        new_clarification=_ai_clarification_audit_value(clarification),
+        operation_desc="更新AI澄清答案",
+        remark=clarification_in.answers,
+    )
     db.commit()
     db.refresh(clarification)
 

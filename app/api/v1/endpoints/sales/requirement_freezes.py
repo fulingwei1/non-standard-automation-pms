@@ -5,7 +5,8 @@
 包含线索和商机的需求冻结管理
 """
 
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -15,15 +16,66 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.enums import AssessmentSourceTypeEnum
+from app.models.sales.operation_log import SalesOperationType
 from app.models.sales import Lead, LeadRequirementDetail, Opportunity, RequirementFreeze
 from app.models.user import User
 from app.schemas.sales import (
     RequirementFreezeCreate,
     RequirementFreezeResponse,
 )
-from app.utils.db_helpers import get_or_404, save_obj
+from app.services.sales.lead_operation_audit import log_lead_operation
+from app.services.sales.opportunity_operation_audit import log_opportunity_operation
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+
+def _audit_scalar(value: Any) -> Any:
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, float):
+        return str(Decimal(str(value)).quantize(Decimal("0.01")))
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if hasattr(value, "value"):
+        return value.value
+    return value
+
+
+def _requirement_detail_audit_value(detail: LeadRequirementDetail) -> dict[str, Any]:
+    fields = [
+        "id",
+        "lead_id",
+        "target_object_type",
+        "application_scenario",
+        "requirement_maturity",
+        "has_sow",
+        "has_interface_doc",
+        "has_drawing_doc",
+        "cycle_time_seconds",
+        "acceptance_method",
+        "acceptance_basis",
+        "requirement_version",
+        "is_frozen",
+        "frozen_at",
+        "frozen_by",
+    ]
+    return {field: _audit_scalar(getattr(detail, field, None)) for field in fields}
+
+
+def _requirement_freeze_audit_value(freeze: RequirementFreeze) -> dict[str, Any]:
+    fields = [
+        "id",
+        "source_type",
+        "source_id",
+        "freeze_type",
+        "freeze_time",
+        "frozen_by",
+        "version_number",
+        "requires_ecr",
+        "description",
+    ]
+    return {field: _audit_scalar(getattr(freeze, field, None)) for field in fields}
 
 
 @router.get("/leads/{lead_id}/requirement-freezes", response_model=List[RequirementFreezeResponse])
@@ -80,7 +132,7 @@ def create_lead_requirement_freeze(
     """
     创建线索需求冻结记录
     """
-    get_or_404(db, Lead, lead_id, detail="线索不存在")
+    lead = get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     # 检查需求详情是否存在
     requirement_detail = (
@@ -89,6 +141,8 @@ def create_lead_requirement_freeze(
 
     if not requirement_detail:
         raise HTTPException(status_code=400, detail="需求详情不存在，请先创建需求详情")
+
+    old_requirement_detail = _requirement_detail_audit_value(requirement_detail)
 
     # 创建冻结记录
     freeze = RequirementFreeze(
@@ -109,6 +163,23 @@ def create_lead_requirement_freeze(
     requirement_detail.frozen_by = current_user.id
     requirement_detail.requirement_version = freeze_in.version_number
 
+    db.flush()
+    log_lead_operation(
+        db,
+        lead,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value={
+            "requirement_detail": old_requirement_detail,
+            "requirement_freeze": None,
+        },
+        new_value={
+            "requirement_detail": _requirement_detail_audit_value(requirement_detail),
+            "requirement_freeze": _requirement_freeze_audit_value(freeze),
+        },
+        operation_desc="冻结线索需求",
+        remark=freeze_in.description,
+    )
     db.commit()
     db.refresh(freeze)
 
@@ -176,7 +247,7 @@ def create_opportunity_requirement_freeze(
     """
     创建商机需求冻结记录
     """
-    get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     # 创建冻结记录
     freeze = RequirementFreeze(
@@ -189,7 +260,20 @@ def create_opportunity_requirement_freeze(
         frozen_by=current_user.id,
     )
 
-    save_obj(db, freeze)
+    db.add(freeze)
+    db.flush()
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value={"requirement_freeze": None},
+        new_value={"requirement_freeze": _requirement_freeze_audit_value(freeze)},
+        operation_desc="冻结商机需求",
+        remark=freeze_in.description,
+    )
+    db.commit()
+    db.refresh(freeze)
 
     frozen_by_name = current_user.real_name
     response_data = RequirementFreezeResponse.model_validate(freeze)

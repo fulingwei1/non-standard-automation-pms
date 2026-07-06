@@ -7,7 +7,7 @@ from decimal import Decimal
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, or_
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -18,6 +18,7 @@ from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.presales import ResourceInvestmentSummary, ResourceWasteAnalysis
+from app.services.report_labor_cost import calculate_timesheet_labor_summary
 
 from .utils import convert_lead_code_to_project_code, parse_presale_period
 
@@ -47,9 +48,14 @@ async def get_lead_resource_investment(
     if not project:
         raise HTTPException(status_code=404, detail=f"未找到线索/项目: {lead_id}")
 
-    timesheets = db.query(Timesheet).filter(Timesheet.project_id == project.id).all()
+    timesheets = (
+        db.query(Timesheet)
+        .filter(Timesheet.project_id == project.id, Timesheet.status == "APPROVED")
+        .all()
+    )
 
-    total_hours = sum(float(sheet.hours or 0) for sheet in timesheets)
+    labor_summary = calculate_timesheet_labor_summary(db, timesheets)
+    total_hours = float(labor_summary.total_hours)
     engineer_ids = set(sheet.user_id for sheet in timesheets if sheet.user_id)
 
     engineer_hours = {}
@@ -82,12 +88,9 @@ async def get_lead_resource_investment(
             investment_by_month[month_key] = 0.0
         investment_by_month[month_key] += float(sheet.hours or 0)
 
-    hourly_rate = Decimal("300")
-    estimated_cost = Decimal(str(total_hours)) * hourly_rate
-
     return ResponseModel(
         code=200,
-            message="查询成功",
+        message="查询成功",
         data=ResourceInvestmentSummary(
             lead_id=lead_id,
             lead_name=project.project_name,
@@ -97,8 +100,8 @@ async def get_lead_resource_investment(
             design_hours=0,
             engineer_count=len(engineer_ids),
             engineers=engineers,
-            estimated_cost=estimated_cost,
-            hourly_rate=hourly_rate,
+            estimated_cost=labor_summary.total_cost,
+            hourly_rate=labor_summary.weighted_hourly_rate,
             investment_by_stage={},
             investment_by_month=investment_by_month,
         ),
@@ -139,23 +142,26 @@ async def get_resource_waste_analysis(
 
     total_investment_hours = 0.0
     wasted_hours = 0.0
+    wasted_cost = Decimal("0")
     loss_reasons = {}
 
     for project in projects:
-        project_hours = float(
-            db.query(func.sum(Timesheet.hours)).filter(Timesheet.project_id == project.id).scalar()
-            or 0
+        timesheets = (
+            db.query(Timesheet)
+            .filter(Timesheet.project_id == project.id, Timesheet.status == "APPROVED")
+            .all()
         )
+        labor_summary = calculate_timesheet_labor_summary(db, timesheets)
+        project_hours = float(labor_summary.total_hours)
 
         total_investment_hours += project_hours
 
         if project.outcome in [LeadOutcomeEnum.LOST.value, LeadOutcomeEnum.ABANDONED.value]:
             wasted_hours += project_hours
+            wasted_cost += labor_summary.total_cost
             reason = project.loss_reason or "OTHER"
             loss_reasons[reason] = loss_reasons.get(reason, 0) + 1
 
-    hourly_rate = Decimal("300")
-    wasted_cost = Decimal(str(wasted_hours)) * hourly_rate
     waste_rate = wasted_hours / total_investment_hours if total_investment_hours > 0 else 0
 
     return ResponseModel(

@@ -3,8 +3,10 @@
 发票工作流审批 API endpoints (新版)
 """
 
+from __future__ import annotations
+
 import logging
-from typing import Any, List
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -24,6 +26,7 @@ from app.models.approval import (
     ApprovalTemplate,
 )
 from app.models.sales import Invoice
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import (
@@ -34,6 +37,10 @@ from app.schemas.sales import (
     ApprovalStatusResponse,
 )
 from app.services.approval_engine import ApprovalEngineService
+from app.services.sales.invoice_operation_audit import (
+    invoice_audit_value,
+    log_invoice_operation,
+)
 from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
@@ -121,6 +128,29 @@ def _invoice_form_data(invoice: Invoice, comment: str | None = None) -> dict[str
     return data
 
 
+def _log_invoice_approval_operation(
+    db: Session,
+    invoice: Invoice,
+    operation_type: str,
+    current_user: User,
+    *,
+    old_value: dict[str, Any],
+    operation_desc: str,
+    remark: str | None = None,
+) -> None:
+    db.flush()
+    log_invoice_operation(
+        db,
+        invoice,
+        operation_type,
+        current_user,
+        old_value=old_value,
+        new_value=invoice_audit_value(invoice),
+        operation_desc=operation_desc,
+        remark=remark,
+    )
+
+
 def _get_current_invoice_approval_task(
     db: Session,
     instance_id: int,
@@ -162,7 +192,7 @@ def start_invoice_approval(
     *,
     db: Session = Depends(deps.get_db),
     invoice_id: int,
-    approval_request: ApprovalStartRequest | None = None,
+    approval_request: Optional[ApprovalStartRequest] = None,
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
@@ -186,6 +216,7 @@ def start_invoice_approval(
 
     workflow_service = ApprovalEngineService(db)
     try:
+        old_value = invoice_audit_value(invoice)
         template_code = _get_invoice_template_code(db, approval_request.workflow_id)
         instance = workflow_service.submit(
             template_code=template_code,
@@ -198,6 +229,17 @@ def start_invoice_approval(
             urgency="NORMAL",
             cc_user_ids=None,
         )
+        db.refresh(invoice)
+        _log_invoice_approval_operation(
+            db,
+            invoice,
+            SalesOperationType.SUBMIT,
+            current_user,
+            old_value=old_value,
+            operation_desc="提交发票审批",
+            remark=approval_request.comment,
+        )
+        db.commit()
 
         return ResponseModel(
             code=200,
@@ -287,6 +329,7 @@ def invoice_approval_action(
         raise HTTPException(status_code=404, detail="审批记录不存在")
 
     workflow_service = ApprovalEngineService(db)
+    old_value = invoice_audit_value(invoice)
 
     try:
         if action_request.action == ApprovalActionEnum.APPROVE:
@@ -294,12 +337,15 @@ def invoice_approval_action(
             task = workflow_service.approve(
                 task_id=task.id, approver_id=current_user.id, comment=action_request.comment
             )
+            db.refresh(invoice)
 
             if task.instance.status == ApprovalRecordStatusEnum.APPROVED.value:
                 # 审批完成，允许开票
                 invoice.status = InvoiceStatusEnum.APPROVED.value
             message = "审批通过"
             response_status = task.instance.status
+            operation_type = SalesOperationType.APPROVE
+            operation_desc = "发票审批通过"
 
         elif action_request.action == ApprovalActionEnum.REJECT:
             task = _get_current_invoice_approval_task(db, instance.id, current_user.id)
@@ -308,9 +354,12 @@ def invoice_approval_action(
                 approver_id=current_user.id,
                 comment=action_request.comment or "审批驳回",
             )
+            db.refresh(invoice)
             invoice.status = InvoiceStatusEnum.REJECTED.value
             message = "审批已驳回"
             response_status = task.instance.status
+            operation_type = SalesOperationType.REJECT
+            operation_desc = "发票审批驳回"
 
         elif action_request.action == ApprovalActionEnum.DELEGATE:
             if not action_request.delegate_to_id:
@@ -325,6 +374,8 @@ def invoice_approval_action(
             )
             message = "审批已委托"
             response_status = delegated_task.instance.status
+            operation_type = SalesOperationType.TRANSFER
+            operation_desc = "发票审批委托"
 
         elif action_request.action == ApprovalActionEnum.WITHDRAW:
             instance = workflow_service.withdraw(
@@ -332,14 +383,26 @@ def invoice_approval_action(
                 initiator_id=current_user.id,
                 comment=action_request.comment,
             )
+            db.refresh(invoice)
             message = "审批已撤回"
             response_status = instance.status
+            operation_type = SalesOperationType.STATUS_CHANGE
+            operation_desc = "撤回发票审批"
 
         else:
             raise HTTPException(
                 status_code=400, detail=f"不支持的审批操作: {action_request.action}"
             )
 
+        _log_invoice_approval_operation(
+            db,
+            invoice,
+            operation_type,
+            current_user,
+            old_value=old_value,
+            operation_desc=operation_desc,
+            remark=action_request.comment,
+        )
         db.commit()
 
         return ResponseModel(
@@ -358,7 +421,7 @@ def approve_invoice_legacy(
     *,
     db: Session = Depends(deps.get_db),
     invoice_id: int,
-    approval_request: dict[str, Any] | None = Body(default=None),
+    approval_request: Optional[dict[str, Any]] = Body(default=None),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """旧版发票审批通过入口，转发到统一审批动作。"""

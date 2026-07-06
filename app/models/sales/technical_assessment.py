@@ -315,34 +315,3 @@ class AIClarification(Base, TimestampMixin):
 
     def __repr__(self):
         return f"<AIClarification {self.id}>"
-
-
-class QuoteApproval(Base, TimestampMixin):
-    """报价审批表"""
-
-    __tablename__ = "quote_approvals"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")
-    approval_level = Column(Integer, nullable=False, comment="审批层级")
-    approval_role = Column(String(50), nullable=False, comment="审批角色")
-    approver_id = Column(Integer, ForeignKey("users.id"), comment="审批人ID")
-    approver_name = Column(String(50), comment="审批人姓名")
-    approval_result = Column(String(20), comment="审批结果")
-    approval_opinion = Column(Text, comment="审批意见")
-    status = Column(String(20), default="PENDING", comment="状态")
-    approved_at = Column(DateTime, comment="审批时间")
-    due_date = Column(DateTime, comment="审批期限")
-    is_overdue = Column(Boolean, default=False, comment="是否超期")
-
-    quote = relationship("Quote", foreign_keys=[quote_id])
-    approver = relationship("User", foreign_keys=[approver_id])
-
-    __table_args__ = (
-        Index("idx_quote_approval_quote", "quote_id"),
-        Index("idx_quote_approval_approver", "approver_id"),
-        Index("idx_quote_approval_status", "status"),
-    )
-
-    def __repr__(self):
-        return f"<QuoteApproval {self.quote_id}-L{self.approval_level}>"

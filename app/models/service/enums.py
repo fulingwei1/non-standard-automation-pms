@@ -149,7 +149,7 @@ def get_service_ticket_transition_rules() -> dict[str, list[str]]:
 def validate_service_ticket_transition(
     current_status: Optional[Union[str, Enum]],
     new_status: Optional[Union[str, Enum]],
-) -> tuple[bool, str | None]:
+) -> tuple[bool, Optional[str]]:
     normalized_current = normalized_service_ticket_status_value(current_status)
     normalized_new = normalized_service_ticket_status_value(new_status)
     valid_statuses = {status.value for status in ServiceTicketStatusEnum}

@@ -50,12 +50,12 @@ class OthersDashboardAdapter:
     def get_recent_activities(self, limit: int = 10, user_id: Optional[int] = None) -> list:
         """获取最近活动"""
         try:
-            from app.models.approval import ApprovalRecord
+            from app.models.approval import ApprovalInstance
 
-            query = self.db.query(ApprovalRecord)
+            query = self.db.query(ApprovalInstance)
             if user_id is not None:
-                query = query.filter(ApprovalRecord.user_id == user_id)
-            query = query.order_by(ApprovalRecord.created_at.desc())
+                query = query.filter(ApprovalInstance.initiator_id == user_id)
+            query = query.order_by(ApprovalInstance.created_at.desc())
             query = query.limit(limit)
             return query.all()
         except Exception:

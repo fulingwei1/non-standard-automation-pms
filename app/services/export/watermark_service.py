@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 # 尝试导入 PDF 处理库
 try:
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.cidfonts import UnicodeCIDFont
     from reportlab.pdfgen import canvas
 
     REPORTLAB_AVAILABLE = True
@@ -31,8 +33,13 @@ try:
 
     PYPDF_AVAILABLE = True
 except ImportError:
-    PYPDF_AVAILABLE = False
-    logger.warning("pypdf 未安装，PDF 水印合并功能不可用")
+    try:
+        from PyPDF2 import PdfReader, PdfWriter
+
+        PYPDF_AVAILABLE = True
+    except ImportError:
+        PYPDF_AVAILABLE = False
+        logger.warning("pypdf/PyPDF2 未安装，PDF 水印合并功能不可用")
 
 # 尝试导入 Excel 处理库
 try:
@@ -102,6 +109,36 @@ class WatermarkConfig:
 class WatermarkService:
     """水印服务"""
 
+    CJK_PDF_FONT_NAME = "STSong-Light"
+
+    @staticmethod
+    def _has_non_ascii_text(text: str) -> bool:
+        return any(ord(char) > 127 for char in text)
+
+    @staticmethod
+    def _ensure_cjk_pdf_font() -> bool:
+        if not REPORTLAB_AVAILABLE:
+            return False
+
+        try:
+            pdfmetrics.getFont(WatermarkService.CJK_PDF_FONT_NAME)
+            return True
+        except KeyError:
+            try:
+                pdfmetrics.registerFont(UnicodeCIDFont(WatermarkService.CJK_PDF_FONT_NAME))
+                return True
+            except Exception as exc:
+                logger.warning("注册中文 PDF 水印字体失败: %s", exc)
+                return False
+
+    @staticmethod
+    def get_pdf_font_name(watermark_text: str) -> str:
+        """根据水印文本选择 PDF 字体，中文文本使用 CID 字体避免黑方块。"""
+        if WatermarkService._has_non_ascii_text(watermark_text):
+            if WatermarkService._ensure_cjk_pdf_font():
+                return WatermarkService.CJK_PDF_FONT_NAME
+        return "Helvetica"
+
     @staticmethod
     def add_pdf_watermark(
         pdf_content: bytes,
@@ -145,6 +182,7 @@ class WatermarkService:
 
             # 获取水印文本
             watermark_text = config.build_watermark_text()
+            font_name = WatermarkService.get_pdf_font_name(watermark_text)
 
             # 绘制平铺水印
             c.saveState()
@@ -161,7 +199,7 @@ class WatermarkService:
             while y < end:
                 x = start
                 while x < end:
-                    c.setFont("Helvetica", config.font_size)
+                    c.setFont(font_name, config.font_size)
                     c.drawCentredString(x, y, watermark_text)
                     x += config.spacing
                 y += config.spacing

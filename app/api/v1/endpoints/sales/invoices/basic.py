@@ -3,6 +3,8 @@
 发票基础 CRUD API endpoints
 """
 
+from __future__ import annotations
+
 import logging
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any, Optional
@@ -17,6 +19,7 @@ from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.enums import InvoiceStatusEnum
 from app.models.sales import Contract, Invoice
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.sales import (
@@ -26,12 +29,15 @@ from app.schemas.sales import (
     InvoiceUpdate,
 )
 from app.services.approval_engine import ApprovalEngineService
+from app.services.sales.invoice_operation_audit import (
+    invoice_audit_value,
+    log_invoice_operation,
+)
+from app.utils.db_helpers import get_or_404
 
 from ..utils import generate_invoice_code
 
 logger = logging.getLogger(__name__)
-
-from app.utils.db_helpers import delete_obj, get_or_404
 
 router = APIRouter()
 
@@ -283,6 +289,14 @@ def _create_invoice_logic(
     invoice = Invoice(**invoice_data)
     db.add(invoice)
     db.flush()
+    log_invoice_operation(
+        db,
+        invoice,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=invoice_audit_value(invoice),
+        operation_desc="创建发票",
+    )
 
     # 如果发票状态是已提交，自动启动审批流程。
     if invoice.status in {"APPLIED", InvoiceStatusEnum.SUBMITTED.value}:
@@ -353,6 +367,7 @@ def update_invoice(
 ) -> Any:
     """更新发票。"""
     invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
+    old_value = invoice_audit_value(invoice)
     invoice_data = invoice_in.model_dump(exclude_unset=True)
 
     if "invoice_code" in invoice_data and invoice_data["invoice_code"] != invoice.invoice_code:
@@ -391,6 +406,15 @@ def update_invoice(
         if hasattr(invoice, field):
             setattr(invoice, field, value)
 
+    log_invoice_operation(
+        db,
+        invoice,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=invoice_audit_value(invoice),
+        operation_desc="更新发票",
+    )
     db.commit()
     db.refresh(invoice)
 
@@ -425,7 +449,18 @@ def delete_invoice(
     if invoice.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只有草稿状态的发票才能删除")
 
-    delete_obj(db, invoice)
+    old_value = invoice_audit_value(invoice)
+    db.delete(invoice)
+    log_invoice_operation(
+        db,
+        invoice,
+        SalesOperationType.DELETE,
+        current_user,
+        old_value=old_value,
+        new_value={},
+        operation_desc="删除发票",
+    )
+    db.commit()
 
     from app.schemas.common import ResponseModel
 

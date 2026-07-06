@@ -4,6 +4,8 @@
 记录权限相关的操作日志
 """
 
+from __future__ import annotations
+
 import inspect
 from typing import TYPE_CHECKING
 

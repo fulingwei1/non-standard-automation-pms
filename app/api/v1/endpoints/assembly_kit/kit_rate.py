@@ -3,6 +3,8 @@
 装配工艺齐套率 API
 """
 
+from __future__ import annotations
+
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query

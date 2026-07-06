@@ -29,7 +29,7 @@ def _coerce_optional_query_date(value: Optional[str]) -> Optional[date]:
 def create_assignment(
     payload: dict = Body(..., description="分配信息"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:create")),
 ) -> Any:
     """为项目创建一条最小可用的工程师分配记录。"""
     project_id = payload.get("project_id")
@@ -104,7 +104,7 @@ def update_assignment(
     assignment_id: int = Path(..., description="分配 ID"),
     payload: dict = Body(..., description="分配更新信息"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:update")),
 ) -> Any:
     """更新工程师分配的常用排产字段。"""
     scheduling_service = EngineerSchedulingService(db)
@@ -158,7 +158,7 @@ def update_assignment(
 def delete_assignment(
     assignment_id: int = Path(..., description="分配 ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:delete")),
 ) -> Any:
     """取消一条工程师分配，保留审计记录。"""
     scheduling_service = EngineerSchedulingService(db)
@@ -183,7 +183,7 @@ def get_workload_board(
     start_date: Optional[str] = Query(None, description="开始日期"),
     end_date: Optional[str] = Query(None, description="结束日期"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     """返回前端调度看板需要的工程师负载列表。"""
     start = _coerce_optional_query_date(start_date)
@@ -235,7 +235,7 @@ def get_engineer_availability(
     start_date: Optional[str] = Query(None, description="开始日期"),
     end_date: Optional[str] = Query(None, description="结束日期"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     """按已有任务负载估算工程师可用性。"""
     engineer = db.query(User).filter(User.id == engineer_id, User.is_active.is_(True)).first()
@@ -271,7 +271,7 @@ def get_engineer_availability(
 def get_engineer_capacity(
     engineer_id: int = Path(..., description="工程师 ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     """获取工程师能力模型（从历史数据提取）"""
     service = EngineerSchedulingService(db)
@@ -283,7 +283,7 @@ def get_engineer_capacity(
 def update_engineer_capacity(
     engineer_id: int = Path(..., description="工程师 ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:update")),
 ) -> Any:
     """重新计算并更新工程师能力模型"""
     service = EngineerSchedulingService(db)
@@ -304,7 +304,7 @@ def analyze_workload(
     start_date: Optional[str] = Query(None, description="开始日期"),
     end_date: Optional[str] = Query(None, description="结束日期"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     """
     分析工程师任务量
@@ -329,7 +329,7 @@ def detect_conflicts(
     engineer_id: int = Path(..., description="工程师 ID"),
     task_data: dict = Body(..., description="任务信息"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     """
     检测新任务与现有任务的冲突
@@ -358,7 +358,7 @@ def generate_warnings(
     project_id: Optional[int] = Query(None, description="项目 ID"),
     department_id: Optional[int] = Query(None, description="部门 ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:update")),
 ) -> Any:
     """生成工作量预警"""
     service = EngineerSchedulingService(db)
@@ -383,7 +383,7 @@ def generate_warnings(
 def get_scheduling_report(
     project_id: int = Path(..., description="项目 ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     """
     生成项目排产决策支持报告
@@ -407,7 +407,7 @@ def get_scheduling_report(
 def evaluate_ai_capability(
     engineer_id: int = Path(..., description="工程师 ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     """
     评估工程师的 AI 使用能力
@@ -430,7 +430,7 @@ def evaluate_ai_capability(
 def update_ai_capability(
     engineer_id: int = Path(..., description="工程师 ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:update")),
 ) -> Any:
     """重新评估并更新工程师 AI 能力"""
     service = EngineerSchedulingService(db)
@@ -449,7 +449,7 @@ def update_ai_capability(
 def evaluate_core_capabilities(
     engineer_id: int = Path(..., description="工程师 ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:read")),
 ) -> Any:
     """
     评估工程师的核心能力
@@ -467,7 +467,7 @@ def evaluate_core_capabilities(
 def update_core_capabilities(
     engineer_id: int = Path(..., description="工程师 ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("task:update")),
 ) -> Any:
     """重新评估并更新工程师核心能力"""
     service = EngineerSchedulingService(db)

@@ -8,6 +8,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.core import security
+from app.models.user import User
 from app.schemas.presale_ai_emotion import (
     BatchAnalysisRequest,
     BatchAnalysisResponse,
@@ -27,7 +29,11 @@ router = APIRouter(prefix="/presale/ai", tags=["AI情绪分析"])
 
 
 @router.post("/analyze-emotion", response_model=EmotionAnalysisResponse, summary="分析客户情绪")
-async def analyze_emotion(request: EmotionAnalysisRequest, db: Session = Depends(get_db)):
+async def analyze_emotion(
+    request: EmotionAnalysisRequest,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(security.require_permission("presale:manage")),
+):
     """
     分析客户沟通内容的情绪、购买意向和流失风险
 
@@ -56,7 +62,11 @@ async def analyze_emotion(request: EmotionAnalysisRequest, db: Session = Depends
 @router.get(
     "/emotion-analysis/{ticket_id}", response_model=EmotionAnalysisResponse, summary="获取情绪分析"
 )
-async def get_emotion_analysis(ticket_id: int, db: Session = Depends(get_db)):
+async def get_emotion_analysis(
+    ticket_id: int,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(security.require_permission("presale:manage")),
+):
     """
     获取指定工单的最新情绪分析结果
 
@@ -87,7 +97,11 @@ async def get_emotion_analysis(ticket_id: int, db: Session = Depends(get_db)):
 @router.post(
     "/predict-churn-risk", response_model=ChurnRiskPredictionResponse, summary="预测流失风险"
 )
-async def predict_churn_risk(request: ChurnRiskPredictionRequest, db: Session = Depends(get_db)):
+async def predict_churn_risk(
+    request: ChurnRiskPredictionRequest,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(security.require_permission("presale:manage")),
+):
     """
     基于客户沟通历史预测流失风险
 
@@ -121,7 +135,9 @@ async def predict_churn_risk(request: ChurnRiskPredictionRequest, db: Session = 
     "/recommend-follow-up", response_model=FollowUpRecommendationResponse, summary="推荐跟进时机"
 )
 async def recommend_follow_up(
-    request: FollowUpRecommendationRequest, db: Session = Depends(get_db)
+    request: FollowUpRecommendationRequest,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(security.require_permission("presale:manage")),
 ):
     """
     基于客户情绪分析推荐最佳跟进时机和内容
@@ -156,6 +172,7 @@ async def get_follow_up_reminders(
     priority: Optional[str] = Query(None, description="优先级筛选: high/medium/low"),
     limit: int = Query(50, ge=1, le=100, description="返回数量限制"),
     db: Session = Depends(get_db),
+    _current_user: User = Depends(security.require_permission("presale:manage")),
 ):
     """
     获取跟进提醒列表
@@ -176,7 +193,11 @@ async def get_follow_up_reminders(
 @router.get(
     "/emotion-trend/{ticket_id}", response_model=EmotionTrendResponse, summary="获取情绪趋势"
 )
-async def get_emotion_trend(ticket_id: int, db: Session = Depends(get_db)):
+async def get_emotion_trend(
+    ticket_id: int,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(security.require_permission("presale:manage")),
+):
     """
     获取指定工单的客户情绪趋势
 
@@ -201,7 +222,11 @@ async def get_emotion_trend(ticket_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/dismiss-reminder/{reminder_id}", response_model=MessageResponse, summary="忽略提醒")
-async def dismiss_reminder(reminder_id: int, db: Session = Depends(get_db)):
+async def dismiss_reminder(
+    reminder_id: int,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(security.require_permission("presale:manage")),
+):
     """
     忽略指定的跟进提醒
 
@@ -224,7 +249,11 @@ async def dismiss_reminder(reminder_id: int, db: Session = Depends(get_db)):
 @router.post(
     "/batch-analyze-customers", response_model=BatchAnalysisResponse, summary="批量分析客户"
 )
-async def batch_analyze_customers(request: BatchAnalysisRequest, db: Session = Depends(get_db)):
+async def batch_analyze_customers(
+    request: BatchAnalysisRequest,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(security.require_permission("presale:manage")),
+):
     """
     批量分析多个客户的情绪和流失风险
 

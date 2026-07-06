@@ -25,6 +25,63 @@ class GenericFilterService:
     """通用过滤服务"""
 
     @staticmethod
+    def _coerce_department_id(value) -> Optional[int]:
+        if value is None or isinstance(value, bool):
+            return None
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str) and value.strip().isdigit():
+            return int(value.strip())
+        return None
+
+    @staticmethod
+    def _is_department_id_field(field_name: str) -> bool:
+        return field_name in {"department_id", "dept_id", "owner_dept_id"} or field_name.endswith(
+            ("_department_id", "_dept_id")
+        )
+
+    @staticmethod
+    def _get_legacy_department_name(user: User) -> Optional[str]:
+        department = getattr(user, "department", None)
+        if isinstance(department, str) and department.strip():
+            return department.strip()
+        return None
+
+    @staticmethod
+    def _resolve_user_department_id(db: Session, user: User) -> Optional[int]:
+        for field_name in ("department_id", "dept_id", "owner_dept_id"):
+            department_id = GenericFilterService._coerce_department_id(
+                getattr(user, field_name, None)
+            )
+            if department_id is not None:
+                return department_id
+
+        department_name = GenericFilterService._get_legacy_department_name(user)
+        if not department_name:
+            return None
+
+        from app.models.organization import Department
+
+        dept = db.query(Department).filter(Department.dept_name == department_name).first()
+        if not dept:
+            return None
+        return GenericFilterService._coerce_department_id(getattr(dept, "id", None))
+
+    @staticmethod
+    def _resolve_user_department_name(
+        db: Session, user: User, department_id: Optional[int]
+    ) -> Optional[str]:
+        if department_id is not None:
+            from app.models.organization import Department
+
+            dept = db.query(Department).filter(Department.id == department_id).first()
+            dept_name = getattr(dept, "dept_name", None) if dept else None
+            if isinstance(dept_name, str) and dept_name.strip():
+                return dept_name.strip()
+
+        return GenericFilterService._get_legacy_department_name(user)
+
+    @staticmethod
     def filter_by_scope(
         db: Session, query: Query, model: type, user: User, config: Optional[DataScopeConfig] = None
     ) -> Query:
@@ -121,18 +178,20 @@ class GenericFilterService:
         if data_scope == DataScopeEnum.DEPT.value:
             # DEPT：同部门的数据
             conditions = []
+            user_dept_id = GenericFilterService._resolve_user_department_id(db, user)
 
             # 方式1：直接通过 dept_field 过滤
             if config.dept_field and hasattr(model, config.dept_field):
                 dept_col = getattr(model, config.dept_field)
-                if user.department:
-                    from app.models.organization import Department
-
-                    dept = (
-                        db.query(Department).filter(Department.dept_name == user.department).first()
+                if GenericFilterService._is_department_id_field(config.dept_field):
+                    if user_dept_id is not None:
+                        conditions.append(dept_col == user_dept_id)
+                else:
+                    dept_name = GenericFilterService._resolve_user_department_name(
+                        db, user, user_dept_id
                     )
-                    if dept:
-                        conditions.append(dept_col == dept.id)
+                    if dept_name:
+                        conditions.append(dept_col == dept_name)
 
             # 方式2：通过项目间接获取部门
             elif (
@@ -141,20 +200,12 @@ class GenericFilterService:
                 and hasattr(model, config.project_field)
             ):
                 project_col = getattr(model, config.project_field)
-                if user.department:
-                    from app.models.organization import Department
-
-                    dept = (
-                        db.query(Department).filter(Department.dept_name == user.department).first()
-                    )
-                    if dept:
-                        # 获取该部门的所有项目
-                        dept_projects = (
-                            db.query(Project.id).filter(Project.dept_id == dept.id).all()
-                        )
-                        dept_project_ids = [p[0] for p in dept_projects]
-                        if dept_project_ids:
-                            conditions.append(project_col.in_(dept_project_ids))
+                if user_dept_id is not None:
+                    # 获取该部门的所有项目
+                    dept_projects = db.query(Project.id).filter(Project.dept_id == user_dept_id).all()
+                    dept_project_ids = [p[0] for p in dept_projects]
+                    if dept_project_ids:
+                        conditions.append(project_col.in_(dept_project_ids))
 
             # 加上自己创建的数据（兜底）
             if owner_fields:

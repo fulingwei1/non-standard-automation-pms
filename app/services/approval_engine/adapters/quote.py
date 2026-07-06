@@ -8,19 +8,14 @@ from __future__ import annotations
 """
 
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
-
-if TYPE_CHECKING:
-    from app.models.sales.technical_assessment import QuoteApproval
+from typing import Any, Dict, List, Optional
 
 import logging
-from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance, ApprovalTask
+from app.models.approval import ApprovalInstance
 from app.models.sales.quotes import Quote, QuoteVersion
-from app.models.user import User
 from .base import ApprovalAdapter
 
 # 兼容旧测试 patch 点：实际在 submit_for_approval 内懒加载
@@ -283,91 +278,3 @@ class QuoteApprovalAdapter(ApprovalAdapter):
         logger.info(f"报价 {quote_version.quote_code} 已提交审批，实例ID: {instance.id}")
 
         return instance
-
-    def create_quote_approval(
-        self,
-        instance: ApprovalInstance,
-        task: ApprovalTask,
-    ) -> Optional[QuoteApproval]:
-        """创建报价审批记录"""
-        from app.models.sales.technical_assessment import QuoteApproval
-
-        # 检查是否已存在
-        existing = (
-            self.db.query(QuoteApproval)
-            .filter(
-                QuoteApproval.quote_version_id == instance.entity_id,
-                QuoteApproval.approval_level == task.node_order,
-            )
-            .first()
-        )
-
-        if existing:
-            return existing
-
-        # 获取审批人
-        approver = (
-            self.db.query(User).filter(User.id == task.assignee_id).first()
-            if task.assignee_id
-            else None
-        )
-
-        # 创建新记录
-        approval = QuoteApproval(
-            quote_version_id=instance.entity_id,
-            approval_level=task.node_order,
-            approval_role=task.node_name or "",
-            approver_id=task.assignee_id,
-            approver_name=approver.real_name if approver else "",
-            approval_result=None,  # 待审批
-            status="PENDING",
-        )
-
-        self.db.add(approval)
-        return approval
-
-    def update_quote_approval_from_action(
-        self,
-        task: ApprovalTask,
-        action: str,
-        comment: Optional[str] = None,
-    ) -> Optional[QuoteApproval]:
-        """更新报价审批记录"""
-        from app.models.sales.technical_assessment import QuoteApproval
-
-        approval_level = task.node_order
-        approval = (
-            self.db.query(QuoteApproval)
-            .filter(
-                QuoteApproval.quote_version_id == task.instance.entity_id,
-                QuoteApproval.approval_level == approval_level,
-            )
-            .first()
-        )
-
-        if not approval:
-            logger.warning(
-                f"未找到报价审批记录: entity_id={task.instance.entity_id}, level={approval_level}"
-            )
-            return None
-
-        # 更新审批结果
-        if action == "APPROVE":
-            approval.approval_result = "APPROVED"
-            approval.approval_opinion = comment
-            approval.status = "APPROVED"
-            approval.approved_at = datetime.now()
-        elif action == "REJECT":
-            approval.approval_result = "REJECTED"
-            approval.approval_opinion = comment
-            approval.status = "REJECTED"
-            approval.approved_at = datetime.now()
-
-        self.db.add(approval)
-        self.db.commit()
-
-        logger.info(
-            f"报价审批记录已更新: entity_id={approval.quote_version_id}, level={approval_level}, action={action}"
-        )
-
-        return approval

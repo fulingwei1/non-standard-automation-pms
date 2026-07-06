@@ -5,7 +5,10 @@ These routes keep older `/approvals/*` clients away from dynamic `{id}` routes
 while the unified approval engine remains the source of truth.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -327,7 +330,7 @@ def _get_task_or_404(db: Session, task_id: int) -> ApprovalTask:
 @router.post("/tasks/{task_id}/approve")
 def approve_task_compat(
     task_id: int,
-    payload: dict | None = None,
+    payload: Optional[dict] = None,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("approval:approve")),
 ):
@@ -346,7 +349,7 @@ def approve_task_compat(
 @router.post("/tasks/{task_id}/reject")
 def reject_task_compat(
     task_id: int,
-    payload: dict | None = None,
+    payload: Optional[dict] = None,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("approval:approve")),
 ):
@@ -365,7 +368,7 @@ def reject_task_compat(
 @router.post("/tasks/{task_id}/return")
 def return_task_compat(
     task_id: int,
-    payload: dict | None = None,
+    payload: Optional[dict] = None,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("approval:approve")),
 ):
@@ -381,7 +384,7 @@ def return_task_compat(
 @router.post("/tasks/{task_id}/transfer")
 def transfer_task_compat(
     task_id: int,
-    payload: dict | None = None,
+    payload: Optional[dict] = None,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("approval:approve")),
 ):

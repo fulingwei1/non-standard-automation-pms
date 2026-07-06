@@ -3,10 +3,9 @@
 销售模块数据范围控制
 
 复用 engperf_scope 的模式：
-  1. 从 RoleDataScope 读取 resource_type 对应的 scope_type
-  2. 降级到 Role.data_scope
-  3. 解析为 SalesScopeContext（含 accessible_dept_ids / accessible_user_ids）
-  4. 提供通用 query filter 和单条记录访问判断
+  1. 从 Role.data_scope 读取全局数据范围
+  2. 解析为 SalesScopeContext（含 accessible_dept_ids / accessible_user_ids）
+  3. 提供通用 query filter 和单条记录访问判断
 
 支持的销售资源类型：
   - customer     客户
@@ -31,7 +30,7 @@ from app.services.permission_management.permission_service import PermissionServ
 
 logger = logging.getLogger(__name__)
 
-# 销售资源类型常量 —— 与 RoleDataScope.resource_type 对应
+# 销售资源类型常量 —— 兼容旧资源级数据范围调用方
 RT_CUSTOMER = "customer"
 RT_OPPORTUNITY = "opportunity"
 RT_QUOTE = "quote"
@@ -89,10 +88,8 @@ def resolve_sales_scope(
 
     解析优先级：
       1. superuser → ALL
-      2. RoleDataScope[resource_type] （精确资源）
-      3. RoleDataScope["sales"]       （通配降级）
-      4. Role.data_scope              （全局降级）
-      5. 默认 → OWN
+      2. Role.data_scope              （全局数据范围）
+      3. 默认 → OWN
 
     Args:
         db:            数据库会话
@@ -114,7 +111,7 @@ def resolve_sales_scope(
             is_finance_role=is_finance,
         )
 
-    # 1. 从 RoleDataScope 读取（精确 → 通配）
+    # 1. 从角色全局数据范围读取（兼容资源键 → 通配）
     scopes = PermissionService.get_user_data_scopes(db, user.id)
     scope_type = scopes.get(resource_type)
     hit_resource = resource_type

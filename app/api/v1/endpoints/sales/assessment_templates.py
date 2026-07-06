@@ -5,6 +5,10 @@
 提供评估模板的 CRUD、评估项管理、风险管理和版本控制接口。
 """
 
+from __future__ import annotations
+
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
@@ -13,6 +17,13 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.models.sales.assessment_template import (
+    AssessmentItem,
+    AssessmentRisk,
+    AssessmentTemplate,
+    AssessmentVersion,
+)
+from app.models.sales.operation_log import SalesEntityType, SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.sales.assessment_template_service import (
@@ -20,6 +31,7 @@ from app.services.sales.assessment_template_service import (
     AssessmentTemplateService,
     AssessmentVersionService,
 )
+from app.services.sales.operation_log_service import SalesOperationLogService
 
 router = APIRouter()
 
@@ -121,6 +133,130 @@ def _probability_impact_for_level(risk_level: str) -> tuple[str, str]:
     return "LOW", "MEDIUM"
 
 
+def _audit_scalar(value: Any) -> Any:
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return str(value)
+    if hasattr(value, "value"):
+        return value.value
+    return value
+
+
+def _assessment_template_audit_value(template: AssessmentTemplate) -> dict[str, Any]:
+    return {
+        "id": template.id,
+        "template_code": template.template_code,
+        "template_name": template.template_name,
+        "category": _audit_scalar(template.category),
+        "description": template.description,
+        "dimension_weights": template.dimension_weights,
+        "veto_rules": template.veto_rules,
+        "score_thresholds": template.score_thresholds,
+        "version": template.version,
+        "is_active": bool(template.is_active),
+        "is_default": bool(template.is_default),
+        "created_by": template.created_by,
+    }
+
+
+def _assessment_item_audit_value(item: AssessmentItem) -> dict[str, Any]:
+    return {
+        "id": item.id,
+        "template_id": item.template_id,
+        "item_code": item.item_code,
+        "item_name": item.item_name,
+        "dimension": _audit_scalar(item.dimension),
+        "description": item.description,
+        "max_score": item.max_score,
+        "weight": _audit_scalar(item.weight),
+        "scoring_criteria": item.scoring_criteria,
+        "is_veto_item": bool(item.is_veto_item),
+        "veto_threshold": item.veto_threshold,
+        "is_required": bool(item.is_required),
+        "sort_order": item.sort_order,
+    }
+
+
+def _assessment_risk_audit_value(risk: AssessmentRisk) -> dict[str, Any]:
+    return {
+        "id": risk.id,
+        "assessment_id": risk.assessment_id,
+        "risk_code": risk.risk_code,
+        "risk_title": risk.risk_title,
+        "risk_category": risk.risk_category,
+        "risk_description": risk.risk_description,
+        "probability": _audit_scalar(risk.probability),
+        "impact": _audit_scalar(risk.impact),
+        "risk_level": _audit_scalar(risk.risk_level),
+        "risk_score": risk.risk_score,
+        "mitigation_plan": risk.mitigation_plan,
+        "contingency_plan": risk.contingency_plan,
+        "owner_id": risk.owner_id,
+        "status": _audit_scalar(risk.status),
+        "due_date": _audit_scalar(risk.due_date),
+        "resolved_at": _audit_scalar(risk.resolved_at),
+        "resolution_notes": risk.resolution_notes,
+    }
+
+
+def _assessment_version_audit_value(version: AssessmentVersion) -> dict[str, Any]:
+    return {
+        "id": version.id,
+        "assessment_id": version.assessment_id,
+        "version_no": version.version_no,
+        "version_note": version.version_note,
+        "snapshot_data": version.snapshot_data,
+        "dimension_scores": version.dimension_scores,
+        "total_score": version.total_score,
+        "decision": version.decision,
+        "evaluator_id": version.evaluator_id,
+        "evaluated_at": _audit_scalar(version.evaluated_at),
+    }
+
+
+def _changed_fields(
+    old_value: dict[str, Any] | None,
+    new_value: dict[str, Any] | None,
+) -> list[str]:
+    old_snapshot = old_value or {}
+    new_snapshot = new_value or {}
+    return [
+        field
+        for field, value in new_snapshot.items()
+        if field in old_snapshot and old_snapshot.get(field) != value
+    ]
+
+
+def _log_assessment_operation(
+    db: Session,
+    *,
+    entity_type: str,
+    entity_id: int,
+    entity_code: str | None,
+    operation_type: str,
+    current_user: User,
+    old_value: dict[str, Any] | None,
+    new_value: dict[str, Any] | None,
+    operation_desc: str,
+    changed_fields: list[str] | None = None,
+    remark: str | None = None,
+) -> None:
+    SalesOperationLogService.log_operation(
+        db,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        entity_code=entity_code,
+        operation_type=operation_type,
+        operator=current_user,
+        operation_desc=operation_desc,
+        old_value=old_value,
+        new_value=new_value,
+        changed_fields=changed_fields,
+        remark=remark,
+    )
+
+
 # ==================== 模板 API ====================
 
 
@@ -187,6 +323,20 @@ def create_assessment_template(
         score_thresholds=request.score_thresholds,
         created_by=current_user.id,
     )
+    _log_assessment_operation(
+        db,
+        entity_type=SalesEntityType.ASSESSMENT_TEMPLATE,
+        entity_id=template.id,
+        entity_code=template.template_code,
+        operation_type=SalesOperationType.CREATE,
+        current_user=current_user,
+        old_value={},
+        new_value=_assessment_template_audit_value(template),
+        changed_fields=[],
+        operation_desc="创建技术评估模板",
+        remark=template.description,
+    )
+    db.commit()
 
     return ResponseModel(
         code=200,
@@ -257,9 +407,29 @@ def update_assessment_template(
     if not update_data:
         raise HTTPException(status_code=400, detail="无更新内容")
 
+    old_template = service.get_template(template_id, include_items=False)
+    if not old_template:
+        raise HTTPException(status_code=404, detail="模板不存在")
+    old_value = _assessment_template_audit_value(old_template)
+
     template = service.update_template(template_id, **update_data)
     if not template:
         raise HTTPException(status_code=404, detail="模板不存在")
+    new_value = _assessment_template_audit_value(template)
+    _log_assessment_operation(
+        db,
+        entity_type=SalesEntityType.ASSESSMENT_TEMPLATE,
+        entity_id=template.id,
+        entity_code=template.template_code,
+        operation_type=SalesOperationType.UPDATE,
+        current_user=current_user,
+        old_value=old_value,
+        new_value=new_value,
+        changed_fields=_changed_fields(old_value, new_value),
+        operation_desc="更新技术评估模板",
+        remark=template.description,
+    )
+    db.commit()
 
     return ResponseModel(
         code=200,
@@ -278,10 +448,27 @@ def set_default_template(
 ) -> Any:
     """设置默认模板"""
     service = AssessmentTemplateService(db)
+    old_template = service.get_template(template_id, include_items=False)
+    old_value = _assessment_template_audit_value(old_template) if old_template else None
     template = service.set_default_template(template_id, category)
 
     if not template:
         raise HTTPException(status_code=404, detail="模板不存在")
+    new_value = _assessment_template_audit_value(template)
+    _log_assessment_operation(
+        db,
+        entity_type=SalesEntityType.ASSESSMENT_TEMPLATE,
+        entity_id=template.id,
+        entity_code=template.template_code,
+        operation_type=SalesOperationType.STATUS_CHANGE,
+        current_user=current_user,
+        old_value=old_value,
+        new_value=new_value,
+        changed_fields=_changed_fields(old_value, new_value),
+        operation_desc="设置默认技术评估模板",
+        remark=category,
+    )
+    db.commit()
 
     return ResponseModel(
         code=200,
@@ -321,6 +508,20 @@ def add_assessment_item(
         veto_threshold=request.veto_threshold,
         is_required=request.is_required,
     )
+    _log_assessment_operation(
+        db,
+        entity_type=SalesEntityType.ASSESSMENT_ITEM,
+        entity_id=item.id,
+        entity_code=item.item_code,
+        operation_type=SalesOperationType.CREATE,
+        current_user=current_user,
+        old_value={},
+        new_value=_assessment_item_audit_value(item),
+        changed_fields=[],
+        operation_desc="新增技术评估项",
+        remark=f"template_id={template_id}",
+    )
+    db.commit()
 
     return ResponseModel(
         code=200,
@@ -351,6 +552,21 @@ def batch_add_assessment_items(
         item_data["scoring_criteria"] = item.score_criteria
         items_data.append(item_data)
     items = service.batch_add_items(template_id, items_data)
+    for item in items:
+        _log_assessment_operation(
+            db,
+            entity_type=SalesEntityType.ASSESSMENT_ITEM,
+            entity_id=item.id,
+            entity_code=item.item_code,
+            operation_type=SalesOperationType.CREATE,
+            current_user=current_user,
+            old_value={},
+            new_value=_assessment_item_audit_value(item),
+            changed_fields=[],
+            operation_desc="批量新增技术评估项",
+            remark=f"template_id={template_id}",
+        )
+    db.commit()
 
     return ResponseModel(
         code=200,
@@ -387,6 +603,20 @@ def create_assessment_risk(
 
     if not risk:
         raise HTTPException(status_code=400, detail="创建风险失败")
+    _log_assessment_operation(
+        db,
+        entity_type=SalesEntityType.ASSESSMENT_RISK,
+        entity_id=risk.id,
+        entity_code=risk.risk_code,
+        operation_type=SalesOperationType.CREATE,
+        current_user=current_user,
+        old_value={},
+        new_value=_assessment_risk_audit_value(risk),
+        changed_fields=[],
+        operation_desc="创建技术评估风险",
+        remark=f"assessment_id={assessment_id}",
+    )
+    db.commit()
 
     return ResponseModel(
         code=200,
@@ -441,6 +671,8 @@ def update_risk_status(
 ) -> Any:
     """更新风险状态"""
     service = AssessmentRiskService(db)
+    old_risk = db.query(AssessmentRisk).filter(AssessmentRisk.id == risk_id).first()
+    old_value = _assessment_risk_audit_value(old_risk) if old_risk else None
     risk = service.update_risk_status(
         risk_id,
         request.status,
@@ -449,6 +681,21 @@ def update_risk_status(
 
     if not risk:
         raise HTTPException(status_code=404, detail="风险不存在")
+    new_value = _assessment_risk_audit_value(risk)
+    _log_assessment_operation(
+        db,
+        entity_type=SalesEntityType.ASSESSMENT_RISK,
+        entity_id=risk.id,
+        entity_code=risk.risk_code,
+        operation_type=SalesOperationType.STATUS_CHANGE,
+        current_user=current_user,
+        old_value=old_value,
+        new_value=new_value,
+        changed_fields=_changed_fields(old_value, new_value),
+        operation_desc="更新技术评估风险状态",
+        remark=request.note,
+    )
+    db.commit()
 
     return ResponseModel(
         code=200,
@@ -483,6 +730,20 @@ def create_assessment_version(
 
     if not version:
         raise HTTPException(status_code=400, detail="创建版本失败")
+    _log_assessment_operation(
+        db,
+        entity_type=SalesEntityType.ASSESSMENT_VERSION,
+        entity_id=version.id,
+        entity_code=version.version_no,
+        operation_type=SalesOperationType.CREATE,
+        current_user=current_user,
+        old_value={},
+        new_value=_assessment_version_audit_value(version),
+        changed_fields=[],
+        operation_desc="创建技术评估版本快照",
+        remark=summary,
+    )
+    db.commit()
 
     return ResponseModel(
         code=200,

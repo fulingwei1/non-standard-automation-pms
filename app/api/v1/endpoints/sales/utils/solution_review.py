@@ -10,7 +10,11 @@ import json
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from app.models.sales import Opportunity
 from app.models.sales.leads import OpportunityRequirement
+from app.models.sales.operation_log import SalesOperationType
+from app.models.user import User
+from app.services.sales.opportunity_operation_audit import log_opportunity_operation
 
 REVIEW_KEY = "ai_solution_review"
 RESOLVE_ACTIONS = ("RESOLVED", "ACCEPT_RISK")
@@ -37,7 +41,45 @@ def _requirement_row(db, opportunity_id: int, create: bool = False) -> Optional[
     return row
 
 
-def persist_solution_review(db, opportunity_id: int, reviews: List[Dict[str, Any]]) -> Dict[str, Any]:
+def _log_solution_review_operation(
+    db,
+    opportunity_id: int,
+    operation_type: str,
+    operator: Optional[User],
+    *,
+    old_value: Optional[dict[str, Any]],
+    new_value: Optional[dict[str, Any]],
+    operation_desc: str,
+    remark: str,
+) -> None:
+    if not operator:
+        return
+    opportunity = db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
+    if not opportunity:
+        return
+    log_opportunity_operation(
+        db,
+        opportunity,
+        operation_type,
+        operator,
+        old_value=old_value or {},
+        new_value=new_value or {},
+        operation_desc=operation_desc,
+        remark=remark,
+    )
+
+
+def _review_snapshot(record: Optional[dict[str, Any]]) -> dict[str, Any]:
+    return {"solution_review": record if isinstance(record, dict) else None}
+
+
+def persist_solution_review(
+    db,
+    opportunity_id: int,
+    reviews: List[Dict[str, Any]],
+    *,
+    current_user: Optional[User] = None,
+) -> Dict[str, Any]:
     """评审结果落库（覆盖旧评审，重置处置状态）。"""
     high = sum(
         1 for r in reviews if isinstance(r, dict) and str(r.get("risk_level", "")).upper() == "HIGH"
@@ -50,8 +92,20 @@ def persist_solution_review(db, opportunity_id: int, reviews: List[Dict[str, Any
     }
     row = _requirement_row(db, opportunity_id, create=True)
     extra = _load_extra(row)
+    old_record = extra.get(REVIEW_KEY)
     extra[REVIEW_KEY] = record
     row.extra_json = json.dumps(extra, ensure_ascii=False)
+    db.flush()
+    _log_solution_review_operation(
+        db,
+        opportunity_id,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=_review_snapshot(old_record),
+        new_value=_review_snapshot(record),
+        operation_desc="保存AI方案评审",
+        remark=REVIEW_KEY,
+    )
     db.commit()
     return record
 
@@ -65,7 +119,13 @@ def get_solution_review(db, opportunity_id: int) -> Optional[Dict[str, Any]]:
 
 
 def resolve_solution_review(
-    db, opportunity_id: int, action: str, note: str, user_id: Optional[int]
+    db,
+    opportunity_id: int,
+    action: str,
+    note: str,
+    user_id: Optional[int],
+    *,
+    current_user: Optional[User] = None,
 ) -> Dict[str, Any]:
     """人工处置评审风险：RESOLVED（已消除）或 ACCEPT_RISK（带险推进），必须写明理由。"""
     action = (action or "").upper()
@@ -80,6 +140,7 @@ def resolve_solution_review(
     if not row or not isinstance(record, dict):
         raise ValueError(f"商机 {opportunity_id} 没有待处置的方案评审")
 
+    old_record = json.loads(json.dumps(record, ensure_ascii=False))
     record["resolved"] = True
     record["resolution"] = {
         "action": action,
@@ -102,6 +163,17 @@ def resolve_solution_review(
         reason=f"[{action}] {note.strip()}",
         user_id=user_id,
         commit=False,
+    )
+    db.flush()
+    _log_solution_review_operation(
+        db,
+        opportunity_id,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=_review_snapshot(old_record),
+        new_value=_review_snapshot(record),
+        operation_desc="处置AI方案评审风险",
+        remark=f"{REVIEW_KEY}_resolution",
     )
     db.commit()
     return record

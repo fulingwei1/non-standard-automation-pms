@@ -8,9 +8,12 @@
   GET /pmo/margin-dashboard/{id}/trend  单项目毛利率趋势
   POST /pmo/margin-dashboard/snapshot/run  手动触发快照（管理员）
 """
+from datetime import date
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -44,6 +47,30 @@ def margin_dashboard(
     )
 
 
+@router.get(
+    "/levels",
+    response_model=ResponseModel,
+    summary="项目等级毛利率底线（对应手册红线）",
+)
+def margin_level_floors(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """项目等级 S/A/B/C 的毛利率底线（首次访问自动初始化手册红线值）。
+
+    对应《项目经理毛利率提升操作手册》Sheet9：
+    S>=40% / A>=35% / B>=30% / C>=25% / 红线>=20%
+    """
+    from app.services.dashboard.margin_level_service import get_level_summary
+
+    levels = get_level_summary(db)
+    return ResponseModel(
+        code=200,
+        message=f"项目等级毛利率底线（{len(levels)} 个等级）",
+        data={"levels": levels, "floor_margin": 20.0},
+    )
+
+
 @router.get("/trend", response_model=ResponseModel, summary="全局毛利率趋势")
 def margin_global_trend(
     days: int = Query(30, description="趋势天数"),
@@ -58,6 +85,40 @@ def margin_global_trend(
         code=200,
         message=f"全局毛利率趋势（{days} 天，{result['total_snapshots']} 条快照）",
         data=result,
+    )
+
+
+@router.get(
+    "/export",
+    summary="导出毛利率 Dashboard 到 Excel",
+    response_class=StreamingResponse,
+)
+def margin_dashboard_export(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """导出毛利率 Dashboard 到 Excel。
+
+    生成包含汇总指标和项目详情的 Excel 文件。
+    项目详情按健康度排序（critical 在前），颜色标识。
+    """
+    from app.services.otd.margin_export_service import MarginExportService
+    from app.services.dashboard.margin_dashboard_service import (
+        MarginDashboardService,
+    )
+    from app.services.profit_analysis_service import ProfitAnalysisService
+
+    dashboard = MarginDashboardService(db).get_dashboard()
+    analyses = ProfitAnalysisService(db).batch_margin_analysis()
+    dashboard["projects"] = analyses
+
+    excel_file = MarginExportService.export_dashboard_to_excel(dashboard)
+    excel_file.seek(0)
+    filename = f"毛利率看板_{date.today().isoformat()}.xlsx"
+    return StreamingResponse(
+        excel_file,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
     )
 
 

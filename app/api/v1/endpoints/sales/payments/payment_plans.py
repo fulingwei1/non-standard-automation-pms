@@ -18,10 +18,15 @@ from app.core.sales_permissions import (
 )
 from app.models.project import Project, ProjectPaymentPlan
 from app.models.sales import Contract
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.services.sales.contract_operation_audit import (
+    contract_audit_value,
+    log_contract_operation,
+)
 from app.utils.project_utils import generate_project_code
 
 router = APIRouter()
@@ -55,6 +60,48 @@ def _infer_payment_type(stage_name: str) -> str:
     if any(keyword in normalized for keyword in ("质保", "尾款", "WARRANTY")):
         return "WARRANTY"
     return "CUSTOM"
+
+
+def _audit_scalar(value: Any) -> Any:
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, date):
+        return value.isoformat()
+    if hasattr(value, "value"):
+        return value.value
+    return value
+
+
+def _payment_plan_audit_value(plan: ProjectPaymentPlan) -> dict[str, Any]:
+    fields = [
+        "id",
+        "project_id",
+        "contract_id",
+        "payment_no",
+        "payment_name",
+        "payment_type",
+        "payment_ratio",
+        "planned_amount",
+        "actual_amount",
+        "planned_date",
+        "actual_date",
+        "status",
+        "invoice_id",
+        "invoice_no",
+    ]
+    return {field: _audit_scalar(getattr(plan, field, None)) for field in fields}
+
+
+def _contract_payment_plan_audit_values(
+    db: Session, contract_id: int
+) -> list[dict[str, Any]]:
+    return [
+        _payment_plan_audit_value(plan)
+        for plan in db.query(ProjectPaymentPlan)
+        .filter(ProjectPaymentPlan.contract_id == contract_id)
+        .order_by(ProjectPaymentPlan.payment_no, ProjectPaymentPlan.id)
+        .all()
+    ]
 
 
 def _ensure_contract_project(db: Session, contract: Contract) -> int:
@@ -174,6 +221,8 @@ def create_payment_plans(
     if not payload.payment_stages:
         raise HTTPException(status_code=422, detail="payment_stages 不能为空")
 
+    old_contract = contract_audit_value(contract)
+    old_contract["payment_plans"] = _contract_payment_plan_audit_values(db, contract.id)
     project_id = _ensure_contract_project(db, contract)
 
     created_plans = []
@@ -202,6 +251,18 @@ def create_payment_plans(
             }
         )
 
+    new_contract = contract_audit_value(contract)
+    new_contract["payment_plans"] = _contract_payment_plan_audit_values(db, contract.id)
+    log_contract_operation(
+        db,
+        contract,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_contract,
+        new_value=new_contract,
+        operation_desc="创建合同收款计划",
+        remark=f"创建{len(created_plans)}期收款计划",
+    )
     db.commit()
 
     return ResponseModel(

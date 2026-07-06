@@ -4,7 +4,7 @@ Webhook通知处理器（钉钉、飞书等）
 """
 
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 try:
     import requests
@@ -63,7 +63,7 @@ class WebhookChannelHandler(ChannelHandler):
     def is_enabled(self) -> bool:
         return bool(self._webhook_url())
 
-    def _webhook_url(self) -> str | None:
+    def _webhook_url(self) -> Optional[str]:
         for name in ("WEBHOOK_URL", "WECHAT_WEBHOOK_URL"):
             value = getattr(settings, name, None)
             if isinstance(value, str) and value:

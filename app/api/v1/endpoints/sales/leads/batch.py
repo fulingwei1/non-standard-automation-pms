@@ -17,7 +17,16 @@ from app.core import security
 from app.models.enums import LeadStatusEnum
 from app.models.project import Customer
 from app.models.sales import Lead, LeadFollowUp, Opportunity
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
+from app.services.sales.lead_operation_audit import (
+    lead_audit_value,
+    log_lead_operation,
+)
+from app.services.sales.opportunity_operation_audit import (
+    log_opportunity_operation,
+    opportunity_audit_value,
+)
 
 from ..utils import generate_opportunity_code, validate_g1_lead_to_opportunity
 
@@ -135,6 +144,7 @@ def batch_convert_leads(
                 continue
 
         try:
+            old_lead_value = lead_audit_value(lead)
             # 生成商机
             opp_code = generate_opportunity_code(db)
             opportunity = Opportunity(
@@ -152,6 +162,25 @@ def batch_convert_leads(
 
             # 更新线索状态
             lead.status = LeadStatusEnum.CONVERTED
+            log_opportunity_operation(
+                db,
+                opportunity,
+                SalesOperationType.CREATE,
+                current_user,
+                new_value=opportunity_audit_value(opportunity),
+                operation_desc="批量线索转商机创建商机",
+                remark=f"来源线索：{lead.lead_code}",
+            )
+            log_lead_operation(
+                db,
+                lead,
+                SalesOperationType.CONVERT,
+                current_user,
+                old_value=old_lead_value,
+                new_value=lead_audit_value(lead),
+                operation_desc="批量线索转商机",
+                remark=f"生成商机：{opportunity.opp_code}",
+            )
 
             results.append(
                 BatchResultItem(id=lead_id, success=True, result_id=opportunity.id)
@@ -214,8 +243,19 @@ def batch_update_status(
             continue
 
         try:
+            old_value = lead_audit_value(lead)
             old_status = lead.status
             lead.status = request.status
+            log_lead_operation(
+                db,
+                lead,
+                SalesOperationType.STATUS_CHANGE,
+                current_user,
+                old_value=old_value,
+                new_value=lead_audit_value(lead),
+                operation_desc="批量更新线索状态",
+                remark=request.reason,
+            )
 
             # 记录跟进
             if request.reason:
@@ -277,8 +317,19 @@ def batch_assign_owner(
             continue
 
         try:
+            old_value = lead_audit_value(lead)
             old_owner_name = lead.owner.real_name if lead.owner else "无"
             lead.owner_id = request.owner_id
+            log_lead_operation(
+                db,
+                lead,
+                SalesOperationType.ASSIGN,
+                current_user,
+                old_value=old_value,
+                new_value=lead_audit_value(lead),
+                operation_desc="批量分配线索负责人",
+                remark=new_owner.real_name or new_owner.username,
+            )
 
             # 记录跟进
             follow_up = LeadFollowUp(

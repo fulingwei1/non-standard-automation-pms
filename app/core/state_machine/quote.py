@@ -384,41 +384,12 @@ class QuoteStateMachine(StateMachine):
     # ==================== 业务逻辑辅助方法 ====================
 
     def _create_approval_records(self, approver_ids):
-        """创建审批记录"""
-        try:
-            from app.models.sales.quotes import QuoteApproval
-
-            for idx, approver_id in enumerate(approver_ids, 1):
-                approval = QuoteApproval(
-                    quote_id=self.model.id,
-                    approval_level=idx,
-                    approver_id=approver_id,
-                    status="PENDING",
-                )
-                self.db.add(approval)
-            self.db.flush()
-        except Exception as e:
-            import logging
-
-            logging.warning(f"创建审批记录失败：{str(e)}")
+        """旧 quote_approvals 已删除；报价审批统一走 ApprovalEngineService。"""
+        return None
 
     def _cancel_pending_approvals(self):
-        """取消待处理的审批记录"""
-        try:
-            from app.models.sales.quotes import QuoteApproval
-
-            pending_approvals = (
-                self.db.query(QuoteApproval)
-                .filter(QuoteApproval.quote_id == self.model.id, QuoteApproval.status == "PENDING")
-                .all()
-            )
-            for approval in pending_approvals:
-                approval.status = "CANCELLED"
-            self.db.flush()
-        except Exception as e:
-            import logging
-
-            logging.warning(f"取消审批记录失败：{str(e)}")
+        """旧 quote_approvals 已删除；统一审批撤回由 ApprovalEngineService 负责。"""
+        return None
 
     def _update_opportunity_status(self, status: str):
         """更新商机状态"""

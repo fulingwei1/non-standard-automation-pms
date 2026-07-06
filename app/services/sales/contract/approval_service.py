@@ -1,108 +1,37 @@
 # -*- coding: utf-8 -*-
 """
-合同审批服务
+合同审批兼容门面。
 
-处理合同审批流程：
-- 提交审批
-- 审批通过/驳回
-- 查询待审批列表
+旧实现写入 contract_approvals；该表已归档删除。保留类名给老调用点使用，
+实际全部转发到统一审批引擎服务。
 """
 
-from datetime import datetime
-from decimal import Decimal
-from typing import List, Optional
+from typing import Any, Optional
 
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
-from app.models.sales.contracts import Contract, ContractApproval
-from app.services.sales.contract.status_service import apply_contract_status, normalize_contract_status
+from app.models.sales.contracts import Contract
+from app.services.contract_approval import ContractApprovalService as UnifiedContractApprovalService
 
 
 class ContractApprovalService:
-    """合同审批服务"""
+    """合同审批服务兼容层。"""
 
     def __init__(self, db: Session):
         self.db = db
+        self.unified = UnifiedContractApprovalService(db)
 
     def submit_for_approval(self, contract_id: int, user_id: int) -> Contract:
-        """提交审批"""
+        results, errors = self.unified.submit_contracts_for_approval(
+            contract_ids=[contract_id],
+            initiator_id=user_id,
+        )
+        if errors and not results:
+            raise ValueError(errors[0].get("error") or "提交合同审批失败")
         contract = self.db.query(Contract).filter(Contract.id == contract_id).first()
         if not contract:
             raise ValueError("合同不存在")
-
-        if normalize_contract_status(contract.status) != "DRAFT":
-            raise ValueError("只能提交草稿状态的合同")
-
-        # 根据金额创建审批流程
-        approvals = self._create_approval_flow(contract.id, contract.total_amount)
-
-        # 更新合同状态
-        apply_contract_status(contract, "PENDING_APPROVAL" if approvals else "APPROVED")
-
-        self.db.commit()
-        self.db.refresh(contract)
         return contract
-
-    def _create_approval_flow(
-        self, contract_id: int, amount: Decimal
-    ) -> List[ContractApproval]:
-        """
-        创建审批流程（根据金额分级）
-
-        审批规则：
-        - 金额 < 10万：销售经理审批
-        - 金额 10-50万：销售总监审批
-        - 金额 > 50万：销售总监 + 财务总监 + 总经理审批
-        """
-        approvals = []
-
-        if amount < 100000:
-            approvals.append(
-                ContractApproval(
-                    contract_id=contract_id,
-                    approval_level=1,
-                    approval_role="sales_manager",
-                    approval_status="pending",
-                )
-            )
-        elif amount < 500000:
-            approvals.append(
-                ContractApproval(
-                    contract_id=contract_id,
-                    approval_level=1,
-                    approval_role="sales_director",
-                    approval_status="pending",
-                )
-            )
-        else:
-            approvals.extend(
-                [
-                    ContractApproval(
-                        contract_id=contract_id,
-                        approval_level=1,
-                        approval_role="sales_director",
-                        approval_status="pending",
-                    ),
-                    ContractApproval(
-                        contract_id=contract_id,
-                        approval_level=2,
-                        approval_role="finance_director",
-                        approval_status="pending",
-                    ),
-                    ContractApproval(
-                        contract_id=contract_id,
-                        approval_level=3,
-                        approval_role="general_manager",
-                        approval_status="pending",
-                    ),
-                ]
-            )
-
-        for approval in approvals:
-            self.db.add(approval)
-
-        self.db.flush()
-        return approvals
 
     def approve(
         self,
@@ -110,49 +39,13 @@ class ContractApprovalService:
         approval_id: int,
         user_id: int,
         opinion: Optional[str] = None,
-    ) -> Contract:
-        """审批通过"""
-        approval = (
-            self.db.query(ContractApproval)
-            .filter(
-                ContractApproval.id == approval_id,
-                ContractApproval.contract_id == contract_id,
-            )
-            .first()
+    ) -> Any:
+        """approval_id 在兼容层中按统一审批任务 task_id 解释。"""
+        return self.unified.approve_task(
+            task_id=approval_id,
+            approver_id=user_id,
+            comment=opinion,
         )
-
-        if not approval:
-            raise ValueError("审批记录不存在")
-
-        if approval.approval_status != "pending":
-            raise ValueError("该审批已处理")
-
-        # 更新审批记录
-        approval.approver_id = user_id
-        approval.approval_status = "approved"
-        approval.approval_opinion = opinion
-        approval.approved_at = datetime.now()
-
-        # 先 flush 确保当前审批状态已更新
-        self.db.flush()
-
-        # 检查是否所有审批都已完成
-        contract = self.db.query(Contract).filter(Contract.id == contract_id).first()
-        pending_count = (
-            self.db.query(ContractApproval)
-            .filter(
-                ContractApproval.contract_id == contract_id,
-                ContractApproval.approval_status == "pending",
-            )
-            .count()
-        )
-
-        if pending_count == 0:
-            apply_contract_status(contract, "APPROVED")
-
-        self.db.commit()
-        self.db.refresh(contract)
-        return contract
 
     def reject(
         self,
@@ -160,43 +53,14 @@ class ContractApprovalService:
         approval_id: int,
         user_id: int,
         opinion: str,
-    ) -> Contract:
-        """审批驳回"""
-        approval = (
-            self.db.query(ContractApproval)
-            .filter(
-                ContractApproval.id == approval_id,
-                ContractApproval.contract_id == contract_id,
-            )
-            .first()
+    ) -> Any:
+        """approval_id 在兼容层中按统一审批任务 task_id 解释。"""
+        return self.unified.reject_task(
+            task_id=approval_id,
+            approver_id=user_id,
+            comment=opinion,
         )
 
-        if not approval:
-            raise ValueError("审批记录不存在")
-
-        if approval.approval_status != "pending":
-            raise ValueError("该审批已处理")
-
-        # 更新审批记录
-        approval.approver_id = user_id
-        approval.approval_status = "rejected"
-        approval.approval_opinion = opinion
-        approval.approved_at = datetime.now()
-
-        # 驳回合同，回到草稿状态
-        contract = self.db.query(Contract).filter(Contract.id == contract_id).first()
-        apply_contract_status(contract, "DRAFT")
-
-        self.db.commit()
-        self.db.refresh(contract)
-        return contract
-
-    def get_pending_approvals(self, user_id: int) -> List[ContractApproval]:
-        """获取待审批列表（我的待办）"""
-        # TODO: 需要根据用户角色匹配 approval_role
-        return (
-            self.db.query(ContractApproval)
-            .filter(ContractApproval.approval_status == "pending")
-            .options(joinedload(ContractApproval.contract))
-            .all()
-        )
+    def get_pending_approvals(self, user_id: int) -> list[dict]:
+        items, _total = self.unified.get_pending_tasks(user_id=user_id)
+        return items

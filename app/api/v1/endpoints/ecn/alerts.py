@@ -6,19 +6,49 @@ ECN超时提醒 API endpoints
 """
 
 from datetime import datetime, timedelta
-from typing import Any, List
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Body, Depends, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.ecn import Ecn, EcnApproval, EcnEvaluation, EcnTask
+from app.models.approval import ApprovalInstance, ApprovalTask
+from app.models.ecn import Ecn, EcnEvaluation, EcnTask
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.ecn.notification import notify_overdue_alert
 
 router = APIRouter()
+
+
+def _approval_task_level(task: ApprovalTask) -> Optional[int]:
+    return task.node.node_order if task.node else task.task_order
+
+
+def _approval_task_role(task: ApprovalTask) -> str:
+    return task.node.node_name if task.node else task.task_type or "ECN审批"
+
+
+def _pending_approval_tasks(
+    db: Session,
+    *,
+    ecn_id: int,
+    approval_level: Optional[int] = None,
+) -> list[ApprovalTask]:
+    tasks = (
+        db.query(ApprovalTask)
+        .join(ApprovalInstance, ApprovalTask.instance_id == ApprovalInstance.id)
+        .filter(
+            ApprovalInstance.entity_type == "ECN",
+            ApprovalInstance.entity_id == ecn_id,
+            ApprovalTask.status == "PENDING",
+        )
+        .all()
+    )
+    if approval_level is None:
+        return tasks
+    return [task for task in tasks if _approval_task_level(task) == approval_level]
 
 
 def _find_users_for_alert(db: Session, alert_type: str, alert_data: dict, ecn: Ecn) -> List[int]:
@@ -50,19 +80,31 @@ def _find_users_for_alert(db: Session, alert_type: str, alert_data: dict, ecn: E
                     user_ids.append(ecn.applicant_id)
                     
     elif alert_type == "APPROVAL_OVERDUE":
-        approval_level = alert_data.get("approval_level")
-        if approval_level:
-            approval = (
-                db.query(EcnApproval)
+        task_id = alert_data.get("approval_task_id") or alert_data.get("task_id")
+        if task_id:
+            task = (
+                db.query(ApprovalTask)
+                .join(ApprovalInstance, ApprovalTask.instance_id == ApprovalInstance.id)
                 .filter(
-                    EcnApproval.ecn_id == ecn.id,
-                    EcnApproval.approval_level == approval_level,
-                    EcnApproval.status == "PENDING",
+                    ApprovalTask.id == task_id,
+                    ApprovalTask.status == "PENDING",
+                    ApprovalInstance.entity_type == "ECN",
+                    ApprovalInstance.entity_id == ecn.id,
                 )
                 .first()
             )
-            if approval and approval.approver_id:
-                user_ids.append(approval.approver_id)
+            if task and task.assignee_id:
+                user_ids.append(task.assignee_id)
+        else:
+            approval_level = alert_data.get("approval_level")
+            if approval_level:
+                for task in _pending_approval_tasks(
+                    db,
+                    ecn_id=ecn.id,
+                    approval_level=int(approval_level),
+                ):
+                    if task.assignee_id:
+                        user_ids.append(task.assignee_id)
     
     return user_ids
 
@@ -135,30 +177,36 @@ def get_ecn_overdue_alerts(
 
     # 2. 审批超时提醒
     overdue_approvals = (
-        db.query(EcnApproval)
-        .filter(EcnApproval.status == "PENDING", EcnApproval.due_date < now)
+        db.query(ApprovalTask)
+        .join(ApprovalInstance, ApprovalTask.instance_id == ApprovalInstance.id)
+        .filter(
+            ApprovalInstance.entity_type == "ECN",
+            ApprovalTask.status == "PENDING",
+            ApprovalTask.due_at.isnot(None),
+            ApprovalTask.due_at < now,
+        )
         .all()
     )
 
-    for approval in overdue_approvals:
-        ecn = db.query(Ecn).filter(Ecn.id == approval.ecn_id).first()
+    for approval_task in overdue_approvals:
+        ecn = db.query(Ecn).filter(Ecn.id == approval_task.instance.entity_id).first()
         if ecn:
-            overdue_days = (now - approval.due_date).days if approval.due_date else 0
+            approval_level = _approval_task_level(approval_task)
+            approval_role = _approval_task_role(approval_task)
+            overdue_days = (now - approval_task.due_at).days if approval_task.due_at else 0
             alerts.append(
                 {
                     "type": "APPROVAL_OVERDUE",
                     "ecn_id": ecn.id,
                     "ecn_no": ecn.ecn_no,
                     "ecn_title": ecn.ecn_title,
-                    "approval_level": approval.approval_level,
-                    "approval_role": approval.approval_role,
+                    "approval_task_id": approval_task.id,
+                    "approval_level": approval_level,
+                    "approval_role": approval_role,
                     "overdue_days": overdue_days,
-                    "message": f"ECN {ecn.ecn_no} 的第{approval.approval_level}级审批（{approval.approval_role}）已超时{overdue_days}天",
+                    "message": f"ECN {ecn.ecn_no} 的第{approval_level}级审批（{approval_role}）已超时{overdue_days}天",
                 }
             )
-            # 更新超时标识
-            approval.is_overdue = True
-            db.add(approval)
 
     # 3. 执行任务超时提醒
     overdue_tasks = (
@@ -261,24 +309,9 @@ def batch_process_overdue_alerts(
 
             elif alert_type == "APPROVAL_OVERDUE":
                 # 审批超时：找到审批人员
-                approval_level = alert_data.get("approval_level")
-                if approval_level:
-                    approval = (
-                        db.query(EcnApproval)
-                        .filter(
-                            EcnApproval.ecn_id == ecn_id,
-                            EcnApproval.approval_level == approval_level,
-                            EcnApproval.status == "PENDING",
-                        )
-                        .first()
-                    )
-
-                    if approval and approval.approver_id:
-                        user_ids.append(approval.approver_id)
-                    else:
-                        # 如果找不到审批人，通知ECN申请人
-                        if ecn.applicant_id:
-                            user_ids.append(ecn.applicant_id)
+                user_ids.extend(_find_users_for_alert(db, alert_type, alert_data, ecn))
+                if not user_ids and ecn.applicant_id:
+                    user_ids.append(ecn.applicant_id)
 
             elif alert_type == "TASK_OVERDUE":
                 # 任务超时：找到执行人员

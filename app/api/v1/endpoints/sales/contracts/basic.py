@@ -19,6 +19,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.project import Customer
 from app.models.sales import Contract, ContractDeliverable, Opportunity, Quote, QuoteItem, QuoteVersion
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import (
@@ -26,6 +27,10 @@ from app.schemas.sales import (
     ContractDeliverableResponse,
     ContractResponse,
     ContractUpdate,
+)
+from app.services.sales.contract_operation_audit import (
+    contract_audit_value,
+    log_contract_operation,
 )
 from app.services.sales.contract.status_service import (
     apply_contract_status,
@@ -351,6 +356,14 @@ def create_contract(
     contract = Contract(**contract_data)
     db.add(contract)
     db.flush()
+    log_contract_operation(
+        db,
+        contract,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=contract_audit_value(contract),
+        operation_desc="创建合同",
+    )
 
     # 创建交付物清单
     if contract_in.deliverables:
@@ -386,7 +399,17 @@ def delete_contract(
     if not security.check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
         raise HTTPException(status_code=403, detail="无权删除该合同")
 
+    old_value = contract_audit_value(contract)
     db.delete(contract)
+    log_contract_operation(
+        db,
+        contract,
+        SalesOperationType.DELETE,
+        current_user,
+        old_value=old_value,
+        new_value={},
+        operation_desc="删除合同",
+    )
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -409,7 +432,17 @@ def archive_contract(
     ):
         raise HTTPException(status_code=403, detail="您没有权限归档此合同")
 
+    old_value = contract_audit_value(contract)
     apply_contract_status(contract, "COMPLETED")
+    log_contract_operation(
+        db,
+        contract,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_value,
+        new_value=contract_audit_value(contract),
+        operation_desc="归档合同",
+    )
     db.commit()
     db.refresh(contract)
 
@@ -546,6 +579,15 @@ def create_contract_from_quote(
     db.add(contract)
     db.flush()
 
+    log_contract_operation(
+        db,
+        contract,
+        SalesOperationType.CREATE,
+        current_user,
+        new_value=contract_audit_value(contract),
+        operation_desc="从报价创建合同",
+        remark=f"quote_id={quote.id}; quote_version_id={version.id}",
+    )
     _create_deliverables_from_quote_items(db, contract_id=contract.id, items=items)
 
     db.commit()
@@ -620,6 +662,7 @@ def update_contract(
     ):
         raise HTTPException(status_code=403, detail="您没有权限编辑此合同")
 
+    old_value = contract_audit_value(contract)
     update_payload = contract_in.model_dump(exclude_unset=True)
     if "status" in update_payload:
         raise HTTPException(
@@ -636,6 +679,16 @@ def update_contract(
 
     for field, value in update_data.items():
         setattr(contract, field, value)
+
+    log_contract_operation(
+        db,
+        contract,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=contract_audit_value(contract),
+        operation_desc="更新合同",
+    )
 
     # Sprint 2.4: 合同变更时自动同步到项目
     if need_sync and contract.project_id:

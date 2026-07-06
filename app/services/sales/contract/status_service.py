@@ -9,6 +9,8 @@
 - 作废合同
 """
 
+from __future__ import annotations
+
 from typing import Iterable, Optional
 
 from sqlalchemy.orm import Session

@@ -18,9 +18,14 @@ from app.core import security
 from app.core.sales_permissions import check_sales_data_permission
 from app.models.project import Customer, Project
 from app.models.sales import Contract, ContractDeliverable, Opportunity, QuoteVersion
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import ContractProjectCreateRequest, ContractSignRequest
+from app.services.sales.contract_operation_audit import (
+    contract_audit_value,
+    log_contract_operation,
+)
 from app.services.sales.contract.status_service import apply_contract_status, normalize_contract_status
 from app.services.status_handlers.contract_handler import bind_presale_context_to_project
 from app.utils.db_helpers import get_or_404
@@ -71,6 +76,7 @@ def sign_contract(
     ):
         raise HTTPException(status_code=400, detail="合同未审批通过，不能签署")
 
+    old_value = contract_audit_value(contract)
     contract.signing_date = sign_request.signed_date
     if normalized_status not in ("SIGNED", "EXECUTING", "COMPLETED"):
         apply_contract_status(contract, "SIGNED")
@@ -117,6 +123,15 @@ def sign_contract(
     if auto_generate_payment_plans and contract.project_id:
         _generate_payment_plans_from_contract(db, contract)
 
+    log_contract_operation(
+        db,
+        contract,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_value,
+        new_value=contract_audit_value(contract),
+        operation_desc="签署合同",
+    )
     db.commit()
 
     # 发送合同签订通知

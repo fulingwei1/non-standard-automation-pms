@@ -11,7 +11,7 @@ ECN物料影响跟踪服务
 """
 
 import logging
-from datetime import datetime, date
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
@@ -19,13 +19,12 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.ecn.core import Ecn
-from app.models.ecn.impact import EcnAffectedMaterial, EcnAffectedOrder, EcnBomImpact
+from app.models.ecn.impact import EcnAffectedMaterial, EcnAffectedOrder
 from app.models.ecn.material_impact import (
     EcnExecutionProgress,
     EcnMaterialDisposition,
     EcnStakeholder,
 )
-from app.models.material import BomItem
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.services.notification.channels.base import NotificationPriority, NotificationRequest
 from app.services.notification.unified_notification_service import NotificationService
@@ -529,19 +528,23 @@ class EcnMaterialImpactService:
                 existing_users.add(po.created_by)
 
         # 4. 审批人
-        from app.models.ecn.evaluation_approval import EcnApproval
+        from app.models.approval import ApprovalInstance, ApprovalTask
 
-        approvals = (
-            self.db.query(EcnApproval)
-            .filter(EcnApproval.ecn_id == ecn.id)
+        approval_tasks = (
+            self.db.query(ApprovalTask)
+            .join(ApprovalInstance, ApprovalTask.instance_id == ApprovalInstance.id)
+            .filter(
+                ApprovalInstance.entity_type == "ECN",
+                ApprovalInstance.entity_id == ecn.id,
+                ApprovalTask.status.in_(["PENDING", "COMPLETED"]),
+            )
             .all()
         )
-        for approval in approvals:
-            if approval.approver_id and approval.approver_id not in existing_users:
-                to_add.append(
-                    (approval.approver_id, "APPROVER", f"ECN审批人（{approval.approval_role}）")
-                )
-                existing_users.add(approval.approver_id)
+        for task in approval_tasks:
+            if task.assignee_id and task.assignee_id not in existing_users:
+                role_name = task.node.node_name if task.node else "ECN审批"
+                to_add.append((task.assignee_id, "APPROVER", f"ECN审批人（{role_name}）"))
+                existing_users.add(task.assignee_id)
 
         # 批量添加
         for user_id, role, reason in to_add:

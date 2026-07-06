@@ -165,7 +165,7 @@ const ApprovalCenter = () => {
       />
 
       {/* 标签页 */}
-      <Tabs value={activeTab || "unknown"} onValueChange={switchTab}>
+      <Tabs value={activeTab} onValueChange={switchTab}>
         <TabsList className="bg-slate-800/50 border border-slate-700">
           <TabsTrigger value={APPROVAL_TABS.PENDING} className="data-[state=active]:bg-slate-700">
             <Clock className="h-4 w-4 mr-2" />

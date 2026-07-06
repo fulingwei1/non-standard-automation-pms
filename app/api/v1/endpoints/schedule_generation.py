@@ -3,7 +3,9 @@
 AI 智能排程 API
 """
 
-from typing import Any
+from __future__ import annotations
+
+from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
@@ -108,7 +110,7 @@ def save_schedule(
 
 @router.get("/schedule-plans", summary="获取计划列表")
 def list_schedule_plans(
-    project_id: int | None = Query(None, description="项目 ID"),
+    project_id: Optional[int] = Query(None, description="项目 ID"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:

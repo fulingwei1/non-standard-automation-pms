@@ -99,6 +99,9 @@ export const defaultNavGroups = [
       // 业务功能
       { name: "AI需求工作台", path: "/presales/ai-workbench", icon: "Sparkles", permission: "presales:task:read", permissionLabel: "AI需求工作台(分析/方案/报价)" },
       { name: "售前智能体", path: "/presales/agent", icon: "Sparkles", permission: "presales:task:read", permissionLabel: "售前智能体(需求→方案→报价→风险)" },
+      { name: "方案审核", path: "/presales/proposal-review", icon: "CheckCircle", permission: "presales:task:manage", permissionLabel: "售前方案审核队列" },
+      { name: "验厂资料", path: "/presales/audit-pack", icon: "ClipboardCheck", permission: "presales:task:read", permissionLabel: "验厂资料准备(上传清单→AI生成)" },
+      { name: "使用反馈", path: "/presales/usage-feedback", icon: "MessageSquare", permission: "presales:task:read", permissionLabel: "售前智能体使用反馈(帮助AI改进)" },
       { name: "技术方案", path: "/presales/technical-solutions?tab=solutions", icon: "Lightbulb", permission: "presales:task:read", permissionLabel: "技术方案" },
       { name: "优势产品", path: "/presales/advantage-products", icon: "Package", permission: "presales:task:read", permissionLabel: "优势产品" },
       { name: "成本估算", path: "/presales/technical-solutions?tab=cost", icon: "Calculator", permission: "presales:task:read", permissionLabel: "成本估算" },
@@ -129,6 +132,20 @@ export const defaultNavGroups = [
         permissionLabel: "成本毛利"
       },
       { name: "项目收尾", path: "/project/management-center?tab=closing", icon: "CheckCircle2", permission: "project:close", permissionLabel: "项目收尾" }
+    ]
+  },
+  // 5.5 OTD 智能体
+  {
+    label: "交付智能体",
+    items: [
+      { name: "OTD 风险看板", path: "/otd/dashboard", icon: "ShieldCheck", permission: "project:project:read", permissionLabel: "OTD 风险看板" },
+      { name: "项目风险详情", path: "/otd/scan", icon: "AlertTriangle", permission: "project:project:read", permissionLabel: "项目风险详情" },
+      { name: "毛利率看板", path: "/otd/margin-dashboard", icon: "DollarSign", permission: "project:project:read", permissionLabel: "毛利率看板" },
+      { name: "7 核心指标", path: "/otd/metrics", icon: "BarChart3", permission: "project:project:read", permissionLabel: "OTD 核心指标" },
+      { name: "对比分析", path: "/otd/compare", icon: "GitCompare", permission: "project:project:read", permissionLabel: "对比分析" },
+      { name: "PM 月度自检", path: "/otd/pm-check", icon: "ClipboardList", permission: "project:project:read", permissionLabel: "PM 月度自检" },
+      { name: "BOM 成本检查", path: "/otd/bom-check", icon: "Package", permission: "project:project:read", permissionLabel: "BOM 成本检查" },
+      { name: "阈值配置", path: "/otd/thresholds", icon: "Settings2", permission: "project:project:read", permissionLabel: "阈值配置" }
     ]
   },
   // 6. 工程技术

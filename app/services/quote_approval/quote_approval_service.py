@@ -12,6 +12,9 @@ from sqlalchemy.orm import Session
 
 from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.sales.quotes import Quote, QuoteVersion
+from app.models.sales.operation_log import SalesOperationType
+from app.models.user import User
+from app.services.sales.quote_operation_audit import log_quote_operation, quote_audit_value
 from app.services.approval_engine import ApprovalEngineService
 
 logger = logging.getLogger(__name__)
@@ -70,6 +73,9 @@ class QuoteApprovalService:
                 errors.append({"quote_id": quote_id, "error": "报价没有版本，无法提交审批"})
                 continue
 
+            operator = self.db.get(User, initiator_id)
+            old_quote_value = quote_audit_value(quote) if isinstance(operator, User) else None
+
             try:
                 # 构建表单数据
                 form_data = self._build_form_data(quote, version)
@@ -83,6 +89,18 @@ class QuoteApprovalService:
                     initiator_id=initiator_id,
                     urgency=urgency,
                 )
+
+                if isinstance(operator, User) and old_quote_value is not None:
+                    log_quote_operation(
+                        self.db,
+                        quote,
+                        SalesOperationType.SUBMIT,
+                        operator,
+                        old_value=old_quote_value,
+                        new_value=quote_audit_value(quote),
+                        operation_desc="提交报价审批",
+                        remark=comment,
+                    )
 
                 results.append(
                     {
@@ -193,6 +211,17 @@ class QuoteApprovalService:
         Raises:
             ValueError: 不支持的操作类型
         """
+        operator = self.db.get(User, approver_id)
+        quote = None
+        old_quote_value = None
+        if isinstance(operator, User) and action in {"approve", "reject"}:
+            task = self.db.query(ApprovalTask).filter(ApprovalTask.id == task_id).first()
+            instance = task.instance if task else None
+            if instance and instance.entity_type == "QUOTE":
+                quote = self.db.query(Quote).filter(Quote.id == instance.entity_id).first()
+                if quote:
+                    old_quote_value = quote_audit_value(quote)
+
         if action == "approve":
             result = self.approval_engine.approve(
                 task_id=task_id,
@@ -207,6 +236,24 @@ class QuoteApprovalService:
             )
         else:
             raise ValueError(f"不支持的操作类型: {action}")
+
+        if isinstance(operator, User) and quote and old_quote_value is not None:
+            operation_type = (
+                SalesOperationType.APPROVE
+                if action == "approve"
+                else SalesOperationType.REJECT
+            )
+            operation_desc = "报价审批通过" if action == "approve" else "报价审批驳回"
+            log_quote_operation(
+                self.db,
+                quote,
+                operation_type,
+                operator,
+                old_value=old_quote_value,
+                new_value=quote_audit_value(quote),
+                operation_desc=operation_desc,
+                remark=comment,
+            )
 
         return {
             "task_id": task_id,
@@ -238,22 +285,16 @@ class QuoteApprovalService:
 
         for task_id in task_ids:
             try:
-                if action == "approve":
-                    self.approval_engine.approve(
+                if action in {"approve", "reject"}:
+                    self.perform_action(
                         task_id=task_id,
-                        approver_id=approver_id,
-                        comment=comment,
-                    )
-                elif action == "reject":
-                    self.approval_engine.reject(
-                        task_id=task_id,
+                        action=action,
                         approver_id=approver_id,
                         comment=comment,
                     )
                 else:
                     errors.append({"task_id": task_id, "error": f"不支持的操作: {action}"})
                     continue
-
                 results.append({"task_id": task_id, "status": "success"})
             except Exception as e:
                 errors.append({"task_id": task_id, "error": str(e)})
@@ -375,7 +416,22 @@ class QuoteApprovalService:
         if instance.initiator_id != user_id:
             raise ValueError("只能撤回自己提交的审批")
 
+        operator = self.db.get(User, user_id)
+        old_quote_value = quote_audit_value(quote) if isinstance(operator, User) else None
+
         self.approval_engine.withdraw(instance_id=instance.id, initiator_id=user_id, comment=reason)
+
+        if isinstance(operator, User) and old_quote_value is not None:
+            log_quote_operation(
+                self.db,
+                quote,
+                SalesOperationType.STATUS_CHANGE,
+                operator,
+                old_value=old_quote_value,
+                new_value=quote_audit_value(quote),
+                operation_desc="撤回报价审批",
+                remark=reason,
+            )
 
         return {
             "quote_id": quote_id,

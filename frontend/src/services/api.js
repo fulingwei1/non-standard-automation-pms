@@ -125,3 +125,4 @@ export * from "./api/worker.js";
 export * from "./api/workshop.js";
 export * from "./api/requirementExtraction.js";
 export * from "./api/relationshipMaturity.js";
+export * from "./api/otd.js";

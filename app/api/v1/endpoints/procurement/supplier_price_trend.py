@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """供应商价格趋势分析 API."""
 
+from __future__ import annotations
+
 import re
 from typing import Any
 

@@ -7,7 +7,9 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core import security
 from app.core.auth import get_db
+from app.models.user import User
 from app.schemas.presale_ai_knowledge import (
     AIQARequest,
     AIQAResponse,
@@ -44,7 +46,9 @@ def get_ai_service(db: Session = Depends(get_db)) -> PresaleAIKnowledgeService:
     description="基于需求语义搜索历史项目，支持多维度筛选",
 )
 def search_similar_cases(
-    request: SemanticSearchRequest, service: PresaleAIKnowledgeService = Depends(get_ai_service)
+    request: SemanticSearchRequest,
+    service: PresaleAIKnowledgeService = Depends(get_ai_service),
+    _current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """语义搜索相似案例"""
     try:
@@ -76,7 +80,11 @@ def search_similar_cases(
     summary="获取案例详情",
     description="根据ID获取单个案例的完整信息",
 )
-def get_case(case_id: int, service: PresaleAIKnowledgeService = Depends(get_ai_service)):
+def get_case(
+    case_id: int,
+    service: PresaleAIKnowledgeService = Depends(get_ai_service),
+    _current_user: User = Depends(security.require_permission("knowledge:read")),
+):
     """获取案例详情"""
     case = service.get_case(case_id)
     if not case:
@@ -95,7 +103,9 @@ def get_case(case_id: int, service: PresaleAIKnowledgeService = Depends(get_ai_s
     description="基于场景推荐高质量案例和成功模式",
 )
 def recommend_best_practices(
-    request: BestPracticeRequest, service: PresaleAIKnowledgeService = Depends(get_ai_service)
+    request: BestPracticeRequest,
+    service: PresaleAIKnowledgeService = Depends(get_ai_service),
+    _current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """推荐最佳实践"""
     try:
@@ -129,6 +139,7 @@ def recommend_best_practices(
 def extract_case_knowledge(
     request: KnowledgeExtractionRequest,
     service: PresaleAIKnowledgeService = Depends(get_ai_service),
+    _current_user: User = Depends(security.require_permission("knowledge:write")),
 ):
     """提取案例知识"""
     try:
@@ -153,7 +164,9 @@ def extract_case_knowledge(
     "/qa", response_model=AIQAResponse, summary="智能问答", description="基于知识库的智能问答系统"
 )
 def ask_question(
-    request: AIQARequest, service: PresaleAIKnowledgeService = Depends(get_ai_service)
+    request: AIQARequest,
+    service: PresaleAIKnowledgeService = Depends(get_ai_service),
+    _current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """智能问答"""
     try:
@@ -191,6 +204,7 @@ def search_knowledge_base(
     page: int = 1,
     page_size: int = 20,
     service: PresaleAIKnowledgeService = Depends(get_ai_service),
+    _current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """知识库搜索"""
     try:
@@ -229,7 +243,9 @@ def search_knowledge_base(
     description="手动添加案例到知识库",
 )
 def add_case(
-    case_data: KnowledgeCaseCreate, service: PresaleAIKnowledgeService = Depends(get_ai_service)
+    case_data: KnowledgeCaseCreate,
+    service: PresaleAIKnowledgeService = Depends(get_ai_service),
+    _current_user: User = Depends(security.require_permission("knowledge:write")),
 ):
     """添加案例"""
     try:
@@ -254,6 +270,7 @@ def update_case(
     case_id: int,
     update_data: KnowledgeCaseUpdate,
     service: PresaleAIKnowledgeService = Depends(get_ai_service),
+    _current_user: User = Depends(security.require_permission("knowledge:write")),
 ):
     """更新案例"""
     case = service.update_case(case_id, update_data)
@@ -272,7 +289,10 @@ def update_case(
     summary="获取所有标签",
     description="获取知识库中所有使用的标签及统计",
 )
-def get_all_tags(service: PresaleAIKnowledgeService = Depends(get_ai_service)):
+def get_all_tags(
+    service: PresaleAIKnowledgeService = Depends(get_ai_service),
+    _current_user: User = Depends(security.require_permission("knowledge:read")),
+):
     """获取所有标签"""
     try:
         result = service.get_all_tags()
@@ -288,7 +308,9 @@ def get_all_tags(service: PresaleAIKnowledgeService = Depends(get_ai_service)):
 
 @router.post("/qa-feedback", summary="问答反馈", description="提交智能问答的用户反馈")
 def submit_qa_feedback(
-    feedback: QAFeedbackRequest, service: PresaleAIKnowledgeService = Depends(get_ai_service)
+    feedback: QAFeedbackRequest,
+    service: PresaleAIKnowledgeService = Depends(get_ai_service),
+    _current_user: User = Depends(security.require_permission("knowledge:write")),
 ):
     """问答反馈"""
     success = service.submit_qa_feedback(

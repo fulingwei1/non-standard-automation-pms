@@ -3,6 +3,8 @@
 技术评审 - 辅助工具函数
 """
 
+from __future__ import annotations
+
 import json
 from datetime import datetime
 

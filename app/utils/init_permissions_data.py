@@ -6,6 +6,8 @@ API权限数据初始化 - 内嵌版本
 确保幂等性，可重复执行
 """
 
+from __future__ import annotations
+
 import logging
 
 from sqlalchemy.orm import Session

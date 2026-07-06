@@ -93,7 +93,9 @@ class BonusCalculatorBase:
 
         return True
 
-    def get_coefficient_by_level(self, level: str) -> Decimal:
+    def get_coefficient_by_level(
+        self, level: str, bonus_rule: Optional[BonusRule] = None
+    ) -> Decimal:
         """
         根据绩效等级获取系数
 
@@ -105,6 +107,12 @@ class BonusCalculatorBase:
         """
         normalized_level = getattr(level, "value", level)
         normalized_level = str(normalized_level or "").upper()
+        trigger_condition = getattr(bonus_rule, "trigger_condition", None)
+        if isinstance(trigger_condition, dict):
+            configured = trigger_condition.get("performance_coefficients") or {}
+            if normalized_level in configured:
+                return Decimal(str(configured[normalized_level]))
+
         coefficients = {
             "S": Decimal("1.5"),
             "A": Decimal("1.2"),
@@ -142,8 +150,9 @@ class BonusCalculatorBase:
         }
 
         # 如果规则中有配置，使用规则配置
-        if bonus_rule.trigger_condition and "role_coefficients" in bonus_rule.trigger_condition:
-            role_coefficients = bonus_rule.trigger_condition["role_coefficients"]
+        trigger_condition = getattr(bonus_rule, "trigger_condition", None)
+        if isinstance(trigger_condition, dict) and "role_coefficients" in trigger_condition:
+            role_coefficients = trigger_condition["role_coefficients"]
             return Decimal(str(role_coefficients.get(role_code, 1.0)))
 
         return default_coefficients.get(role_code, Decimal("1.0"))

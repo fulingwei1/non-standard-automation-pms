@@ -3,6 +3,8 @@
 商机管理 - 工作流操作（阶段门、阶段、评分、赢单、输单）
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any, Optional
@@ -16,10 +18,15 @@ from app.core import security
 from app.core.sales_permissions import can_set_opportunity_gate
 from app.models.enums import OpportunityStageEnum
 from app.models.sales import Opportunity, OpportunityRequirement
+from app.models.sales.operation_log import SalesOperationType
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import OpportunityRequirementResponse, OpportunityResponse
 from app.services.presale.assessment_status import unfinished_assessment_sql
+from app.services.sales.opportunity_operation_audit import (
+    log_opportunity_operation,
+    opportunity_audit_value,
+)
 from app.utils.db_helpers import get_or_404
 
 from .utils import validate_g2_opportunity_to_quote, validate_opportunity_stage_transition
@@ -301,7 +308,12 @@ def ai_solution_review(
     # 评审结果落库：G2 闸门消费未处置的 HIGH 风险（PRE-19 → 决策流接线）
     from .utils.solution_review import persist_solution_review
 
-    record = persist_solution_review(db, opp_id, [r for r in reviews if isinstance(r, dict)])
+    record = persist_solution_review(
+        db,
+        opp_id,
+        [r for r in reviews if isinstance(r, dict)],
+        current_user=current_user,
+    )
     high = record["high_risk"]
     return ResponseModel(
         code=200,
@@ -331,6 +343,7 @@ def resolve_ai_solution_review(
             action=payload.get("action", ""),
             note=payload.get("note", ""),
             user_id=current_user.id,
+            current_user=current_user,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -913,10 +926,21 @@ def submit_opportunity_gate(
             status_code=400, detail=f"{gate_type}阶段门验证失败: {', '.join(validation_errors)}"
         )
 
+    old_value = opportunity_audit_value(opportunity)
     opportunity.gate_status = gate_request.gate_status
     if gate_request.gate_status == "PASS":
         opportunity.gate_passed_at = datetime.now()
     opportunity.updated_by = current_user.id
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_value,
+        new_value=opportunity_audit_value(opportunity),
+        operation_desc=f"{gate_type}阶段门提交",
+        remark=gate_type,
+    )
 
     db.commit()
 
@@ -940,8 +964,18 @@ def update_opportunity_stage(
     """
     opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
+    old_value = opportunity_audit_value(opportunity)
     opportunity.stage = validate_opportunity_stage_transition(opportunity.stage, stage)
     opportunity.updated_by = current_user.id
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_value,
+        new_value=opportunity_audit_value(opportunity),
+        operation_desc="更新商机阶段",
+    )
     db.commit()
     db.refresh(opportunity)
 
@@ -980,6 +1014,7 @@ def update_opportunity_score(
     """
     opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
+    old_value = opportunity_audit_value(opportunity)
     opportunity.score = score
 
     # 根据评分自动更新风险等级
@@ -990,6 +1025,16 @@ def update_opportunity_score(
     else:
         opportunity.risk_level = "HIGH"
     opportunity.updated_by = current_user.id
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.UPDATE,
+        current_user,
+        old_value=old_value,
+        new_value=opportunity_audit_value(opportunity),
+        operation_desc="商机评分",
+        remark=score_remark,
+    )
 
     db.commit()
     db.refresh(opportunity)
@@ -1033,10 +1078,20 @@ def win_opportunity(
         OpportunityStageEnum.WON.value,
         allow_direct_win=True,
     )
+    old_value = opportunity_audit_value(opportunity)
     opportunity.stage = "WON"
     opportunity.gate_status = "PASS"
     opportunity.gate_passed_at = datetime.now()
     opportunity.updated_by = current_user.id
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_value,
+        new_value=opportunity_audit_value(opportunity),
+        operation_desc="商机赢单",
+    )
     db.commit()
     db.refresh(opportunity)
 
@@ -1077,11 +1132,22 @@ def lose_opportunity(
         opportunity.stage,
         OpportunityStageEnum.LOST.value,
     )
+    old_value = opportunity_audit_value(opportunity)
     opportunity.stage = "LOST"
     if lose_reason:
         opportunity.lose_reason = lose_reason
     opportunity.lost_at = datetime.now()
     opportunity.updated_by = current_user.id
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_value,
+        new_value=opportunity_audit_value(opportunity),
+        operation_desc="商机输单",
+        remark=lose_reason,
+    )
     db.commit()
     db.refresh(opportunity)
 
@@ -1193,9 +1259,20 @@ def advance_opportunity(
             )
         target = STAGE_ORDER[idx + 1]
 
+    old_value = opportunity_audit_value(opportunity)
     old_stage = opportunity.stage
     opportunity.stage = target
     opportunity.updated_by = current_user.id
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_value,
+        new_value=opportunity_audit_value(opportunity),
+        operation_desc="推进商机阶段",
+        remark=request.remark,
+    )
     db.commit()
     db.refresh(opportunity)
 
@@ -1233,11 +1310,22 @@ def win_opportunity_post(
     if opportunity.stage == "LOST":
         raise HTTPException(status_code=400, detail="商机已输单，无法标记赢单")
 
+    old_value = opportunity_audit_value(opportunity)
     old_stage = opportunity.stage
     opportunity.stage = "WON"
     opportunity.gate_status = "PASS"
     opportunity.gate_passed_at = datetime.now()
     opportunity.updated_by = current_user.id
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_value,
+        new_value=opportunity_audit_value(opportunity),
+        operation_desc="商机赢单",
+        remark=remark,
+    )
     db.commit()
     db.refresh(opportunity)
 
@@ -1287,11 +1375,22 @@ def lose_opportunity_post_compat(
         or request.get("reason")
         or "未填写输单原因"
     )
+    old_value = opportunity_audit_value(opportunity)
     old_stage = opportunity.stage
     opportunity.stage = "LOST"
     opportunity.lose_reason = reason
     opportunity.lost_at = datetime.now()
     opportunity.updated_by = current_user.id
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_value,
+        new_value=opportunity_audit_value(opportunity),
+        operation_desc="商机输单",
+        remark=reason,
+    )
     db.commit()
 
     return ResponseModel(
@@ -1328,11 +1427,22 @@ def loss_opportunity_post(
     if opportunity.stage == "WON":
         raise HTTPException(status_code=400, detail="商机已赢单，无法标记输单")
 
+    old_value = opportunity_audit_value(opportunity)
     old_stage = opportunity.stage
     opportunity.stage = "LOST"
     opportunity.lose_reason = request.loss_reason
     opportunity.lost_at = datetime.now()
     opportunity.updated_by = current_user.id
+    log_opportunity_operation(
+        db,
+        opportunity,
+        SalesOperationType.STATUS_CHANGE,
+        current_user,
+        old_value=old_value,
+        new_value=opportunity_audit_value(opportunity),
+        operation_desc="商机输单",
+        remark=request.loss_reason,
+    )
     db.commit()
     db.refresh(opportunity)
 
