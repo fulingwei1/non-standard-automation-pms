@@ -28,7 +28,7 @@ from app.models.project import (
     ProjectCost,
 )
 from app.models.user import User
-from app.services.cost_forecast_service import CostForecastService
+from app.services.cost.cost_forecast_service import CostForecastService
 
 # ============================================================================
 # 测试夹具（Fixtures）

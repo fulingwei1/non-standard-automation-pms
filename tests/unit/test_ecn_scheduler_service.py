@@ -14,7 +14,7 @@ class TestCheckEvaluationOverdue:
 
     def test_no_overdue_evaluations(self, db_session):
         """测试无超时评估"""
-        from app.services.ecn_scheduler import check_evaluation_overdue
+        from app.services.ecn.ecn_scheduler import check_evaluation_overdue
 
         alerts = check_evaluation_overdue(db_session)
         assert isinstance(alerts, list)
@@ -22,7 +22,7 @@ class TestCheckEvaluationOverdue:
     def test_alert_structure(self, db_session):
         """测试提醒结构"""
         from app.models.ecn import Ecn, EcnEvaluation
-        from app.services.ecn_scheduler import check_evaluation_overdue
+        from app.services.ecn.ecn_scheduler import check_evaluation_overdue
 
         # 创建超时评估
         ecn = Ecn(ecn_no="ECN001", ecn_title="测试ECN")
@@ -53,7 +53,7 @@ class TestCheckApprovalOverdue:
 
     def test_no_overdue_approvals(self, db_session):
         """测试无超时审批"""
-        from app.services.ecn_scheduler import check_approval_overdue
+        from app.services.ecn.ecn_scheduler import check_approval_overdue
 
         alerts = check_approval_overdue(db_session)
         assert isinstance(alerts, list)
@@ -61,7 +61,7 @@ class TestCheckApprovalOverdue:
     def test_approval_alert_type(self, db_session):
         """测试审批提醒类型"""
         from app.models.ecn import Ecn, EcnApproval
-        from app.services.ecn_scheduler import check_approval_overdue
+        from app.services.ecn.ecn_scheduler import check_approval_overdue
 
         ecn = Ecn(ecn_no="ECN002", ecn_title="测试ECN")
         db_session.add(ecn)
@@ -88,7 +88,7 @@ class TestCheckTaskOverdue:
 
     def test_no_overdue_tasks(self, db_session):
         """测试无超时任务"""
-        from app.services.ecn_scheduler import check_task_overdue
+        from app.services.ecn.ecn_scheduler import check_task_overdue
 
         alerts = check_task_overdue(db_session)
         assert isinstance(alerts, list)
@@ -96,7 +96,7 @@ class TestCheckTaskOverdue:
     def test_task_alert_type(self, db_session):
         """测试任务提醒类型"""
         from app.models.ecn import Ecn, EcnTask
-        from app.services.ecn_scheduler import check_task_overdue
+        from app.services.ecn.ecn_scheduler import check_task_overdue
 
         ecn = Ecn(ecn_no="ECN003", ecn_title="测试ECN")
         db_session.add(ecn)
@@ -122,7 +122,7 @@ class TestCheckAllOverdue:
 
     def test_check_all_returns_list(self):
         """测试返回列表"""
-        from app.services.ecn_scheduler import check_all_overdue
+        from app.services.ecn.ecn_scheduler import check_all_overdue
 
         with patch("app.services.ecn_scheduler.get_db_session") as mock_db:
             mock_session = MagicMock()
@@ -139,7 +139,7 @@ class TestSendOverdueNotifications:
 
     def test_empty_alerts_no_action(self):
         """测试空提醒不执行操作"""
-        from app.services.ecn_scheduler import send_overdue_notifications
+        from app.services.ecn.ecn_scheduler import send_overdue_notifications
 
         # 空列表不应报错
         send_overdue_notifications([])
@@ -158,7 +158,7 @@ class TestRunEcnScheduler:
 
     def test_scheduler_handles_exception(self):
         """测试调度器异常处理"""
-        from app.services.ecn_scheduler import run_ecn_scheduler
+        from app.services.ecn.ecn_scheduler import run_ecn_scheduler
 
         with patch("app.services.ecn_scheduler.check_all_overdue") as mock_check:
             mock_check.side_effect = Exception("测试异常")
@@ -168,7 +168,7 @@ class TestRunEcnScheduler:
 
     def test_scheduler_with_alerts(self):
         """测试有提醒时的调度器"""
-        from app.services.ecn_scheduler import run_ecn_scheduler
+        from app.services.ecn.ecn_scheduler import run_ecn_scheduler
 
         with patch("app.services.ecn_scheduler.check_all_overdue") as mock_check:
             with patch("app.services.ecn_scheduler.send_overdue_notifications") as mock_send:

@@ -21,7 +21,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from app.services.cost_forecast_service import CostForecastService
+from app.services.cost.cost_forecast_service import CostForecastService
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -500,6 +500,6 @@ class TestSaveForecast:
             "monthly_forecast_data": [],
             "trend_data": {},
         }
-        with patch("app.services.cost_forecast_service.save_obj"):
+        with patch("app.services.cost.cost_forecast_service.save_obj"):
             result = service.save_forecast(1, forecast_result, created_by=1)
         assert result is not None

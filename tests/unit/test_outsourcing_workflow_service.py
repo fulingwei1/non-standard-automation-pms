@@ -672,7 +672,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
     def test_trigger_cost_collection_success(self):
         """测试成功触发成本归集"""
         # Mock动态导入的CostCollectionService
-        with patch("app.services.cost_collection_service.CostCollectionService") as mock_service:
+        with patch("app.services.cost.cost_collection_service.CostCollectionService") as mock_service:
             self.service._trigger_cost_collection(order_id=10, user_id=5)
             mock_service.collect_from_outsourcing_order.assert_called_once_with(
                 self.db, 10, created_by=5
@@ -680,7 +680,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
 
     def test_trigger_cost_collection_exception(self):
         """测试成本归集异常（应该被捕获并记录日志）"""
-        with patch("app.services.cost_collection_service.CostCollectionService") as mock_service:
+        with patch("app.services.cost.cost_collection_service.CostCollectionService") as mock_service:
             mock_service.collect_from_outsourcing_order.side_effect = Exception("成本归集失败")
 
             # 不应该抛出异常
@@ -697,7 +697,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
         original_import = builtins.__import__
 
         def mock_import(name, *args, **kwargs):
-            if name == "app.services.cost_collection_service":
+            if name == "app.services.cost.cost_collection_service":
                 raise ImportError("模块不存在")
             return original_import(name, *args, **kwargs)
 

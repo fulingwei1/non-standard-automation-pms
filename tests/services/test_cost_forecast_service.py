@@ -31,7 +31,7 @@ def _make_project(**kw):
 
 class TestCostForecastServiceInit:
     def test_init_sets_db(self):
-        from app.services.cost_forecast_service import CostForecastService
+        from app.services.cost.cost_forecast_service import CostForecastService
 
         db = _make_db()
         svc = CostForecastService(db)
@@ -40,7 +40,7 @@ class TestCostForecastServiceInit:
 
 class TestLinearForecast:
     def test_project_not_found_returns_error(self):
-        from app.services.cost_forecast_service import CostForecastService
+        from app.services.cost.cost_forecast_service import CostForecastService
 
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = None
@@ -50,7 +50,7 @@ class TestLinearForecast:
         assert "项目不存在" in result["error"]
 
     def test_insufficient_data_returns_error(self):
-        from app.services.cost_forecast_service import CostForecastService
+        from app.services.cost.cost_forecast_service import CostForecastService
 
         db = _make_db()
         project = _make_project()
@@ -62,7 +62,7 @@ class TestLinearForecast:
         assert "error" in result
 
     def test_linear_forecast_with_enough_data(self):
-        from app.services.cost_forecast_service import CostForecastService
+        from app.services.cost.cost_forecast_service import CostForecastService
 
         db = _make_db()
         project = _make_project()
@@ -83,7 +83,7 @@ class TestLinearForecast:
 
 class TestGetCostTrend:
     def test_project_not_found(self):
-        from app.services.cost_forecast_service import CostForecastService
+        from app.services.cost.cost_forecast_service import CostForecastService
 
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = None
@@ -92,7 +92,7 @@ class TestGetCostTrend:
         assert "error" in result
 
     def test_no_monthly_data_returns_empty_trend(self):
-        from app.services.cost_forecast_service import CostForecastService
+        from app.services.cost.cost_forecast_service import CostForecastService
 
         db = _make_db()
         project = _make_project()
@@ -105,7 +105,7 @@ class TestGetCostTrend:
         assert result["summary"]["total_months"] == 0
 
     def test_with_monthly_data_returns_summary(self):
-        from app.services.cost_forecast_service import CostForecastService
+        from app.services.cost.cost_forecast_service import CostForecastService
 
         db = _make_db()
         project = _make_project()
@@ -124,7 +124,7 @@ class TestGetCostTrend:
 
 class TestCheckCostAlerts:
     def test_project_not_found_returns_empty_list(self):
-        from app.services.cost_forecast_service import CostForecastService
+        from app.services.cost.cost_forecast_service import CostForecastService
 
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = None
@@ -133,7 +133,7 @@ class TestCheckCostAlerts:
         assert result == []
 
     def test_no_alerts_for_healthy_project(self):
-        from app.services.cost_forecast_service import CostForecastService
+        from app.services.cost.cost_forecast_service import CostForecastService
 
         db = _make_db()
         project = _make_project(actual_cost=Decimal("100000"), budget_amount=Decimal("500000"))
@@ -153,7 +153,7 @@ class TestCheckCostAlerts:
         assert result == []
 
     def test_overspend_alert_triggered(self):
-        from app.services.cost_forecast_service import CostForecastService
+        from app.services.cost.cost_forecast_service import CostForecastService
 
         db = _make_db()
         project = _make_project(actual_cost=Decimal("490000"), budget_amount=Decimal("500000"))

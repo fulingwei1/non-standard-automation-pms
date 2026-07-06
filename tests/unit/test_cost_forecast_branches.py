@@ -44,7 +44,7 @@ except Exception as e:
     HAS_MODULE = False
 
 try:
-    from app.services.cost_collection_service import CostCollectionService as _CCS
+    from app.services.cost.cost_collection_service import CostCollectionService as _CCS
 
     CostCollectionService = _CCS
 except Exception as e:
@@ -792,7 +792,7 @@ class TestCostCollectionPurchaseOrder:
         db.query.side_effect = query_side_effect
 
         with patch(
-            "app.services.cost_collection_service.CostAlertService.check_budget_execution"
+            "app.services.cost.cost_collection_service.CostAlertService.check_budget_execution"
         ):
             result = CostCollectionService.collect_from_purchase_order(
                 db, 1, created_by=1
@@ -845,7 +845,7 @@ class TestCostCollectionOutsourcingOrder:
 
         with (
             patch(
-                "app.services.cost_collection_service.CostAlertService.check_budget_execution"
+                "app.services.cost.cost_collection_service.CostAlertService.check_budget_execution"
             ),
             patch.object(CostCollectionService, "_recalculate_project_actual_cost"),
         ):
@@ -950,7 +950,7 @@ class TestCostCollectionECN:
 
         with (
             patch(
-                "app.services.cost_collection_service.CostAlertService.check_budget_execution"
+                "app.services.cost.cost_collection_service.CostAlertService.check_budget_execution"
             ),
             patch.object(CostCollectionService, "_recalculate_project_actual_cost"),
         ):
@@ -1023,7 +1023,7 @@ class TestCostCollectionBOM:
         db.query.side_effect = query_side_effect
 
         with (
-            patch("app.services.cost_collection_service.delete_obj"),
+            patch("app.services.cost.cost_collection_service.delete_obj"),
             patch.object(CostCollectionService, "_recalculate_project_actual_cost"),
         ):
             result = CostCollectionService.collect_from_bom(db, 1)
@@ -1067,7 +1067,7 @@ class TestCostCollectionBOM:
 
         with (
             patch(
-                "app.services.cost_collection_service.CostAlertService.check_budget_execution"
+                "app.services.cost.cost_collection_service.CostAlertService.check_budget_execution"
             ),
             patch.object(CostCollectionService, "_recalculate_project_actual_cost"),
         ):

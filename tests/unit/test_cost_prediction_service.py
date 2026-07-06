@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.services.cost_prediction_service import CostPredictionService
+from app.services.cost.cost_prediction_service import CostPredictionService
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def mock_db():
 
 @pytest.fixture
 def service(mock_db):
-    with patch("app.services.cost_prediction_service.EVMCalculator"):
+    with patch("app.services.cost.cost_prediction_service.EVMCalculator"):
         svc = CostPredictionService(db=mock_db, glm_api_key="fake-key")
     svc.ai_predictor = None  # 禁用AI
     return svc

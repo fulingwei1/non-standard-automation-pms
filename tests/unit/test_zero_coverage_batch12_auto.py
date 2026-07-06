@@ -60,7 +60,7 @@ class TestPresaleAIService:
     def test_service_import(self):
         """Test PresaleAIService"""
         try:
-            from app.services.presale_ai_service import PresaleAIService
+            from app.services.presale.presale_ai_service import PresaleAIService
             mock_db = MagicMock()
             service = PresaleAIService(mock_db)
             assert service.db == mock_db

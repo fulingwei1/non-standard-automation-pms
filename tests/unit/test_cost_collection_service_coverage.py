@@ -21,7 +21,7 @@ def mock_db():
 
 class TestCollectFromPurchaseOrder:
     def test_order_not_found_returns_none(self, mock_db):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db.query.return_value.filter.return_value.first.return_value = None
         result = CostCollectionService.collect_from_purchase_order(mock_db, 999)
@@ -29,7 +29,7 @@ class TestCollectFromPurchaseOrder:
 
     def test_no_project_id_returns_none(self, mock_db):
         """采购订单未关联项目时不创建成本记录"""
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_order = MagicMock()
         mock_order.project_id = None
@@ -52,7 +52,7 @@ class TestCollectFromPurchaseOrder:
 
     def test_creates_new_cost_record(self, mock_db):
         """正常创建新成本记录"""
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_order = MagicMock()
         mock_order.project_id = 10
@@ -77,7 +77,7 @@ class TestCollectFromPurchaseOrder:
             mock_project_costs
         )
 
-        with patch("app.services.cost_collection_service.ProjectCost") as MockCost:
+        with patch("app.services.cost.cost_collection_service.ProjectCost") as MockCost:
             mock_cost = MagicMock()
             MockCost.return_value = mock_cost
             result = CostCollectionService.collect_from_purchase_order(
@@ -88,7 +88,7 @@ class TestCollectFromPurchaseOrder:
 
     def test_updates_existing_cost_record(self, mock_db):
         """已存在成本记录时应更新"""
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_order = MagicMock()
         mock_order.project_id = 10
@@ -121,14 +121,14 @@ class TestCollectFromPurchaseOrder:
 
 class TestCollectFromOutsourcingOrder:
     def test_order_not_found_returns_none(self, mock_db):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db.query.return_value.filter.return_value.first.return_value = None
         result = CostCollectionService.collect_from_outsourcing_order(mock_db, 999)
         assert result is None
 
     def test_no_project_returns_none(self, mock_db):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_order = MagicMock()
         mock_order.project_id = None
@@ -143,7 +143,7 @@ class TestCollectFromOutsourcingOrder:
 
     def test_creates_outsourcing_cost(self, mock_db):
         """正常创建外协成本记录"""
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_order = MagicMock()
         mock_order.project_id = 5
@@ -163,7 +163,7 @@ class TestCollectFromOutsourcingOrder:
         ]
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
-        with patch("app.services.cost_collection_service.ProjectCost") as MockCost:
+        with patch("app.services.cost.cost_collection_service.ProjectCost") as MockCost:
             mock_cost = MagicMock()
             MockCost.return_value = mock_cost
             result = CostCollectionService.collect_from_outsourcing_order(mock_db, 1)
@@ -176,7 +176,7 @@ class TestCollectFromOutsourcingOrder:
 
 class TestCollectFromEcn:
     def test_ecn_not_found_returns_none(self, mock_db):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db.query.return_value.filter.return_value.first.return_value = None
         result = CostCollectionService.collect_from_ecn(mock_db, 999)
@@ -184,7 +184,7 @@ class TestCollectFromEcn:
 
     def test_ecn_no_project_returns_none(self, mock_db):
         """ECN 有成本但无项目ID时返回 None"""
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_ecn = MagicMock()
         mock_ecn.project_id = None
@@ -199,7 +199,7 @@ class TestCollectFromEcn:
 
     def test_ecn_no_cost_returns_none(self, mock_db):
         """ECN 没有变更成本时返回 None"""
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_ecn = MagicMock()
         mock_ecn.project_id = 3
@@ -219,7 +219,7 @@ class TestCollectFromEcn:
 class TestRemoveCostFromSource:
     def test_source_not_found_returns_false(self, mock_db):
         """来源成本记录不存在时返回 False"""
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db.query.return_value.filter.return_value.first.return_value = None
         result = CostCollectionService.remove_cost_from_source(
@@ -229,7 +229,7 @@ class TestRemoveCostFromSource:
 
     def test_removes_cost_record(self, mock_db):
         """找到成本记录时删除并返回 True"""
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_cost = MagicMock()
         mock_cost.project_id = 5

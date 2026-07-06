@@ -19,11 +19,9 @@ from slowapi import Limiter
 def test_import_rate_limiting_modules():
     """测试1: 导入速率限制模块"""
     from app.core import rate_limiting
-    from app.middleware import rate_limit_middleware
     from app.utils import rate_limit_decorator
 
     assert rate_limiting is not None
-    assert rate_limit_middleware is not None
     assert rate_limit_decorator is not None
     print("✅ 所有速率限制模块导入成功")
 

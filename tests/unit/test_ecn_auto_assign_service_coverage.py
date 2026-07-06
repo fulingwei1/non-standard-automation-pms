@@ -27,7 +27,7 @@ def make_user(user_id, department=None, position=None, is_active=True):
 
 class TestFindUsersByDepartment:
     def test_returns_users_for_dept(self, mock_db):
-        from app.services.ecn_auto_assign_service import find_users_by_department
+        from app.services.ecn.ecn_auto_assign_service import find_users_by_department
 
         users = [make_user(1, "技术部"), make_user(2, "技术部")]
         mock_db.query.return_value.filter.return_value.all.return_value = users
@@ -35,7 +35,7 @@ class TestFindUsersByDepartment:
         assert result == users
 
     def test_returns_empty_when_no_users(self, mock_db):
-        from app.services.ecn_auto_assign_service import find_users_by_department
+        from app.services.ecn.ecn_auto_assign_service import find_users_by_department
 
         mock_db.query.return_value.filter.return_value.all.return_value = []
         result = find_users_by_department(mock_db, "不存在的部门")
@@ -47,14 +47,14 @@ class TestFindUsersByDepartment:
 
 class TestFindUsersByRole:
     def test_returns_empty_when_role_not_found(self, mock_db):
-        from app.services.ecn_auto_assign_service import find_users_by_role
+        from app.services.ecn.ecn_auto_assign_service import find_users_by_role
 
         mock_db.query.return_value.filter.return_value.first.return_value = None
         result = find_users_by_role(mock_db, "不存在的角色")
         assert result == []
 
     def test_returns_empty_when_no_user_has_role(self, mock_db):
-        from app.services.ecn_auto_assign_service import find_users_by_role
+        from app.services.ecn.ecn_auto_assign_service import find_users_by_role
 
         mock_role = MagicMock()
         mock_role.id = 1
@@ -67,7 +67,7 @@ class TestFindUsersByRole:
         assert result == []
 
     def test_returns_users_with_role(self, mock_db):
-        from app.services.ecn_auto_assign_service import find_users_by_role
+        from app.services.ecn.ecn_auto_assign_service import find_users_by_role
 
         mock_role = MagicMock()
         mock_role.id = 1
@@ -93,7 +93,7 @@ class TestFindUsersByRole:
 
 class TestAutoAssignEvaluation:
     def test_no_dept_returns_none(self, mock_db):
-        from app.services.ecn_auto_assign_service import auto_assign_evaluation
+        from app.services.ecn.ecn_auto_assign_service import auto_assign_evaluation
 
         ecn = MagicMock()
         ecn.project_id = None
@@ -103,7 +103,7 @@ class TestAutoAssignEvaluation:
         assert result is None
 
     def test_assigns_dept_lead(self, mock_db):
-        from app.services.ecn_auto_assign_service import auto_assign_evaluation
+        from app.services.ecn.ecn_auto_assign_service import auto_assign_evaluation
 
         ecn = MagicMock()
         ecn.project_id = None  # no project
@@ -119,7 +119,7 @@ class TestAutoAssignEvaluation:
         assert result == 1  # lead selected
 
     def test_assigns_manager_when_no_lead(self, mock_db):
-        from app.services.ecn_auto_assign_service import auto_assign_evaluation
+        from app.services.ecn.ecn_auto_assign_service import auto_assign_evaluation
 
         ecn = MagicMock()
         ecn.project_id = None
@@ -135,7 +135,7 @@ class TestAutoAssignEvaluation:
         assert result == 2  # manager selected
 
     def test_returns_none_when_only_regular_users(self, mock_db):
-        from app.services.ecn_auto_assign_service import auto_assign_evaluation
+        from app.services.ecn.ecn_auto_assign_service import auto_assign_evaluation
 
         ecn = MagicMock()
         ecn.project_id = None
@@ -150,7 +150,7 @@ class TestAutoAssignEvaluation:
         assert result is None  # no lead or manager
 
     def test_returns_none_when_no_dept_users(self, mock_db):
-        from app.services.ecn_auto_assign_service import auto_assign_evaluation
+        from app.services.ecn.ecn_auto_assign_service import auto_assign_evaluation
 
         ecn = MagicMock()
         ecn.project_id = None
@@ -168,14 +168,14 @@ class TestAutoAssignEvaluation:
 
 class TestAutoAssignPendingEvaluations:
     def test_ecn_not_found_returns_zero(self, mock_db):
-        from app.services.ecn_auto_assign_service import auto_assign_pending_evaluations
+        from app.services.ecn.ecn_auto_assign_service import auto_assign_pending_evaluations
 
         mock_db.query.return_value.filter.return_value.first.return_value = None
         result = auto_assign_pending_evaluations(mock_db, 999)
         assert result == 0
 
     def test_assigns_pending_evaluations(self, mock_db):
-        from app.services.ecn_auto_assign_service import auto_assign_pending_evaluations
+        from app.services.ecn.ecn_auto_assign_service import auto_assign_pending_evaluations
 
         mock_ecn = MagicMock()
         mock_ecn.id = 1
@@ -197,7 +197,7 @@ class TestAutoAssignPendingEvaluations:
         assert result == 0
 
     def test_no_pending_evaluations_returns_zero(self, mock_db):
-        from app.services.ecn_auto_assign_service import auto_assign_pending_evaluations
+        from app.services.ecn.ecn_auto_assign_service import auto_assign_pending_evaluations
 
         mock_ecn = MagicMock()
         mock_ecn.id = 1
@@ -214,14 +214,14 @@ class TestAutoAssignPendingEvaluations:
 
 class TestAutoAssignPendingApprovals:
     def test_ecn_not_found_returns_zero(self, mock_db):
-        from app.services.ecn_auto_assign_service import auto_assign_pending_approvals
+        from app.services.ecn.ecn_auto_assign_service import auto_assign_pending_approvals
 
         mock_db.query.return_value.filter.return_value.first.return_value = None
         result = auto_assign_pending_approvals(mock_db, 999)
         assert result == 0
 
     def test_no_pending_approvals_returns_zero(self, mock_db):
-        from app.services.ecn_auto_assign_service import auto_assign_pending_approvals
+        from app.services.ecn.ecn_auto_assign_service import auto_assign_pending_approvals
 
         mock_ecn = MagicMock()
         mock_db.query.return_value.filter.return_value.first.side_effect = [mock_ecn]
@@ -236,14 +236,14 @@ class TestAutoAssignPendingApprovals:
 
 class TestAutoAssignPendingTasks:
     def test_ecn_not_found_returns_zero(self, mock_db):
-        from app.services.ecn_auto_assign_service import auto_assign_pending_tasks
+        from app.services.ecn.ecn_auto_assign_service import auto_assign_pending_tasks
 
         mock_db.query.return_value.filter.return_value.first.return_value = None
         result = auto_assign_pending_tasks(mock_db, 999)
         assert result == 0
 
     def test_no_pending_tasks_returns_zero(self, mock_db):
-        from app.services.ecn_auto_assign_service import auto_assign_pending_tasks
+        from app.services.ecn.ecn_auto_assign_service import auto_assign_pending_tasks
 
         mock_ecn = MagicMock()
         mock_db.query.return_value.filter.return_value.first.side_effect = [mock_ecn]

@@ -44,7 +44,7 @@ class TestCostCollectionService:
 
     def test_collect_from_purchase_order_not_found_returns_none(self):
         """采购订单不存在时返回 None"""
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         db = self._make_db()
         db.query.return_value.filter.return_value.first.return_value = None
@@ -55,7 +55,7 @@ class TestCostCollectionService:
     def test_collect_from_purchase_order_no_project_id_returns_none(self):
         """订单没有关联项目时返回 None"""
         from app.models.purchase import PurchaseOrder
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         db = self._make_db()
         order = Mock(spec=PurchaseOrder)
@@ -73,7 +73,7 @@ class TestCostCollectionService:
         """已有成本记录时更新而不新建"""
         from app.models.project import ProjectCost
         from app.models.purchase import PurchaseOrder
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         db = self._make_db()
         order = Mock(spec=PurchaseOrder)
@@ -95,7 +95,7 @@ class TestCostCollectionService:
         # project recalculate: .all() returns list of costs
         db.query.return_value.filter.return_value.all.return_value = [existing_cost]
 
-        with patch("app.services.cost_collection_service.CostAlertService"):
+        with patch("app.services.cost.cost_collection_service.CostAlertService"):
             result = CostCollectionService.collect_from_purchase_order(db, order_id=2)
 
         # Should return the existing cost
@@ -105,7 +105,7 @@ class TestCostCollectionService:
         """新建成本记录并更新项目实际成本"""
         from app.models.project import Project
         from app.models.purchase import PurchaseOrder
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         db = self._make_db()
         order = Mock(spec=PurchaseOrder)
@@ -123,7 +123,7 @@ class TestCostCollectionService:
         # order exists, no existing cost, project exists
         db.query.return_value.filter.return_value.first.side_effect = [order, None, project]
 
-        with patch("app.services.cost_collection_service.CostAlertService") as mock_alert:
+        with patch("app.services.cost.cost_collection_service.CostAlertService") as mock_alert:
             mock_alert.check_budget_execution.return_value = None
             result = CostCollectionService.collect_from_purchase_order(db, order_id=3, created_by=1)
 
@@ -134,7 +134,7 @@ class TestCostCollectionService:
         """预警检查失败不影响成本归集"""
         from app.models.project import Project
         from app.models.purchase import PurchaseOrder
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         db = self._make_db()
         order = Mock(spec=PurchaseOrder)
@@ -151,7 +151,7 @@ class TestCostCollectionService:
 
         db.query.return_value.filter.return_value.first.side_effect = [order, None, project]
 
-        with patch("app.services.cost_collection_service.CostAlertService") as mock_alert:
+        with patch("app.services.cost.cost_collection_service.CostAlertService") as mock_alert:
             mock_alert.check_budget_execution.side_effect = Exception("预警服务异常")
             # Should NOT raise
             result = CostCollectionService.collect_from_purchase_order(db, order_id=4)

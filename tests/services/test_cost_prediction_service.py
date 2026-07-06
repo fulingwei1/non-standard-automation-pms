@@ -50,7 +50,7 @@ def _make_project(**kw):
 class TestCostPredictionServiceInit:
     def test_init_without_api_key(self):
         """无API密钥时ai_predictor应为None"""
-        from app.services.cost_prediction_service import CostPredictionService
+        from app.services.cost.cost_prediction_service import CostPredictionService
 
         db = _make_db()
         with patch.dict("os.environ", {}, clear=True):
@@ -64,10 +64,10 @@ class TestCostPredictionServiceInit:
 
     def test_init_with_api_key(self):
         """有API密钥时ai_predictor应被初始化"""
-        from app.services.cost_prediction_service import CostPredictionService
+        from app.services.cost.cost_prediction_service import CostPredictionService
 
         db = _make_db()
-        with patch("app.services.cost_prediction_service.GLM5CostPredictor") as mock_glm:
+        with patch("app.services.cost.cost_prediction_service.GLM5CostPredictor") as mock_glm:
             mock_glm.return_value = MagicMock()
             svc = CostPredictionService(db, glm_api_key="test-key")
         assert svc.ai_predictor is not None
@@ -75,7 +75,7 @@ class TestCostPredictionServiceInit:
 
 class TestTraditionalEACPrediction:
     def _make_svc(self):
-        from app.services.cost_prediction_service import CostPredictionService
+        from app.services.cost.cost_prediction_service import CostPredictionService
 
         db = _make_db()
         import os
@@ -113,7 +113,7 @@ class TestTraditionalEACPrediction:
 
 class TestTraditionalRiskAnalysis:
     def _make_svc(self):
-        from app.services.cost_prediction_service import CostPredictionService
+        from app.services.cost.cost_prediction_service import CostPredictionService
 
         db = _make_db()
         import os
@@ -144,7 +144,7 @@ class TestTraditionalRiskAnalysis:
 
 class TestCalculateDataQuality:
     def _make_svc(self):
-        from app.services.cost_prediction_service import CostPredictionService
+        from app.services.cost.cost_prediction_service import CostPredictionService
 
         db = _make_db()
         import os
@@ -166,7 +166,7 @@ class TestCalculateDataQuality:
 
 class TestGetLatestPrediction:
     def test_returns_latest_prediction(self):
-        from app.services.cost_prediction_service import CostPredictionService
+        from app.services.cost.cost_prediction_service import CostPredictionService
 
         db = _make_db()
         mock_prediction = MagicMock()
@@ -181,7 +181,7 @@ class TestGetLatestPrediction:
         assert result is mock_prediction
 
     def test_returns_none_when_no_prediction(self):
-        from app.services.cost_prediction_service import CostPredictionService
+        from app.services.cost.cost_prediction_service import CostPredictionService
 
         db = _make_db()
         db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
@@ -195,7 +195,7 @@ class TestGetLatestPrediction:
 
 class TestCreatePredictionValidation:
     def test_project_not_found_raises(self):
-        from app.services.cost_prediction_service import CostPredictionService
+        from app.services.cost.cost_prediction_service import CostPredictionService
 
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = None

@@ -95,13 +95,6 @@ from ...permission import (
     ScopeType,
 )
 
-# 管道分析
-from ...pipeline_analysis import (
-    AccountabilityRecord,
-    PipelineBreakRecord,
-    PipelineHealthSnapshot,
-)
-
 # 陷阱管理
 from ...pitfall import (
     Pitfall,
@@ -335,9 +328,6 @@ __all__ = [
     "PermissionType",
     "ResourceType",
     # Pipeline Analysis
-    "PipelineBreakRecord",
-    "PipelineHealthSnapshot",
-    "AccountabilityRecord",
     # Presale
     "PresaleSupportTicket",
     "PresaleTicketDeliverable",

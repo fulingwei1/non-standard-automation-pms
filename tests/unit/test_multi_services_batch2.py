@@ -72,7 +72,7 @@ IMPORT_MODULES = [
     "app.services.cost_allocation_service",
     "app.services.budget_execution_check_service",
     "app.services.change_impact_analysis_service",
-    "app.services.dashboard_adapter",
+    "app.services.dashboard.dashboard_adapter",
     "app.services.culture_wall_service",
     "app.services.cost_match_suggestion_service",
     "app.services.change_response_suggestion_service",

@@ -25,7 +25,7 @@ from app.models import (
     Project,
     User,
 )
-from app.services.cost_prediction_service import (
+from app.services.cost.cost_prediction_service import (
     CostPredictionService,
     GLM5CostPredictor,
 )
@@ -277,7 +277,7 @@ class TestOptimizationSuggestionModel:
 class TestGLM5CostPredictor:
     """GLM-5成本预测器测试"""
 
-    @patch("app.services.cost_prediction_service.requests.post")
+    @patch("app.services.cost.cost_prediction_service.requests.post")
     def test_predict_eac_with_mock(self, mock_post):
         """测试EAC预测（使用mock）"""
         # Mock API响应
@@ -325,7 +325,7 @@ class TestGLM5CostPredictor:
         assert result["confidence"] == 75
         assert "reasoning" in result
 
-    @patch("app.services.cost_prediction_service.requests.post")
+    @patch("app.services.cost.cost_prediction_service.requests.post")
     def test_analyze_cost_risks_with_mock(self, mock_post):
         """测试成本风险分析（使用mock）"""
         mock_response = Mock()
@@ -409,7 +409,7 @@ class TestCostPredictionService:
         # CPI=0.9375应该是MEDIUM风险
         assert result["risk_level"] == "MEDIUM"
 
-    @patch("app.services.cost_prediction_service.GLM5CostPredictor")
+    @patch("app.services.cost.cost_prediction_service.GLM5CostPredictor")
     def test_create_prediction_with_ai(
         self,
         mock_predictor_class,

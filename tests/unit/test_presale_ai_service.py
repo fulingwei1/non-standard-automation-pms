@@ -13,7 +13,7 @@ from app.schemas.presale_ai_solution import (
     SolutionGenerationRequest,
     TemplateMatchRequest,
 )
-from app.services.presale_ai_service import PresaleAIService
+from app.services.presale.presale_ai_service import PresaleAIService
 
 # ============================================================
 # Helper factory
@@ -23,7 +23,7 @@ from app.services.presale_ai_service import PresaleAIService
 def _make_service():
     db = MagicMock()
     mock_ai = MagicMock()
-    with patch("app.services.presale_ai_service.AIClientService", return_value=mock_ai):
+    with patch("app.services.presale.presale_ai_service.AIClientService", return_value=mock_ai):
         svc = PresaleAIService(db_session)
         svc.ai_client = mock_ai
     return svc, db, mock_ai
@@ -163,7 +163,7 @@ class TestGenerateSolution:
         }
 
         # 禁用架构图和BOM生成简化测试
-        with patch("app.services.presale_ai_service.save_obj"):
+        with patch("app.services.presale.presale_ai_service.save_obj"):
             svc._log_generation = MagicMock()
             req = SolutionGenerationRequest(
                 presale_ticket_id=1,
@@ -188,7 +188,7 @@ class TestGenerateSolution:
             "usage": {"prompt_tokens": 50, "completion_tokens": 100, "total_tokens": 150},
         }
 
-        with patch("app.services.presale_ai_service.save_obj"):
+        with patch("app.services.presale.presale_ai_service.save_obj"):
             svc._log_generation = MagicMock()
             req = SolutionGenerationRequest(
                 presale_ticket_id=1,

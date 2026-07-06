@@ -10,7 +10,7 @@ class TestCostPredictionServiceBusinessLogic:
     def test_create_prediction(self):
         """测试创建预测"""
         try:
-            from app.services.cost_prediction_service import CostPredictionService
+            from app.services.cost.cost_prediction_service import CostPredictionService
 
             mock_db = MagicMock()
             service = CostPredictionService(mock_db)
@@ -24,7 +24,7 @@ class TestCostPredictionServiceBusinessLogic:
     def test_get_latest_prediction(self):
         """测试获取最新预测"""
         try:
-            from app.services.cost_prediction_service import CostPredictionService
+            from app.services.cost.cost_prediction_service import CostPredictionService
 
             mock_db = MagicMock()
             service = CostPredictionService(mock_db)
@@ -38,7 +38,7 @@ class TestCostPredictionServiceBusinessLogic:
     def test_get_prediction_history(self):
         """测试获取预测历史"""
         try:
-            from app.services.cost_prediction_service import CostPredictionService
+            from app.services.cost.cost_prediction_service import CostPredictionService
 
             mock_db = MagicMock()
             service = CostPredictionService(mock_db)

@@ -65,7 +65,7 @@ def _make_cost_record(source_id=1, amount=Decimal("500")):
 
 class TestCollectFromPurchaseOrder:
     def test_returns_none_when_order_not_found(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -73,7 +73,7 @@ class TestCollectFromPurchaseOrder:
         assert result is None
 
     def test_returns_none_when_no_project(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         order = _make_order(project_id=None)
@@ -83,7 +83,7 @@ class TestCollectFromPurchaseOrder:
         assert result is None
 
     def test_updates_existing_cost_record(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         order = _make_order(
@@ -111,7 +111,7 @@ class TestCollectFromPurchaseOrder:
         mock_db.add.assert_called()
 
     def test_creates_new_cost_record(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         order = _make_order(project_id=5, total_amount=Decimal("1500"))
@@ -123,7 +123,7 @@ class TestCollectFromPurchaseOrder:
             project,  # project
         ]
 
-        with patch("app.services.cost_collection_service.CostAlertService"):
+        with patch("app.services.cost.cost_collection_service.CostAlertService"):
             result = CostCollectionService.collect_from_purchase_order(
                 mock_db, 1, created_by=10
             )
@@ -134,7 +134,7 @@ class TestCollectFromPurchaseOrder:
         mock_db.add.assert_called()
 
     def test_cost_alert_failure_doesnt_break_collection(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         order = _make_order(project_id=3, total_amount=Decimal("500"))
@@ -146,7 +146,7 @@ class TestCollectFromPurchaseOrder:
         ]
 
         with patch(
-            "app.services.cost_collection_service.CostAlertService.check_budget_execution",
+            "app.services.cost.cost_collection_service.CostAlertService.check_budget_execution",
             side_effect=Exception("alert failed"),
         ):
             result = CostCollectionService.collect_from_purchase_order(mock_db, 1)
@@ -154,7 +154,7 @@ class TestCollectFromPurchaseOrder:
         assert result is not None
 
     def test_updates_project_actual_cost(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         order = _make_order(project_id=2, total_amount=Decimal("3000"))
@@ -166,7 +166,7 @@ class TestCollectFromPurchaseOrder:
         ]
 
         with (
-            patch("app.services.cost_collection_service.CostAlertService"),
+            patch("app.services.cost.cost_collection_service.CostAlertService"),
             patch.object(
                 CostCollectionService, "_recalculate_project_actual_cost"
             ) as mock_recalculate,
@@ -177,7 +177,7 @@ class TestCollectFromPurchaseOrder:
         mock_recalculate.assert_called_once_with(mock_db, 2)
 
     def test_uses_custom_cost_date(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         order = _make_order(project_id=1, total_amount=Decimal("100"))
@@ -188,7 +188,7 @@ class TestCollectFromPurchaseOrder:
             None,
             project,
         ]
-        with patch("app.services.cost_collection_service.CostAlertService"):
+        with patch("app.services.cost.cost_collection_service.CostAlertService"):
             result = CostCollectionService.collect_from_purchase_order(
                 mock_db, 1, cost_date=custom_date
             )
@@ -214,7 +214,7 @@ class TestCollectFromOutsourcingOrder:
         return o
 
     def test_returns_none_when_order_not_found(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -222,7 +222,7 @@ class TestCollectFromOutsourcingOrder:
         assert result is None
 
     def test_returns_none_when_no_project(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         order = self._make_outsourcing(project_id=None)
@@ -231,7 +231,7 @@ class TestCollectFromOutsourcingOrder:
         assert result is None
 
     def test_creates_new_outsourcing_cost(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         order = self._make_outsourcing(project_id=2, total_amount=Decimal("5000"))
@@ -242,14 +242,14 @@ class TestCollectFromOutsourcingOrder:
             project,
         ]
 
-        with patch("app.services.cost_collection_service.CostAlertService"):
+        with patch("app.services.cost.cost_collection_service.CostAlertService"):
             result = CostCollectionService.collect_from_outsourcing_order(mock_db, 1)
         assert result is not None
         assert result.cost_type == "OUTSOURCING"
         assert result.cost_category == "OUTSOURCING"
 
     def test_updates_existing_outsourcing_cost(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         order = self._make_outsourcing(project_id=2, total_amount=Decimal("7000"))
@@ -267,7 +267,7 @@ class TestCollectFromOutsourcingOrder:
         assert existing_cost.amount == Decimal("7000")
 
     def test_alert_failure_doesnt_break_collection(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         order = self._make_outsourcing(project_id=3)
@@ -278,7 +278,7 @@ class TestCollectFromOutsourcingOrder:
             project,
         ]
         with patch(
-            "app.services.cost_collection_service.CostAlertService.check_budget_execution",
+            "app.services.cost.cost_collection_service.CostAlertService.check_budget_execution",
             side_effect=Exception("alert error"),
         ):
             result = CostCollectionService.collect_from_outsourcing_order(mock_db, 1)
@@ -302,7 +302,7 @@ class TestCollectFromEcn:
         return ecn
 
     def test_returns_none_when_ecn_not_found(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -310,7 +310,7 @@ class TestCollectFromEcn:
         assert result is None
 
     def test_returns_none_when_zero_cost_impact(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         ecn = self._make_ecn(cost_impact=Decimal("0"))
@@ -319,7 +319,7 @@ class TestCollectFromEcn:
         assert result is None
 
     def test_collects_negative_cost_as_credit(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         ecn = self._make_ecn(cost_impact=Decimal("-100"))
@@ -336,7 +336,7 @@ class TestCollectFromEcn:
         assert result.cost_category == "ECN"
 
     def test_returns_none_when_no_project(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         ecn = self._make_ecn(project_id=None, cost_impact=Decimal("5000"))
@@ -345,7 +345,7 @@ class TestCollectFromEcn:
         assert result is None
 
     def test_creates_new_ecn_cost(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         ecn = self._make_ecn(cost_impact=Decimal("10000"), project_id=3)
@@ -355,7 +355,7 @@ class TestCollectFromEcn:
             None,
             project,
         ]
-        with patch("app.services.cost_collection_service.CostAlertService"):
+        with patch("app.services.cost.cost_collection_service.CostAlertService"):
             result = CostCollectionService.collect_from_ecn(mock_db, 1)
         assert result is not None
         assert result.cost_type == "CHANGE"
@@ -363,7 +363,7 @@ class TestCollectFromEcn:
         assert result.tax_amount == Decimal("0")
 
     def test_updates_existing_ecn_cost(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         ecn = self._make_ecn(cost_impact=Decimal("8000"), project_id=4)
@@ -388,7 +388,7 @@ class TestCollectFromEcn:
 
 class TestRemoveCostFromSource:
     def test_returns_false_when_cost_not_found(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -398,7 +398,7 @@ class TestRemoveCostFromSource:
         assert result is False
 
     def test_deletes_cost_and_updates_project(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         cost = _make_cost_record(amount=Decimal("1000"))
@@ -416,7 +416,7 @@ class TestRemoveCostFromSource:
         mock_recalculate.assert_called_once_with(mock_db, 2)
 
     def test_project_cost_never_goes_below_zero(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         cost = _make_cost_record(amount=Decimal("9999"))
@@ -429,7 +429,7 @@ class TestRemoveCostFromSource:
         mock_recalculate.assert_called_once_with(mock_db, 1)
 
     def test_handles_no_project_gracefully(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         cost = _make_cost_record(amount=Decimal("500"))
@@ -459,11 +459,11 @@ class TestCollectFromBom:
         return bom
 
     def test_raises_when_bom_not_found(self):
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         with patch(
-            "app.services.cost_collection_service.CostCollectionService.collect_from_bom"
+            "app.services.cost.cost_collection_service.CostCollectionService.collect_from_bom"
         ):
             pass  # need to import models
         from app.models.material import BomHeader, BomItem
@@ -474,7 +474,7 @@ class TestCollectFromBom:
 
     def test_raises_when_no_project(self):
         from app.models.material import BomHeader
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         bom = self._make_bom(project_id=None)
@@ -484,7 +484,7 @@ class TestCollectFromBom:
 
     def test_raises_when_not_released(self):
         from app.models.material import BomHeader
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         bom = self._make_bom(status="DRAFT")
@@ -494,7 +494,7 @@ class TestCollectFromBom:
 
     def test_removes_existing_cost_when_bom_total_zero(self):
         from app.models.material import BomHeader, BomItem
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         bom = self._make_bom(status="RELEASED")
@@ -509,14 +509,14 @@ class TestCollectFromBom:
             project,
         ]
         mock_db.query.return_value.filter.return_value.all.return_value = [item1]
-        with patch("app.services.cost_collection_service.delete_obj") as mock_delete:
+        with patch("app.services.cost.cost_collection_service.delete_obj") as mock_delete:
             result = CostCollectionService.collect_from_bom(mock_db, 1)
         assert result is None
         mock_delete.assert_called_once()
 
     def test_creates_new_bom_cost(self):
         from app.models.material import BomHeader, BomItem
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         bom = self._make_bom(status="RELEASED")
@@ -531,7 +531,7 @@ class TestCollectFromBom:
             project,
         ]
         mock_db.query.return_value.filter.return_value.all.return_value = [item1, item2]
-        with patch("app.services.cost_collection_service.CostAlertService"):
+        with patch("app.services.cost.cost_collection_service.CostAlertService"):
             result = CostCollectionService.collect_from_bom(mock_db, 1)
         assert result is not None
         assert result.amount == Decimal("3000")
@@ -539,7 +539,7 @@ class TestCollectFromBom:
 
     def test_uses_bom_total_amount_when_set(self):
         from app.models.material import BomHeader, BomItem
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         bom = self._make_bom(status="RELEASED", total_amount=Decimal("9999"))
@@ -552,14 +552,14 @@ class TestCollectFromBom:
             project,
         ]
         mock_db.query.return_value.filter.return_value.all.return_value = [item1]
-        with patch("app.services.cost_collection_service.CostAlertService"):
+        with patch("app.services.cost.cost_collection_service.CostAlertService"):
             result = CostCollectionService.collect_from_bom(mock_db, 1)
         # Should use bom.total_amount = 9999
         assert result.amount == Decimal("9999")
 
     def test_updates_existing_bom_cost(self):
         from app.models.material import BomHeader, BomItem
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         mock_db = MagicMock()
         bom = self._make_bom(status="RELEASED")

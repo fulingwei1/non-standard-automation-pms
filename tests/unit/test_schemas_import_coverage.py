@@ -73,7 +73,7 @@ MORE_SERVICE_MODULES = [
     "app.services.hr_profile_import_service",
     "app.services.docx_content_builders",
     "app.services.technical_assessment_service",
-    "app.services.presale_ai_service",
+    "app.services.presale.presale_ai_service",
     "app.services.presale_ai_requirement_service",
     "app.services.presale_ai_knowledge_service",
     "app.services.role_management.service",

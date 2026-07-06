@@ -94,7 +94,7 @@ class TestServiceModuleImports:
     def test_import_ecn_services(self):
         """Test importing ECN services."""
         try:
-            from app.services.ecn_auto_assign_service import auto_assign_ecn
+            from app.services.ecn.ecn_auto_assign_service import auto_assign_ecn
 
             assert callable(auto_assign_ecn)
         except Exception as e:

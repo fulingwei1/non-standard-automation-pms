@@ -21,7 +21,7 @@ def test_registry():
 
     # 导入适配器模块以触发注册
     import app.services.dashboard_adapters  # noqa: F401
-    from app.services.dashboard_adapter import dashboard_registry
+    from app.services.dashboard.dashboard_adapter import dashboard_registry
 
     modules = dashboard_registry.list_modules()
 
@@ -46,7 +46,7 @@ def test_adapters_for_role():
 
     import app.services.dashboard_adapters  # noqa: F401
     from app.models.user import User
-    from app.services.dashboard_adapter import dashboard_registry
+    from app.services.dashboard.dashboard_adapter import dashboard_registry
 
     # 使用SQLite数据库
     db_url = "sqlite:///data/app.db"
@@ -81,7 +81,7 @@ def test_adapter_methods():
 
     import app.services.dashboard_adapters  # noqa: F401
     from app.models.user import User
-    from app.services.dashboard_adapter import dashboard_registry
+    from app.services.dashboard.dashboard_adapter import dashboard_registry
 
     # 使用SQLite数据库
     db_url = "sqlite:///data/app.db"

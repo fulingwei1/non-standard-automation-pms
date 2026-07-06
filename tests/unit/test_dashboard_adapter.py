@@ -29,7 +29,7 @@ class TestDashboardAdapter:
         return user
 
     def test_adapter_init(self, db_session, current_user):
-        from app.services.dashboard_adapter import DashboardAdapter
+        from app.services.dashboard.dashboard_adapter import DashboardAdapter
 
         # Create a concrete implementation for testing
         class TestAdapter(DashboardAdapter):
@@ -57,7 +57,7 @@ class TestDashboardAdapter:
         assert adapter.current_user == current_user
 
     def test_supports_role_true(self, db_session, current_user):
-        from app.services.dashboard_adapter import DashboardAdapter
+        from app.services.dashboard.dashboard_adapter import DashboardAdapter
 
         class TestAdapter(DashboardAdapter):
             @property
@@ -85,7 +85,7 @@ class TestDashboardAdapter:
         assert adapter.supports_role("ENGINEER") is True
 
     def test_supports_role_false(self, db_session, current_user):
-        from app.services.dashboard_adapter import DashboardAdapter
+        from app.services.dashboard.dashboard_adapter import DashboardAdapter
 
         class TestAdapter(DashboardAdapter):
             @property
@@ -112,7 +112,7 @@ class TestDashboardAdapter:
         assert adapter.supports_role("GUEST") is False
 
     def test_get_detailed_data_not_implemented(self, db_session, current_user):
-        from app.services.dashboard_adapter import DashboardAdapter
+        from app.services.dashboard.dashboard_adapter import DashboardAdapter
 
         class TestAdapter(DashboardAdapter):
             @property
@@ -158,7 +158,7 @@ class TestDashboardRegistry:
     @pytest.fixture
     def create_test_adapter(self):
         """Factory to create test adapter classes."""
-        from app.services.dashboard_adapter import DashboardAdapter
+        from app.services.dashboard.dashboard_adapter import DashboardAdapter
 
         def _create(module_id: str, module_name: str, roles: List[str]):
             class TestAdapter(DashboardAdapter):
@@ -185,14 +185,14 @@ class TestDashboardRegistry:
         return _create
 
     def test_registry_init(self):
-        from app.services.dashboard_adapter import DashboardRegistry
+        from app.services.dashboard.dashboard_adapter import DashboardRegistry
 
         registry = DashboardRegistry()
 
         assert registry._adapters == {}
 
     def test_register_adapter(self, create_test_adapter):
-        from app.services.dashboard_adapter import DashboardRegistry
+        from app.services.dashboard.dashboard_adapter import DashboardRegistry
 
         registry = DashboardRegistry()
         TestAdapter = create_test_adapter("project", "项目管理", ["ADMIN"])
@@ -203,7 +203,7 @@ class TestDashboardRegistry:
         assert registry._adapters["project"] == TestAdapter
 
     def test_register_duplicate_raises_error(self, create_test_adapter):
-        from app.services.dashboard_adapter import DashboardRegistry
+        from app.services.dashboard.dashboard_adapter import DashboardRegistry
 
         registry = DashboardRegistry()
         TestAdapter1 = create_test_adapter("project", "项目管理", ["ADMIN"])
@@ -217,7 +217,7 @@ class TestDashboardRegistry:
         assert "already registered" in str(exc_info.value)
 
     def test_get_adapter_existing(self, db_session, current_user, create_test_adapter):
-        from app.services.dashboard_adapter import DashboardRegistry
+        from app.services.dashboard.dashboard_adapter import DashboardRegistry
 
         registry = DashboardRegistry()
         TestAdapter = create_test_adapter("sales", "销售管理", ["SALES"])
@@ -231,7 +231,7 @@ class TestDashboardRegistry:
         assert adapter.current_user == current_user
 
     def test_get_adapter_not_found(self, db_session, current_user):
-        from app.services.dashboard_adapter import DashboardRegistry
+        from app.services.dashboard.dashboard_adapter import DashboardRegistry
 
         registry = DashboardRegistry()
 
@@ -240,7 +240,7 @@ class TestDashboardRegistry:
         assert adapter is None
 
     def test_get_adapters_for_role(self, db_session, current_user, create_test_adapter):
-        from app.services.dashboard_adapter import DashboardRegistry
+        from app.services.dashboard.dashboard_adapter import DashboardRegistry
 
         registry = DashboardRegistry()
         registry.register(create_test_adapter("project", "项目", ["ADMIN", "PM"]))
@@ -256,7 +256,7 @@ class TestDashboardRegistry:
         assert len(sales_adapters) == 1
 
     def test_get_adapters_for_role_none_match(self, db_session, current_user, create_test_adapter):
-        from app.services.dashboard_adapter import DashboardRegistry
+        from app.services.dashboard.dashboard_adapter import DashboardRegistry
 
         registry = DashboardRegistry()
         registry.register(create_test_adapter("project", "项目", ["PM"]))
@@ -266,7 +266,7 @@ class TestDashboardRegistry:
         assert len(adapters) == 0
 
     def test_list_modules_empty(self):
-        from app.services.dashboard_adapter import DashboardRegistry
+        from app.services.dashboard.dashboard_adapter import DashboardRegistry
 
         registry = DashboardRegistry()
 
@@ -275,7 +275,7 @@ class TestDashboardRegistry:
         assert modules == []
 
     def test_list_modules(self, create_test_adapter):
-        from app.services.dashboard_adapter import DashboardRegistry
+        from app.services.dashboard.dashboard_adapter import DashboardRegistry
 
         registry = DashboardRegistry()
         registry.register(create_test_adapter("project", "项目管理", ["ADMIN", "PM"]))
@@ -298,7 +298,7 @@ class TestRegisterDashboardDecorator:
     """Test suite for register_dashboard decorator."""
 
     def test_decorator_registers_adapter(self):
-        from app.services.dashboard_adapter import (
+        from app.services.dashboard.dashboard_adapter import (
             DashboardAdapter,
             DashboardRegistry,
         )
@@ -333,7 +333,7 @@ class TestRegisterDashboardDecorator:
         assert registry._adapters["decorated"] == DecoratedAdapter
 
     def test_decorator_returns_original_class(self):
-        from app.services.dashboard_adapter import (
+        from app.services.dashboard.dashboard_adapter import (
             DashboardAdapter,
             DashboardRegistry,
         )
