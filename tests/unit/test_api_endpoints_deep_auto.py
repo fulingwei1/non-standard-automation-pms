@@ -63,7 +63,7 @@ class TestAdvantageProductsAPIsDeep:
     def test_categories_endpoint(self):
         """测试分类端点"""
         try:
-            from app.api.v1.endpoints.advantage_products.categories import get_categories
+            from app.modules.presale.api.advantage_products.categories import get_categories
             assert get_categories is not None
         except ImportError:
             pytest.skip("Module not found")
@@ -71,7 +71,7 @@ class TestAdvantageProductsAPIsDeep:
     def test_products_endpoint(self):
         """测试产品端点"""
         try:
-            from app.api.v1.endpoints.advantage_products.products import get_products
+            from app.modules.presale.api.advantage_products.products import get_products
             assert get_products is not None
         except ImportError:
             pytest.skip("Module not found")
@@ -79,7 +79,7 @@ class TestAdvantageProductsAPIsDeep:
     def test_import_excel_endpoint(self):
         """测试Excel导入端点"""
         try:
-            from app.api.v1.endpoints.advantage_products.import_excel import import_products
+            from app.modules.presale.api.advantage_products.import_excel import import_products
             assert import_products is not None
         except ImportError:
             pytest.skip("Module not found")

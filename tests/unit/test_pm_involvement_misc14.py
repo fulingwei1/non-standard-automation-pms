@@ -14,7 +14,7 @@ from app.services.pm_involvement_service import PMInvolvementService
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE_PATH = ROOT / "app" / "api" / "v1" / "endpoints" / "performance" / "pm_involvement.py"
 PRESALE_TICKET_CRUD_PATH = (
-    ROOT / "app" / "api" / "v1" / "endpoints" / "presale" / "tickets" / "crud.py"
+    ROOT / "app" / "modules" / "presale" / "api" / "tickets" / "crud.py"
 )
 
 

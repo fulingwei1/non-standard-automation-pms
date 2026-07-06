@@ -13,6 +13,7 @@ ai_assessment_service 单元测试
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import os
 import pytest
 
 from app.services.ai_assessment_service import AIAssessmentService
@@ -339,8 +340,7 @@ class TestServiceInitialization:
 
     def test_init_with_env_var(self):
         """测试使用环境变量初始化"""
-        with patch("app.services.ai_assessment_service.ALIBABA_API_KEY", "test-key"):
-            with patch("app.services.ai_assessment_service.ALIBABA_MODEL", "qwen-max"):
+        with patch.dict(os.environ, {"ALIBABA_API_KEY": "test-key", "ALIBABA_MODEL": "qwen-max"}):
                 service = AIAssessmentService()
                 assert service.api_key == "test-key"
                 assert service.model == "qwen-max"
@@ -348,8 +348,9 @@ class TestServiceInitialization:
 
     def test_init_without_env_var(self):
         """测试未配置环境变量时初始化"""
-        with patch("app.services.ai_assessment_service.ALIBABA_API_KEY", ""):
-            with patch("app.services.ai_assessment_service.ALIBABA_MODEL", "qwen-plus"):
+        with patch.dict(os.environ, {"ALIBABA_API_KEY": "", "ALIBABA_MODEL": "qwen-plus"}), \
+             patch("app.services.ai_assessment_service.ALIBABA_API_KEY", ""), \
+             patch("app.services.ai_assessment_service.ALIBABA_MODEL", "qwen-plus"):
                 service = AIAssessmentService()
                 assert service.api_key == ""
                 assert service.enabled is False

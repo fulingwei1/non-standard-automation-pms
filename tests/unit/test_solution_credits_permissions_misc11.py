@@ -8,9 +8,9 @@ from pathlib import Path
 SOURCE_PATH = (
     Path(__file__).resolve().parents[2]
     / "app"
+    / "modules"
+    / "presale"
     / "api"
-    / "v1"
-    / "endpoints"
     / "solution_credits"
     / "internal.py"
 )

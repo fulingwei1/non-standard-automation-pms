@@ -1,7 +1,7 @@
 from inspect import signature
 from pathlib import Path
 
-from app.api.v1.endpoints.advantage_products.import_excel import import_from_excel
+from app.modules.presale.api.advantage_products.import_excel import import_from_excel
 
 
 def test_advantage_product_import_defaults_to_non_destructive_mode():

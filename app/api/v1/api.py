@@ -8,6 +8,7 @@ API路由聚合 - 中等版本（跳过有问题的模块）
 import os
 
 from fastapi import APIRouter, Depends
+from app.api.deps import require_module
 
 STRICT_API_ROUTER = os.getenv("STRICT_API_ROUTER", "true").lower() == "true"
 ENABLE_STUB_ENDPOINTS = os.getenv("ENABLE_STUB_ENDPOINTS", "false").lower() == "true"
@@ -256,7 +257,6 @@ def create_api_router() -> APIRouter:
     
     # ==================== 预售管理 ====================
     try:
-        from app.api.deps import require_module
         from app.modules.presale.api import router as presale_router
         _presale_gate = [Depends(require_module("presale"))]
         api_router.include_router(presale_router, prefix="/presale", tags=["presale"], dependencies=_presale_gate)
@@ -283,20 +283,20 @@ def create_api_router() -> APIRouter:
         api_router.include_router(presale_ai_quotation_router, tags=["presale-ai"], dependencies=_presale_gate)
         from app.api.v1.endpoints.ai_jobs import router as ai_jobs_router
         api_router.include_router(ai_jobs_router)
-        from app.api.v1.endpoints.presale_agent_metrics import router as presale_agent_metrics_router
-        api_router.include_router(presale_agent_metrics_router)
-        from app.api.v1.endpoints.presale_agent_revisions import router as presale_agent_revisions_router
-        api_router.include_router(presale_agent_revisions_router)
-        from app.api.v1.endpoints.presale_proposals import router as presale_proposals_router
-        api_router.include_router(presale_proposals_router)
-        from app.api.v1.endpoints.audit_pack import router as audit_pack_router
-        api_router.include_router(audit_pack_router)
-        from app.api.v1.endpoints.presale_usage_feedback import router as presale_usage_feedback_router
-        api_router.include_router(presale_usage_feedback_router)
+        from app.modules.presale.api.presale_agent_metrics import router as presale_agent_metrics_router
+        api_router.include_router(presale_agent_metrics_router, dependencies=[Depends(require_module("presale"))])
+        from app.modules.presale.api.presale_agent_revisions import router as presale_agent_revisions_router
+        api_router.include_router(presale_agent_revisions_router, dependencies=[Depends(require_module("presale"))])
+        from app.modules.presale.api.presale_proposals import router as presale_proposals_router
+        api_router.include_router(presale_proposals_router, dependencies=[Depends(require_module("presale"))])
+        from app.modules.presale.api.audit_pack import router as audit_pack_router
+        api_router.include_router(audit_pack_router, dependencies=[Depends(require_module("presale"))])
+        from app.modules.presale.api.presale_usage_feedback import router as presale_usage_feedback_router
+        api_router.include_router(presale_usage_feedback_router, dependencies=[Depends(require_module("presale"))])
         from app.api.v1.company_certifications import router as company_certifications_router
         api_router.include_router(company_certifications_router)
-        from app.api.v1.endpoints.export_docs import router as export_docs_router
-        api_router.include_router(export_docs_router)
+        from app.modules.presale.api.export_docs import router as export_docs_router
+        api_router.include_router(export_docs_router, dependencies=[Depends(require_module("presale"))])
         from app.api.v1.endpoints.ai_feedback import router as ai_feedback_router
         api_router.include_router(ai_feedback_router)
         from app.api.v1.endpoints.sales.activity_minutes import router as sales_minutes_router
@@ -761,8 +761,8 @@ def create_api_router() -> APIRouter:
 
     # ==================== 优势产品 ====================
     try:
-        from app.api.v1.endpoints.advantage_products import router as advantage_products_router
-        api_router.include_router(advantage_products_router, prefix="/advantage-products", tags=["advantage-products"])
+        from app.modules.presale.api.advantage_products import router as advantage_products_router
+        api_router.include_router(advantage_products_router, prefix="/advantage-products", tags=["advantage-products"], dependencies=[Depends(require_module("presale"))])
         print("✓ 优势产品模块加载成功")
     except Exception as e:
         print(f"✗ 优势产品模块加载失败：{e}")
@@ -782,12 +782,12 @@ def create_api_router() -> APIRouter:
     # ==================== AI 功能模块 ====================
     try:
         from app.api.v1.endpoints.engineer_scheduling import router as engineer_scheduling_router
-        from app.api.v1.endpoints.requirement_extraction import router as requirement_extraction_router
+        from app.modules.presale.api.requirement_extraction import router as requirement_extraction_router
         from app.api.v1.endpoints.team_generation import router as team_generation_router
         from app.api.v1.endpoints.schedule_generation import router as schedule_generation_router
         from app.api.v1.endpoints.schedule_optimization import router as schedule_optimization_router
         api_router.include_router(engineer_scheduling_router, prefix="/engineer-scheduling", tags=["engineer-scheduling"])
-        api_router.include_router(requirement_extraction_router, prefix="/requirement-extraction", tags=["requirement-extraction"])
+        api_router.include_router(requirement_extraction_router, prefix="/requirement-extraction", tags=["requirement-extraction"], dependencies=[Depends(require_module("presale"))])
         api_router.include_router(team_generation_router, prefix="/team-generation", tags=["team-generation"])
         api_router.include_router(schedule_generation_router, prefix="/schedule-generation", tags=["schedule-generation"])
         api_router.include_router(schedule_optimization_router, prefix="/schedule-optimization", tags=["schedule-optimization"])
@@ -949,10 +949,10 @@ def create_api_router() -> APIRouter:
 
     # ==================== 预售分析 ====================
     try:
-        from app.api.v1.endpoints.presale_analytics import router as presale_analytics_router
+        from app.modules.presale.api.presale_analytics import router as presale_analytics_router
         # 2026-07-03 去重：原同时挂 /presale-analytics 与 /presales 两前缀；前端与契约测试均用
         # /presales，故保留 /presales、去掉无消费方的 /presale-analytics
-        api_router.include_router(presale_analytics_router, prefix="/presales", tags=["presales"])
+        api_router.include_router(presale_analytics_router, prefix="/presales", tags=["presales"], dependencies=[Depends(require_module("presale"))])
         print("✓ 预售分析模块加载成功")
     except Exception as e:
         print(f"✗ 预售分析模块加载失败：{e}")
@@ -1003,8 +1003,8 @@ def create_api_router() -> APIRouter:
 
     # ==================== 方案学分 ====================
     try:
-        from app.api.v1.endpoints.solution_credits import router as solution_credits_router
-        api_router.include_router(solution_credits_router, prefix="/solution-credits", tags=["solution-credits"])
+        from app.modules.presale.api.solution_credits import router as solution_credits_router
+        api_router.include_router(solution_credits_router, prefix="/solution-credits", tags=["solution-credits"], dependencies=[Depends(require_module("presale"))])
         print("✓ 方案学分模块加载成功")
     except Exception as e:
         print(f"✗ 方案学分模块加载失败：{e}")

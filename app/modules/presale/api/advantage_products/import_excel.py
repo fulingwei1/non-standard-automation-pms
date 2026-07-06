@@ -23,7 +23,7 @@ async def import_from_excel(
     current_user: User = Depends(security.require_permission("advantage_product:create")),
 ):
     """从 Excel 文件导入优势产品"""
-    from app.services.advantage_product_import_service import (
+    from app.modules.presale.services.advantage_product_import_service import (
         ensure_categories_exist,
         parse_product_from_cell,
         process_product_row,

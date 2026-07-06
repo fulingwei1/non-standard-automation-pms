@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.services.solution_credit_service import SolutionCreditService
+from app.modules.presale.services.solution_credit_service import SolutionCreditService
 
 from .schemas import (
     AdminAddCreditsRequest,

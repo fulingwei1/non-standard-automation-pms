@@ -38,7 +38,7 @@ from app.schemas.presale import (
     SolutionReviewRequest,
     SolutionUpdate,
 )
-from app.services.presale_assessment_completion import complete_presale_source_assessment
+from app.modules.presale.services.presale_assessment_completion import complete_presale_source_assessment
 from app.utils.db_helpers import get_or_404, save_obj
 
 # 使用统一的编码生成工具

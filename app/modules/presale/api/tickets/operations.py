@@ -25,7 +25,7 @@ from app.schemas.presale import (
     TicketRatingRequest,
     TicketResponse,
 )
-from app.services.presale_assessment_completion import complete_presale_source_assessment
+from app.modules.presale.services.presale_assessment_completion import complete_presale_source_assessment
 from app.utils.db_helpers import get_or_404, save_obj
 
 from .crud import read_ticket

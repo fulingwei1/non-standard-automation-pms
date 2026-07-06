@@ -122,7 +122,7 @@ def create_ticket(
     import logging
     from datetime import datetime
 
-    from app.services.pm_involvement_service import PMInvolvementService
+    from app.modules.presale.services.pm_involvement_service import PMInvolvementService
 
     logger = logging.getLogger(__name__)
 

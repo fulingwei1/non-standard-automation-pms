@@ -23,7 +23,7 @@ from app.schemas.presale_ai_emotion import (
     FollowUpReminderListResponse,
     MessageResponse,
 )
-from app.services.ai_emotion_service import AIEmotionService
+from app.modules.presale.services.ai_emotion_service import AIEmotionService
 
 router = APIRouter(prefix="/presale/ai", tags=["AI情绪分析"])
 
