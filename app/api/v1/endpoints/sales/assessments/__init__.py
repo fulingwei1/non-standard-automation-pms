@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
-"""
-技术评估管理模块路由聚合
+"""兼容旧导入路径：实现已迁至 app.modules.presale.api.assessments（P2 模块化批D）。"""
+import importlib
+import pkgutil
+import sys
 
-将拆分后的各个子模块路由聚合到统一的router中
-"""
+_impl = importlib.import_module("app.modules.presale.api.assessments")
+sys.modules[__name__] = _impl
 
-from fastapi import APIRouter
-
-from . import assessments, failure_cases, open_items, scoring_rules
-
-# 创建主路由
-router = APIRouter()
-
-# 注册子模块路由
-router.include_router(assessments.router, tags=["sales-assessments"])
-router.include_router(failure_cases.router, tags=["sales-failure-cases"])
-router.include_router(open_items.router, tags=["sales-open-items"])
-router.include_router(scoring_rules.router, tags=["sales-scoring-rules"])
+for _m in pkgutil.walk_packages(_impl.__path__, prefix="app.modules.presale.api.assessments."):
+    try:
+        _mod = importlib.import_module(_m.name)
+    except Exception:
+        continue
+    sys.modules[_m.name.replace("app.modules.presale.api.assessments", "app.api.v1.endpoints.sales.assessments")] = _mod

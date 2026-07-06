@@ -1,0 +1,387 @@
+# -*- coding: utf-8 -*-
+"""
+报价明细items管理
+从 sales/quotes.py 拆分
+"""
+
+from __future__ import annotations
+
+from decimal import Decimal
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app.api.deps import get_db
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
+from app.core import security
+from app.models.sales import Quote, QuoteItem, QuoteVersion
+from app.models.sales.operation_log import SalesEntityType, SalesOperationType
+from app.models.user import User
+from app.schemas.common import ResponseModel
+from app.services.sales.operation_log_service import SalesOperationLogService
+from app.api.v1.endpoints.sales.utils.quote_item_validation import (
+    validate_positive_quantity,
+    validate_positive_unit_price,
+)
+from app.utils.db_helpers import get_or_404
+
+
+READONLY_QUOTE_STATUSES = {
+    "SUBMITTED",
+    "PENDING_APPROVAL",
+    "IN_REVIEW",
+    "APPROVED",
+    "SENT",
+    "ACCEPTED",
+    "CONVERTED",
+    "EXPIRED",
+    "CANCELLED",
+}
+READONLY_VERSION_STATUSES = {
+    "SUBMITTED",
+    "PENDING_APPROVAL",
+    "IN_REVIEW",
+    "APPROVED",
+    "SENT",
+    "ACCEPTED",
+    "CONVERTED",
+    "EXPIRED",
+    "CANCELLED",
+}
+
+
+def _check_version_scope(db: Session, quote_version_id: int, current_user: User) -> QuoteVersion:
+    """加载报价版本，通过父 Quote 检查数据权限"""
+    version = db.query(QuoteVersion).filter(QuoteVersion.id == quote_version_id).first()
+    if not version:
+        raise HTTPException(status_code=404, detail="报价版本不存在")
+    quote = get_or_404(db, Quote, version.quote_id, detail="报价不存在")
+    if not security.check_sales_data_permission(quote, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该报价")
+    return version
+
+
+def _check_item_scope(db: Session, item_id: int, current_user: User) -> QuoteItem:
+    """加载报价明细，通过 QuoteVersion -> Quote 检查数据权限"""
+    item = get_or_404(db, QuoteItem, item_id, detail="报价明细不存在")
+    _check_version_scope(db, item.quote_version_id, current_user)
+    return item
+
+
+def _normalize_status(value) -> str:
+    return str(value or "").upper()
+
+
+def _ensure_version_editable(db: Session, version: QuoteVersion) -> None:
+    quote = db.query(Quote).filter(Quote.id == version.quote_id).first()
+    quote_status = _normalize_status(quote.status if quote else None)
+    version_status = _normalize_status(getattr(version, "status", None))
+
+    if quote_status in READONLY_QUOTE_STATUSES or version_status in READONLY_VERSION_STATUSES:
+        raise HTTPException(status_code=400, detail="已提交或已审批的报价版本不可修改明细")
+
+
+def _to_decimal(value, *, default: Decimal = Decimal("0")) -> Decimal:
+    if value is None:
+        return default
+    return Decimal(str(value))
+
+
+def _audit_scalar(value):
+    if isinstance(value, Decimal):
+        return str(value)
+    return value
+
+
+def _quote_item_audit_value(item: QuoteItem) -> dict:
+    return {
+        "item_id": item.id,
+        "quote_version_id": item.quote_version_id,
+        "item_type": item.item_type,
+        "item_name": item.item_name,
+        "qty": _audit_scalar(item.qty),
+        "unit_price": _audit_scalar(item.unit_price),
+        "cost": _audit_scalar(item.cost),
+        "lead_time_days": item.lead_time_days,
+        "remark": item.remark,
+        "cost_category": item.cost_category,
+        "cost_source": item.cost_source,
+        "specification": item.specification,
+        "unit": item.unit,
+    }
+
+
+def _quote_version_audit_code(version: QuoteVersion) -> str | None:
+    if getattr(version, "quote_code", None):
+        return version.quote_code
+    quote = getattr(version, "quote", None)
+    return getattr(quote, "quote_code", None) if quote else None
+
+
+def _recalculate_version_totals(db: Session, version: QuoteVersion) -> None:
+    items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).all()
+    total_price = Decimal("0")
+    total_cost = Decimal("0")
+
+    for item in items:
+        qty = _to_decimal(item.qty, default=Decimal("1"))
+        unit_price = _to_decimal(item.unit_price)
+        unit_cost = _to_decimal(item.cost)
+        total_price += qty * unit_price
+        total_cost += qty * unit_cost
+
+    version.total_price = total_price.quantize(Decimal("0.01"))
+    version.cost_total = total_cost.quantize(Decimal("0.01"))
+    if total_price > 0:
+        version.gross_margin = (
+            (total_price - total_cost) / total_price * Decimal("100")
+        ).quantize(Decimal("0.01"))
+        version.margin_warning = version.gross_margin < Decimal("20")
+    else:
+        version.gross_margin = None
+        version.margin_warning = False
+
+
+router = APIRouter()
+
+
+@router.get("/quotes/{quote_version_id}/items", response_model=ResponseModel)
+def get_quote_items(
+    quote_version_id: int,
+    db: Session = Depends(get_db),
+    pagination: PaginationParams = Depends(get_pagination_query),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """
+    获取报价版本的明细列表
+
+    Args:
+        quote_version_id: 报价版本ID
+        db: 数据库会话
+        skip: 跳过记录数
+        limit: 返回记录数
+        current_user: 当前用户
+
+    Returns:
+        ResponseModel: 报价明细列表
+    """
+    try:
+        # 验证报价版本存在 + 数据权限
+        _check_version_scope(db, quote_version_id, current_user)
+
+        # 查询明细列表
+        items = (
+            db.query(QuoteItem)
+            .filter(QuoteItem.quote_version_id == quote_version_id)
+            .order_by(QuoteItem.id)
+        )
+        items = apply_pagination(items, pagination.offset, pagination.limit).all()
+
+        # 转换为字典列表
+        items_data = [
+            {
+                "id": item.id,
+                "quote_version_id": item.quote_version_id,
+                "item_type": item.item_type,
+                "item_name": item.item_name,
+                "qty": float(item.qty) if item.qty else None,
+                "unit_price": float(item.unit_price) if item.unit_price else None,
+                "cost": float(item.cost) if item.cost else None,
+                "lead_time_days": item.lead_time_days,
+                "remark": item.remark,
+                "cost_category": item.cost_category,
+                "cost_source": item.cost_source,
+                "specification": item.specification,
+                "unit": item.unit,
+            }
+            for item in items
+        ]
+
+        return ResponseModel(code=200, message="报价明细列表获取成功", data=items_data)
+    except HTTPException:
+        raise
+    except Exception as e:
+        return ResponseModel(code=500, message=f"获取报价明细失败: {str(e)}")
+
+
+@router.post("/quotes/{quote_version_id}/items", response_model=ResponseModel)
+def create_quote_item(
+    quote_version_id: int,
+    item_data: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """
+    创建报价明细
+
+    Args:
+        quote_version_id: 报价版本ID
+        item_data: 明细数据
+        db: 数据库会话
+        current_user: 当前用户
+
+    Returns:
+        ResponseModel: 创建结果
+    """
+    try:
+        # 验证报价版本存在 + 数据权限
+        version = _check_version_scope(db, quote_version_id, current_user)
+        _ensure_version_editable(db, version)
+        qty = validate_positive_quantity(item_data.get("qty"))
+        unit_price = validate_positive_unit_price(item_data.get("unit_price"))
+
+        # 创建明细
+        item = QuoteItem(
+            quote_version_id=quote_version_id,
+            item_type=item_data.get("item_type"),
+            item_name=item_data.get("item_name"),
+            qty=qty,
+            unit_price=unit_price,
+            cost=item_data.get("cost"),
+            lead_time_days=item_data.get("lead_time_days"),
+            remark=item_data.get("remark"),
+            cost_category=item_data.get("cost_category"),
+            cost_source=item_data.get("cost_source", "MANUAL"),
+            specification=item_data.get("specification"),
+            unit=item_data.get("unit"),
+        )
+        db.add(item)
+        db.flush()
+        SalesOperationLogService.log_create(
+            db,
+            entity_type=SalesEntityType.QUOTE_VERSION,
+            entity_id=version.id,
+            operator=current_user,
+            entity_code=_quote_version_audit_code(version),
+            new_value=_quote_item_audit_value(item),
+            remark=f"quote_item_id={item.id}",
+        )
+        _recalculate_version_totals(db, version)
+        db.commit()
+        db.refresh(item)
+
+        return ResponseModel(code=200, message="报价明细创建成功", data={"id": item.id})
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        return ResponseModel(code=500, message=f"创建报价明细失败: {str(e)}")
+
+
+@router.put("/quotes/items/{item_id}", response_model=ResponseModel)
+def update_quote_item(
+    item_id: int,
+    item_data: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """
+    更新报价明细
+
+    Args:
+        item_id: 明细ID
+        item_data: 更新数据
+        db: 数据库会话
+        current_user: 当前用户
+
+    Returns:
+        ResponseModel: 更新结果
+    """
+    try:
+        item = _check_item_scope(db, item_id, current_user)
+        version = item.quote_version or db.query(QuoteVersion).filter(
+            QuoteVersion.id == item.quote_version_id
+        ).first()
+        _ensure_version_editable(db, version)
+        old_value = _quote_item_audit_value(item)
+
+        if "qty" in item_data:
+            item_data["qty"] = validate_positive_quantity(item_data["qty"])
+        if "unit_price" in item_data:
+            item_data["unit_price"] = validate_positive_unit_price(item_data["unit_price"])
+
+        # 更新字段
+        for field in [
+            "item_type",
+            "item_name",
+            "qty",
+            "unit_price",
+            "cost",
+            "lead_time_days",
+            "remark",
+            "cost_category",
+            "specification",
+            "unit",
+        ]:
+            if field in item_data:
+                setattr(item, field, item_data[field])
+
+        db.flush()
+        SalesOperationLogService.log_update(
+            db,
+            entity_type=SalesEntityType.QUOTE_VERSION,
+            entity_id=version.id,
+            operator=current_user,
+            old_value=old_value,
+            new_value=_quote_item_audit_value(item),
+            entity_code=_quote_version_audit_code(version),
+            remark=f"quote_item_id={item.id}",
+        )
+        _recalculate_version_totals(db, version)
+        db.commit()
+        return ResponseModel(code=200, message="报价明细更新成功")
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        return ResponseModel(code=500, message=f"更新报价明细失败: {str(e)}")
+
+
+@router.delete("/quotes/items/{item_id}", response_model=ResponseModel)
+def delete_quote_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+):
+    """
+    删除报价明细
+
+    Args:
+        item_id: 明细ID
+        db: 数据库会话
+        current_user: 当前用户
+
+    Returns:
+        ResponseModel: 删除结果
+    """
+    try:
+        item = _check_item_scope(db, item_id, current_user)
+        version = item.quote_version or db.query(QuoteVersion).filter(
+            QuoteVersion.id == item.quote_version_id
+        ).first()
+        _ensure_version_editable(db, version)
+        old_value = _quote_item_audit_value(item)
+
+        db.delete(item)
+        db.flush()
+        SalesOperationLogService.log_operation(
+            db,
+            entity_type=SalesEntityType.QUOTE_VERSION,
+            entity_id=version.id,
+            operation_type=SalesOperationType.DELETE,
+            operator=current_user,
+            entity_code=_quote_version_audit_code(version),
+            operation_desc="删除报价明细",
+            old_value=old_value,
+            changed_fields=list(old_value.keys()),
+            remark=f"quote_item_id={item_id}",
+        )
+        _recalculate_version_totals(db, version)
+        db.commit()
+        return ResponseModel(code=200, message="报价明细删除成功")
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        return ResponseModel(code=500, message=f"删除报价明细失败: {str(e)}")

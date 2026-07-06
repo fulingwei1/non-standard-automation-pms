@@ -62,6 +62,14 @@ from . import (
 from .contracts import contracts as contracts_contracts
 
 # 创建主路由
+from fastapi import Depends
+
+from app.api.deps import require_module
+
+# P2批D：报价/需求/评估/售前费用四簇已迁入 presale 模块，路由仍由本聚合器
+# 按原前缀挂载（URL不变），但统一挂 presale 开通闸门。
+_PRESALE_GATE = [Depends(require_module("presale"))]
+
 router = APIRouter()
 
 # 注意：优先级路由需要在leads之前注册，避免路径冲突
@@ -75,19 +83,19 @@ router.include_router(leads.router, tags=["sales-leads"])
 router.include_router(opportunity_health.router, tags=["sales-opportunity-health"])
 router.include_router(opportunity_batch.router, tags=["sales-opportunity-batch"])
 router.include_router(opportunities.router, tags=["sales-opportunities"])
-router.include_router(quotes.router, tags=["sales-quotes"])
-router.include_router(quote_approval.router, tags=["sales-quote-approval"])
+router.include_router(quotes.router, tags=["sales-quotes"], dependencies=_PRESALE_GATE)
+router.include_router(quote_approval.router, tags=["sales-quote-approval"], dependencies=_PRESALE_GATE)
 router.include_router(contract_milestones.router, prefix="/contracts", tags=["sales-contract-milestones"])
 router.include_router(contracts.router, tags=["sales-contracts"])
 router.include_router(invoices.router, tags=["sales-invoices"])
 router.include_router(payments.router, tags=["sales-payments"])
 router.include_router(statistics.router, tags=["sales-statistics"])
 router.include_router(loss_analysis.router, tags=["sales-loss-analysis"])
-router.include_router(expenses.router, tags=["sales-expenses"])
+router.include_router(expenses.router, tags=["sales-expenses"], dependencies=_PRESALE_GATE)
 router.include_router(follow_up_reminders.router, prefix="/follow-up", tags=["sales-follow-up"])
 router.include_router(collection_priority.router, prefix="/collection", tags=["sales-collection"])
-router.include_router(assessments.router, tags=["sales-assessments"])
-router.include_router(assessment_templates.router, tags=["sales-assessment-templates"])
+router.include_router(assessments.router, tags=["sales-assessments"], dependencies=_PRESALE_GATE)
+router.include_router(assessment_templates.router, tags=["sales-assessment-templates"], dependencies=_PRESALE_GATE)
 router.include_router(disputes.router, tags=["sales-disputes"])
 router.include_router(targets.router, tags=["sales-targets"])
 router.include_router(team.router, tags=["sales-team"])
@@ -103,7 +111,7 @@ router.include_router(operation_logs.router, tags=["sales-operation-logs"])
 # 已启用的模块（包含 schema 定义）
 router.include_router(cost_management.router, tags=["sales-cost-management"])
 router.include_router(receivables.router, tags=["sales-receivables"])
-router.include_router(requirements.router, tags=["sales-requirements"])
+router.include_router(requirements.router, tags=["sales-requirements"], dependencies=_PRESALE_GATE)
 router.include_router(sales_funnel.pipeline_router, tags=["sales-pipeline-analysis"])
 router.include_router(funnel.router, tags=["sales-funnel-state-machine"])
 router.include_router(accountability.router, tags=["sales-accountability"])
@@ -118,14 +126,14 @@ router.include_router(contracts_contracts.router, tags=["sales-contracts-project
 
 # 报价成本管理（合并模块）
 router.include_router(quote_costs.router, tags=["sales-quote-costs"])
-router.include_router(quote_delivery.router, tags=["sales-quote-delivery"])
-router.include_router(quote_exports.router, tags=["sales-quote-exports"])
-router.include_router(quote_items.router, tags=["sales-quote-items"])
-router.include_router(quote_per_id_approval.router, tags=["sales-quote-per-id-approval"])
-router.include_router(quote_quotes_crud.router, tags=["sales-quote-crud"])
-router.include_router(quote_status.router, tags=["sales-quote-status"])
-router.include_router(quote_templates.router, tags=["sales-quote-templates"])
-router.include_router(quote_versions.router, tags=["sales-quote-versions"])
+router.include_router(quote_delivery.router, tags=["sales-quote-delivery"], dependencies=_PRESALE_GATE)
+router.include_router(quote_exports.router, tags=["sales-quote-exports"], dependencies=_PRESALE_GATE)
+router.include_router(quote_items.router, tags=["sales-quote-items"], dependencies=_PRESALE_GATE)
+router.include_router(quote_per_id_approval.router, tags=["sales-quote-per-id-approval"], dependencies=_PRESALE_GATE)
+router.include_router(quote_quotes_crud.router, tags=["sales-quote-crud"], dependencies=_PRESALE_GATE)
+router.include_router(quote_status.router, tags=["sales-quote-status"], dependencies=_PRESALE_GATE)
+router.include_router(quote_templates.router, tags=["sales-quote-templates"], dependencies=_PRESALE_GATE)
+router.include_router(quote_versions.router, tags=["sales-quote-versions"], dependencies=_PRESALE_GATE)
 
 # 新增AI销售助手、报价智能化、销售自动化路由
 from app.api.v1.endpoints import ai_sales_assistant
@@ -133,7 +141,7 @@ from . import automation as sales_automation
 from . import intelligent_quote as sales_intelligent_quote
 
 router.include_router(ai_sales_assistant.router, prefix="/ai", tags=["sales-ai-assistant"])
-router.include_router(sales_intelligent_quote.router, tags=["sales-intelligent-quote"])
+router.include_router(sales_intelligent_quote.router, tags=["sales-intelligent-quote"], dependencies=_PRESALE_GATE)
 router.include_router(sales_automation.router, tags=["sales-automation"])
 
 # 销售漏斗优化路由（合并模块）
