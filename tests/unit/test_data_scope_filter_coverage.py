@@ -220,6 +220,36 @@ class TestGenericFilterService:
             result = GenericFilterService.filter_by_scope(mock_db, query, Project, user, config)
         query.filter.assert_called()
 
+    def test_dept_scope_prefers_department_id_over_legacy_name(self, mock_db):
+        """HR-03: 调岗后 DEPT 范围必须随 department_id，不被旧部门名字符串带偏。"""
+        from app.models.enums import DataScopeEnum
+        from app.models.organization import Department
+        from app.models.user import User
+        from app.services.data_scope.config import DataScopeConfig
+        from app.services.data_scope.generic_filter import GenericFilterService
+
+        user = make_user(user_id=5, is_superuser=False, department="旧部门")
+        user.department_id = 20
+        query = MagicMock()
+        query.filter.return_value = query
+
+        stale_dept = Department(id=99, dept_code="OLD", dept_name="旧部门")
+        mock_db.query.return_value.filter.return_value.first.return_value = stale_dept
+        config = DataScopeConfig(owner_field=None, dept_field="department_id")
+
+        with patch(
+            "app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope",
+            return_value=DataScopeEnum.DEPT.value,
+        ):
+            GenericFilterService.filter_by_scope(mock_db, query, User, user, config)
+
+        compiled_filter = str(
+            query.filter.call_args.args[0].compile(compile_kwargs={"literal_binds": True})
+        )
+        assert "users.department_id = 20" in compiled_filter
+        assert "users.department_id = 99" not in compiled_filter
+        mock_db.query.assert_not_called()
+
 
 # ─── GenericFilterService.check_customer_access ──────────────────────────────
 

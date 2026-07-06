@@ -155,6 +155,62 @@ class TestTimesheetFlowIntegration:
     # 本周一
     WEEK_START = date.today() - timedelta(days=date.today().weekday())
 
+    def _record_unified_approval_log(
+        self,
+        db,
+        *,
+        timesheet,
+        operator,
+        action: str,
+        comment: str,
+        after_status: str,
+    ):
+        from app.models.approval import ApprovalActionLog, ApprovalInstance
+
+        instance = (
+            db.query(ApprovalInstance)
+            .filter(
+                ApprovalInstance.entity_type == "TIMESHEET",
+                ApprovalInstance.entity_id == timesheet.id,
+            )
+            .first()
+        )
+        if instance is None:
+            instance = ApprovalInstance(
+                instance_no=f"TS-FLOW-MIG-{timesheet.id}-{uuid.uuid4().hex[:8]}",
+                template_id=1,
+                flow_id=1,
+                entity_type="TIMESHEET",
+                entity_id=timesheet.id,
+                initiator_id=timesheet.user_id,
+                initiator_name=timesheet.user_name,
+                status=after_status,
+                title=f"工时审批 - {timesheet.user_name}",
+                summary=timesheet.work_content,
+                submitted_at=timesheet.submit_time or datetime.now(),
+                completed_at=datetime.now() if after_status in {"APPROVED", "REJECTED"} else None,
+                final_comment=comment if after_status in {"APPROVED", "REJECTED"} else None,
+                final_approver_id=operator.id if after_status in {"APPROVED", "REJECTED"} else None,
+            )
+            db.add(instance)
+            db.flush()
+        else:
+            instance.status = after_status
+
+        log = ApprovalActionLog(
+            instance_id=instance.id,
+            operator_id=operator.id,
+            operator_name=operator.real_name,
+            action=action,
+            action_detail={"source": "integration_test_timesheet_flow"},
+            comment=comment,
+            before_status="PENDING",
+            after_status=after_status,
+            action_at=datetime.now(),
+        )
+        db.add(log)
+        return log
+
     # ─── 1. 工时记录创建（草稿状态） ──────────────────────────
     def test_timesheet_entries_created_as_draft(self, db, ts_engineer, ts_project):
         """工程师填报本周工时，初始为草稿状态"""
@@ -256,7 +312,8 @@ class TestTimesheetFlowIntegration:
     # ─── 3. 审批人审批通过 ───────────────────────────────────
     def test_timesheet_batch_approved(self, db, ts_engineer, ts_manager):
         """项目经理审批通过工时批次"""
-        from app.models.timesheet import Timesheet, TimesheetApprovalLog, TimesheetBatch
+        from app.models.approval import ApprovalActionLog, ApprovalInstance
+        from app.models.timesheet import Timesheet, TimesheetBatch
 
         batch = db.query(TimesheetBatch).filter(TimesheetBatch.batch_no == "BATCH-FLOW-001").first()
         assert batch is not None
@@ -266,17 +323,6 @@ class TestTimesheetFlowIntegration:
         batch.approve_time = datetime.now()
         batch.approve_comment = "工时填报内容完整，与项目计划吻合，审批通过"
         db.flush()
-
-        # 记录审批日志
-        approval_log = TimesheetApprovalLog(
-            batch_id=batch.id,
-            approver_id=ts_manager.id,
-            approver_name=ts_manager.real_name,
-            action="APPROVE",
-            comment="工时填报内容完整，与项目计划吻合，审批通过",
-            approved_at=datetime.now(),
-        )
-        db.add(approval_log)
 
         # 更新工时记录状态
         entries = (
@@ -291,6 +337,14 @@ class TestTimesheetFlowIntegration:
             entry.status = "APPROVED"
             entry.approve_time = datetime.now()
             entry.approve_comment = "已审批通过"
+            self._record_unified_approval_log(
+                db,
+                timesheet=entry,
+                operator=ts_manager,
+                action="APPROVE",
+                comment="工时填报内容完整，与项目计划吻合，审批通过",
+                after_status="APPROVED",
+            )
 
         db.commit()
 
@@ -298,15 +352,22 @@ class TestTimesheetFlowIntegration:
         assert batch.status == "APPROVED"
 
         logs = (
-            db.query(TimesheetApprovalLog).filter(TimesheetApprovalLog.batch_id == batch.id).all()
+            db.query(ApprovalActionLog)
+            .join(ApprovalInstance, ApprovalActionLog.instance_id == ApprovalInstance.id)
+            .filter(
+                ApprovalInstance.entity_type == "TIMESHEET",
+                ApprovalInstance.entity_id.in_([entry.id for entry in entries]),
+            )
+            .all()
         )
-        assert len(logs) == 1
-        assert logs[0].action == "APPROVE"
+        assert len(logs) == 3
+        assert all(log.action == "APPROVE" for log in logs)
 
     # ─── 4. 工时驳回再重新提交测试 ──────────────────────────
     def test_timesheet_rejected_and_resubmitted(self, db, ts_engineer, ts_manager, ts_project):
         """新增一条工时 → 提交 → 驳回 → 修改 → 重新提交"""
-        from app.models.timesheet import Timesheet, TimesheetApprovalLog
+        from app.models.approval import ApprovalActionLog, ApprovalInstance
+        from app.models.timesheet import Timesheet
 
         # 新增一条工时
         ts_extra = Timesheet(
@@ -335,15 +396,14 @@ class TestTimesheetFlowIntegration:
         ts_extra.approve_time = datetime.now()
         db.flush()
 
-        reject_log = TimesheetApprovalLog(
-            timesheet_id=ts_extra.id,
-            approver_id=ts_manager.id,
-            approver_name=ts_manager.real_name,
+        self._record_unified_approval_log(
+            db,
+            timesheet=ts_extra,
+            operator=ts_manager,
             action="REJECT",
             comment="工作内容描述过于简单，请补充具体工作内容",
-            approved_at=datetime.now(),
+            after_status="REJECTED",
         )
-        db.add(reject_log)
         db.commit()
 
         # 工程师修改后重新提交
@@ -357,8 +417,12 @@ class TestTimesheetFlowIntegration:
         assert "装配工艺" in ts_extra.work_content
 
         logs = (
-            db.query(TimesheetApprovalLog)
-            .filter(TimesheetApprovalLog.timesheet_id == ts_extra.id)
+            db.query(ApprovalActionLog)
+            .join(ApprovalInstance, ApprovalActionLog.instance_id == ApprovalInstance.id)
+            .filter(
+                ApprovalInstance.entity_type == "TIMESHEET",
+                ApprovalInstance.entity_id == ts_extra.id,
+            )
             .all()
         )
         assert any(log.action == "REJECT" for log in logs)
@@ -485,10 +549,10 @@ class TestTimesheetFlowIntegration:
     # ─── 8. 全流程闭环验证 ───────────────────────────────────
     def test_full_timesheet_flow_end_to_end(self, db, ts_engineer, ts_manager, ts_project):
         """验证工时录入→审批→汇总→报表的完整链路数据一致性"""
+        from app.models.approval import ApprovalActionLog, ApprovalInstance
         from app.models.report_center import ReportGeneration
         from app.models.timesheet import (
             Timesheet,
-            TimesheetApprovalLog,
             TimesheetBatch,
             TimesheetSummary,
         )
@@ -518,8 +582,12 @@ class TestTimesheetFlowIntegration:
         )
 
         approval_logs = (
-            db.query(TimesheetApprovalLog)
-            .filter(TimesheetApprovalLog.approver_id == ts_manager.id)
+            db.query(ApprovalActionLog)
+            .join(ApprovalInstance, ApprovalActionLog.instance_id == ApprovalInstance.id)
+            .filter(
+                ApprovalInstance.entity_type == "TIMESHEET",
+                ApprovalActionLog.operator_id == ts_manager.id,
+            )
             .all()
         )
 

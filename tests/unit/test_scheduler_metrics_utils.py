@@ -133,6 +133,24 @@ class TestSchedulerMetricsAdvanced:
         assert len(snap["jobs"]) == 0
         assert len(snap["notifications"]) == 0
 
+    def test_metrics_persist_and_reload_from_file(self, tmp_path):
+        """Scheduler metrics should survive process-local object recreation."""
+        metrics_path = tmp_path / "scheduler_metrics.json"
+        writer = SchedulerMetrics(persistence_path=metrics_path)
+        writer.record_success("admin10_job", 123.0, "2026-07-05T00:00:00+00:00")
+        writer.record_failure("admin10_job", 50.0, "2026-07-05T00:01:00+00:00")
+        writer.record_notification("email", True)
+
+        reader = SchedulerMetrics(persistence_path=metrics_path)
+        snapshot = reader.snapshot()
+        stats = reader.get_statistics("admin10_job")
+
+        assert snapshot["jobs"]["admin10_job"]["success_count"] == 1
+        assert snapshot["jobs"]["admin10_job"]["failure_count"] == 1
+        assert snapshot["notifications"]["EMAIL"]["success_count"] == 1
+        assert stats["sample_count"] == 2
+        assert stats["max_duration_ms"] == 123.0
+
 
 class TestModuleLevelFunctions:
     """Tests for module-level helper functions."""

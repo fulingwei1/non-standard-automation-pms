@@ -135,6 +135,33 @@ class TestCacheService:
         cache.invalidate_project_detail(1)
         assert cache.get_project_detail(1) is None
 
+    @patch("app.services.cache_service.REDIS_AVAILABLE", False)
+    def test_memory_project_list_cache_survives_new_service_instance(self):
+        """内存降级模式下，项目列表缓存应能跨 CacheService 实例命中。"""
+        writer = CacheService(redis_client=None)
+        writer.clear()
+        payload = {
+            "items": [{"id": 1, "project_name": "缓存项目"}],
+            "total": 1,
+            "page": 1,
+            "page_size": 20,
+            "pages": 1,
+        }
+
+        writer.set_project_list(
+            payload,
+            expire_seconds=300,
+            page=1,
+            page_size=20,
+            is_active=True,
+        )
+
+        reader = CacheService(redis_client=None)
+        cached = reader.get_project_list(page=1, page_size=20, is_active=True)
+
+        assert cached == payload
+        assert reader.get_stats()["hits"] == 1
+
     def test_cache_key_generation(self):
         """测试缓存键生成"""
         cache = CacheService()

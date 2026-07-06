@@ -377,25 +377,37 @@ class TestMarginDeviation:
         assert isinstance(result["project_count"], int)
 
     def test_mocks_margin_gap_aggregation(self, db_session):
-        """mock ProfitAnalysisService 返回固定 gap，验证单项目聚合。"""
+        """mock batch_margin_analysis 返回固定 gap，验证聚合 + 下钻。"""
         from app.services.otd import OTDMetricsService
 
         project = _make_project(db_session, "METRIC-MARGIN-A", is_active=True)
 
-        def fake_analysis(self_inner, project_id):
-            return {"margin_gap": -8.0}
+        def fake_batch(self_inner, target_margin=25.0, project_ids=None):
+            return [
+                {
+                    "project_id": project.id,
+                    "project_code": "METRIC-MARGIN-A",
+                    "project_name": "测试",
+                    "margin_gap": -8.0,
+                    "current_margin_rate": 17.0,
+                    "health": "critical",
+                }
+            ]
 
         with patch(
-            "app.services.profit_analysis_service.ProfitAnalysisService.get_margin_analysis",
-            fake_analysis,
+            "app.services.profit_analysis_service.ProfitAnalysisService.batch_margin_analysis",
+            fake_batch,
         ):
-            # 限定到本项目，避免其他测试的活跃项目干扰
             result = OTDMetricsService(db_session)._margin_deviation(project.id)
 
         assert result["project_count"] == 1
         assert result["avg_margin_gap_pct"] == -8.0
-        assert result["below_target_count"] == 1  # -8 < 0
-        assert result["seriously_below_count"] == 1  # -8 < -5
+        assert result["below_target_count"] == 1
+        assert result["seriously_below_count"] == 1
+        # 下钻：top_offenders 含该项目
+        assert len(result["top_offenders"]) == 1
+        assert result["top_offenders"][0]["project_code"] == "METRIC-MARGIN-A"
+        assert result["top_offenders"][0]["margin_gap"] == -8.0
 
 
 # ============================================================
@@ -457,3 +469,67 @@ class TestMetricsAggregation:
         result = OTDMetricsService(db_session).get_metrics(start, end)
         assert result["window"]["start"] == start.isoformat()
         assert result["window"]["end"] == end.isoformat()
+
+
+# ============================================================
+# 下钻：top_offenders（B3）
+# ============================================================
+
+
+class TestMetricsDrillDown:
+    """每个指标的 top_offenders 下钻。"""
+
+    def test_offenders_included_by_default(self, db_session):
+        """默认 include_offenders=True，每个指标都有 top_offenders 字段。"""
+        from app.services.otd import OTDMetricsService
+
+        result = OTDMetricsService(db_session).get_metrics()
+        for name, val in result["metrics"].items():
+            assert "top_offenders" in val, f"{name} 缺 top_offenders"
+            assert isinstance(val["top_offenders"], list)
+
+    def test_offenders_excluded_when_disabled(self, db_session):
+        """include_offenders=False 时 top_offenders 为空列表（响应更小）。"""
+        from app.services.otd import OTDMetricsService
+
+        result = OTDMetricsService(db_session).get_metrics(
+            include_offenders=False
+        )
+        for name, val in result["metrics"].items():
+            assert val["top_offenders"] == []
+
+    def test_on_time_offenders_sorted_by_delay(self, db_session):
+        """准时交付率 offenders 按延期天数降序。"""
+        from app.services.otd import OTDMetricsService
+
+        # 造两个逾期完成的项目
+        planned = date.today() - timedelta(days=20)
+        _make_project(
+            db_session, "METRIC-DRILL-LATE1", stage="S9",
+            planned_end=planned, actual_end=date.today() - timedelta(days=5),  # 延期15天
+        )
+        _make_project(
+            db_session, "METRIC-DRILL-LATE2", stage="S9",
+            planned_end=planned, actual_end=date.today(),  # 延期20天
+        )
+
+        result = OTDMetricsService(db_session)._on_time_delivery_rate()
+        offenders = result["top_offenders"]
+        assert len(offenders) >= 2
+        # 降序：第一个 delay_days >= 第二个
+        assert offenders[0]["delay_days"] >= offenders[1]["delay_days"]
+        # 含项目标识
+        assert "project_code" in offenders[0]
+
+    def test_delay_offenders_with_status(self, db_session):
+        """延期天数 offenders 含 status 字段（已完成/在途）。"""
+        from app.services.otd import OTDMetricsService
+
+        _make_project(
+            db_session, "METRIC-DRILL-INPROG", stage="S5",
+            planned_end=date.today() - timedelta(days=30),
+        )
+        result = OTDMetricsService(db_session)._delay_days_distribution()
+        if result["top_offenders"]:
+            assert "status" in result["top_offenders"][0]
+            assert result["top_offenders"][0]["status"] in ("已完成", "在途")

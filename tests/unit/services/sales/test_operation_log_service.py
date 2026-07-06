@@ -128,6 +128,25 @@ class TestLogOperation:
         assert log_entry.operator_name == "lisi"
         assert log_entry.operator_dept is None
 
+    def test_log_operation_accepts_user_department_string(self, mock_db):
+        """当前 User.department 是字符串字段，业务审计不能按 department.name 读取。"""
+        operator = MagicMock()
+        operator.id = 3
+        operator.username = "wangwu"
+        operator.real_name = "王五"
+        operator.department = "销售部"
+
+        SalesOperationLogService.log_operation(
+            mock_db,
+            entity_type=SalesEntityType.QUOTE_VERSION,
+            entity_id=101,
+            operation_type=SalesOperationType.UPDATE,
+            operator=operator,
+        )
+
+        log_entry = mock_db.add.call_args[0][0]
+        assert log_entry.operator_dept == "销售部"
+
 
 # ========== log_create 测试 ==========
 

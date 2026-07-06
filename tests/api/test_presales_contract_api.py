@@ -172,17 +172,17 @@ class TestPresalesFrontendContractRoutes:
         routes = _route_map(client.app)
         prefix = settings.API_V1_PREFIX
 
-        # 2026-07-03 去重：老AI方案栈 generate-solution / solution/{id}（presale_ai_routes.py，
-        # 写 presale_ai_solution 表）已下线，方案统一走 /presale/proposals/solutions
+        # 2026-07-03 去重：老AI方案栈 solution/{id}/template*（presale_ai_routes.py，
+        # 写 presale_ai_solution 表）已下线；generate-solution 作为 PRE-10 异步 job 桥接入口保留。
         expected_routes = {
             ("GET", f"{prefix}/presale/ai/knowledge-base/search"),
+            ("POST", f"{prefix}/presale/ai/generate-solution"),
             ("POST", f"{prefix}/presale/ai/search-similar-cases"),
             ("POST", f"{prefix}/presale/ai/analyze-emotion"),
             ("POST", f"{prefix}/presale/ai/recommend-follow-up"),
             ("POST", f"{prefix}/presale/proposals/solutions"),
         }
         forbidden_routes = {
-            ("POST", f"{prefix}/presale/ai/generate-solution"),
             ("GET", f"{prefix}{prefix}/presale/ai/knowledge-base/search"),
             ("POST", f"{prefix}{prefix}/presale/ai/analyze-emotion"),
         }

@@ -90,6 +90,16 @@ def test_collect_admin_stats_uses_runtime_counts_and_backup_metadata(monkeypatch
     assert data["auditLogsToday"] == 5
 
 
+def test_directory_size_treats_permission_denied_as_zero():
+    from app.api.v1.endpoints import admin_stats
+
+    class DeniedPath:
+        def exists(self):
+            raise PermissionError("permission denied")
+
+    assert admin_stats._directory_size(DeniedPath()) == 0
+
+
 def test_admin_compat_stats_delegates_to_same_runtime_collector(monkeypatch):
     from app.api.v1.endpoints import admin_compat
 

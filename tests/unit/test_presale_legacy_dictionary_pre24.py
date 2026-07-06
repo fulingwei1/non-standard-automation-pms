@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """PRE-24: legacy presale dictionaries must be normalized and query-safe."""
 
+from __future__ import annotations
+
 import uuid
 
 from sqlalchemy import create_engine, text

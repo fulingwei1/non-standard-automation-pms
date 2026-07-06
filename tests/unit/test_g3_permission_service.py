@@ -248,30 +248,14 @@ class TestGetUserDataScopes:
 
     def test_returns_highest_scope(self):
         db = MagicMock()
-        role = MagicMock()
-        role.id = 1
+        role_own = MagicMock(is_active=True, data_scope="OWN")
+        role_dept = MagicMock(is_active=True, data_scope="DEPARTMENT")
 
-        from app.models.permission import DataScopeRule, RoleDataScope
-
-        rds1 = MagicMock(spec=RoleDataScope)
-        rds1.resource_type = "project"
-        rds1.scope_rule_id = 1
-        rds1.role_id = 1
-
-        rule1 = MagicMock(spec=DataScopeRule)
-        rule1.scope_type = "DEPARTMENT"
-
-        def db_query_side(model):
-            m = MagicMock()
-            if model is RoleDataScope:
-                m.filter.return_value.all.return_value = [rds1]
-            elif model is DataScopeRule:
-                m.filter.return_value.first.return_value = rule1
-            return m
-
-        db.query.side_effect = db_query_side
-
-        with patch.object(PermissionService, "get_user_effective_roles", return_value=[role]):
+        with patch.object(
+            PermissionService,
+            "get_user_effective_roles",
+            return_value=[role_own, role_dept],
+        ):
             result = PermissionService.get_user_data_scopes(db, user_id=1)
 
         assert "project" in result

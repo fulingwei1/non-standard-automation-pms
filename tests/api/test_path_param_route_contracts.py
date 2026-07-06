@@ -808,30 +808,91 @@ def test_project_change_routes_tolerate_legacy_nulls_and_old_decisions(
         text("SELECT id FROM change_requests WHERE change_code = :code"),
         {"code": f"PP-CHG-{suffix}"},
     ).scalar_one()
+    template_flow = db_session.execute(
+        text(
+            """
+            SELECT t.id AS template_id, f.id AS flow_id
+            FROM approval_templates t
+            JOIN approval_flow_definitions f ON f.template_id = t.id
+            WHERE t.template_code = 'TPL_PROJECT'
+            ORDER BY COALESCE(f.is_default, 0) DESC, f.id
+            LIMIT 1
+            """
+        )
+    ).mappings().one()
     db_session.execute(
         text(
             """
-            INSERT INTO change_approval_records (
-                change_request_id,
-                approver_id,
-                approver_name,
-                decision,
-                approval_date,
+            INSERT INTO approval_instances (
+                instance_no,
+                template_id,
+                flow_id,
+                entity_type,
+                entity_id,
+                initiator_id,
+                initiator_name,
+                form_data,
+                status,
+                title,
+                submitted_at,
                 created_at,
                 updated_at
             )
             VALUES (
+                :instance_no,
+                :template_id,
+                :flow_id,
+                'PROJECT_CHANGE_REQUEST',
                 :change_id,
                 :user_id,
                 '系统管理员',
-                'ch230356',
+                '{"source":"path_param_contract_test"}',
+                'PENDING',
+                '路径参数变更审批',
                 CURRENT_TIMESTAMP,
                 CURRENT_TIMESTAMP,
                 CURRENT_TIMESTAMP
             )
             """
         ),
-        {"change_id": change_id, "user_id": admin.id},
+        {
+            "instance_no": f"PP-CHG-AP-{suffix}",
+            "template_id": template_flow["template_id"],
+            "flow_id": template_flow["flow_id"],
+            "change_id": change_id,
+            "user_id": admin.id,
+        },
+    )
+    instance_id = db_session.execute(
+        text("SELECT id FROM approval_instances WHERE instance_no = :instance_no"),
+        {"instance_no": f"PP-CHG-AP-{suffix}"},
+    ).scalar_one()
+    db_session.execute(
+        text(
+            """
+            INSERT INTO approval_action_logs (
+                instance_id,
+                operator_id,
+                operator_name,
+                action,
+                action_detail,
+                action_at,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                :instance_id,
+                :user_id,
+                '系统管理员',
+                'COMMENT',
+                '{"source":"path_param_contract_test","decision":"ch230356"}',
+                CURRENT_TIMESTAMP,
+                CURRENT_TIMESTAMP,
+                CURRENT_TIMESTAMP
+            )
+            """
+        ),
+        {"instance_id": instance_id, "user_id": admin.id},
     )
     db_session.commit()
 

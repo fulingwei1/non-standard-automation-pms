@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.models.approval import ApprovalInstance, ApprovalTask
-from app.models.sales.invoices import Invoice, InvoiceApproval
+from app.models.sales.invoices import Invoice
 from app.models.user import User
 from app.services.approval_engine.adapters.invoice import InvoiceApprovalAdapter
 
@@ -535,6 +535,12 @@ class TestSubmitForApproval:
         mock_engine_class.assert_not_called()
 
 
+@pytest.mark.skip(
+    reason=(
+        "legacy invoice_approvals sync methods were removed; unified approval_tasks "
+        "and approval_action_logs are now the source of truth"
+    )
+)
 @pytest.mark.unit
 class TestCreateInvoiceApproval:
     """测试创建发票审批记录"""
@@ -620,6 +626,12 @@ class TestCreateInvoiceApproval:
         assert result.approver_name == ""
 
 
+@pytest.mark.skip(
+    reason=(
+        "legacy invoice_approvals sync methods were removed; unified approval_tasks "
+        "and approval_action_logs are now the source of truth"
+    )
+)
 @pytest.mark.unit
 class TestUpdateInvoiceApprovalFromAction:
     """测试更新发票审批记录"""

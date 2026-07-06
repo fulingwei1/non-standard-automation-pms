@@ -377,58 +377,15 @@ class TestDataScopeMerge:
         """多角色时取最大范围：OWN + DEPARTMENT → DEPARTMENT"""
         from app.services.permission_service import PermissionService
 
-        # 模拟两个角色
         role_own = MagicMock()
         role_own.id = 1
+        role_own.is_active = True
+        role_own.data_scope = "OWN"
         role_dept = MagicMock()
         role_dept.id = 2
+        role_dept.is_active = True
+        role_dept.data_scope = "DEPARTMENT"
         mock_get_roles.return_value = [role_own, role_dept]
-
-        # 模拟 RoleDataScope 查询
-        rds_own = MagicMock()
-        rds_own.resource_type = RESOURCE_TYPE
-        rds_own.scope_rule_id = 101
-
-        rds_dept = MagicMock()
-        rds_dept.resource_type = RESOURCE_TYPE
-        rds_dept.scope_rule_id = 102
-
-        rule_own = MagicMock()
-        rule_own.scope_type = "OWN"
-        rule_dept = MagicMock()
-        rule_dept.scope_type = "DEPARTMENT"
-
-        # 设置 db.query 链
-        rds_query = MagicMock()
-        rds_query.filter.return_value = rds_query
-        rds_query.all.return_value = [rds_own, rds_dept]
-
-        rule_query = MagicMock()
-
-        def query_side_effect(model):
-            from app.models.permission import RoleDataScope, DataScopeRule
-            if model is RoleDataScope:
-                return rds_query
-            if model is DataScopeRule:
-                return rule_query
-            return MagicMock()
-
-        self.db.query.side_effect = query_side_effect
-
-        # DataScopeRule 查询
-        def rule_filter_side_effect(*args, **kwargs):
-            mock_filtered = MagicMock()
-            # 根据调用顺序返回不同的 rule
-            if not hasattr(rule_filter_side_effect, '_call_count'):
-                rule_filter_side_effect._call_count = 0
-            rule_filter_side_effect._call_count += 1
-            if rule_filter_side_effect._call_count == 1:
-                mock_filtered.first.return_value = rule_own
-            else:
-                mock_filtered.first.return_value = rule_dept
-            return mock_filtered
-
-        rule_query.filter.side_effect = rule_filter_side_effect
 
         result = PermissionService.get_user_data_scopes(self.db, user_id=1)
         assert result.get(RESOURCE_TYPE) == "DEPARTMENT"

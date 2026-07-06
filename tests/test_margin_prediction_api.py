@@ -5,6 +5,7 @@
 本轮只写测试框架，不跑 SQL 查询
 """
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
@@ -27,6 +28,40 @@ def get_mock_db():
     """创建模拟数据库会话"""
     db = MagicMock()
     return db
+
+
+def make_project(
+    project_id=1,
+    project_name="测试项目",
+    project_code="PJ-TEST-001",
+    product_category="ICT",
+    industry="3C 电子",
+    contract_amount=1000000.0,
+    actual_cost=800000.0,
+    budget_amount=750000.0,
+    stage="S3",
+):
+    return SimpleNamespace(
+        id=project_id,
+        project_name=project_name,
+        project_code=project_code,
+        product_category=product_category,
+        industry=industry,
+        contract_amount=contract_amount,
+        actual_cost=actual_cost,
+        budget_amount=budget_amount,
+        stage=stage,
+    )
+
+
+def mock_project_query(db, projects):
+    query = MagicMock()
+    query.filter.return_value = query
+    query.order_by.return_value = query
+    query.limit.return_value = query
+    query.all.return_value = projects
+    db.query.return_value = query
+    return query
 
 
 class TestMarginPredictionAPI:
@@ -59,10 +94,7 @@ class TestMarginPredictionAPI:
 
     def test_get_historical_margins_empty(self, mock_db):
         """测试空数据返回"""
-        # Mock SQL 返回空结果
-        mock_result = MagicMock()
-        mock_result.fetchall.return_value = []
-        mock_db.execute.return_value = mock_result
+        mock_project_query(mock_db, [])
 
         # 模拟 auth 依赖
         with patch("app.api.v1.endpoints.margin_prediction.security.get_current_active_user") as mock_auth:
@@ -79,37 +111,12 @@ class TestMarginPredictionAPI:
             assert result["historical_summary"]["avg_margin"] == 0
             assert result["projects"] == []
             assert result["by_category"] == []
-            assert result["by_amount_range"] == []
+            assert all(row["count"] == 0 for row in result["by_amount_range"])
 
     def test_get_historical_margins_single_record(self, mock_db):
         """测试单条数据返回"""
-        # Mock 单条项目数据
-        mock_project = MagicMock()
-        mock_project.id = 1
-        mock_project.project_name = "测试项目"
-        mock_project.project_code = "PJ-TEST-001"
-        mock_project.product_category = "ICT"
-        mock_project.industry = "3C 电子"
-        mock_project.contract_amount = 1000000.0
-        mock_project.actual_cost = 800000.0
-        mock_project.gross_margin = 20.0
-        mock_project.stage = "S3"
-
-        # Mock 成本明细
-        mock_cost = MagicMock()
-        mock_cost.cost_type = "材料"
-        mock_cost.total = 400000.0
-
-        # Mock 主查询结果
-        mock_result = MagicMock()
-        mock_result.fetchall.return_value = [mock_project]
-        
-        # Mock 成本查询结果
-        mock_cost_result = MagicMock()
-        mock_cost_result.fetchall.return_value = [mock_cost]
-
-        # 设置 execute 返回不同结果
-        mock_db.execute.side_effect = [mock_result, mock_cost_result]
+        mock_project = make_project()
+        mock_project_query(mock_db, [mock_project])
 
         with patch("app.api.v1.endpoints.margin_prediction.security.get_current_active_user") as mock_auth:
             mock_auth.return_value = get_mock_user()
@@ -126,10 +133,7 @@ class TestMarginPredictionAPI:
 
     def test_predict_margin_basic(self, mock_db):
         """测试预测算法基础功能"""
-        # Mock 用于预测的历史数据
-        mock_material_result = MagicMock()
-        mock_material_result.avg_material_ratio = 50.0
-        mock_db.execute.return_value = mock_material_result
+        mock_project_query(mock_db, [make_project(contract_amount=2800000.0)])
 
         with patch("app.api.v1.endpoints.margin_prediction.security.get_current_active_user") as mock_auth:
             mock_auth.return_value = get_mock_user()
@@ -168,58 +172,12 @@ class TestMarginPredictionAPI:
     def test_aggregate_margins_by_period(self, mock_db):
         """测试数据聚合功能"""
         # Mock 多条项目数据（按不同产品分类和金额区间）
-        mock_projects = []
-        
-        # 项目1: ICT, 150万
-        p1 = MagicMock()
-        p1.id = 1
-        p1.project_name = "ICT项目A"
-        p1.project_code = "PJ-ICT-001"
-        p1.product_category = "ICT"
-        p1.industry = "3C 电子"
-        p1.contract_amount = 1500000.0
-        p1.actual_cost = 1200000.0
-        p1.gross_margin = 20.0
-        p1.stage = "S3"
-        mock_projects.append(p1)
-        
-        # 项目2: ICT, 250万
-        p2 = MagicMock()
-        p2.id = 2
-        p2.project_name = "ICT项目B"
-        p2.project_code = "PJ-ICT-002"
-        p2.product_category = "ICT"
-        p2.industry = "3C 电子"
-        p2.contract_amount = 2500000.0
-        p2.actual_cost = 1875000.0
-        p2.gross_margin = 25.0
-        p2.stage = "S3"
-        mock_projects.append(p2)
-        
-        # 项目3: FCT, 180万
-        p3 = MagicMock()
-        p3.id = 3
-        p3.project_name = "FCT项目A"
-        p3.project_code = "PJ-FCT-001"
-        p3.product_category = "FCT"
-        p3.industry = "锂电"
-        p3.contract_amount = 1800000.0
-        p3.actual_cost = 1260000.0
-        p3.gross_margin = 30.0
-        p3.stage = "S3"
-        mock_projects.append(p3)
-
-        mock_result = MagicMock()
-        mock_result.fetchall.return_value = mock_projects
-        
-        mock_cost_result = MagicMock()
-        mock_cost_result.fetchall.return_value = []
-        
-        # 每个项目需要一次成本查询，共3次，然后是分类聚合
-        mock_db.execute.side_effect = [
-            mock_result,  # 主查询
-            mock_cost_result, mock_cost_result, mock_cost_result,  # 每个项目的成本查询
+        mock_projects = [
+            make_project(1, "ICT项目A", "PJ-ICT-001", "ICT", "3C 电子", 1500000.0, 1200000.0),
+            make_project(2, "ICT项目B", "PJ-ICT-002", "ICT", "3C 电子", 2500000.0, 1875000.0),
+            make_project(3, "FCT项目A", "PJ-FCT-001", "FCT", "锂电", 1800000.0, 1260000.0),
         ]
+        mock_project_query(mock_db, mock_projects)
 
         with patch("app.api.v1.endpoints.margin_prediction.security.get_current_active_user") as mock_auth:
             mock_auth.return_value = get_mock_user()
@@ -248,32 +206,7 @@ class TestMarginPredictionAPI:
 
     def test_predict_margin_with_minimal_input(self, mock_db):
         """测试最少参数预测（使用默认值）"""
-        # Mock 返回默认历史比率
-        mock_material_result = MagicMock()
-        mock_material_result.avg_material_ratio = 50.0
-        
-        mock_rd_result = MagicMock()
-        mock_rd_result.avg_rd_rate = 150.0
-        
-        mock_prod_result = MagicMock()
-        mock_prod_result.avg_prod_labor_ratio = 15.0
-        
-        mock_overhead_result = MagicMock()
-        mock_overhead_result.avg_overhead_ratio = 12.0
-        
-        mock_similar_result = MagicMock()
-        mock_similar_result.fetchall.return_value = []
-        
-        mock_similar_sql_result = MagicMock()
-        mock_similar_sql_result.fetchall.return_value = []
-
-        mock_db.execute.side_effect = [
-            mock_material_result,  # 物料比率
-            mock_rd_result,  # 研发工时费率
-            mock_prod_result,  # 生产人工比率
-            mock_overhead_result,  # 制造费用比率
-            mock_similar_sql_result,  # 相似项目
-        ]
+        mock_project_query(mock_db, [])
 
         with patch("app.api.v1.endpoints.margin_prediction.security.get_current_active_user") as mock_auth:
             mock_auth.return_value = get_mock_user()
@@ -292,30 +225,22 @@ class TestMarginPredictionAPI:
             assert "cost_breakdown" in result
             # 成本结构应该有各个组成项
             cost_items = result["cost_breakdown"]
-            assert "bom_material_cost" in cost_items
-            assert "rd_labor_cost" in cost_items
-            assert "production_labor_cost" in cost_items
-            assert "total_cost" in cost_items
+            labels = {item["label"] for item in cost_items}
+            assert {"材料成本", "研发人工", "生产人工", "制造费用"}.issubset(labels)
+            assert result["prediction"]["predicted_cost"] > 0
 
     def test_cost_variance_analysis(self, mock_db):
         """测试成本偏差分析"""
-        # Mock 成本偏差数据
-        mock_variance_project = MagicMock()
-        mock_variance_project.id = 1
-        mock_variance_project.project_name = "偏差测试项目"
-        mock_variance_project.project_code = "PJ-VAR-001"
-        mock_variance_project.product_category = "ICT"
-        mock_variance_project.contract_amount = 1000000.0
-        mock_variance_project.budget_amount = 800000.0
-        mock_variance_project.actual_cost = 900000.0
-        mock_variance_project.planned_margin = 20.0
-        mock_variance_project.actual_margin = 10.0
-        mock_variance_project.budget_variance_pct = 12.5
-
-        mock_result = MagicMock()
-        mock_result.fetchall.return_value = [mock_variance_project]
-        
-        mock_db.execute.return_value = mock_result
+        mock_variance_project = make_project(
+            project_id=1,
+            project_name="偏差测试项目",
+            project_code="PJ-VAR-001",
+            product_category="ICT",
+            contract_amount=1000000.0,
+            actual_cost=900000.0,
+            budget_amount=800000.0,
+        )
+        mock_project_query(mock_db, [mock_variance_project])
 
         with patch("app.api.v1.endpoints.margin_prediction.security.get_current_active_user") as mock_auth:
             mock_auth.return_value = get_mock_user()
@@ -338,30 +263,7 @@ class TestMarginPredictionEdgeCases:
     def test_predict_margin_zero_amount(self):
         """测试合同金额为0的情况"""
         mock_db = get_mock_db()
-        
-        # Mock 所有需要的 SQL 查询
-        mock_material_result = MagicMock()
-        mock_material_result.avg_material_ratio = 50.0
-        
-        mock_rd_result = MagicMock()
-        mock_rd_result.avg_rd_rate = 150.0
-        
-        mock_prod_result = MagicMock()
-        mock_prod_result.avg_prod_labor_ratio = 15.0
-        
-        mock_overhead_result = MagicMock()
-        mock_overhead_result.avg_overhead_ratio = 12.0
-        
-        mock_similar_result = MagicMock()
-        mock_similar_result.fetchall.return_value = []
-
-        mock_db.execute.side_effect = [
-            mock_material_result,
-            mock_rd_result,
-            mock_prod_result,
-            mock_overhead_result,
-            mock_similar_result
-        ]
+        mock_project_query(mock_db, [])
         
         with patch("app.api.v1.endpoints.margin_prediction.security.get_current_active_user") as mock_auth:
             mock_auth.return_value = get_mock_user()
@@ -377,6 +279,30 @@ class TestMarginPredictionEdgeCases:
             
             # 验证不会崩溃
             assert "prediction" in result
+
+    def test_project_bom_costs_summarizes_material_rows(self):
+        """测试 BOM 成本汇总端点。"""
+        mock_db = get_mock_db()
+        query = MagicMock()
+        query.filter.return_value = query
+        query.all.return_value = [
+            SimpleNamespace(cost_type="MATERIAL", cost_category=None, amount=100000),
+            SimpleNamespace(cost_type="LABOR", cost_category=None, amount=50000),
+            SimpleNamespace(cost_type=None, cost_category="材料", amount=30000),
+        ]
+        mock_db.query.return_value = query
+
+        from app.api.v1.endpoints.margin_prediction import get_project_bom_costs
+
+        result = get_project_bom_costs(
+            project_id=1,
+            db=mock_db,
+            current_user=get_mock_user(),
+        )
+
+        assert result["total_cost"] == 180000
+        assert result["purchased_count"] == 2
+        assert result["unpurchased_count"] == 1
 
     def test_historical_margins_calculation(self):
         """测试毛利率计算逻辑"""

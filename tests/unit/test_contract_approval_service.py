@@ -334,7 +334,7 @@ class TestContractApprovalService(unittest.TestCase):
         self.assertEqual(items[0]["node_name"], "部门经理审批")
 
         self.service.engine.get_pending_tasks.assert_called_once_with(
-            user_id=2, entity_type="CONTRACT"
+            user_id=2, entity_type="CONTRACT", page=1, page_size=100000
         )
 
     def test_get_pending_tasks_with_filters(self):

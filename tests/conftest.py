@@ -123,8 +123,11 @@ def _load_lazy_globals() -> None:
     from app.models.project import Machine as _Machine
     from app.models.project import Project as _Project
     from app.models.project import ProjectMember as _ProjectMember
-    from app.models.task_center import TaskApprovalWorkflow as _TaskApprovalWorkflow
     from app.models.task_center import TaskUnified as _TaskUnified
+    try:
+        from app.models.task_center import TaskApprovalWorkflow as _TaskApprovalWorkflow
+    except ImportError:
+        _TaskApprovalWorkflow = None
     from app.models.user import ApiPermission as _ApiPermission
     from app.models.user import Role as _Role
     from app.models.user import RoleApiPermission as _RoleApiPermission
@@ -167,7 +170,11 @@ try:
         from app.models.base import SessionLocal, get_engine
         from app.models.organization import Employee
         from app.models.project import Customer, Machine, Project, ProjectMember
-        from app.models.task_center import TaskApprovalWorkflow, TaskUnified
+        from app.models.task_center import TaskUnified
+        try:
+            from app.models.task_center import TaskApprovalWorkflow
+        except ImportError:
+            TaskApprovalWorkflow = None
         from app.models.user import (
             ApiPermission,
             Role,
@@ -262,7 +269,11 @@ def _init_test_database() -> None:
     from app.models.organization import Employee
     from app.models.project import Customer, Machine, Project, ProjectMember
     from app.models.project.resource_plan import ProjectStageResourcePlan
-    from app.models.task_center import TaskApprovalWorkflow, TaskUnified
+    from app.models.task_center import TaskUnified
+    try:
+        from app.models.task_center import TaskApprovalWorkflow
+    except ImportError:
+        TaskApprovalWorkflow = None
     from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
     from app.models.vendor import Vendor
 
@@ -1123,14 +1134,15 @@ def mock_important_task(
         approval_status="PENDING_APPROVAL",
         status="PENDING_APPROVAL",
     )
-    workflow = TaskApprovalWorkflow(
-        task_id=task.id,
-        submitted_by=mock_user.id,
-        submit_note="测试任务必要性",
-        approver_id=pm_user.id,
-        approval_status="PENDING",
-    )
-    db_session.add(workflow)
+    if TaskApprovalWorkflow is not None:
+        workflow = TaskApprovalWorkflow(
+            task_id=task.id,
+            submitted_by=mock_user.id,
+            submit_note="测试任务必要性",
+            approver_id=pm_user.id,
+            approval_status="PENDING",
+        )
+        db_session.add(workflow)
     db_session.commit()
     return task
 

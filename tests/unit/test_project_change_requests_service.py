@@ -12,6 +12,7 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from app.models.approval import ApprovalActionLog
 from app.models.change_request import ChangeApprovalRecord, ChangeNotification, ChangeRequest
 from app.models.enums import (
     ApprovalDecisionEnum,
@@ -474,6 +475,46 @@ def test_approve_change_request_approved(service, mock_db, mock_change_request, 
         mock_db.commit.assert_called_once()
 
 
+def test_approve_change_request_records_unified_action_log(
+    service, mock_db, mock_change_request, mock_user
+):
+    """项目变更审批明细写入统一审批日志，不再写旧表"""
+    mock_change_request.status = ChangeStatusEnum.PENDING_APPROVAL
+
+    approval_in = ChangeApprovalRequest(
+        decision=ApprovalDecisionEnum.APPROVED,
+        comments="同意该变更",
+        attachments=[{"name": "review.pdf", "url": "/uploads/review.pdf"}],
+    )
+
+    with (
+        patch("app.services.project_change_requests.service.get_or_404") as mock_get,
+        patch.object(service, "_apply_approved_change_to_project_baseline"),
+        patch.object(
+            service,
+            "_get_or_create_project_change_approval_instance",
+            create=True,
+        ) as mock_instance,
+    ):
+        mock_get.return_value = mock_change_request
+        mock_instance.return_value = MagicMock(id=99, status="PENDING")
+
+        service.approve_change_request(1, approval_in, mock_user)
+
+    added_objects = [call.args[0] for call in mock_db.add.call_args_list]
+    assert not any(isinstance(obj, ChangeApprovalRecord) for obj in added_objects)
+
+    action_logs = [obj for obj in added_objects if isinstance(obj, ApprovalActionLog)]
+    assert len(action_logs) == 1
+    log = action_logs[0]
+    assert log.instance_id == 99
+    assert log.operator_id == mock_user.id
+    assert log.action == "APPROVE"
+    assert log.comment == "同意该变更"
+    assert log.attachments == [{"name": "review.pdf", "url": "/uploads/review.pdf"}]
+    assert log.action_detail["source"] == "project_change_requests.approve_change_request"
+
+
 def test_approve_change_request_rejected(service, mock_db, mock_change_request, mock_user):
     """测试拒绝变更请求"""
     mock_change_request.status = ChangeStatusEnum.PENDING_APPROVAL
@@ -535,21 +576,31 @@ def test_approve_change_request_wrong_status(service, mock_change_request, mock_
 
 def test_get_approval_records_success(service, mock_db, mock_change_request):
     """测试获取审批记录"""
-    mock_record = MagicMock(spec=ChangeApprovalRecord)
+    mock_record = MagicMock(spec=ApprovalActionLog)
     mock_record.id = 1
-    mock_record.decision = ApprovalDecisionEnum.APPROVED
+    mock_record.operator_id = 1
+    mock_record.operator_name = "测试用户"
+    mock_record.action = "APPROVE"
+    mock_record.action_detail = {"decision": "APPROVED", "approver_role": "PM"}
+    mock_record.action_at = datetime(2026, 1, 1, 9, 0, 0)
+    mock_record.comment = "同意"
+    mock_record.attachments = []
+    mock_record.created_at = datetime(2026, 1, 1, 9, 0, 0)
 
     with patch("app.services.project_change_requests.service.get_or_404") as mock_get:
         mock_get.return_value = mock_change_request
 
         mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.all.return_value = [mock_record]
+        mock_query.join.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            (mock_record, 1)
+        ]
         mock_db.query.return_value = mock_query
 
         results = service.get_approval_records(1)
 
         assert len(results) == 1
-        assert results[0].decision == ApprovalDecisionEnum.APPROVED
+        assert results[0]["decision"] == ApprovalDecisionEnum.APPROVED
+        assert results[0]["approver_role"] == "PM"
 
 
 # ============================================================================

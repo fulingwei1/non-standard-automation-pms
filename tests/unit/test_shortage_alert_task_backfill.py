@@ -93,6 +93,8 @@ def test_auto_trigger_task_enabled_and_out_of_stub():
         t for t in SHORTAGE_TASKS if t["id"] == "auto_trigger_urgent_purchase_from_shortage_alerts"
     )
     assert task["enabled"] is True, "PROD-15 已修，自动触发任务应解禁（申请进审批池，人审仍是闸门）"
+    assert "alert_records" in task["dependencies_tables"]
+    assert "mat_shortage_alert" not in task["dependencies_tables"]
 
 
 def test_generate_shortage_daily_report_writes_snapshot(db_session, monkeypatch):

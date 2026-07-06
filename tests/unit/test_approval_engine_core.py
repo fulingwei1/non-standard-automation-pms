@@ -308,6 +308,35 @@ class TestLogAction:
         assert added_log.operator_name is None
         assert added_log.comment is None
 
+    def test_record_action_log_public_write_boundary(self):
+        """测试审批日志公共写入口"""
+        mock_db = MagicMock()
+        service = ApprovalEngineCore(mock_db)
+        action_at = datetime(2026, 7, 5, 10, 30)
+
+        log = service.record_action_log(
+            tenant_id=7,
+            instance_id=100,
+            operator_id=1,
+            action="APPROVE",
+            operator_name="Test User",
+            comment="OK",
+            attachments=[{"name": "review.pdf"}],
+            action_detail={"source": "unit"},
+            before_status="PENDING",
+            after_status="APPROVED",
+            action_at=action_at,
+        )
+
+        mock_db.add.assert_called_once_with(log)
+        assert isinstance(log, ApprovalActionLog)
+        assert log.tenant_id == 7
+        assert log.instance_id == 100
+        assert log.operator_id == 1
+        assert log.action_at == action_at
+        assert log.attachments == [{"name": "review.pdf"}]
+        assert log.action_detail == {"source": "unit"}
+
 
 @pytest.mark.unit
 class TestAdvanceToNextNode:

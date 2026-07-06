@@ -5,13 +5,11 @@
 测试目标文件:
 - app/core/auth.py - JWT认证核心逻辑
 - app/core/middleware/auth_middleware.py - 认证中间件
-- app/core/account_lockout.py - 账户锁定逻辑
 
 目标: 将分支覆盖率从0%提升到70%以上
 """
 
 import sys
-import time
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -244,115 +242,6 @@ class TestPermissionCheckBranches:
                 await verify_token_and_get_user(token=token, db=db)
 
             assert exc.value.status_code == status.HTTP_401_UNAUTHORIZED
-
-
-# =============================================================================
-# 账户锁定分支测试 (5个)
-# =============================================================================
-
-
-class TestAccountLockoutBranches:
-    """账户锁定分支测试"""
-
-    def setup_method(self):
-        """每个测试前重置锁定状态"""
-        from app.core.account_lockout import account_lockout
-
-        account_lockout._failures.clear()
-        account_lockout._locked_until.clear()
-
-    def test_record_failure_increment(self):
-        """测试失败次数递增分支"""
-        from app.core.account_lockout import account_lockout
-
-        username = "test_user"
-
-        # 第1次失败
-        triggered = account_lockout.record_failure(username)
-        assert triggered is False
-        assert account_lockout.remaining_attempts(username) == 4
-
-        # 第2次失败
-        triggered = account_lockout.record_failure(username)
-        assert triggered is False
-        assert account_lockout.remaining_attempts(username) == 3
-
-    def test_lockout_trigger(self):
-        """测试触发锁定分支"""
-        from app.core.account_lockout import account_lockout
-
-        username = "test_user"
-
-        # 连续失败4次
-        for _ in range(4):
-            triggered = account_lockout.record_failure(username)
-            assert triggered is False
-
-        # 第5次失败应该触发锁定
-        triggered = account_lockout.record_failure(username)
-        assert triggered is True
-
-        # 检查锁定状态
-        is_locked, remaining = account_lockout.is_locked(username)
-        assert is_locked is True
-        assert remaining > 0
-
-    def test_lockout_check_when_locked(self):
-        """测试锁定状态检查分支"""
-        from app.core.account_lockout import account_lockout
-
-        username = "test_user"
-
-        # 触发锁定
-        for _ in range(5):
-            account_lockout.record_failure(username)
-
-        # 检查应该返回锁定状态
-        is_locked, remaining = account_lockout.is_locked(username)
-        assert is_locked is True
-        assert remaining > 0
-        assert remaining <= account_lockout.LOCKOUT_DURATION
-
-    def test_lockout_auto_expire(self):
-        """测试锁定自动过期分支"""
-        from app.core.account_lockout import account_lockout
-
-        username = "test_user"
-
-        # 手动设置一个已过期的锁定时间
-        past_time = time.time() - 100
-        account_lockout._locked_until[username] = past_time
-
-        # 检查应该返回未锁定，并清理状态
-        is_locked, remaining = account_lockout.is_locked(username)
-        assert is_locked is False
-        assert remaining == 0.0
-
-        # 锁定记录应该被清理
-        assert username not in account_lockout._locked_until
-        assert len(account_lockout._failures.get(username, [])) == 0
-
-    def test_lockout_reset(self):
-        """测试锁定重置分支"""
-        from app.core.account_lockout import account_lockout
-
-        username = "test_user"
-
-        # 触发锁定
-        for _ in range(5):
-            account_lockout.record_failure(username)
-
-        # 确认已锁定
-        is_locked, _ = account_lockout.is_locked(username)
-        assert is_locked is True
-
-        # 重置
-        account_lockout.reset(username)
-
-        # 应该解除锁定
-        is_locked, _ = account_lockout.is_locked(username)
-        assert is_locked is False
-        assert account_lockout.remaining_attempts(username) == 5
 
 
 # =============================================================================

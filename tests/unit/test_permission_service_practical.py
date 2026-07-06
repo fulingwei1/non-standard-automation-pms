@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 from app.core.security import get_password_hash
 from app.models.base import get_session
 from app.models.organization import Employee
-from app.models.permission import DataScopeRule
 from app.models.user import ApiPermission, Role, RoleApiPermission, User
 from app.services.permission_service import PermissionService
 
@@ -118,19 +117,6 @@ class TestPermissionService:
 
     def test_get_user_permissions_basic(self, db_session: Session, test_user_with_role):
         """测试获取用户基本权限。"""
-
-        # 创建数据范围规则
-        scope_rule = DataScopeRule(
-            rule_name="Test Scope Rule",
-            rule_code="ALL_PROJECTS",
-            scope_type="PROJECT",
-            description="测试：所有项目访问权限",
-            is_active=True,
-        )
-        db_session.add(scope_rule)
-        db_session.commit()
-        db_session.refresh(scope_rule)
-
         # 创建权限
         perm = ApiPermission(
             perm_name="test:project:write",

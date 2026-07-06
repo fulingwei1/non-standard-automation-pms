@@ -171,6 +171,471 @@ class TestCriticalEndpointProtection:
                 f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
             )
 
+    def test_super_admin_dependency_counts_as_permission(self):
+        """deps.require_super_admin 应计入 PERMISSION，避免租户管理误报裸奔。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(str(ROOT / "app/api/v1/endpoints/tenants.py"))
+        tenant_writes = [
+            ep for ep in endpoints if ep["method"] in {"POST", "PUT", "DELETE"}
+        ]
+
+        assert tenant_writes
+        assert all(ep["protection"] == "PERMISSION" for ep in tenant_writes)
+
+    def test_router_level_permission_dependency_counts_for_endpoints(self):
+        """APIRouter(dependencies=[Depends(require_permission(...))]) 应覆盖本文件路由。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/api/v1/endpoints/organization/employees.py")
+        )
+        by_function = {ep["function"]: ep for ep in endpoints}
+
+        assert by_function["read_employees"]["protection"] == "PERMISSION"
+        assert by_function["read_employees"]["perm_code"] == "hr:read"
+        assert by_function["read_employee"]["protection"] == "PERMISSION"
+        assert by_function["read_employee"]["perm_code"] == "hr:read"
+        assert by_function["get_employee_assignments"]["protection"] == "PERMISSION"
+        assert by_function["get_employee_assignments"]["perm_code"] == "hr:read"
+        assert by_function["create_employee"]["perm_code"] == "hr:create"
+
+    def test_backup_admin_endpoints_have_permission(self):
+        """备份/恢复/删除是高危运维动作，必须是 PERMISSION 级别。"""
+        backup_endpoints = self._find_endpoints_in_file("endpoints/backup.py")
+
+        assert backup_endpoints
+        for ep in backup_endpoints:
+            assert ep["protection"] == "PERMISSION", (
+                f"备份端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+
+    def test_company_certification_endpoints_have_permission(self):
+        """公司资质证书接口属于售前资料库，不能无认证/无权限裸露。"""
+        cert_endpoints = self._find_endpoints_in_file("company_certifications.py")
+
+        assert cert_endpoints
+        for ep in cert_endpoints:
+            assert ep["protection"] == "PERMISSION", (
+                f"公司资质证书端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+
+    def test_presale_ai_knowledge_endpoints_have_permission(self):
+        """售前 AI 知识库会读写案例/问答反馈，不能匿名裸露。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(str(ROOT / "app/api/v1/presale_ai_knowledge.py"))
+
+        assert endpoints
+        for ep in endpoints:
+            assert ep["protection"] == "PERMISSION", (
+                f"售前AI知识库端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+
+    def test_presale_ai_emotion_endpoints_have_permission(self):
+        """售前 AI 情绪分析会生成分析/提醒，不能匿名裸露。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(str(ROOT / "app/api/presale_ai_emotion.py"))
+
+        assert endpoints
+        for ep in endpoints:
+            assert ep["protection"] == "PERMISSION", (
+                f"售前AI情绪端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+
+    def test_project_risk_endpoints_use_standard_project_permissions(self):
+        """项目风险 CRUD/扫描应使用已初始化的 project:* 权限码。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/api/v1/endpoints/projects/risks.py")
+        )
+        expected_permissions = {
+            "create_risk": "project:create",
+            "get_risks": "project:read",
+            "get_risk": "project:read",
+            "update_risk": "project:update",
+            "delete_risk": "project:delete",
+            "get_risk_matrix": "project:read",
+            "get_risk_summary": "project:read",
+            "auto_scan_risks": "project:create",
+        }
+
+        by_function = {ep["function"]: ep for ep in endpoints}
+        assert set(expected_permissions).issubset(by_function)
+
+        for function_name, permission_code in expected_permissions.items():
+            ep = by_function[function_name]
+            assert ep["protection"] == "PERMISSION", (
+                f"项目风险端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+            assert ep["perm_code"] == permission_code, (
+                f"项目风险端点权限码不匹配: {function_name} 当前 {ep['perm_code']}，"
+                f"应为 {permission_code}"
+            )
+
+    def test_schedule_optimization_fallback_routes_have_permissions(self):
+        """排程优化 fallback 路由已挂载到主 API，不能裸露自动写动作。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/api/v1/endpoints/schedule_optimization.py")
+        )
+        expected_permissions = {
+            "read_root": "project:read",
+            "get_optimization_analysis": "project:read",
+            "auto_generate_bom": "material:update",
+            "auto_create_purchase": "purchase:create",
+        }
+
+        by_function = {ep["function"]: ep for ep in endpoints}
+        assert set(expected_permissions).issubset(by_function)
+
+        for function_name, permission_code in expected_permissions.items():
+            ep = by_function[function_name]
+            assert ep["protection"] == "PERMISSION", (
+                f"排程优化端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+            assert ep["perm_code"] == permission_code, (
+                f"排程优化端点权限码不匹配: {function_name} 当前 {ep['perm_code']}，"
+                f"应为 {permission_code}"
+            )
+
+    def test_assembly_kit_scheduling_routes_have_write_permissions(self):
+        """齐套排产建议生成/处理会写建议状态，不能裸露或只挂 read 权限。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/api/v1/endpoints/assembly_kit/scheduling.py")
+        )
+        expected_permissions = {
+            "generate_scheduling_suggestions": "assembly_kit:create",
+            "get_scheduling_suggestions": "assembly_kit:read",
+            "accept_suggestion": "assembly_kit:update",
+            "reject_suggestion": "assembly_kit:update",
+        }
+
+        by_function = {ep["function"]: ep for ep in endpoints}
+        assert set(expected_permissions).issubset(by_function)
+
+        for function_name, permission_code in expected_permissions.items():
+            ep = by_function[function_name]
+            assert ep["protection"] == "PERMISSION", (
+                f"齐套排产建议端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+            assert ep["perm_code"] == permission_code, (
+                f"齐套排产建议端点权限码不匹配: {function_name} 当前 {ep['perm_code']}，"
+                f"应为 {permission_code}"
+            )
+
+    def test_production_capacity_calculation_routes_have_manage_permission(self):
+        """OEE/工人效率计算会落库生产记录，必须要求生产管理权限。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/api/v1/endpoints/production/capacity/calculation.py")
+        )
+        expected_permissions = {
+            "calculate_oee": "production:manage",
+            "calculate_worker_efficiency": "production:manage",
+        }
+
+        by_function = {ep["function"]: ep for ep in endpoints}
+        assert set(expected_permissions).issubset(by_function)
+
+        for function_name, permission_code in expected_permissions.items():
+            ep = by_function[function_name]
+            assert ep["protection"] == "PERMISSION", (
+                f"产能计算端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+            assert ep["perm_code"] == permission_code, (
+                f"产能计算端点权限码不匹配: {function_name} 当前 {ep['perm_code']}，"
+                f"应为 {permission_code}"
+            )
+
+    def test_organization_departments_refactored_routes_have_hr_permissions(self):
+        """部门组织架构接口必须使用明确 HR 权限，不能只要求登录。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/api/v1/endpoints/organization/departments_refactored.py")
+        )
+        expected_permissions = {
+            "read_departments": "hr:read",
+            "get_department_tree": "hr:read",
+            "get_department_statistics": "hr:read",
+            "create_department": "hr:create",
+            "read_department": "hr:read",
+            "update_department": "hr:update",
+            "delete_department": "hr:update",
+            "get_department_users": "hr:read",
+        }
+
+        by_function = {ep["function"]: ep for ep in endpoints}
+        assert set(expected_permissions).issubset(by_function)
+
+        for function_name, permission_code in expected_permissions.items():
+            ep = by_function[function_name]
+            assert ep["protection"] == "PERMISSION", (
+                f"部门端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+            assert ep["perm_code"] == permission_code, (
+                f"部门端点权限码不匹配: {function_name} 当前 {ep['perm_code']}，"
+                f"应为 {permission_code}"
+            )
+
+    def test_organization_employee_import_routes_have_hr_permissions(self):
+        """员工批量导入会新增/更新人事数据，必须使用明确 HR 权限。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/api/v1/endpoints/organization/employee_import.py")
+        )
+        expected_permissions = {
+            "import_employees_from_excel": "hr:create",
+            "download_import_template": "hr:read",
+        }
+
+        by_function = {ep["function"]: ep for ep in endpoints}
+        assert set(expected_permissions).issubset(by_function)
+
+        for function_name, permission_code in expected_permissions.items():
+            ep = by_function[function_name]
+            assert ep["protection"] == "PERMISSION", (
+                f"员工导入端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+            assert ep["perm_code"] == permission_code, (
+                f"员工导入端点权限码不匹配: {function_name} 当前 {ep['perm_code']}，"
+                f"应为 {permission_code}"
+            )
+
+    def test_gantt_dependency_routes_have_project_permissions(self):
+        """甘特依赖会读写项目排期关系，不能只有登录态。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/api/v1/endpoints/gantt_dependency.py")
+        )
+        expected_permissions = {
+            "get_gantt_data": "project:read",
+            "add_dependency": "project:update",
+            "delete_dependency": "project:update",
+            "get_critical_path": "project:read",
+        }
+
+        by_function = {ep["function"]: ep for ep in endpoints}
+        assert set(expected_permissions).issubset(by_function)
+
+        for function_name, permission_code in expected_permissions.items():
+            ep = by_function[function_name]
+            assert ep["protection"] == "PERMISSION", (
+                f"甘特依赖端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+            assert ep["perm_code"] == permission_code, (
+                f"甘特依赖端点权限码不匹配: {function_name} 当前 {ep['perm_code']}，"
+                f"应为 {permission_code}"
+            )
+
+    def test_global_milestone_routes_have_milestone_permissions(self):
+        """全局里程碑兼容路由已挂主 API，必须使用 milestone:* 权限。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(str(ROOT / "app/api/v1/endpoints/milestones.py"))
+        expected_permissions = {
+            "list_milestones": "milestone:read",
+            "list_project_milestones_compat": "milestone:read",
+            "get_milestone": "milestone:read",
+            "create_milestone": "milestone:create",
+            "update_milestone": "milestone:update",
+            "complete_milestone": "milestone:update",
+            "delete_milestone": "milestone:delete",
+        }
+
+        by_function = {ep["function"]: ep for ep in endpoints}
+        assert set(expected_permissions).issubset(by_function)
+
+        for function_name, permission_code in expected_permissions.items():
+            ep = by_function[function_name]
+            assert ep["protection"] == "PERMISSION", (
+                f"里程碑端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+            assert ep["perm_code"] == permission_code, (
+                f"里程碑端点权限码不匹配: {function_name} 当前 {ep['perm_code']}，"
+                f"应为 {permission_code}"
+            )
+
+    def test_lessons_learned_compat_routes_have_project_evaluation_permissions(self):
+        """经验教训兼容路由读写 ProjectLesson，应使用项目复盘权限。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/api/v1/endpoints/lessons_learned.py")
+        )
+        expected_permissions = {
+            "list_lessons": "project_evaluation:read",
+            "lesson_stats": "project_evaluation:read",
+            "search_lessons": "project_evaluation:read",
+            "lesson_detail": "project_evaluation:read",
+            "create_lesson": "project_evaluation:create",
+            "update_lesson": "project_evaluation:update",
+            "delete_lesson": "project_evaluation:update",
+        }
+
+        by_function = {ep["function"]: ep for ep in endpoints}
+        assert set(expected_permissions).issubset(by_function)
+
+        for function_name, permission_code in expected_permissions.items():
+            ep = by_function[function_name]
+            assert ep["protection"] == "PERMISSION", (
+                f"经验教训端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+            assert ep["perm_code"] == permission_code, (
+                f"经验教训端点权限码不匹配: {function_name} 当前 {ep['perm_code']}，"
+                f"应为 {permission_code}"
+            )
+
+    def test_engineer_scheduling_routes_have_task_permissions(self):
+        """工程师排产路由会读写任务分配/能力/预警，应使用 task:* 权限。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/api/v1/endpoints/engineer_scheduling.py")
+        )
+        expected_permissions = {
+            "create_assignment": "task:create",
+            "update_assignment": "task:update",
+            "delete_assignment": "task:delete",
+            "get_workload_board": "task:read",
+            "get_engineer_availability": "task:read",
+            "get_engineer_capacity": "task:read",
+            "update_engineer_capacity": "task:update",
+            "analyze_workload": "task:read",
+            "detect_conflicts": "task:read",
+            "generate_warnings": "task:update",
+            "get_scheduling_report": "task:read",
+            "evaluate_ai_capability": "task:read",
+            "update_ai_capability": "task:update",
+            "evaluate_core_capabilities": "task:read",
+            "update_core_capabilities": "task:update",
+        }
+
+        by_function = {ep["function"]: ep for ep in endpoints}
+        assert set(expected_permissions).issubset(by_function)
+
+        for function_name, permission_code in expected_permissions.items():
+            ep = by_function[function_name]
+            assert ep["protection"] == "PERMISSION", (
+                f"工程师排产端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+            assert ep["perm_code"] == permission_code, (
+                f"工程师排产端点权限码不匹配: {function_name} 当前 {ep['perm_code']}，"
+                f"应为 {permission_code}"
+            )
+
+    def test_progress_compat_routes_have_task_permissions(self):
+        """旧进度兼容路由已挂 /progress，任务/WBS/自动处理必须使用 task:* 权限。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/api/v1/endpoints/progress_compat.py")
+        )
+        expected_permissions = {
+            "list_project_tasks": "task:read",
+            "create_project_task": "task:create",
+            "get_task": "task:read",
+            "get_project_progress_forecast": "task:read",
+            "check_project_dependencies": "task:read",
+            "preview_auto_processing": "task:read",
+            "apply_forecast_auto_processing": "task:update",
+            "fix_dependencies_auto_processing": "task:update",
+            "run_complete_auto_processing": "task:update",
+            "batch_auto_process": "task:update",
+            "list_wbs_templates": "task:read",
+            "create_wbs_template": "task:create",
+            "get_wbs_template": "task:read",
+            "update_wbs_template": "task:update",
+            "delete_wbs_template": "task:delete",
+            "list_wbs_template_tasks": "task:read",
+            "create_wbs_template_task": "task:create",
+            "update_wbs_template_task": "task:update",
+            "get_milestone_rate_report": "task:read",
+            "get_delay_reasons_report": "task:read",
+        }
+
+        by_function = {ep["function"]: ep for ep in endpoints}
+        assert set(expected_permissions).issubset(by_function)
+
+        for function_name, permission_code in expected_permissions.items():
+            ep = by_function[function_name]
+            assert ep["protection"] == "PERMISSION", (
+                f"进度兼容端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+            assert ep["perm_code"] == permission_code, (
+                f"进度兼容端点权限码不匹配: {function_name} 当前 {ep['perm_code']}，"
+                f"应为 {permission_code}"
+            )
+
+    def test_admin_compat_routes_have_admin_permissions(self):
+        """行政兼容路由是后台管理面，不能只校验登录态。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/api/v1/endpoints/admin_compat.py")
+        )
+        expected_permissions = {
+            "get_admin_stats": "user:read",
+            "list_supplies": "user:read",
+            "get_supplies_inventory": "user:read",
+            "create_supply_request": "user:create",
+            "approve_supply_request": "user:update",
+            "reject_supply_request": "user:update",
+            "get_supply": "user:read",
+            "list_vehicles": "user:read",
+            "list_available_vehicles": "user:read",
+            "create_vehicle_request": "user:create",
+            "approve_vehicle_request": "user:update",
+            "reject_vehicle_request": "user:update",
+            "get_vehicle": "user:read",
+            "list_assets": "user:read",
+            "get_asset_statistics": "user:read",
+            "create_asset": "user:create",
+            "update_asset": "user:update",
+            "delete_asset": "user:delete",
+            "get_asset": "user:read",
+            "list_expenses": "user:read",
+            "get_expense_statistics": "user:read",
+        }
+
+        by_function = {ep["function"]: ep for ep in endpoints}
+        assert set(expected_permissions).issubset(by_function)
+
+        for function_name, permission_code in expected_permissions.items():
+            ep = by_function[function_name]
+            assert ep["protection"] == "PERMISSION", (
+                f"行政兼容端点缺少权限保护: {ep['method']} {ep['path']} "
+                f"in {ep['file']}:{ep['line']} (当前: {ep['protection']})"
+            )
+            assert ep["perm_code"] == permission_code, (
+                f"行政兼容端点权限码不匹配: {function_name} 当前 {ep['perm_code']}，"
+                f"应为 {permission_code}"
+            )
+
 
 class TestWhitelistMinimality:
     """白名单路由应该尽可能少"""
@@ -199,6 +664,27 @@ class TestWhitelistMinimality:
 
 class TestEndpointScanConsistency:
     """扫描结果内部一致性"""
+
+    def test_unmounted_async_crud_router_factory_is_not_scanned_as_endpoint(self):
+        """未挂载的异步 CRUD route factory 不应污染真实 API 权限风险列表。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/api/v1/endpoints/base_crud_router.py")
+        )
+
+        assert endpoints == []
+
+    def test_lazy_only_material_fusion_files_are_not_scanned_as_strict_endpoints(self):
+        """未挂主应用的 material legacy/lazy 文件不应进入当前严格路由审计。"""
+        from scripts.audit_permission_coverage import extract_endpoints_from_file
+
+        for relative_path in (
+            "app/api/v1/endpoints/material/tracking.py",
+            "app/api/v1/endpoints/material/project_fusion.py",
+        ):
+            endpoints = extract_endpoints_from_file(str(ROOT / relative_path))
+            assert endpoints == []
 
     @pytest.fixture(autouse=True)
     def load_audit(self):

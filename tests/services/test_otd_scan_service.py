@@ -297,7 +297,7 @@ class TestOTDAIAttribution:
                 assert profile["suggestion"] == ""
 
     def test_ai_failure_does_not_break_scan(self, db_session):
-        """AI 调用抛异常时，扫描不应中断，suggestion 为空。"""
+        """AI 调用抛异常时，扫描不应中断，用规则兜底给 suggestion。"""
         from app.models.project.financial import ProjectMilestone
         from app.services.otd import OTDScanService
 
@@ -318,9 +318,12 @@ class TestOTDAIAttribution:
             side_effect=Exception("AI 不可用"),
         ):
             profile = OTDScanService(db_session).scan_project(project.id)
-            # 扫描仍完成，severity 正常，只是 suggestion 为空
+            # 扫描仍完成，severity 正常
             assert profile["severity"] in ("HIGH", "CRITICAL")
-            assert profile["suggestion"] == ""
+            # AI 失败时用规则兜底（top_cause），suggestion 非空
+            assert profile["suggestion"] != ""
+            assert profile["suggestion_source"] == "rule"
+            assert profile["top_cause"] != ""
 
 
 # ============================================================

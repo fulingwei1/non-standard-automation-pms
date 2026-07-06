@@ -23,7 +23,16 @@ class TestThresholdServiceLoad:
 
     def test_get_active_config_returns_default_when_empty(self, db_session):
         """DB 无配置行时，返回代码默认值（内存实例，不报错）。"""
-        from app.services.otd.threshold_service import get_active_config
+        from app.services.otd.threshold_service import (
+            DEFAULT_CONFIG_CODE,
+            get_active_config,
+        )
+
+        # 先清理可能存在的配置行（避免跨文件 DB 状态污染）
+        db_session.query(OtdThresholdConfig).filter(
+            OtdThresholdConfig.code == DEFAULT_CONFIG_CODE
+        ).delete()
+        db_session.commit()
 
         config = get_active_config(db_session)
         # 关键默认值正确
@@ -40,6 +49,12 @@ class TestThresholdServiceLoad:
             DEFAULT_CONFIG_CODE,
             get_active_config,
         )
+
+        # 先清理可能存在的同 code 行（避免跨文件 DB 状态污染）
+        db_session.query(OtdThresholdConfig).filter(
+            OtdThresholdConfig.code == DEFAULT_CONFIG_CODE
+        ).delete()
+        db_session.commit()
 
         # 建一条 DB 配置行，改一个阈值
         cfg = OtdThresholdConfig(

@@ -48,13 +48,16 @@ from app.models.project import (
 from app.models.project.financial import ProjectCost
 from app.models.purchase import PurchaseOrder, PurchaseRequest
 from app.models.sales import (
-    ApprovalWorkflow,
-    ApprovalWorkflowStep,
     Contract,
     Lead,
     Opportunity,
     Quote,
 )
+try:
+    from app.models.sales import ApprovalWorkflow, ApprovalWorkflowStep
+except ImportError:
+    ApprovalWorkflow = None
+    ApprovalWorkflowStep = None
 from app.models.user import Role, User
 from app.models.vendor import Vendor
 
@@ -597,31 +600,32 @@ class AcceptanceOrderFactory(BaseFactory):
 # ============== 审批工作流 ==============
 
 
-class ApprovalWorkflowFactory(BaseFactory):
-    """审批工作流工厂"""
+if ApprovalWorkflow is not None and ApprovalWorkflowStep is not None:
 
-    class Meta:
-        model = ApprovalWorkflow
+    class ApprovalWorkflowFactory(BaseFactory):
+        """审批工作流工厂"""
 
-    workflow_type = "QUOTE"
-    workflow_name = factory.Sequence(lambda n: f"测试审批流程{n}")
-    description = "测试审批工作流描述"
-    is_active = True
+        class Meta:
+            model = ApprovalWorkflow
 
+        workflow_type = "QUOTE"
+        workflow_name = factory.Sequence(lambda n: f"测试审批流程{n}")
+        description = "测试审批工作流描述"
+        is_active = True
 
-class ApprovalWorkflowStepFactory(BaseFactory):
-    """审批工作流步骤工厂"""
+    class ApprovalWorkflowStepFactory(BaseFactory):
+        """审批工作流步骤工厂"""
 
-    class Meta:
-        model = ApprovalWorkflowStep
+        class Meta:
+            model = ApprovalWorkflowStep
 
-    step_order = factory.Sequence(lambda n: n + 1)
-    step_name = factory.Sequence(lambda n: f"审批步骤{n}")
-    approver_role = "MANAGER"
-    is_required = True
-    can_delegate = True
-    can_withdraw = True
-    due_hours = 24
+        step_order = factory.Sequence(lambda n: n + 1)
+        step_name = factory.Sequence(lambda n: f"审批步骤{n}")
+        approver_role = "MANAGER"
+        is_required = True
+        can_delegate = True
+        can_withdraw = True
+        due_hours = 24
 
 
 # ============== 便捷方法 ==============

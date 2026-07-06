@@ -60,21 +60,75 @@ class TestCheckApprovalOverdue:
 
     def test_approval_alert_type(self, db_session):
         """测试审批提醒类型"""
-        from app.models.ecn import Ecn, EcnApproval
+        from app.models.approval import (
+            ApprovalFlowDefinition,
+            ApprovalInstance,
+            ApprovalNodeDefinition,
+            ApprovalTask,
+            ApprovalTemplate,
+        )
+        from app.models.ecn import Ecn
+        from app.models.user import User
         from app.services.ecn.ecn_scheduler import check_approval_overdue
 
         ecn = Ecn(ecn_no="ECN002", ecn_title="测试ECN")
         db_session.add(ecn)
         db_session.flush()
 
-        approval = EcnApproval(
-            ecn_id=ecn.id,
-            approval_level=1,
-            approval_role="部门经理",
-            status="PENDING",
-            due_date=datetime.now() - timedelta(days=2),
+        approver = User(username="ecn_scheduler_approver", password_hash="x", real_name="审批人")
+        db_session.add(approver)
+        db_session.flush()
+
+        template = ApprovalTemplate(
+            template_code="ECN_SCHEDULER_TEST",
+            template_name="ECN调度测试",
+            entity_type="ECN",
+            is_active=True,
         )
-        db_session.add(approval)
+        db_session.add(template)
+        db_session.flush()
+
+        flow = ApprovalFlowDefinition(
+            template_id=template.id,
+            flow_name="ECN调度测试流",
+            is_default=True,
+            is_active=True,
+        )
+        db_session.add(flow)
+        db_session.flush()
+
+        node = ApprovalNodeDefinition(
+            flow_id=flow.id,
+            node_name="部门经理",
+            node_order=1,
+            node_type="APPROVAL",
+            is_active=True,
+        )
+        db_session.add(node)
+        db_session.flush()
+
+        instance = ApprovalInstance(
+            instance_no="AP-ECN-SCHEDULER-TEST",
+            template_id=template.id,
+            flow_id=flow.id,
+            entity_type="ECN",
+            entity_id=ecn.id,
+            initiator_id=approver.id,
+            status="PENDING",
+        )
+        db_session.add(instance)
+        db_session.flush()
+
+        approval_task = ApprovalTask(
+            instance_id=instance.id,
+            node_id=node.id,
+            task_type="APPROVAL",
+            task_order=1,
+            assignee_id=approver.id,
+            status="PENDING",
+            due_at=datetime.now() - timedelta(days=2),
+        )
+        db_session.add(approval_task)
         db_session.flush()
 
         alerts = check_approval_overdue(db_session)
@@ -124,7 +178,7 @@ class TestCheckAllOverdue:
         """测试返回列表"""
         from app.services.ecn.ecn_scheduler import check_all_overdue
 
-        with patch("app.services.ecn_scheduler.get_db_session") as mock_db:
+        with patch("app.services.ecn.ecn_scheduler.get_db_session") as mock_db:
             mock_session = MagicMock()
             mock_db.return_value.__enter__ = MagicMock(return_value=mock_session)
             mock_db.return_value.__exit__ = MagicMock(return_value=False)
@@ -160,7 +214,7 @@ class TestRunEcnScheduler:
         """测试调度器异常处理"""
         from app.services.ecn.ecn_scheduler import run_ecn_scheduler
 
-        with patch("app.services.ecn_scheduler.check_all_overdue") as mock_check:
+        with patch("app.services.ecn.ecn_scheduler.check_all_overdue") as mock_check:
             mock_check.side_effect = Exception("测试异常")
 
             # 不应抛出异常
@@ -170,8 +224,8 @@ class TestRunEcnScheduler:
         """测试有提醒时的调度器"""
         from app.services.ecn.ecn_scheduler import run_ecn_scheduler
 
-        with patch("app.services.ecn_scheduler.check_all_overdue") as mock_check:
-            with patch("app.services.ecn_scheduler.send_overdue_notifications") as mock_send:
+        with patch("app.services.ecn.ecn_scheduler.check_all_overdue") as mock_check:
+            with patch("app.services.ecn.ecn_scheduler.send_overdue_notifications") as mock_send:
                 mock_check.return_value = [{"type": "TEST", "message": "test"}]
 
                 run_ecn_scheduler()

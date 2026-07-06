@@ -10,6 +10,7 @@
 
 import json
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime
 from unittest.mock import MagicMock, call, patch
 
@@ -22,6 +23,7 @@ from app.models.business_support import (
 )
 from app.models.sales import Invoice
 from app.services.business_support_utils.service import BusinessSupportUtilsService
+from app.utils.business_code_generator import reset_business_code_reservations
 
 
 class TestBusinessSupportUtilsServiceInit(unittest.TestCase):
@@ -117,6 +119,7 @@ class TestCodeGenerationMethods(unittest.TestCase):
     """测试编码生成方法"""
 
     def setUp(self):
+        reset_business_code_reservations()
         self.mock_db = MagicMock()
         self.service = BusinessSupportUtilsService(self.mock_db)
 
@@ -155,6 +158,28 @@ class TestCodeGenerationMethods(unittest.TestCase):
         result = self.service.generate_order_no()
 
         self.assertEqual(result, "SO250115-006")
+
+    @patch("app.services.business_support_utils.service.apply_like_filter")
+    @patch("app.services.business_support_utils.service.datetime")
+    def test_generate_order_no_reserves_unique_numbers_for_same_snapshot(
+        self, mock_datetime, mock_apply_like
+    ):
+        """同一数据库快照下并发生成也不能撞号"""
+        mock_datetime.now.return_value = datetime(2025, 1, 15, 10, 30)
+
+        mock_query = MagicMock()
+        mock_query.order_by.return_value.first.return_value = None
+        self.mock_db.query.return_value = mock_query
+        mock_apply_like.side_effect = lambda q, *args, **kwargs: q
+
+        with ThreadPoolExecutor(max_workers=6) as executor:
+            results = list(executor.map(lambda _: self.service.generate_order_no(), range(6)))
+
+        self.assertEqual(len(set(results)), 6)
+        self.assertEqual(
+            sorted(results),
+            [f"SO250115-{seq:03d}" for seq in range(1, 7)],
+        )
 
     @patch("app.services.business_support_utils.service.apply_like_filter")
     @patch("app.services.business_support_utils.service.datetime")

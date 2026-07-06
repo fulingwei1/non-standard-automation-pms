@@ -19,8 +19,6 @@ from app.models.user import User, Role, UserRole, ApiPermission, RoleApiPermissi
 from app.models.permission import (
     MenuPermission,
     RoleMenu,
-    DataScopeRule,
-    RoleDataScope,
 )
 from app.models.organization import (
     Department,
@@ -483,28 +481,16 @@ class TestPermissionServiceBranches:
         db_session.add(user)
         db_session.flush()
 
-        role = Role(role_code="DATA_ROLE", role_name="Data Role", is_active=True)
+        role = Role(
+            role_code="DATA_ROLE",
+            role_name="Data Role",
+            data_scope="ALL",
+            is_active=True,
+        )
         db_session.add(role)
         db_session.flush()
 
         db_session.add(UserRole(user_id=user.id, role_id=role.id))
-
-        scope_rule = DataScopeRule(
-            rule_name="All Data",
-            scope_type="ALL",
-            description="All data scope",
-        )
-        db_session.add(scope_rule)
-        db_session.flush()
-
-        db_session.add(
-            RoleDataScope(
-                role_id=role.id,
-                resource_type="project",
-                scope_rule_id=scope_rule.id,
-                is_active=True,
-            )
-        )
         db_session.flush()
 
         scopes = PermissionService.get_user_data_scopes(db_session, user.id)
@@ -516,36 +502,23 @@ class TestPermissionServiceBranches:
         db_session.add(user)
         db_session.flush()
 
-        role1 = Role(role_code="SCOPE_ROLE1", role_name="Scope Role 1", is_active=True)
-        role2 = Role(role_code="SCOPE_ROLE2", role_name="Scope Role 2", is_active=True)
+        role1 = Role(
+            role_code="SCOPE_ROLE1",
+            role_name="Scope Role 1",
+            data_scope="OWN",
+            is_active=True,
+        )
+        role2 = Role(
+            role_code="SCOPE_ROLE2",
+            role_name="Scope Role 2",
+            data_scope="DEPARTMENT",
+            is_active=True,
+        )
         db_session.add_all([role1, role2])
         db_session.flush()
 
         db_session.add(UserRole(user_id=user.id, role_id=role1.id))
         db_session.add(UserRole(user_id=user.id, role_id=role2.id))
-
-        # 创建两个范围规则: OWN < DEPARTMENT
-        scope_own = DataScopeRule(rule_name="Own", scope_type="OWN")
-        scope_dept = DataScopeRule(rule_name="Department", scope_type="DEPARTMENT")
-        db_session.add_all([scope_own, scope_dept])
-        db_session.flush()
-
-        db_session.add(
-            RoleDataScope(
-                role_id=role1.id,
-                resource_type="timesheet",
-                scope_rule_id=scope_own.id,
-                is_active=True,
-            )
-        )
-        db_session.add(
-            RoleDataScope(
-                role_id=role2.id,
-                resource_type="timesheet",
-                scope_rule_id=scope_dept.id,
-                is_active=True,
-            )
-        )
         db_session.flush()
 
         scopes = PermissionService.get_user_data_scopes(db_session, user.id)

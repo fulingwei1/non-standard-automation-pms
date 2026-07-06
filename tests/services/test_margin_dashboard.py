@@ -219,3 +219,198 @@ class TestMarginTrend:
         assert len(result["dates"]) == 6
         assert 22.0 in result["current_margin_rate"]  # 有快照天
         assert None in result["current_margin_rate"]  # 无快照天
+
+
+# ============================================================
+# batch_margin_analysis（N+1 修复后的批量接口）
+# ============================================================
+
+
+class TestBatchMarginAnalysis:
+    def test_batch_returns_all_projects(self, db_session):
+        """batch_margin_analysis 一次性返回所有活跃项目。"""
+        from app.services.profit_analysis_service import ProfitAnalysisService
+
+        _make_project(db_session, "MARGIN-BATCH-1", contract=100000)
+        _make_project(db_session, "MARGIN-BATCH-2", contract=200000)
+
+        with patch(
+            "app.services.profit_analysis_service.ProfitAnalysisService._get_actual_cost",
+            return_value=50000,
+        ):
+            results = ProfitAnalysisService(db_session).batch_margin_analysis()
+
+        assert len(results) >= 2
+        codes = {r["project_code"] for r in results}
+        assert "MARGIN-BATCH-1" in codes
+        for r in results:
+            assert "current_margin_rate" in r
+            assert "health" in r
+
+    def test_batch_skips_zero_contract(self, db_session):
+        from app.services.profit_analysis_service import ProfitAnalysisService
+
+        _make_project(db_session, "MARGIN-BATCH-ZERO", contract=0)
+        results = ProfitAnalysisService(db_session).batch_margin_analysis()
+        codes = {r["project_code"] for r in results}
+        assert "MARGIN-BATCH-ZERO" not in codes
+
+    def test_batch_margin_rate_correctness(self, db_session):
+        """批量算的毛利率与单项目一致（同口径）。"""
+        from app.models.project.financial import ProjectCost
+        from app.services.profit_analysis_service import ProfitAnalysisService
+
+        project = _make_project(db_session, "MARGIN-BATCH-CMP", contract=100000)
+        db_session.add(
+            ProjectCost(project_id=project.id, cost_type="MATERIAL", amount=60000)
+        )
+        db_session.flush()
+
+        service = ProfitAnalysisService(db_session)
+        single = service.get_margin_analysis(project.id)
+        batch = service.batch_margin_analysis()
+        batch_item = next(
+            r for r in batch if r["project_code"] == "MARGIN-BATCH-CMP"
+        )
+        assert float(single["current_margin_rate"]) == float(
+            batch_item["current_margin_rate"]
+        )
+
+
+class TestBatchCreateSnapshots:
+    def test_batch_snapshots_created(self, db_session):
+        from app.services.dashboard.margin_trend_service import MarginTrendService
+
+        _make_project(db_session, "MARGIN-BSNAP-1", contract=100000)
+        _make_project(db_session, "MARGIN-BSNAP-2", contract=200000)
+
+        with patch(
+            "app.services.profit_analysis_service.ProfitAnalysisService._get_actual_cost",
+            return_value=40000,
+        ):
+            result = MarginTrendService(db_session).batch_create_snapshots()
+        assert result["created"] >= 2
+
+        with patch(
+            "app.services.profit_analysis_service.ProfitAnalysisService._get_actual_cost",
+            return_value=40000,
+        ):
+            result2 = MarginTrendService(db_session).batch_create_snapshots()
+        assert result2["created"] == 0  # 幂等
+
+
+class TestDashboardSummary:
+    def test_summary_structure(self, db_session):
+        from app.services.dashboard.margin_dashboard_service import (
+            MarginDashboardService,
+        )
+
+        result = MarginDashboardService(db_session).get_dashboard()
+        s = result["summary"]
+        assert (
+            s["healthy_count"] + s["warning_count"] + s["critical_count"]
+            == s["total_projects"]
+        )
+
+
+class TestTrendColdStart:
+    def test_needs_backfill_when_empty(self, db_session):
+        """快照数 < days 时 needs_backfill=True，hint 引导。"""
+        from app.services.dashboard.margin_trend_service import MarginTrendService
+
+        # 用大 days 确保快照数 < days（即使有累积数据）
+        result = MarginTrendService(db_session).get_global_trend(days=365)
+        assert result["needs_backfill"] is True  # 不可能有 365 天快照
+        assert result["hint"] is not None
+        assert "backfill" in result["hint"]
+
+    def test_needs_backfill_false_when_enough(self, db_session):
+        from app.services.dashboard.margin_trend_service import MarginTrendService
+
+        project = _make_project(db_session, "MARGIN-COLD-FILL")
+        db_session.add(
+            ProjectMarginSnapshot(
+                project_id=project.id,
+                snapshot_date=date.today(),
+                current_margin_rate=28.0,
+                health="healthy",
+            )
+        )
+        db_session.commit()
+        result = MarginTrendService(db_session).get_global_trend(days=1)
+        assert result["needs_backfill"] is False
+
+
+# ============================================================
+# 项目等级毛利率底线（手册 Sheet9 红线）
+# ============================================================
+
+
+class TestProjectLevelMargin:
+    """项目等级 S/A/B/C 对应不同毛利率底线。"""
+
+    def test_target_margin_by_level(self, db_session):
+        """S=40 / A=35 / B=30 / C=25，无等级=25。"""
+        from app.services.dashboard.margin_level_service import get_target_margin
+
+        assert get_target_margin(db_session, "S") == 40.0
+        assert get_target_margin(db_session, "A") == 35.0
+        assert get_target_margin(db_session, "B") == 30.0
+        assert get_target_margin(db_session, "C") == 25.0
+        assert get_target_margin(db_session, None) == 25.0
+
+    def test_margin_floor_by_level(self, db_session):
+        """底线：S=30 / C=20。"""
+        from app.services.dashboard.margin_level_service import get_margin_floor
+
+        assert get_margin_floor(db_session, "S") == 30.0
+        assert get_margin_floor(db_session, "C") == 20.0
+
+    def test_ensure_default_levels_initializes(self, db_session):
+        """首次运行自动初始化手册红线到 DB。"""
+        from app.models.sales.margin_alert import MarginAlertConfig
+        from app.services.dashboard.margin_level_service import ensure_default_levels
+
+        # 清理可能存在的
+        db_session.query(MarginAlertConfig).filter(
+            MarginAlertConfig.code.like("PROJECT_LEVEL_%")
+        ).delete()
+        db_session.commit()
+
+        created = ensure_default_levels(db_session)
+        assert created == 4  # S/A/B/C
+
+        # 幂等：再跑不新增
+        created2 = ensure_default_levels(db_session)
+        assert created2 == 0
+
+    def test_get_margin_analysis_uses_level(self, db_session):
+        """get_margin_analysis 按项目等级取 target_margin。"""
+        from app.services.profit_analysis_service import ProfitAnalysisService
+
+        project = _make_project(db_session, "MARGIN-LEVEL-S", contract=100000)
+        project.project_level = "S"
+        db_session.commit()
+
+        a = ProfitAnalysisService(db_session).get_margin_analysis(project.id)
+        assert a["target_margin_rate"] == 40.0  # S 级
+
+        project.project_level = "C"
+        db_session.commit()
+        a2 = ProfitAnalysisService(db_session).get_margin_analysis(project.id)
+        assert a2["target_margin_rate"] == 25.0  # C 级
+
+    def test_batch_margin_includes_level(self, db_session):
+        """batch_margin_analysis 返回里带 project_level。"""
+        from app.services.profit_analysis_service import ProfitAnalysisService
+
+        project = _make_project(db_session, "MARGIN-BATCH-LVL", contract=100000)
+        project.project_level = "A"
+        db_session.commit()
+
+        results = ProfitAnalysisService(db_session).batch_margin_analysis()
+        item = next(
+            r for r in results if r["project_code"] == "MARGIN-BATCH-LVL"
+        )
+        assert item["project_level"] == "A"
+        assert item["target_margin_rate"] == 35.0  # A 级

@@ -645,5 +645,25 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
         self.assertEqual(self.adapter.entity_type, "QUOTE")
 
 
+_LEGACY_SYNC_SKIP_REASON = (
+    "legacy quote_approvals sync methods were removed; unified approval_tasks "
+    "and approval_action_logs are now the source of truth"
+)
+for _legacy_test_name in (
+    "test_create_quote_approval_new",
+    "test_create_quote_approval_existing",
+    "test_update_quote_approval_approve",
+    "test_update_quote_approval_reject",
+    "test_update_quote_approval_not_found",
+):
+    setattr(
+        TestQuoteApprovalAdapter,
+        _legacy_test_name,
+        unittest.skip(_LEGACY_SYNC_SKIP_REASON)(
+            getattr(TestQuoteApprovalAdapter, _legacy_test_name)
+        ),
+    )
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -135,6 +135,34 @@ class TestValidateFileSize(unittest.TestCase):
         self.assertEqual(error, "文件大小无效")
 
 
+class TestValidateFileContent(unittest.TestCase):
+    """测试文件内容签名验证"""
+
+    def setUp(self):
+        self.service = FileUploadService(upload_dir=Path("/tmp"))
+
+    def test_pdf_content_matches_extension(self):
+        """PDF 扩展名必须有 PDF 文件头"""
+        is_valid, error = self.service.validate_file_content(b"%PDF-1.7\nbody", "quote.pdf")
+        self.assertTrue(is_valid)
+        self.assertIsNone(error)
+
+    def test_pdf_extension_rejects_executable_content(self):
+        """禁止把 exe 内容伪装成 PDF 上传"""
+        is_valid, error = self.service.validate_file_content(b"MZ\x90\x00payload", "quote.pdf")
+        self.assertFalse(is_valid)
+        self.assertIn("文件内容与扩展名不匹配", error)
+
+    def test_text_file_rejects_html_script_content(self):
+        """txt 文件不能伪装上传 HTML/脚本内容"""
+        is_valid, error = self.service.validate_file_content(
+            b"<html><script>alert(1)</script></html>",
+            "note.txt",
+        )
+        self.assertFalse(is_valid)
+        self.assertIn("HTML", error)
+
+
 class TestCheckUserQuota(unittest.TestCase):
     """测试用户配额检查"""
 

@@ -17,7 +17,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from app.models.approval.instance import ApprovalInstance
 from app.models.approval.task import ApprovalTask
-from app.models.sales.invoices import Invoice, InvoiceApproval
+from app.models.sales.invoices import Invoice
 from app.models.user import User
 from app.services.approval_engine.adapters.invoice import InvoiceApprovalAdapter
 
@@ -694,6 +694,28 @@ class TestInvoiceApprovalAdapter(unittest.TestCase):
 
         self.assertFalse(valid)
         self.assertEqual(message, "请填写购买方名称")
+
+
+_LEGACY_SYNC_SKIP_REASON = (
+    "legacy invoice_approvals sync methods were removed; unified approval_tasks "
+    "and approval_action_logs are now the source of truth"
+)
+for _legacy_test_name in (
+    "test_create_invoice_approval_new",
+    "test_create_invoice_approval_existing",
+    "test_create_invoice_approval_no_assignee",
+    "test_update_invoice_approval_approve",
+    "test_update_invoice_approval_reject",
+    "test_update_invoice_approval_not_found",
+    "test_update_invoice_approval_unknown_action",
+):
+    setattr(
+        TestInvoiceApprovalAdapter,
+        _legacy_test_name,
+        unittest.skip(_LEGACY_SYNC_SKIP_REASON)(
+            getattr(TestInvoiceApprovalAdapter, _legacy_test_name)
+        ),
+    )
 
 
 if __name__ == "__main__":

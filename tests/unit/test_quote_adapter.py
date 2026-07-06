@@ -566,6 +566,10 @@ class TestQuoteApprovalAdapterSubmitForApproval(unittest.TestCase):
         self.assertIsNone(form_data["status"])
 
 
+@unittest.skip(
+    "legacy quote_approvals sync methods were removed; unified approval_tasks "
+    "and approval_action_logs are now the source of truth"
+)
 class TestQuoteApprovalAdapterCreateQuoteApproval(unittest.TestCase):
     """测试创建报价审批记录"""
 
@@ -681,6 +685,10 @@ class TestQuoteApprovalAdapterCreateQuoteApproval(unittest.TestCase):
         self.assertEqual(call_args[1]["approver_name"], "")
 
 
+@unittest.skip(
+    "legacy quote_approvals sync methods were removed; unified approval_tasks "
+    "and approval_action_logs are now the source of truth"
+)
 class TestQuoteApprovalAdapterUpdateQuoteApproval(unittest.TestCase):
     """测试更新报价审批记录"""
 

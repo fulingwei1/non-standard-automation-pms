@@ -8,12 +8,15 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
+from sqlalchemy import text
 
+from app.models.presale import PresaleSolutionTemplate
 from app.schemas.presale_ai_solution import (
     SolutionGenerationRequest,
     TemplateMatchRequest,
 )
 from app.services.presale.presale_ai_service import PresaleAIService
+from app.services.presale.ammo_library_service import AmmoLibraryService
 
 # ============================================================
 # Helper factory
@@ -24,9 +27,20 @@ def _make_service():
     db = MagicMock()
     mock_ai = MagicMock()
     with patch("app.services.presale.presale_ai_service.AIClientService", return_value=mock_ai):
-        svc = PresaleAIService(db_session)
+        svc = PresaleAIService(db)
         svc.ai_client = mock_ai
+        svc.embedding_model = None
+        svc.use_semantic_search = False
     return svc, db, mock_ai
+
+
+def _make_light_service(db):
+    svc = PresaleAIService.__new__(PresaleAIService)
+    svc.db = db
+    svc.ai_client = MagicMock()
+    svc.embedding_model = None
+    svc.use_semantic_search = False
+    return svc
 
 
 def _make_template(**kwargs):
@@ -35,11 +49,17 @@ def _make_template(**kwargs):
     t.name = kwargs.get("name", "标准模板")
     t.industry = kwargs.get("industry", "汽车")
     t.equipment_type = kwargs.get("equipment_type", "机器人")
+    t.test_type = kwargs.get("test_type", t.equipment_type)
     t.keywords = kwargs.get("keywords", "机器人 装配 汽车")
     t.usage_count = kwargs.get("usage_count", 10)
+    t.use_count = kwargs.get("use_count", t.usage_count)
     t.avg_quality_score = kwargs.get("avg_quality_score", Decimal("0.85"))
     t.is_active = kwargs.get("is_active", 1)
     t.solution_content = kwargs.get("solution_content", {"description": "模板内容"})
+    t.content_template = kwargs.get(
+        "content_template",
+        json.dumps(t.solution_content, ensure_ascii=False),
+    )
     return t
 
 
@@ -59,7 +79,7 @@ class TestCalculateSimilarity:
     def test_identical_texts(self):
         svc, db, _ = _make_service()
         score = svc._calculate_similarity("机器人 装配", "机器人 装配")
-        assert score == 1.0
+        assert score == pytest.approx(1.0)
 
     def test_no_overlap(self):
         svc, db, _ = _make_service()
@@ -83,6 +103,78 @@ class TestCalculateSimilarity:
 
 
 class TestMatchTemplates:
+    def test_match_templates_uses_canonical_presale_solution_template(self, db_session):
+        """AI模板匹配入口不再依赖 presale_solution_templates 旧表。"""
+        db_session.execute(text("DROP TABLE IF EXISTS presale_solution_templates"))
+        template = PresaleSolutionTemplate(
+            template_no="PAI-CANON-001",
+            name="FCT整机测试模板",
+            industry="家电",
+            test_type="FCT测试",
+            description="机器人 装配 追溯",
+            content_template='{"description": "正式模板内容"}',
+            use_count=7,
+            is_active=True,
+        )
+        db_session.add(template)
+        db_session.commit()
+
+        svc = _make_light_service(db_session)
+        req = TemplateMatchRequest(
+            presale_ticket_id=1,
+            industry="家电",
+            equipment_type="FCT测试",
+            keywords="机器人 装配",
+            top_k=1,
+        )
+
+        items, _ = svc.match_templates(req, user_id=1)
+
+        assert len(items) == 1
+        assert items[0].template_id == template.id
+        assert items[0].template_name == "FCT整机测试模板"
+        assert items[0].equipment_type == "FCT测试"
+        assert items[0].usage_count == 7
+
+    def test_ammo_library_uses_canonical_presale_solution_template(self, db_session):
+        """弹药库方案推荐读取正式单数表，旧复数表可删除。"""
+        db_session.execute(text("DROP TABLE IF EXISTS presale_solution_templates"))
+        template = PresaleSolutionTemplate(
+            template_no="AMMO-CANON-001",
+            name="EOL下线测试模板",
+            industry="汽车",
+            test_type="EOL测试",
+            description="新能源 下线测试",
+            content_template='{"description": "EOL正式模板"}',
+            cost_template={"typical_cost_range_min": 100000, "typical_cost_range_max": 200000},
+            use_count=3,
+            is_active=True,
+        )
+        db_session.add(template)
+        db_session.commit()
+
+        rows = AmmoLibraryService(db_session)._search_solution_templates(
+            industry="汽车",
+            equipment_type="EOL测试",
+            top_k=3,
+        )
+
+        assert rows == [
+            {
+                "id": template.id,
+                "name": "EOL下线测试模板",
+                "code": "AMMO-CANON-001",
+                "industry": "汽车",
+                "equipment_type": "EOL测试",
+                "complexity_level": None,
+                "typical_cost_range_min": 100000.0,
+                "typical_cost_range_max": 200000.0,
+                "success_rate": None,
+                "usage_count": 3,
+                "is_active": 1,
+            }
+        ]
+
     def test_match_templates_no_templates(self):
         """没有模板时返回空列表"""
         svc, db, _ = _make_service()
