@@ -12,8 +12,8 @@ def read_file_lines(file_path):
 
 
 def main():
-    source_file = Path("/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/presale.py")
-    output_dir = Path("/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/presale")
+    source_file = Path("/Users/flw/non-standard-automation-pm/app/modules/presale/api.py")
+    output_dir = Path("/Users/flw/non-standard-automation-pm/app/modules/presale/api")
 
     print("📖 读取 presale.py (1798行)...")
     lines = read_file_lines(source_file)

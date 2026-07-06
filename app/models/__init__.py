@@ -102,7 +102,6 @@ from .presale_ai_requirement_analysis import PresaleAIRequirementAnalysis  # noq
 from .presale_ai_solution import (  # noqa: F401
     PresaleAIGenerationLog,
     PresaleAISolution,
-    PresaleAISolutionTemplate,
 )
 from .presale_emotion_trend import PresaleEmotionTrend  # noqa: F401
 from .presale_expense import PresaleExpense  # noqa: F401
@@ -719,3 +718,29 @@ except Exception:
     import logging
 
     logging.getLogger(__name__).debug("SQLite 模型导出后 schema 补丁跳过", exc_info=True)
+
+
+# ---- P2 模块化：presale 模型已迁至 app/modules/presale/models ----
+# 为避免 exports 聚合层与模块包的 import 循环，这里用 PEP 562 惰性提供，
+# `from app.models import PresaleSolution` 等旧用法不受影响。
+_PRESALE_LAZY = {
+    "PresaleAISolutionTemplate",
+    "PresaleCustomerTechProfile",
+    "PresaleSolution",
+    "PresaleSolutionCost",
+    "PresaleSolutionTemplate",
+    "PresaleSupportTicket",
+    "PresaleTenderRecord",
+    "PresaleTicketDeliverable",
+    "PresaleTicketProgress",
+    "PresaleWorkload",
+}
+
+
+def __getattr__(name):
+    if name in _PRESALE_LAZY:
+        from app.modules.presale import models as _presale_models
+        # 旧别名：PresaleAISolutionTemplate 即模块包内的 PresaleSolutionTemplate
+        target = "PresaleSolutionTemplate" if name == "PresaleAISolutionTemplate" else name
+        return getattr(_presale_models, target)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

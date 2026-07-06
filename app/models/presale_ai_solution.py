@@ -9,7 +9,6 @@ from sqlalchemy import DECIMAL, JSON, Column, DateTime, ForeignKey, Index, Integ
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base
-from app.models.presale import PresaleSolutionTemplate as PresaleAISolutionTemplate
 
 
 class PresaleAISolution(Base):
@@ -125,4 +124,11 @@ class PresaleAIGenerationLog(Base):
 
 
 # Backward-compatible alias
-PresaleSolutionTemplate = PresaleAISolutionTemplate
+
+
+def __getattr__(name):
+    # P2 模块化：模板类已迁至 app/modules/presale/models，惰性提供避免 import 循环
+    if name in ("PresaleAISolutionTemplate", "PresaleSolutionTemplate"):
+        from app.modules.presale.models import PresaleSolutionTemplate as _t
+        return _t
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

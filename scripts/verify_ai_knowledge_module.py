@@ -66,7 +66,7 @@ except Exception as e:
 # 4. 验证API路由导入
 print("\n4. 验证API路由...")
 try:
-    from app.api.v1.presale_ai_knowledge import router
+    from app.modules.presale.api.presale_ai_knowledge import router
 
     print("   ✅ API Router 导入成功")
 

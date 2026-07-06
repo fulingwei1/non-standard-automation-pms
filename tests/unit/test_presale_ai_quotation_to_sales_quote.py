@@ -22,7 +22,7 @@ def _suffix() -> str:
 
 
 def test_promote_ai_quotation_route_registered():
-    from app.api.v1.presale_ai_quotation import router
+    from app.modules.presale.api.presale_ai_quotation import router
 
     assert any(
         route.path == "/presale/ai/quotation/{quotation_id}/promote-to-sales-quote"

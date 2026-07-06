@@ -16,7 +16,7 @@ def _auth_headers(token: str) -> dict:
 @pytest.mark.asyncio
 async def test_analyze_emotion_endpoint(client: TestClient, admin_token: str):
     """测试情绪分析API端点"""
-    with patch("app.api.presale_ai_emotion.AIEmotionService") as MockService:
+    with patch("app.modules.presale.api.presale_ai_emotion.AIEmotionService") as MockService:
         mock_service = MockService.return_value
         mock_result = Mock()
         mock_result.id = 1

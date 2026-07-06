@@ -1,44 +1,19 @@
 # -*- coding: utf-8 -*-
+"""兼容旧导入路径：实现已迁至 app.modules.presale.api（P2 模块化，一个迭代周期后删除本 shim）。
+
+将新包及其全部子模块别名到旧路径，避免同一文件在两个模块名下被二次执行
+（否则 ORM 表会重复注册）。
 """
-售前管理 API - 模块化结构
-"""
+import importlib
+import pkgutil
+import sys
 
-from fastapi import APIRouter
+_impl = importlib.import_module("app.modules.presale.api")
+sys.modules[__name__] = _impl
 
-from .analytics import router as analytics_router
-from .bids import router as bids_router
-from .dashboard import router as dashboard_router
-from .expenses import router as expenses_router
-from .forecast import router as forecast_router
-from .proposals import router as proposals_router
-from .solution_compare import router as solution_compare_router
-from .statistics import router as statistics_router
-from .task_management import router as task_management_router
-from .templates import router as templates_router
-from .technical_parameters import router as technical_parameters_router
-from .tickets import router as tickets_router
-from .workbench import router as workbench_router
-
-router = APIRouter()
-
-router.include_router(
-    tickets_router, prefix="/tickets", tags=["presale-tickets"]
-)  # 移除/presale前缀
-router.include_router(proposals_router)
-router.include_router(templates_router)
-router.include_router(
-    technical_parameters_router,
-    prefix="/technical-parameters",
-    tags=["presale-technical-parameters"],
-)
-router.include_router(bids_router, tags=["presale-bids"])  # 移除/presale前缀
-router.include_router(statistics_router)
-router.include_router(analytics_router)
-router.include_router(dashboard_router)
-router.include_router(task_management_router)
-router.include_router(expenses_router)
-router.include_router(solution_compare_router)
-router.include_router(forecast_router)
-router.include_router(workbench_router, prefix="/workbench", tags=["presale-workbench"])
-
-__all__ = ["router"]
+for _m in pkgutil.walk_packages(_impl.__path__, prefix="app.modules.presale.api."):
+    try:
+        _mod = importlib.import_module(_m.name)
+    except Exception:  # 子模块自身的可选依赖问题不应破坏别名层
+        continue
+    sys.modules[_m.name.replace("app.modules.presale.api", "app.api.v1.endpoints.presale")] = _mod

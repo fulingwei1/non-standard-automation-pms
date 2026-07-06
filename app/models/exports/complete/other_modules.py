@@ -114,19 +114,6 @@ from ...pmo import (
     PmoResourceAllocation,
 )
 
-# 售前支持
-from ...presale import (
-    PresaleCustomerTechProfile,
-    PresaleSolution,
-    PresaleSolutionCost,
-    PresaleSolutionTemplate,
-    PresaleSupportTicket,
-    PresaleTenderRecord,
-    PresaleTicketDeliverable,
-    PresaleTicketProgress,
-    PresaleWorkload,
-)
-
 # 售前费用
 from ...presale_expense import PresaleExpense
 
@@ -329,15 +316,6 @@ __all__ = [
     "ResourceType",
     # Pipeline Analysis
     # Presale
-    "PresaleSupportTicket",
-    "PresaleTicketDeliverable",
-    "PresaleTicketProgress",
-    "PresaleSolution",
-    "PresaleSolutionCost",
-    "PresaleSolutionTemplate",
-    "PresaleWorkload",
-    "PresaleCustomerTechProfile",
-    "PresaleTenderRecord",
     # Presale Expense
     "PresaleExpense",
     # Report Center

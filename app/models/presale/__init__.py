@@ -1,57 +1,19 @@
 # -*- coding: utf-8 -*-
+"""兼容旧导入路径：实现已迁至 app.modules.presale.models（P2 模块化，一个迭代周期后删除本 shim）。
+
+将新包及其全部子模块别名到旧路径，避免同一文件在两个模块名下被二次执行
+（否则 ORM 表会重复注册）。
 """
-售前管理模块 - 按业务域聚合
-"""
+import importlib
+import pkgutil
+import sys
 
-# 核心模型（原 presale.py）
-from .core import (
-    DeliverableStatusEnum,
-    PresaleCustomerTechProfile,
-    PresaleSolution,
-    PresaleSolutionCost,
-    PresaleSolutionTemplate,
-    PresaleSupportTicket,
-    PresaleTenderRecord,
-    PresaleTicketDeliverable,
-    PresaleTicketProgress,
-    PresaleWorkload,
-    SolutionStatusEnum,
-    TenderResultEnum,
-    TicketStatusEnum,
-    TicketTypeEnum,
-    TicketUrgencyEnum,
-)
+_impl = importlib.import_module("app.modules.presale.models")
+sys.modules[__name__] = _impl
 
-# 技术参数模板
-from .technical_parameter_template import (
-    CostCategoryEnum,
-    IndustryEnum,
-    TechnicalParameterTemplate,
-    TestTypeEnum,
-)
-
-__all__ = [
-    # 核心模型
-    "PresaleSupportTicket",
-    "PresaleTicketDeliverable",
-    "PresaleTicketProgress",
-    "PresaleSolution",
-    "PresaleSolutionCost",
-    "PresaleSolutionTemplate",
-    "PresaleWorkload",
-    "PresaleCustomerTechProfile",
-    "PresaleTenderRecord",
-    # 核心枚举
-    "TicketTypeEnum",
-    "TicketUrgencyEnum",
-    "TicketStatusEnum",
-    "DeliverableStatusEnum",
-    "SolutionStatusEnum",
-    "TenderResultEnum",
-    # 技术参数模板
-    "TechnicalParameterTemplate",
-    # 技术参数枚举
-    "IndustryEnum",
-    "TestTypeEnum",
-    "CostCategoryEnum",
-]
+for _m in pkgutil.walk_packages(_impl.__path__, prefix="app.modules.presale.models."):
+    try:
+        _mod = importlib.import_module(_m.name)
+    except Exception:  # 子模块自身的可选依赖问题不应破坏别名层
+        continue
+    sys.modules[_m.name.replace("app.modules.presale.models", "app.models.presale")] = _mod

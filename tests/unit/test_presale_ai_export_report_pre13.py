@@ -6,7 +6,7 @@ from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
 
-from app.api.v1 import presale_ai_integration as integration_api
+from app.modules.presale.api import presale_ai_integration as integration_api
 from app.models.presale_ai import AIFunctionEnum, PresaleAIUsageStats
 from app.models.user import User
 from app.schemas.presale_ai import ExportReportRequest

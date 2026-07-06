@@ -135,7 +135,7 @@ class TestPresaleAIAPIsDeep:
     def test_presale_ai_emotion(self):
         """测试售前AI情绪"""
         try:
-            from app.api.presale_ai_emotion import analyze_emotion
+            from app.modules.presale.api.presale_ai_emotion import analyze_emotion
             assert analyze_emotion is not None
         except ImportError:
             pytest.skip("Module not found")

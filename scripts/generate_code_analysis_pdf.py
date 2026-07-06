@@ -210,7 +210,7 @@ def create_pdf(output_path):
         ["frontend/src/pages/SalesDirectorWorkstation.jsx", "1912"],
         ["app/schemas/sales.py", "1888"],
         ["frontend/src/pages/MaterialAnalysis.jsx", "1867"],
-        ["app/api/v1/endpoints/presale.py", "1798"],
+        ["app/modules/presale/api.py", "1798"],
         ["frontend/src/components/layout/Sidebar.jsx", "1712"],
         ["frontend/src/pages/PaymentManagement.jsx", "1688"],
         ["frontend/src/pages/WorkerWorkstation.jsx", "1679"],

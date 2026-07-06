@@ -182,7 +182,7 @@ def create_duplication_report_excel():
         },
         {
             "模块": "售前统计",
-            "文件路径": "app/api/v1/endpoints/presales_integration/dashboard.py",
+            "文件路径": "app/modules/presale/apis_integration/dashboard.py",
             "功能": "售前数据统计",
             "重复模式": "计数统计、趋势分析",
             "严重程度": "🟡 中",

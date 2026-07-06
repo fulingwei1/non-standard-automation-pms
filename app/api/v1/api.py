@@ -7,7 +7,7 @@ API路由聚合 - 中等版本（跳过有问题的模块）
 
 import os
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 STRICT_API_ROUTER = os.getenv("STRICT_API_ROUTER", "true").lower() == "true"
 ENABLE_STUB_ENDPOINTS = os.getenv("ENABLE_STUB_ENDPOINTS", "false").lower() == "true"
@@ -256,8 +256,10 @@ def create_api_router() -> APIRouter:
     
     # ==================== 预售管理 ====================
     try:
-        from app.api.v1.endpoints.presale import router as presale_router
-        api_router.include_router(presale_router, prefix="/presale", tags=["presale"])
+        from app.api.deps import require_module
+        from app.modules.presale.api import router as presale_router
+        _presale_gate = [Depends(require_module("presale"))]
+        api_router.include_router(presale_router, prefix="/presale", tags=["presale"], dependencies=_presale_gate)
         print("✓ 预售管理模块加载成功")
     except Exception as e:
         print(f"✗ 预售管理模块加载失败: {e}")
@@ -269,16 +271,16 @@ def create_api_router() -> APIRouter:
         # 2026-07-03 去重：老AI方案栈 presale_ai_routes（generate-solution/solution/template*，写
         # presale_ai_solution 表，前端仅孤儿页调用）与异步栈 presale_ai_win_rate（AsyncSession 与同步
         # 栈不兼容）已下线；方案统一走 /presale/proposals，赢率统一走 /presales/predict-win-rate
-        from app.api.presale_ai_emotion import router as presale_ai_emotion_router
-        from app.api.v1.presale_ai_cost import router as presale_ai_cost_router
-        from app.api.v1.presale_ai_knowledge import router as presale_ai_knowledge_router
-        from app.api.v1.presale_ai_integration import router as presale_ai_integration_router
-        from app.api.v1.presale_ai_quotation import router as presale_ai_quotation_router
-        api_router.include_router(presale_ai_integration_router, prefix="/presale/ai", tags=["presale-ai"])
-        api_router.include_router(presale_ai_cost_router, tags=["presale-ai-cost"])
-        api_router.include_router(presale_ai_knowledge_router, tags=["presale-ai-knowledge"])
-        api_router.include_router(presale_ai_emotion_router, tags=["presale-ai-emotion"])
-        api_router.include_router(presale_ai_quotation_router, tags=["presale-ai"])
+        from app.modules.presale.api.presale_ai_emotion import router as presale_ai_emotion_router
+        from app.modules.presale.api.presale_ai_cost import router as presale_ai_cost_router
+        from app.modules.presale.api.presale_ai_knowledge import router as presale_ai_knowledge_router
+        from app.modules.presale.api.presale_ai_integration import router as presale_ai_integration_router
+        from app.modules.presale.api.presale_ai_quotation import router as presale_ai_quotation_router
+        api_router.include_router(presale_ai_integration_router, prefix="/presale/ai", tags=["presale-ai"], dependencies=_presale_gate)
+        api_router.include_router(presale_ai_cost_router, tags=["presale-ai-cost"], dependencies=_presale_gate)
+        api_router.include_router(presale_ai_knowledge_router, tags=["presale-ai-knowledge"], dependencies=_presale_gate)
+        api_router.include_router(presale_ai_emotion_router, tags=["presale-ai-emotion"], dependencies=_presale_gate)
+        api_router.include_router(presale_ai_quotation_router, tags=["presale-ai"], dependencies=_presale_gate)
         from app.api.v1.endpoints.ai_jobs import router as ai_jobs_router
         api_router.include_router(ai_jobs_router)
         from app.api.v1.endpoints.presale_agent_metrics import router as presale_agent_metrics_router

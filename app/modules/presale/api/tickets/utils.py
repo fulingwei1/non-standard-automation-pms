@@ -1,0 +1,193 @@
+# -*- coding: utf-8 -*-
+"""
+售前工单管理 - 工具函数
+"""
+from __future__ import annotations
+
+from datetime import datetime
+
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
+
+from app.common.query_filters import apply_like_filter
+from app.modules.presale.models import PresaleSolution, PresaleSupportTicket, PresaleTenderRecord
+from app.schemas.presale import TicketResponse
+
+LEGACY_TICKET_STATUS_ALIASES = {
+    "PROCESSING": "IN_PROGRESS",
+    "REVIEW": "PENDING",
+}
+
+
+def canonical_ticket_status(status: str | None) -> str:
+    normalized = str(status or "").strip().upper()
+    return LEGACY_TICKET_STATUS_ALIASES.get(normalized, normalized)
+
+
+def expand_ticket_status_filter(status: str | None) -> list[str]:
+    requested = str(status or "").strip().upper()
+    if not requested:
+        return []
+    canonical = canonical_ticket_status(requested)
+    expanded = {requested, canonical}
+    expanded.update(
+        legacy
+        for legacy, mapped in LEGACY_TICKET_STATUS_ALIASES.items()
+        if mapped == canonical
+    )
+    return sorted(expanded)
+
+
+def generate_ticket_no(db: Session) -> str:
+    """生成工单编号：TICKET-yymmdd-xxx"""
+    today = datetime.now().strftime("%y%m%d")
+    max_ticket_query = db.query(PresaleSupportTicket)
+    max_ticket_query = apply_like_filter(
+        max_ticket_query,
+        PresaleSupportTicket,
+        f"TICKET-{today}-%",
+        "ticket_no",
+        use_ilike=False,
+    )
+    max_ticket = max_ticket_query.order_by(desc(PresaleSupportTicket.ticket_no)).first()
+    if max_ticket:
+        seq = int(max_ticket.ticket_no.split("-")[-1]) + 1
+    else:
+        seq = 1
+    return f"TICKET-{today}-{seq:03d}"
+
+
+def generate_solution_no(db: Session) -> str:
+    """生成方案编号：SOL-yymmdd-xxx"""
+    today = datetime.now().strftime("%y%m%d")
+    max_solution_query = db.query(PresaleSolution)
+    max_solution_query = apply_like_filter(
+        max_solution_query,
+        PresaleSolution,
+        f"SOL-{today}-%",
+        "solution_no",
+        use_ilike=False,
+    )
+    max_solution = max_solution_query.order_by(desc(PresaleSolution.solution_no)).first()
+    if max_solution:
+        seq = int(max_solution.solution_no.split("-")[-1]) + 1
+    else:
+        seq = 1
+    return f"SOL-{today}-{seq:03d}"
+
+
+def generate_tender_no(db: Session) -> str:
+    """生成投标编号：TENDER-yymmdd-xxx"""
+    today = datetime.now().strftime("%y%m%d")
+    max_tender_query = db.query(PresaleTenderRecord)
+    max_tender_query = apply_like_filter(
+        max_tender_query,
+        PresaleTenderRecord,
+        f"TENDER-{today}-%",
+        "tender_no",
+        use_ilike=False,
+    )
+    max_tender = max_tender_query.order_by(desc(PresaleTenderRecord.tender_no)).first()
+    if max_tender:
+        seq = int(max_tender.tender_no.split("-")[-1]) + 1
+    else:
+        seq = 1
+    return f"TENDER-{today}-{seq:03d}"
+
+
+def _latest_progress_record(ticket: PresaleSupportTicket):
+    records = list(getattr(ticket, "progress_records", None) or [])
+    if not records:
+        return None
+
+    return max(
+        records,
+        key=lambda record: (
+            getattr(record, "created_at", None) or datetime.min,
+            getattr(record, "id", 0) or 0,
+        ),
+    )
+
+
+def _build_deliverable_response(deliverable) -> dict:
+    file_path = getattr(deliverable, "file_path", None)
+    return {
+        "id": getattr(deliverable, "id", None),
+        "ticket_id": getattr(deliverable, "ticket_id", None),
+        "deliverable_name": getattr(deliverable, "name", None),
+        "deliverable_type": getattr(deliverable, "file_type", None),
+        "file_path": file_path,
+        "file_url": file_path,
+        "is_required": getattr(deliverable, "is_required", True) is not False,
+        "status": getattr(deliverable, "status", None),
+        "reviewer_id": getattr(deliverable, "reviewer_id", None),
+        "review_time": getattr(deliverable, "review_time", None),
+        "review_comment": getattr(deliverable, "review_comment", None),
+        "created_at": getattr(deliverable, "created_at", None),
+        "updated_at": getattr(deliverable, "updated_at", None),
+    }
+
+
+def build_ticket_response(ticket: PresaleSupportTicket, opportunity=None) -> TicketResponse:
+    """构建工单响应对象"""
+    latest_progress = _latest_progress_record(ticket)
+    progress_note = None
+    if latest_progress is not None:
+        progress_note = getattr(latest_progress, "progress_note", None) or getattr(
+            latest_progress, "content", None
+        )
+
+    return TicketResponse(
+        id=ticket.id,
+        ticket_no=ticket.ticket_no,
+        title=ticket.title,
+        ticket_type=ticket.ticket_type,
+        urgency=ticket.urgency or 'normal',
+        description=ticket.description,
+        customer_id=ticket.customer_id,
+        customer_name=ticket.customer_name,
+        lead_id=getattr(ticket, "lead_id", None),
+        opportunity_id=ticket.opportunity_id,
+        opportunity_code=getattr(opportunity, "opp_code", None),
+        opportunity_name=getattr(opportunity, "opp_name", None),
+        estimated_amount=(
+            float(opportunity.est_amount)
+            if getattr(opportunity, "est_amount", None) is not None
+            else None
+        ),
+        project_id=ticket.project_id,
+        applicant_id=ticket.applicant_id,
+        applicant_name=ticket.applicant_name,
+        applicant_dept=ticket.applicant_dept,
+        apply_time=ticket.apply_time,
+        assignee_id=ticket.assignee_id,
+        assignee_name=ticket.assignee_name,
+        accept_time=ticket.accept_time,
+        expected_date=ticket.expected_date,
+        deadline=ticket.deadline,
+        status=canonical_ticket_status(ticket.status),
+        progress_percent=getattr(latest_progress, "progress_percent", None),
+        progress_note=progress_note,
+        complete_time=ticket.complete_time,
+        actual_hours=float(ticket.actual_hours) if ticket.actual_hours else None,
+        deliverables=[
+            _build_deliverable_response(deliverable)
+            for deliverable in (getattr(ticket, "deliverables", None) or [])
+        ],
+        satisfaction_score=ticket.satisfaction_score,
+        feedback=ticket.feedback,
+        assessment_required=getattr(ticket, "assessment_required", True),
+        assessment_status=getattr(ticket, "assessment_status", None),
+        assessment_priority=getattr(ticket, "assessment_priority", None),
+        assessment_due_date=getattr(ticket, "assessment_due_date", None),
+        current_assessment_id=getattr(ticket, "current_assessment_id", None),
+        pm_involvement_required=getattr(ticket, "pm_involvement_required", False),
+        pm_involvement_risk_level=getattr(ticket, "pm_involvement_risk_level", None),
+        pm_involvement_risk_factors=getattr(ticket, "pm_involvement_risk_factors", None) or [],
+        pm_involvement_checked_at=getattr(ticket, "pm_involvement_checked_at", None),
+        pm_assigned=getattr(ticket, "pm_assigned", False),
+        pm_user_id=getattr(ticket, "pm_user_id", None),
+        pm_assigned_at=getattr(ticket, "pm_assigned_at", None),
+        created_at=ticket.created_at,
+        updated_at=ticket.updated_at,
+    )
