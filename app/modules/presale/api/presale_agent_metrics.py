@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.presale_agent_metric import PresaleAgentMetric
+from app.modules.presale.models.presale_agent_metric import PresaleAgentMetric
 from app.models.user import User
 
 router = APIRouter(prefix="/presale-agent", tags=["售前智能体埋点"])

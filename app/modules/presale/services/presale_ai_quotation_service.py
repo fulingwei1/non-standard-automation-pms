@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import desc, text
 from sqlalchemy.orm import Session
 
-from app.models.presale_ai_quotation import (
+from app.modules.presale.models.presale_ai_quotation import (
     PresaleAIQuotation,
     QuotationStatus,
     QuotationType,

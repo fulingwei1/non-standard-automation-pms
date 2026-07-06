@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.audit_pack import AuditPackRequest
+from app.modules.presale.models.audit_pack import AuditPackRequest
 from app.models.user import User
 
 router = APIRouter(prefix="/audit-packs", tags=["验厂资料"])

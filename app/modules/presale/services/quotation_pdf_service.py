@@ -20,7 +20,7 @@ try:
 except ImportError:
     REPORTLAB_AVAILABLE = False
 
-from app.models.presale_ai_quotation import PresaleAIQuotation
+from app.modules.presale.models.presale_ai_quotation import PresaleAIQuotation
 
 
 class QuotationPDFService:

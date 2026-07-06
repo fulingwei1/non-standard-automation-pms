@@ -11,8 +11,8 @@ import numpy as np
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
-from app.models.presale_ai_qa import PresaleAIQA
-from app.models.presale_knowledge_case import PresaleKnowledgeCase
+from app.modules.presale.models.presale_ai_qa import PresaleAIQA
+from app.modules.presale.models.presale_knowledge_case import PresaleKnowledgeCase
 from app.schemas.presale_ai_knowledge import (
     AIQARequest,
     BestPracticeRequest,

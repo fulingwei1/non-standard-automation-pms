@@ -13,13 +13,13 @@ import httpx
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from app.models.presale_ai_emotion_analysis import (
+from app.modules.presale.models.presale_ai_emotion_analysis import (
     ChurnRiskLevel,
     PresaleAIEmotionAnalysis,
     SentimentType,
 )
-from app.models.presale_emotion_trend import PresaleEmotionTrend
-from app.models.presale_follow_up_reminder import (
+from app.modules.presale.models.presale_emotion_trend import PresaleEmotionTrend
+from app.modules.presale.models.presale_follow_up_reminder import (
     PresaleFollowUpReminder,
     ReminderPriority,
     ReminderStatus,

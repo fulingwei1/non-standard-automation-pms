@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
-from app.models.presale_mobile import (
+from app.modules.presale.models.presale_mobile import (
     PresaleMobileAssistantChat,
     PresaleMobileOfflineData,
     PresaleMobileQuickEstimate,

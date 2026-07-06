@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.presale_usage_feedback import PresaleUsageFeedback
+from app.modules.presale.models.presale_usage_feedback import PresaleUsageFeedback
 from app.models.user import User
 
 router = APIRouter(prefix="/presale-usage-feedback", tags=["售前智能体使用反馈"])

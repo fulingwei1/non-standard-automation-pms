@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.presale_proposal import PresaleProposal, PresaleProposalVersion
+from app.modules.presale.models.presale_proposal import PresaleProposal, PresaleProposalVersion
 from app.models.user import User
 
 router = APIRouter(prefix="/presale-proposals", tags=["售前方案协作"])

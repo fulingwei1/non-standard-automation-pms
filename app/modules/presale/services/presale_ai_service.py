@@ -14,7 +14,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.modules.presale.models import PresaleSolutionTemplate
-from app.models.presale_ai_solution import (
+from app.modules.presale.models.presale_ai_solution import (
     PresaleAIGenerationLog,
     PresaleAISolution,
 )

@@ -1,51 +1,7 @@
-"""
-跟进提醒模型
-"""
+# -*- coding: utf-8 -*-
+"""兼容旧导入路径：实现已迁至 app.modules.presale.models.presale_follow_up_reminder（P2 模块化批C）。"""
+import sys
 
-import enum
+from app.modules.presale.models import presale_follow_up_reminder as _impl
 
-from sqlalchemy import TIMESTAMP, Column, DateTime, Enum, ForeignKey, Integer, Text
-from sqlalchemy.sql import func
-
-from app.models.base import Base
-
-
-class ReminderPriority(str, enum.Enum):
-    """提醒优先级"""
-
-    HIGH = "high"
-    MEDIUM = "medium"
-    LOW = "low"
-
-
-class ReminderStatus(str, enum.Enum):
-    """提醒状态"""
-
-    PENDING = "pending"
-    COMPLETED = "completed"
-    DISMISSED = "dismissed"
-
-
-class PresaleFollowUpReminder(Base):
-    """跟进提醒表"""
-
-    __tablename__ = "presale_follow_up_reminder"
-
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
-    presale_ticket_id = Column(
-        Integer,
-        ForeignKey("presale_support_ticket.id"),
-        nullable=False,
-        index=True,
-        comment="售前工单ID",
-    )
-    recommended_time = Column(DateTime, comment="推荐跟进时间")
-    priority = Column(Enum(ReminderPriority), comment="优先级")
-    follow_up_content = Column(Text, comment="跟进内容建议")
-    reason = Column(Text, comment="最佳时机理由")
-    status = Column(Enum(ReminderStatus), default=ReminderStatus.PENDING, comment="状态")
-    created_at = Column(TIMESTAMP, server_default=func.now(), comment="创建时间")
-
-    def __repr__(self):
-        return f"<PresaleFollowUpReminder(id={self.id}, ticket_id={self.presale_ticket_id}, priority={self.priority})>"
+sys.modules[__name__] = _impl

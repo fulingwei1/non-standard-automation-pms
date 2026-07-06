@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import String, and_, cast, desc, func
 from sqlalchemy.orm import Session
 
-from app.models.presale_ai import (
+from app.modules.presale.models.presale_ai import (
     PresaleAIAuditLog,
     PresaleAIConfig,
     PresaleAIFeedback,

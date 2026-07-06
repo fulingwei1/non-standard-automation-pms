@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 from app.modules.presale.models.core import PresaleSupportTicket
-from app.models.presale_ai_requirement_analysis import PresaleAIRequirementAnalysis
+from app.modules.presale.models.presale_ai_requirement_analysis import PresaleAIRequirementAnalysis
 from app.models.sales.leads import OpportunityRequirement
 
 

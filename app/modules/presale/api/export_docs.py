@@ -9,8 +9,8 @@ import io
 from app.api import deps
 from app.core import security
 from app.models.user import User
-from app.models.presale_proposal import PresaleProposal
-from app.models.audit_pack import AuditPackRequest
+from app.modules.presale.models.presale_proposal import PresaleProposal
+from app.modules.presale.models.audit_pack import AuditPackRequest
 
 router = APIRouter(prefix="/export", tags=["文档导出"])
 

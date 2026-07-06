@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.advantage_product import AdvantageProduct, AdvantageProductCategory
+from app.modules.presale.models.advantage_product import AdvantageProduct, AdvantageProductCategory
 from app.models.user import User
 from app.schemas.advantage_product import (
     AdvantageProductCategoryCreate,

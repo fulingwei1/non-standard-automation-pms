@@ -9,7 +9,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from app.models.presale.core import PresaleSupportTicket
-from app.models.presale_ai_quotation import PresaleAIQuotation
+from app.modules.presale.models.presale_ai_quotation import PresaleAIQuotation
 from app.models.sales.contracts import Contract
 from app.services.sales.contract.status_service import contract_status_query_values
 

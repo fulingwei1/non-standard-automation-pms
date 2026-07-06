@@ -13,7 +13,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.presale_ai_requirement_analysis import PresaleAIRequirementAnalysis
+from app.modules.presale.models.presale_ai_requirement_analysis import PresaleAIRequirementAnalysis
 from app.schemas.presale_ai_requirement import (
     ClarificationQuestion,
     FeasibilityAnalysis,

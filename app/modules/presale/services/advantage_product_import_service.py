@@ -7,7 +7,7 @@ from typing import Dict, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
-from app.models.advantage_product import AdvantageProduct, AdvantageProductCategory
+from app.modules.presale.models.advantage_product import AdvantageProduct, AdvantageProductCategory
 
 # 类别映射（列索引 -> 类别信息）
 COLUMN_CATEGORY_MAP = {

@@ -792,7 +792,7 @@ def _record_metric(
     requirement_text: str, started: float, status: str, error: Optional[str],
 ) -> None:
     """落埋点到 presale_agent_metrics（成功失败都记）。"""
-    from app.models.presale_agent_metric import PresaleAgentMetric
+    from app.modules.presale.models.presale_agent_metric import PresaleAgentMetric
     from datetime import datetime
 
     steps = result.get("steps", {})

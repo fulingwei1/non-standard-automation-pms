@@ -75,7 +75,7 @@ async def get_emotion_analysis(
     try:
         from sqlalchemy import desc
 
-        from app.models.presale_ai_emotion_analysis import PresaleAIEmotionAnalysis
+        from app.modules.presale.models.presale_ai_emotion_analysis import PresaleAIEmotionAnalysis
 
         analysis = (
             db.query(PresaleAIEmotionAnalysis)

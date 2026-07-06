@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.presale_agent_revision import PresaleAgentRevision
+from app.modules.presale.models.presale_agent_revision import PresaleAgentRevision
 from app.models.user import User
 
 router = APIRouter(prefix="/presale-agent", tags=["售前智能体修订"])

@@ -19,7 +19,7 @@ from app.modules.presale.models import (
     PresaleSupportTicket,
     PresaleTenderRecord,
 )
-from app.models.presale_expense import PresaleExpense
+from app.modules.presale.models.presale_expense import PresaleExpense
 from app.models.user import User
 from app.schemas.common import ResponseModel
 
