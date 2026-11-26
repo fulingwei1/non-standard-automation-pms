@@ -27,6 +27,7 @@ class TestExceptionEscalation:
         """测试异常升级成功"""
         # 创建测试异常
         exception = ProductionException(
+            tenant_id=1,
             exception_no="EXC-TEST-001",
             exception_type="EQUIPMENT",
             exception_level="MAJOR",
@@ -73,6 +74,7 @@ class TestExceptionEscalation:
     def test_escalate_multiple_levels(self, client: TestClient, db_session, auth_headers):
         """测试多级升级"""
         exception = ProductionException(
+            tenant_id=1,
             exception_no="EXC-TEST-002",
             exception_type="QUALITY",
             exception_level="CRITICAL",
@@ -117,6 +119,7 @@ class TestFlowTracking:
         """测试获取流程跟踪"""
         # 创建异常和流程
         exception = ProductionException(
+            tenant_id=1,
             exception_no="EXC-TEST-003",
             exception_type="MATERIAL",
             exception_level="MINOR",
@@ -128,6 +131,7 @@ class TestFlowTracking:
         db_session.commit()
 
         flow = ExceptionHandlingFlow(
+            tenant_id=1,
             exception_id=exception.id,
             status=FlowStatus.PROCESSING,
             escalation_level=EscalationLevel.NONE,
@@ -188,6 +192,7 @@ class TestKnowledge:
         """测试按关键词搜索知识库"""
         # 创建测试知识
         knowledge = ExceptionKnowledge(
+            tenant_id=1,
             title="质量问题处理",
             exception_type="QUALITY",
             exception_level="MAJOR",
@@ -228,6 +233,7 @@ class TestKnowledge:
         # 创建多条测试数据
         for i in range(25):
             knowledge = ExceptionKnowledge(
+            tenant_id=1,
                 title=f"测试知识{i}",
                 exception_type="OTHER",
                 exception_level="MINOR",
@@ -266,6 +272,7 @@ class TestStatistics:
         # 创建测试异常
         for i in range(10):
             exception = ProductionException(
+            tenant_id=1,
                 exception_no=f"EXC-STAT-{i:03d}",
                 exception_type="EQUIPMENT" if i % 2 == 0 else "QUALITY",
                 exception_level="MAJOR" if i % 3 == 0 else "MINOR",
@@ -313,6 +320,7 @@ class TestPDCA:
         """测试创建PDCA记录"""
         # 创建测试异常
         exception = ProductionException(
+            tenant_id=1,
             exception_no="EXC-PDCA-001",
             exception_type="QUALITY",
             exception_level="MAJOR",
@@ -346,6 +354,7 @@ class TestPDCA:
         """测试推进PDCA到Do阶段"""
         # 创建异常和PDCA
         exception = ProductionException(
+            tenant_id=1,
             exception_no="EXC-PDCA-002",
             exception_type="EQUIPMENT",
             exception_level="MAJOR",
@@ -357,6 +366,7 @@ class TestPDCA:
         db_session.commit()
 
         pdca = ExceptionPDCA(
+            tenant_id=1,
             exception_id=exception.id,
             pdca_no=f"PDCA-TEST-{exception.id}",
             current_stage=PDCAStage.PLAN,
@@ -389,6 +399,7 @@ class TestPDCA:
         """测试PDCA阶段状态机验证"""
         # 创建处于PLAN阶段的PDCA
         exception = ProductionException(
+            tenant_id=1,
             exception_no="EXC-PDCA-003",
             exception_type="OTHER",
             exception_level="MINOR",
@@ -400,6 +411,7 @@ class TestPDCA:
         db_session.commit()
 
         pdca = ExceptionPDCA(
+            tenant_id=1,
             exception_id=exception.id,
             pdca_no=f"PDCA-TEST-{exception.id}",
             current_stage=PDCAStage.PLAN,
@@ -427,6 +439,7 @@ class TestPDCA:
         """测试PDCA完整周期"""
         # 创建异常
         exception = ProductionException(
+            tenant_id=1,
             exception_no="EXC-PDCA-004",
             exception_type="QUALITY",
             exception_level="MAJOR",
@@ -499,6 +512,7 @@ class TestRecurrenceAnalysis:
         # 创建重复异常
         for i in range(5):
             exception = ProductionException(
+            tenant_id=1,
                 exception_no=f"EXC-REC-{i:03d}",
                 exception_type="EQUIPMENT",
                 exception_level="MAJOR",

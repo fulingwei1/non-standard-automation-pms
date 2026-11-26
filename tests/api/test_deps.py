@@ -9,6 +9,7 @@ API依赖测试
 4. 安全性 - 权限隔离、越权防护
 """
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock
 
 import pytest
@@ -28,7 +29,7 @@ from app.models.user import User
 def mock_request():
     """创建模拟请求"""
     request = Mock(spec=Request)
-    request.state = Mock()
+    request.state = SimpleNamespace()
     return request
 
 
@@ -391,7 +392,7 @@ class TestEdgeCases:
 
     def test_user_object_without_attributes(self):
         """测试用户对象缺少属性"""
-        user = Mock()
+        user = SimpleNamespace()
         # 故意不设置必要属性
 
         # 应该有默认处理或抛出异常

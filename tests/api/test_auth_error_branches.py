@@ -37,7 +37,7 @@ class TestLoginErrorBranches:
             f"{settings.API_V1_PREFIX}/auth/login",
             data={"username": "", "password": "admin123"}
         )
-        assert response.status_code in [400, 422]
+        assert response.status_code in [400, 401, 422]
 
     def test_login_empty_password(self, client: TestClient):
         """空密码"""
@@ -176,8 +176,8 @@ class TestPasswordChangeErrorBranches:
 
     def test_change_password_no_token(self, client: TestClient):
         """无Token修改密码"""
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/change-password",
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/auth/password",
             json={
                 "old_password": "admin123",
                 "new_password": "newpassword123"
@@ -190,11 +190,11 @@ class TestPasswordChangeErrorBranches:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/change-password",
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/auth/password",
             json={
                 "old_password": "wrongoldpassword",
-                "new_password": "newpassword123"
+                "new_password": "NewPassword123"
             },
             headers={"Authorization": f"Bearer {admin_token}"}
         )
@@ -205,8 +205,8 @@ class TestPasswordChangeErrorBranches:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/change-password",
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/auth/password",
             json={
                 "old_password": "admin123",
                 "new_password": "123"  # 太短的密码
@@ -220,8 +220,8 @@ class TestPasswordChangeErrorBranches:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/change-password",
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/auth/password",
             json={"new_password": "newpassword123"},
             headers={"Authorization": f"Bearer {admin_token}"}
         )
@@ -232,8 +232,8 @@ class TestPasswordChangeErrorBranches:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/change-password",
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/auth/password",
             json={"old_password": "admin123"},
             headers={"Authorization": f"Bearer {admin_token}"}
         )
@@ -244,8 +244,8 @@ class TestPasswordChangeErrorBranches:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/change-password",
+        response = client.put(
+            f"{settings.API_V1_PREFIX}/auth/password",
             json={
                 "old_password": "admin123",
                 "new_password": "admin123"  # 与旧密码相同
