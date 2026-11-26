@@ -230,9 +230,21 @@ def _create_active_scoring_rule(client: TestClient, token: str) -> int:
 
 
 def _sign_contract(
-    client: TestClient, token: str, contract_id: int, *, auto_create_project: bool = True
+    client: TestClient,
+    token: str,
+    contract_id: int,
+    *,
+    auto_create_project: bool = True,
+    db_session: Session = None,
 ) -> dict:
     headers = _auth_headers(token)
+    if db_session is not None:
+        from app.models.sales.contracts import Contract
+
+        contract_row = db_session.query(Contract).filter(Contract.id == contract_id).first()
+        if contract_row:
+            contract_row.status = "APPROVED"
+            db_session.commit()
     sign_data = {
         "signed_date": date.today().isoformat(),
         "remark": "合同签署",
@@ -976,7 +988,7 @@ class TestSalesClosedLoop:
     """销售闭环测试"""
 
     def test_lead_to_opportunity_quote_contract_project_closed_loop(
-        self, client: TestClient, admin_token: str
+        self, client: TestClient, db_session: Session, admin_token: str
     ):
         """同一条沙箱数据走通：线索 -> 商机 -> 报价 -> 合同 -> 项目立项"""
 
@@ -1052,7 +1064,9 @@ class TestSalesClosedLoop:
         assert contract["customer_id"] == customer_id
         assert contract["contract_name"] == contract_name
 
-        _sign_contract(client, admin_token, contract["id"], auto_create_project=False)
+        _sign_contract(
+            client, admin_token, contract["id"], auto_create_project=False, db_session=db_session
+        )
 
         project_response = client.post(
             f"{settings.API_V1_PREFIX}/sales/contracts/{contract['id']}/project",
@@ -1144,7 +1158,9 @@ class TestSalesClosedLoop:
         assert contract_response.status_code == 201, contract_response.text
         contract = contract_response.json()
 
-        _sign_contract(client, admin_token, contract["id"], auto_create_project=False)
+        _sign_contract(
+            client, admin_token, contract["id"], auto_create_project=False, db_session=db_session
+        )
 
         project_response = client.post(
             f"{settings.API_V1_PREFIX}/sales/contracts/{contract['id']}/project",

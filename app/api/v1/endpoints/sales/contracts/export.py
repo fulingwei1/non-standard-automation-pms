@@ -58,9 +58,9 @@ def _build_contract_pdf_response(
     deliverable_list = [
         {
             "deliverable_name": d.deliverable_name or "",
-            "quantity": float(d.quantity) if d.quantity else 0,
-            "unit": d.unit or "",
-            "remark": d.remark or "",
+            "quantity": float(getattr(d, "quantity", 0) or 0),
+            "unit": getattr(d, "unit", None) or (getattr(d, "deliverable_type", None) or ""),
+            "remark": getattr(d, "remark", None) or "",
         }
         for d in deliverables
     ]

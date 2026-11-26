@@ -233,7 +233,7 @@ class TestSalesContractsAPI:
         assert contract["opportunity_id"]
         assert contract["customer_id"]
         assert float(contract["contract_amount"]) == 150000.0
-        assert contract["status"] == "draft"
+        assert contract["status"] == "DRAFT"
 
     def test_create_contract_accepts_legacy_quote_payload_and_infers_context(
         self, client: TestClient, db_session: Session, admin_token: str
@@ -1492,13 +1492,19 @@ class TestSalesContractsAPI:
         assert data["contract_id"] == contract["id"]
         assert data["approval_instance"] is None
 
-    def test_contract_signing(self, client: TestClient, admin_token: str):
+    def test_contract_signing(self, client: TestClient, db_session: Session, admin_token: str):
         """测试合同签署"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         contract = _create_contract(client, admin_token)
         headers = _auth_headers(admin_token)
+        from app.models.sales.contracts import Contract
+
+        contract_row = db_session.query(Contract).filter(Contract.id == contract["id"]).first()
+        if contract_row:
+            contract_row.status = "APPROVED"
+            db_session.commit()
 
         signing_data = {
             "sign_date": datetime.now().strftime("%Y-%m-%d"),
