@@ -48,6 +48,7 @@ class TestProjectCRUD:
             department="项目部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         other_user = User(
             username=f"{marker.lower()}-other",
@@ -56,6 +57,7 @@ class TestProjectCRUD:
             department="项目部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         db_session.add_all([actor, other_user])
         db_session.flush()
@@ -66,6 +68,7 @@ class TestProjectCRUD:
             contact_person="QA",
             contact_phone="13800000000",
             status="ACTIVE",
+            tenant_id=1,
         )
         db_session.add(customer)
         db_session.flush()
@@ -80,6 +83,7 @@ class TestProjectCRUD:
             health="H1",
             is_active=True,
             created_by=actor.id,
+            tenant_id=1,
         )
         other_project = Project(
             project_code=f"PJ-{uuid.uuid4().hex[:8].upper()}",
@@ -91,6 +95,7 @@ class TestProjectCRUD:
             health="H1",
             is_active=True,
             created_by=other_user.id,
+            tenant_id=1,
         )
         db_session.add_all([own_project, other_project])
         db_session.flush()
@@ -101,6 +106,7 @@ class TestProjectCRUD:
                     project_id=own_project.id,
                     user_id=actor.id,
                     role_code="MEMBER",
+                    tenant_id=1,
                     is_active=True,
                     created_by=actor.id,
                 ),
@@ -108,6 +114,7 @@ class TestProjectCRUD:
                     project_id=other_project.id,
                     user_id=other_user.id,
                     role_code="MEMBER",
+                    tenant_id=1,
                     is_active=True,
                     created_by=other_user.id,
                 ),
@@ -140,6 +147,7 @@ class TestProjectCRUD:
             department="项目部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         other_user = User(
             username=f"{marker.lower()}-other",
@@ -148,6 +156,7 @@ class TestProjectCRUD:
             department="项目部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         db_session.add_all([actor, other_user])
         db_session.flush()
@@ -158,6 +167,7 @@ class TestProjectCRUD:
             contact_person="QA",
             contact_phone="13800000000",
             status="ACTIVE",
+            tenant_id=1,
         )
         db_session.add(customer)
         db_session.flush()
@@ -172,6 +182,7 @@ class TestProjectCRUD:
             health="H1",
             is_active=True,
             created_by=other_user.id,
+            tenant_id=1,
             pm_id=other_user.id,
         )
         unrelated_project = Project(
@@ -184,6 +195,7 @@ class TestProjectCRUD:
             health="H1",
             is_active=True,
             created_by=other_user.id,
+            tenant_id=1,
             pm_id=other_user.id,
         )
         db_session.add_all([member_project, unrelated_project])
@@ -194,6 +206,7 @@ class TestProjectCRUD:
                 project_id=member_project.id,
                 user_id=actor.id,
                 role_code="MEMBER",
+                    tenant_id=1,
                 is_active=True,
                 created_by=other_user.id,
             )
@@ -228,6 +241,7 @@ class TestProjectCRUD:
             department="项目部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         other_user = User(
             username=f"{marker.lower()}-other",
@@ -236,6 +250,7 @@ class TestProjectCRUD:
             department="项目部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         db_session.add_all([actor, other_user])
         db_session.flush()
@@ -246,6 +261,7 @@ class TestProjectCRUD:
             contact_person="QA",
             contact_phone="13800000000",
             status="ACTIVE",
+            tenant_id=1,
         )
         db_session.add(customer)
         db_session.flush()
@@ -260,6 +276,7 @@ class TestProjectCRUD:
             health="H1",
             is_active=True,
             created_by=other_user.id,
+            tenant_id=1,
             pm_id=other_user.id,
         )
         unrelated_project = Project(
@@ -272,6 +289,7 @@ class TestProjectCRUD:
             health="H1",
             is_active=True,
             created_by=other_user.id,
+            tenant_id=1,
             pm_id=other_user.id,
         )
         db_session.add_all([member_project, unrelated_project])
@@ -282,6 +300,7 @@ class TestProjectCRUD:
                 project_id=member_project.id,
                 user_id=actor.id,
                 role_code="MEMBER",
+                    tenant_id=1,
                 is_active=True,
                 created_by=other_user.id,
             )
@@ -316,6 +335,7 @@ class TestProjectCRUD:
             department="项目部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         other_user = User(
             username=f"{marker.lower()}-other",
@@ -324,6 +344,7 @@ class TestProjectCRUD:
             department="项目部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         db_session.add_all([actor, other_user])
         db_session.flush()
@@ -334,6 +355,7 @@ class TestProjectCRUD:
             contact_person="QA",
             contact_phone="13800000000",
             status="ACTIVE",
+            tenant_id=1,
         )
         db_session.add(customer)
         db_session.flush()
@@ -348,6 +370,7 @@ class TestProjectCRUD:
             health="H1",
             is_active=True,
             created_by=other_user.id,
+            tenant_id=1,
             pm_id=other_user.id,
         )
         unrelated_project = Project(
@@ -360,6 +383,7 @@ class TestProjectCRUD:
             health="H1",
             is_active=True,
             created_by=other_user.id,
+            tenant_id=1,
             pm_id=other_user.id,
         )
         db_session.add_all([member_project, unrelated_project])
@@ -371,6 +395,7 @@ class TestProjectCRUD:
                     project_id=member_project.id,
                     user_id=actor.id,
                     role_code="MEMBER",
+                    tenant_id=1,
                     is_active=True,
                     created_by=other_user.id,
                 ),
@@ -380,6 +405,7 @@ class TestProjectCRUD:
                     stage_name=f"{marker}-阶段",
                     sequence=1,
                     status="PENDING",
+                    tenant_id=1,
                 ),
             ]
         )
@@ -427,6 +453,7 @@ class TestProjectCRUD:
             department="项目部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         other_user = User(
             username=f"{marker.lower()}-other",
@@ -435,6 +462,7 @@ class TestProjectCRUD:
             department="项目部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         db_session.add_all([actor, other_user])
         db_session.flush()
@@ -445,6 +473,7 @@ class TestProjectCRUD:
             contact_person="QA",
             contact_phone="13800000000",
             status="ACTIVE",
+            tenant_id=1,
         )
         db_session.add(customer)
         db_session.flush()
@@ -459,6 +488,7 @@ class TestProjectCRUD:
             health="H1",
             is_active=True,
             created_by=other_user.id,
+            tenant_id=1,
             pm_id=other_user.id,
             contract_amount=100000,
             budget_amount=70000,
@@ -474,6 +504,7 @@ class TestProjectCRUD:
             health="H1",
             is_active=True,
             created_by=other_user.id,
+            tenant_id=1,
             pm_id=other_user.id,
             contract_amount=200000,
             budget_amount=150000,
@@ -487,6 +518,7 @@ class TestProjectCRUD:
                 project_id=member_project.id,
                 user_id=actor.id,
                 role_code="MEMBER",
+                    tenant_id=1,
                 is_active=True,
                 created_by=other_user.id,
             )

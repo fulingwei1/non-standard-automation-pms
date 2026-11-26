@@ -28,12 +28,12 @@ def compare_role_perspectives(
     """
     比较角色视角（多角色对比）
     """
-    from app.services.report_data_generation_service import report_data_service
+    from app.services.report_data_generation.router import ReportRouterMixin
 
     # 为每个角色生成报表数据
     role_data = {}
     for role in compare_in.roles:
-        report_data = report_data_service.generate_report_by_type(
+        report_data = ReportRouterMixin.generate_report_by_type(
             db,
             compare_in.report_type,
             compare_in.project_id,

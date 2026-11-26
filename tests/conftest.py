@@ -849,11 +849,26 @@ def _get_or_create_user(
     from app.core.security import verify_password as _vp
     from app.models.user import User as _User
 
+    from app.models.tenant import Tenant as _Tenant
+
+    default_tenant = db.query(_Tenant).order_by(_Tenant.id.asc()).first()
+    if not default_tenant:
+        default_tenant = _Tenant(
+            tenant_code="DEFAULT",
+            tenant_name="默认测试租户",
+            status="ACTIVE",
+        )
+        db.add(default_tenant)
+        db.flush()
+
     user = db.query(_User).filter(_User.username == username).first()
     if user:
         updated = False
         if not user.is_active:
             user.is_active = True
+            updated = True
+        if not user.is_superuser and user.tenant_id is None:
+            user.tenant_id = default_tenant.id
             updated = True
         if real_name and user.real_name != real_name:
             user.real_name = real_name
@@ -879,6 +894,7 @@ def _get_or_create_user(
 
     user = _User(
         employee_id=employee.id,
+        tenant_id=default_tenant.id,
         username=username,
         password_hash=_gph(password),
         real_name=real_name,
