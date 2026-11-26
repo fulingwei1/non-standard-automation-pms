@@ -1,3 +1,4 @@
+import { isValidElement } from "react";
 import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { cn } from "../../lib/utils";
@@ -5,6 +6,7 @@ import { fadeIn } from "../../lib/animations";
 
 export function StatCard({
   title,
+  label,
   value,
   subtitle,
   trend,
@@ -30,6 +32,7 @@ export function StatCard({
   onClick,
   children
 }) {
+  const displayTitle = title ?? label;
   const textSize =
     size === "large" ? "text-3xl" : size === "small" ? "text-xl" : "text-2xl";
   const resolvedIconColor = iconColor || color;
@@ -56,11 +59,15 @@ export function StatCard({
           <div className="flex items-center gap-3">
             {Icon && (
               <div className={cn("rounded-lg p-3 bg-opacity-20", bg, iconWrapperClassName)}>
-                <Icon className={cn("h-6 w-6", resolvedIconColor, iconClassName)} />
+                {isValidElement(Icon) ? (
+                  Icon
+                ) : (
+                  <Icon className={cn("h-6 w-6", resolvedIconColor, iconClassName)} />
+                )}
               </div>
             )}
             <div>
-              <p className={cn("text-sm text-slate-400 mb-1", titleClassName)}>{title}</p>
+              <p className={cn("text-sm text-slate-400 mb-1", titleClassName)}>{displayTitle}</p>
               <p className={cn("font-bold", textSize, resolvedValueColor, valueClassName)}>{value}</p>
               {subtitle && (
                 <p className={cn("text-xs text-slate-500 mt-1", subtitleClassName)}>{subtitle}</p>
@@ -89,12 +96,16 @@ export function StatCard({
       ) : layout === "row" ? (
         <>
           <div className="flex items-center justify-between">
-            <p className={cn("text-sm text-slate-400", titleClassName)}>{title}</p>
+            <p className={cn("text-sm text-slate-400", titleClassName)}>{displayTitle}</p>
             <div className="flex items-center gap-2">
               <p className={cn("font-bold", textSize, resolvedValueColor, valueClassName)}>{value}</p>
               {Icon && (
                 <div className={cn("rounded-lg p-2 bg-opacity-20", bg, iconWrapperClassName)}>
-                  <Icon className={cn("h-5 w-5", resolvedIconColor, iconClassName)} />
+                  {isValidElement(Icon) ? (
+                    Icon
+                  ) : (
+                    <Icon className={cn("h-5 w-5", resolvedIconColor, iconClassName)} />
+                  )}
                 </div>
               )}
             </div>
@@ -124,7 +135,7 @@ export function StatCard({
       ) : (
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <p className={cn("text-sm text-slate-400 mb-2", titleClassName)}>{title}</p>
+            <p className={cn("text-sm text-slate-400 mb-2", titleClassName)}>{displayTitle}</p>
             <p className={cn("font-bold mb-1", textSize, resolvedValueColor, valueClassName)}>{value}</p>
             {subtitle && (
               <p className={cn("text-xs text-slate-500", subtitleClassName)}>{subtitle}</p>
@@ -150,7 +161,11 @@ export function StatCard({
           </div>
           {Icon && (
             <div className={cn("rounded-lg p-3 bg-opacity-20", bg, iconWrapperClassName)}>
-              <Icon className={cn("h-6 w-6", resolvedIconColor, iconClassName)} />
+              {isValidElement(Icon) ? (
+                Icon
+              ) : (
+                <Icon className={cn("h-6 w-6", resolvedIconColor, iconClassName)} />
+              )}
             </div>
           )}
         </div>

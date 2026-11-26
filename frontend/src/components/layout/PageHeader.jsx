@@ -1,3 +1,4 @@
+import { isValidElement } from "react";
 import { cn } from "../../lib/utils";
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -6,11 +7,14 @@ import { Button } from "../ui/button";
 export function PageHeader({
   title,
   description,
+  subtitle,
+  icon: HeaderIcon,
   breadcrumbs,
   actions,
   action,
   className,
 }) {
+  const displayDescription = description ?? subtitle;
   const resolvedActions = [];
 
   const appendAction = (item, index) => {
@@ -48,7 +52,7 @@ export function PageHeader({
         className={cn("gap-2", actionClassName)}
         disabled={disabled}
       >
-        {Icon && <Icon className="h-4 w-4" />}
+        {Icon && (isValidElement(Icon) ? Icon : <Icon className="h-4 w-4" />)}
         {label}
       </Button>
     );
@@ -99,13 +103,20 @@ export function PageHeader({
 
       {/* Title and Actions */}
       <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-white tracking-tight">
-            {title}
-          </h1>
-          {description && (
-            <p className="mt-1 text-sm text-slate-400">{description}</p>
+        <div className="flex items-center gap-3">
+          {HeaderIcon && (
+            <div className="text-primary">
+              {isValidElement(HeaderIcon) ? HeaderIcon : <HeaderIcon className="h-6 w-6" />}
+            </div>
           )}
+          <div>
+            <h1 className="text-2xl font-semibold text-white tracking-tight">
+              {title}
+            </h1>
+            {displayDescription && (
+              <p className="mt-1 text-sm text-slate-400">{displayDescription}</p>
+            )}
+          </div>
         </div>
         {resolvedActions.length > 0 && (
           <div className="flex items-center gap-3">{resolvedActions}</div>

@@ -67,7 +67,7 @@ const SalesOpportunityCenter = lazyLoad(() => import("../../pages/SalesOpportuni
 const SalesFunnel = lazyLoad(() => import("../../pages/SalesFunnel"));
 
 // 销售仪表盘
-import SalesDashboard from "../../pages/SalesDashboard";
+const SalesDashboard = lazyLoad(() => import("../../pages/SalesDashboard"));
 
 // 售前相关
 const TechnicalAssessment = lazyLoad(() => import("../../pages/TechnicalAssessment"));

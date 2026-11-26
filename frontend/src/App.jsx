@@ -8,6 +8,7 @@ import {
 "react-router-dom";
 import { App as AntdApp, ConfigProvider, theme } from "antd";
 import zhCN from "antd/locale/zh_CN";
+import { Toaster } from "sonner";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
 import { MainLayout } from "./components/layout/MainLayout";
 import { AppRoutes } from "./routes/routeConfig";
@@ -161,6 +162,7 @@ function App() {
     <ErrorBoundary>
       <ConfigProvider theme={antdDarkTheme} locale={zhCN}>
         <AntdApp>
+          <Toaster position="top-right" richColors closeButton theme="dark" />
           <Router>
             <Routes>
               {/* 登录路由 */}

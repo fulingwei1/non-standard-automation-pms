@@ -104,7 +104,7 @@ const DashboardStatCard = React.forwardRef(
               "ring-1 ring-primary/20",
             )}
           >
-            {Icon && <Icon className={cn("h-5 w-5", iconColor)} />}
+            {Icon && (React.isValidElement(Icon) ? Icon : <Icon className={cn("h-5 w-5", iconColor)} />)}
           </div>
 
           {change && (

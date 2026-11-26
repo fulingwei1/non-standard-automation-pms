@@ -1,3 +1,4 @@
+import { isValidElement } from "react";
 import { AlertCircle, RefreshCw, XCircle, Lightbulb } from "lucide-react";
 import { Card, CardContent } from "./card";
 import { Button } from "./button";
@@ -67,26 +68,35 @@ export function ErrorMessage({
 export function EmptyState({
   icon: Icon,
   title = "暂无数据",
-  message = "当前没有数据可显示",
+  message,
+  description,
   action,
   actionLabel,
   className,
 }) {
+  const displayMessage = description ?? message ?? "当前没有数据可显示";
+
   return (
     <Card className={className}>
       <CardContent className="p-12 text-center">
         {Icon && (
           <div className="flex justify-center mb-4">
-            <Icon className="w-16 h-16 text-slate-500" />
+            {isValidElement(Icon) ? (
+              Icon
+            ) : (
+              <Icon className="w-16 h-16 text-slate-500" />
+            )}
           </div>
         )}
         <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-        <p className="text-slate-400 mb-4">{message}</p>
-        {action && actionLabel && (
+        <p className="text-slate-400 mb-4">{displayMessage}</p>
+        {action && actionLabel ? (
           <Button onClick={action} variant="outline">
             {actionLabel}
           </Button>
-        )}
+        ) : action && isValidElement(action) ? (
+          <div className="mt-4">{action}</div>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -94,10 +104,14 @@ export function EmptyState({
 
 export function ApiIntegrationError({
   error,
+  message,
+  title,
   onRetry,
   className,
 }) {
-  const friendly = getFriendlyError(error);
+  const friendly = getFriendlyError(error || (message ? { message } : null));
+  const displayTitle = title || friendly.title;
+  const displayMessage = message || friendly.message;
 
   return (
     <Card
@@ -110,10 +124,10 @@ export function ApiIntegrationError({
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-semibold text-amber-400 mb-2">
-              {friendly.title}
+              {displayTitle}
             </h3>
 
-            <p className="text-slate-300 mb-2">{friendly.message}</p>
+            <p className="text-slate-300 mb-2">{displayMessage}</p>
 
             {friendly.suggestion && (
               <div className="flex items-start gap-2 mt-2 mb-4 p-3 rounded-lg bg-white/[0.03] border border-white/5">

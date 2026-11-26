@@ -67,7 +67,13 @@ const ConfirmDialog = ({
       <DialogContent className={contentClassName || undefined}>
         <DialogHeader>
           <DialogTitle className={["flex items-center gap-2", titleClassName].filter(Boolean).join(" ")}>
-            {IconComponent && <IconComponent className={`h-5 w-5 ${iconClassName}`} />}
+            {IconComponent && (
+              React.isValidElement(IconComponent) ? (
+                IconComponent
+              ) : (
+                <IconComponent className={`h-5 w-5 ${iconClassName}`} />
+              )
+            )}
             {title}
           </DialogTitle>
           {description && (

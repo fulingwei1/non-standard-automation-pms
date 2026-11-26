@@ -31,7 +31,7 @@ const Input = React.forwardRef(
       <div className="relative">
         {Icon && (
           <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-            <Icon className="h-4 w-4" />
+            {React.isValidElement(Icon) ? Icon : <Icon className="h-4 w-4" />}
           </div>
         )}
         <input

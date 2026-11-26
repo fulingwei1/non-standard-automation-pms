@@ -1,3 +1,4 @@
+import { isValidElement } from "react";
 import { AlertCircle, RefreshCw, Inbox, Lightbulb } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
@@ -6,6 +7,7 @@ import { getFriendlyError } from "../../utils/friendlyErrors";
 
 export function ErrorMessage({
   error,
+  message,
   onRetry,
   title,
   className,
@@ -13,7 +15,7 @@ export function ErrorMessage({
 }) {
   const friendly = getFriendlyError(error);
   const displayTitle = title || friendly?.title || "加载失败";
-  const displayMessage = friendly?.message || error?.message || "未知错误";
+  const displayMessage = message || friendly?.message || error?.message || "未知错误";
   const displaySuggestion = friendly?.suggestion;
 
   return (
@@ -62,17 +64,36 @@ export function EmptyState({
   icon: Icon = Inbox,
   title = "暂无数据",
   description,
+  message,
   action,
+  actionLabel,
   className,
 }) {
   const IconComponent = Icon;
+  const displayDescription = description ?? message;
   return (
     <Card className={className}>
       <CardContent className="p-12 text-center">
-        <IconComponent className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+        {IconComponent && (
+          <div className="flex justify-center mb-4">
+            {isValidElement(IconComponent) ? (
+              IconComponent
+            ) : (
+              <IconComponent className="w-16 h-16 text-slate-500 mx-auto" />
+            )}
+          </div>
+        )}
         <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-        {description && <p className="text-slate-400 mb-4">{description}</p>}
-        {action && <div className="mt-4">{action}</div>}
+        {displayDescription && <p className="text-slate-400 mb-4">{displayDescription}</p>}
+        {action && actionLabel ? (
+          <div className="mt-4">
+            <Button onClick={action} variant="outline">
+              {actionLabel}
+            </Button>
+          </div>
+        ) : action ? (
+          <div className="mt-4">{action}</div>
+        ) : null}
       </CardContent>
     </Card>
   );

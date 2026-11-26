@@ -1,11 +1,27 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ganttDependencyApi, projectApi } from "../../services/api";
+import {
+  getProjectContextFilters,
+  mergeProjectContextFilters,
+} from "../../lib/projectContext";
 import { ROW_HEIGHT } from "./constants";
 import { extractPayload, normalizeProjects, parseDate, diffDays, getTaskBarPlacement } from "./utils";
 
 export default function useGanttData() {
+  const [searchParams] = useSearchParams();
+  const projectContextFilters = useMemo(
+    () => getProjectContextFilters(searchParams),
+    [searchParams]
+  );
+  const projectListParams = useMemo(
+    () => mergeProjectContextFilters(searchParams, { page: 1, page_size: 200 }),
+    [searchParams]
+  );
   const [projects, setProjects] = useState([]);
-  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [selectedProjectId, setSelectedProjectId] = useState(
+    projectContextFilters.project_id || ""
+  );
   const [tasks, setTasks] = useState([]);
   const [dependencies, setDependencies] = useState([]);
   const [criticalPathTaskIds, setCriticalPathTaskIds] = useState([]);
@@ -23,19 +39,40 @@ export default function useGanttData() {
 
   const loadProjects = useCallback(async () => {
     try {
-      const response = await projectApi.list({ page: 1, page_size: 200 });
+      const response = await projectApi.list(projectListParams);
       const payload = extractPayload(response);
       const list = normalizeProjects(payload);
       setProjects(list);
 
+      if (projectContextFilters.project_id) {
+        setSelectedProjectId(String(projectContextFilters.project_id));
+        return;
+      }
+
+      if (list.length === 1) {
+        setSelectedProjectId(String(list[0].id));
+        return;
+      }
+
       if (!selectedProjectId && list.length > 0) {
         setSelectedProjectId(String(list[0].id));
+        return;
+      }
+
+      if (list.length === 0) {
+        setSelectedProjectId("");
+        setTasks([]);
+        setDependencies([]);
+        setCriticalPathTaskIds([]);
+        setCriticalPathDuration(0);
+        setLoading(false);
       }
     } catch (err) {
       console.error("加载项目列表失败:", err);
       setError("加载项目列表失败，请稍后重试。");
+      setLoading(false);
     }
-  }, [selectedProjectId]);
+  }, [projectContextFilters.project_id, projectListParams, selectedProjectId]);
 
   const loadProjectData = useCallback(async (projectId) => {
     if (!projectId) {

@@ -1,43 +1,41 @@
 import { Route } from "react-router-dom";
 import { ProjectReviewProtectedRoute } from "../../components/common/ProtectedRoute";
+import { lazyLoad } from "../lazyLoad";
 import { PresalesCenterRedirect } from "./presalesRedirects";
 import { ProjectManagementCenterRedirect } from "./projectRedirects";
 
-// ProjectList 已整合到 ProjectBoard 的卡片视图
-// import ProjectList from "../../pages/ProjectList";
-import ProjectDetail from "../../pages/ProjectDetail";
-import ProjectWorkspace from "../../pages/ProjectWorkspace";
-import ProjectContributionReport from "../../pages/ProjectContributionReport";
-import ProgressReport from "../../pages/ProgressReport";
-import ProgressBoard from "../../pages/ProgressBoard";
-import ProgressForecast from "../../pages/ProgressForecast";
-import DependencyCheck from "../../pages/DependencyCheck";
-import MilestoneRateReport from "../../pages/MilestoneRateReport";
-import DelayReasonsReport from "../../pages/DelayReasonsReport";
-import ProjectTaskList from "../../pages/ProjectTaskList";
-import MachineManagement from "../../pages/MachineManagement";
-import MilestoneManagement from "../../pages/MilestoneManagement";
-import AssemblerTaskCenter from "../../pages/AssemblerTaskCenter";
-import EngineerRecommendation from "../../pages/EngineerRecommendation";
-import EngineerWorkloadBoard from "../../pages/EngineerWorkloadBoard";
-import EngineerWorkstation from "../../pages/EngineerWorkstation";
-// ProjectStageView 已整合到 ProjectBoard 的流水线视图
-// import ProjectStageView from "../../pages/ProjectStageView";
-import ProjectTimelineView from "../../pages/ProjectTimelineView";
-import ProjectListWithCost from "../../pages/ProjectListWithCost";
-import AcceptanceManagement from "../../pages/AcceptanceManagement";
-import ECNManagement from "../../pages/ECNManagement";
-import ECNCostImpact from "../../pages/ECNCostImpact";
-import ECNMaterialImpact from "../../pages/ECNMaterialImpact";
-import MaterialProgressView from "../../pages/MaterialProgressView";
-import FieldCommissioning from "../../pages/FieldCommissioning";
-import TemplateConfigList from "../../pages/TemplateConfigList";
-import MarginPrediction from "../../pages/MarginPrediction";
-import ScheduleOptimization from "../../pages/ScheduleOptimization";
-import ScheduleGeneration from "../../pages/ScheduleGeneration";
-import SchedulePlansList from "../../pages/SchedulePlansList";
-import SchedulePlanDetail from "../../pages/SchedulePlanDetail";
-import ProjectManagementCenter from "../../pages/ProjectManagementCenter";
+// 懒加载页面组件 — 减少初始包体积
+const ProjectDetail = lazyLoad(() => import("../../pages/ProjectDetail"));
+const ProjectWorkspace = lazyLoad(() => import("../../pages/ProjectWorkspace"));
+const ProjectContributionReport = lazyLoad(() => import("../../pages/ProjectContributionReport"));
+const ProgressReport = lazyLoad(() => import("../../pages/ProgressReport"));
+const ProgressBoard = lazyLoad(() => import("../../pages/ProgressBoard"));
+const ProgressForecast = lazyLoad(() => import("../../pages/ProgressForecast"));
+const DependencyCheck = lazyLoad(() => import("../../pages/DependencyCheck"));
+const MilestoneRateReport = lazyLoad(() => import("../../pages/MilestoneRateReport"));
+const DelayReasonsReport = lazyLoad(() => import("../../pages/DelayReasonsReport"));
+const ProjectTaskList = lazyLoad(() => import("../../pages/ProjectTaskList"));
+const MachineManagement = lazyLoad(() => import("../../pages/MachineManagement"));
+const MilestoneManagement = lazyLoad(() => import("../../pages/MilestoneManagement"));
+const AssemblerTaskCenter = lazyLoad(() => import("../../pages/AssemblerTaskCenter"));
+const EngineerRecommendation = lazyLoad(() => import("../../pages/EngineerRecommendation"));
+const EngineerWorkloadBoard = lazyLoad(() => import("../../pages/EngineerWorkloadBoard"));
+const EngineerWorkstation = lazyLoad(() => import("../../pages/EngineerWorkstation"));
+const ProjectTimelineView = lazyLoad(() => import("../../pages/ProjectTimelineView"));
+const ProjectListWithCost = lazyLoad(() => import("../../pages/ProjectListWithCost"));
+const AcceptanceManagement = lazyLoad(() => import("../../pages/AcceptanceManagement"));
+const ECNManagement = lazyLoad(() => import("../../pages/ECNManagement"));
+const ECNCostImpact = lazyLoad(() => import("../../pages/ECNCostImpact"));
+const ECNMaterialImpact = lazyLoad(() => import("../../pages/ECNMaterialImpact"));
+const MaterialProgressView = lazyLoad(() => import("../../pages/MaterialProgressView"));
+const FieldCommissioning = lazyLoad(() => import("../../pages/FieldCommissioning"));
+const TemplateConfigList = lazyLoad(() => import("../../pages/TemplateConfigList"));
+const MarginPrediction = lazyLoad(() => import("../../pages/MarginPrediction"));
+const ScheduleOptimization = lazyLoad(() => import("../../pages/ScheduleOptimization"));
+const ScheduleGeneration = lazyLoad(() => import("../../pages/ScheduleGeneration"));
+const SchedulePlansList = lazyLoad(() => import("../../pages/SchedulePlansList"));
+const SchedulePlanDetail = lazyLoad(() => import("../../pages/SchedulePlanDetail"));
+const ProjectManagementCenter = lazyLoad(() => import("../../pages/ProjectManagementCenter"));
 
 export function ProjectRoutes() {
   return (
