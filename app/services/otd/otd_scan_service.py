@@ -20,7 +20,6 @@ OTD 项目交付智能体 - 每日扫描编排服务
 不新建任何表，不改任何 model。预警走现有 AlertRecord + send_notification_for_alert。
 """
 
-import json
 import logging
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional

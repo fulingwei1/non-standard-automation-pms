@@ -7,7 +7,7 @@ from decimal import Decimal
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.common.query_filters import apply_like_filter

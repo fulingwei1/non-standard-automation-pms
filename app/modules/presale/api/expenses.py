@@ -13,7 +13,6 @@ from datetime import date, datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -24,7 +23,6 @@ from app.schemas.common import ResponseModel
 from app.schemas.presale_expense import (
     ExpenseApprovalRequest,
     PresaleExpenseCreate,
-    PresaleExpenseResponse,
 )
 
 router = APIRouter(prefix="/expenses", tags=["presale-expenses"])

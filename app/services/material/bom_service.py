@@ -9,9 +9,9 @@ from datetime import datetime
 from typing import Any, Dict
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
-from app.models.material import BomHeader, BomItem, Material
+from app.models.material import BomHeader, BomItem
 from app.models.project import Project
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.vendor import Vendor

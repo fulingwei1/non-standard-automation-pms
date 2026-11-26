@@ -10,8 +10,7 @@
   GET  /presale-proposals/pending      待审队列（售前工程师用）
   GET  /presale-proposals/{id}         方案详情（含迭代历史）
 """
-import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field

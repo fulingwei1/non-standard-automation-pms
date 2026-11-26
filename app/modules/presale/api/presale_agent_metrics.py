@@ -14,7 +14,7 @@
   - 销售转化率（is_converted 字段手动回填后）
 """
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, text

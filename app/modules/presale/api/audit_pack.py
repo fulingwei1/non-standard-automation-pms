@@ -10,11 +10,10 @@ GET  /audit-packs              列表（按状态过滤）
 GET  /audit-packs/pending      待审批队列
 GET  /audit-packs/{id}         详情（含生成的资料包HTML）
 """
-import json
 from datetime import datetime
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import desc
 from sqlalchemy.orm import Session

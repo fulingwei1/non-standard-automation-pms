@@ -11,7 +11,7 @@ BOM 成本检查清单服务（对应手册 Sheet3）
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session

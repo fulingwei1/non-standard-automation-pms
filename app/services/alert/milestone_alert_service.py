@@ -10,7 +10,7 @@
 
 import logging
 from datetime import date, datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import List, Tuple
 
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session

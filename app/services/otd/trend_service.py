@@ -239,7 +239,6 @@ class OTDTrendService:
     ) -> List[Dict[str, Any]]:
         """查时间窗内的 OTD 预警（筛 alert_data.source == otd_scan），用于趋势打点。"""
         from app.models.alert import AlertRecord
-        from sqlalchemy import literal_column
 
         try:
             alerts = (

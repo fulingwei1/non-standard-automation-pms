@@ -5,9 +5,7 @@ ProjectFilterService 测试
 测试 app/services/data_scope/project_filter.py 中的核心功能
 """
 
-import pytest
 from unittest.mock import Mock, patch
-from datetime import datetime
 
 
 class MockUser:
@@ -24,7 +22,6 @@ class TestProjectFilterService:
 
     def test_get_accessible_project_ids_superuser(self):
         """测试：超级管理员可以访问所有项目"""
-        from app.services.data_scope.user_scope import UserScopeService
         
         mock_db = Mock()
         mock_user = MockUser(id=1, is_superuser=True)

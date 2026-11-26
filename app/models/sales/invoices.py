@@ -4,12 +4,9 @@
 """
 
 from sqlalchemy import (
-    Boolean,
     Column,
     Date,
-    DateTime,
     ForeignKey,
-    Index,
     Integer,
     Numeric,
     String,

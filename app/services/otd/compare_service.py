@@ -11,7 +11,7 @@ OTD 对比分析服务
 
 import logging
 from datetime import date, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from sqlalchemy.orm import Session
 
@@ -111,7 +111,6 @@ class OTDCompareService:
         对比：风险项目数 / 平均毛利率 / 准时交付率 / 延期天数。
         """
         from app.services.otd import OTDMetricsService
-        from app.services.otd.trend_service import OTDTrendService
 
         period_end = self._today
         period_start = period_end - timedelta(days=days)

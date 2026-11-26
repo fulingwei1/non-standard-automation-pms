@@ -11,8 +11,8 @@ from . import actions, batch, crud, follow_ups
 router = APIRouter()
 
 # 聚合所有子模块的路由
-# 静态入口（例如 /leads/export）必须先于 /leads/{lead_id} 注册。
+# 静态入口（例如 /leads/export、/leads/batch/*）必须先于 /leads/{lead_id} 注册。
+router.include_router(batch.router)
 router.include_router(actions.router)
 router.include_router(follow_ups.router)
-router.include_router(batch.router)
 router.include_router(crud.router)

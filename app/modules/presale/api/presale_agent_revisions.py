@@ -9,13 +9,12 @@
   GET  /presale-agent/revisions/stats    高频修改字段统计（AI 改进方向）
   GET  /presale-agent/revisions/{id}     查单条修订详情
 """
-import json
 from collections import Counter
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import desc, func
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps

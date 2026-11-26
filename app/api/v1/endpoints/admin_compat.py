@@ -16,7 +16,6 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.api.v1.endpoints.admin_stats import collect_admin_stats
 from app.core import security
 from app.models.admin_office import (
     AdminAsset,
@@ -106,17 +105,6 @@ def _parse_date(value) -> Optional[date]:
         return date.fromisoformat(str(value)[:10])
     except ValueError:
         return None
-
-
-# ==================== 总览 ====================
-
-
-@router.get("/stats")
-def get_admin_stats(
-    db: Session = Depends(deps.get_db),
-    _current_user: User = Depends(security.require_permission("user:read")),
-) -> Dict[str, Any]:
-    return {"code": 200, "message": "success", "data": collect_admin_stats(db)}
 
 
 # ==================== 办公用品 ====================

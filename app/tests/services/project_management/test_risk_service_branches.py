@@ -11,7 +11,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from app.models.pmo import PmoProjectRisk
-from app.models.project import Project, ProjectMilestone
+from app.models.project import ProjectMilestone
 from app.models.project.risk_history import ProjectRiskHistory, ProjectRiskSnapshot
 from app.services.project.project_risk_service import ProjectRiskService
 

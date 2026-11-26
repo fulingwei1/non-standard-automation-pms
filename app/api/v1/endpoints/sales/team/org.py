@@ -4,7 +4,7 @@
 GET /sales/team/org — 返回销售团队层级树、各节点业绩、汇报关系
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Query

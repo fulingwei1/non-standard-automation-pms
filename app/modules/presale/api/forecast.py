@@ -5,11 +5,9 @@
 """
 
 from collections import defaultdict
-from datetime import date, datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps

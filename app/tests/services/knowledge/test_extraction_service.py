@@ -5,11 +5,10 @@ KnowledgeExtractionService 测试
 """
 
 import pytest
-from datetime import date, datetime
-from unittest.mock import Mock, MagicMock, patch
+from datetime import datetime
+from unittest.mock import MagicMock, patch
 
 from app.services.knowledge.extraction_service import KnowledgeExtractionService
-from app.models.knowledge_base import KnowledgeEntry, KnowledgeTypeEnum, KnowledgeStatusEnum
 
 
 class TestKnowledgeExtractionService:

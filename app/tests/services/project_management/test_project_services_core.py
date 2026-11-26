@@ -25,7 +25,6 @@ from app.services.stage_advance_service import (
     create_status_log,
     create_installation_dispatch_orders,
 )
-from app.schemas.project import MilestoneCreate, MilestoneUpdate
 
 
 # ========== 进度服务测试 ==========

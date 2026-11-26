@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """C1 ECN影响预测 · 回款催收 · 投标智能。"""
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field

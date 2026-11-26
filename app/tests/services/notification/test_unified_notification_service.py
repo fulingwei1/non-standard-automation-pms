@@ -2,9 +2,8 @@
 """
 统一通知服务测试
 """
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock
 import pytest
-from datetime import datetime
 
 from app.services.notification.unified_notification_service import (
     NotificationService,

@@ -15,7 +15,7 @@ from datetime import date, datetime, time, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.sales import Lead, LeadFollowUp, Opportunity, Quote

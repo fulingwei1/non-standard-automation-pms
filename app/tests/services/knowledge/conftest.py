@@ -3,9 +3,8 @@
 知识库服务测试配置文件
 """
 import pytest
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
-from unittest.mock import Mock, MagicMock
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -14,12 +13,6 @@ from sqlalchemy.pool import StaticPool
 from app.models.base import Base
 from app.models.user import User
 from app.models.project.core import Project
-from app.models.knowledge_base import (
-    KnowledgeEntry,
-    KnowledgeTypeEnum,
-    KnowledgeSourceEnum,
-    KnowledgeStatusEnum,
-)
 from app.models.project_risk import ProjectRisk
 from app.models.issue import Issue
 from app.models.ecn.core import Ecn

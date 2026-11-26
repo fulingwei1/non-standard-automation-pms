@@ -7,7 +7,7 @@
 2. 每个销售人员的转化率
 """
 
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query

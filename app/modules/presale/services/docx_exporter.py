@@ -6,10 +6,9 @@
 销售拿到 Word 可以直接编辑后发给客户。
 """
 import io
-import json
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 logger = logging.getLogger("presale.export")
 
@@ -31,7 +30,7 @@ def export_proposal_to_docx(
         Word 文档二进制内容（bytes）
     """
     from docx import Document
-    from docx.shared import Pt, Inches, Cm
+    from docx.shared import Pt
     from docx.enum.text import WD_ALIGN_PARAGRAPH
 
     doc = Document()
@@ -284,7 +283,6 @@ def export_audit_pack_to_docx(
     """
     from docx import Document
     from docx.shared import Pt
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
     import re
 
     doc = Document()

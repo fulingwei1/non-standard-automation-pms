@@ -11,7 +11,7 @@
 - GET /low-profit-root-cause — 低利润根因分析（全局）
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session

@@ -14,7 +14,6 @@ from app.core import security
 from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.user import User
 from app.schemas.sales.contract_enhanced import (
-    ContractApprovalResponse,
     ContractApprovalUpdate,
     ContractAttachmentCreate,
     ContractAttachmentResponse,

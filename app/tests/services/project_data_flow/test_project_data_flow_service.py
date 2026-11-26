@@ -7,7 +7,7 @@
 
 from datetime import date
 from types import SimpleNamespace
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, MagicMock
 
 import pytest
 from sqlalchemy.orm import Session

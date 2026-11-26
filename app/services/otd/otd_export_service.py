@@ -4,8 +4,7 @@ OTD 项目交付智能体导出服务
 """
 
 import io
-from datetime import date, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from app.services.import_export_engine import ExcelExportEngine
 

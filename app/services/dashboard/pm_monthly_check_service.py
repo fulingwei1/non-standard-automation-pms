@@ -13,7 +13,7 @@ PM 月度自检服务（对应手册 Sheet8）
 """
 
 import logging
-from datetime import date, timedelta
+from datetime import date
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session

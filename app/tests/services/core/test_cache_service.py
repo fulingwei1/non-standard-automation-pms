@@ -2,8 +2,7 @@
 """
 缓存服务测试
 """
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 from datetime import datetime, timedelta
 
 
@@ -124,7 +123,6 @@ class TestCacheService:
     def test_cache_ttl_expiration(self):
         """测试缓存过期"""
         from app.services.cache_service import CacheService
-        from datetime import datetime, timedelta
         
         cache = CacheService(redis_client=None)
         

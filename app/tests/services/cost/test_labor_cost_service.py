@@ -7,12 +7,10 @@
 - 项目工时成本计算
 """
 
-import pytest
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-from app.models.project import Project
 from app.services.cost.labor_cost_service import LaborCostService
 
 

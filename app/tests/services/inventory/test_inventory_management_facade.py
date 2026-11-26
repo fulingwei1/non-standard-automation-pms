@@ -5,7 +5,7 @@ from unittest.mock import Mock, MagicMock
 
 import pytest
 
-from app.models.inventory_tracking import MaterialStock, MaterialTransaction, MaterialReservation
+from app.models.inventory_tracking import MaterialStock, MaterialTransaction
 
 
 class TestInventoryManagementFacade:
@@ -47,7 +47,6 @@ class TestInventoryManagementFacade:
 
     def test_get_available_quantity(self, inventory_service, mock_db_session):
         """测试获取可用数量"""
-        from sqlalchemy import func
 
         mock_query = Mock()
         mock_query.filter = Mock(return_value=Mock(scalar=Mock(return_value=Decimal("500"))))

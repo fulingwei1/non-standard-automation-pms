@@ -22,7 +22,7 @@ from app.schemas.service import (
     CustomerCommunicationResponse,
     CustomerCommunicationUpdate,
 )
-from app.utils.db_helpers import get_or_404, save_obj
+from app.utils.db_helpers import save_obj
 
 from .access import filter_owned_service_query, get_owned_service_object_or_404
 from .number_utils import generate_communication_no

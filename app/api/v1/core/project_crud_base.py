@@ -118,7 +118,7 @@ def create_project_crud_router(
         keyword: Optional[str] = Query(None, description="关键词搜索"),
         order_by: Optional[str] = Query(None, description="排序字段"),
         order_direction: Optional[str] = Query("desc", description="排序方向 (asc/desc)"),
-        current_user: User = Depends(read_dependency),
+        current_user: User = Depends(read_dependency),  # Depends(require_permission)
     ) -> Any:
         """获取项目子资源列表"""
 

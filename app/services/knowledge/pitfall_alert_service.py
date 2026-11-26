@@ -13,7 +13,6 @@ from app.models.knowledge_base import (
     KnowledgeAlert,
     KnowledgeEntry,
     KnowledgeStatusEnum,
-    KnowledgeTypeEnum,
 )
 from app.models.project.core import Project
 

@@ -5,8 +5,7 @@ KnowledgeSearchService 测试
 """
 
 import pytest
-from datetime import datetime
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, MagicMock
 
 from app.services.knowledge.search_service import KnowledgeSearchService
 from app.models.knowledge_base import KnowledgeEntry, KnowledgeTypeEnum, KnowledgeSourceEnum, KnowledgeStatusEnum
@@ -164,7 +163,6 @@ class TestKnowledgeSearchService:
         """
         测试知识库统计
         """
-        from sqlalchemy import func
         
         db_session.query = MagicMock()
         

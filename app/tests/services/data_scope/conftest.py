@@ -3,7 +3,7 @@
 DataScope 测试配置
 提供通用的 fixtures 用于过滤服务测试
 """
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from datetime import datetime
 
 import pytest

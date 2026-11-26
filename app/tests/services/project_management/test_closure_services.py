@@ -6,7 +6,6 @@ Closure 相关服务测试（简化版）
 - LessonsCollectionService.auto_collect - 结项复盘报告生成
 """
 
-import pytest
 from datetime import date
 from decimal import Decimal
 

@@ -7,7 +7,6 @@
 """
 
 import logging
-from datetime import datetime
 from typing import Any, Dict
 
 from app.dependencies import get_db_session

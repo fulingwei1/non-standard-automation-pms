@@ -8,7 +8,6 @@
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps

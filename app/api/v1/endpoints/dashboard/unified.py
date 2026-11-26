@@ -9,7 +9,6 @@ import logging
 2. 详细模式：返回完整的业务数据
 """
 
-import logging
 from datetime import datetime
 from typing import List, Optional
 

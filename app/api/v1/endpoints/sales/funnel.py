@@ -5,7 +5,7 @@
 提供统一状态管理、阶段门验证、状态转换和滞留时间监控接口。
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field

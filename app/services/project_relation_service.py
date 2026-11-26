@@ -5,11 +5,11 @@
 提供项目与生产/采购/交付/售后模块的关联功能
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
-from app.models.production import ProductionPlan, WorkOrder
+from app.models.production import WorkOrder
 from app.models.purchase import PurchaseRequest, PurchaseOrder
 from app.models.project_delivery import ProjectDeliverySchedule
 

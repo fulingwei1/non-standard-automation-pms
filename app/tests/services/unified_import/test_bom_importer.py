@@ -5,12 +5,10 @@ BOM导入器测试
 
 import pytest
 import pandas as pd
-from unittest.mock import Mock, patch, MagicMock
 from decimal import Decimal
 
 from app.services.unified_import.bom_importer import BomImporter
 from app.models.material import BomHeader, BomItem
-from app.models.project import Project
 
 
 class TestBomImporter:

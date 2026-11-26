@@ -4,14 +4,13 @@ BOM 业务逻辑服务
 基于统一的 BaseService 实现
 """
 
-from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
 from app.common.crud.base import BaseService
-from app.models.material import BomHeader, BomItem
+from app.models.material import BomHeader
 from app.schemas.material import BomCreate, BomItemResponse, BomResponse, BomUpdate
 
 

@@ -12,7 +12,7 @@
 """
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session

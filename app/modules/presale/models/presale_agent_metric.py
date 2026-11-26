@@ -11,7 +11,7 @@
 后续可补：报价→实际成交偏差（需 join projects.actual_cost，等真实数据）、
         是否转化为签单（is_converted，需手动回填或外接 CRM）。
 """
-from sqlalchemy import ForeignKey, JSON, Column, DateTime, Integer, Numeric, String, Text
+from sqlalchemy import ForeignKey, JSON, Column, Integer, Numeric, String, Text
 
 from app.models.base import Base, TimestampMixin
 

@@ -4,14 +4,14 @@
 目标覆盖率: 60%+
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date
 from decimal import Decimal
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models.project import Project, ProjectMilestone, ProjectPaymentPlan
+from app.models.project import Project, ProjectPaymentPlan
 from app.models.sales import Contract
 from app.services.sales.payment_plan_service import PaymentPlanService
 

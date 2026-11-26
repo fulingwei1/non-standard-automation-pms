@@ -5,12 +5,10 @@
 
 import pytest
 import pandas as pd
-from unittest.mock import Mock, patch
 from decimal import Decimal
 
 from app.services.unified_import.material_importer import MaterialImporter
 from app.models.material import Material
-from app.models.vendor import Vendor
 
 
 class TestMaterialImporter:

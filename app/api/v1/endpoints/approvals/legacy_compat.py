@@ -8,7 +8,6 @@ while the unified approval engine remains the source of truth.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -223,23 +222,6 @@ def export_instances(
     return {"download_url": None, "message": "审批实例导出已准备"}
 
 
-@router.post("/instances/{instance_id}/withdraw")
-def withdraw_instance_compat(
-    instance_id: int,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("approval:create")),
-):
-    instance = db.query(ApprovalInstance).filter(ApprovalInstance.id == instance_id).first()
-    if not instance:
-        raise HTTPException(status_code=404, detail="审批实例不存在")
-    if instance.initiator_id != current_user.id and not current_user.is_superuser:
-        raise HTTPException(status_code=404, detail="审批实例不存在")
-    instance.status = "CANCELLED"
-    db.add(instance)
-    db.commit()
-    return {"message": "撤回成功", "instance_id": instance.id}
-
-
 @router.get("/instances/")
 def list_instances_with_slash(
     db: Session = Depends(deps.get_db),
@@ -328,89 +310,6 @@ def _get_task_or_404(db: Session, task_id: int) -> ApprovalTask:
     return task
 
 
-@router.post("/tasks/{task_id}/approve")
-def approve_task_compat(
-    task_id: int,
-    payload: Optional[dict] = None,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("approval:approve")),
-):
-    task = _get_task_or_404(db, task_id)
-    task.status = "COMPLETED"
-    task.action = "APPROVE"
-    task.comment = (payload or {}).get("comments") or (payload or {}).get("comment")
-    task.completed_at = datetime.now()
-    if task.instance:
-        task.instance.status = "APPROVED"
-        task.instance.completed_at = datetime.now()
-    db.commit()
-    return {"message": "审批通过", "task_id": task.id}
-
-
-@router.post("/tasks/{task_id}/reject")
-def reject_task_compat(
-    task_id: int,
-    payload: Optional[dict] = None,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("approval:approve")),
-):
-    task = _get_task_or_404(db, task_id)
-    task.status = "COMPLETED"
-    task.action = "REJECT"
-    task.comment = (payload or {}).get("comments") or (payload or {}).get("comment")
-    task.completed_at = datetime.now()
-    if task.instance:
-        task.instance.status = "REJECTED"
-        task.instance.completed_at = datetime.now()
-    db.commit()
-    return {"message": "审批驳回", "task_id": task.id}
-
-
-@router.post("/tasks/{task_id}/return")
-def return_task_compat(
-    task_id: int,
-    payload: Optional[dict] = None,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("approval:approve")),
-):
-    task = _get_task_or_404(db, task_id)
-    task.status = "COMPLETED"
-    task.action = "RETURN"
-    task.comment = (payload or {}).get("comments") or (payload or {}).get("comment")
-    task.completed_at = datetime.now()
-    db.commit()
-    return {"message": "退回成功", "task_id": task.id}
-
-
-@router.post("/tasks/{task_id}/transfer")
-def transfer_task_compat(
-    task_id: int,
-    payload: Optional[dict] = None,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("approval:approve")),
-):
-    task = _get_task_or_404(db, task_id)
-    to_user_id = (payload or {}).get("transfer_to_user_id") or (payload or {}).get("to_user_id")
-    if to_user_id is not None:
-        target_user = db.query(User).filter(User.id == to_user_id, User.is_active.is_(True)).first()
-        if not target_user:
-            raise HTTPException(status_code=404, detail="转交目标用户不存在")
-        task.assignee_id = target_user.id
-    task.comment = (payload or {}).get("comments") or (payload or {}).get("comment")
-    db.commit()
-    return {"message": "转交成功", "task_id": task.id}
-
-
-@router.post("/tasks/{task_id}/remind")
-def remind_task_compat(
-    task_id: int,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("approval:view")),
-):
-    _get_task_or_404(db, task_id)
-    return {"message": "催办成功"}
-
-
 @router.post("/tasks/batch-approve")
 def batch_approve_tasks(
     payload: dict,
@@ -462,7 +361,6 @@ def list_templates_with_slash(
     }
 
 
-@router.post("/templates")
 @router.post("/templates/")
 def create_template_compat(
     payload: dict,

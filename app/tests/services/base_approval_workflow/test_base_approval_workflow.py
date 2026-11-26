@@ -6,7 +6,7 @@
 仅测试不依赖外部导入的简单功能
 """
 
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock
 
 import pytest
 from sqlalchemy.orm import Session

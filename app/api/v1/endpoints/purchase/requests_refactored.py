@@ -25,7 +25,7 @@ from app.models.purchase import (
 from app.models.user import User
 from app.services.data_scope.config import DataScopeConfig
 from app.services.data_scope.data_scope_service import DataScopeService
-from app.utils.db_helpers import delete_obj, get_or_404, save_obj
+from app.utils.db_helpers import get_or_404, save_obj
 
 from .utils import (
     decimal_value,

@@ -221,7 +221,7 @@ def test_sales_templates_route_tolerates_legacy_invalid_json(
     db_session.commit()
 
     response = client.get(
-        f"{settings.API_V1_PREFIX}/sales/templates",
+        f"{settings.API_V1_PREFIX}/approvals/templates",
         headers=_auth_headers(admin_token),
         follow_redirects=False,
     )

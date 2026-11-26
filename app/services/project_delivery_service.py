@@ -6,11 +6,10 @@
 """
 
 import logging
-from datetime import date, datetime
-from decimal import Decimal
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, desc, func, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.models.project_delivery import (
@@ -21,7 +20,6 @@ from app.models.project_delivery import (
     ProjectDeliveryChangeLog,
     ProjectDeliveryDependency,
 )
-from app.models.user import User
 from app.schemas.project_delivery import (
     ProjectDeliveryScheduleCreate,
     ProjectDeliveryScheduleUpdate,
