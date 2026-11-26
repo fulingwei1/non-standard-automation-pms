@@ -1471,19 +1471,21 @@ def submitted_budget(db_session: Session, admin_token: str):
         db_session.flush()
 
     import uuid
-    # Create submitted budget
+    from app.models.approval import ApprovalTask
+    from app.services.approval_engine import ApprovalEngineService
+
+    # Create submitted budget via unified approval engine
     admin_user = db_session.query(User).filter(User.username == "admin").first()
+    admin_id = admin_user.id if admin_user else 1
     budget = ProjectBudget(
         budget_no=f"BG-SUBMITTED-{uuid.uuid4().hex[:12].upper()}",
         project_id=project.id,
         budget_name="测试预算 - 已提交",
         budget_type="INITIAL",
         version="V1.0",
-        total_amount=Decimal("100000.00"),
-        status="SUBMITTED",
-        submitted_at=datetime.now(),
-        submitted_by=admin_user.id if admin_user else 1,
-        created_by=admin_user.id if admin_user else 1,
+        total_amount=Decimal("60000.00"),
+        status="DRAFT",
+        created_by=admin_id,
     )
     db_session.add(budget)
     db_session.flush()
@@ -1497,6 +1499,37 @@ def submitted_budget(db_session: Session, admin_token: str):
         budget_amount=Decimal("60000.00"),
     )
     db_session.add(item)
+    db_session.flush()
+
+    instance = ApprovalEngineService(db_session).submit(
+        template_code="TPL_PROJECT_BUDGET",
+        entity_type="PROJECT_BUDGET",
+        entity_id=budget.id,
+        form_data={
+            "budget_id": budget.id,
+            "budget_no": budget.budget_no,
+            "project_id": budget.project_id,
+            "budget_type": budget.budget_type,
+            "version": budget.version,
+            "total_amount": float(budget.total_amount or 0),
+            "item_total": 60000.0,
+        },
+        initiator_id=admin_id,
+        title=f"项目预算审批 - {budget.budget_no}",
+        summary=f"{project.project_name} / {budget.budget_name}",
+        urgency="NORMAL",
+        cc_user_ids=None,
+    )
+    pending_tasks = (
+        db_session.query(ApprovalTask)
+        .filter(
+            ApprovalTask.instance_id == instance.id,
+            ApprovalTask.status == "PENDING",
+        )
+        .all()
+    )
+    if pending_tasks and not any(t.assignee_id == admin_id for t in pending_tasks):
+        pending_tasks[0].assignee_id = admin_id
     db_session.commit()
     db_session.refresh(budget)
     return budget

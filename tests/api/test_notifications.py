@@ -38,6 +38,7 @@ class TestNotificationCRUD:
         """普通登录用户应能读取自己的通知，不需要额外 notification:read 权限"""
         marker = f"NOTIFY-OWN-{uuid.uuid4().hex}"
         own_notification = Notification(
+            tenant_id=regular_user.tenant_id,
             user_id=regular_user.id,
             notification_type="SYSTEM",
             source_type="test",
@@ -47,6 +48,7 @@ class TestNotificationCRUD:
             is_read=False,
         )
         other_notification = Notification(
+            tenant_id=normal_user.tenant_id,
             user_id=normal_user.id,
             notification_type="SYSTEM",
             source_type="test",
