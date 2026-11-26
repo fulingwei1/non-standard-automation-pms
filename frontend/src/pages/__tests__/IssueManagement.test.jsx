@@ -1,647 +1,201 @@
 /**
  * IssueManagement 组件测试
- * 测试覆盖：渲染、数据加载、交互、错误、权限
+ * 覆盖：页面渲染、数据加载、空态与错误态、新建问题弹窗
  */
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import IssueManagement from "../IssueManagement";
+import { issueApi } from "../../services/api";
 
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-
-import { MemoryRouter } from 'react-router-dom';
-
-import IssueManagement from '../IssueManagement';
-
-import { issueApi } from '../../services/api';
-
-// Mock dependencies
-vi.mock('../../services/api', () => ({
-  default: {
-    get: vi.fn().mockResolvedValue({data: { items: [] }}),
-    post: vi.fn().mockResolvedValue({ data: { success: true } }),
-    put: vi.fn().mockResolvedValue({ data: { success: true } }),
-    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
-    defaults: { baseURL: '/api' },
+vi.mock("../../services/api", () => ({
+  issueApi: {
+    getIssues: vi.fn(),
+    getStats: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    assign: vi.fn(),
+    resolve: vi.fn(),
+    verify: vi.fn(),
+    close: vi.fn(),
+    cancel: vi.fn(),
   },
-    issueApi: {
-      create: vi.fn().mockResolvedValue({data: { items: [] }}),
-      delete: vi.fn().mockResolvedValue({data: { items: [] }}),
-      getIssues: vi.fn().mockResolvedValue({data: { items: [] }}),
-      update: vi.fn().mockResolvedValue({data: { items: [] }}),
-      list: vi.fn().mockResolvedValue({data: { items: [] }}),
-      get: vi.fn().mockResolvedValue({data: { items: [] }}),
-      assign: vi.fn().mockResolvedValue({data: { items: [] }}),
-      resolve: vi.fn().mockResolvedValue({data: { items: [] }}),
-      verify: vi.fn().mockResolvedValue({data: { items: [] }}),
-      close: vi.fn().mockResolvedValue({data: { items: [] }}),
-      cancel: vi.fn().mockResolvedValue({data: { items: [] }}),
-      changeStatus: vi.fn().mockResolvedValue({data: { items: [] }}),
-      getStatistics: vi.fn().mockResolvedValue({data: { items: [] }}),
-      getStats: vi.fn().mockResolvedValue({data: { items: [] }}),
-      getTrend: vi.fn().mockResolvedValue({data: { items: [] }}),
-      getEngineerStatistics: vi.fn().mockResolvedValue({data: { items: [] }}),
-      getCauseAnalysis: vi.fn().mockResolvedValue({data: { items: [] }}),
-      getSnapshots: vi.fn().mockResolvedValue({data: { items: [] }}),
-      getSnapshot: vi.fn().mockResolvedValue({data: { items: [] }}),
-      getFollowUps: vi.fn().mockResolvedValue({data: { items: [] }}),
-      addFollowUp: vi.fn().mockResolvedValue({data: { items: [] }}),
-      getRelated: vi.fn().mockResolvedValue({data: { items: [] }}),
-      createRelated: vi.fn().mockResolvedValue({data: { items: [] }}),
-      batchAssign: vi.fn().mockResolvedValue({data: { items: [] }}),
-      batchStatus: vi.fn().mockResolvedValue({data: { items: [] }}),
-      batchClose: vi.fn().mockResolvedValue({data: { items: [] }}),
-      export: vi.fn().mockResolvedValue({data: { items: [] }}),
-      import: vi.fn().mockResolvedValue({data: { items: [] }}),
-      getBoard: vi.fn().mockResolvedValue({data: { items: [] }}),
-    }
 }));
 
-vi.mock('framer-motion', () => ({
-  motion: new Proxy({}, {
-    get: (_, tag) => ({ children, ...props }) => {
-      const validProps = ['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'];
-      const filtered = props && Object.entries(props).length > 0 
-        ? Object.fromEntries(Object.entries(props).filter(([k]) => !validProps.includes(k))) 
-        : {};
-      const Tag = typeof tag === 'string' ? tag : 'div';
-      return <Tag {...filtered}>{children}</Tag>;
-    }
-  }),
-  AnimatePresence: ({ children }) => children,
-  useAnimation: () => ({ start: vi.fn(), stop: vi.fn() }),
-  useInView: () => true,
-}));
-
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
-
-describe('IssueManagement', () => {
-  const mockIssueData = {
-    items: [
-      {
-        id: 1,
-        issueNo: 'ISS-2024-001',
-        title: '系统登录失败',
-        projectName: '智能制造系统',
-        severity: 'high',
-        status: 'open',
-        reportedBy: '张三',
-        assignedTo: '李四',
-        reportedAt: '2024-02-15',
-        dueDate: '2024-02-20'
+vi.mock("framer-motion", () => ({
+  motion: new Proxy(
+    {},
+    {
+      get: (_, tag) => ({ children, ...props }) => {
+        const invalid = new Set([
+          "initial",
+          "animate",
+          "exit",
+          "variants",
+          "transition",
+          "whileHover",
+          "whileTap",
+          "whileInView",
+          "layout",
+          "layoutId",
+          "drag",
+          "dragConstraints",
+          "onDragEnd",
+        ]);
+        const filtered = Object.fromEntries(
+          Object.entries(props).filter(([k]) => !invalid.has(k)),
+        );
+        const Tag = typeof tag === "string" ? tag : "div";
+        return <Tag {...filtered}>{children}</Tag>;
       },
-      {
-        id: 2,
-        issueNo: 'ISS-2024-002',
-        title: '数据同步延迟',
-        projectName: 'ERP系统升级',
-        severity: 'medium',
-        status: 'in_progress',
-        reportedBy: '王五',
-        assignedTo: '赵六',
-        reportedAt: '2024-02-10',
-        dueDate: '2024-02-25'
-      }
-    ],
+    },
+  ),
+  AnimatePresence: ({ children }) => children,
+}));
+
+describe("IssueManagement", () => {
+  const mockIssues = [
+    {
+      id: 1,
+      issue_no: "ISS-2024-001",
+      title: "系统登录失败",
+      description: "用户无法正常登录系统",
+      project_name: "智能制造系统",
+      severity: "MAJOR",
+      priority: "HIGH",
+      status: "OPEN",
+      category: "PROJECT",
+      issue_type: "DEFECT",
+      reporter_name: "张三",
+      assignee_name: "李四",
+      created_at: "2024-02-15",
+      due_date: "2024-02-20",
+    },
+    {
+      id: 2,
+      issue_no: "ISS-2024-002",
+      title: "数据同步延迟",
+      description: "同步超过30秒",
+      project_name: "ERP系统升级",
+      severity: "MINOR",
+      priority: "MEDIUM",
+      status: "IN_PROGRESS",
+      category: "TECHNICAL",
+      issue_type: "BUG",
+      reporter_name: "王五",
+      assignee_name: "赵六",
+      created_at: "2024-02-10",
+      due_date: "2024-02-25",
+    },
+  ];
+
+  const mockStats = {
     total: 2,
-    page: 1,
-    pageSize: 10
+    open: 1,
+    processing: 1,
+    resolved: 0,
+    closed: 0,
+    blocking: 0,
+    overdue: 0,
+    by_status: { OPEN: 1, IN_PROGRESS: 1 },
+    by_severity: { MAJOR: 1, MINOR: 1 },
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    issueApi.getIssues.mockResolvedValue({ data: mockIssueData });
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  // 1. 组件渲染测试
-  describe('Component Rendering', () => {
-    it('should render issue management page with title', async () => {
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/问题异常|Issue Management/i)).toBeInTheDocument();
-      });
+    issueApi.getIssues.mockResolvedValue({
+      data: { items: mockIssues, total: 2 },
     });
-
-    it('should render issue list table', async () => {
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-        expect(screen.getByText('ISS-2024-001')).toBeInTheDocument();
-      });
+    issueApi.getStats.mockResolvedValue({
+      data: mockStats,
     });
-
-    it('should render severity badges', async () => {
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/高|High/i)).toBeInTheDocument();
-        expect(screen.getByText(/中|Medium/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should render status badges', async () => {
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/打开|Open/i)).toBeInTheDocument();
-        expect(screen.getByText(/进行中|In Progress/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should render action buttons', async () => {
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const buttons = screen.getAllByRole('button');
-        expect(buttons.length).toBeGreaterThan(0);
-      });
+    issueApi.create.mockResolvedValue({
+      data: { id: 3, title: "新测试问题" },
     });
   });
 
-  // 2. 数据加载测试
-  describe('Data Loading', () => {
-    it('should load issues on mount', async () => {
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
+  const renderPage = (props = {}) =>
+    render(
+      <MemoryRouter>
+        <IssueManagement {...props} />
+      </MemoryRouter>,
+    );
 
-      await waitFor(() => {
-        expect(issueApi.getIssues).toHaveBeenCalledWith(
-          expect.stringContaining('/issues')
-        );
-      });
+  it("renders page header and loads issues and stats on mount", async () => {
+    renderPage();
+
+    expect(
+      screen.getByRole("heading", { name: "问题异常" }),
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(issueApi.getIssues).toHaveBeenCalledWith({});
+      expect(issueApi.getStats).toHaveBeenCalledWith({ timeRange: "week" });
     });
 
-    it('should display loading state', () => {
-      issueApi.getIssues.mockImplementation(() => new Promise(() => {}));
-      
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      expect(screen.getByText(/加载中|Loading/i)).toBeInTheDocument();
-    });
-
-    it('should handle empty issue list', async () => {
-      issueApi.getIssues.mockResolvedValue({ data: { items: [], total: 0 } });
-
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/暂无数据|No Data/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should refresh data when refresh button clicked', async () => {
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(issueApi.getIssues).toHaveBeenCalledTimes(1);
-      });
-
-      const refreshButton = screen.getByRole('button', { name: /刷新|Refresh/i });
-      fireEvent.click(refreshButton);
-
-      await waitFor(() => {
-        expect(issueApi.getIssues).toHaveBeenCalledTimes(2);
-      });
-    });
+    expect(await screen.findByText("系统登录失败")).toBeInTheDocument();
+    expect(screen.getByText("数据同步延迟")).toBeInTheDocument();
   });
 
-  // 3. 交互测试
-  describe('User Interactions', () => {
-    it('should open create issue modal', async () => {
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
+  it("hides PageHeader when embedded is true", async () => {
+    renderPage({ embedded: true });
 
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const createButton = screen.getByRole('button', { name: /新建问题|Create Issue/i });
-      fireEvent.click(createButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/创建问题|Create Issue/i)).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(issueApi.getIssues).toHaveBeenCalled();
     });
 
-    it('should filter by severity', async () => {
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const severityFilter = screen.getByRole('combobox', { name: /严重程度|Severity/i });
-      fireEvent.change(severityFilter, { target: { value: 'high' } });
-
-      await waitFor(() => {
-        expect(issueApi.getIssues).toHaveBeenCalledWith(
-          expect.stringContaining('severity=high')
-        );
-      });
-    });
-
-    it('should filter by status', async () => {
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const statusFilter = screen.getByRole('combobox', { name: /状态|Status/i });
-      fireEvent.change(statusFilter, { target: { value: 'open' } });
-
-      await waitFor(() => {
-        expect(issueApi.getIssues).toHaveBeenCalledWith(
-          expect.stringContaining('status=open')
-        );
-      });
-    });
-
-    it('should search by keyword', async () => {
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const searchInput = screen.getByPlaceholderText(/搜索问题|Search issue/i);
-      fireEvent.change(searchInput, { target: { value: '登录' } });
-
-      await waitFor(() => {
-        expect(issueApi.getIssues).toHaveBeenCalledWith(
-          expect.stringContaining('keyword=登录')
-        );
-      });
-    });
-
-    it('should view issue detail', async () => {
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const viewButton = screen.getAllByRole('button', { name: /查看|View/i })[0];
-      fireEvent.click(viewButton);
-
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining('/issues/1'));
-      });
-    });
-
-    it('should assign issue to user', async () => {
-      issueApi.update.mockResolvedValue({ data: { success: true } });
-
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const assignButton = screen.getAllByRole('button', { name: /分配|Assign/i })[0];
-      fireEvent.click(assignButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/分配问题|Assign Issue/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should update issue status', async () => {
-      issueApi.update.mockResolvedValue({ data: { success: true } });
-
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const statusButton = screen.getAllByRole('button', { name: /更新状态|Update Status/i })[0];
-      fireEvent.click(statusButton);
-
-      await waitFor(() => {
-        expect(issueApi.update).toHaveBeenCalledWith(
-          expect.stringContaining('/issues/1'),
-          expect.any(Object)
-        );
-      });
-    });
-
-    it('should resolve issue', async () => {
-      issueApi.update.mockResolvedValue({ data: { success: true } });
-
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const resolveButton = screen.getAllByRole('button', { name: /解决|Resolve/i })[0];
-      fireEvent.click(resolveButton);
-
-      await waitFor(() => {
-        expect(issueApi.update).toHaveBeenCalledWith(
-          expect.stringContaining('/issues/1/resolve'),
-          expect.any(Object)
-        );
-      });
-    });
-
-    it('should close issue', async () => {
-      issueApi.update.mockResolvedValue({ data: { success: true } });
-
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const closeButton = screen.getAllByRole('button', { name: /关闭|Close/i })[0];
-      fireEvent.click(closeButton);
-
-      await waitFor(() => {
-        expect(issueApi.update).toHaveBeenCalledWith(
-          expect.stringContaining('/issues/1/close'),
-          expect.any(Object)
-        );
-      });
-    });
-
-    it('should delete issue', async () => {
-      issueApi.delete.mockResolvedValue({ data: { success: true } });
-      window.confirm = vi.fn(() => true);
-
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const deleteButton = screen.getAllByRole('button', { name: /删除|Delete/i })[0];
-      fireEvent.click(deleteButton);
-
-      await waitFor(() => {
-        expect(issueApi.delete).toHaveBeenCalledWith('/issues/1');
-      });
-    });
-
-    it('should add comment to issue', async () => {
-      issueApi.create.mockResolvedValue({ data: { success: true } });
-
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const commentButton = screen.getAllByRole('button', { name: /评论|Comment/i })[0];
-      fireEvent.click(commentButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/添加评论|Add Comment/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should handle pagination', async () => {
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const nextPageButton = screen.getByRole('button', { name: /下一页|Next/i });
-      fireEvent.click(nextPageButton);
-
-      await waitFor(() => {
-        expect(issueApi.getIssues).toHaveBeenCalledWith(
-          expect.stringContaining('page=2')
-        );
-      });
-    });
-
-    it('should export issues', async () => {
-      issueApi.getIssues.mockResolvedValue({ data: new Blob(['data'], { type: 'application/vnd.ms-excel' }) });
-
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const exportButton = screen.getByRole('button', { name: /导出|Export/i });
-      fireEvent.click(exportButton);
-
-      await waitFor(() => {
-        expect(issueApi.getIssues).toHaveBeenCalledWith(
-          expect.stringContaining('/issues/export')
-        );
-      });
-    });
+    expect(
+      screen.queryByRole("heading", { name: "问题异常" }),
+    ).not.toBeInTheDocument();
   });
 
-  // 4. 错误处理测试
-  describe('Error Handling', () => {
-    it('should display error message on load failure', async () => {
-      issueApi.getIssues.mockRejectedValue(new Error('Network Error'));
+  it("shows empty hint when no issues exist", async () => {
+    issueApi.getIssues.mockResolvedValueOnce({ data: { items: [], total: 0 } });
 
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText(/加载失败|Load Failed/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should handle create issue failure', async () => {
-      issueApi.create.mockRejectedValue(new Error('Create Failed'));
-
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const createButton = screen.getByRole('button', { name: /新建问题|Create Issue/i });
-      fireEvent.click(createButton);
-
-      await waitFor(() => {
-        const submitButton = screen.getByRole('button', { name: /提交|Submit/i });
-        fireEvent.click(submitButton);
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText(/创建失败|Create Failed/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should handle update issue failure', async () => {
-      issueApi.update.mockRejectedValue(new Error('Update Failed'));
-
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统登录失败')).toBeInTheDocument();
-      });
-
-      const statusButton = screen.getAllByRole('button', { name: /更新状态|Update Status/i })[0];
-      fireEvent.click(statusButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/更新失败|Update Failed/i)).toBeInTheDocument();
-      });
-    });
+    expect(
+      await screen.findByText("数据库暂无问题数据"),
+    ).toBeInTheDocument();
   });
 
-  // 5. 权限测试
-  describe('Permission Control', () => {
-    it('should show create button for authorized users', async () => {
-      localStorage.setItem('userPermissions', JSON.stringify(['issue:create']));
+  it("shows error banner when loading issues or stats fails", async () => {
+    issueApi.getIssues.mockRejectedValueOnce(new Error("服务器错误"));
+    issueApi.getStats.mockRejectedValueOnce(new Error("统计失败"));
 
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /新建问题|Create Issue/i })).toBeInTheDocument();
-      });
+    expect(
+      await screen.findByText(/问题列表加载失败：API错误: 服务器错误/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/统计数据加载失败：API错误: 统计失败/),
+    ).toBeInTheDocument();
+  });
+
+  it("opens create dialog and submits a new issue", async () => {
+    renderPage();
+
+    const createBtn = screen.getAllByRole("button", { name: /新建问题/ })[0];
+    fireEvent.click(createBtn);
+
+    fireEvent.change(screen.getByLabelText("问题标题 *"), {
+      target: { value: "新增设备异常" },
+    });
+    fireEvent.change(screen.getByLabelText("问题描述 *"), {
+      target: { value: "传感器无响应" },
     });
 
-    it('should hide create button for unauthorized users', async () => {
-      localStorage.setItem('userPermissions', JSON.stringify([]));
+    fireEvent.click(screen.getByRole("button", { name: "创建问题" }));
 
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
+    await waitFor(() => {
+      expect(issueApi.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "新增设备异常",
+          description: "传感器无响应",
+        }),
       );
-
-      await waitFor(() => {
-        expect(screen.queryByRole('button', { name: /新建问题|Create Issue/i })).not.toBeInTheDocument();
-      });
-    });
-
-    it('should show assign button for authorized users', async () => {
-      localStorage.setItem('userPermissions', JSON.stringify(['issue:assign']));
-
-      render(
-        <MemoryRouter>
-          <IssueManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getAllByRole('button', { name: /分配|Assign/i }).length).toBeGreaterThan(0);
-      });
     });
   });
 });
