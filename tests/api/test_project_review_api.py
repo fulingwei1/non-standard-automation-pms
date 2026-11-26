@@ -24,6 +24,7 @@ except ImportError as e:
 def test_project(db, auth_headers):
     """测试项目"""
     project = Project(
+        tenant_id=1,
         project_code=f"API_TEST_001-{uuid.uuid4().hex[:8]}",
         project_name="API 测试项目",
         status="COMPLETED",
@@ -76,6 +77,7 @@ class TestReviewsAPI:
         """测试获取复盘详情"""
         # 先创建一个复盘
         review = ProjectReview(
+            tenant_id=1,
             review_no="TEST_REV_001",
             project_id=test_project.id,
             project_code=test_project.code,
@@ -98,6 +100,7 @@ class TestReviewsAPI:
     def test_update_review(self, client, auth_headers, db, test_project):
         """测试更新复盘"""
         review = ProjectReview(
+            tenant_id=1,
             review_no="TEST_REV_002",
             project_id=test_project.id,
             project_code=test_project.code,
@@ -139,6 +142,7 @@ class TestLessonsAPI:
         """测试提取经验教训"""
         # 创建复盘
         review = ProjectReview(
+            tenant_id=1,
             review_no="TEST_REV_LESSON",
             project_id=test_project.id,
             project_code=test_project.code,
@@ -182,6 +186,7 @@ class TestComparisonAPI:
     def test_compare_with_history(self, client, auth_headers, db, test_project):
         """测试历史对比"""
         review = ProjectReview(
+            tenant_id=1,
             review_no="TEST_REV_CMP",
             project_id=test_project.id,
             project_code=test_project.code,
@@ -211,6 +216,7 @@ class TestComparisonAPI:
     def test_get_improvements(self, client, auth_headers, db, test_project):
         """测试获取改进建议"""
         review = ProjectReview(
+            tenant_id=1,
             review_no="TEST_REV_IMP",
             project_id=test_project.id,
             project_code=test_project.code,
@@ -239,6 +245,7 @@ class TestKnowledgeAPI:
     def test_sync_to_knowledge(self, client, auth_headers, db, test_project):
         """测试同步到知识库"""
         review = ProjectReview(
+            tenant_id=1,
             review_no="TEST_REV_KNOW",
             project_id=test_project.id,
             project_code=test_project.code,
@@ -267,6 +274,7 @@ class TestKnowledgeAPI:
     def test_get_knowledge_impact(self, client, auth_headers, db, test_project):
         """测试获取知识库影响"""
         review = ProjectReview(
+            tenant_id=1,
             review_no="TEST_REV_IMPACT",
             project_id=test_project.id,
             project_code=test_project.code,
