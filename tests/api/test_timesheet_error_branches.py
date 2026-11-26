@@ -18,13 +18,13 @@ class TestTimesheetListErrorBranches:
 
     def test_list_timesheets_no_token(self, client: TestClient):
         """无Token访问"""
-        response = client.get(f"{settings.API_V1_PREFIX}/timesheet")
+        response = client.get(f"{settings.API_V1_PREFIX}/timesheet/records")
         assert response.status_code == 401
 
     def test_list_timesheets_invalid_token(self, client: TestClient):
         """无效Token"""
         response = client.get(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             headers={"Authorization": "Bearer invalid_token"}
         )
         assert response.status_code == 401
@@ -35,7 +35,7 @@ class TestTimesheetListErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             params={"start_date": "invalid-date"},
             headers={"Authorization": f"Bearer {admin_token}"}
         )
@@ -47,7 +47,7 @@ class TestTimesheetListErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             params={
                 "start_date": "2025-12-31",
                 "end_date": "2025-01-01"
@@ -63,7 +63,7 @@ class TestTimesheetListErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             params={"page": -1},
             headers={"Authorization": f"Bearer {admin_token}"}
         )
@@ -75,7 +75,7 @@ class TestTimesheetListErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             params={"page_size": 10000},
             headers={"Authorization": f"Bearer {admin_token}"}
         )
@@ -88,7 +88,7 @@ class TestCreateTimesheetErrorBranches:
     def test_create_timesheet_no_token(self, client: TestClient):
         """无Token创建"""
         response = client.post(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             json={"work_date": date.today().isoformat(), "hours": 8.0}
         )
         assert response.status_code == 401
@@ -99,7 +99,7 @@ class TestCreateTimesheetErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             json={},
             headers={"Authorization": f"Bearer {admin_token}"}
         )
@@ -111,7 +111,7 @@ class TestCreateTimesheetErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             json={
                 "work_date": date.today().isoformat(),
                 "hours": 8.0
@@ -126,7 +126,7 @@ class TestCreateTimesheetErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             json={
                 "project_id": 1,
                 "hours": 8.0
@@ -141,7 +141,7 @@ class TestCreateTimesheetErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             json={
                 "project_id": 1,
                 "work_date": date.today().isoformat()
@@ -156,7 +156,7 @@ class TestCreateTimesheetErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             json={
                 "project_id": 999999,
                 "work_date": date.today().isoformat(),
@@ -181,7 +181,7 @@ class TestCreateTimesheetErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             json={
                 "project_id": 1,
                 "work_date": date.today().isoformat(),
@@ -198,7 +198,7 @@ class TestCreateTimesheetErrorBranches:
 
         future_date = (date.today() + timedelta(days=30)).isoformat()
         response = client.post(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             json={
                 "project_id": 1,
                 "work_date": future_date,
@@ -215,13 +215,13 @@ class TestCreateTimesheetErrorBranches:
             pytest.skip("Admin token not available")
 
         # 先查找现有工时记录
-        from app.models.timesheet import TimesheetRecord
-        existing = db_session.query(TimesheetRecord).first()
+        from app.models.timesheet import Timesheet
+        existing = db_session.query(Timesheet).first()
         if not existing:
             pytest.skip("No existing timesheet for duplicate test")
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             json={
                 "project_id": existing.project_id,
                 "work_date": existing.work_date.isoformat(),
@@ -238,7 +238,7 @@ class TestCreateTimesheetErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/timesheet",
+            f"{settings.API_V1_PREFIX}/timesheet/records",
             json={
                 "project_id": 1,
                 "work_date": date.today().isoformat(),
@@ -255,7 +255,7 @@ class TestGetTimesheetErrorBranches:
 
     def test_get_timesheet_no_token(self, client: TestClient):
         """无Token访问"""
-        response = client.get(f"{settings.API_V1_PREFIX}/timesheet/1")
+        response = client.get(f"{settings.API_V1_PREFIX}/timesheet/records/1")
         assert response.status_code == 401
 
     def test_get_timesheet_not_found(self, client: TestClient, admin_token: str):
@@ -264,7 +264,7 @@ class TestGetTimesheetErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/timesheet/999999",
+            f"{settings.API_V1_PREFIX}/timesheet/records/999999",
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 404
@@ -275,7 +275,7 @@ class TestGetTimesheetErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/timesheet/invalid",
+            f"{settings.API_V1_PREFIX}/timesheet/records/invalid",
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 422
@@ -287,7 +287,7 @@ class TestUpdateTimesheetErrorBranches:
     def test_update_timesheet_no_token(self, client: TestClient):
         """无Token更新"""
         response = client.put(
-            f"{settings.API_V1_PREFIX}/timesheet/1",
+            f"{settings.API_V1_PREFIX}/timesheet/records/1",
             json={"hours": 6.0}
         )
         assert response.status_code == 401
@@ -298,7 +298,7 @@ class TestUpdateTimesheetErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/timesheet/999999",
+            f"{settings.API_V1_PREFIX}/timesheet/records/999999",
             json={"hours": 6.0},
             headers={"Authorization": f"Bearer {admin_token}"}
         )
@@ -309,13 +309,13 @@ class TestUpdateTimesheetErrorBranches:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        from app.models.timesheet import TimesheetRecord
-        record = db_session.query(TimesheetRecord).first()
+        from app.models.timesheet import Timesheet
+        record = db_session.query(Timesheet).first()
         if not record:
             pytest.skip("No timesheet available for test")
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/timesheet/{record.id}",
+            f"{settings.API_V1_PREFIX}/timesheet/records/{record.id}",
             json={"hours": -5.0},
             headers={"Authorization": f"Bearer {admin_token}"}
         )
@@ -326,16 +326,16 @@ class TestUpdateTimesheetErrorBranches:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        from app.models.timesheet import TimesheetRecord
-        approved = db_session.query(TimesheetRecord).filter(
-            TimesheetRecord.status == "APPROVED"
+        from app.models.timesheet import Timesheet
+        approved = db_session.query(Timesheet).filter(
+            Timesheet.status == "APPROVED"
         ).first()
 
         if not approved:
             pytest.skip("No approved timesheet for test")
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/timesheet/{approved.id}",
+            f"{settings.API_V1_PREFIX}/timesheet/records/{approved.id}",
             json={"hours": 6.0},
             headers={"Authorization": f"Bearer {admin_token}"}
         )
@@ -348,7 +348,7 @@ class TestDeleteTimesheetErrorBranches:
 
     def test_delete_timesheet_no_token(self, client: TestClient):
         """无Token删除"""
-        response = client.delete(f"{settings.API_V1_PREFIX}/timesheet/1")
+        response = client.delete(f"{settings.API_V1_PREFIX}/timesheet/records/1")
         assert response.status_code == 401
 
     def test_delete_timesheet_not_found(self, client: TestClient, admin_token: str):
@@ -357,7 +357,7 @@ class TestDeleteTimesheetErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/timesheet/999999",
+            f"{settings.API_V1_PREFIX}/timesheet/records/999999",
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 404
@@ -367,16 +367,16 @@ class TestDeleteTimesheetErrorBranches:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        from app.models.timesheet import TimesheetRecord
-        approved = db_session.query(TimesheetRecord).filter(
-            TimesheetRecord.status == "APPROVED"
+        from app.models.timesheet import Timesheet
+        approved = db_session.query(Timesheet).filter(
+            Timesheet.status == "APPROVED"
         ).first()
 
         if not approved:
             pytest.skip("No approved timesheet for test")
 
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/timesheet/{approved.id}",
+            f"{settings.API_V1_PREFIX}/timesheet/records/{approved.id}",
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         # 可能禁止删除已审批的记录
@@ -421,9 +421,9 @@ class TestTimesheetApprovalErrorBranches:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        from app.models.timesheet import TimesheetRecord
-        approved = db_session.query(TimesheetRecord).filter(
-            TimesheetRecord.status == "APPROVED"
+        from app.models.timesheet import Timesheet
+        approved = db_session.query(Timesheet).filter(
+            Timesheet.status == "APPROVED"
         ).first()
 
         if not approved:
@@ -441,9 +441,9 @@ class TestTimesheetApprovalErrorBranches:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        from app.models.timesheet import TimesheetRecord
-        pending = db_session.query(TimesheetRecord).filter(
-            TimesheetRecord.status == "PENDING"
+        from app.models.timesheet import Timesheet
+        pending = db_session.query(Timesheet).filter(
+            Timesheet.status == "PENDING"
         ).first()
 
         if not pending:
@@ -487,8 +487,8 @@ class TestTimesheetStatisticsErrorBranches:
             pytest.skip("Admin token not available")
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/timesheet/week",
-            params={"week": "invalid"},
+            f"{settings.API_V1_PREFIX}/timesheet/weekly/week",
+            params={"week_start": "invalid"},
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code in [400, 422]
