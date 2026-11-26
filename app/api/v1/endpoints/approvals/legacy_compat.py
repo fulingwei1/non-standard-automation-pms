@@ -391,7 +391,11 @@ def transfer_task_compat(
 ):
     task = _get_task_or_404(db, task_id)
     to_user_id = (payload or {}).get("transfer_to_user_id") or (payload or {}).get("to_user_id")
-    task.assignee_id = to_user_id or task.assignee_id
+    if to_user_id is not None:
+        target_user = db.query(User).filter(User.id == to_user_id, User.is_active.is_(True)).first()
+        if not target_user:
+            raise HTTPException(status_code=404, detail="转交目标用户不存在")
+        task.assignee_id = target_user.id
     task.comment = (payload or {}).get("comments") or (payload or {}).get("comment")
     db.commit()
     return {"message": "转交成功", "task_id": task.id}

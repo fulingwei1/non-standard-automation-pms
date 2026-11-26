@@ -21,6 +21,7 @@ def _auth_headers_for_user(user: User) -> dict:
 
 def _create_sales_user(db_session: Session, suffix: str, real_name: str) -> User:
     user = User(
+        tenant_id=1,
         username=f"collection_self_{suffix}",
         password_hash=get_password_hash("collection123"),
         email=f"collection_self_{suffix}@example.com",
@@ -42,6 +43,7 @@ def _create_overdue_invoice(
     unpaid_amount: Decimal,
 ) -> Invoice:
     customer = Customer(
+        tenant_id=owner.tenant_id,
         customer_code=f"CUST-COLL-{suffix}",
         customer_name=f"催款客户-{suffix}",
         contact_person="客户联系人",
@@ -55,6 +57,7 @@ def _create_overdue_invoice(
     db_session.flush()
 
     contract = Contract(
+        tenant_id=owner.tenant_id,
         contract_code=f"CT-COLL-{suffix}",
         contract_name=f"催款合同-{suffix}",
         contract_type="sales",
@@ -69,6 +72,7 @@ def _create_overdue_invoice(
     db_session.flush()
 
     invoice = Invoice(
+        tenant_id=owner.tenant_id,
         invoice_code=f"INV-COLL-{suffix}",
         contract_id=contract.id,
         amount=unpaid_amount,

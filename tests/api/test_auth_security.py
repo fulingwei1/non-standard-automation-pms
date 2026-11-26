@@ -266,6 +266,7 @@ class TestPasswordChange:
 
         # 先创建员工
         employee = Employee(
+            tenant_id=1,
             employee_code=employee_code,
             name="密码测试用户",
             department="测试部门",
@@ -277,6 +278,7 @@ class TestPasswordChange:
 
         # 创建用户
         test_user = User(
+            tenant_id=1,
             employee_id=employee.id,
             username=username,
             password_hash=get_password_hash("old_password123"),
