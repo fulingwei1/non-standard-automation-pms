@@ -94,7 +94,7 @@ def _create_user(
     username: str,
     password: str,
     *,
-    tenant_id: int | None = None,
+    tenant_id: int | None = 1,
 ) -> User:
     user = User(
         tenant_id=tenant_id,

@@ -56,6 +56,7 @@ def _create_role(
     permissions: list[ApiPermission] | None = None,
 ) -> Role:
     role = Role(
+        tenant_id=1,
         role_code=code,
         role_name=name,
         description="role assignment boundary contract",
@@ -80,6 +81,7 @@ def _create_user_with_permissions(
     permissions: list[ApiPermission],
 ) -> User:
     user = User(
+        tenant_id=1,
         username=username,
         password_hash=get_password_hash(password),
         auth_type="password",
@@ -107,6 +109,7 @@ def _create_template(
     permission_codes: list[str] | None = None,
 ) -> RoleTemplate:
     template = RoleTemplate(
+        tenant_id=1,
         template_code=code,
         template_name=name,
         role_type="BUSINESS",
