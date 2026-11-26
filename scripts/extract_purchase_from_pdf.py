@@ -266,14 +266,15 @@ def main():
                         """INSERT INTO purchase_material_costs
                         (material_name, specification, brand, unit, unit_cost, currency,
                          supplier_name, purchase_date, lead_time_days, is_active,
-                         match_priority, created_at, updated_at)
-                        VALUES (?,?,?,?,?,?,?, ?,?, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)""",
+                         match_priority, source_file, created_at, updated_at)
+                        VALUES (?,?,?,?,?,?,?, ?,?, 1, 1, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)""",
                         (
                             name, it.get("spec"), it.get("brand"),
                             it.get("unit") or "套",
                             price, elements.get("currency") or "CNY",
                             elements.get("supplier_name"), elements.get("sign_date"),
                             elements.get("lead_time_days"),
+                            pdf,
                         ),
                     )
                     inserted += 1

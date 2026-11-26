@@ -23,8 +23,8 @@ echo -e "\n${YELLOW}🔄 步骤0: 检查数据库同步...${NC}"
 if [ -f "sync-db.sh" ]; then
     # 检查是否有更新的备份需要导入
     if [ -f "db-backups/backup-latest.sql" ] && [ -f "data/app.db" ]; then
-        local backup_time=$(stat -f%m "db-backups/backup-latest.sql" 2>/dev/null || stat -c%Y "db-backups/backup-latest.sql" 2>/dev/null)
-        local db_time=$(stat -f%m "data/app.db" 2>/dev/null || stat -c%Y "data/app.db" 2>/dev/null)
+        backup_time=$(stat -f%m "db-backups/backup-latest.sql" 2>/dev/null || stat -c%Y "db-backups/backup-latest.sql" 2>/dev/null)
+        db_time=$(stat -f%m "data/app.db" 2>/dev/null || stat -c%Y "data/app.db" 2>/dev/null)
         
         if [ "$backup_time" -gt "$db_time" ]; then
             echo -e "${YELLOW}⚠️  检测到新的数据库备份，正在导入...${NC}"
@@ -42,12 +42,18 @@ else
     echo -e "${YELLOW}⚠️  同步脚本不存在，跳过同步检查${NC}"
 fi
 
+if [ -x ".venv/bin/python" ]; then
+    PYTHON=".venv/bin/python"
+else
+    PYTHON="python3"
+fi
+
 # ========== 步骤1: 同步种子数据（如果数据库为空） ==========
 echo -e "\n${YELLOW}🌱 步骤1: 同步演示数据...${NC}"
 if [ ! -f "data/app.db" ]; then
     if [ -f "scripts/seed_blm_bem.py" ]; then
         echo "运行种子数据脚本..."
-        python3 scripts/seed_blm_bem.py
+        "$PYTHON" scripts/seed_blm_bem.py
         echo -e "${GREEN}✅ 演示数据同步完成${NC}"
     else
         echo -e "${RED}❌ 种子脚本不存在: scripts/seed_blm_bem.py${NC}"
@@ -69,7 +75,8 @@ fi
 
 # 启动后端
 source .env 2>/dev/null || true
-python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload &
+export SECRET_KEY="${SECRET_KEY:-dev-secret-key-for-local-testing-only-32chars}"
+"$PYTHON" -m uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload &
 BACKEND_PID=$!
 echo -e "${GREEN}✅ 后端已启动 (PID: $BACKEND_PID)${NC}"
 

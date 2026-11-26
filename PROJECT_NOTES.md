@@ -1,5 +1,27 @@
 # PROJECT_NOTES
 
+## 2026-10-13 系统核心缺陷全量治理：P0/P1/P2/P3 全面清零与架构加固
+
+- 针对系统评估发现的 26 项缺陷，系统性实施全量修复与棘轮加固：
+  1. **2FA 登录死锁解除**（P0）：在 `auth_middleware.py` 白名单补全 `/api/v1/auth/2fa/login`，配合 2FA 凭证与会话级联支持，全流程单元测试 17 条全部通过。
+  2. **生产密钥/密码明文泄露根治**（P0）：重置 `.env.local` 与 `.env.production`，清除真实 Kimi/DashScope API keys 与 MySQL/Grafana 密码，采用占位符与长度合规的开发密钥；加固 `.gitignore`。
+  3. **Toast 全局静默失效修复**（P0）：在 `frontend/src/App.jsx` 根容器显式挂载 Sonner `<Toaster />`，恢复 20+ 业务页面的操作与错误提示。
+  4. **Docker 构建与绑定修复**（P0）：修复 requirements.txt 与 scripts 复制路径，Uvicorn 绑定从 127.0.0.1 修正为 0.0.0.0，升级 Vercel 为 python3.11。
+  5. **235 处外键违规彻底清零**（P0）：运行 `fix_fk_violations.py` 修复历史供应商、工人、项目费用与盘点任务孤儿数据，`PRAGMA foreign_key_check` 违规数降至 0。
+  6. **SQL 标识符注入防御**（P1）：在 `partition.py`、`gantt_dependency.py`、`supplier_price_trend.py` 引入 `_safe_identifier` 正则白名单校验，杜绝动态 DDL/PRAGMA 注入。
+  7. **认证降级 SQL 租户穿透修复**（P1）：`auth.py` 回退查询补全 `tenant_id` 与严格拒绝分支，杜绝租户隔离绕过（41 条认证单测全绿）。
+  8. **认证端点防暴力破解限流与 slowapi 根治**（P1）：修补 `rate_limiting.py` 中 `slowapi` 无 Response 实例时的注入异常，恢复登录端点 `5/minute` 并为 2FA、密码重置全面挂载限流（17 条限流测试全绿）。
+  9. **全仓非公开 `NONE` 端点清零与高危 `DELETE` 权限收口**（P1/P2）：为齐套分析（`assembly_kit/*`）、产能分析（`production/capacity/*`）、战略管理（`strategy/*`）及 33 个高危 `DELETE` 端点补齐细粒度 RBAC 权限；全仓 `NONE` 端点数从 143 降至 **4**（仅剩公共登录/刷新/健康检查/外部客户问卷提交），细粒度权限覆盖率提升至 **46.6%**，并收紧 `permission_coverage_baseline.json` 与 `test_api_permission_scan.py` 棘轮基线。
+  10. **AI Mock 写库门禁豁免清零**（P2）：在 `ai_admin.py`、`ai_engineering.py`、`knowledge_syncer.py`、`schedule_prediction_service.py` 补齐 `is_mock_response()` 校验，`ai_mock_guard_baseline.json` 豁免数从 4 降至 **0**（114 条 AI 单测全绿）。
+  11. **多租户与会话级联健全**（P1）：在 `UserSession` 关系上补齐 `cascade="all, delete-orphan", passive_deletes=True`，彻底杜绝用户注销/删除时的 NOT NULL 违规崩溃。
+  12. **260 处异步阻塞端点全量转同步线程池**（P2 性能）：将 `app/api/v1/endpoints/` 下全部 260 个内部无 `await` 的 `async def` 同步 DB 路由函数统一转换为 `def`，交由 FastAPI/AnyIO 线程池并发执行，彻底消除主事件循环阻塞。
+  13. **前端架构与构建优化**（P2）：统一 `apiClient.js` 适配层；将 `projectRoutes.jsx`（31 个）与 `salesRoutes.jsx`（`SalesDashboard`）全部静态页面导入重构为 `lazyLoad`；消除 `GanttDependency.jsx` 924 行重复代码并保留项目上下文筛选；移除 `.svg` 上传防止存储型 XSS。
+  14. **工程规范与门禁提速**（P3）：预提取 `ci_guard_ghost_tables.py` 构造与 SQL 写入特征，门禁耗时从 90s 降至 **<3s**；清理 `app/` 运行时散落的 `print()` 调试输出并统一接入结构化 `logging`；统一 `requirements-dev.txt` 与 `api/requirements.txt` 依赖版本并补齐 `PasswordChange` 长度上限防 bcrypt DoS。
+- 验收指标：
+  - `PRAGMA foreign_key_check`：**0 处违规**
+  - 5 项 CI 门禁（`ci_guard_ai_mock` [豁免=0], `ci_guard_ghost_tables` [<3s], `ci_guard_permission_coverage` [NONE=4, PERM=46.6%], `ci_guard_router_strict`, `ci_guard_stub_defaults`）：**全部绿灯（100% 通过）**
+  - 核心测试（权限扫描 35 条、AI 服务 114 条、认证 41 条、2FA 17 条、限流 17 条、项目 CRUD/集成 21 条、生产进度 19 条、发货单 6 条）：**全部 100% 通过**
+
 ## 2026-07-05 继续：审批动作日志与业务状态历史边界收口
 
 - 用户选择第 4 条后，收口“审批动作历史只进 `approval_action_logs`；业务状态历史进 `state_transition_logs` 或领域日志”的工程边界。

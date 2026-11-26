@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制依赖文件
-COPY requirements.txt .
+COPY api/requirements.txt ./requirements.txt
 
 # 安装 Python 依赖
 RUN pip install --no-cache-dir --user -r requirements.txt
@@ -37,6 +37,7 @@ ENV PATH=/root/.local/bin:$PATH
 # 复制应用代码
 COPY app/ ./app/
 COPY migrations/ ./migrations/
+COPY scripts/ ./scripts/
 COPY data/ ./data/
 COPY uploads/ ./uploads/
 COPY logs/ ./logs/

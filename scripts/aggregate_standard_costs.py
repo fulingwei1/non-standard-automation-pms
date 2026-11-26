@@ -64,6 +64,7 @@ def aggregate(conn: sqlite3.Connection, min_samples: int):
             "category": items[0]["cost_category"] or "设备成本",
             "unit": items[0]["unit"] or "套",
             "spec": items[0]["specification"] or "",
+            "source": "HISTORICAL_QUOTE",
             "sample_count": len(clean),
             "median_price": round(median(clean), 2),
             "avg_price": round(sum(clean) / len(clean), 2),
@@ -78,6 +79,51 @@ def aggregate(conn: sqlite3.Connection, min_samples: int):
     return results
 
 
+def aggregate_from_purchase(conn: sqlite3.Connection, min_samples: int):
+    """从 purchase_material_costs 按 material_name 聚合标准成本（真实采购价）。"""
+    rows = conn.execute(
+        """
+        SELECT material_name, unit_cost, unit, specification, brand, supplier_name
+        FROM purchase_material_costs
+        WHERE unit_cost IS NOT NULL AND unit_cost > 0
+          AND material_name IS NOT NULL AND TRIM(material_name) != ''
+        """
+    ).fetchall()
+
+    # 按 material_name 分组
+    groups: dict[str, list] = {}
+    for r in rows:
+        name = r["material_name"].strip()
+        groups.setdefault(name, []).append(r)
+
+    results = []
+    for name, items in groups.items():
+        if len(items) < min_samples:
+            continue
+        prices = [float(r["unit_cost"]) for r in items]
+        med = median(prices)
+        clean = [p for p in prices if med / 10 <= p <= med * 10] or prices
+        suppliers = {r["supplier_name"] for r in items if r["supplier_name"]}
+        results.append({
+            "item_name": name,
+            "category": "采购件",
+            "unit": items[0]["unit"] or "套",
+            "spec": items[0]["specification"] or "",
+            "source": "PURCHASE_HISTORY",
+            "sample_count": len(clean),
+            "median_price": round(median(clean), 2),
+            "avg_price": round(sum(clean) / len(clean), 2),
+            "min_price": round(min(clean), 2),
+            "max_price": round(max(clean), 2),
+            "std_dev": round(pstdev(clean), 2) if len(clean) > 1 else 0,
+            "cv": round(pstdev(clean) / med * 100, 1) if med and len(clean) > 1 else 0,
+            "supplier_count": len(suppliers),
+        })
+
+    results.sort(key=lambda x: x["sample_count"], reverse=True)
+    return results
+
+
 def main():
     parser = argparse.ArgumentParser(description="从历史报价聚合标准件价格库")
     parser.add_argument("--db", type=Path, default=DEFAULT_DB_PATH)
@@ -88,23 +134,30 @@ def main():
     conn = sqlite3.connect(args.db)
     conn.row_factory = sqlite3.Row
 
-    # 清占位数据
+    # 清占位数据 + 旧的聚合结果（重新聚合，避免脏数据残留）
     if args.apply:
         deleted = conn.execute(
-            "DELETE FROM standard_costs WHERE cost_name LIKE 'standard_costs_cost_name_%'"
+            "DELETE FROM standard_costs WHERE cost_name LIKE 'standard_costs_cost_name_%' "
+            "OR cost_source IN ('HISTORICAL_QUOTE', 'PURCHASE_HISTORY')"
         ).rowcount
         if deleted:
-            logger.info("清理 %s 条占位数据", deleted)
+            logger.info("清理 %s 条旧聚合/占位数据", deleted)
 
-    results = aggregate(conn, args.min_samples)
-    logger.info(f"聚合出 {len(results)} 个标准成本项（min_samples={args.min_samples}）")
+    quote_results = aggregate(conn, args.min_samples)
+    purchase_results = aggregate_from_purchase(conn, args.min_samples)
+    results = quote_results + purchase_results
+    logger.info(
+        f"聚合出 {len(results)} 个标准成本项 "
+        f"（报价{len(quote_results)} + 采购{len(purchase_results)}，min_samples={args.min_samples}）"
+    )
 
     if not args.apply:
         logger.info("（dry-run 模式，不写库）")
         for r in results[:15]:
             cv_flag = "⚠高波动" if r["cv"] > 50 else ""
+            src_tag = "采购" if r["source"] == "PURCHASE_HISTORY" else "报价"
             print(
-                f"  [{r['sample_count']}次] {r['item_name'][:30]:<30} "
+                f"  [{r['sample_count']}次|{src_tag}] {r['item_name'][:28]:<28} "
                 f"中位{r['median_price']:>12} 均{r['avg_price']:>12} "
                 f"区间{r['min_price']}~{r['max_price']} CV={r['cv']}% {cv_flag}"
             )
@@ -116,11 +169,13 @@ def main():
     today = date.today().isoformat()
     inserted = 0
     for r in results:
-        # cost_code 用 SC + 序号
-        cost_code = f"SC-{r['item_name'][:20].replace(' ', '')}"
+        # cost_code 用来源前缀 + 序号，避免报价和采购同名冲突
+        src_prefix = "PH" if r["source"] == "PURCHASE_HISTORY" else "SC"
+        cost_code = f"{src_prefix}-{r['item_name'][:20].replace(' ', '')}"
         # source_description 记录统计信息，供对标时判断可信度
         source_desc = (
-            f"历史报价聚合：样本{r['sample_count']}，中位{r['median_price']}，"
+            f"{'采购价聚合' if r['source'] == 'PURCHASE_HISTORY' else '历史报价聚合'}："
+            f"样本{r['sample_count']}，中位{r['median_price']}，"
             f"区间{r['min_price']}~{r['max_price']}，CV={r['cv']}%"
         )
         # upsert（按 cost_code 存在则更新）
@@ -133,16 +188,16 @@ def main():
                 "unit=?, standard_cost=?, cost_source=?, source_description=?, "
                 "effective_date=?, is_active=1 WHERE cost_code=?",
                 (r["item_name"], r["category"], r["spec"], r["unit"], r["median_price"],
-                 "HISTORICAL_QUOTE", source_desc, today, cost_code),
+                 r["source"], source_desc, today, cost_code),
             )
         else:
             conn.execute(
                 "INSERT INTO standard_costs (cost_code, cost_name, cost_category, specification, "
                 "unit, standard_cost, currency, cost_source, source_description, effective_date, "
                 "version, is_active, created_at, updated_at) "
-                "VALUES (?,?,?,?,?,?,  'CNY','HISTORICAL_QUOTE',?, ?,1,1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                "VALUES (?,?,?,?,?,?, 'CNY',?,?, ?,1,1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
                 (cost_code, r["item_name"], r["category"], r["spec"], r["unit"],
-                 r["median_price"], source_desc, today),
+                 r["median_price"], r["source"], source_desc, today),
             )
         inserted += 1
 
