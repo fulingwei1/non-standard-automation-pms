@@ -4,7 +4,7 @@ ECN模型 - 配置类
 """
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, JSON, String, Text
 
-from ..base import Base, TimestampMixin
+from app.models.base import Base, TimestampMixin
 
 
 class EcnType(Base, TimestampMixin):

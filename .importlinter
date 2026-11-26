@@ -30,4 +30,5 @@ name = 业务模块彼此独立
 type = independence
 modules =
     app.modules.presale
+    app.modules.ecn
 ; ↑ 兄弟业务模块逐个追加；registry/manifest 是共享基座不参与独立性判定

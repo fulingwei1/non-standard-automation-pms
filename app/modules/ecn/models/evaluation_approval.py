@@ -15,7 +15,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, synonym
 
-from ..base import Base, TimestampMixin
+from app.models.base import Base, TimestampMixin
 
 
 class EcnEvaluation(Base, TimestampMixin):

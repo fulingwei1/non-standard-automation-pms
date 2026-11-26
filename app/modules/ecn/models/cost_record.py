@@ -18,7 +18,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from ..base import Base, TimestampMixin
+from app.models.base import Base, TimestampMixin
 
 
 class EcnCostRecord(Base, TimestampMixin):

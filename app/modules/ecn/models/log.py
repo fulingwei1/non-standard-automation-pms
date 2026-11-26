@@ -5,7 +5,7 @@ ECN模型 - 日志
 from sqlalchemy import JSON, Column, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-from ..base import Base, TimestampMixin
+from app.models.base import Base, TimestampMixin
 
 
 class EcnLog(Base, TimestampMixin):

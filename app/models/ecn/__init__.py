@@ -1,35 +1,15 @@
 # -*- coding: utf-8 -*-
-"""
-ECN模型模块
+"""兼容旧导入路径：实现已迁至 app.modules.ecn.models（P2 模块化，一个迭代周期后删除本 shim）。"""
+import importlib
+import pkgutil
+import sys
 
-聚合所有ECN相关的模型，保持向后兼容
-"""
-from .config import EcnApprovalMatrix, EcnType
-from .core import Ecn
-from .evaluation_approval import EcnApproval, EcnEvaluation
-from .execution import EcnTask
-from .impact import EcnAffectedMaterial, EcnAffectedOrder, EcnBomChange, EcnBomImpact
-from .cost_record import EcnCostRecord
-from .log import EcnLog
-from .material_impact import EcnExecutionProgress, EcnMaterialDisposition, EcnStakeholder
-from .responsibility_template import EcnResponsibility, EcnSolutionTemplate
+_impl = importlib.import_module("app.modules.ecn.models")
+sys.modules[__name__] = _impl
 
-__all__ = [
-    "EcnType",
-    "EcnApprovalMatrix",
-    "Ecn",
-    "EcnEvaluation",
-    "EcnApproval",
-    "EcnTask",
-    "EcnAffectedMaterial",
-    "EcnAffectedOrder",
-    "EcnBomImpact",
-    "EcnBomChange",
-    "EcnResponsibility",
-    "EcnSolutionTemplate",
-    "EcnCostRecord",
-    "EcnLog",
-    "EcnMaterialDisposition",
-    "EcnExecutionProgress",
-    "EcnStakeholder",
-]
+for _m in pkgutil.walk_packages(_impl.__path__, prefix="app.modules.ecn.models."):
+    try:
+        _mod = importlib.import_module(_m.name)
+    except Exception:
+        continue
+    sys.modules[_m.name.replace("app.modules.ecn.models", "app.models.ecn")] = _mod
