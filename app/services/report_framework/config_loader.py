@@ -1,3 +1,4 @@
+import logging
 # -*- coding: utf-8 -*-
 """
 配置加载器
@@ -98,7 +99,7 @@ class ConfigLoader:
                 self._meta_cache[config.meta.code] = config.meta
             except (ConfigError, ValidationError) as e:
                 # 记录错误但继续处理其他文件
-                print(f"Warning: Failed to load {yaml_file}: {e}")
+                logging.getLogger(__name__).warning("Failed to load %s: %s", yaml_file, e)
 
         return reports
 

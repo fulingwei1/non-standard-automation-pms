@@ -1,3 +1,4 @@
+import logging
 # -*- coding: utf-8 -*-
 """
 工时预测服务
@@ -20,7 +21,7 @@ try:
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
-    print("Warning: scikit-learn not installed, linear regression will use fallback method")
+    logging.getLogger(__name__).debug("scikit-learn not installed, linear regression will use fallback method")
 
 from app.models.project import Project
 from app.models.timesheet import Timesheet

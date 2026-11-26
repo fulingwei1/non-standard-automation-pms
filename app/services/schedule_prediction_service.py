@@ -18,7 +18,7 @@ from app.models.project.schedule_prediction import (
     ProjectSchedulePrediction,
     ScheduleAlert,
 )
-from app.services.ai_client_service import AIClientService
+from app.services.ai_client_service import AIClientService, is_mock_response
 from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
@@ -175,6 +175,9 @@ class SchedulePredictionService:
                 temperature=0.3,  # 降低随机性，提高准确性
                 max_tokens=2000,
             )
+            if is_mock_response(response):
+                logger.warning("AI预测返回mock降级响应，使用线性预测")
+                return self._predict_linear(features)
 
             # 解析响应
             content = response["content"]
@@ -437,6 +440,9 @@ class SchedulePredictionService:
             response = self.ai_client.generate_solution(
                 prompt=prompt, model="glm-5", temperature=0.5, max_tokens=3000
             )
+            if is_mock_response(response):
+                logger.warning("AI生成赶工方案返回mock降级响应，使用默认方案")
+                return self._generate_default_solutions(delay_days, project_data)
 
             # 解析响应
             content = response["content"]

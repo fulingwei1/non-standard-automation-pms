@@ -79,10 +79,15 @@ def collect_write_evidence() -> str:
 def find_ghosts() -> list:
     models = collect_models()
     corpus = collect_write_evidence()
+    ctor_tokens = set(re.findall(r"\b([A-Za-z_]\w*)\s*\(", corpus))
+    sql_tables = {
+        m.lower()
+        for m in re.findall(r"INSERT(?:\s+OR\s+REPLACE)?\s+INTO ([A-Za-z_]\w*)\b", corpus, re.I)
+    }
     ghosts = []
     for cls, table in sorted(models.items()):
-        has_ctor = re.search(rf"\b{re.escape(cls)}\s*\(", corpus)
-        has_sql = re.search(rf"INSERT(?:\s+OR\s+REPLACE)?\s+INTO {re.escape(table)}\b", corpus, re.I)
+        has_ctor = cls in ctor_tokens
+        has_sql = table.lower() in sql_tables
         if not has_ctor and not has_sql:
             ghosts.append(f"{cls}({table})")
     return ghosts

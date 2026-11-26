@@ -1,3 +1,4 @@
+import logging
 """
 AI报价单自动生成API路由
 Team 5: AI Quotation Generator API
@@ -379,11 +380,11 @@ async def _send_email_task(
     TODO: 集成实际的邮件服务（如SendGrid, AWS SES等）
     """
     # 这里应该调用实际的邮件服务
-    print(f"发送邮件到 {to_email}")
-    print(f"主题: {subject}")
-    print(f"内容: {message}")
+    logging.getLogger(__name__).info("发送邮件到 %s", to_email)
+    logging.getLogger(__name__).debug("主题: %s", subject)
+    logging.getLogger(__name__).debug("内容: %s", message)
     if pdf_path:
-        print(f"附件: {pdf_path}")
+        logging.getLogger(__name__).debug("附件: %s", pdf_path)
     # 实际实现：
     # email_service = EmailService()
     # await email_service.send_email(to_email, cc_emails, subject, message, pdf_path)

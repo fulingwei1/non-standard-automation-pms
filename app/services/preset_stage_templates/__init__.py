@@ -1,3 +1,4 @@
+import logging
 # -*- coding: utf-8 -*-
 """
 预置阶段模板数据
@@ -62,7 +63,7 @@ def init_preset_templates(template_service) -> List:
                 template_service.set_default_template(template.id)
                 created_templates.append(template)
         except Exception as e:
-            print(f"初始化模板 {template_data['template_code']} 失败: {e}")
+            logging.getLogger(__name__).warning("初始化模板 %s 失败: %s", template_data["template_code"], e)
 
     return created_templates
 

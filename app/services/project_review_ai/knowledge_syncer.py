@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.models.presale_knowledge_case import PresaleKnowledgeCase
 from app.models.project import Project
 from app.models.project_review import ProjectLesson, ProjectReview
-from app.services.ai_client_service import AIClientService
+from app.services.ai_client_service import AIClientService, is_mock_response
 
 
 class ProjectKnowledgeSyncer:
@@ -155,6 +155,8 @@ class ProjectKnowledgeSyncer:
 
     def _parse_summary_response(self, ai_response: Dict[str, Any]) -> Dict[str, Any]:
         """解析AI摘要响应"""
+        if is_mock_response(ai_response):
+            return {}
         content = ai_response.get("content", "{}")
 
         try:

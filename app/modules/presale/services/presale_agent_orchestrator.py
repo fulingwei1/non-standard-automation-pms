@@ -181,6 +181,22 @@ def run_presale_agent(
                 "selling_points": len(step_comp.get("our_selling_points", [])),
             })
 
+        # ============= Step 8.6: 报价对标分析（深度方案时自动做） =============
+        if enable_deep_solution:
+            t0 = time.time()
+            from app.modules.presale.services.cost_benchmark import _step_cost_benchmark
+            step_benchmark = _step_cost_benchmark(
+                db, ai, requirement_text, parsed,
+                step8 if step8.get("ok") else {},
+                step2.get("similar_cases", []),
+            )
+            result["steps"]["cost_benchmark"] = step_benchmark
+            result["timings"]["cost_benchmark"] = round(time.time() - t0, 2)
+            _log_step("8.6", "报价对标", {
+                "ok": step_benchmark.get("ok"),
+                "benchmarks": len(step_benchmark.get("benchmarks", [])),
+            })
+
         # ============= Step 9: 可视化方案包（整线项目，可选） =============
         # 触发条件：深度方案开启 + 整线项目（project_type 或关键词判断）
         _project_type = (parsed or {}).get("project_type", "")
@@ -814,7 +830,10 @@ def _record_metric(
     total_time = round(time.time() - started, 2) if not result.get("total_time") else result["total_time"]
 
     # 各步骤成功标志
+    from app.services.ai_client_service import is_mock_response
     steps_ok = {k: bool(v.get("ok")) if isinstance(v, dict) else False for k, v in steps.items()}
+    if is_mock_response(steps.get("solution_draft", {}).get("raw")):
+        steps_ok["solution_draft_mock"] = True
 
     cited_cases = 0
     quote_samples = 0

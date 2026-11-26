@@ -1,3 +1,4 @@
+import logging
 # -*- coding: utf-8 -*-
 """
 成本预测与优化服务
@@ -775,7 +776,7 @@ class CostPredictionService:
 
         except Exception as e:
             # 建议生成失败不影响预测创建
-            print(f"优化建议生成失败: {str(e)}")
+            logging.getLogger(__name__).warning("优化建议生成失败: %s", e)
 
     def get_latest_prediction(self, project_id: int) -> Optional[CostPrediction]:
         """获取项目最新的成本预测"""

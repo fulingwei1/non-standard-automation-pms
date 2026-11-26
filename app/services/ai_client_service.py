@@ -195,7 +195,7 @@ class AIClientService:
                 },
             }
         except Exception as e:
-            print(f"OpenAI API Error: {e}")
+            _ai_logger.warning("OpenAI API Error: %s", e)
             return self._mock_response(prompt, model)
 
     def _call_qwen(
@@ -268,7 +268,7 @@ class AIClientService:
                 )
                 continue
 
-        print(f"Qwen(Bailian) API Error after retries: {last_err}")
+        _ai_logger.warning("Qwen(Bailian) API Error after retries: %s", last_err)
         return self._mock_response(prompt, model)
 
     def chat_with_tools(
@@ -546,7 +546,7 @@ class AIClientService:
                 ),
             }
         except Exception as e:
-            print(f"Kimi API Error: {e}")
+            _ai_logger.warning("Kimi API Error: %s", e)
             return self._mock_response(prompt, "kimi")
 
     def _call_glm5(
@@ -563,7 +563,7 @@ class AIClientService:
         - Function Call 支持
         """
         if not self.zhipu_client:
-            print("GLM-5 客户端未初始化，使用 Mock 模式")
+            _ai_logger.debug("GLM-5 客户端未初始化，使用 Mock 模式")
             return self._mock_response(prompt, "glm-5")
 
         try:
@@ -618,7 +618,7 @@ class AIClientService:
             return result
 
         except Exception as e:
-            print(f"GLM-5 API Error: {e}")
+            _ai_logger.warning("GLM-5 API Error: %s", e)
             # 降级到 Mock 模式
             return self._mock_response(prompt, "glm-5")
 

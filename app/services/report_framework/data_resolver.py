@@ -1,3 +1,4 @@
+import logging
 # -*- coding: utf-8 -*-
 """
 数据源解析器
@@ -71,7 +72,7 @@ class DataResolver:
             except DataSourceError as e:
                 # 数据源错误，记录并继续
                 context[name] = []
-                print(f"Warning: Data source '{name}' failed: {e}")
+                logging.getLogger(__name__).warning("Data source '%s' failed: %s", name, e)
 
         # 移除 params，只返回数据
         context.pop("params", None)

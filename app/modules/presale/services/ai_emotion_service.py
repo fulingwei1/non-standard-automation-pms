@@ -1,3 +1,4 @@
+import logging
 """
 AI情绪分析服务
 集成OpenAI GPT-4进行情感分析、意向识别、流失预警
@@ -284,7 +285,7 @@ class AIEmotionService:
                 )
                 success_count += 1
             except Exception as e:
-                print(f"分析客户 {customer_id} 失败: {str(e)}")
+                logging.getLogger(__name__).warning("分析客户 %s 失败: %s", customer_id, e)
                 failed_count += 1
 
         return {
@@ -361,7 +362,7 @@ class AIEmotionService:
                 else:
                     return self._get_default_emotion_result()
         except Exception as e:
-            print(f"调用OpenAI失败: {str(e)}")
+            logging.getLogger(__name__).warning("调用OpenAI失败: %s", e)
             return self._get_default_emotion_result()
 
     async def _call_openai_for_churn(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -424,7 +425,7 @@ class AIEmotionService:
                 else:
                     return self._get_default_churn_result()
         except Exception as e:
-            print(f"调用OpenAI失败: {str(e)}")
+            logging.getLogger(__name__).warning("调用OpenAI失败: %s", e)
             return self._get_default_churn_result()
 
     async def _call_openai_for_follow_up(self, emotion_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -486,7 +487,7 @@ class AIEmotionService:
                 else:
                     return self._get_default_follow_up_result()
         except Exception as e:
-            print(f"调用OpenAI失败: {str(e)}")
+            logging.getLogger(__name__).warning("调用OpenAI失败: %s", e)
             return self._get_default_follow_up_result()
 
     def _determine_sentiment(self, sentiment_score: float) -> SentimentType:

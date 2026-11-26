@@ -1,3 +1,4 @@
+import logging
 # -*- coding: utf-8 -*-
 """
 项目成本预测服务
@@ -457,7 +458,7 @@ class ProjectCostPredictionService:
 
         except Exception as e:
             # 建议生成失败不影响预测创建
-            print(f"优化建议生成失败: {str(e)}")
+            logging.getLogger(__name__).warning("优化建议生成失败: %s", e)
 
     def _get_suggestions_summary(self, project_id: int) -> Dict:
         """获取优化建议摘要"""

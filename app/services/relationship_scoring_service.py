@@ -1,3 +1,4 @@
+import logging
 # -*- coding: utf-8 -*-
 """
 客户关系成熟度评分服务
@@ -713,7 +714,7 @@ class RelationshipScoringService:
         except Exception as e:
             self.db.rollback()
             # 记录错误但不中断流程
-            print(f"Failed to save relationship score: {e}")
+            logging.getLogger(__name__).warning("Failed to save relationship score: %s", e)
 
     def get_customer_score_history(
         self, customer_id: int, limit: int = 10

@@ -352,6 +352,7 @@ class PurchaseMaterialCost(Base, TimestampMixin):
     # 备注
     remark = Column(Text, comment="备注")
     submitted_by = Column(Integer, ForeignKey("users.id"), comment="提交人ID（采购部）")
+    source_file = Column(String(500), comment="来源PDF文件路径，用于溯源")
 
     # 关系
     # supplier = relationship("Supplier", foreign_keys=[supplier_id])  # 已禁用 - Supplier 是废弃模型

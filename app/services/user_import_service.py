@@ -232,6 +232,7 @@ class UserImportService:
         # 处理密码（如果未提供，使用默认密码）
         password = row.get("password")
         if pd.isna(password) or str(password).strip() == "":
+            # TODO(security): 弱默认密码存在安全风险，生产环境应通过随机生成初始密码或强制首次登录修改密码，当前保留以兼容批量导入逻辑
             password = "123456"  # 默认密码
         user_data["password_hash"] = get_password_hash(str(password))
 
