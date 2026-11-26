@@ -1031,7 +1031,9 @@ def mock_project(db_session: Session, engineer_user: User, pm_user: User) -> Pro
     _ensure_role(db_session, "PM", "项目经理")
     _ensure_role(db_session, "ENGINEER", "工程师")
     customer = _ensure_customer(db_session)
+    tenant_id = pm_user.tenant_id or 1
     project = Project(
+        tenant_id=tenant_id,
         project_code=f"PJT-{uuid.uuid4().hex[:8].upper()}",
         project_name="工程师测试项目",
         customer_id=customer.id,
@@ -1051,6 +1053,7 @@ def mock_project(db_session: Session, engineer_user: User, pm_user: User) -> Pro
     # 创建项目成员：项目经理 + 工程师
     members = [
         ProjectMember(
+            tenant_id=tenant_id,
             project_id=project.id,
             user_id=pm_user.id,
             role_code="PM",
@@ -1059,6 +1062,7 @@ def mock_project(db_session: Session, engineer_user: User, pm_user: User) -> Pro
             created_by=pm_user.id,
         ),
         ProjectMember(
+            tenant_id=tenant_id,
             project_id=project.id,
             user_id=engineer_user.id,
             role_code="ENGINEER",

@@ -29,6 +29,7 @@ def _auth_headers(user) -> dict:
 def admin_user(db_session):
     marker = uuid4().hex[:10]
     user = User(
+        tenant_id=1,
         username=f"otd_thr_admin_{marker}",
         password_hash=get_password_hash("otd123"),
         real_name="阈值管理员",
@@ -51,6 +52,7 @@ def admin_user(db_session):
 def plain_user(db_session):
     marker = uuid4().hex[:10]
     user = User(
+        tenant_id=1,
         username=f"otd_thr_plain_{marker}",
         password_hash=get_password_hash("otd123"),
         real_name="普通用户",

@@ -30,6 +30,7 @@ def _create_project(db: Session, suffix: str, creator_id: int) -> Project:
     db.flush()
 
     project = Project(
+        tenant_id=1,
         project_code=f"NT-PJ-{suffix}",
         project_name=f"Node task project {suffix}",
         customer_id=customer.id,
@@ -46,6 +47,7 @@ def _create_project(db: Session, suffix: str, creator_id: int) -> Project:
 
 def _create_node(db: Session, project: Project, suffix: str) -> ProjectNodeInstance:
     stage = ProjectStageInstance(
+        tenant_id=1,
         project_id=project.id,
         stage_code=f"NT-ST-{suffix[:6]}",
         stage_name="Node task self-service stage",
@@ -55,6 +57,7 @@ def _create_node(db: Session, project: Project, suffix: str) -> ProjectNodeInsta
     db.flush()
 
     node = ProjectNodeInstance(
+        tenant_id=1,
         project_id=project.id,
         stage_instance_id=stage.id,
         node_code=f"NTN{suffix[:6]}",
@@ -75,6 +78,7 @@ def test_regular_user_can_read_only_own_node_tasks(
     marker = f"NODE-TASK-SELF-{suffix}"
 
     actor = User(
+        tenant_id=1,
         username=f"node_task_actor_{suffix}",
         password_hash=get_password_hash("password123"),
         real_name="Node task actor",
@@ -83,6 +87,7 @@ def test_regular_user_can_read_only_own_node_tasks(
         is_superuser=False,
     )
     other_user = User(
+        tenant_id=1,
         username=f"node_task_other_{suffix}",
         password_hash=get_password_hash("password123"),
         real_name="Node task other",
@@ -97,6 +102,7 @@ def test_regular_user_can_read_only_own_node_tasks(
     node = _create_node(db_session, project, suffix)
 
     own_task = NodeTask(
+        tenant_id=1,
         node_instance_id=node.id,
         task_code=f"NT-T-{suffix}",
         task_name=f"{marker}-own",
@@ -106,6 +112,7 @@ def test_regular_user_can_read_only_own_node_tasks(
         assignee_id=actor.id,
     )
     other_task = NodeTask(
+        tenant_id=1,
         node_instance_id=node.id,
         task_code=f"NT-O-{suffix}",
         task_name=f"{marker}-other",

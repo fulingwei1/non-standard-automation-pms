@@ -43,6 +43,7 @@ def _create_pm_user(db: Session) -> User:
     role = _get_or_create_pm_role(db)
     username = f"pm_self_service_{uuid.uuid4().hex[:8]}"
     user = User(
+        tenant_id=1,
         username=username,
         password_hash="not-used",
         auth_type="password",
@@ -60,6 +61,7 @@ def _create_pm_user(db: Session) -> User:
 
 def _create_pm_owned_project(db: Session, pm: User) -> Project:
     project = Project(
+        tenant_id=pm.tenant_id,
         project_code=f"PM-SELF-{uuid.uuid4().hex[:8].upper()}",
         project_name="PM自服务合同测试项目",
         customer_name="PM测试客户",

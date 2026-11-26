@@ -33,6 +33,7 @@ def _make_project(db, stage="S2", **overrides):
 
     marker = uuid4().hex[:8]
     defaults = dict(
+        tenant_id=1,
         project_code=f"OTD-API-{marker}",
         project_name="OTD API 测试项目",
         stage=stage,
@@ -66,6 +67,7 @@ def admin_user(db_session):
 
     marker = uuid4().hex[:10]
     user = User(
+        tenant_id=1,
         username=f"otd_admin_{marker}",
         password_hash=get_password_hash("otd123"),
         real_name="OTD管理员",
@@ -94,6 +96,7 @@ def plain_user(db_session):
 
     marker = uuid4().hex[:10]
     user = User(
+        tenant_id=1,
         username=f"otd_plain_{marker}",
         password_hash=get_password_hash("otd123"),
         real_name="普通用户",
