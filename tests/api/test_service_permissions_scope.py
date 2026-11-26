@@ -114,6 +114,7 @@ def _create_foreign_project(db: Session, template_project: Project, pm_user: Use
         pm_name=pm_user.real_name or pm_user.username,
         priority="NORMAL",
         created_by=pm_user.id,
+        tenant_id=1,
     )
     db.add(project)
     db.commit()
@@ -132,6 +133,7 @@ def _ensure_customer(db: Session) -> Customer:
         contact_person="测试联系人",
         contact_phone="13800000000",
         status="ACTIVE",
+        tenant_id=1,
     )
     db.add(customer)
     db.commit()
@@ -153,6 +155,7 @@ def _create_accessible_project(db: Session, engineer_user: User, pm_user: User) 
         pm_name=pm_user.real_name or pm_user.username,
         priority="NORMAL",
         created_by=pm_user.id,
+        tenant_id=1,
     )
     db.add(project)
     db.commit()
@@ -166,6 +169,7 @@ def _create_accessible_project(db: Session, engineer_user: User, pm_user: User) 
             is_lead=True,
             allocation_pct=100,
             created_by=pm_user.id,
+            tenant_id=1,
         ),
         ProjectMember(
             project_id=project.id,
@@ -173,6 +177,7 @@ def _create_accessible_project(db: Session, engineer_user: User, pm_user: User) 
             role_code="ENGINEER",
             allocation_pct=100,
             created_by=pm_user.id,
+            tenant_id=1,
         ),
     ]
     db.add_all(members)
@@ -198,6 +203,7 @@ def _create_ticket(
         reported_time=datetime(2026, 3, 16, 10, 0, 0),
         status=ServiceTicketStatusEnum.PENDING.value,
         timeline=[],
+        tenant_id=1,
     )
     db.add(ticket)
     db.commit()
@@ -226,6 +232,7 @@ def _create_record(
         service_content=f"record-scope-{suffix}",
         status=ServiceRecordStatusEnum.IN_PROGRESS.value,
         photos=[],
+        tenant_id=1,
     )
     db.add(record)
     db.commit()
@@ -250,6 +257,7 @@ def _create_survey(
         status=SurveyStatusEnum.DRAFT.value,
         created_by=creator.id,
         created_by_name=creator.real_name or creator.username,
+        tenant_id=1,
     )
     db.add(survey)
     db.commit()
@@ -274,6 +282,7 @@ def _create_communication(
         content=f"comm-content-{suffix}",
         created_by=creator.id,
         created_by_name=creator.real_name or creator.username,
+        tenant_id=1,
     )
     db.add(communication)
     db.commit()
@@ -294,6 +303,7 @@ def _create_article(db: Session, *, author: User) -> KnowledgeBase:
         status=KnowledgeBaseStatusEnum.DRAFT.value,
         author_id=author.id,
         author_name=author.real_name or author.username,
+        tenant_id=1,
     )
     db.add(article)
     db.commit()

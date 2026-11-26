@@ -2831,6 +2831,27 @@ class TestPresalesFrontendContractBehavior:
         assert created_initiation.status_code == 201, created_initiation.text
         initiation_id = created_initiation.json()["id"]
 
+        assessment = TechnicalAssessment(
+            source_type="OPPORTUNITY",
+            source_id=opportunity.id,
+            evaluator_id=admin_user.id,
+            status=AssessmentStatusEnum.COMPLETED.value,
+            total_score=86,
+            decision="推荐立项",
+            evaluated_at=datetime.now(),
+            presale_ticket_id=ticket_id,
+            tenant_id=getattr(opportunity, "tenant_id", None),
+        )
+        db_session.add(assessment)
+        db_session.flush()
+        db_session.query(Opportunity).filter(Opportunity.id == opportunity.id).update(
+            {"assessment_id": assessment.id}
+        )
+        db_session.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).update(
+            {"current_assessment_id": assessment.id}
+        )
+        db_session.commit()
+
         submitted = client.put(
             f"{prefix}/pmo/initiations/{initiation_id}/submit",
             headers=headers,
