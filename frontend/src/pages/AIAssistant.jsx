@@ -24,7 +24,7 @@ export default function AIAssistant() {
     const ask = async () => {
         if (q.trim().length < 2) return; setAsking(true); setAns(null);
         try { const { data } = await api.post("/ai-advanced/ask", { question: q }); setAns(data?.data || data); }
-        catch (e) { alert("问答失败"); } finally { setAsking(false); }
+        catch (_e) { alert("问答失败"); } finally { setAsking(false); }
     };
 
     // 文本助手（摘要/翻译/润色/邮件）
@@ -38,18 +38,18 @@ export default function AIAssistant() {
             else if (kind === "润色") d = (await api.post("/ai-copilot/polish", { text: txt })).data?.data;
             else if (kind === "邮件") d = (await api.post("/ai-copilot/draft", { purpose: txt })).data?.data;
             setOut(d?.summary ? `${d.summary}\n\n要点：${(d.key_points || []).join("；")}` : (d?.translation || d?.polished || d?.draft || JSON.stringify(d)));
-        } catch (e) { setOut("处理失败"); } finally { setBusy(""); }
+        } catch (_e) { setOut("处理失败"); } finally { setBusy(""); }
     };
 
     // 日报
     const [report, setReport] = useState(""); const [rBusy, setRBusy] = useState(false);
     const [history, setHistory] = useState([]);
-    const loadHistory = async () => { try { const { data } = await api.get("/ai-copilot/my-reports"); setHistory((data?.data || data)?.reports || []); } catch (e) { /* */ } };
+    const loadHistory = async () => { try { const { data } = await api.get("/ai-copilot/my-reports"); setHistory((data?.data || data)?.reports || []); } catch (_e) { /* */ } };
     useEffect(() => { loadHistory(); }, []);
     const genReport = async (period) => {
         setRBusy(true); setReport("");
         try { const { data } = await api.get(`/ai-copilot/report?period=${period}`); setReport((data?.data || data)?.report || ""); loadHistory(); }
-        catch (e) { setReport("生成失败"); } finally { setRBusy(false); }
+        catch (_e) { setReport("生成失败"); } finally { setRBusy(false); }
     };
 
     return (

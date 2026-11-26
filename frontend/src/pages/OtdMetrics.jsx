@@ -5,17 +5,13 @@ import {
   Card,
   CardContent,
   Button,
-  Badge,
-  Progress,
   LoadingSpinner,
   ApiIntegrationError,
-  EmptyState,
 } from "../components/ui";
 import { otdApi } from "../services/api/otd";
 import {
   Download,
   TrendingUp,
-  AlertTriangle,
   Clock,
   Repeat,
   GitCommit,
@@ -23,7 +19,6 @@ import {
   CheckSquare,
   MessageSquareWarning,
 } from "lucide-react";
-import { cn } from "../lib/utils";
 
 const metricMeta = [
   {

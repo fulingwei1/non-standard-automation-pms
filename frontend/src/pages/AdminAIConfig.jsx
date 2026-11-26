@@ -33,7 +33,7 @@ export default function AdminAIConfig() {
     };
     // 日报/周报推送排程
     const [sched, setSched] = useState(null);
-    const loadSched = async () => { try { const { data } = await api.get("/admin/ai-config/report-schedule"); setSched(data?.data || data); } catch (e) { /* */ } };
+    const loadSched = async () => { try { const { data } = await api.get("/admin/ai-config/report-schedule"); setSched(data?.data || data); } catch (_e) { /* */ } };
     useEffect(() => { loadSched(); }, []);
     const saveSched = async (kind, patch) => {
         const cur = sched[kind];
@@ -44,7 +44,7 @@ export default function AdminAIConfig() {
     };
     const pushNow = async (period) => {
         try { const { data } = await api.post(`/admin/ai-config/push-reports?period=${period}`); setMsg(data?.message || "已触发"); }
-        catch (e) { setMsg("触发失败"); }
+        catch (_e) { setMsg("触发失败"); }
     };
 
     const [testModel, setTestModel] = useState("");

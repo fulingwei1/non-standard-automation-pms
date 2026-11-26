@@ -4,7 +4,7 @@ import OrderCard from "../OrderCard";
 
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, whileHover, ...props }) => <div {...props}>{children}</div>,
+    div: ({ children, whileHover: _whileHover, ...props }) => <div {...props}>{children}</div>,
   },
 }));
 

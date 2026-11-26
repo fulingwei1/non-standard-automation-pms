@@ -44,7 +44,6 @@ const DeliveryManagement = () => {
     viewMode,
     params,
     loading,
-    deliveries,
     deliveryStatistics,
     filteredDeliveries,
     activeTab,

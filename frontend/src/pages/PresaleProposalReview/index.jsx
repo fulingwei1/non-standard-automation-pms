@@ -1,8 +1,8 @@
 // 售前方案审核队列（售前工程师用）
 import { useEffect, useState } from "react";
-import { Clock, CheckCircle2, AlertCircle, GitBranch, Eye, X } from "lucide-react";
+import { CheckCircle2, AlertCircle, GitBranch, Eye, X } from "lucide-react";
 import { PageHeader } from "../../components/layout";
-import { Alert, AlertDescription, Badge, Button, Card, CardContent, Textarea } from "../../components/ui";
+import { Badge, Button, Card, CardContent, Textarea } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import {
   listProposals, getProposalDetail, reviewProposal,

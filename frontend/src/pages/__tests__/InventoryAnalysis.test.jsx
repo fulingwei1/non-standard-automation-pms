@@ -178,7 +178,7 @@ describe("InventoryAnalysis", () => {
   it("切到呆滞物料页后按阈值加载，并在阈值变化时重新请求", async () => {
     renderPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "呆滞物料" }));
+    fireEvent.click(screen.getByRole("tab", { name: "呆滞物料" }));
 
     await waitFor(() => {
       expect(api.get).toHaveBeenCalledWith("/inventory-analysis/stale-materials", {
@@ -204,19 +204,19 @@ describe("InventoryAnalysis", () => {
   it("切换到其他标签时加载对应分析数据", async () => {
     renderPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "安全库存" }));
+    fireEvent.click(screen.getByRole("tab", { name: "安全库存" }));
     await waitFor(() => {
       expect(api.get).toHaveBeenCalledWith("/inventory-analysis/safety-stock-compliance");
     });
     expect(screen.getByTestId("safety-stock-tab")).toHaveTextContent("安全库存内容：88");
 
-    fireEvent.click(screen.getByRole("button", { name: "ABC分类" }));
+    fireEvent.click(screen.getByRole("tab", { name: "ABC分类" }));
     await waitFor(() => {
       expect(api.get).toHaveBeenCalledWith("/inventory-analysis/abc-analysis");
     });
     expect(screen.getByTestId("abc-analysis-tab")).toHaveTextContent("ABC分类内容：42");
 
-    fireEvent.click(screen.getByRole("button", { name: "成本占用" }));
+    fireEvent.click(screen.getByRole("tab", { name: "成本占用" }));
     await waitFor(() => {
       expect(api.get).toHaveBeenCalledWith("/inventory-analysis/cost-occupancy");
     });

@@ -42,7 +42,7 @@ export default function CommandBar() {
             if (d.intent === "action" && d.path && d.hint) {
                 go(`${d.path}?ai_hint=${encodeURIComponent(d.hint)}`);
             }
-        } catch (e) { setResult({ error: "AI 处理失败" }); } finally { setLoading(false); }
+        } catch (_e) { setResult({ error: "AI 处理失败" }); } finally { setLoading(false); }
     }, [q]);
 
     if (!open) return null;

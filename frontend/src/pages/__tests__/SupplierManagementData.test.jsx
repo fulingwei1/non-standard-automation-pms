@@ -29,7 +29,8 @@ vi.mock('framer-motion', () => ({
             ].includes(key)
         )
       );
-      return children ? children(filtered) : null;
+      const Tag = typeof _tag === 'string' ? _tag : 'div';
+      return <Tag {...filtered}>{children}</Tag>;
     },
   }),
 }));

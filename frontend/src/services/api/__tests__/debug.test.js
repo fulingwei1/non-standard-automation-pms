@@ -1,8 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import MockAdapter from 'axios-mock-adapter';
+
+vi.unmock('../client.js');
 
 describe('Debug client.js axios mock', () => {
   it('should test client.js axios with mock', async () => {
+    vi.resetModules();
     // 直接导入 client.js
     const { default: api } = await import('../client.js');
     console.log('Client api:', api);

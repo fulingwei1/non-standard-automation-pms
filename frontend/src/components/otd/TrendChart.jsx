@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { Card, CardContent, Badge, LoadingSpinner, EmptyState } from "../ui";
-import { TrendingUp, AlertCircle } from "lucide-react";
+import { Card, CardContent, EmptyState } from "../ui";
+import { TrendingUp } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 /**
@@ -36,8 +36,7 @@ export function SeverityTrendChart({ dates, severity, title = "风险等级趋�
     );
   }
 
-  // 每 N 天显示一个日期标签
-  const labelInterval = Math.max(1, Math.floor(dates.length / 8));
+  // 日期标签间隔（保留用于后续密集日期裁剪）
 
   return (
     <Card>
@@ -99,7 +98,6 @@ export function NumericTrendChart({
   values,
   title = "数值趋势",
   unit = "",
-  color = "bg-blue-500",
   targetLine,
 }) {
   const canvasRef = useRef(null);
@@ -229,7 +227,7 @@ export function useTrendData(fetchFn, deps = []) {
     return () => {
       mounted = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, deps);
 
   return { data, loading };

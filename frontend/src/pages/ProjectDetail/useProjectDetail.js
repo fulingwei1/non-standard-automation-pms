@@ -46,11 +46,11 @@ export function useProjectDetail() {
       searchParams.delete("tab");
       setSearchParams(searchParams, { replace: true });
     }
-  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeTab]);  
 
   useEffect(() => {
     fetchProjectData();
-  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id]);  
 
   const fetchProjectData = async () => {
     setLoading(true);

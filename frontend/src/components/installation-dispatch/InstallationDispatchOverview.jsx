@@ -157,7 +157,7 @@ const InstallationDispatchOverview = ({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {Object.entries(DISPATCH_STATUS).map(([key, value]) => {
+              {Object.entries(DISPATCH_STATUS).map(([_key, value]) => {
                 const count = stats[STATUS_STAT_KEYS[value]] || 0;
                 const percentage = stats.totalDispatches > 0 ? (count / stats.totalDispatches * 100).toFixed(1) : 0;
                 

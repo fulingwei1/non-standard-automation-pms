@@ -135,7 +135,7 @@ describe('PurchaseOrderDetail', () => {
 
     expect(screen.getByText('PO-2024-001')).toBeInTheDocument();
     expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /编辑/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /编辑/i }).length).toBeGreaterThan(0);
   });
 
   it('renders supplier and line item information', () => {

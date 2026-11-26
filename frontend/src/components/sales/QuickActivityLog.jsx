@@ -29,7 +29,7 @@ export default function QuickActivityLog({ customerId, opportunityId, leadId, pr
             if (!url) return;
             const { data } = await api.get(url);
             setItems((data?.data || data)?.activities || []);
-        } catch (e) { /* ignore */ }
+        } catch (_e) { /* ignore */ }
     }, [opportunityId, customerId]);
 
     useEffect(() => { load(); }, [load]);

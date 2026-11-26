@@ -273,7 +273,7 @@ describe("PresaleProposals", () => {
     renderPage();
 
     await screen.findByText("草稿售前方案");
-    fireEvent.click(screen.getByRole("button", { name: /方案评审/ }));
+    fireEvent.click(screen.getByRole("tab", { name: /方案评审/ }));
 
     expect(await screen.findByText("已提交评审方案")).toBeInTheDocument();
     expect(screen.queryByText("草稿售前方案")).not.toBeInTheDocument();

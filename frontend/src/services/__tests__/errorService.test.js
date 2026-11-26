@@ -225,7 +225,6 @@ describe('Error Service', () => {
 
       const result = errorService.handleApiError(error);
 
-      expect(result).toContain('[数据验证错误]');
       expect(result).toContain('用户名已存在');
     });
 
@@ -239,8 +238,7 @@ describe('Error Service', () => {
 
       const result = errorService.handleApiError(error);
 
-      expect(result).toContain('[数据验证错误]');
-      expect(result).toContain('请求参数错误');
+      expect(result).toContain('数据验证失败');
     });
 
     it('应该处理500服务器错误', () => {

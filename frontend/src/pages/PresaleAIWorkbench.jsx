@@ -49,7 +49,7 @@ export default function PresaleAIWorkbench() {
         if (job?.status !== "SUCCESS" && job?.status !== "FAILED") {
           timers.current.push(setTimeout(tick, POLL_INTERVAL_MS));
         }
-      } catch (e) {
+      } catch (_e) {
         setJob({ status: "FAILED", error: "轮询失败" });
       }
     };

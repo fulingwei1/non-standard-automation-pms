@@ -9,7 +9,7 @@ export default function BusinessAnalysisCard() {
     useEffect(() => {
         (async () => {
             try { const { data } = await api.get("/sales/ai-business-analysis"); setD(data?.data || data); }
-            catch (e) { /* ignore */ } finally { setLoading(false); }
+            catch (_e) { /* ignore */ } finally { setLoading(false); }
         })();
     }, []);
     const m = d?.metrics || {}, a = d?.analysis || {};

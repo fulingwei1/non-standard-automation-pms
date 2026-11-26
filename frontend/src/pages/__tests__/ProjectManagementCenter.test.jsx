@@ -82,7 +82,7 @@ describe("ProjectManagementCenter", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("button", { name: "售前" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "售前" })).toBeInTheDocument();
     expect(await screen.findByText("售前交接")).toBeInTheDocument();
 
     expect(screen.getByRole("link", { name: /工单看板/ })).toHaveAttribute(

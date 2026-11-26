@@ -19,7 +19,6 @@ import {
   Download,
   RefreshCw,
   Sparkles,
-  AlertTriangle,
   CheckCircle,
   Lightbulb,
 } from "lucide-react";

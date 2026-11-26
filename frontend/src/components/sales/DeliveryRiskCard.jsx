@@ -9,7 +9,7 @@ export default function DeliveryRiskCard() {
     useEffect(() => {
         (async () => {
             try { const { data } = await api.get("/ai-delivery/risk"); setD(data?.data || data); }
-            catch (e) { /* ignore */ } finally { setLoading(false); }
+            catch (_e) { /* ignore */ } finally { setLoading(false); }
         })();
     }, []);
     return (

@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { PageHeader } from "../components/layout/PageHeader";
 import { NumericTrendChart, useTrendData } from "../components/otd/TrendChart";
@@ -33,7 +32,6 @@ const healthConfig = {
 };
 
 export default function MarginDashboard() {
-  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -57,7 +55,6 @@ export default function MarginDashboard() {
   }, [fetchData]);
 
   // 全局毛利率趋势 + 等级底线 + 回填状态
-  const [showTrend, setShowTrend] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const trendData = useTrendData(
     () => otdApi.marginTrend(30),

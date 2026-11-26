@@ -16,7 +16,7 @@ export default function SalesBriefing() {
             try {
                 const { data: d } = await api.get("/sales/ai-briefing");
                 setData(d?.data || d);
-            } catch (e) { /* ignore */ } finally { setLoading(false); }
+            } catch (_e) { /* ignore */ } finally { setLoading(false); }
         })();
     }, []);
 

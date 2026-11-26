@@ -18,7 +18,7 @@ import {
   submitRevision, listRevisions, revisionStats, clarifyRequirement,
 } from "../../services/api/presaleAgent";
 import {
-  createProposal, reviseProposal, submitProposal, listProposals,
+  createProposal, reviseProposal, submitProposal,
 } from "../../services/api/presaleProposals";
 
 // 步骤定义（含中文说明 + 预计耗时秒）
@@ -151,7 +151,7 @@ export default function PresaleAgent() {
           { role: "assistant", content: res.reply_to_user || "请补充更多信息" },
         ]);
         if (res.is_complete) setClarifyDone(true);
-      } catch (e) {
+      } catch (_e) {
         setChatMessages((prev) => [
           ...prev,
           { role: "assistant", content: "⚠️ 澄清服务暂时不可用" },
@@ -435,7 +435,8 @@ export default function PresaleAgent() {
 // ============= 结果展示（改进：结论摘要 + 分主次 + 导出） =============
 
 function AgentResult({ result, requirement, deep }) {
-  const { steps, summary, timings, total_time } = result;
+  const { steps, timings } = result;
+  const [proposalError, setProposalError] = useState("");
   const [showEditor, setShowEditor] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [revisedResult, setRevisedResult] = useState(null); // 修订后的结果（用于展示对比）
@@ -460,7 +461,7 @@ function AgentResult({ result, requirement, deep }) {
       setProposalId(r.id);
       setProposalStatus("draft");
     } catch (e) {
-      setError(e?.response?.data?.detail || e.message || "保存失败");
+      setProposalError(e?.response?.data?.detail || e.message || "保存失败");
     }
   };
 
@@ -490,7 +491,7 @@ function AgentResult({ result, requirement, deep }) {
       const r = await submitProposal(proposalId);
       setProposalStatus(r.status);
     } catch (e) {
-      setError(e?.response?.data?.detail || e.message);
+      setProposalError(e?.response?.data?.detail || e.message);
     }
   };
 
@@ -524,6 +525,13 @@ function AgentResult({ result, requirement, deep }) {
           <AlertDescription>
             ✅ 已保存工程师修订。修改已记录，将用于持续优化 AI 产出质量。
           </AlertDescription>
+        </Alert>
+      )}
+
+      {proposalError && (
+        <Alert className="border-red-500/30 bg-red-500/10 text-red-100">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{proposalError}</AlertDescription>
         </Alert>
       )}
 
@@ -994,7 +1002,7 @@ function DeepRiskView({ data }) {
 
 function DeepSolutionView({ data }) {
   if (!data?.ok) return <Muted>深度方案生成失败：{data?.error || "未知错误"}</Muted>;
-  const { solution_overview, system_architecture, subsystems = [], equipment_selection = [], test_strategy, software_design, cost_breakdown = [], tiers = [], implementation_phases = [], evidence = [], differentiation, assumptions = [], tool_calls = [], rounds = 0 } = data;
+  const { solution_overview, system_architecture, subsystems = [], equipment_selection = [], cost_breakdown = [], tiers = [], implementation_phases = [], evidence = [], differentiation, assumptions = [], tool_calls = [], rounds = 0 } = data;
   return (
     <div className="space-y-4 text-sm">
       <div className="mb-1 flex items-center gap-2 rounded-md border border-violet-500/20 bg-violet-500/5 px-3 py-1.5 text-xs text-violet-200">
@@ -1500,7 +1508,7 @@ function RevisionEditor({ result, requirement, onClose, onSaved }) {
     }
     setSaving(true);
     try {
-      const res = await submitRevision({
+      await submitRevision({
         requirement_text: requirement,
         ai_output: result,
         revised_output: revised,

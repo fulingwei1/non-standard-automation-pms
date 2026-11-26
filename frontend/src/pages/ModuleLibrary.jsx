@@ -9,13 +9,13 @@ export default function ModuleLibrary() {
     const [mining, setMining] = useState(false);
     const load = async () => {
         try { const { data } = await api.get("/ai-modules"); setMods((data?.data || data)?.modules || []); }
-        catch (e) { /* ignore */ } finally { setLoading(false); }
+        catch (_e) { /* ignore */ } finally { setLoading(false); }
     };
     useEffect(() => { load(); }, []);
     const mine = async () => {
         setMining(true);
         try { const { data } = await api.post("/ai-modules/extract"); alert((data?.data ? `AI 挖出 ${data.message || ""}` : "完成")); await load(); }
-        catch (e) { alert("挖掘失败"); } finally { setMining(false); }
+        catch (_e) { alert("挖掘失败"); } finally { setMining(false); }
     };
     return (
         <div className="p-6 max-w-6xl mx-auto space-y-4">

@@ -12,21 +12,22 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import MockAdapter from 'axios-mock-adapter';
-import * as customerService from '../customerService';
-import { apiClient } from '../apiClient';
+import { setupApiTest, teardownApiTest } from '../api/__tests__/_test-setup.js';
+
+vi.unmock('../api/client.js');
 
 describe('Customer Service', () => {
   let mock;
+  let customerService;
 
-  beforeEach(() => {
-    // 创建apiClient的mock
-    mock = new MockAdapter(apiClient);
-    vi.clearAllMocks();
+  beforeEach(async () => {
+    const setup = await setupApiTest();
+    mock = setup.mock;
+    customerService = await import('../customerService');
   });
 
   afterEach(() => {
-    mock.reset();
+    teardownApiTest(mock);
   });
 
   describe('getCustomer360()', () => {

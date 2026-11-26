@@ -10,20 +10,22 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import MockAdapter from 'axios-mock-adapter';
-import * as contractService from '../contractService';
-import apiClient from '../apiClient';
+import { setupApiTest, teardownApiTest } from '../api/__tests__/_test-setup.js';
+
+vi.unmock('../api/client.js');
 
 describe('Contract Service', () => {
   let mock;
+  let contractService;
 
-  beforeEach(() => {
-    mock = new MockAdapter(apiClient);
-    vi.clearAllMocks();
+  beforeEach(async () => {
+    const setup = await setupApiTest();
+    mock = setup.mock;
+    contractService = await import('../contractService');
   });
 
   afterEach(() => {
-    mock.reset();
+    teardownApiTest(mock);
   });
 
   describe('getContracts()', () => {
@@ -330,6 +332,7 @@ describe('Contract Service', () => {
         createContract: contractService.createContract,
         updateContract: contractService.updateContract,
         deleteContract: contractService.deleteContract,
+        signContract: contractService.signContract,
         getContractHistory: contractService.getContractHistory,
       });
     });

@@ -53,7 +53,7 @@ export default function AutofillBar({ formType, onFill, placeholder, defaultHint
       } else {
         setError("AI 未返回可用字段");
       }
-    } catch (e) {
+    } catch (_e) {
       setError("AI 填充失败，请稍后重试");
     } finally {
       setLoading(false);
@@ -67,7 +67,7 @@ export default function AutofillBar({ formType, onFill, placeholder, defaultHint
       setHint(defaultHint);
       run(defaultHint);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [defaultHint]);
 
   return (

@@ -16,9 +16,10 @@ export default mergeConfig(
         web: [/\.[jt]sx?$/],
       },
       exclude: [...configDefaults.exclude, "e2e/**"],
-      // 限制并发，避免状态冲突
+      // 开启文件级并行并限制 worker 数量，避免全量测试串行超时或内存溢出
       pool: "forks",
-      fileParallelism: false,
+      fileParallelism: true,
+      maxWorkers: 4,
       maxConcurrency: 5,
       sequence: {
         shuffle: false,

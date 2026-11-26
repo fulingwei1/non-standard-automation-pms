@@ -141,7 +141,7 @@ export default function OpportunityDetail() {
     try {
       const { data } = await api.get(`/sales/opportunities/${id}/similar-cases`);
       setSimilar(data?.data || data);
-    } catch (e) { alert("检索失败"); }
+    } catch (_e) { alert("检索失败"); }
   };
   const [nextAct, setNextAct] = useState(null);
   const [naLoading, setNaLoading] = useState(false);
@@ -150,7 +150,7 @@ export default function OpportunityDetail() {
     try {
       const { data } = await api.post(`/sales/opportunities/${id}/ai-next-action`);
       setNextAct(data?.data || data);
-    } catch (e) { alert("生成失败"); } finally { setNaLoading(false); }
+    } catch (_e) { alert("生成失败"); } finally { setNaLoading(false); }
   };
   const [bomSel, setBomSel] = useState(null);
   const [bomLoading, setBomLoading] = useState(false);
@@ -176,7 +176,7 @@ export default function OpportunityDetail() {
             opportunity_id: Number(id), solution_id: d.solution_id,
           });
           setCoverage(cov.data?.data || cov.data);
-        } catch (e) { /* 覆盖核对失败不阻断设计结果展示 */ }
+        } catch (_e) { /* 覆盖核对失败不阻断设计结果展示 */ }
       }
     }
     catch (e) { alert(e?.response?.data?.detail || "配置设计失败"); } finally { setDesignLoading(false); }

@@ -8,13 +8,11 @@ import { setupApiTest, teardownApiTest } from "../api/__tests__/_test-setup.js";
 
 describe("presaleAIService", () => {
   let mock;
-  let api;
   let presaleAIService;
 
   beforeEach(async () => {
     const setup = await setupApiTest();
     mock = setup.mock;
-    api = setup.api;
 
     const module = await import("../presaleAIService.js");
     presaleAIService = module.presaleAIService;

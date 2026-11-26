@@ -9,7 +9,7 @@ export default function ReceivableRiskCard() {
     useEffect(() => {
         (async () => {
             try { const { data } = await api.get("/ai-more/receivable-risk"); setD(data?.data || data); }
-            catch (e) { /* ignore */ } finally { setLoading(false); }
+            catch (_e) { /* ignore */ } finally { setLoading(false); }
         })();
     }, []);
     const wan = (n) => (n / 10000).toFixed(0);
