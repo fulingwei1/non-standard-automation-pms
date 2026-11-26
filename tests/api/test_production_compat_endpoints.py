@@ -693,12 +693,14 @@ class TestProductionCompatibilityEndpoints:
             applicant_id=normal_user.id,
             apply_time=datetime.now(),
             status=scope_marker,
+            tenant_id=normal_user.tenant_id,
         )
         other_requisition = MaterialRequisition(
             requisition_no=f"MR-OTH-{suffix}",
             applicant_id=admin.id,
             apply_time=datetime.now(),
             status=scope_marker,
+            tenant_id=normal_user.tenant_id,
         )
         db.add_all([own_requisition, other_requisition])
         db.commit()
@@ -746,10 +748,12 @@ class TestProductionCompatibilityEndpoints:
             work_order_no=f"WR-SCOPE-WO-{suffix}",
             task_name="数据权限测试工单",
             task_type="ASSEMBLY",
+            tenant_id=normal_user.tenant_id,
         )
         worker = Worker(
             worker_no=f"WR-SCOPE-WK-{suffix}",
             worker_name="数据权限测试工人",
+            tenant_id=normal_user.tenant_id,
         )
         db.add_all([work_order, worker])
         db.commit()
@@ -764,6 +768,7 @@ class TestProductionCompatibilityEndpoints:
             report_time=datetime.now(),
             status="APPROVED",
             approved_by=normal_user.id,
+            tenant_id=normal_user.tenant_id,
         )
         other_report = WorkReport(
             report_no=f"WR-OTH-{suffix}",
@@ -773,6 +778,7 @@ class TestProductionCompatibilityEndpoints:
             report_time=datetime.now(),
             status="APPROVED",
             approved_by=admin.id,
+            tenant_id=normal_user.tenant_id,
         )
         db.add_all([own_report, other_report])
         db.commit()

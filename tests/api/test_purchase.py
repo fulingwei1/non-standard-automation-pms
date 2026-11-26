@@ -658,6 +658,7 @@ class TestPurchaseOrderApproval:
         db_session: Session,
         *,
         created_by: int,
+        tenant_id: Optional[int] = None,
     ) -> PurchaseOrder:
         supplier = db_session.query(Vendor).filter(Vendor.vendor_type == "MATERIAL").first()
         if not supplier:
@@ -680,6 +681,7 @@ class TestPurchaseOrderApproval:
             order_title="审批权限测试订单",
             status="SUBMITTED",
             created_by=created_by,
+            tenant_id=tenant_id,
             order_date=date.today(),
             submitted_at=datetime.now(),
             total_amount=Decimal("100.00"),
@@ -783,6 +785,7 @@ class TestPurchaseOrderApproval:
             username=f"po_manager_{suffix}",
             password=manager_password,
             real_name="采购主管",
+            tenant_id=1,
         )
         peer_password = "peer123"
         peer = self._create_login_user(
@@ -790,6 +793,7 @@ class TestPurchaseOrderApproval:
             username=f"po_peer_{suffix}",
             password=peer_password,
             real_name="采购同事",
+            tenant_id=1,
         )
         requester = self._create_login_user(
             db_session,
@@ -797,8 +801,11 @@ class TestPurchaseOrderApproval:
             password=requester_password,
             real_name="采购员",
             reporting_to=manager.id,
+            tenant_id=1,
         )
-        order = self._create_submitted_order_for_user(db_session, created_by=requester.id)
+        order = self._create_submitted_order_for_user(
+            db_session, created_by=requester.id, tenant_id=1
+        )
 
         requester_headers = self._login_headers(client, requester.username, requester_password)
         self_response = client.put(
