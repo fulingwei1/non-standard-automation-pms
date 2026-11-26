@@ -20,8 +20,7 @@ from app.models.project import Customer, Project, ProjectPaymentPlan
 from app.models.sales import Contract
 
 
-@pytest.mark.asyncio
-async def test_shipping_delivery_order_creates_delivery_payment_invoice_request(db_session):
+def test_shipping_delivery_order_creates_delivery_payment_invoice_request(db_session):
     """设备发货后应自动触发 DELIVERY 发货款开票申请。"""
     suffix = uuid4().hex[:8].upper()
     today = date.today()
@@ -161,7 +160,7 @@ async def test_shipping_delivery_order_creates_delivery_payment_invoice_request(
     db_session.add(plan)
     db_session.commit()
 
-    await ship_delivery_order(
+    ship_delivery_order(
         delivery_order.id,
         db=db_session,
         current_user=SimpleNamespace(id=1, username="admin", real_name="系统管理员"),

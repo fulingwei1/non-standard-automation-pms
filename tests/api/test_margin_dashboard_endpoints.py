@@ -33,6 +33,7 @@ def _auth_headers(user) -> dict:
 def admin_user(db_session):
     marker = uuid4().hex[:10]
     user = User(
+        tenant_id=1,
         username=f"mdash_admin_{marker}",
         password_hash=get_password_hash("m123"),
         real_name="看板管理员",
@@ -54,6 +55,7 @@ def admin_user(db_session):
 def plain_user(db_session):
     marker = uuid4().hex[:10]
     user = User(
+        tenant_id=1,
         username=f"mdash_plain_{marker}",
         password_hash=get_password_hash("m123"),
         real_name="普通用户",
@@ -70,6 +72,7 @@ def _make_project_with_snapshot(db_session):
 
     marker = uuid4().hex[:8]
     project = Project(
+        tenant_id=1,
         project_code=f"MDASH-API-{marker}",
         project_name="看板API测试",
         stage="S5",
@@ -86,6 +89,7 @@ def _make_project_with_snapshot(db_session):
     db_session.flush()
     db_session.add(
         ProjectMarginSnapshot(
+            tenant_id=1,
             project_id=project.id,
             snapshot_date=date.today(),
             current_margin_rate=28.0,
@@ -164,6 +168,7 @@ class TestMarginSnapshotRunEndpoint:
         marker = uuid4().hex[:8]
         db_session.add(
             Project(
+                tenant_id=1,
                 project_code=f"MDASH-RUN-{marker}",
                 project_name="快照触发测试",
                 stage="S5",
