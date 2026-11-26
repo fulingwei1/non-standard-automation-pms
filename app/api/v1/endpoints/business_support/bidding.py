@@ -58,7 +58,7 @@ def generate_bidding_no(db: Session) -> str:
     response_model=ResponseModel[PaginatedResponse[BiddingProjectResponse]],
     summary="获取投标项目列表",
 )
-async def get_bidding_projects(
+def get_bidding_projects(
     pagination: PaginationParams = Depends(get_pagination_query),
     bidding_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     bid_result: Optional[str] = Query(None, description="投标结果筛选"),
@@ -152,7 +152,7 @@ async def get_bidding_projects(
 
 
 @router.post("", response_model=ResponseModel[BiddingProjectResponse], summary="创建投标项目")
-async def create_bidding_project(
+def create_bidding_project(
     bidding_data: BiddingProjectCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("business_support:create")),
@@ -242,7 +242,7 @@ async def create_bidding_project(
     response_model=ResponseModel[BiddingProjectResponse],
     summary="获取投标项目详情",
 )
-async def get_bidding_project(
+def get_bidding_project(
     bidding_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("business_support:read")),
@@ -300,7 +300,7 @@ async def get_bidding_project(
 @router.put(
     "/{bidding_id}", response_model=ResponseModel[BiddingProjectResponse], summary="更新投标项目"
 )
-async def update_bidding_project(
+def update_bidding_project(
     bidding_id: int,
     bidding_data: BiddingProjectUpdate,
     db: Session = Depends(deps.get_db),

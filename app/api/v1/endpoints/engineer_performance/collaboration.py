@@ -31,7 +31,7 @@ def _user_display_name(user: Optional[User]) -> Optional[str]:
 
 
 @router.get("/matrix", summary="获取协作评价矩阵")
-async def get_collaboration_matrix(
+def get_collaboration_matrix(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
@@ -63,7 +63,7 @@ async def get_collaboration_matrix(
 
 
 @router.post("", summary="提交跨部门评价")
-async def create_collaboration_rating(
+def create_collaboration_rating(
     data: CollaborationRatingCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:evaluate")),
@@ -85,7 +85,7 @@ async def create_collaboration_rating(
 
 
 @router.get("/received/{user_id}", summary="获取收到的评价")
-async def get_ratings_received(
+def get_ratings_received(
     user_id: int,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -130,7 +130,7 @@ async def get_ratings_received(
 
 
 @router.get("/given/{user_id}", summary="获取给出的评价")
-async def get_ratings_given(
+def get_ratings_given(
     user_id: int,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -171,7 +171,7 @@ async def get_ratings_given(
 
 
 @router.get("/pending", summary="获取待评价列表")
-async def get_pending_ratings(
+def get_pending_ratings(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:evaluate")),
@@ -193,7 +193,7 @@ async def get_pending_ratings(
 
 
 @router.get("/stats/{user_id}", summary="获取协作统计")
-async def get_collaboration_stats(
+def get_collaboration_stats(
     user_id: int,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),
@@ -215,7 +215,7 @@ async def get_collaboration_stats(
 
 
 @router.post("/auto-select/{engineer_id}", summary="自动抽取合作人员")
-async def auto_select_collaborators(
+def auto_select_collaborators(
     engineer_id: int,
     period_id: int,
     target_count: int = 5,
@@ -245,7 +245,7 @@ async def auto_select_collaborators(
 
 
 @router.post("/submit-rating", summary="提交评价（新接口）")
-async def submit_rating(
+def submit_rating(
     rating_id: int = Body(..., description="评价记录ID"),
     communication_score: int = Body(..., ge=1, le=5, description="沟通配合得分（1-5）"),
     response_score: int = Body(..., ge=1, le=5, description="响应速度得分（1-5）"),
@@ -283,7 +283,7 @@ async def submit_rating(
 
 
 @router.get("/pending-ratings", summary="获取待评价列表（新接口）")
-async def get_pending_ratings_new(
+def get_pending_ratings_new(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:evaluate")),
@@ -319,7 +319,7 @@ async def get_pending_ratings_new(
 
 
 @router.get("/statistics/{period_id}", summary="获取评价统计信息")
-async def get_rating_statistics(
+def get_rating_statistics(
     period_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
@@ -342,7 +342,7 @@ async def get_rating_statistics(
 
 
 @router.get("/trend/{engineer_id}", summary="获取协作趋势")
-async def get_collaboration_trend(
+def get_collaboration_trend(
     engineer_id: int,
     periods: int = Query(6, ge=1, le=12, description="历史周期数"),
     db: Session = Depends(get_db),
@@ -369,7 +369,7 @@ async def get_collaboration_trend(
 
 
 @router.get("/quality-analysis/{period_id}", summary="分析评价质量")
-async def analyze_rating_quality(
+def analyze_rating_quality(
     period_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:manage")),
@@ -387,7 +387,7 @@ async def analyze_rating_quality(
 
 
 @router.post("/auto-complete/{period_id}", summary="自动完成缺失评价")
-async def auto_complete_missing_ratings(
+def auto_complete_missing_ratings(
     period_id: int,
     default_score: float = 75.0,
     db: Session = Depends(get_db),

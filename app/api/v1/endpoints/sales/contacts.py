@@ -317,7 +317,7 @@ def update_contact(
 def delete_contact(
     contact_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("customer:update")),
 ) -> None:
     """
     删除联系人

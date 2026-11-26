@@ -182,7 +182,7 @@ def delete_project_relation(
     related_project_id: int,
     relation_type: str = Query(..., description="关联类型"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:update")),
 ):
     """
     删除项目关联

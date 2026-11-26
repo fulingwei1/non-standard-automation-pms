@@ -87,7 +87,7 @@ def _update_contract_review_record(
     response_model=ResponseModel[PaginatedResponse[ContractReviewResponse]],
     summary="获取合同审核列表",
 )
-async def get_contract_reviews(
+def get_contract_reviews(
     pagination: PaginationParams = Depends(get_pagination_query),
     contract_id: Optional[int] = Query(None, description="合同ID筛选"),
     review_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
@@ -130,7 +130,7 @@ async def get_contract_reviews(
     response_model=ResponseModel[ContractReviewResponse],
     summary="创建合同审核",
 )
-async def create_contract_review_from_body(
+def create_contract_review_from_body(
     review_data: ContractReviewCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("business_support:create")),
@@ -160,7 +160,7 @@ async def create_contract_review_from_body(
     response_model=ResponseModel[ContractReviewResponse],
     summary="获取合同审核详情",
 )
-async def get_contract_review(
+def get_contract_review(
     review_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("business_support:read")),
@@ -184,7 +184,7 @@ async def get_contract_review(
     response_model=ResponseModel[ContractReviewResponse],
     summary="更新合同审核",
 )
-async def update_contract_review_by_id(
+def update_contract_review_by_id(
     review_id: int,
     review_data: ContractReviewUpdate,
     db: Session = Depends(deps.get_db),
@@ -211,7 +211,7 @@ async def update_contract_review_by_id(
     response_model=ResponseModel[ContractReviewResponse],
     summary="创建合同审核",
 )
-async def create_contract_review(
+def create_contract_review(
     contract_id: int,
     review_data: ContractReviewCreate,
     db: Session = Depends(deps.get_db),
@@ -242,7 +242,7 @@ async def create_contract_review(
     response_model=ResponseModel[ContractReviewResponse],
     summary="更新合同审核",
 )
-async def update_contract_review(
+def update_contract_review(
     contract_id: int,
     review_id: int,
     review_data: ContractReviewUpdate,

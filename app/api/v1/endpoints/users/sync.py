@@ -8,11 +8,12 @@
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.rate_limiting import limiter
 from app.models.organization import Employee
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -140,11 +141,13 @@ def toggle_user_active(
 @router.put(
     "/{user_id}/reset-password", response_model=ResponseModel, status_code=status.HTTP_200_OK
 )
+@limiter.limit("5/minute")
 def reset_user_password(
     *,
     db: Session = Depends(deps.get_db),
     user_id: int,
     request: Request,
+    response: Response,
     current_user: User = Depends(security.require_permission("system:user:update")),
 ) -> Any:
     """重置用户密码为初始密码"""

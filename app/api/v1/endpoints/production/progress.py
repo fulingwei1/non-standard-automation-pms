@@ -32,7 +32,7 @@ router = APIRouter()
     summary="实时进度总览",
     description="获取生产进度实时总览数据，包含工单数量、工位状态、预警统计等",
 )
-async def get_realtime_progress(
+def get_realtime_progress(
     workshop_id: Optional[int] = Query(None, description="车间ID筛选"),
     workstation_id: Optional[int] = Query(None, description="工位ID筛选"),
     status: Optional[str] = Query(None, description="工单状态筛选"),
@@ -62,7 +62,7 @@ async def get_realtime_progress(
     summary="工单进度时间线",
     description="获取指定工单的完整进度时间线和预警历史",
 )
-async def get_work_order_timeline(
+def get_work_order_timeline(
     work_order_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -95,7 +95,7 @@ async def get_work_order_timeline(
     summary="工位实时状态",
     description="获取指定工位的实时运行状态和产能信息",
 )
-async def get_workstation_realtime(
+def get_workstation_realtime(
     workstation_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -131,7 +131,7 @@ async def get_workstation_realtime(
     summary="记录进度日志",
     description="记录工单的进度变化，自动计算偏差并触发预警规则",
 )
-async def create_progress_log(
+def create_progress_log(
     log_data: ProductionProgressLogCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -162,7 +162,7 @@ async def create_progress_log(
     summary="瓶颈工位识别",
     description="基于产能利用率识别瓶颈工位，支持分级预警",
 )
-async def get_bottleneck_workstations(
+def get_bottleneck_workstations(
     workshop_id: Optional[int] = Query(None, description="车间ID筛选"),
     min_level: int = Query(1, ge=1, le=3, description="最小瓶颈等级（1-轻度，2-中度，3-严重）"),
     limit: int = Query(10, ge=1, le=100, description="返回数量限制"),
@@ -197,7 +197,7 @@ async def get_bottleneck_workstations(
     summary="进度预警列表",
     description="获取进度预警列表，支持多维度筛选",
 )
-async def get_progress_alerts(
+def get_progress_alerts(
     work_order_id: Optional[int] = Query(None, description="工单ID"),
     workstation_id: Optional[int] = Query(None, description="工位ID"),
     alert_type: Optional[str] = Query(
@@ -243,7 +243,7 @@ async def get_progress_alerts(
     summary="关闭预警",
     description="关闭指定的进度预警，可添加处理说明",
 )
-async def dismiss_progress_alert(
+def dismiss_progress_alert(
     alert_id: int,
     dismiss_data: ProgressAlertDismiss,
     db: Session = Depends(get_db),
@@ -276,7 +276,7 @@ async def dismiss_progress_alert(
     summary="进度偏差分析",
     description="分析工单进度偏差，识别延期风险",
 )
-async def get_progress_deviation(
+def get_progress_deviation(
     workshop_id: Optional[int] = Query(None, description="车间ID筛选"),
     min_deviation: int = Query(10, ge=0, description="最小偏差(%)"),
     only_delayed: bool = Query(True, description="只显示延期工单"),

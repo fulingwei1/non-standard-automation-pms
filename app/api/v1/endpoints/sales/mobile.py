@@ -99,7 +99,7 @@ def get_check_in_history(
 
 
 @router.post("/mobile/business-card/scan", summary="名片扫描识别")
-async def scan_business_card(
+def scan_business_card(
     image: UploadFile = File(..., description="名片图片"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
@@ -235,7 +235,7 @@ def reject_request(
 
 
 @router.post("/mobile/voice-note", summary="语音记录")
-async def create_voice_note(
+def create_voice_note(
     audio: UploadFile = File(..., description="语音文件"),
     customer_id: Optional[int] = Body(None, description="客户 ID"),
     opportunity_id: Optional[int] = Body(None, description="商机 ID"),

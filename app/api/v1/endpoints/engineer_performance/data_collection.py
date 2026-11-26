@@ -21,7 +21,7 @@ router = APIRouter(prefix="/data-collection", tags=["数据采集"])
 
 
 @router.get("/{engineer_id}", summary="获取数据采集结果")
-async def get_data_collection(
+def get_data_collection(
     engineer_id: int,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     start_date: Optional[date] = Query(None, description="开始日期"),
@@ -51,7 +51,7 @@ async def get_data_collection(
 
 
 @router.get("/self-evaluation/{engineer_id}", summary="提取自我评价")
-async def extract_self_evaluation(
+def extract_self_evaluation(
     engineer_id: int,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     start_date: Optional[date] = Query(None, description="开始日期"),
@@ -79,7 +79,7 @@ async def extract_self_evaluation(
 
 
 @router.post("/collect-all/{engineer_id}", summary="触发完整数据采集")
-async def trigger_collect_all(
+def trigger_collect_all(
     engineer_id: int,
     period_id: int,
     db: Session = Depends(get_db),
@@ -96,7 +96,7 @@ async def trigger_collect_all(
 
 
 @router.get("/report/{engineer_id}", summary="生成数据采集报告")
-async def generate_collection_report(
+def generate_collection_report(
     engineer_id: int,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     start_date: Optional[date] = Query(None, description="开始日期"),

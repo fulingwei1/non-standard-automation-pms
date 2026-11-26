@@ -182,7 +182,7 @@ def delete_sla_policy(
     *,
     db: Session = Depends(deps.get_db),
     policy_id: int = Path(..., description="策略ID"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:delete")),
 ) -> Any:
     """
     删除SLA策略（软删除：设置为不启用）

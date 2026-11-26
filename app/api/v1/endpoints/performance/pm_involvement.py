@@ -43,7 +43,7 @@ class PMInvolvementResult(BaseModel):
 
 
 @router.post("/judge-pm-involvement", response_model=PMInvolvementResult, summary="判断PM介入时机")
-async def judge_pm_involvement(
+def judge_pm_involvement(
     project_data: ProjectDataInput,
     current_user: User = Depends(security.require_permission("presale:manage")),
 ):
@@ -70,7 +70,7 @@ async def judge_pm_involvement(
 
 
 @router.get("/similar-projects/{project_type}", summary="查询相似项目")
-async def get_similar_projects(
+def get_similar_projects(
     project_type: str,
     industry: Optional[str] = None,
     db: Session = Depends(deps.get_db),
@@ -93,7 +93,7 @@ async def get_similar_projects(
 
 
 @router.get("/check-standard-solution/{project_type}", summary="检查标准方案")
-async def check_standard_solution(
+def check_standard_solution(
     project_type: str,
     industry: Optional[str] = None,
     db: Session = Depends(deps.get_db),
@@ -114,7 +114,7 @@ async def check_standard_solution(
 @router.post(
     "/auto-judge/{ticket_id}", response_model=PMInvolvementResult, summary="自动判断（从工单）"
 )
-async def auto_judge_from_ticket(
+def auto_judge_from_ticket(
     ticket_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("presale:manage")),
@@ -134,7 +134,7 @@ async def auto_judge_from_ticket(
 
 
 @router.post("/generate-notification", summary="生成通知消息")
-async def generate_notification(
+def generate_notification(
     result: PMInvolvementResult,
     ticket_info: Dict,
     current_user: User = Depends(security.require_permission("presale:manage")),
@@ -158,7 +158,7 @@ async def generate_notification(
 
 # 测试端点
 @router.get("/test-examples", summary="获取测试示例")
-async def get_test_examples(current_user: User = Depends(security.get_current_active_user)):
+def get_test_examples(current_user: User = Depends(security.get_current_active_user)):
     """获取测试数据示例"""
     return {
         "高风险项目示例": {

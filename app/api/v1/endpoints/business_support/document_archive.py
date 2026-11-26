@@ -52,7 +52,7 @@ def generate_archive_no(db: Session) -> str:
 
 
 @router.post("", response_model=ResponseModel[DocumentArchiveResponse], summary="创建文件归档")
-async def create_document_archive(
+def create_document_archive(
     archive_data: DocumentArchiveCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("business_support:create")),
@@ -113,7 +113,7 @@ async def create_document_archive(
     response_model=ResponseModel[PaginatedResponse[DocumentArchiveResponse]],
     summary="获取文件归档列表",
 )
-async def get_document_archives(
+def get_document_archives(
     pagination: PaginationParams = Depends(get_pagination_query),
     document_type: Optional[str] = Query(None, description="文件类型筛选"),
     related_type: Optional[str] = Query(None, description="关联类型筛选"),

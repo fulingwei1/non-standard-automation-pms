@@ -325,7 +325,7 @@ def publish_review(
 def delete_project_review(
     review_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:delete")),
 ):
     """
     删除复盘报告

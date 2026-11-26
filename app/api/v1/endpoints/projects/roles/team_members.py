@@ -29,7 +29,7 @@ router = APIRouter()
     response_model=TeamMemberListResponse,
     summary="获取团队成员",
 )
-async def get_team_members(
+def get_team_members(
     project_id: int = Path(..., description="项目ID"),
     member_id: int = Path(..., description="负责人成员ID"),
     db: Session = Depends(deps.get_db),
@@ -85,7 +85,7 @@ async def get_team_members(
     response_model=TeamMemberResponse,
     summary="添加团队成员",
 )
-async def add_team_member(
+def add_team_member(
     data: TeamMemberCreate,
     project_id: int = Path(..., description="项目ID"),
     member_id: int = Path(..., description="负责人成员ID"),
@@ -164,7 +164,7 @@ async def add_team_member(
     response_model=MessageResponse,
     summary="移除团队成员",
 )
-async def remove_team_member(
+def remove_team_member(
     project_id: int = Path(..., description="项目ID"),
     lead_id: int = Path(..., description="负责人成员ID"),
     member_id: int = Path(..., description="团队成员ID"),

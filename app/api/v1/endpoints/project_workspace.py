@@ -19,8 +19,9 @@ except ImportError:
                 from .admin.project_workspace import router
             except ImportError:
                 # Create a simple router as fallback
-                from fastapi import APIRouter
-                router = APIRouter()
+                from fastapi import APIRouter, Depends
+                from app.core import security
+                router = APIRouter(dependencies=[Depends(security.require_permission("project:read"))])
                 @router.get('/')
                 def read_root():
                     return {'message': 'project_workspace module placeholder'}

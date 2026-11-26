@@ -315,7 +315,7 @@ def delete_acceptance_template(
     *,
     db: Session = Depends(deps.get_db),
     template_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("acceptance:manage")),
 ) -> Any:
     """
     删除验收模板（软删除）

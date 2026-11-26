@@ -1,3 +1,4 @@
+from app.core import security
 # -*- coding: utf-8 -*-
 """
 合同条款管理 API
@@ -69,7 +70,7 @@ def update_contract_term(
 def delete_contract_term(
     term_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:update")),
 ):
     """删除条款"""
     success = ContractEnhancedService.delete_term(db, term_id)

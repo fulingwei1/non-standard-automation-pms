@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 @router.post("/compare", response_model=ComparisonResponse)
-async def compare_with_history(
+def compare_with_history(
     request: ComparisonRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -75,7 +75,7 @@ async def compare_with_history(
 
 
 @router.get("/{review_id}/improvements", response_model=ImprovementResponse)
-async def get_improvements(
+def get_improvements(
     review_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """
@@ -101,7 +101,7 @@ async def get_improvements(
 
 
 @router.get("/{review_id}/benchmarks")
-async def get_benchmarks(
+def get_benchmarks(
     review_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """获取项目基准对比"""

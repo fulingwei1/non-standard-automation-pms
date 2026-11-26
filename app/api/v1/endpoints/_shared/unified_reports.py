@@ -46,7 +46,7 @@ def create_unified_report_router(
     router = APIRouter(prefix=prefix, tags=tags)
 
     @router.get(list_path, response_model=list_response_model)
-    async def list_available_reports(
+    def list_available_reports(
         db=Depends(get_db),
         current_user=Depends(get_current_user),
     ):
@@ -60,7 +60,7 @@ def create_unified_report_router(
         return list_mapper(reports)
 
     @router.get(schema_path, response_model=schema_response_model)
-    async def get_report_schema(
+    def get_report_schema(
         report_code: str,
         db=Depends(get_db),
         current_user=Depends(get_current_user),
@@ -78,7 +78,7 @@ def create_unified_report_router(
             raise HTTPException(status_code=404, detail=str(exc))
 
     @router.post("/generate", response_model=GenerateResponse)
-    async def generate_report(
+    def generate_report(
         request: GenerateRequest,
         db=Depends(get_db),
         current_user=Depends(get_current_user),
@@ -114,7 +114,7 @@ def create_unified_report_router(
             raise HTTPException(status_code=500, detail=f"报告生成失败: {str(exc)}")
 
     @router.post("/generate/download")
-    async def generate_and_download(
+    def generate_and_download(
         request: GenerateRequest,
         db=Depends(get_db),
         current_user=Depends(get_current_user),
@@ -186,7 +186,7 @@ def create_unified_report_router(
             raise HTTPException(status_code=500, detail=f"报告生成失败: {str(exc)}")
 
     @router.get(preview_path)
-    async def preview_report(
+    def preview_report(
         report_code: str,
         db=Depends(get_db),
         current_user=Depends(get_current_user),

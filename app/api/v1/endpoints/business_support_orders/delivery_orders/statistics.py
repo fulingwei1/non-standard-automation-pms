@@ -23,7 +23,7 @@ router = APIRouter()
     response_model=ResponseModel[DeliveryStatistics],
     summary="获取发货统计",
 )
-async def get_delivery_statistics(
+def get_delivery_statistics(
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),

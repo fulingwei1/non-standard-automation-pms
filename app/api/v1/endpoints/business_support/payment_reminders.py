@@ -48,7 +48,7 @@ def _payment_reminder_response(reminder: PaymentReminder) -> PaymentReminderResp
 
 
 @router.post("", response_model=ResponseModel[PaymentReminderResponse], summary="创建回款催收记录")
-async def create_payment_reminder(
+def create_payment_reminder(
     reminder_data: PaymentReminderCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("business_support:create")),
@@ -97,7 +97,7 @@ async def create_payment_reminder(
     response_model=ResponseModel[PaginatedResponse[PaymentReminderResponse]],
     summary="获取回款催收记录列表",
 )
-async def get_payment_reminders(
+def get_payment_reminders(
     pagination: PaginationParams = Depends(get_pagination_query),
     contract_id: Optional[int] = Query(None, description="合同ID筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
@@ -151,7 +151,7 @@ async def get_payment_reminders(
     response_model=ResponseModel[PaymentReminderResponse],
     summary="获取回款催收记录详情",
 )
-async def get_payment_reminder(
+def get_payment_reminder(
     reminder_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("business_support:read")),
@@ -175,7 +175,7 @@ async def get_payment_reminder(
     response_model=ResponseModel[PaymentReminderResponse],
     summary="更新回款催收记录",
 )
-async def update_payment_reminder(
+def update_payment_reminder(
     reminder_id: int,
     reminder_data: PaymentReminderUpdate,
     db: Session = Depends(deps.get_db),

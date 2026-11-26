@@ -35,14 +35,14 @@ from app.schemas.assembly_kit import (  # Stage; Template; Category Mapping; BOM
 )
 from app.schemas.common import MessageResponse, ResponseModel
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("assembly_kit:read"))])
 
 
 from fastapi import APIRouter
 
 from app.utils.db_helpers import get_or_404
 
-router = APIRouter(prefix="/assembly-kit/material-mapping", tags=["material_mapping"])
+router = APIRouter(prefix="/assembly-kit/material-mapping", tags=["material_mapping"], dependencies=[Depends(security.require_permission("assembly_kit:read"))])
 
 # 共 4 个路由
 
@@ -50,7 +50,7 @@ router = APIRouter(prefix="/assembly-kit/material-mapping", tags=["material_mapp
 
 
 @router.get("/category-mappings", response_model=ResponseModel)
-async def get_category_mappings(
+def get_category_mappings(
     db: Session = Depends(deps.get_db),
     category_id: Optional[int] = Query(None, description="物料分类ID"),
     stage_code: Optional[str] = Query(None, description="装配阶段编码"),
@@ -78,7 +78,7 @@ async def get_category_mappings(
 
 
 @router.post("/category-mappings", response_model=ResponseModel)
-async def create_category_mapping(
+def create_category_mapping(
     mapping_data: CategoryStageMappingCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("assembly_kit:create")),
@@ -104,7 +104,7 @@ async def create_category_mapping(
 
 
 @router.put("/category-mappings/{mapping_id}", response_model=ResponseModel)
-async def update_category_mapping(
+def update_category_mapping(
     mapping_id: int,
     mapping_data: CategoryStageMappingUpdate,
     db: Session = Depends(deps.get_db),
@@ -127,7 +127,7 @@ async def update_category_mapping(
 
 
 @router.delete("/category-mappings/{mapping_id}", response_model=MessageResponse)
-async def delete_category_mapping(
+def delete_category_mapping(
     mapping_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("assembly_kit:delete")),

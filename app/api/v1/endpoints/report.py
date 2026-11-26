@@ -198,7 +198,7 @@ def update_template(
 def delete_template(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.require_super_admin),
     template_id: int,
 ):
     """删除报表模板 (权限: Admin only)"""
@@ -589,7 +589,7 @@ def add_recipient(
 def delete_recipient(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.require_super_admin),
     recipient_id: int,
 ):
     """删除报表收件人"""

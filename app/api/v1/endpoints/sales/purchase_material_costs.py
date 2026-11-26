@@ -247,7 +247,7 @@ def delete_purchase_material_cost(
     *,
     db: Session = Depends(deps.get_db),
     cost_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_sales_delete_permission()),
 ) -> Any:
     """
     删除采购物料成本

@@ -47,7 +47,7 @@ router = APIRouter()
     response_model=ResponseModel[PaginatedResponse[InvoiceRequestResponse]],
     summary="获取开票申请列表",
 )
-async def get_invoice_requests(
+def get_invoice_requests(
     pagination: PaginationParams = Depends(get_pagination_query),
     invoice_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     contract_id: Optional[int] = Query(None, description="合同ID"),
@@ -103,7 +103,7 @@ async def get_invoice_requests(
     response_model=ResponseModel[InvoiceRequestResponse],
     summary="创建开票申请",
 )
-async def create_invoice_request(
+def create_invoice_request(
     invoice_request_data: InvoiceRequestCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -203,7 +203,7 @@ async def create_invoice_request(
     response_model=ResponseModel[InvoiceRequestResponse],
     summary="获取开票申请详情",
 )
-async def get_invoice_request(
+def get_invoice_request(
     request_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -220,7 +220,7 @@ async def get_invoice_request(
     response_model=ResponseModel[InvoiceRequestResponse],
     summary="更新开票申请",
 )
-async def update_invoice_request(
+def update_invoice_request(
     request_id: int,
     request_in: InvoiceRequestUpdate,
     db: Session = Depends(deps.get_db),
@@ -275,7 +275,7 @@ async def update_invoice_request(
     response_model=ResponseModel[InvoiceRequestResponse],
     summary="审批开票申请",
 )
-async def approve_invoice_request(
+def approve_invoice_request(
     request_id: int,
     approve_in: InvoiceRequestApproveRequest,
     db: Session = Depends(deps.get_db),
@@ -353,7 +353,7 @@ async def approve_invoice_request(
     response_model=ResponseModel[InvoiceRequestResponse],
     summary="驳回开票申请",
 )
-async def reject_invoice_request(
+def reject_invoice_request(
     request_id: int,
     reject_in: InvoiceRequestRejectRequest,
     db: Session = Depends(deps.get_db),

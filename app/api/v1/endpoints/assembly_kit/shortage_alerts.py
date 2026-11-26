@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from app.core import security
 
 logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
@@ -37,12 +38,12 @@ from app.schemas.assembly_kit import (  # Stage; Template; Category Mapping; BOM
 )
 from app.schemas.common import ResponseModel
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("assembly_kit:read"))])
 
 
 from fastapi import APIRouter
 
-router = APIRouter(prefix="/assembly-kit/shortage-alerts", tags=["shortage_alerts"])
+router = APIRouter(prefix="/assembly-kit/shortage-alerts", tags=["shortage_alerts"], dependencies=[Depends(security.require_permission("assembly_kit:read"))])
 
 # 共 1 个路由
 
@@ -50,7 +51,7 @@ router = APIRouter(prefix="/assembly-kit/shortage-alerts", tags=["shortage_alert
 
 
 @router.get("", response_model=ResponseModel)
-async def get_shortage_alerts(
+def get_shortage_alerts(
     db: Session = Depends(deps.get_db),
     alert_level: Optional[str] = Query(None, description="预警级别(L1/L2/L3/L4)"),
     is_blocking: Optional[bool] = Query(None, description="是否阻塞性物料"),

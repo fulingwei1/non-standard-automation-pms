@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from app.core import security
 from sqlalchemy import and_, case, func
 from sqlalchemy.orm import Session
 
@@ -20,7 +21,7 @@ from app.models.production import (
     Workstation,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("production:read"))])
 
 
 @router.get("/bottlenecks")
@@ -216,7 +217,7 @@ def identify_bottlenecks(
 
 
 @router.get("/utilization")
-async def get_capacity_utilization(
+def get_capacity_utilization(
     type: str = Query("equipment", description="类型: equipment/workstation/worker"),
     workshop_id: Optional[int] = Query(None, description="车间ID"),
     start_date: Optional[date] = Query(None, description="开始日期"),

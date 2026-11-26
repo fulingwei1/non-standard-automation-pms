@@ -347,7 +347,7 @@ def delete_project(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:delete")),
 ) -> Any:
     """
     Delete a project (soft delete).

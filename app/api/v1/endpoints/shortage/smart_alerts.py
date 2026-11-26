@@ -75,7 +75,7 @@ router = APIRouter()
     response_model=ShortageAlertListResponse,
     deprecated=True,
 )
-async def get_shortage_alerts(
+def get_shortage_alerts(
     project_id: Optional[int] = Query(None, description="项目ID"),
     material_id: Optional[int] = Query(None, description="物料ID"),
     alert_level: Optional[str] = Query(None, description="预警级别"),
@@ -129,7 +129,7 @@ async def get_shortage_alerts(
     response_model=ShortageAlertResponse,
     deprecated=True,
 )
-async def get_shortage_alert_detail(
+def get_shortage_alert_detail(
     alert_id: int = Path(..., description="预警ID"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -153,7 +153,7 @@ async def get_shortage_alert_detail(
 
 
 @router.post("/scan", response_model=ScanShortageResponse)
-async def trigger_shortage_scan(
+def trigger_shortage_scan(
     request: ScanShortageRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -181,7 +181,7 @@ async def trigger_shortage_scan(
 
 
 @router.get("/alerts/{alert_id}/solutions", response_model=HandlingPlanListResponse)
-async def get_handling_solutions(
+def get_handling_solutions(
     alert_id: int = Path(..., description="预警ID"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -212,7 +212,7 @@ async def get_handling_solutions(
     "/alerts/{alert_id}/resolve",
     deprecated=True,
 )
-async def resolve_shortage_alert(
+def resolve_shortage_alert(
     alert_id: int = Path(..., description="预警ID"),
     request: ResolveAlertRequest = None,
     db: Session = Depends(get_db),
@@ -255,7 +255,7 @@ async def resolve_shortage_alert(
 
 
 @router.get("/forecast/{material_id}", response_model=DemandForecastResponse)
-async def get_material_forecast(
+def get_material_forecast(
     material_id: int = Path(..., description="物料ID"),
     forecast_horizon_days: int = Query(30, description="预测周期（天）", ge=1, le=365),
     algorithm: str = Query("EXP_SMOOTHING", description="预测算法"),
@@ -286,7 +286,7 @@ async def get_material_forecast(
 
 
 @router.get("/analysis/trend", response_model=ShortageTrendResponse)
-async def get_shortage_trend(
+def get_shortage_trend(
     days: int = Query(30, description="统计天数", ge=1, le=365),
     project_id: Optional[int] = Query(None, description="项目ID"),
     db: Session = Depends(get_db),
@@ -307,7 +307,7 @@ async def get_shortage_trend(
 
 
 @router.get("/analysis/root-cause", response_model=RootCauseResponse)
-async def get_root_cause_analysis(
+def get_root_cause_analysis(
     days: int = Query(30, description="分析天数", ge=1, le=365),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -336,7 +336,7 @@ async def get_root_cause_analysis(
 
 
 @router.get("/impact/projects", response_model=ProjectImpactResponse)
-async def get_project_impact(
+def get_project_impact(
     alert_level: Optional[str] = Query(None, description="预警级别过滤"),
     status: Optional[str] = Query(None, description="状态过滤"),
     db: Session = Depends(get_db),
@@ -360,7 +360,7 @@ async def get_project_impact(
 
 
 @router.post("/notifications/subscribe", response_model=NotificationSubscribeResponse)
-async def subscribe_shortage_notifications(
+def subscribe_shortage_notifications(
     request: NotificationSubscribeRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),

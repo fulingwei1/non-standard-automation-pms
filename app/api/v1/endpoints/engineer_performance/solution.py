@@ -20,7 +20,7 @@ router = APIRouter(prefix="/solution", tags=["方案工程师"])
 
 
 @router.get("/{engineer_id}/score", summary="获取方案工程师得分详情")
-async def get_solution_score_details(
+def get_solution_score_details(
     engineer_id: int,
     period_id: int,
     db: Session = Depends(get_db),
@@ -39,7 +39,7 @@ async def get_solution_score_details(
 
 
 @router.get("/{engineer_id}/bonus", summary="获取方案工程师奖金详情")
-async def get_solution_bonus_details(
+def get_solution_bonus_details(
     engineer_id: int,
     period_id: int,
     base_bonus_per_solution: Optional[float] = Query(500.0, description="每个方案基础奖金"),
@@ -80,7 +80,7 @@ class CalculateBonusRequest(BaseModel):
 
 
 @router.post("/calculate-bonus", summary="计算方案工程师奖金")
-async def calculate_solution_bonus(
+def calculate_solution_bonus(
     request: CalculateBonusRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:engineer:read")),

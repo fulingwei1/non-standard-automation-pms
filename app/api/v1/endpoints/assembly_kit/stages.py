@@ -31,12 +31,12 @@ from app.schemas.assembly_kit import (  # Stage; Template; Category Mapping; BOM
 )
 from app.schemas.common import ResponseModel
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("assembly_kit:read"))])
 
 
 from fastapi import APIRouter
 
-router = APIRouter(prefix="/assembly-kit/stages", tags=["stages"])
+router = APIRouter(prefix="/assembly-kit/stages", tags=["stages"], dependencies=[Depends(security.require_permission("assembly_kit:read"))])
 
 # 共 2 个路由
 
@@ -44,7 +44,7 @@ router = APIRouter(prefix="/assembly-kit/stages", tags=["stages"])
 
 
 @router.get("", response_model=ResponseModel)
-async def get_assembly_stages(
+def get_assembly_stages(
     db: Session = Depends(deps.get_db),
     include_inactive: bool = Query(False, description="是否包含已禁用阶段"),
 ):
@@ -60,7 +60,7 @@ async def get_assembly_stages(
 
 
 @router.put("/{stage_code}", response_model=ResponseModel)
-async def update_assembly_stage(
+def update_assembly_stage(
     stage_code: str,
     stage_data: AssemblyStageUpdate,
     db: Session = Depends(deps.get_db),

@@ -107,7 +107,7 @@ class TestReq(BaseModel):
 def test_connection(body: TestReq, db: Session = Depends(deps.get_db),
                     current_user: User = Depends(security.get_current_active_user)) -> Any:
     _require_admin(current_user)
-    from app.services.ai_client_service import AIClientService, load_ai_settings
+    from app.services.ai_client_service import AIClientService, is_mock_response, load_ai_settings
 
     load_ai_settings(force=True)
     svc = AIClientService()
@@ -123,7 +123,7 @@ def test_connection(body: TestReq, db: Session = Depends(deps.get_db),
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"连接失败：{str(e)[:150]}")
     content = (resp.get("content") or "").strip()
-    ok = bool(content) and "mock" not in str(resp.get("model", "")).lower()
+    ok = bool(content) and not is_mock_response(resp)
     return ResponseModel(code=200 if ok else 502,
                          message="连接正常" if ok else "返回异常（可能是Key无效走了降级/mock）",
                          data={"ok": ok, "model": resp.get("model"), "latency_s": round(time.time() - t0, 2),

@@ -27,7 +27,7 @@ from app.services.sales.customer_operation_audit import (
 )
 from app.utils.db_helpers import get_or_404
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("customer:read"))])
 
 
 def _customer_tag_names(db: Session, customer_id: int) -> list[str]:

@@ -145,7 +145,7 @@ def delete_ecn_type(
     *,
     db: Session = Depends(deps.get_db),
     type_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("ecn:update")),
 ) -> Any:
     """
     删除ECN类型配置

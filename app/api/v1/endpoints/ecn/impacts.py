@@ -163,7 +163,7 @@ def delete_ecn_affected_material(
     db: Session = Depends(deps.get_db),
     ecn_id: int,
     material_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("ecn:update")),
 ) -> Any:
     """
     删除受影响物料
@@ -300,7 +300,7 @@ def delete_ecn_affected_order(
     db: Session = Depends(deps.get_db),
     ecn_id: int,
     order_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("ecn:update")),
 ) -> Any:
     """
     删除受影响订单

@@ -290,7 +290,7 @@ def delete_sales_team(
     *,
     db: Session = Depends(deps.get_db),
     team_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_sales_delete_permission()),
 ) -> Any:
     """删除销售团队（软删除）"""
     team = db.query(SalesTeam).filter(SalesTeam.id == team_id).first()

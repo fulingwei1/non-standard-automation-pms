@@ -62,7 +62,7 @@ class WorkerEfficiencyCalculateRequest(BaseModel):
 
 
 @router.post("/oee/calculate")
-async def calculate_oee(
+def calculate_oee(
     request: OEECalculateRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("production:manage")),
@@ -166,7 +166,7 @@ async def calculate_oee(
 
 
 @router.post("/worker-efficiency/calculate")
-async def calculate_worker_efficiency(
+def calculate_worker_efficiency(
     request: WorkerEfficiencyCalculateRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("production:manage")),

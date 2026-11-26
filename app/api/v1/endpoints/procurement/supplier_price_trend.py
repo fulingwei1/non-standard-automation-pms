@@ -22,7 +22,7 @@ _IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 def _safe_identifier(identifier: str) -> str:
     if not _IDENTIFIER_RE.match(identifier):
-        raise HTTPException(status_code=500, detail=f"Invalid SQL identifier: {identifier}")
+        raise ValueError(f"Invalid SQL identifier: {identifier}")
     return identifier
 
 

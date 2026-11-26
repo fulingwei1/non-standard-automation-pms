@@ -36,7 +36,7 @@ def _empty_company_summary() -> dict:
 
 
 @router.get("/company", summary="公司整体概况")
-async def get_company_summary(
+def get_company_summary(
     period_id: Optional[int] = Query(None, description="考核周期ID，不传则使用当前周期"),
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
@@ -64,7 +64,7 @@ async def get_company_summary(
 
 
 @router.get("/by-job-type/{job_type}", summary="按岗位类型概况")
-async def get_job_type_summary(
+def get_job_type_summary(
     job_type: str,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),

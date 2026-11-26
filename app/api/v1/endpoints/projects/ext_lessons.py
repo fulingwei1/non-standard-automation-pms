@@ -231,7 +231,7 @@ def update_project_lesson(
 def delete_project_lesson(
     lesson_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project_evaluation:delete")),
 ):
     """
     删除经验教训

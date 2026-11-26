@@ -555,7 +555,7 @@ def delete_payment_record(
     *,
     db: Session = Depends(deps.get_db),
     payment_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("finance:delete")),
 ) -> Any:
     """删除回款记录（清空发票上的收款信息，不删除发票）。"""
     invoice = _get_scoped_invoice(db, payment_id, current_user)

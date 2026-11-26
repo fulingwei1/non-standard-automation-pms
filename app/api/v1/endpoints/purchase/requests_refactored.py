@@ -1,3 +1,4 @@
+from app.core import security
 # -*- coding: utf-8 -*-
 """
 采购申请端点（重构版）
@@ -201,7 +202,7 @@ def submit_purchase_request(
 def delete_purchase_request(
     request_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(security.require_permission("purchase:request:delete")),
 ):
     """删除采购申请"""
     from sqlalchemy import text

@@ -19,7 +19,7 @@ router = APIRouter(prefix="/trend", tags=["趋势分析"])
 
 
 @router.get("/engineer/{engineer_id}", summary="获取工程师历史趋势")
-async def get_engineer_trend(
+def get_engineer_trend(
     engineer_id: int,
     periods: int = Query(6, ge=2, le=12, description="历史周期数"),
     db: Session = Depends(get_db),
@@ -34,7 +34,7 @@ async def get_engineer_trend(
 
 
 @router.get("/ability-changes/{engineer_id}", summary="识别能力变化")
-async def identify_ability_changes(
+def identify_ability_changes(
     engineer_id: int,
     periods: int = Query(6, ge=2, le=12, description="历史周期数"),
     db: Session = Depends(get_db),
@@ -49,7 +49,7 @@ async def identify_ability_changes(
 
 
 @router.get("/department/{department_id}", summary="获取部门整体趋势")
-async def get_department_trend(
+def get_department_trend(
     department_id: int,
     periods: int = Query(6, ge=2, le=12, description="历史周期数"),
     db: Session = Depends(get_db),
@@ -71,7 +71,7 @@ class CompareDepartmentsRequest(BaseModel):
 
 
 @router.post("/compare-departments", summary="对比多个部门趋势")
-async def compare_departments(
+def compare_departments(
     request: CompareDepartmentsRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:engineer:read")),

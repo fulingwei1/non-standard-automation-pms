@@ -7,6 +7,7 @@ from io import BytesIO
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from app.core import security
 from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
@@ -19,11 +20,11 @@ from app.models.production import (
     WorkerEfficiencyRecord,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("production:read"))])
 
 
 @router.get("/report")
-async def get_capacity_report(
+def get_capacity_report(
     workshop_id: Optional[int] = Query(None, description="车间ID"),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),

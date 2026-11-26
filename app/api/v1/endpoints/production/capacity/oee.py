@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from app.core import security
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
@@ -16,11 +17,11 @@ from app.models.production import (
     Workshop,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("production:read"))])
 
 
 @router.get("/oee")
-async def get_oee_analysis(
+def get_oee_analysis(
     equipment_id: Optional[int] = Query(None, description="设备ID"),
     workshop_id: Optional[int] = Query(None, description="车间ID"),
     workstation_id: Optional[int] = Query(None, description="工位ID"),

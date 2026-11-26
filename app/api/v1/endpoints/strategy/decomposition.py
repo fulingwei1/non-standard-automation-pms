@@ -1,11 +1,14 @@
+import logging
 # -*- coding: utf-8 -*-
 """
 战略管理 API 端点 - 目标分解
 """
 
+import logging
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from app.core import security
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -27,7 +30,8 @@ from app.schemas.strategy import (
 )
 from app.services import strategy as strategy_service
 
-router = APIRouter()
+logger = logging.getLogger(__name__)
+router = APIRouter(dependencies=[Depends(security.require_permission("strategy:read"))])
 
 
 # ============================================
@@ -76,7 +80,7 @@ def list_department_objectives(
         
         if not is_executive:
             department_id = user.department_id
-            print(f"DEBUG: User {user.username} filtered to department {department_id}")
+            logger.debug("User %s filtered to department %s", user.username, department_id)
     
     items, total = strategy_service.list_department_objectives(
         db,

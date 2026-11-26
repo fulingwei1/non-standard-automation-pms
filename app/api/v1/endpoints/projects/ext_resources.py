@@ -298,7 +298,7 @@ def release_resource(
 def delete_resource_allocation(
     allocation_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:update")),
 ):
     """
     删除资源分配

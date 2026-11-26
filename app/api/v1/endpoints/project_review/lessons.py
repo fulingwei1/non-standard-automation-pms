@@ -25,7 +25,7 @@ router = APIRouter()
 
 
 @router.post("/extract", response_model=LessonExtractResponse)
-async def extract_lessons(
+def extract_lessons(
     request: LessonExtractRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -70,7 +70,7 @@ async def extract_lessons(
 
 @router.get("", response_model=List[ProjectLessonResponse])
 @router.get("/", response_model=List[ProjectLessonResponse], include_in_schema=False)
-async def list_lessons(
+def list_lessons(
     review_id: Optional[int] = None,
     project_id: Optional[int] = None,
     lesson_type: Optional[str] = None,
@@ -113,7 +113,7 @@ async def list_lessons(
 
 
 @router.get("/{lesson_id}", response_model=ProjectLessonResponse)
-async def get_lesson(
+def get_lesson(
     lesson_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """获取经验教训详情"""
@@ -123,7 +123,7 @@ async def get_lesson(
 
 
 @router.patch("/{lesson_id}", response_model=ProjectLessonResponse)
-async def update_lesson(
+def update_lesson(
     lesson_id: int,
     update_data: ProjectLessonUpdate,
     db: Session = Depends(get_db),
@@ -144,7 +144,7 @@ async def update_lesson(
 
 
 @router.get("/{lesson_id}/similar")
-async def get_similar_lessons(
+def get_similar_lessons(
     lesson_id: int,
     limit: int = Query(5, ge=1, le=20),
     db: Session = Depends(get_db),
@@ -162,7 +162,7 @@ async def get_similar_lessons(
 
 
 @router.get("/categorize/by-category")
-async def categorize_lessons(
+def categorize_lessons(
     review_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """按类别分组经验教训"""

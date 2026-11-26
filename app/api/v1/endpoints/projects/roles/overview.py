@@ -32,7 +32,7 @@ router = APIRouter()
     response_model=List[ProjectRoleOverviewResponse],
     summary="获取项目角色概览",
 )
-async def get_project_role_overview(
+def get_project_role_overview(
     project_id: int = Path(..., description="项目ID"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("project_role:read")),

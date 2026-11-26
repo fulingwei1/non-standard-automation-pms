@@ -202,7 +202,7 @@ def delete_project_payment_plan(
     *,
     db: Session = Depends(deps.get_db),
     plan_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("finance:delete")),
 ) -> Any:
     """
     删除项目付款计划

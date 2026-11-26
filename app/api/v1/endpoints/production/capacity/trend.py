@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from app.core import security
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
@@ -15,7 +16,7 @@ from app.models.production import (
     WorkerEfficiencyRecord,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("production:read"))])
 
 
 def _period_expression(db: Session, date_column, granularity: str):
@@ -34,7 +35,7 @@ def _period_expression(db: Session, date_column, granularity: str):
 
 
 @router.get("/trend")
-async def get_capacity_trend(
+def get_capacity_trend(
     type: str = Query("oee", description="类型: oee/efficiency"),
     equipment_id: Optional[int] = Query(None, description="设备ID"),
     worker_id: Optional[int] = Query(None, description="工人ID"),

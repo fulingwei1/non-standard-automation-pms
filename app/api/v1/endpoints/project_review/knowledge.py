@@ -19,7 +19,7 @@ router = APIRouter()
 
 
 @router.post("/sync", response_model=KnowledgeSyncResponse)
-async def sync_to_knowledge_base(
+def sync_to_knowledge_base(
     request: KnowledgeSyncRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -61,7 +61,7 @@ async def sync_to_knowledge_base(
 
 @router.get("/{review_id}/knowledge-impact", response_model=KnowledgeImpactResponse)
 @router.get("/{review_id}/impact", response_model=KnowledgeImpactResponse)
-async def get_knowledge_impact(
+def get_knowledge_impact(
     review_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """
@@ -121,7 +121,7 @@ async def get_knowledge_impact(
 
 
 @router.post("/{review_id}/update-from-lessons")
-async def update_knowledge_from_lessons(
+def update_knowledge_from_lessons(
     review_id: int,
     case_id: int,
     db: Session = Depends(get_db),

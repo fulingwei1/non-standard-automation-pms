@@ -24,7 +24,7 @@ router = APIRouter()
     response_model=ResponseModel[SalesReportResponse],
     summary="获取销售日报",
 )
-async def get_sales_daily_report(
+def get_sales_daily_report(
     report_date: Optional[str] = Query(
         None, description="报表日期（YYYY-MM-DD格式），不提供则使用今天"
     ),
@@ -62,7 +62,7 @@ async def get_sales_daily_report(
     response_model=ResponseModel[SalesReportResponse],
     summary="获取销售周报",
 )
-async def get_sales_weekly_report(
+def get_sales_weekly_report(
     week: Optional[str] = Query(None, description="周（YYYY-WW格式），不提供则使用当前周"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -100,7 +100,7 @@ async def get_sales_weekly_report(
     response_model=ResponseModel[SalesReportResponse],
     summary="获取销售月报",
 )
-async def get_sales_monthly_report(
+def get_sales_monthly_report(
     month: Optional[str] = Query(None, description="月份（YYYY-MM格式），不提供则使用当前月份"),
     format: str = Query("json", description="格式：json/pdf/excel"),
     db: Session = Depends(deps.get_db),

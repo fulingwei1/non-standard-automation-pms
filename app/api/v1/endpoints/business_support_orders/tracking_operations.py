@@ -34,7 +34,7 @@ router = APIRouter()
     response_model=ResponseModel[AcceptanceTrackingResponse],
     summary="验收条件检查",
 )
-async def check_acceptance_condition(
+def check_acceptance_condition(
     tracking_id: int,
     check_data: ConditionCheckRequest,
     db: Session = Depends(deps.get_db),
@@ -81,7 +81,7 @@ async def check_acceptance_condition(
     response_model=ResponseModel[AcceptanceTrackingResponse],
     summary="催签验收单",
 )
-async def remind_acceptance_signature(
+def remind_acceptance_signature(
     tracking_id: int,
     reminder_data: ReminderRequest,
     db: Session = Depends(deps.get_db),

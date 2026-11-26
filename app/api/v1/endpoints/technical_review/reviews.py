@@ -308,7 +308,9 @@ def update_technical_review(
             sync_service = DesignReviewSyncService(db)
             sync_service.sync_from_technical_review(review.id)
         except Exception as e:
-            print(f"设计评审同步失败: {e}")
+            import logging
+
+            logging.getLogger(__name__).warning("设计评审同步失败: %s", e)
 
     return _build_review_response(review)
 
@@ -317,7 +319,7 @@ def update_technical_review(
 def delete_technical_review(
     review_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:delete")),
 ) -> Any:
     """删除技术评审"""
     review = get_or_404(db, TechnicalReview, review_id, "技术评审不存在")

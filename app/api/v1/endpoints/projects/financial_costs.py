@@ -255,7 +255,7 @@ async def upload_financial_project_costs(
 def delete_financial_project_cost(
     cost_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("finance:delete")),
 ) -> Any:
     cost = db.query(FinancialProjectCost).filter(FinancialProjectCost.id == cost_id).first()
     if not cost:

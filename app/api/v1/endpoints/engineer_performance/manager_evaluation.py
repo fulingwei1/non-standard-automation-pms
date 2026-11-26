@@ -39,7 +39,7 @@ class SubmitEvaluationRequest(BaseModel):
 
 
 @router.post("/adjust", summary="调整绩效得分和排名")
-async def adjust_performance(
+def adjust_performance(
     request: AdjustPerformanceRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:evaluate")),
@@ -75,7 +75,7 @@ async def adjust_performance(
 
 
 @router.get("/adjustment-history/{result_id}", summary="获取调整历史")
-async def get_adjustment_history(
+def get_adjustment_history(
     result_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """获取绩效调整历史记录（增强版：包含详细信息）"""
@@ -87,7 +87,7 @@ async def get_adjustment_history(
 
 
 @router.get("/evaluation-tasks", summary="获取评价任务列表")
-async def get_evaluation_tasks(
+def get_evaluation_tasks(
     period_id: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:evaluate")),
@@ -116,7 +116,7 @@ async def get_evaluation_tasks(
 
 
 @router.post("/submit-evaluation", summary="提交评价（不调整得分）")
-async def submit_evaluation(
+def submit_evaluation(
     request: SubmitEvaluationRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:evaluate")),
@@ -139,7 +139,7 @@ async def submit_evaluation(
 
 
 @router.get("/engineers", summary="获取可评价的工程师列表")
-async def get_engineers_for_evaluation(
+def get_engineers_for_evaluation(
     period_id: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:evaluate")),

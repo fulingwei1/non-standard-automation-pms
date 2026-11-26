@@ -7,10 +7,11 @@
 import logging
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.core.rate_limiting import limiter
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
@@ -208,11 +209,13 @@ def read_user_options(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 def create_user(
     *,
     db: Session = Depends(deps.get_db),
     user_in: UserCreate,
     request: Request,
+    response: Response,
     current_user: User = Depends(security.require_permission("user:create")),
 ) -> Any:
     """创建新用户"""

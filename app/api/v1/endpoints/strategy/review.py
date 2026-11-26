@@ -7,6 +7,7 @@ from datetime import date
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from app.core import security
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -28,7 +29,7 @@ from app.services import strategy as strategy_service
 from app.services.strategy.review.strategy_reviews import _review_to_response
 from app.services.strategy.review.calendar_events import _event_to_response
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("strategy:read"))])
 
 
 # ============================================

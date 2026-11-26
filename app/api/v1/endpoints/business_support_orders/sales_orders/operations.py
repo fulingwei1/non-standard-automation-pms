@@ -26,7 +26,7 @@ router = APIRouter()
     response_model=ResponseModel[SalesOrderResponse],
     summary="分配项目号",
 )
-async def assign_project_to_order(
+def assign_project_to_order(
     order_id: int,
     assign_data: AssignProjectRequest,
     db: Session = Depends(deps.get_db),
@@ -63,7 +63,7 @@ async def assign_project_to_order(
 @router.post(
     "/sales-orders/{order_id}/send-notice", response_model=ResponseModel, summary="发送项目通知单"
 )
-async def send_project_notice(
+def send_project_notice(
     order_id: int,
     notice_data: SendNoticeRequest,
     db: Session = Depends(deps.get_db),

@@ -427,7 +427,7 @@ def update_customer(
 def delete_customer(
     customer_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("customer:delete")),
 ) -> None:
     """
     删除客户

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """甘特图依赖关系与关键路径 API"""
 
+import re
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional, Set
 
@@ -41,8 +42,19 @@ class DependencyCreate(BaseModel):
     lag_days: int = Field(default=0, description="滞后天数")
 
 
+_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def _safe_identifier(name: str) -> str:
+    """验证 SQL 标识符，防止 SQL 注入"""
+    if not _IDENTIFIER_RE.match(name):
+        raise ValueError(f"Invalid SQL identifier: {name}")
+    return name
+
+
 def _table_has_column(db: Session, table_name: str, column_name: str) -> bool:
-    rows = db.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    safe_table = _safe_identifier(table_name)
+    rows = db.execute(text(f"PRAGMA table_info({safe_table})")).fetchall()
     columns = []
     for row in rows:
         if hasattr(row, "_mapping") and "name" in row._mapping:

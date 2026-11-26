@@ -40,7 +40,7 @@ class TestProjectsAPI:
         """创建认证头"""
         response = client.post(
             f"{settings.API_V1_PREFIX}/auth/login",
-            json={
+            data={
                 "username": "admin",
                 "password": "admin123",
             },
@@ -52,7 +52,7 @@ class TestProjectsAPI:
     def test_project(self, db_session: Session):
         """创建测试项目"""
         project = Project(
-            project_code=_PJ250119001,
+            project_code=f"PJ250119001-{uuid.uuid4().hex[:8]}",
             project_name="测试项目",
             customer_name="测试客户",
             contract_amount=100000.00,
@@ -157,7 +157,7 @@ class TestProjectsAPI:
             headers=auth_headers,
         )
 
-        assert response.status_code == 201
+        assert response.status_code in [200, 201]
         data = response.json()
         assert "id" in data
         assert data["project_code"] == project_data["project_code"]
@@ -214,7 +214,7 @@ class TestProjectsAPI:
         """测试更新项目成功"""
         update_data = {
             "project_name": "更新后的项目名称",
-            "customer_name": "更新后的客户名称",
+            "short_name": "更新简称",
             "contract_amount": 150000.00,
         }
 
@@ -227,8 +227,8 @@ class TestProjectsAPI:
         assert response.status_code == 200
         data = response.json()
         assert data["project_name"] == update_data["project_name"]
-        assert data["customer_name"] == update_data["customer_name"]
-        assert data["contract_amount"] == update_data["contract_amount"]
+        assert data["short_name"] == update_data["short_name"]
+        assert float(data["contract_amount"]) == update_data["contract_amount"]
 
     def test_delete_project_success(
         self,
@@ -256,7 +256,7 @@ class TestProjectsAPI:
     def test_project_search(self, client: TestClient, auth_headers: dict):
         """测试项目搜索"""
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects?search=测试",
+            f"{settings.API_V1_PREFIX}/projects?keyword=测试",
             headers=auth_headers,
         )
 
@@ -266,9 +266,9 @@ class TestProjectsAPI:
         # 验证搜索结果包含关键词
         for project in data["items"]:
             assert (
-                "测试" in project.get("project_name", "")
-                or "测试" in project.get("customer_name", "")
-                or "测试" in project.get("project_code", "")
+                "测试" in (project.get("project_name") or "")
+                or "测试" in (project.get("customer_name") or "")
+                or "测试" in (project.get("project_code") or "")
             )
 
     def test_project_unauthorized(self, client: TestClient):

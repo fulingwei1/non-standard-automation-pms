@@ -27,7 +27,7 @@ router = APIRouter()
     response_model=ResponseModel[ContractSealRecordResponse],
     summary="创建合同盖章记录",
 )
-async def create_contract_seal_record(
+def create_contract_seal_record(
     contract_id: int,
     seal_data: ContractSealRecordCreate,
     db: Session = Depends(deps.get_db),
@@ -86,7 +86,7 @@ async def create_contract_seal_record(
     response_model=ResponseModel[ContractSealRecordResponse],
     summary="更新合同盖章记录",
 )
-async def update_contract_seal_record(
+def update_contract_seal_record(
     contract_id: int,
     seal_id: int,
     seal_data: ContractSealRecordUpdate,

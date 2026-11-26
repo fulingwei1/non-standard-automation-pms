@@ -1,3 +1,4 @@
+from app.core import security
 # -*- coding: utf-8 -*-
 """
 合同附件管理 API
@@ -56,7 +57,7 @@ def get_contract_attachments(
 def delete_attachment(
     attachment_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:update")),
 ):
     """删除附件"""
     success = ContractEnhancedService.delete_attachment(db, attachment_id)

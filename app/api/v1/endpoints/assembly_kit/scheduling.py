@@ -52,7 +52,7 @@ router = APIRouter(prefix="/assembly-kit/scheduling", tags=["scheduling"])
 
 
 @router.post("/suggestions/generate", response_model=ResponseModel)
-async def generate_scheduling_suggestions(
+def generate_scheduling_suggestions(
     db: Session = Depends(deps.get_db),
     scope: str = Query("WEEKLY", description="排产范围：WEEKLY/MONTHLY"),
     project_ids: Optional[str] = Query(None, description="项目ID列表，逗号分隔"),
@@ -77,7 +77,7 @@ async def generate_scheduling_suggestions(
 
 
 @router.get("/suggestions", response_model=ResponseModel)
-async def get_scheduling_suggestions(
+def get_scheduling_suggestions(
     db: Session = Depends(deps.get_db),
     suggestion_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     project_id: Optional[int] = Query(None),
@@ -127,7 +127,7 @@ async def get_scheduling_suggestions(
 
 
 @router.post("/suggestions/{suggestion_id}/accept", response_model=ResponseModel)
-async def accept_suggestion(
+def accept_suggestion(
     suggestion_id: int,
     accept_data: SchedulingSuggestionAccept,
     db: Session = Depends(deps.get_db),
@@ -155,7 +155,7 @@ async def accept_suggestion(
 
 
 @router.post("/suggestions/{suggestion_id}/reject", response_model=ResponseModel)
-async def reject_suggestion(
+def reject_suggestion(
     suggestion_id: int,
     reject_data: SchedulingSuggestionReject,
     db: Session = Depends(deps.get_db),

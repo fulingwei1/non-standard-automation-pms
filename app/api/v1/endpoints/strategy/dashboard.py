@@ -16,6 +16,7 @@ from datetime import date
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends
+from app.core import security
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -27,7 +28,7 @@ from app.schemas.strategy import (
 )
 from app.services import strategy as strategy_service
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("strategy:read"))])
 
 
 @router.get("/overview/{strategy_id}", response_model=StrategyOverviewResponse)

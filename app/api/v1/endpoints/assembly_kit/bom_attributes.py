@@ -24,11 +24,11 @@ from app.services.bom_attributes import BomAttributesService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/assembly-kit/bom-attributes", tags=["bom_attributes"])
+router = APIRouter(prefix="/assembly-kit/bom-attributes", tags=["bom_attributes"], dependencies=[Depends(security.require_permission("assembly_kit:read"))])
 
 
 @router.get("/bom/{bom_id}/assembly-attrs", response_model=ResponseModel)
-async def get_bom_assembly_attrs(
+def get_bom_assembly_attrs(
     bom_id: int,
     db: Session = Depends(deps.get_db),
     stage_code: Optional[str] = Query(None, description="筛选装配阶段"),
@@ -41,7 +41,7 @@ async def get_bom_assembly_attrs(
 
 
 @router.post("/bom/{bom_id}/assembly-attrs/batch", response_model=ResponseModel)
-async def batch_set_assembly_attrs(
+def batch_set_assembly_attrs(
     bom_id: int,
     batch_data: BomItemAssemblyAttrsBatchCreate,
     db: Session = Depends(deps.get_db),
@@ -59,7 +59,7 @@ async def batch_set_assembly_attrs(
 
 
 @router.put("/bom/assembly-attrs/{attr_id}", response_model=ResponseModel)
-async def update_assembly_attr(
+def update_assembly_attr(
     attr_id: int,
     attr_data: BomItemAssemblyAttrsUpdate,
     db: Session = Depends(deps.get_db),
@@ -74,7 +74,7 @@ async def update_assembly_attr(
 
 
 @router.post("/bom/{bom_id}/assembly-attrs/auto", response_model=ResponseModel)
-async def auto_assign_assembly_attrs(
+def auto_assign_assembly_attrs(
     bom_id: int,
     request: BomAssemblyAttrsAutoRequest,
     db: Session = Depends(deps.get_db),
@@ -92,7 +92,7 @@ async def auto_assign_assembly_attrs(
 
 
 @router.get("/bom/{bom_id}/assembly-attrs/recommendations", response_model=ResponseModel)
-async def get_assembly_attr_recommendations(bom_id: int, db: Session = Depends(deps.get_db)):
+def get_assembly_attr_recommendations(bom_id: int, db: Session = Depends(deps.get_db)):
     """获取装配属性推荐结果（不应用，仅返回推荐）"""
     service = BomAttributesService(db)
     result = service.get_assembly_attr_recommendations(bom_id)
@@ -101,7 +101,7 @@ async def get_assembly_attr_recommendations(bom_id: int, db: Session = Depends(d
 
 
 @router.post("/bom/{bom_id}/assembly-attrs/smart-recommend", response_model=ResponseModel)
-async def smart_recommend_assembly_attrs(
+def smart_recommend_assembly_attrs(
     bom_id: int,
     request: BomAssemblyAttrsAutoRequest,
     db: Session = Depends(deps.get_db),
@@ -119,7 +119,7 @@ async def smart_recommend_assembly_attrs(
 
 
 @router.post("/bom/{bom_id}/assembly-attrs/template", response_model=ResponseModel)
-async def apply_assembly_template(
+def apply_assembly_template(
     bom_id: int,
     request: BomAssemblyAttrsTemplateRequest,
     db: Session = Depends(deps.get_db),

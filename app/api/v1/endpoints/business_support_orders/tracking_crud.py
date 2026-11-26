@@ -35,7 +35,7 @@ router = APIRouter()
     response_model=ResponseModel[PaginatedResponse[AcceptanceTrackingResponse]],
     summary="获取验收单跟踪列表",
 )
-async def get_acceptance_tracking(
+def get_acceptance_tracking(
     pagination: PaginationParams = Depends(get_pagination_query),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
@@ -103,7 +103,7 @@ async def get_acceptance_tracking(
     response_model=ResponseModel[AcceptanceTrackingResponse],
     summary="创建验收单跟踪记录",
 )
-async def create_acceptance_tracking(
+def create_acceptance_tracking(
     tracking_data: AcceptanceTrackingCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -201,7 +201,7 @@ async def create_acceptance_tracking(
     response_model=ResponseModel[AcceptanceTrackingResponse],
     summary="获取验收单跟踪详情",
 )
-async def get_acceptance_tracking_detail(
+def get_acceptance_tracking_detail(
     tracking_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -224,7 +224,7 @@ async def get_acceptance_tracking_detail(
     response_model=ResponseModel[AcceptanceTrackingResponse],
     summary="更新验收单跟踪记录",
 )
-async def update_acceptance_tracking(
+def update_acceptance_tracking(
     tracking_id: int,
     tracking_data: AcceptanceTrackingUpdate,
     db: Session = Depends(deps.get_db),

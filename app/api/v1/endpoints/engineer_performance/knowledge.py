@@ -70,7 +70,7 @@ def _serialize_contribution(db: Session, contribution: Any) -> dict:
 
 
 @router.get("", summary="获取知识贡献列表")
-async def list_contributions(
+def list_contributions(
     contributor_id: Optional[int] = Query(None, description="贡献者ID"),
     job_type: Optional[str] = Query(None, description="岗位领域"),
     contribution_type: Optional[str] = Query(None, description="贡献类型"),
@@ -131,7 +131,7 @@ async def list_contributions(
 
 
 @router.post("", summary="创建知识贡献")
-async def create_contribution(
+def create_contribution(
     data: KnowledgeContributionCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("knowledge:write")),
@@ -148,7 +148,7 @@ async def create_contribution(
 
 
 @router.get("/contributions", summary="获取知识贡献列表（兼容前端）")
-async def list_contributions_compat(
+def list_contributions_compat(
     contributor_id: Optional[int] = Query(None, description="贡献者ID"),
     job_type: Optional[str] = Query(None, description="岗位领域"),
     contribution_type: Optional[str] = Query(None, description="贡献类型"),
@@ -202,7 +202,7 @@ async def list_contributions_compat(
 
 
 @router.post("/contributions", summary="创建知识贡献（兼容前端）")
-async def create_contribution_compat(
+def create_contribution_compat(
     payload: dict,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("knowledge:write")),
@@ -239,7 +239,7 @@ async def create_contribution_compat(
 
 
 @router.put("/contributions/{contribution_id:int}/approve", summary="审核知识贡献（兼容前端）")
-async def approve_contribution_compat(
+def approve_contribution_compat(
     contribution_id: int,
     payload: dict,
     db: Session = Depends(get_db),
@@ -262,7 +262,7 @@ async def approve_contribution_compat(
 
 
 @router.post("/reuse", summary="记录复用（兼容前端）")
-async def record_reuse_compat(
+def record_reuse_compat(
     payload: dict,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("knowledge:write")),
@@ -299,7 +299,7 @@ async def record_reuse_compat(
 
 
 @router.get("/rankings", summary="获取贡献排行（兼容前端）")
-async def get_contribution_rankings_compat(
+def get_contribution_rankings_compat(
     job_type: Optional[str] = Query(None, description="岗位领域"),
     contribution_type: Optional[str] = Query(None, description="贡献类型"),
     limit: int = Query(20, ge=1, le=50),
@@ -344,7 +344,7 @@ async def get_contribution_rankings_compat(
 
 
 @router.get("/contributor/{contributor_id}/stats", summary="获取贡献者统计（兼容前端）")
-async def get_contributor_stats_compat(
+def get_contributor_stats_compat(
     contributor_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("knowledge:read")),
@@ -387,7 +387,7 @@ async def get_contributor_stats_compat(
 
 
 @router.get("/{contribution_id:int}", summary="获取知识贡献详情")
-async def get_contribution(
+def get_contribution(
     contribution_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("knowledge:read")),
@@ -432,7 +432,7 @@ async def get_contribution(
 
 
 @router.put("/{contribution_id:int}", summary="更新知识贡献")
-async def update_contribution(
+def update_contribution(
     contribution_id: int,
     data: KnowledgeContributionUpdate,
     db: Session = Depends(get_db),
@@ -455,7 +455,7 @@ async def update_contribution(
 
 
 @router.post("/{contribution_id:int}/submit", summary="提交审核")
-async def submit_for_review(
+def submit_for_review(
     contribution_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("knowledge:write")),
@@ -477,7 +477,7 @@ async def submit_for_review(
 
 
 @router.post("/{contribution_id:int}/approve", summary="审核通过")
-async def approve_contribution(
+def approve_contribution(
     contribution_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("knowledge:approve")),
@@ -497,7 +497,7 @@ async def approve_contribution(
 
 
 @router.post("/{contribution_id:int}/reject", summary="审核拒绝")
-async def reject_contribution(
+def reject_contribution(
     contribution_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("knowledge:approve")),
@@ -517,7 +517,7 @@ async def reject_contribution(
 
 
 @router.post("/{contribution_id:int}/reuse", summary="记录复用")
-async def record_reuse(
+def record_reuse(
     contribution_id: int,
     data: KnowledgeReuseCreate,
     db: Session = Depends(get_db),
@@ -541,7 +541,7 @@ async def record_reuse(
 
 
 @router.delete("/{contribution_id:int}", summary="删除知识贡献")
-async def delete_contribution(
+def delete_contribution(
     contribution_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("knowledge:write")),
@@ -565,7 +565,7 @@ async def delete_contribution(
 
 
 @router.get("/ranking", summary="获取贡献排行")
-async def get_contribution_ranking(
+def get_contribution_ranking(
     job_type: Optional[str] = Query(None, description="岗位领域"),
     contribution_type: Optional[str] = Query(None, description="贡献类型"),
     limit: int = Query(20, ge=1, le=50),
@@ -602,7 +602,7 @@ async def get_contribution_ranking(
 
 
 @router.get("/stats/me", summary="获取我的贡献统计")
-async def get_my_contribution_stats(
+def get_my_contribution_stats(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("knowledge:read")),
 ):

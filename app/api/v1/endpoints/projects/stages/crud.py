@@ -109,7 +109,7 @@ def initialize_project_stages(
 def clear_project_stages(
     project_id: int = Path(..., description="项目ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_user),
+    current_user: User = Depends(security.require_permission("project:delete")),
 ) -> Any:
     """清除项目的所有阶段实例"""
     check_project_access_or_raise(db, current_user, project_id, "您没有权限清除该项目的阶段")

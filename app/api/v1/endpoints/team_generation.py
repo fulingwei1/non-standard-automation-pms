@@ -17,7 +17,7 @@ from app.models.project_team import ProjectTeamPlan
 from app.models.user import User
 from app.services.team_generation_service import TeamGenerationService
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("project:read"))])
 
 
 def _assignment_from_user(user: User, role: str, role_name: str) -> dict[str, Any]:

@@ -24,7 +24,7 @@ router = APIRouter(prefix="/config", tags=["配置管理"])
 
 
 @router.get("/weights", summary="获取权重配置列表")
-async def list_dimension_configs(
+def list_dimension_configs(
     job_type: Optional[str] = Query(None, description="岗位类型"),
     include_expired: bool = Query(False, description="是否包含已过期配置"),
     db: Session = Depends(get_db),
@@ -61,7 +61,7 @@ async def list_dimension_configs(
 
 
 @router.get("/weights/{job_type}", summary="获取指定岗位权重配置")
-async def get_dimension_config(
+def get_dimension_config(
     job_type: str,
     job_level: Optional[str] = Query(None, description="职级"),
     db: Session = Depends(get_db),
@@ -100,7 +100,7 @@ async def get_dimension_config(
 
 
 @router.post("/weights", summary="创建权重配置")
-async def create_dimension_config(
+def create_dimension_config(
     data: DimensionConfigCreate,
     require_approval: bool = True,
     db: Session = Depends(get_db),
@@ -150,7 +150,7 @@ async def create_dimension_config(
 
 
 @router.get("/grades", summary="获取等级规则")
-async def get_grade_rules(
+def get_grade_rules(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:config:read")),
 ):
@@ -201,7 +201,7 @@ async def get_grade_rules(
 
 
 @router.get("/job-types", summary="获取岗位类型列表")
-async def get_job_types(
+def get_job_types(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:config:read")),
 ):
@@ -221,7 +221,7 @@ async def get_job_types(
 
 
 @router.get("/job-levels", summary="获取职级列表")
-async def get_job_levels(
+def get_job_levels(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:config:read")),
 ):
@@ -239,7 +239,7 @@ async def get_job_levels(
 
 
 @router.get("/department-configs", summary="获取部门评价指标配置")
-async def get_department_configs(
+def get_department_configs(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:config:read")),
 ):
@@ -254,7 +254,7 @@ async def get_department_configs(
 
 
 @router.post("/department-configs", summary="创建部门级别权重配置")
-async def create_department_config(
+def create_department_config(
     data: DimensionConfigCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:config:write")),
@@ -295,7 +295,7 @@ async def create_department_config(
 
 
 @router.get("/pending-approvals", summary="获取待审批配置列表")
-async def get_pending_approvals(
+def get_pending_approvals(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:manage")),
 ):
@@ -345,7 +345,7 @@ class ApproveConfigRequest(BaseModel):
 
 
 @router.post("/approve/{config_id}", summary="审批部门级别配置")
-async def approve_dimension_config(
+def approve_dimension_config(
     config_id: int,
     request: ApproveConfigRequest,
     db: Session = Depends(get_db),

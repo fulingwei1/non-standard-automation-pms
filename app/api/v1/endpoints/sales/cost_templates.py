@@ -298,7 +298,7 @@ def delete_cost_template(
     *,
     db: Session = Depends(deps.get_db),
     template_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_sales_delete_permission()),
 ) -> Any:
     """
     删除成本模板

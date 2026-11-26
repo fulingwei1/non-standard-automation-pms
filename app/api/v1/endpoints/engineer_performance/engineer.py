@@ -33,7 +33,7 @@ router = APIRouter(prefix="/engineer", tags=["个人绩效"])
 
 
 @router.get("/profile", summary="获取当前用户工程师档案")
-async def get_my_profile(
+def get_my_profile(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
@@ -65,7 +65,7 @@ async def get_my_profile(
 
 
 @router.post("/profile", summary="创建工程师档案")
-async def create_profile(
+def create_profile(
     data: EngineerProfileCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:engineer:write")),
@@ -84,7 +84,7 @@ async def create_profile(
 
 
 @router.put("/profile/{user_id}", summary="更新工程师档案")
-async def update_profile(
+def update_profile(
     user_id: int,
     data: EngineerProfileUpdate,
     db: Session = Depends(get_db),
@@ -124,7 +124,7 @@ def _performance_result_payload(result: PerformanceResult) -> dict:
 
 
 @router.post("/calculate/batch", summary="批量计算并保存工程师绩效")
-async def calculate_batch_performance(
+def calculate_batch_performance(
     period_id: int = Query(..., description="考核周期ID"),
     job_type: Optional[str] = Query(None, description="岗位类型"),
     job_level: Optional[str] = Query(None, description="职级"),
@@ -172,7 +172,7 @@ async def calculate_batch_performance(
 
 
 @router.post("/calculate/{user_id}", summary="计算并保存指定工程师绩效")
-async def calculate_engineer_performance(
+def calculate_engineer_performance(
     user_id: int,
     period_id: int = Query(..., description="考核周期ID"),
     db: Session = Depends(get_db),
@@ -193,7 +193,7 @@ async def calculate_engineer_performance(
 
 
 @router.get("/{user_id}", summary="获取工程师绩效详情")
-async def get_engineer_performance(
+def get_engineer_performance(
     user_id: int,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),
@@ -262,7 +262,7 @@ async def get_engineer_performance(
 
 
 @router.get("/{user_id}/trend", summary="获取绩效趋势")
-async def get_engineer_trend(
+def get_engineer_trend(
     user_id: int,
     periods: int = Query(6, ge=1, le=12, description="历史周期数"),
     db: Session = Depends(get_db),
@@ -284,7 +284,7 @@ async def get_engineer_trend(
 
 
 @router.get("/{user_id}/comparison", summary="获取同岗位对比")
-async def get_engineer_comparison(
+def get_engineer_comparison(
     user_id: int,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),
@@ -361,7 +361,7 @@ async def get_engineer_comparison(
 
 
 @router.get("", summary="获取工程师列表")
-async def list_engineers(
+def list_engineers(
     job_type: Optional[str] = Query(None, description="岗位类型"),
     job_level: Optional[str] = Query(None, description="职级"),
     department_id: Optional[int] = Query(None, description="部门ID"),

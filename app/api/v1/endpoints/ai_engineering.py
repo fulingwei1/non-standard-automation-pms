@@ -22,10 +22,12 @@ logger = logging.getLogger(__name__)
 
 
 def _ai(prompt: str, max_tokens: int = 1600):
-    from app.services.ai_client_service import AIClientService
+    from app.services.ai_client_service import AIClientService, is_mock_response
 
     resp = AIClientService().generate_solution(
         prompt=prompt, model="qwen3-coder-plus", temperature=0.25, max_tokens=max_tokens)
+    if is_mock_response(resp):
+        return None
     return ai_job_service._extract_json(resp.get("content") or "")
 
 

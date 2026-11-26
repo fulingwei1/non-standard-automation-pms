@@ -23,7 +23,7 @@ router = APIRouter()
 
 
 @router.get("/configs", response_model=ProjectRoleConfigListResponse, summary="获取项目角色配置")
-async def get_project_role_configs(
+def get_project_role_configs(
     project_id: int = Path(..., description="项目ID"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("project_role:read")),
@@ -49,7 +49,7 @@ async def get_project_role_configs(
     response_model=ProjectRoleConfigListResponse,
     summary="初始化项目角色配置",
 )
-async def init_project_role_configs(
+def init_project_role_configs(
     project_id: int = Path(..., description="项目ID"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("project_role:create")),
@@ -93,7 +93,7 @@ async def init_project_role_configs(
     response_model=ProjectRoleConfigListResponse,
     summary="批量更新项目角色配置",
 )
-async def update_project_role_configs(
+def update_project_role_configs(
     data: ProjectRoleConfigBatchUpdate,
     project_id: int = Path(..., description="项目ID"),
     db: Session = Depends(deps.get_db),

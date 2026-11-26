@@ -38,7 +38,7 @@ router = APIRouter()
     response_model=ResponseModel[ReconciliationResponse],
     summary="生成客户对账单",
 )
-async def create_reconciliation(
+def create_reconciliation(
     reconciliation_data: ReconciliationCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -190,7 +190,7 @@ async def create_reconciliation(
     response_model=ResponseModel[PaginatedResponse[ReconciliationResponse]],
     summary="获取客户对账单列表",
 )
-async def get_reconciliations(
+def get_reconciliations(
     pagination: PaginationParams = Depends(get_pagination_query),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     reconciliation_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
@@ -273,7 +273,7 @@ async def get_reconciliations(
     response_model=ResponseModel[ReconciliationResponse],
     summary="获取客户对账单详情",
 )
-async def get_reconciliation(
+def get_reconciliation(
     reconciliation_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -321,7 +321,7 @@ async def get_reconciliation(
     response_model=ResponseModel[ReconciliationResponse],
     summary="更新客户对账单",
 )
-async def update_reconciliation(
+def update_reconciliation(
     reconciliation_id: int,
     reconciliation_data: ReconciliationUpdate,
     db: Session = Depends(deps.get_db),
@@ -382,7 +382,7 @@ async def update_reconciliation(
 @router.post(
     "/reconciliations/{reconciliation_id}/send", response_model=ResponseModel, summary="发送对账单"
 )
-async def send_reconciliation(
+def send_reconciliation(
     reconciliation_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),

@@ -33,7 +33,7 @@ class SyncRequest(BaseModel):
 
 
 @router.post("/work-log/generate", summary="生成工作日志")
-async def generate_work_logs(
+def generate_work_logs(
     request: SyncRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:manage")),
@@ -55,7 +55,7 @@ async def generate_work_logs(
 
 
 @router.post("/design-review/sync", summary="同步设计评审")
-async def sync_design_reviews(
+def sync_design_reviews(
     request: SyncRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:manage")),
@@ -71,7 +71,7 @@ async def sync_design_reviews(
 
 
 @router.post("/debug-issue/sync", summary="同步调试问题")
-async def sync_debug_issues(
+def sync_debug_issues(
     request: SyncRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:manage")),
@@ -87,7 +87,7 @@ async def sync_debug_issues(
 
 
 @router.post("/knowledge/identify", summary="识别知识贡献")
-async def identify_knowledge(
+def identify_knowledge(
     request: SyncRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:manage")),
@@ -111,7 +111,7 @@ async def identify_knowledge(
 
 
 @router.post("/all", summary="同步所有绩效数据")
-async def sync_all_performance_data(
+def sync_all_performance_data(
     request: SyncRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:manage")),
@@ -159,7 +159,7 @@ async def sync_all_performance_data(
 
 
 @router.get("/status", summary="获取同步状态")
-async def get_sync_status(
+def get_sync_status(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):

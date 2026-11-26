@@ -20,8 +20,9 @@ except ImportError:
                 # Create a simple router as fallback
                 from typing import Any
 
-                from fastapi import APIRouter
-                router = APIRouter()
+                from fastapi import APIRouter, Depends
+                from app.core import security
+                router = APIRouter(dependencies=[Depends(security.require_permission("project:read"))])
 
                 def _sample_template(template_id: int = 1) -> dict[str, Any]:
                     return {

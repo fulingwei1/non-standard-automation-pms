@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from app.core import security
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
@@ -18,11 +19,11 @@ from app.models.production import (
     Workshop,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("production:read"))])
 
 
 @router.get("/comparison")
-async def multi_dimensional_comparison(
+def multi_dimensional_comparison(
     dimension: str = Query(..., description="对比维度: workshop/equipment/worker/time"),
     metric: str = Query("oee", description="对比指标: oee/efficiency/output/quality"),
     workshop_ids: Optional[str] = Query(None, description="车间ID列表,逗号分隔"),

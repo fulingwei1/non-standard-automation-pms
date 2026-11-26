@@ -66,7 +66,7 @@ async def import_employees_from_excel(
 
 
 @router.get("/employees/import/template")
-async def download_import_template(
+def download_import_template(
     _current_user: User = Depends(security.require_permission("hr:read")),
 ) -> Dict[str, Any]:
     """

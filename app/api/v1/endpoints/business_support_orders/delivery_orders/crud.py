@@ -384,7 +384,7 @@ def get_pending_delivery_approval_task(
     response_model=ResponseModel[PaginatedResponse[DeliveryOrderResponse]],
     summary="获取发货单列表",
 )
-async def get_delivery_orders(
+def get_delivery_orders(
     pagination: PaginationParams = Depends(get_pagination_query),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     order_id: Optional[int] = Query(None, description="销售订单ID筛选"),
@@ -448,7 +448,7 @@ async def get_delivery_orders(
 @router.post(
     "/delivery-orders", response_model=ResponseModel[DeliveryOrderResponse], summary="创建发货单"
 )
-async def create_delivery_order(
+def create_delivery_order(
     delivery_data: DeliveryOrderCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -526,7 +526,7 @@ async def create_delivery_order(
     response_model=ResponseModel[PaginatedResponse[DeliveryOrderResponse]],
     summary="获取待审批发货单",
 )
-async def get_pending_approval_deliveries(
+def get_pending_approval_deliveries(
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -561,7 +561,7 @@ async def get_pending_approval_deliveries(
     response_model=ResponseModel[dict[str, Any]],
     summary="提交发货单统一审批",
 )
-async def submit_delivery_order_approval(
+def submit_delivery_order_approval(
     delivery_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("delivery:manage")),
@@ -626,7 +626,7 @@ async def submit_delivery_order_approval(
     response_model=ResponseModel[DeliveryOrderResponse],
     summary="审批发货单",
 )
-async def approve_delivery_order(
+def approve_delivery_order(
     delivery_id: int,
     approval_data: DeliveryApprovalRequest,
     db: Session = Depends(deps.get_db),
@@ -684,7 +684,7 @@ async def approve_delivery_order(
     response_model=ResponseModel[DeliveryOrderResponse],
     summary="打印送货单",
 )
-async def print_delivery_order(
+def print_delivery_order(
     delivery_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -720,7 +720,7 @@ async def print_delivery_order(
     response_model=ResponseModel[DeliveryOrderResponse],
     summary="确认发货",
 )
-async def ship_delivery_order(
+def ship_delivery_order(
     delivery_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("delivery:manage")),
@@ -766,7 +766,7 @@ async def ship_delivery_order(
     response_model=ResponseModel[DeliveryOrderResponse],
     summary="确认签收",
 )
-async def receive_delivery_order(
+def receive_delivery_order(
     delivery_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("delivery:manage")),
@@ -801,7 +801,7 @@ async def receive_delivery_order(
     response_model=ResponseModel[DeliveryOrderResponse],
     summary="获取发货单详情",
 )
-async def get_delivery_order(
+def get_delivery_order(
     delivery_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -826,7 +826,7 @@ async def get_delivery_order(
     response_model=ResponseModel[DeliveryOrderResponse],
     summary="更新发货单",
 )
-async def update_delivery_order(
+def update_delivery_order(
     delivery_id: int,
     delivery_data: DeliveryOrderUpdate,
     db: Session = Depends(deps.get_db),

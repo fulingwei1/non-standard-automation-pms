@@ -7,6 +7,7 @@ import json
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from app.core import security
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -19,7 +20,7 @@ from app.schemas.strategy import (
 from app.schemas.strategy.yoy_report import YoYReportResponse
 from app.services import strategy as strategy_service
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("strategy:read"))])
 
 
 def _json_list(value):

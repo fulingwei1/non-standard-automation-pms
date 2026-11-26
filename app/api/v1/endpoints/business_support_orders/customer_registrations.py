@@ -41,7 +41,7 @@ router = APIRouter()
     response_model=ResponseModel[PaginatedResponse[CustomerSupplierRegistrationResponse]],
     summary="获取客户供应商入驻列表",
 )
-async def get_customer_registrations(
+def get_customer_registrations(
     pagination: PaginationParams = Depends(get_pagination_query),
     customer_id: Optional[int] = Query(None, description="客户ID"),
     registration_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
@@ -99,7 +99,7 @@ async def get_customer_registrations(
     response_model=ResponseModel[CustomerSupplierRegistrationResponse],
     summary="创建客户供应商入驻申请",
 )
-async def create_customer_registration(
+def create_customer_registration(
     registration_in: CustomerSupplierRegistrationCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -146,7 +146,7 @@ async def create_customer_registration(
     response_model=ResponseModel[CustomerSupplierRegistrationResponse],
     summary="获取入驻详情",
 )
-async def get_customer_registration(
+def get_customer_registration(
     registration_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -169,7 +169,7 @@ async def get_customer_registration(
     response_model=ResponseModel[CustomerSupplierRegistrationResponse],
     summary="更新入驻记录",
 )
-async def update_customer_registration(
+def update_customer_registration(
     registration_id: int,
     registration_in: CustomerSupplierRegistrationUpdate,
     db: Session = Depends(deps.get_db),
@@ -210,7 +210,7 @@ async def update_customer_registration(
     response_model=ResponseModel[CustomerSupplierRegistrationResponse],
     summary="审批客户入驻申请",
 )
-async def approve_customer_registration(
+def approve_customer_registration(
     registration_id: int,
     review_in: SupplierRegistrationReviewRequest,
     db: Session = Depends(deps.get_db),
@@ -253,7 +253,7 @@ async def approve_customer_registration(
     response_model=ResponseModel[CustomerSupplierRegistrationResponse],
     summary="驳回客户入驻申请",
 )
-async def reject_customer_registration(
+def reject_customer_registration(
     registration_id: int,
     review_in: SupplierRegistrationReviewRequest,
     db: Session = Depends(deps.get_db),

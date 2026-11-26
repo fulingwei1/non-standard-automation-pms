@@ -27,7 +27,7 @@ router = APIRouter()
 
 
 @router.get("/leads", response_model=ProjectLeadListResponse, summary="获取项目负责人列表")
-async def get_project_leads(
+def get_project_leads(
     project_id: int = Path(..., description="项目ID"),
     include_team: bool = Query(False, description="是否包含团队成员"),
     db: Session = Depends(deps.get_db),
@@ -83,7 +83,7 @@ async def get_project_leads(
 
 
 @router.post("/leads", response_model=ProjectLeadResponse, summary="指定项目负责人")
-async def create_project_lead(
+def create_project_lead(
     data: ProjectLeadCreate,
     project_id: int = Path(..., description="项目ID"),
     db: Session = Depends(deps.get_db),
@@ -154,7 +154,7 @@ async def create_project_lead(
 
 
 @router.put("/leads/{member_id}", response_model=ProjectLeadResponse, summary="更新项目负责人")
-async def update_project_lead(
+def update_project_lead(
     data: ProjectLeadUpdate,
     project_id: int = Path(..., description="项目ID"),
     member_id: int = Path(..., description="成员ID"),
@@ -212,7 +212,7 @@ async def update_project_lead(
 
 
 @router.delete("/leads/{member_id}", response_model=MessageResponse, summary="移除项目负责人")
-async def remove_project_lead(
+def remove_project_lead(
     project_id: int = Path(..., description="项目ID"),
     member_id: int = Path(..., description="成员ID"),
     db: Session = Depends(deps.get_db),

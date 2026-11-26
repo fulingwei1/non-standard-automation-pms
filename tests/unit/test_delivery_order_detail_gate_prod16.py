@@ -113,11 +113,10 @@ def _add_final_quality_pass(db: Session, project: Project):
     db.commit()
 
 
-@pytest.mark.asyncio
-async def test_create_delivery_order_copies_sales_order_items_to_real_lines(db_session: Session):
+def test_create_delivery_order_copies_sales_order_items_to_real_lines(db_session: Session):
     _, project, order, order_item = _business_seed(db_session, ready=True)
 
-    result = await create_delivery_order(
+    result = create_delivery_order(
         DeliveryOrderCreate(
             order_id=order.id,
             delivery_date=date.today() + timedelta(days=1),
@@ -139,8 +138,7 @@ async def test_create_delivery_order_copies_sales_order_items_to_real_lines(db_s
     assert db_item.sales_order_item_id == order_item.id
 
 
-@pytest.mark.asyncio
-async def test_ship_delivery_order_requires_lines_kitting_quality_and_updates_project(
+def test_ship_delivery_order_requires_lines_kitting_quality_and_updates_project(
     db_session: Session,
 ):
     customer, project, order, order_item = _business_seed(db_session, ready=False)
@@ -174,7 +172,7 @@ async def test_ship_delivery_order_requires_lines_kitting_quality_and_updates_pr
     db_session.commit()
 
     with pytest.raises(HTTPException) as not_ready:
-        await ship_delivery_order(delivery.id, db=db_session, current_user=_current_user())
+        ship_delivery_order(delivery.id, db=db_session, current_user=_current_user())
     assert not_ready.value.status_code == 400
     assert "齐套" in not_ready.value.detail
 
@@ -184,18 +182,18 @@ async def test_ship_delivery_order_requires_lines_kitting_quality_and_updates_pr
     db_session.commit()
 
     with pytest.raises(HTTPException) as no_quality:
-        await ship_delivery_order(delivery.id, db=db_session, current_user=_current_user())
+        ship_delivery_order(delivery.id, db=db_session, current_user=_current_user())
     assert no_quality.value.status_code == 400
     assert "质检" in no_quality.value.detail
 
     _add_final_quality_pass(db_session, project)
-    shipped = await ship_delivery_order(delivery.id, db=db_session, current_user=_current_user())
+    shipped = ship_delivery_order(delivery.id, db=db_session, current_user=_current_user())
     assert shipped.data.delivery_status == "shipped"
     db_session.refresh(project)
     assert project.stage == "S8"
     assert project.status == "ST24"
 
-    received = await receive_delivery_order(
+    received = receive_delivery_order(
         delivery.id,
         db=db_session,
         current_user=_current_user(),

@@ -1,3 +1,4 @@
+from app.core import security
 """
 项目复盘报告API端点
 """
@@ -65,7 +66,7 @@ def _to_project_review_response(review: ProjectReview) -> ProjectReviewResponse:
 
 
 @router.post("/generate", response_model=ReviewGenerateResponse)
-async def generate_review_report(
+def generate_review_report(
     request: ReviewGenerateRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -141,7 +142,7 @@ async def generate_review_report(
 
 
 @router.get("/", response_model=ProjectReviewListResponse)
-async def list_reviews(
+def list_reviews(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     project_id: Optional[int] = None,
@@ -181,7 +182,7 @@ async def list_reviews(
 
 
 @router.get("/{review_id}", response_model=ProjectReviewResponse)
-async def get_review(
+def get_review(
     review_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """获取复盘报告详情"""
@@ -191,7 +192,7 @@ async def get_review(
 
 
 @router.patch("/{review_id}", response_model=ProjectReviewResponse)
-async def update_review(
+def update_review(
     review_id: int,
     update_data: ProjectReviewUpdate,
     db: Session = Depends(get_db),
@@ -212,8 +213,8 @@ async def update_review(
 
 
 @router.delete("/{review_id}")
-async def delete_review(
-    review_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+def delete_review(
+    review_id: int, db: Session = Depends(get_db), current_user: User = Depends(security.require_permission("project_evaluation:delete"))
 ):
     """删除复盘报告"""
     review = get_or_404(db, ProjectReview, review_id, "复盘报告不存在")
@@ -225,7 +226,7 @@ async def delete_review(
 
 
 @router.get("/stats/summary")
-async def get_review_stats(
+def get_review_stats(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """获取复盘统计信息"""

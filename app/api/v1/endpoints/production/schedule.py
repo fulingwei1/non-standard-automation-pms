@@ -1,3 +1,4 @@
+from app.core import security
 # -*- coding: utf-8 -*-
 """
 生产排程API
@@ -30,7 +31,7 @@ router = APIRouter()
 
 
 @router.post("/generate", response_model=ScheduleGenerateResponse)
-async def generate_schedule(
+def generate_schedule(
     request: ScheduleGenerateRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -61,7 +62,7 @@ async def generate_schedule(
 
 
 @router.get("/preview", response_model=SchedulePreviewResponse)
-async def preview_schedule(
+def preview_schedule(
     plan_id: int = Query(..., description="排程方案ID"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -79,7 +80,7 @@ async def preview_schedule(
 
 
 @router.post("/confirm")
-async def confirm_schedule(
+def confirm_schedule(
     plan_id: int = Query(..., description="排程方案ID"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -99,7 +100,7 @@ async def confirm_schedule(
 
 
 @router.get("/conflicts", response_model=ConflictCheckResponse)
-async def check_conflicts(
+def check_conflicts(
     plan_id: int = Query(None, description="排程方案ID"),
     schedule_id: int = Query(None, description="排程ID"),
     status: str = Query(None, description="冲突状态"),
@@ -117,7 +118,7 @@ async def check_conflicts(
 
 
 @router.post("/adjust")
-async def adjust_schedule(
+def adjust_schedule(
     request: ScheduleAdjustRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -135,7 +136,7 @@ async def adjust_schedule(
 
 
 @router.post("/urgent-insert", response_model=UrgentInsertResponse)
-async def urgent_insert(
+def urgent_insert(
     request: UrgentInsertRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -160,7 +161,7 @@ async def urgent_insert(
 
 
 @router.get("/comparison", response_model=ScheduleComparisonResponse)
-async def compare_schedules(
+def compare_schedules(
     plan_ids: str = Query(..., description="方案ID列表，逗号分隔"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -179,7 +180,7 @@ async def compare_schedules(
 
 
 @router.get("/gantt", response_model=GanttDataResponse)
-async def get_gantt_data(
+def get_gantt_data(
     plan_id: int = Query(..., description="排程方案ID"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -197,10 +198,10 @@ async def get_gantt_data(
 
 
 @router.delete("/reset")
-async def reset_schedule(
+def reset_schedule(
     plan_id: int = Query(..., description="排程方案ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("production:manage")),
 ):
     """重置排程"""
     try:
@@ -213,7 +214,7 @@ async def reset_schedule(
 
 
 @router.get("/history", response_model=ScheduleHistoryResponse)
-async def get_schedule_history(
+def get_schedule_history(
     schedule_id: int = Query(None, description="排程ID"),
     plan_id: int = Query(None, description="方案ID"),
     page: int = Query(1, ge=1),

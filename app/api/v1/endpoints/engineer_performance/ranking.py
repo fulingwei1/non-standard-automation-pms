@@ -26,7 +26,7 @@ router = APIRouter(prefix="/ranking", tags=["绩效排名"])
 
 
 @router.get("", summary="综合排名")
-async def get_ranking(
+def get_ranking(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     job_type: Optional[str] = Query(None, description="岗位类型"),
     job_level: Optional[str] = Query(None, description="职级"),
@@ -102,7 +102,7 @@ async def get_ranking(
 
 
 @router.get("/by-department", summary="按部门排名")
-async def get_ranking_by_department(
+def get_ranking_by_department(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     department_id: int = Query(..., description="部门ID"),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -153,7 +153,7 @@ async def get_ranking_by_department(
 
 
 @router.get("/by-job-type", summary="按岗位类型排名")
-async def get_ranking_by_job_type(
+def get_ranking_by_job_type(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     job_type: str = Query(..., description="岗位类型"),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -200,7 +200,7 @@ async def get_ranking_by_job_type(
 
 
 @router.get("/top", summary="Top N 工程师")
-async def get_top_engineers(
+def get_top_engineers(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     n: int = Query(10, ge=1, le=50, description="返回数量"),
     job_type: Optional[str] = Query(None, description="岗位类型"),

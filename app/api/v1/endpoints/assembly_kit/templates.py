@@ -33,14 +33,14 @@ from app.schemas.assembly_kit import (  # Stage; Template; Category Mapping; BOM
 )
 from app.schemas.common import MessageResponse, ResponseModel
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("assembly_kit:read"))])
 
 
 from fastapi import APIRouter
 
 from app.utils.db_helpers import get_or_404
 
-router = APIRouter(prefix="/assembly-kit/templates", tags=["templates"])
+router = APIRouter(prefix="/assembly-kit/templates", tags=["templates"], dependencies=[Depends(security.require_permission("assembly_kit:read"))])
 
 # 共 4 个路由
 
@@ -48,7 +48,7 @@ router = APIRouter(prefix="/assembly-kit/templates", tags=["templates"])
 
 
 @router.get("", response_model=ResponseModel)
-async def get_assembly_templates(
+def get_assembly_templates(
     db: Session = Depends(deps.get_db),
     equipment_type: Optional[str] = Query(None, description="设备类型筛选"),
     include_inactive: bool = Query(False),
@@ -72,7 +72,7 @@ async def get_assembly_templates(
 
 
 @router.post("", response_model=ResponseModel)
-async def create_assembly_template(
+def create_assembly_template(
     template_data: AssemblyTemplateCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("assembly_kit:read")),
@@ -97,7 +97,7 @@ async def create_assembly_template(
 
 
 @router.put("/{template_id}", response_model=ResponseModel)
-async def update_assembly_template(
+def update_assembly_template(
     template_id: int,
     template_data: AssemblyTemplateUpdate,
     db: Session = Depends(deps.get_db),
@@ -120,7 +120,7 @@ async def update_assembly_template(
 
 
 @router.delete("/{template_id}", response_model=MessageResponse)
-async def delete_assembly_template(
+def delete_assembly_template(
     template_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("assembly_kit:read")),

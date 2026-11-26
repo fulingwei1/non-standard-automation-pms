@@ -383,7 +383,7 @@ def get_ecn_state(
 
 
 @router.post("/{ecn_id}/transition")
-async def transition_ecn_state(
+def transition_ecn_state(
     ecn_id: int,
     request: TransitionRequest,
     current_user: Any = Depends(require_permission("ecn:update")),
@@ -556,7 +556,7 @@ def get_allowed_transitions(
 
 
 @router.post("/{ecn_id}/batch-transition")
-async def batch_transition_ecns(
+def batch_transition_ecns(
     ecn_id: int,
     ecn_ids: List[int],
     target_state: str,

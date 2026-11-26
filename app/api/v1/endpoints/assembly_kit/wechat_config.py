@@ -38,7 +38,7 @@ router = APIRouter(prefix="/assembly-kit/wechat-config", tags=["wechat_config"])
 
 
 @router.get("/wechat/config", response_model=ResponseModel)
-async def get_wechat_config(
+def get_wechat_config(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("assembly_kit:read")),
 ):
@@ -59,7 +59,7 @@ async def get_wechat_config(
 
 
 @router.post("/wechat/test", response_model=ResponseModel)
-async def test_wechat_connection(
+def test_wechat_connection(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("assembly_kit:read")),
 ):

@@ -3,6 +3,7 @@
 齐套分析 - 优化建议
 """
 from fastapi import APIRouter, Depends
+from app.core import security
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -10,11 +11,11 @@ from app.models import MaterialReadiness
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("assembly_kit:read"))])
 
 
 @router.get("/analysis/{readiness_id}/optimize", response_model=ResponseModel)
-async def get_optimization_suggestions(readiness_id: int, db: Session = Depends(deps.get_db)):
+def get_optimization_suggestions(readiness_id: int, db: Session = Depends(deps.get_db)):
     """获取齐套分析优化建议"""
     from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 

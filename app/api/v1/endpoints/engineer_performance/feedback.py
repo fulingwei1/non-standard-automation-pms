@@ -17,7 +17,7 @@ router = APIRouter(prefix="/feedback", tags=["绩效反馈"])
 
 
 @router.get("/{engineer_id}", summary="获取绩效反馈")
-async def get_engineer_feedback(
+def get_engineer_feedback(
     engineer_id: int,
     period_id: int,
     db: Session = Depends(get_db),
@@ -32,7 +32,7 @@ async def get_engineer_feedback(
 
 
 @router.get("/message/{engineer_id}", summary="生成反馈消息")
-async def generate_feedback_message(
+def generate_feedback_message(
     engineer_id: int,
     period_id: int,
     db: Session = Depends(get_db),
@@ -47,7 +47,7 @@ async def generate_feedback_message(
 
 
 @router.get("/trend/{engineer_id}", summary="获取五维得分趋势")
-async def get_dimension_trend(
+def get_dimension_trend(
     engineer_id: int,
     periods: int = Query(6, ge=2, le=12, description="历史周期数"),
     db: Session = Depends(get_db),
@@ -62,7 +62,7 @@ async def get_dimension_trend(
 
 
 @router.get("/ability-changes/{engineer_id}", summary="识别能力变化")
-async def identify_ability_changes(
+def identify_ability_changes(
     engineer_id: int,
     periods: int = Query(6, ge=2, le=12, description="历史周期数"),
     db: Session = Depends(get_db),

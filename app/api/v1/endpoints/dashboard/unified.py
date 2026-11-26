@@ -1,3 +1,4 @@
+import logging
 # -*- coding: utf-8 -*-
 """
 统一工作台数据 API
@@ -8,6 +9,7 @@
 2. 详细模式：返回完整的业务数据
 """
 
+import logging
 from datetime import datetime
 from typing import List, Optional
 
@@ -27,6 +29,7 @@ from app.schemas.dashboard import (
 )
 from app.services.dashboard.dashboard_adapter import dashboard_registry
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -65,7 +68,7 @@ def get_unified_dashboard(
             all_widgets.extend(widgets)
         except Exception as e:
             # 单个模块失败不影响整体
-            print(f"Error loading dashboard for {adapter.module_id}: {e}")
+            logger.warning("Error loading dashboard for %s: %s", adapter.module_id, e)
             continue
 
     # 按order排序widgets
@@ -132,7 +135,7 @@ def get_unified_dashboard_detailed(
             continue
         except Exception as e:
             # 单个模块失败不影响整体
-            print(f"Error loading detailed dashboard for {adapter.module_id}: {e}")
+            logger.warning("Error loading detailed dashboard for %s: %s", adapter.module_id, e)
             continue
 
     return ResponseModel(data=detailed_data)

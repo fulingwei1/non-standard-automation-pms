@@ -352,7 +352,7 @@ def delete_acceptance_order(
     *,
     db: Session = Depends(deps.get_db),
     order_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("acceptance:manage")),
 ) -> Any:
     """
     删除验收单（仅草稿状态）

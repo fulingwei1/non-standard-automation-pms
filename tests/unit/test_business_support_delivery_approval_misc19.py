@@ -96,14 +96,13 @@ def _delivery_order(db: Session) -> DeliveryOrder:
     return delivery
 
 
-@pytest.mark.asyncio
-async def test_delivery_approve_requires_unified_approval_instance(db_session: Session):
+def test_delivery_approve_requires_unified_approval_instance(db_session: Session):
     current_user = _admin_user(db_session)
     init_approval_workflow_seeds(db_session)
     delivery = _delivery_order(db_session)
 
     with pytest.raises(HTTPException) as exc_info:
-        await approve_delivery_order(
+        approve_delivery_order(
             delivery_id=delivery.id,
             approval_data=DeliveryApprovalRequest(
                 approved=True,
@@ -117,13 +116,12 @@ async def test_delivery_approve_requires_unified_approval_instance(db_session: S
     assert "统一审批" in exc_info.value.detail
 
 
-@pytest.mark.asyncio
-async def test_delivery_submit_then_approve_uses_unified_engine(db_session: Session):
+def test_delivery_submit_then_approve_uses_unified_engine(db_session: Session):
     current_user = _admin_user(db_session)
     init_approval_workflow_seeds(db_session)
     delivery = _delivery_order(db_session)
 
-    submitted = await submit_delivery_order_approval(
+    submitted = submit_delivery_order_approval(
         delivery_id=delivery.id,
         db=db_session,
         current_user=current_user,
@@ -151,7 +149,7 @@ async def test_delivery_submit_then_approve_uses_unified_engine(db_session: Sess
     )
     assert task is not None
 
-    approved = await approve_delivery_order(
+    approved = approve_delivery_order(
         delivery_id=delivery.id,
         approval_data=DeliveryApprovalRequest(
             approved=True,

@@ -403,7 +403,7 @@ def remove_team_member(
     db: Session = Depends(deps.get_db),
     team_id: int,
     member_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_sales_edit_permission()),
 ) -> Any:
     """移除团队成员（软删除）"""
     member = (

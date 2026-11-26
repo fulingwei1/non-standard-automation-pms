@@ -1,3 +1,4 @@
+from app.core import security
 # -*- coding: utf-8 -*-
 """
 采购订单端点（重构版）
@@ -415,7 +416,7 @@ def approve_purchase_order(
 def delete_purchase_order(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(security.require_permission("purchase:order:delete")),
 ):
     """删除采购订单；非草稿订单保持不变并返回兼容成功。"""
     order = get_or_404(db, PurchaseOrder, order_id, "采购订单不存在")

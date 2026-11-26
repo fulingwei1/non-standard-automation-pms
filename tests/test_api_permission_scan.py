@@ -76,9 +76,9 @@ class TestPermissionCoverageRatchet:
 
     # ── 基线值 (修正后口径) ────────────────────────────────────
     # 这些值基于当前审计结果，只允许改善
-    BASELINE_MAX_NONE = 180          # NONE (完全无保护) 端点上限
-    BASELINE_MIN_PERM_PCT = 25.0     # PERMISSION 覆盖率下限 (%)
-    BASELINE_MAX_WRITE_NAKED = 860   # AUTH_ONLY+NONE 写端点上限
+    BASELINE_MAX_NONE = 4            # NONE (完全无保护) 端点上限 (仅公共登录/刷新/健康检查/问卷提交)
+    BASELINE_MIN_PERM_PCT = 46.6     # PERMISSION 覆盖率下限 (%)
+    BASELINE_MAX_WRITE_NAKED = 599   # AUTH_ONLY+NONE 写端点上限
 
     def test_none_endpoints_not_increasing(self):
         """NONE 保护级别端点数不应增加"""
@@ -226,7 +226,9 @@ class TestCriticalEndpointProtection:
         """售前 AI 知识库会读写案例/问答反馈，不能匿名裸露。"""
         from scripts.audit_permission_coverage import extract_endpoints_from_file
 
-        endpoints = extract_endpoints_from_file(str(ROOT / "app/api/v1/presale_ai_knowledge.py"))
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/modules/presale/api/presale_ai_knowledge.py")
+        )
 
         assert endpoints
         for ep in endpoints:
@@ -239,7 +241,9 @@ class TestCriticalEndpointProtection:
         """售前 AI 情绪分析会生成分析/提醒，不能匿名裸露。"""
         from scripts.audit_permission_coverage import extract_endpoints_from_file
 
-        endpoints = extract_endpoints_from_file(str(ROOT / "app/api/presale_ai_emotion.py"))
+        endpoints = extract_endpoints_from_file(
+            str(ROOT / "app/modules/presale/api/presale_ai_emotion.py")
+        )
 
         assert endpoints
         for ep in endpoints:
@@ -651,10 +655,15 @@ class TestWhitelistMinimality:
         )
 
     def test_whitelist_no_api_endpoints(self):
-        """白名单中不应有 /api/v1/ 业务端点 (除 login/refresh)"""
+        """白名单中不应有 /api/v1/ 业务端点 (除 login/refresh/2fa login)"""
         from app.core.middleware.auth_middleware import GlobalAuthMiddleware
 
-        allowed_api = {"/api/v1/auth/login", "/api/v1/auth/refresh", "/api/health"}
+        allowed_api = {
+            "/api/v1/auth/login",
+            "/api/v1/auth/2fa/login",
+            "/api/v1/auth/refresh",
+            "/api/health",
+        }
         for path in GlobalAuthMiddleware.WHITE_LIST:
             if path.startswith("/api/"):
                 assert path in allowed_api, (

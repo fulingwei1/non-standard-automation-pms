@@ -135,7 +135,7 @@ class EVMSnapshotCreate(BaseModel):
 
 @router.get("/evm", response_model=EVMAnalysisResponse)
 @require_permission("cost:read")
-async def get_evm_analysis(
+def get_evm_analysis(
     project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """
@@ -177,7 +177,7 @@ async def get_evm_analysis(
 
 @router.get("/evm/trend", response_model=EVMTrendResponse)
 @require_permission("cost:read")
-async def get_evm_trend(
+def get_evm_trend(
     project_id: int,
     period_type: str = Query(default="MONTH", description="周期类型"),
     limit: int = Query(default=12, ge=1, le=24, description="返回数据点数量"),
@@ -219,7 +219,7 @@ async def get_evm_trend(
 
 @router.post("/evm/snapshot", response_model=EVMDataResponse)
 @require_permission("cost:write")
-async def create_evm_snapshot(
+def create_evm_snapshot(
     project_id: int,
     evm_data: EVMDataCreate,
     db: Session = Depends(get_db),
@@ -278,7 +278,7 @@ async def create_evm_snapshot(
 
 
 @router.get("/evm/metrics", response_model=dict)
-async def calculate_evm_metrics(
+def calculate_evm_metrics(
     project_id: int,
     pv: Optional[Decimal] = Query(None, ge=0, description="计划价值"),
     ev: Optional[Decimal] = Query(None, ge=0, description="挣得价值"),

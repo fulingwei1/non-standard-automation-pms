@@ -32,14 +32,14 @@ from app.schemas.assembly_kit import (  # Stage; Template; Category Mapping; BOM
 )
 from app.schemas.common import ResponseModel
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("assembly_kit:read"))])
 
 
 from fastapi import APIRouter
 
 from app.utils.db_helpers import get_or_404
 
-router = APIRouter(prefix="/assembly-kit/alert-rules", tags=["alert_rules"])
+router = APIRouter(prefix="/assembly-kit/alert-rules", tags=["alert_rules"], dependencies=[Depends(security.require_permission("assembly_kit:read"))])
 
 # 共 3 个路由
 
@@ -47,7 +47,7 @@ router = APIRouter(prefix="/assembly-kit/alert-rules", tags=["alert_rules"])
 
 
 @router.get("", response_model=ResponseModel)
-async def get_alert_rules(
+def get_alert_rules(
     db: Session = Depends(deps.get_db), include_inactive: bool = Query(False)
 ):
     """获取预警规则列表"""
@@ -65,7 +65,7 @@ async def get_alert_rules(
 
 
 @router.post("", response_model=ResponseModel)
-async def create_alert_rule(
+def create_alert_rule(
     rule_data: ShortageAlertRuleCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("assembly_kit:create")),
@@ -90,7 +90,7 @@ async def create_alert_rule(
 
 
 @router.put("/{rule_id}", response_model=ResponseModel)
-async def update_alert_rule(
+def update_alert_rule(
     rule_id: int,
     rule_data: ShortageAlertRuleUpdate,
     db: Session = Depends(deps.get_db),

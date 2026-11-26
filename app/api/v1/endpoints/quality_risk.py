@@ -18,8 +18,9 @@ except ImportError:
                 from .admin.quality_risk import router
             except ImportError:
                 # Create a simple router as fallback
-                from fastapi import APIRouter
-                router = APIRouter()
+                from fastapi import APIRouter, Depends
+                from app.core import security
+                router = APIRouter(dependencies=[Depends(security.require_permission("quality:read"))])
                 @router.get('/')
                 def read_root():
                     return {'message': 'quality_risk module placeholder'}

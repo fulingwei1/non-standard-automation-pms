@@ -8,6 +8,7 @@ from datetime import date, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from app.core import security
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
@@ -17,11 +18,11 @@ from app.models.production import (
     WorkerEfficiencyRecord,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("production:read"))])
 
 
 @router.get("/forecast")
-async def forecast_capacity(
+def forecast_capacity(
     type: str = Query("equipment", description="类型: equipment/worker"),
     equipment_id: Optional[int] = Query(None, description="设备ID(type=equipment时)"),
     worker_id: Optional[int] = Query(None, description="工人ID(type=worker时)"),

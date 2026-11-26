@@ -110,7 +110,7 @@ def create_review_material(
 def delete_review_material(
     material_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:update")),
 ) -> Any:
     """删除评审材料"""
     material = get_or_404(db, ReviewMaterial, material_id, "评审材料不存在")

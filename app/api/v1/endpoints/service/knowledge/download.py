@@ -20,7 +20,7 @@ router = APIRouter()
 
 
 @router.get("/{article_id}/download")
-async def download_knowledge_document(
+def download_knowledge_document(
     *,
     db: Session = Depends(deps.get_db),
     article_id: int,

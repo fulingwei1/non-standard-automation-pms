@@ -30,7 +30,7 @@ router = APIRouter()
     response_model=ResponseModel[PaginatedResponse[SalesOrderResponse]],
     summary="获取销售订单列表",
 )
-async def get_sales_orders(
+def get_sales_orders(
     pagination: PaginationParams = Depends(get_pagination_query),
     contract_id: Optional[int] = Query(None, description="合同ID筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
@@ -91,7 +91,7 @@ async def get_sales_orders(
 @router.post(
     "/sales-orders", response_model=ResponseModel[SalesOrderResponse], summary="创建销售订单"
 )
-async def create_sales_order(
+def create_sales_order(
     order_data: SalesOrderCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -174,7 +174,7 @@ async def create_sales_order(
     response_model=ResponseModel[SalesOrderResponse],
     summary="获取销售订单详情",
 )
-async def get_sales_order(
+def get_sales_order(
     order_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -197,7 +197,7 @@ async def get_sales_order(
     response_model=ResponseModel[SalesOrderResponse],
     summary="更新销售订单",
 )
-async def update_sales_order(
+def update_sales_order(
     order_id: int,
     order_data: SalesOrderUpdate,
     db: Session = Depends(deps.get_db),

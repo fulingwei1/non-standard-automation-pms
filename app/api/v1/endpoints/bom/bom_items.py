@@ -210,7 +210,7 @@ def delete_bom_item(
     *,
     db: Session = Depends(deps.get_db),
     item_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("bom:delete")),
 ) -> Any:
     """删除BOM明细"""
     item = get_or_404(db, BomItem, item_id, "BOM明细不存在")

@@ -5,6 +5,7 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends
+from app.core import security
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -14,11 +15,11 @@ from app.schemas.assembly_kit import MaterialReadinessResponse
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("assembly_kit:read"))])
 
 
 @router.get("/projects/{project_id}/assembly-readiness", response_model=ResponseModel)
-async def get_project_readiness_list(
+def get_project_readiness_list(
     project_id: int,
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),

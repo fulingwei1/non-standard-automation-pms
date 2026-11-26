@@ -25,7 +25,7 @@ router = APIRouter()
     response_model=ResponseModel[PaymentReportResponse],
     summary="获取回款统计报表",
 )
-async def get_payment_report(
+def get_payment_report(
     start_date: Optional[str] = Query(None, description="开始日期（YYYY-MM-DD格式）"),
     end_date: Optional[str] = Query(None, description="结束日期（YYYY-MM-DD格式）"),
     db: Session = Depends(deps.get_db),

@@ -153,7 +153,7 @@ def update_review_participant(
 def delete_review_participant(
     participant_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("project:update")),
 ) -> Any:
     """删除评审参与人"""
     participant = get_or_404(db, ReviewParticipant, participant_id, "评审参与人不存在")

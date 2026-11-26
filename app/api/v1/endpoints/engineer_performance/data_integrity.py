@@ -19,7 +19,7 @@ router = APIRouter(prefix="/data-integrity", tags=["数据完整性"])
 
 
 @router.get("/check/{engineer_id}", summary="检查数据完整性")
-async def check_data_completeness(
+def check_data_completeness(
     engineer_id: int,
     period_id: int,
     db: Session = Depends(get_db),
@@ -34,7 +34,7 @@ async def check_data_completeness(
 
 
 @router.get("/report", summary="生成数据质量报告")
-async def generate_data_quality_report(
+def generate_data_quality_report(
     period_id: int,
     department_id: Optional[int] = Query(None, description="部门ID（可选）"),
     db: Session = Depends(get_db),
@@ -49,7 +49,7 @@ async def generate_data_quality_report(
 
 
 @router.get("/reminders", summary="获取数据缺失提醒")
-async def get_missing_data_reminders(
+def get_missing_data_reminders(
     period_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
@@ -63,7 +63,7 @@ async def get_missing_data_reminders(
 
 
 @router.get("/suggest-fixes/{engineer_id}", summary="获取自动修复建议")
-async def get_auto_fix_suggestions(
+def get_auto_fix_suggestions(
     engineer_id: int,
     period_id: int,
     db: Session = Depends(get_db),
@@ -86,7 +86,7 @@ class AutoFixRequest(BaseModel):
 
 
 @router.post("/auto-fix", summary="自动修复数据问题")
-async def auto_fix_data_issues(
+def auto_fix_data_issues(
     request: AutoFixRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:manage")),
@@ -106,7 +106,7 @@ async def auto_fix_data_issues(
 
 
 @router.post("/send-reminders", summary="发送数据缺失提醒")
-async def send_data_missing_reminders(
+def send_data_missing_reminders(
     period_id: int = Body(..., description="考核周期ID"),
     reminder_types: Optional[List[str]] = Body(None, description="提醒类型列表"),
     db: Session = Depends(get_db),
@@ -125,7 +125,7 @@ async def send_data_missing_reminders(
 
 
 @router.get("/export-report", summary="导出数据质量报告")
-async def export_data_quality_report(
+def export_data_quality_report(
     period_id: int,
     department_id: Optional[int] = Query(None, description="部门ID（可选）"),
     format: str = Query("json", description="导出格式（json/excel/pdf）"),

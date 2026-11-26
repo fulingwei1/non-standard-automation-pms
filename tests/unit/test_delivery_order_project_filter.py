@@ -4,8 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
-@pytest.mark.asyncio
-async def test_get_delivery_orders_accepts_project_filter():
+def test_get_delivery_orders_accepts_project_filter():
     from app.api.v1.endpoints.business_support_orders.delivery_orders import crud
 
     db = MagicMock()
@@ -24,7 +23,7 @@ async def test_get_delivery_orders_accepts_project_filter():
     )
 
     with patch.object(crud, "apply_keyword_filter", side_effect=lambda q, *_args, **_kwargs: q):
-        await crud.get_delivery_orders(
+        crud.get_delivery_orders(
             pagination=pagination,
             project_id=42,
             order_id=None,
@@ -40,8 +39,7 @@ async def test_get_delivery_orders_accepts_project_filter():
     assert "project_id" in str(query.filter.call_args.args[0])
 
 
-@pytest.mark.asyncio
-async def test_get_delivery_statistics_accepts_project_filter():
+def test_get_delivery_statistics_accepts_project_filter():
     from app.api.v1.endpoints.business_support_orders.delivery_orders import statistics
 
     db = MagicMock()
@@ -51,7 +49,7 @@ async def test_get_delivery_statistics_accepts_project_filter():
     query.count.return_value = 0
     query.all.return_value = []
 
-    await statistics.get_delivery_statistics(
+    statistics.get_delivery_statistics(
         project_id=42,
         db=db,
         current_user=MagicMock(),

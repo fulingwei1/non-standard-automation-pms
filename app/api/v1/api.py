@@ -23,18 +23,22 @@ def create_api_router() -> APIRouter:
     - 其他可能有问题的模块
     """
     import builtins
+    import logging
 
+    logger = logging.getLogger("app.api.v1.api")
     api_router = APIRouter()
     router_load_failures = []
 
     def _router_print(*args, **kwargs):
+        line = " ".join(str(a) for a in args)
+        if line.startswith("✗"):
+            logger.error(line)
+            router_load_failures.append(line)
+        elif line.startswith("✓"):
+            logger.info(line)
+        else:
+            logger.info(line)
         builtins.print(*args, **kwargs)
-        try:
-            line = " ".join(str(a) for a in args)
-            if line.startswith("✗"):
-                router_load_failures.append(line)
-        except Exception:
-            pass
 
     # 捕获路由加载失败日志，便于启动后统一汇总
     print = _router_print  # noqa: A001

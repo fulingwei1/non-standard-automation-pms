@@ -39,11 +39,11 @@ from .utils import (
 )
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(security.require_permission("assembly_kit:read"))])
 
 
 @router.post("/analysis", response_model=ResponseModel)
-async def execute_kit_analysis(
+def execute_kit_analysis(
     request: MaterialReadinessCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("assembly_kit:create")),
@@ -218,7 +218,7 @@ async def execute_kit_analysis(
 
 
 @router.get("/analysis/{readiness_id}", response_model=ResponseModel)
-async def get_analysis_detail(readiness_id: int, db: Session = Depends(deps.get_db)):
+def get_analysis_detail(readiness_id: int, db: Session = Depends(deps.get_db)):
     """获取齐套分析详情"""
     readiness = get_or_404(db, MaterialReadiness, readiness_id, "齐套分析记录不存在")
 
