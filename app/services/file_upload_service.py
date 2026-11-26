@@ -39,7 +39,7 @@ class FileUploadService:
         ".gif",
         ".bmp",
         ".webp",
-        ".svg",
+        # 注意: .svg 已移除 — SVG 文件可嵌入 <script> 标签导致存储型 XSS
         # 视频
         ".mp4",
         ".avi",

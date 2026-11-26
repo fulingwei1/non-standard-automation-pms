@@ -39,6 +39,7 @@ class GlobalAuthMiddleware(BaseHTTPMiddleware):
         # 认证相关
         "/api/v1/auth/login",
         "/api/v1/auth/refresh",
+        "/api/v1/auth/2fa/login",
         # 系统接口
         "/health",
         "/api/health",

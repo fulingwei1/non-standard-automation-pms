@@ -8,7 +8,7 @@ import secrets
 from datetime import datetime, timedelta
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -40,9 +40,10 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/login", response_model=dict, status_code=status.HTTP_200_OK)
-# @limiter.limit("5/minute")  # FIXME: 暂时禁用，slowapi有兼容性问题  
+@limiter.limit("5/minute")
 def login(
     request: Request,  # 用于获取客户端IP和User-Agent
+    response: Response,  # 用于 slowapi 注入 RateLimit headers
     db: Session = Depends(deps.get_db),
     form_data: OAuth2PasswordRequestForm = Depends(),
     device_info: Optional[DeviceInfo] = None,
@@ -344,6 +345,7 @@ def logout(
 @limiter.limit("10/minute")  # 防止token刷新滥用
 def refresh_token(
     request: Request,
+    response: Response,
     refresh_data: Optional[RefreshTokenRequest] = None,
     authorization: Optional[str] = Header(default=None, alias="Authorization"),
     db: Session = Depends(deps.get_db),
@@ -528,6 +530,7 @@ def get_me(
 @limiter.limit("5/hour")  # 严格限制密码修改频率
 def change_password(
     request: Request,
+    response: Response,
     password_data: PasswordChange,
     current_user: User = Depends(security.get_current_active_user),
     db: Session = Depends(deps.get_db),

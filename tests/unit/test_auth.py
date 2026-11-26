@@ -444,6 +444,88 @@ class TestGetCurrentUser:
 
             assert exc_info.value.status_code == 401
 
+    @pytest.mark.asyncio
+    async def test_get_current_user_sql_fallback_success_tenant_user(self):
+        """测试SQL回退路径成功获取租户用户并正确设置tenant_id"""
+        from app.core.auth import get_current_user
+
+        token = create_access_token({"sub": "10"})
+
+        with patch("app.core.auth.is_token_revoked", return_value=False):
+            db = MagicMock()
+            # ORM 查询抛出异常，触发 SQL 回退
+            db.query.side_effect = Exception("ORM connection error")
+            # SQL 查询返回 (id, username, is_active, is_superuser, tenant_id)
+            db.execute.return_value.fetchone.return_value = (10, "tenant_user", True, False, 42)
+
+            with patch("app.core.auth.set_audit_context") as mock_set_audit:
+                user = await get_current_user(token=token, db=db)
+
+                assert user.id == 10
+                assert user.username == "tenant_user"
+                assert user.is_active is True
+                assert user.is_superuser is False
+                assert user.tenant_id == 42
+                mock_set_audit.assert_called_once_with(operator_id=10, tenant_id=42)
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_sql_fallback_success_superuser(self):
+        """测试SQL回退路径成功获取超级管理员（tenant_id为None）"""
+        from app.core.auth import get_current_user
+
+        token = create_access_token({"sub": "1"})
+
+        with patch("app.core.auth.is_token_revoked", return_value=False):
+            db = MagicMock()
+            db.query.side_effect = Exception("ORM connection error")
+            db.execute.return_value.fetchone.return_value = (1, "root_admin", True, True, None)
+
+            with patch("app.core.auth.set_audit_context") as mock_set_audit:
+                user = await get_current_user(token=token, db=db)
+
+                assert user.id == 1
+                assert user.is_superuser is True
+                assert user.tenant_id is None
+                mock_set_audit.assert_called_once_with(operator_id=1, tenant_id=None)
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_sql_fallback_fails_when_tenant_id_missing_from_query(self):
+        """测试SQL回退查询结果未包含tenant_id时失败"""
+        from fastapi import HTTPException
+        from app.core.auth import get_current_user
+
+        token = create_access_token({"sub": "10"})
+
+        with patch("app.core.auth.is_token_revoked", return_value=False):
+            db = MagicMock()
+            db.query.side_effect = Exception("ORM connection error")
+            # 模拟旧版查询结果，只返回4个字段（缺少tenant_id）
+            db.execute.return_value.fetchone.return_value = (10, "tenant_user", True, False)
+
+            with pytest.raises(HTTPException) as exc_info:
+                await get_current_user(token=token, db=db)
+
+            assert exc_info.value.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_sql_fallback_fails_when_non_superuser_lacks_tenant_id(self):
+        """测试SQL回退非超级管理员tenant_id为None时拒绝认证，防止越权"""
+        from fastapi import HTTPException
+        from app.core.auth import get_current_user
+
+        token = create_access_token({"sub": "10"})
+
+        with patch("app.core.auth.is_token_revoked", return_value=False):
+            db = MagicMock()
+            db.query.side_effect = Exception("ORM connection error")
+            # 普通用户但tenant_id为None
+            db.execute.return_value.fetchone.return_value = (10, "rogue_user", True, False, None)
+
+            with pytest.raises(HTTPException) as exc_info:
+                await get_current_user(token=token, db=db)
+
+            assert exc_info.value.status_code == 401
+
 
 class TestGetCurrentActiveUser:
     """获取当前活跃用户测试"""

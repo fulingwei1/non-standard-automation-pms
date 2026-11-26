@@ -9,6 +9,7 @@
 """
 
 import logging
+import re
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from enum import Enum
@@ -18,6 +19,13 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
+
+
+def _safe_identifier(name: str) -> str:
+    """验证 SQL 标识符（表名、列名等），防止 SQL 注入"""
+    if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
+        raise ValueError(f"Invalid SQL identifier: {name}")
+    return name
 
 
 class PartitionType(str, Enum):
@@ -189,8 +197,8 @@ class PartitionManager:
             logger.warning("分区功能仅支持 PostgreSQL")
             return False
 
-        table_name = config.table_name
-        partition_column = config.partition_column
+        table_name = _safe_identifier(config.table_name)
+        partition_column = _safe_identifier(config.partition_column)
 
         try:
             # 检查表是否已经是分区表
@@ -223,7 +231,7 @@ class PartitionManager:
                 return False
 
             # 2. 重命名原表
-            old_table = f"{table_name}_old"
+            old_table = _safe_identifier(f"{table_name}_old")
             rename_sql = text(f'ALTER TABLE "{table_name}" RENAME TO "{old_table}"')
             self.db.execute(rename_sql)
 
@@ -231,9 +239,10 @@ class PartitionManager:
             column_defs = []
             for col in columns:
                 col_name, data_type, is_nullable, col_default = col
+                safe_col_name = _safe_identifier(col_name)
                 nullable = "NOT NULL" if is_nullable == "NO" else ""
                 default = f"DEFAULT {col_default}" if col_default else ""
-                column_defs.append(f'"{col_name}" {data_type} {nullable} {default}')
+                column_defs.append(f'"{safe_col_name}" {data_type} {nullable} {default}')
 
             partition_by = (
                 f"PARTITION BY {config.partition_type.value} ({partition_column})"
@@ -246,7 +255,7 @@ class PartitionManager:
             self.db.execute(text(create_sql))
 
             # 4. 创建默认分区（用于存放不在任何分区范围内的数据）
-            default_partition = f"{table_name}_default"
+            default_partition = _safe_identifier(f"{table_name}_default")
             create_default_sql = text(
                 f'CREATE TABLE "{default_partition}" PARTITION OF "{table_name}" DEFAULT'
             )
@@ -276,8 +285,9 @@ class PartitionManager:
         self, config: PartitionConfig, old_table: str
     ) -> None:
         """根据历史数据创建分区"""
-        table_name = config.table_name
-        partition_column = config.partition_column
+        table_name = _safe_identifier(config.table_name)
+        partition_column = _safe_identifier(config.partition_column)
+        old_table = _safe_identifier(old_table)
 
         # 获取数据的时间范围
         get_range_sql = text(f"""
@@ -300,7 +310,7 @@ class PartitionManager:
         while current <= max_date:
             year = current.year
             month = current.month
-            partition_name = self.get_partition_name(table_name, year, month)
+            partition_name = _safe_identifier(self.get_partition_name(table_name, year, month))
             start_date, end_date = self.get_date_range_for_partition(
                 year, month, interval=PartitionInterval.MONTHLY
             )
@@ -335,7 +345,7 @@ class PartitionManager:
             return []
 
         created_partitions = []
-        table_name = config.table_name
+        table_name = _safe_identifier(config.table_name)
         today = date.today()
 
         for i in range(months_ahead + 1):
@@ -344,7 +354,7 @@ class PartitionManager:
             year = target_date.year
             month = target_date.month
 
-            partition_name = self.get_partition_name(table_name, year, month)
+            partition_name = _safe_identifier(self.get_partition_name(table_name, year, month))
             start_date, end_date = self.get_date_range_for_partition(
                 year, month, interval=PartitionInterval.MONTHLY
             )
@@ -393,7 +403,8 @@ class PartitionManager:
             return []
 
         archived_partitions = []
-        table_name = config.table_name
+        table_name = _safe_identifier(config.table_name)
+        archive_schema = _safe_identifier(archive_schema)
         retention_months = config.retention_months
 
         # 计算截止日期
@@ -431,8 +442,9 @@ class PartitionManager:
 
                         if partition_date < cutoff_date:
                             # 移动到归档 schema
+                            safe_partition_name = _safe_identifier(partition_name)
                             archive_sql = text(f"""
-                                ALTER TABLE "{partition_name}"
+                                ALTER TABLE "{safe_partition_name}"
                                 SET SCHEMA "{archive_schema}"
                             """)
                             self.db.execute(archive_sql)
@@ -461,6 +473,7 @@ class PartitionManager:
         if not self.is_postgres():
             return {"error": "仅支持 PostgreSQL"}
 
+        safe_table_name = _safe_identifier(table_name)
         try:
             stats_sql = text("""
                 SELECT
@@ -474,7 +487,7 @@ class PartitionManager:
                 WHERE parent.relname = :table_name
                 ORDER BY child.relname
             """)
-            result = self.db.execute(stats_sql, {"table_name": table_name}).fetchall()
+            result = self.db.execute(stats_sql, {"table_name": safe_table_name}).fetchall()
 
             partitions = []
             total_rows = 0

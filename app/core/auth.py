@@ -697,25 +697,63 @@ async def get_current_user(
 
             result = db.execute(
                 text(
-                    "SELECT id, username, is_active, is_superuser FROM users WHERE id = :user_id"
+                    "SELECT id, username, is_active, is_superuser, tenant_id FROM users WHERE id = :user_id"
                 ),
                 {"user_id": user_id},
             )
             user_row = result.fetchone()
             if user_row:
+                # 检查查询结果是否包含 tenant_id（无法确定租户ID则认证失败）
+                if hasattr(user_row, "_mapping"):
+                    row_map = user_row._mapping
+                    if "tenant_id" not in row_map and len(user_row) < 5:
+                        logger.error("SQL查询用户结果缺少tenant_id，拒绝认证")
+                        raise credentials_exception
+                    user_id_val = row_map.get("id", user_row[0])
+                    username_val = row_map.get("username", user_row[1])
+                    is_active_val = row_map.get("is_active", user_row[2])
+                    is_superuser_val = row_map.get("is_superuser", user_row[3] if len(user_row) > 3 else False)
+                    tenant_id_val = row_map.get("tenant_id") if "tenant_id" in row_map else user_row[4]
+                else:
+                    if len(user_row) < 5:
+                        logger.error("SQL查询用户结果缺少tenant_id，拒绝认证")
+                        raise credentials_exception
+                    user_id_val = user_row[0]
+                    username_val = user_row[1]
+                    is_active_val = user_row[2]
+                    is_superuser_val = user_row[3] if len(user_row) > 3 else False
+                    tenant_id_val = user_row[4]
+
+                is_superuser_bool = bool(is_superuser_val) if is_superuser_val is not None else False
+
+                # 非超级管理员必须关联有效租户；无法确定租户ID时拒绝认证，防止绕过租户隔离
+                if not is_superuser_bool and tenant_id_val is None:
+                    logger.error(f"SQL查询用户缺少tenant_id且非超级管理员: user_id={user_id}，拒绝认证")
+                    raise credentials_exception
+
                 # 创建一个简单的User对象
                 user = User()
-                user.id = user_row[0]
-                user.username = user_row[1]
-                user.is_active = bool(user_row[2])
-                user.is_superuser = bool(user_row[3]) if len(user_row) > 3 else False
+                user.id = user_id_val
+                user.username = username_val
+                user.is_active = bool(is_active_val)
+                user.is_superuser = is_superuser_bool
+                user.tenant_id = tenant_id_val
                 # 设置其他必需字段的默认值
                 user.employee_id = 0
                 user.password_hash = None  # B105: 使用 None 而不是空字符串
                 user.auth_type = "password"
+
+                # 验证用户与租户数据一致性
+                validate_user_tenant_consistency(user)
+
+                # 将操作人ID和租户ID设置到上下文中，用于审计日志和数据隔离
+                set_audit_context(operator_id=user.id, tenant_id=user.tenant_id)
+
                 return user
             else:
                 raise credentials_exception
+        except HTTPException:
+            raise
         except Exception as sql_e:
             logger.error(f"SQL查询用户也失败: {sql_e}", exc_info=True)
             raise credentials_exception

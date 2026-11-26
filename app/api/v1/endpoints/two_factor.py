@@ -15,12 +15,13 @@ import logging
 from datetime import timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.core.rate_limit import limiter
 from ....core import auth as security
 from ....core.auth import get_current_active_user
 from ....core.config import settings
@@ -132,8 +133,12 @@ class TwoFactorLoginResponse(BaseModel):
 
 
 @router.post("/login", response_model=TwoFactorLoginResponse, summary="完成2FA登录")
-async def complete_2fa_login(
-    request_data: TwoFactorLoginRequest, req: Request, db: Session = Depends(get_db)
+@limiter.limit("5/minute")
+def complete_2fa_login(
+    request_data: TwoFactorLoginRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
 ):
     """
     完成2FA登录（验证2FA码后返回最终token）
@@ -179,7 +184,7 @@ async def complete_2fa_login(
     user.two_factor_enabled = user_dict["two_factor_enabled"]
 
     # 5. 验证2FA码
-    client_ip = req.client.host if req.client else None
+    client_ip = request.client.host if request.client else None
     service = get_two_factor_service()
     success, message = service.verify_2fa_code(db, user, request_data.code, client_ip)
 
@@ -198,7 +203,7 @@ async def complete_2fa_login(
 
     # 7. 创建会话记录
     try:
-        user_agent = req.headers.get("User-Agent")
+        user_agent = request.headers.get("User-Agent")
         SessionService.create_session(
             db=db,
             user_id=user_id,
@@ -223,8 +228,12 @@ async def complete_2fa_login(
 
 
 @router.post("/setup", summary="获取2FA二维码")
-async def setup_two_factor(
-    current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)
+@limiter.limit("10/minute")
+def setup_two_factor(
+    request: Request,
+    response: Response,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
 ):
     """
     获取2FA设置信息（未启用2FA前调用）
@@ -260,8 +269,11 @@ async def setup_two_factor(
 
 
 @router.post("/enable", response_model=TwoFactorEnableResponse, summary="启用2FA")
-async def enable_two_factor(
-    request: TwoFactorEnableRequest,
+@limiter.limit("5/minute")
+def enable_two_factor(
+    request: Request,
+    response: Response,
+    enable_data: TwoFactorEnableRequest,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
@@ -276,7 +288,7 @@ async def enable_two_factor(
     # 启用2FA
     service = get_two_factor_service()
     success, message, backup_codes = service.enable_2fa_for_user(
-        db, current_user, request.totp_code
+        db, current_user, enable_data.totp_code
     )
 
     if not success:
@@ -286,9 +298,11 @@ async def enable_two_factor(
 
 
 @router.post("/verify", response_model=TwoFactorVerifyResponse, summary="验证2FA码")
-async def verify_two_factor(
-    request: TwoFactorVerifyRequest,
-    req: Request,
+@limiter.limit("5/minute")
+def verify_two_factor(
+    request: Request,
+    response: Response,
+    verify_data: TwoFactorVerifyRequest,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
@@ -301,11 +315,11 @@ async def verify_two_factor(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="未启用2FA")
 
     # 获取客户端IP
-    client_ip = req.client.host if req.client else None
+    client_ip = request.client.host if request.client else None
 
     # 验证2FA码
     service = get_two_factor_service()
-    success, message = service.verify_2fa_code(db, current_user, request.code, client_ip)
+    success, message = service.verify_2fa_code(db, current_user, verify_data.code, client_ip)
 
     if not success:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=message)
@@ -314,8 +328,11 @@ async def verify_two_factor(
 
 
 @router.post("/disable", response_model=TwoFactorDisableResponse, summary="禁用2FA")
-async def disable_two_factor(
-    request: TwoFactorDisableRequest,
+@limiter.limit("5/minute")
+def disable_two_factor(
+    request: Request,
+    response: Response,
+    disable_data: TwoFactorDisableRequest,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
@@ -329,7 +346,7 @@ async def disable_two_factor(
 
     # 禁用2FA
     service = get_two_factor_service()
-    success, message = service.disable_2fa_for_user(db, current_user, request.password)
+    success, message = service.disable_2fa_for_user(db, current_user, disable_data.password)
 
     if not success:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
@@ -338,7 +355,7 @@ async def disable_two_factor(
 
 
 @router.get("/backup-codes", response_model=BackupCodesInfoResponse, summary="获取备用码信息")
-async def get_backup_codes_info(
+def get_backup_codes_info(
     current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)
 ):
     """
@@ -360,8 +377,11 @@ async def get_backup_codes_info(
     response_model=BackupCodesRegenerateResponse,
     summary="重新生成备用码",
 )
-async def regenerate_backup_codes(
-    request: BackupCodesRegenerateRequest,
+@limiter.limit("5/minute")
+def regenerate_backup_codes(
+    request: Request,
+    response: Response,
+    regen_data: BackupCodesRegenerateRequest,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
@@ -375,7 +395,7 @@ async def regenerate_backup_codes(
 
     service = get_two_factor_service()
     success, message, backup_codes = service.regenerate_backup_codes(
-        db, current_user, request.password
+        db, current_user, regen_data.password
     )
 
     if not success:

@@ -16,7 +16,7 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import backref, relationship
 
 from .base import Base, TimestampMixin
 
@@ -81,7 +81,9 @@ class UserSession(Base, TimestampMixin):
     risk_score = Column(Integer, default=0, comment="风险评分（0-100）")
 
     # 关系
-    user = relationship("User", backref="sessions")
+    user = relationship(
+        "User", backref=backref("sessions", cascade="all, delete-orphan", passive_deletes=True)
+    )
 
     # 索引
     __table_args__ = (

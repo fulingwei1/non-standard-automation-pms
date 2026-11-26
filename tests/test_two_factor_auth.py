@@ -482,7 +482,26 @@ class TestTwoFactorAPI:
 
 
 @pytest.fixture
-def test_user(db: Session):
+def test_tenant(db: Session):
+    """创建或获取测试租户"""
+    from app.models.tenant import Tenant, TenantPlan, TenantStatus
+
+    tenant = db.query(Tenant).filter(Tenant.tenant_code == "test_2fa_tenant").first()
+    if not tenant:
+        tenant = Tenant(
+            tenant_code="test_2fa_tenant",
+            tenant_name="2FA测试租户",
+            status=TenantStatus.ACTIVE.value,
+            plan_type=TenantPlan.ENTERPRISE.value,
+        )
+        db.add(tenant)
+        db.commit()
+        db.refresh(tenant)
+    return tenant
+
+
+@pytest.fixture
+def test_user(db: Session, test_tenant):
     """创建测试用户（未启用2FA）"""
     user = User(
         username="test_2fa_user",
@@ -490,6 +509,7 @@ def test_user(db: Session):
         password_hash=get_password_hash("test_password"),
         is_active=True,
         two_factor_enabled=False,
+        tenant_id=test_tenant.id,
     )
     db.add(user)
     db.commit()
@@ -501,7 +521,7 @@ def test_user(db: Session):
 
 
 @pytest.fixture
-def test_user_with_2fa(db: Session):
+def test_user_with_2fa(db: Session, test_tenant):
     """创建已启用2FA的测试用户"""
     import pyotp
 
@@ -511,6 +531,7 @@ def test_user_with_2fa(db: Session):
         password_hash=get_password_hash("test_password"),
         is_active=True,
         two_factor_enabled=False,
+        tenant_id=test_tenant.id,
     )
     db.add(user)
     db.commit()

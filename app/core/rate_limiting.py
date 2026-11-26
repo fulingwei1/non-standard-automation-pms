@@ -15,6 +15,21 @@ from typing import Callable, Optional
 from fastapi import Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+import slowapi.extension
+
+# 兼容性修复：slowapi 在端点返回 dict/Pydantic 模型且未声明 response: Response 参数时，
+# 会将 None 传递给 _inject_headers 并抛出 Exception("parameter `response` must be an instance of starlette.responses.Response")。
+# 安全放行 None 响应，防止 500 错误，确保限流核心功能（429 拦截）正常运作。
+_orig_inject_headers = slowapi.extension.Limiter._inject_headers
+
+
+def _safe_inject_headers(self, response, current_limit):
+    if response is None:
+        return None
+    return _orig_inject_headers(self, response, current_limit)
+
+
+slowapi.extension.Limiter._inject_headers = _safe_inject_headers
 
 from app.core.config import settings
 

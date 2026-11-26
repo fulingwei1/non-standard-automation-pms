@@ -53,14 +53,14 @@ class LoginRequest(BaseModel):
     """登录请求"""
 
     username: str = Field(min_length=3, max_length=50, description="用户名")
-    password: str = Field(min_length=6, description="密码")
+    password: str = Field(min_length=6, max_length=128, description="密码")
 
 
 class UserCreate(BaseModel):
     """创建用户"""
 
     username: str = Field(min_length=3, max_length=50, description="用户名")
-    password: str = Field(min_length=6, description="密码")
+    password: str = Field(min_length=8, max_length=128, description="密码（至少8位，包含大小写字母和数字）")
     email: Optional[str] = Field(default=None, description="邮箱")
     phone: Optional[str] = Field(default=None, max_length=20, description="手机号")
     real_name: Optional[str] = Field(default=None, max_length=50, description="真实姓名")
@@ -91,8 +91,10 @@ class UserUpdate(BaseModel):
 class PasswordChange(BaseModel):
     """修改密码"""
 
-    old_password: str = Field(min_length=6, description="原密码")
-    new_password: str = Field(min_length=8, description="新密码（至少8位，包含大小写字母和数字）")
+    old_password: str = Field(min_length=6, max_length=128, description="原密码")
+    new_password: str = Field(
+        min_length=8, max_length=128, description="新密码（至少8位，包含大小写字母和数字）"
+    )
 
     @field_validator("new_password")
     @classmethod

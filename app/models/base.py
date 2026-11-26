@@ -562,6 +562,20 @@ def _ensure_sqlite_schema(engine):
         except Exception:
             logger.debug("project_costs 成本口径列补丁跳过", exc_info=True)
 
+    if "purchase_material_costs" in tables:
+        columns = {col["name"] for col in inspector.get_columns("purchase_material_costs")}
+        if "source_file" not in columns:
+            try:
+                with engine.begin() as conn:
+                    conn.execute(
+                        text(
+                            "ALTER TABLE purchase_material_costs "
+                            "ADD COLUMN source_file VARCHAR(500)"
+                        )
+                    )
+            except Exception:
+                logger.debug("purchase_material_costs source_file 列补丁跳过", exc_info=True)
+
     if "api_permissions" in tables:
         columns = {col["name"] for col in inspector.get_columns("api_permissions")}
         if "group_id" not in columns:
