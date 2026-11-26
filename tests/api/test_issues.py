@@ -358,6 +358,10 @@ class TestIssueDataScope:
     ) -> User:
         user = db_session.query(User).filter(User.username == username).first()
         if user:
+            if user.department != department or user.tenant_id != 1:
+                user.department = department
+                user.tenant_id = 1
+                db_session.commit()
             return user
         employee = Employee(
             employee_code=f"EMP-{username}",
@@ -366,6 +370,7 @@ class TestIssueDataScope:
             role="TEST",
             phone="18800000000",
             is_active=True,
+            tenant_id=1,
         )
         db_session.add(employee)
         db_session.flush()
@@ -378,6 +383,7 @@ class TestIssueDataScope:
             department=department,
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         db_session.add(user)
         db_session.flush()
@@ -463,19 +469,22 @@ class TestIssueDataScope:
         self._assign_perm_to_role(db_session, role_own, perm_create)
         self._assign_perm_to_role(db_session, role_dept, perm_read)
 
+        import uuid
+
+        suffix = uuid.uuid4().hex[:8]
         dept_user = self._create_user(
-            db_session, "dept_user", "dpass", "部门用户", "工程部", role_own
+            db_session, f"dept_user_{suffix}", "dpass", "部门用户", "工程部", role_own
         )
         other_user = self._create_user(
-            db_session, "other_user", "opass", "其他用户", "销售部", role_own
+            db_session, f"other_user_{suffix}", "opass", "其他用户", "销售部", role_own
         )
         dept_mgr = self._create_user(
-            db_session, "dept_mgr", "mpass", "部门经理", "工程部", role_dept
+            db_session, f"dept_mgr_{suffix}", "mpass", "部门经理", "工程部", role_dept
         )
 
-        dept_user_token = self._login(client, "dept_user", "dpass")
-        other_user_token = self._login(client, "other_user", "opass")
-        dept_mgr_token = self._login(client, "dept_mgr", "mpass")
+        dept_user_token = self._login(client, f"dept_user_{suffix}", "dpass")
+        other_user_token = self._login(client, f"other_user_{suffix}", "opass")
+        dept_mgr_token = self._login(client, f"dept_mgr_{suffix}", "mpass")
 
         dept_user_headers = {"Authorization": f"Bearer {dept_user_token}"}
         other_user_headers = {"Authorization": f"Bearer {other_user_token}"}
@@ -514,7 +523,7 @@ class TestIssueDataScope:
         other_issue_id = r_other.json()["id"]
 
         mgr_list = client.get(
-            f"{settings.API_V1_PREFIX}/issues?page=1&page_size=50",
+            f"{settings.API_V1_PREFIX}/issues?page=1&page_size=200&keyword=的问题",
             headers=dept_mgr_headers,
         )
         assert mgr_list.status_code == 200
@@ -602,6 +611,7 @@ class TestIssueTemplates:
             department="项目部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         template = IssueTemplate(
             template_name=f"{marker}-模板",

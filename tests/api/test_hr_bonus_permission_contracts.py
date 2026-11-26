@@ -51,6 +51,7 @@ def _create_user(
         real_name=f"权限测试用户-{username}",
         is_active=True,
         is_superuser=False,
+        tenant_id=1,
     )
     db.add(user)
     db.flush()
@@ -104,6 +105,7 @@ def _create_bonus_distribution(
         rule_name="权限测试奖金规则",
         bonus_type="PERFORMANCE_BASED",
         is_active=True,
+        tenant_id=1,
     )
     db.add(rule)
     db.flush()
@@ -113,6 +115,7 @@ def _create_bonus_distribution(
         user_id=user_id,
         calculated_amount=Decimal("1000.00"),
         status="APPROVED",
+        tenant_id=1,
     )
     db.add(calculation)
     db.flush()
@@ -124,6 +127,7 @@ def _create_bonus_distribution(
         distribution_date=date(2026, 7, 3),
         payment_method="BANK",
         status=status,
+        tenant_id=1,
     )
     db.add(distribution)
     db.flush()

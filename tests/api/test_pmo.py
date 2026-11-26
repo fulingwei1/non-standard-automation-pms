@@ -222,6 +222,7 @@ class TestInitiations:
             department="销售部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         other_user = User(
             username=f"{marker.lower()}-other",
@@ -230,6 +231,7 @@ class TestInitiations:
             department="销售部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         db_session.add_all([applicant, other_user])
         db_session.flush()
@@ -242,6 +244,7 @@ class TestInitiations:
             applicant_id=applicant.id,
             applicant_name=applicant.real_name,
             status="DRAFT",
+            tenant_id=1,
         )
         other_initiation = PmoProjectInitiation(
             application_no=f"{marker}-OTHER",
@@ -251,6 +254,7 @@ class TestInitiations:
             applicant_id=other_user.id,
             applicant_name=other_user.real_name,
             status="DRAFT",
+            tenant_id=1,
         )
         db_session.add_all([own_initiation, other_initiation])
         db_session.commit()

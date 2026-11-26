@@ -114,7 +114,7 @@ _tenant_scoped_classes_cache = None
 # 与共享默认数据共存不冲突。RoleApiPermission/RoleMenu 是 Role 的关联表，
 # Role 本身已是 NULL=共享语义，这两张关联表跟随同样的约定。
 _SHARED_WHEN_NULL_MODEL_NAMES = frozenset({
-    "Role", "ApiPermission", "MenuPermission",
+    "Role", "UserRole", "ApiPermission", "MenuPermission",
     # TEN-03 补遗批（2026-07-06）：batch4 用 Base.registry.mappers 普查时未被
     # import 的漏网模型，其中共享定义类（字典/日历/模板配置）沿用 NULL=共享。
     "Industry", "IndustryCategoryMapping", "AdvantageProductCategory",

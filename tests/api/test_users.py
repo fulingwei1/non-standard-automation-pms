@@ -348,6 +348,7 @@ class TestUserPermissionEnforcement:
             position="服务工程师",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         db_session.add(option_user)
         db_session.commit()

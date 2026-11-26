@@ -64,6 +64,7 @@ def _create_hr_manager_user(db: Session) -> User:
         real_name="HR角色合同测试用户",
         is_active=True,
         is_superuser=False,
+        tenant_id=1,
     )
     db.add(user)
     db.flush()

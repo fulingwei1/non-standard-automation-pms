@@ -40,6 +40,9 @@ def _ensure_api_permission(db: Session, code: str, name: str) -> ApiPermission:
 def _get_or_create_pmo_director_role(db: Session) -> Role:
     role = db.query(Role).filter(Role.role_code == "pmo_director").first()
     if role:
+        if role.data_scope != "ALL":
+            role.data_scope = "ALL"
+            db.flush()
         return role
 
     role = Role(
@@ -57,6 +60,8 @@ def _get_or_create_pmo_director_role(db: Session) -> Role:
 
 def _create_pmo_director_user(db: Session) -> User:
     role = _get_or_create_pmo_director_role(db)
+    role.data_scope = "ALL"
+    role.is_active = True
     username = f"pmo_role_contract_{uuid.uuid4().hex[:8]}"
     user = User(
         username=username,
@@ -65,6 +70,7 @@ def _create_pmo_director_user(db: Session) -> User:
         real_name="PMO角色合同测试用户",
         is_active=True,
         is_superuser=False,
+        tenant_id=1,
     )
     db.add(user)
     db.flush()
@@ -83,6 +89,7 @@ def _create_project(db: Session) -> Project:
         status="ST01",
         health="H1",
         is_active=True,
+        tenant_id=1,
     )
     db.add(project)
     db.commit()
