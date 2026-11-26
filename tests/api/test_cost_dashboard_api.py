@@ -90,7 +90,7 @@ class TestTopProjectsAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_top_projects.return_value = {
@@ -101,6 +101,7 @@ class TestTopProjectsAPI:
                         "project_name": "项目 1",
                         "actual_cost": 100000,
                         "budget_amount": 120000,
+                        "contract_amount": 150000,
                         "cost_variance": -20000,
                         "cost_variance_pct": -16.67,
                         "profit": 50000,
@@ -129,7 +130,7 @@ class TestTopProjectsAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_top_projects.return_value = {
@@ -158,7 +159,7 @@ class TestCostAlertsAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_cost_alerts.return_value = {
@@ -204,7 +205,7 @@ class TestProjectDashboardAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_project_cost_dashboard.return_value = {
@@ -241,7 +242,7 @@ class TestProjectDashboardAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_project_cost_dashboard.side_effect = ValueError("项目 999 不存在")
@@ -263,7 +264,7 @@ class TestExportAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_cost_overview.return_value = {
