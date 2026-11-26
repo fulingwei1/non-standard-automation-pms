@@ -572,7 +572,7 @@ class TestSalesQuotesAPI:
         item_data = {
             "product_name": "测试设备",
             "specification": "型号X1",
-            "quantity": 10,
+            "qty": 10,
             "unit_price": 50000.0,
             "total_price": 500000.0,
             "delivery_period": "60天",

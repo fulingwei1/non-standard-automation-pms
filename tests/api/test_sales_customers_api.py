@@ -36,6 +36,7 @@ def _create_customer_list_user(db_session: Session, suffix: str, real_name: str)
         position="销售",
         is_active=True,
         is_superuser=False,
+        tenant_id=1,
     )
     db_session.add(user)
     db_session.flush()
@@ -52,6 +53,7 @@ def _create_customer_record(db_session: Session, owner: User, suffix: str) -> Cu
         credit_level="B",
         sales_owner_id=owner.id,
         created_by=owner.id,
+        tenant_id=1,
     )
     db_session.add(customer)
     db_session.flush()

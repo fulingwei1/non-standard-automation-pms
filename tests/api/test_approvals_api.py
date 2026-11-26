@@ -385,6 +385,7 @@ class TestApprovalPendingAPI:
             department="综合管理部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         other_user = User(
             username=f"{marker.lower()}-other",
@@ -393,6 +394,7 @@ class TestApprovalPendingAPI:
             department="综合管理部",
             is_active=True,
             is_superuser=False,
+            tenant_id=1,
         )
         db_session.add_all([actor, other_user])
         db_session.flush()
@@ -407,6 +409,7 @@ class TestApprovalPendingAPI:
             published_by=actor.id,
             is_active=True,
             created_by=actor.id,
+            tenant_id=1,
         )
         db_session.add(template)
         db_session.flush()
@@ -418,6 +421,7 @@ class TestApprovalPendingAPI:
             version=1,
             is_active=True,
             created_by=actor.id,
+            tenant_id=1,
         )
         db_session.add(flow)
         db_session.flush()
@@ -429,6 +433,7 @@ class TestApprovalPendingAPI:
             node_order=1,
             approval_mode="SINGLE",
             is_active=True,
+            tenant_id=1,
         )
         db_session.add(node)
         db_session.flush()
@@ -443,6 +448,7 @@ class TestApprovalPendingAPI:
                 initiator_id=initiator.id,
                 initiator_name=initiator.real_name,
                 form_data={"title": title},
+                tenant_id=1,
                 status="PENDING",
                 current_node_id=node.id,
                 current_node_order=1,
@@ -468,6 +474,7 @@ class TestApprovalPendingAPI:
             assignee_name=actor.real_name,
             assignee_type="NORMAL",
             status="PENDING",
+            tenant_id=1,
         )
         own_processed_task = ApprovalTask(
             instance_id=own_processed_instance.id,
@@ -480,6 +487,7 @@ class TestApprovalPendingAPI:
             status="COMPLETED",
             action="APPROVE",
             completed_at=datetime.now(),
+            tenant_id=1,
         )
         other_pending_task = ApprovalTask(
             instance_id=other_pending_instance.id,
@@ -490,6 +498,7 @@ class TestApprovalPendingAPI:
             assignee_name=other_user.real_name,
             assignee_type="NORMAL",
             status="PENDING",
+            tenant_id=1,
         )
         own_cc = ApprovalCarbonCopy(
             instance_id=own_initiated_instance.id,
@@ -497,6 +506,7 @@ class TestApprovalPendingAPI:
             cc_user_name=actor.real_name,
             cc_source="FLOW",
             is_read=False,
+            tenant_id=1,
         )
         other_cc = ApprovalCarbonCopy(
             instance_id=other_pending_instance.id,
@@ -504,6 +514,7 @@ class TestApprovalPendingAPI:
             cc_user_name=other_user.real_name,
             cc_source="FLOW",
             is_read=False,
+            tenant_id=1,
         )
         db_session.add_all(
             [own_pending_task, own_processed_task, other_pending_task, own_cc, other_cc]
