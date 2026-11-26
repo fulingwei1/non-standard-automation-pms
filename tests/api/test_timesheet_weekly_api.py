@@ -21,6 +21,7 @@ def _auth_headers_for_user(user: User) -> dict:
 
 def _create_timesheet_user(db_session: Session, suffix: str, real_name: str) -> User:
     user = User(
+        tenant_id=1,
         username=f"weekly_self_{suffix}",
         password_hash=get_password_hash("weekly123"),
         email=f"weekly_self_{suffix}@example.com",
@@ -44,6 +45,7 @@ def _create_timesheet(
     status: str = "DRAFT",
 ) -> Timesheet:
     timesheet = Timesheet(
+        tenant_id=user.tenant_id,
         timesheet_no=f"TS-WEEK-{suffix}",
         user_id=user.id,
         user_name=user.real_name,

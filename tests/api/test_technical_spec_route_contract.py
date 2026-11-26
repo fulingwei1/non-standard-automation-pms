@@ -170,6 +170,7 @@ def test_regular_member_can_read_project_technical_spec_without_module_permissio
     """Project members can read their own technical spec rows without module-wide read."""
     marker = f"TECH-SPEC-SELF-{uuid.uuid4().hex}"
     actor = User(
+        tenant_id=1,
         username=f"{marker.lower()}-actor",
         password_hash=get_password_hash("password123"),
         real_name="技术规格自服务用户",
@@ -178,6 +179,7 @@ def test_regular_member_can_read_project_technical_spec_without_module_permissio
         is_superuser=False,
     )
     other_user = User(
+        tenant_id=1,
         username=f"{marker.lower()}-other",
         password_hash=get_password_hash("password123"),
         real_name="其他项目用户",
@@ -199,6 +201,7 @@ def test_regular_member_can_read_project_technical_spec_without_module_permissio
     db_session.flush()
 
     member_project = Project(
+        tenant_id=1,
         project_code=f"PJ-{uuid.uuid4().hex[:8].upper()}",
         project_name=f"{marker}-member",
         customer_id=customer.id,
@@ -211,6 +214,7 @@ def test_regular_member_can_read_project_technical_spec_without_module_permissio
         pm_id=other_user.id,
     )
     unrelated_project = Project(
+        tenant_id=1,
         project_code=f"PJ-{uuid.uuid4().hex[:8].upper()}",
         project_name=f"{marker}-unrelated",
         customer_id=customer.id,
@@ -227,6 +231,7 @@ def test_regular_member_can_read_project_technical_spec_without_module_permissio
 
     db_session.add(
         ProjectMember(
+            tenant_id=1,
             project_id=member_project.id,
             user_id=actor.id,
             role_code="MEMBER",
@@ -235,6 +240,7 @@ def test_regular_member_can_read_project_technical_spec_without_module_permissio
         )
     )
     own_requirement = TechnicalSpecRequirement(
+        tenant_id=1,
         project_id=member_project.id,
         material_code=f"OWN-{uuid.uuid4().hex[:6].upper()}",
         material_name=f"{marker}-own-material",
@@ -243,6 +249,7 @@ def test_regular_member_can_read_project_technical_spec_without_module_permissio
         extracted_by=other_user.id,
     )
     unrelated_requirement = TechnicalSpecRequirement(
+        tenant_id=1,
         project_id=unrelated_project.id,
         material_code=f"OTHER-{uuid.uuid4().hex[:6].upper()}",
         material_name=f"{marker}-other-material",
@@ -253,6 +260,7 @@ def test_regular_member_can_read_project_technical_spec_without_module_permissio
     db_session.add_all([own_requirement, unrelated_requirement])
     db_session.flush()
     own_match = SpecMatchRecord(
+        tenant_id=1,
         project_id=member_project.id,
         spec_requirement_id=own_requirement.id,
         match_type="BOM",
@@ -260,6 +268,7 @@ def test_regular_member_can_read_project_technical_spec_without_module_permissio
         match_status="UNKNOWN",
     )
     unrelated_match = SpecMatchRecord(
+        tenant_id=1,
         project_id=unrelated_project.id,
         spec_requirement_id=unrelated_requirement.id,
         match_type="BOM",
