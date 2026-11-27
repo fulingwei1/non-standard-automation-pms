@@ -111,6 +111,7 @@ def test_approved_change_request_updates_project_baseline(db_session):
     )
 
     assert project.planned_end_date == date(2026, 2, 7)
+    assert project.budget_amount == Decimal("1250.00")
     assert project.actual_cost == Decimal("1350.00")
     assert milestone.planned_date == date(2026, 1, 27)
     assert cost.amount == Decimal("1250.00")

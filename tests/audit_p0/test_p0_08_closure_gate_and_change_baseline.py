@@ -46,11 +46,16 @@ def test_change_approval_writes_project_baseline(repo_root):
     src = (repo_root / "app/services/project_change_requests/service.py").read_text(
         encoding="utf-8"
     )
-    m = re.search(r"def approve_change_request\(.*?\n(?=\n    def )", src, re.S)
+    m = re.search(r"def approve_change_request\(.*?\n(?=\n    def |\Z)", src, re.S)
     assert m, "未能定位 approve_change_request 函数"
-    body = m.group(0)
+    inspected = [m.group(0)]
+    for helper_name in re.findall(r"self\.(_\w+)\(", m.group(0)):
+        hm = re.search(rf"def {helper_name}\(.*?\n(?=\n    def |\Z)", src, re.S)
+        if hm:
+            inspected.append(hm.group(0))
+    combined = "\n".join(inspected)
     writes_baseline = any(
-        sig in body for sig in ("planned_end_date", "budget_amount", "execute_linkage")
+        sig in combined for sig in ("planned_end_date", "budget_amount", "execute_linkage")
     )
     # 正确行为：变更审批通过后应回写项目基线（工期/预算）或调联动引擎
     assert writes_baseline, (

@@ -18,7 +18,7 @@ WITHDRAW_CALL_SITES = [
     "app/services/contract_approval/service.py",
     "app/services/acceptance_approval/service.py",
     "app/services/quote_approval/quote_approval_service.py",
-    "app/services/ecn/approval/service.py",
+    "app/modules/ecn/services/approval/service.py",
 ]
 
 

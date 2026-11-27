@@ -457,6 +457,11 @@ class ProjectChangeRequestsService:
 
         milestone_updates = self._apply_milestone_delay(change_request, delay_days, impact_details)
 
+        old_budget = self._decimal(project.budget_amount)
+        if cost_amount != 0:
+            project.budget_amount = old_budget + self._decimal(cost_amount)
+            self.db.add(project)
+
         cost, cost_created = self._record_change_cost(change_request, cost_amount, current_user.id)
         if cost_created and cost:
             project.actual_cost = self._decimal(project.actual_cost) + self._decimal(cost.amount)
@@ -471,6 +476,8 @@ class ProjectChangeRequestsService:
             "new_planned_end_date": (
                 project.planned_end_date.isoformat() if project.planned_end_date else None
             ),
+            "old_budget_amount": float(old_budget),
+            "new_budget_amount": float(self._decimal(project.budget_amount)),
             "milestone_updates": milestone_updates,
             "cost_amount": float(cost_amount),
             "cost_id": cost.id if cost else None,
